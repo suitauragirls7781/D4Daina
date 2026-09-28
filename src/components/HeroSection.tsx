@@ -14,7 +14,7 @@ export const HeroSection: React.FC = () => {
   const { heroConfig, isLoading } = useAdmin();
 
   const liveProductSlides = React.useMemo<LiveHeroSlide[]>(() => {
-    // 1. If live products are synced from Supabase, ALWAYS generate slides from real synced products!
+    // 1. If live products are synced from the database, ALWAYS generate slides from real synced products!
     if (products && products.length > 0) {
       // Check if admin has explicitly customized hero slides that match real products or have real uploaded images
       const customMatchingSlides = (heroConfig?.slides || []).filter((slide) => {
@@ -56,7 +56,7 @@ export const HeroSection: React.FC = () => {
         });
       }
 
-      // Automatically generate live hero slides from real Supabase products
+      // Automatically generate live hero slides from real database products
       return generateHeroSlidesFromProducts(products).slice(0, 6);
     }
 

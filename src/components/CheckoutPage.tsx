@@ -3,7 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
 import { DeliveryAddress, PaymentMethodType, Order } from '../types';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, saveDoc } from '../lib/dataStore';
 import { getStoredUtmParams } from '../utils/utmTracker';
 import { lockAndReserveCartStock, releaseStockLock, confirmStockDeduction } from '../utils/stockLock';
 import { trackPurchaseEvent, markFirestoreQuotaExhausted, isQuotaExhausted } from '../utils/visitorTracker';
@@ -186,7 +186,7 @@ export const CheckoutPage: React.FC = () => {
     if (lockToken) void releaseStockLock(lockToken);
   };
 
-  const savePartialToSupabase = async (
+  const savePartialToDb = async (
     customFirstName?: string,
     customLastName?: string,
     customPhone?: string,
@@ -204,31 +204,29 @@ export const CheckoutPage: React.FC = () => {
       const sid = getCheckoutSessionId();
       const utmParams = getStoredUtmParams();
       const payload = {
-        id: sid,
-        session_id: sid,
-        first_name: fName,
-        last_name: lName,
-        full_name: fullNameCombined,
+        sessionId: sid,
+        firstName: fName,
+        lastName: lName,
+        fullName: fullNameCombined,
         phone: mob,
         mobile: mob,
         email: eml,
-        utm_source: utmParams.utm_source || (utmParams.fbclid ? 'meta_ads' : 'direct'),
-        utm_medium: utmParams.utm_medium || '',
-        utm_campaign: utmParams.utm_campaign || '',
+        utmSource: utmParams.utm_source || (utmParams.fbclid ? 'meta_ads' : 'direct'),
+        utmMedium: utmParams.utm_medium || '',
+        utmCampaign: utmParams.utm_campaign || '',
         fbclid: utmParams.fbclid || '',
-        cart_items: JSON.stringify(cart),
-        total_amount: cartTotal,
-        address: JSON.stringify({
+        cartItems: cart,
+        totalAmount: cartTotal,
+        address: {
           ...address,
           fullName: fullNameCombined,
           mobile: mob,
           email: eml,
-        }),
+        },
         status: 'abandoned',
-        updated_at: new Date().toISOString(),
       };
 
-      await supabase.from('abandoned_checkouts').upsert([payload], { onConflict: 'id' });
+      await saveDoc(COLLECTIONS.abandonedCheckouts, sid, payload);
     } catch (err) {
       console.warn('Abandoned checkouts push notice:', err);
     }
@@ -239,32 +237,32 @@ export const CheckoutPage: React.FC = () => {
       setFirstName(val);
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
-        savePartialToSupabase(val, lastName, address.mobile, address.email);
+        savePartialToDb(val, lastName, address.mobile, address.email);
       }, 1000);
     } else if (field === 'lastName') {
       setLastName(val);
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
-        savePartialToSupabase(firstName, val, address.mobile, address.email);
+        savePartialToDb(firstName, val, address.mobile, address.email);
       }, 1000);
     } else if (field === 'mobile') {
       const cleanMob = val.replace(/\D/g, '').slice(0, 10);
       setAddress(prev => ({ ...prev, mobile: cleanMob }));
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
-        savePartialToSupabase(firstName, lastName, cleanMob, address.email);
+        savePartialToDb(firstName, lastName, cleanMob, address.email);
       }, 1000);
     } else if (field === 'email') {
       setAddress(prev => ({ ...prev, email: val }));
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
-        savePartialToSupabase(firstName, lastName, address.mobile, val);
+        savePartialToDb(firstName, lastName, address.mobile, val);
       }, 1000);
     }
   };
 
   const handleFieldBlur = () => {
-    savePartialToSupabase();
+    savePartialToDb();
   };
 
   useEffect(() => {
@@ -594,7 +592,7 @@ export const CheckoutPage: React.FC = () => {
           localStorage.setItem(`sag_user_profile_${orderEmail}`, JSON.stringify(profileToSave));
           localStorage.setItem(`sag_user_profile_current`, JSON.stringify(profileToSave));
 
-          // Auto-save customer record in Firestore & Supabase so login later immediately syncs address & orders
+          // Auto-save customer record in the database so login later immediately syncs address & orders
           (async () => {
             try {
               const custDocRef = doc(db, 'customers', orderEmail);

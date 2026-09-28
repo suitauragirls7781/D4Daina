@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { createAdminFirebaseToken, firestore } from './_lib/firebaseAdmin.js';
+import { createUploadSignature, destroyImage } from './_lib/cloudinary.js';
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 const COOKIE_NAME = 'sag_admin_session';
@@ -47,14 +48,10 @@ const reply = (res, status, body) => {
   res.end(JSON.stringify(body));
 };
 
-const database = () => {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) throw new Error('SERVER_CONFIG_MISSING');
-  return createClient(url, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-};
+const database = () => firestore();
+const credentialsDoc = (client) => client.collection('admin_credentials').doc('singleton');
+// Each public setting is one document; values are stored as JSON because Firestore rejects nested arrays.
+const settingsCollection = (client) => client.collection('storefront_settings');
 
 const hashSecret = (value, salt = randomBytes(16)) => {
   const saltHex = salt.toString('hex');
@@ -72,13 +69,8 @@ const verifySecret = (value, stored) => {
 };
 
 const getCredentials = async (client, bootstrap = false) => {
-  const { data, error } = await client
-    .from('admin_credentials')
-    .select('*')
-    .eq('singleton', true)
-    .maybeSingle();
-  if (error) throw error;
-  if (data) return data;
+  const snapshot = await credentialsDoc(client).get();
+  if (snapshot.exists) return snapshot.data();
   if (!bootstrap) return null;
 
   const username = process.env.ADMIN_INITIAL_USERNAME?.trim();
@@ -96,13 +88,8 @@ const getCredentials = async (client, bootstrap = false) => {
     allow_direct_admin_route: false,
     session_version: 1,
   };
-  const { data: created, error: createError } = await client
-    .from('admin_credentials')
-    .upsert(initialCredentials, { onConflict: 'singleton' })
-    .select('*')
-    .single();
-  if (createError) throw createError;
-  return created;
+  await credentialsDoc(client).set(initialCredentials);
+  return initialCredentials;
 };
 
 const signPayload = (payload) => createHmac('sha256', process.env.ADMIN_SESSION_SECRET)
@@ -191,6 +178,7 @@ export default async function handler(req, res) {
           success: true,
           username: credentials.username,
           sessionVersion: credentials.session_version,
+          firebaseToken: await createAdminFirebaseToken(),
         });
       }
 
@@ -209,17 +197,16 @@ export default async function handler(req, res) {
         } });
       }
 
-      const [settingsResult, paymentResult] = await Promise.all([
-        client.from('storefront_settings').select('setting_key,setting_value'),
-        client.from('storefront_payment_settings').select('setting_value').eq('singleton', true).maybeSingle(),
-      ]);
-      if (settingsResult.error) throw settingsResult.error;
-      if (paymentResult.error) throw paymentResult.error;
-      const settings = Object.fromEntries((settingsResult.data || []).map((row) => [row.setting_key, row.setting_value]));
+      const snapshot = await settingsCollection(client).get();
+      const settings = {};
+      snapshot.docs.forEach((settingDoc) => {
+        if (!PUBLIC_SETTINGS.has(settingDoc.id)) return;
+        try {
+          settings[settingDoc.id] = JSON.parse(settingDoc.data().value_json);
+        } catch {}
+      });
       if (settings.storeSettings) settings.storeSettings = sanitizePublicStoreSettings(settings.storeSettings);
-      if (paymentResult.data?.setting_value) {
-        settings.paymentSettings = sanitizePublicPaymentSettings(paymentResult.data.setting_value);
-      }
+      if (settings.paymentSettings) settings.paymentSettings = sanitizePublicPaymentSettings(settings.paymentSettings);
       return reply(res, 200, { settings });
     }
 
@@ -235,12 +222,27 @@ export default async function handler(req, res) {
         return reply(res, 401, { error: 'Invalid admin credentials.' });
       }
       setSessionCookie(res, createSession(credentials));
-      return reply(res, 200, { success: true, username: credentials.username, sessionVersion: credentials.session_version });
+      return reply(res, 200, {
+        success: true,
+        username: credentials.username,
+        sessionVersion: credentials.session_version,
+        firebaseToken: await createAdminFirebaseToken(),
+      });
     }
 
     if (req.method === 'POST' && action === 'logout') {
       setSessionCookie(res, '', true);
       return reply(res, 200, { success: true });
+    }
+
+    if (req.method === 'POST' && (action === 'cloudinary-sign' || action === 'cloudinary-delete')) {
+      const auth = await authenticate(req, client);
+      if (!auth) return reply(res, 401, { error: 'Admin session required.' });
+      if (action === 'cloudinary-sign') return reply(res, 200, createUploadSignature(String(body.folder || '')));
+      const urls = (Array.isArray(body.urls) ? body.urls : [body.url]).filter((url) => typeof url === 'string').slice(0, 50);
+      const results = await Promise.allSettled(urls.map((url) => destroyImage(url)));
+      const failed = urls.filter((_, index) => results[index].status === 'rejected');
+      return reply(res, failed.length ? 207 : 200, { success: failed.length === 0, failed });
     }
 
     if (req.method !== 'PUT') return reply(res, 405, { error: 'Method not allowed.' });
@@ -265,10 +267,9 @@ export default async function handler(req, res) {
         allow_direct_admin_route: securityConfig.allowDirectAdminRoute ?? current.allow_direct_admin_route,
         session_version: current.session_version + 1,
       };
-      const { data, error } = await client.from('admin_credentials').upsert(nextCredentials, { onConflict: 'singleton' }).select('*').single();
-      if (error) throw error;
-      setSessionCookie(res, createSession(data));
-      return reply(res, 200, { success: true, sessionVersion: data.session_version });
+      await credentialsDoc(client).set(nextCredentials);
+      setSessionCookie(res, createSession(nextCredentials));
+      return reply(res, 200, { success: true, sessionVersion: nextCredentials.session_version });
     }
 
     const settings = body.settings;
@@ -279,27 +280,21 @@ export default async function handler(req, res) {
     if (entries.length === 0 || entries.some(([key]) => !PUBLIC_SETTINGS.has(key))) {
       return reply(res, 400, { error: 'Unsupported storefront setting.' });
     }
-    const paymentEntry = entries.find(([key]) => key === 'paymentSettings');
-    if (paymentEntry) {
-      const { error } = await client.from('storefront_payment_settings').upsert({
-        singleton: true,
-        setting_value: sanitizePublicPaymentSettings(paymentEntry[1]),
+    const sanitizers = { storeSettings: sanitizePublicStoreSettings, paymentSettings: sanitizePublicPaymentSettings };
+    const batch = client.batch();
+    entries.forEach(([key, value]) => {
+      const safeValue = sanitizers[key] ? sanitizers[key](value) : value;
+      batch.set(settingsCollection(client).doc(key), {
+        value_json: JSON.stringify(safeValue),
         updated_at: new Date().toISOString(),
-      }, { onConflict: 'singleton' });
-      if (error) throw error;
-    }
-    const rows = entries.filter(([key]) => key !== 'paymentSettings').map(([setting_key, setting_value]) => ({
-      setting_key,
-      setting_value: setting_key === 'storeSettings' ? sanitizePublicStoreSettings(setting_value) : setting_value,
-      updated_at: new Date().toISOString(),
-    }));
-    if (rows.length > 0) {
-      const { error } = await client.from('storefront_settings').upsert(rows, { onConflict: 'setting_key' });
-      if (error) throw error;
-    }
+      });
+    });
+    await batch.commit();
     return reply(res, 200, { success: true });
   } catch (error) {
     const message = error?.message || 'Unable to process admin configuration.';
+    if (message === 'INVALID_UPLOAD_FOLDER') return reply(res, 400, { error: 'Unsupported upload folder.' });
+    if (message === 'CLOUDINARY_CONFIG_MISSING') return reply(res, 503, { error: 'Image uploads are not configured yet.' });
     const status = ['SERVER_CONFIG_MISSING', 'ADMIN_BOOTSTRAP_CONFIG_MISSING'].includes(message) ? 503 : 500;
     console.error('Admin config API error:', message);
     return reply(res, status, { error: status === 503 ? 'Server-side admin credentials are not configured.' : 'Unable to process admin configuration.' });

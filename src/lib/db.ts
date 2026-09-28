@@ -1,17 +1,13 @@
-import { supabase } from './supabase';
+import { COLLECTIONS, listDocs, removeDoc, saveDoc } from './dataStore';
 
 export const getHeroSlides = async () => {
-  const { data, error } = await supabase.from('hero_slides').select('*');
-  if (error) throw error;
-  return data;
+  return listDocs(COLLECTIONS.heroSlides);
 };
 
 export const addHeroSlide = async (slide: any) => {
-  const { error } = await supabase.from('hero_slides').upsert(slide);
-  if (error) throw error;
+  await saveDoc(COLLECTIONS.heroSlides, String(slide.id), slide);
 };
 
 export const deleteHeroSlide = async (id: string) => {
-  const { error } = await supabase.from('hero_slides').delete().eq('id', id);
-  if (error) throw error;
+  await removeDoc(COLLECTIONS.heroSlides, id);
 };

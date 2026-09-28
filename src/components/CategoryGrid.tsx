@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { CATEGORIES_DATA } from '../data/categories';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, listDocs, watchCollection } from '../lib/dataStore';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { Sparkles, ArrowUpRight } from 'lucide-react';
 
@@ -12,15 +12,10 @@ export const CategoryGrid: React.FC = () => {
   const [liveCategoryCounts, setLiveCategoryCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    const fetchLiveCategoryCounts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('category, isNewArrival, isBestSeller, isTrending, isFestive, isSale');
-
+    const applyCategoryCounts = (data: any[] | null) => {
         const counts: Record<string, number> = {};
 
-        if (!error && data && data.length > 0) {
+        if (data && data.length > 0) {
           data.forEach((p: any) => {
             if (p.category) {
               counts[p.category] = (counts[p.category] || 0) + 1;
@@ -45,22 +40,25 @@ export const CategoryGrid: React.FC = () => {
         }
 
         setLiveCategoryCounts(counts);
+    };
+
+    const fetchLiveCategoryCounts = async () => {
+      try {
+        applyCategoryCounts(await listDocs(COLLECTIONS.products));
       } catch (e) {
-        console.warn('Error fetching live category counts from Supabase:', e);
+        console.warn('Error fetching live category counts from database:', e);
+        applyCategoryCounts(null);
       }
     };
 
     fetchLiveCategoryCounts();
 
-    const channel = supabase
-      .channel('category-counts-live-channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-        fetchLiveCategoryCounts();
-      })
-      .subscribe();
+    const unsubscribe = watchCollection(COLLECTIONS.products, (rows) => {
+      applyCategoryCounts(rows);
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [shopProducts.length]);
 

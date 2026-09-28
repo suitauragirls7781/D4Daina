@@ -218,8 +218,6 @@ export interface StoreSettings {
   freeShippingThreshold: number;
   announcementText?: string;
   announcementActive?: boolean;
-  supabaseUrl?: string;
-  supabaseAnonKey?: string;
 }
 
 export interface PaymentGatewaySettings {

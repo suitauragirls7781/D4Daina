@@ -11,9 +11,10 @@ import {
 } from '../types';
 import { useProducts } from './ProductContext';
 import { useRouter } from './RouterContext';
-import { supabase } from '../lib/supabase';
-import { db } from '../lib/firebase';
-import { mapCouponFromSupabase, mapOrderFromSupabase } from './AdminContext';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { ADMIN_UID, COLLECTIONS, emailKey, getDocById, listDocs, listDocsWhere, saveDoc } from '../lib/dataStore';
+import { mapCouponFromDb, mapOrderFromDb } from './AdminContext';
 import { recordHeartbeat, trackFunnelEvent } from '../utils/visitorTracker';
 import { categoryToSlug, slugToCategory } from '../utils/slugHelper';
 
@@ -282,17 +283,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [coupons, setCoupons] = useState<Coupon[]>(DEFAULT_COUPONS);
 
-  // Fetch Coupons from Supabase and merge with DEFAULT_COUPONS
+  // Fetch Coupons from the database and merge with DEFAULT_COUPONS
   const fetchCoupons = async () => {
     try {
-      const { data, error } = await supabase
-        .from('coupons')
-        .select('*')
-        .eq('is_active', true)
-        .order('id', { ascending: false });
+      const data = await listDocs(COLLECTIONS.coupons);
 
-      if (!error && data && data.length > 0) {
-        const mappedCoupons: Coupon[] = data.map(mapCouponFromSupabase).filter(coupon => coupon.isActive);
+      if (data && data.length > 0) {
+        const mappedCoupons: Coupon[] = data
+          .map(mapCouponFromDb)
+          .filter(coupon => coupon.isActive)
+          .sort((a, b) => String(b.id).localeCompare(String(a.id)));
         
         // Always preserve DEFAULT_COUPONS so users can access all 6 curated coupons!
         const existingCodes = new Set(mappedCoupons.map(c => c.code.toUpperCase()));
@@ -339,69 +339,45 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
-  // Push Cart to Supabase session / profile
-  const pushCartToSupabase = async (itemsToPush: CartItem[]) => {
+  // Resolve the logged-in storefront customer's email (custom/OTP session first, then Firebase Auth customer)
+  const getSessionEmail = (): string | null => {
+    const localUser = localStorage.getItem('sag_custom_user');
+    if (localUser) {
+      try {
+        const parsed = JSON.parse(localUser);
+        if (parsed.email) return parsed.email;
+      } catch {}
+    }
+    const fbUser = auth.currentUser;
+    if (fbUser && fbUser.uid !== ADMIN_UID && fbUser.email) {
+      return fbUser.email;
+    }
+    return null;
+  };
+
+  // Push Cart to the customer's database profile
+  const pushCartToDb = async (itemsToPush: CartItem[]) => {
     try {
-      let email: string | null = null;
-      
-      // Check Supabase Auth session
-      const { data: sessData } = await supabase.auth.getSession();
-      if (sessData?.session?.user?.email) {
-        email = sessData.session.user.email;
-      }
-
-      if (!email) {
-        const localUser = localStorage.getItem('sag_custom_user');
-        if (localUser) {
-          try {
-            const parsed = JSON.parse(localUser);
-            email = parsed.email || null;
-          } catch {}
-        }
-      }
-
+      const email = getSessionEmail();
       if (email) {
-        const cleanEmail = email.trim().toLowerCase();
-        await supabase.from('profiles').upsert(
-          [
-            {
-              email: cleanEmail,
-              cart_data: JSON.stringify(itemsToPush),
-              updated_at: new Date().toISOString(),
-            },
-          ],
-          { onConflict: 'email' }
-        );
+        const cleanEmail = emailKey(email);
+        await saveDoc(COLLECTIONS.profiles, cleanEmail, {
+          email: cleanEmail,
+          cart: itemsToPush,
+        });
       }
     } catch (e) {
-      console.warn('Supabase cart push notice:', e);
+      console.warn('Database cart push notice:', e);
     }
   };
 
   // Background cart merging script executed when guest authenticates into an active account
   const mergeGuestCartOnAuth = async (targetEmail?: string) => {
     try {
-      let email: string | null = targetEmail || null;
-      if (!email) {
-        const { data: sessData } = await supabase.auth.getSession();
-        if (sessData?.session?.user?.email) {
-          email = sessData.session.user.email;
-        }
-      }
-
-      if (!email) {
-        const localUser = localStorage.getItem('sag_custom_user');
-        if (localUser) {
-          try {
-            const parsed = JSON.parse(localUser);
-            email = parsed.email || null;
-          } catch {}
-        }
-      }
-
+      const email: string | null = targetEmail || getSessionEmail();
       if (!email) return;
 
-      const cleanEmail = email.trim().toLowerCase();
+      const cleanEmail = emailKey(email);
 
       // Read guest cart snapshot prior to merge
       let guestItems: CartItem[] = [];
@@ -419,21 +395,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         guestItems = cart;
       }
 
-      // Fetch user's active account cart from Supabase profiles
-      const { data: profData } = await supabase
-        .from('profiles')
-        .select('cart_data')
-        .eq('email', cleanEmail)
-        .maybeSingle();
+      // Fetch user's active account cart from the database profile
+      const profData = await getDocById(COLLECTIONS.profiles, cleanEmail);
 
       let remoteCart: CartItem[] = [];
-      if (profData && profData.cart_data) {
-        try {
-          const parsed = JSON.parse(profData.cart_data);
-          if (Array.isArray(parsed)) {
-            remoteCart = parsed;
-          }
-        } catch {}
+      if (profData && Array.isArray(profData.cart)) {
+        remoteCart = profData.cart as CartItem[];
       }
 
       if (guestItems.length > 0) {
@@ -474,7 +441,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch {}
 
         // 4. Sync merged cart back to remote account profile
-        await pushCartToSupabase(mergedCart);
+        await pushCartToDb(mergedCart);
 
         // 5. Silent sync complete
         if (addedCount > 0 || quantityUpdatesCount > 0) {
@@ -491,111 +458,65 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Pull / Restore Cart from Supabase session state
-  const pullCartFromSupabase = async () => {
+  // Pull / Restore Cart from the customer's database profile
+  const pullCartFromDb = async () => {
     await mergeGuestCartOnAuth();
   };
 
-  // Push Wishlist to Supabase user profile
-  const pushWishlistToSupabase = async (itemsToPush: Product[]) => {
+  // Push Wishlist to the customer's database profile
+  const pushWishlistToDb = async (itemsToPush: Product[]) => {
     try {
-      let email: string | null = null;
-      const { data: sessData } = await supabase.auth.getSession();
-      if (sessData?.session?.user?.email) {
-        email = sessData.session.user.email;
-      }
-
-      if (!email) {
-        const localUser = localStorage.getItem('sag_custom_user');
-        if (localUser) {
-          try {
-            const parsed = JSON.parse(localUser);
-            email = parsed.email || null;
-          } catch {}
-        }
-      }
-
+      const email = getSessionEmail();
       if (email) {
-        const cleanEmail = email.trim().toLowerCase();
-        await supabase.from('profiles').upsert(
-          [
-            {
-              email: cleanEmail,
-              wishlist_data: JSON.stringify(itemsToPush),
-              updated_at: new Date().toISOString(),
-            },
-          ],
-          { onConflict: 'email' }
-        );
+        const cleanEmail = emailKey(email);
+        await saveDoc(COLLECTIONS.profiles, cleanEmail, {
+          email: cleanEmail,
+          wishlist: itemsToPush,
+        });
       }
     } catch (e) {
-      console.warn('Supabase wishlist push notice:', e);
+      console.warn('Database wishlist push notice:', e);
     }
   };
 
-  // Pull / Restore & Auto-Merge Wishlist from Supabase user profile
-  const pullWishlistFromSupabase = async () => {
+  // Pull / Restore & Auto-Merge Wishlist from the customer's database profile
+  const pullWishlistFromDb = async () => {
     try {
-      let email: string | null = null;
-      const { data: sessData } = await supabase.auth.getSession();
-      if (sessData?.session?.user?.email) {
-        email = sessData.session.user.email;
-      }
-
-      if (!email) {
-        const localUser = localStorage.getItem('sag_custom_user');
-        if (localUser) {
-          try {
-            const parsed = JSON.parse(localUser);
-            email = parsed.email || null;
-          } catch {}
-        }
-      }
-
+      const email = getSessionEmail();
       if (email) {
-        const cleanEmail = email.trim().toLowerCase();
-        const { data: profData } = await supabase
-          .from('profiles')
-          .select('wishlist_data')
-          .eq('email', cleanEmail)
-          .maybeSingle();
+        const cleanEmail = emailKey(email);
+        const profData = await getDocById(COLLECTIONS.profiles, cleanEmail);
 
-        if (profData && profData.wishlist_data) {
-          try {
-            const remoteWishlist: Product[] = JSON.parse(profData.wishlist_data);
-            if (Array.isArray(remoteWishlist)) {
-              setWishlist((prevGuestWishlist) => {
-                const map = new Map<string, Product>();
-                // First add remote wishlist items from profile
-                remoteWishlist.forEach((item) => {
-                  if (item && item.id) map.set(String(item.id), item);
-                });
-                // Auto-merge guest local items so non-logged-in guest favorites are preserved & merged!
-                prevGuestWishlist.forEach((item) => {
-                  if (item && item.id) map.set(String(item.id), item);
-                });
-                const mergedWishlist = Array.from(map.values());
-                
-                try {
-                  localStorage.setItem('sag_wishlist_v1', JSON.stringify(mergedWishlist));
-                } catch {}
-                
-                pushWishlistToSupabase(mergedWishlist);
-                return mergedWishlist;
-              });
-            }
-          } catch (pErr) {
-            console.error('Remote wishlist parse error:', pErr);
-          }
+        if (profData && Array.isArray(profData.wishlist)) {
+          const remoteWishlist = profData.wishlist as Product[];
+          setWishlist((prevGuestWishlist) => {
+            const map = new Map<string, Product>();
+            // First add remote wishlist items from profile
+            remoteWishlist.forEach((item) => {
+              if (item && item.id) map.set(String(item.id), item);
+            });
+            // Auto-merge guest local items so non-logged-in guest favorites are preserved & merged!
+            prevGuestWishlist.forEach((item) => {
+              if (item && item.id) map.set(String(item.id), item);
+            });
+            const mergedWishlist = Array.from(map.values());
+
+            try {
+              localStorage.setItem('sag_wishlist_v1', JSON.stringify(mergedWishlist));
+            } catch {}
+
+            pushWishlistToDb(mergedWishlist);
+            return mergedWishlist;
+          });
         } else {
           // If profile has no remote wishlist data yet, push the guest wishlist to profile!
           if (wishlistRef.current && wishlistRef.current.length > 0) {
-            pushWishlistToSupabase(wishlistRef.current);
+            pushWishlistToDb(wishlistRef.current);
           }
         }
       }
     } catch (e) {
-      console.warn('Supabase wishlist pull notice:', e);
+      console.warn('Database wishlist pull notice:', e);
     }
   };
 
@@ -621,9 +542,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Debounced Push to Supabase session state
+    // Debounced Push to the customer's database profile
     const timer = setTimeout(() => {
-      pushCartToSupabase(cart);
+      pushCartToDb(cart);
     }, 400);
 
     return () => clearTimeout(timer);
@@ -679,11 +600,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('sag_cart_v1', serialized);
         localStorage.setItem('sag_cart_backup', serialized);
         sessionStorage.setItem('sag_cart_session', serialized);
-        pushCartToSupabase(cartRef.current);
+        pushCartToDb(cartRef.current);
 
         const serializedWishlist = JSON.stringify(wishlistRef.current);
         localStorage.setItem('sag_wishlist_v1', serializedWishlist);
-        pushWishlistToSupabase(wishlistRef.current);
+        pushWishlistToDb(wishlistRef.current);
       } catch {}
     };
 
@@ -703,26 +624,27 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Sync Supabase cart & wishlist state on mount & auth state changes (with auto-merge)
+  // Sync database cart & wishlist state on mount & auth state changes (with auto-merge)
   useEffect(() => {
-    pullCartFromSupabase();
-    pullWishlistFromSupabase();
+    pullCartFromDb();
+    pullWishlistFromDb();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event: string) => {
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        pullCartFromSupabase();
-        pullWishlistFromSupabase();
+    // Firebase Auth customer sign-in (the admin's Firebase session is ignored)
+    const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
+      if (fbUser && fbUser.uid !== ADMIN_UID) {
+        pullCartFromDb();
+        pullWishlistFromDb();
       }
     });
 
     const handleAuthEvent = () => {
-      pullCartFromSupabase();
-      pullWishlistFromSupabase();
+      pullCartFromDb();
+      pullWishlistFromDb();
     };
     window.addEventListener('sag-auth-state-change', handleAuthEvent);
 
     return () => {
-      authListener?.subscription?.unsubscribe();
+      unsubscribeAuth();
       window.removeEventListener('sag-auth-state-change', handleAuthEvent);
     };
   }, []);
@@ -735,7 +657,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     const timer = setTimeout(() => {
-      pushWishlistToSupabase(wishlist);
+      pushWishlistToDb(wishlist);
     }, 400);
 
     return () => clearTimeout(timer);
@@ -781,21 +703,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
-  // One-time database & storage purge to clear legacy test data
+  // One-time local storage purge to clear legacy test data
   useEffect(() => {
     const purgeOldTestData = async () => {
       try {
         const isPurged = localStorage.getItem('sag_v2_data_purged_final');
         if (!isPurged) {
-          console.log('Purging legacy test data across site and database...');
+          console.log('Purging legacy test data from local storage...');
           localStorage.clear();
           sessionStorage.clear();
           localStorage.setItem('sag_v2_data_purged_final', 'true');
-
-          // Delete all old test records from Supabase tables
-          await supabase.from('orders').delete().gte('id', 0);
-          await supabase.from('abandoned_checkouts').delete().gte('id', 0);
-          await supabase.from('profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
         }
       } catch (e) {
         console.warn('Purge test data notice:', e);
@@ -804,7 +721,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     purgeOldTestData();
   }, []);
 
-  // Retroactive Order Mapping: Query Firestore DB + Supabase DB + Local Storage for current authenticated user's exact email/phone
+  // Retroactive Order Mapping: Query the database + Local Storage for current authenticated user's exact email/phone
   const syncCustomerOrders = async (identifier?: string | { email?: string; phone?: string }) => {
     try {
       let targetEmail = '';
@@ -825,14 +742,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      // Check Supabase Auth session if still empty
+      // Check Firebase Auth customer session if still empty
       if (!targetEmail) {
-        try {
-          const { data: sessData } = await supabase.auth.getSession();
-          if (sessData?.session?.user?.email) {
-            targetEmail = sessData.session.user.email.toLowerCase().trim();
-          }
-        } catch {}
+        const sessionEmail = getSessionEmail();
+        if (sessionEmail) targetEmail = emailKey(sessionEmail);
       }
 
       // Check last guest email fallback if user recently ordered or logged in
@@ -890,15 +803,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (e) {}
       });
 
-      // Query Supabase orders by the authenticated customer's email envelope.
+      // Query database orders by the customer's exact (normalized) email.
       try {
-        const { data: ordData, error } = await supabase
-          .from('orders')
-          .select('*')
-          .ilike('customer_email', `${targetEmail}%`);
-        
-        if (!error && ordData && ordData.length > 0) {
-          const mappedOrders = ordData.map(mapOrderFromSupabase);
+        const ordData = await listDocsWhere(COLLECTIONS.orders, 'customerEmail', emailKey(targetEmail));
+
+        if (ordData && ordData.length > 0) {
+          const mappedOrders = ordData.map(mapOrderFromDb);
           mappedOrders.forEach((o) => {
             if (o && o.orderNumber) {
               matchedMap.set(o.orderNumber, o);
@@ -906,7 +816,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } catch (dbErr) {
-        console.warn('Supabase sync orders notice:', dbErr);
+        console.warn('Database sync orders notice:', dbErr);
       }
 
       const userOrders = Array.from(matchedMap.values()).sort(
@@ -1059,7 +969,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       console.error(e);
     }
-    pushCartToSupabase([]);
+    pushCartToDb([]);
   };
 
   // Wishlist Actions

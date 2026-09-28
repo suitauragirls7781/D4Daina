@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, deleteImages, listDocs, newDocId, removeDoc, saveDoc, watchCollection } from '../lib/dataStore';
 import { Product, ProductSize } from '../types';
 
 const LOCAL_STORAGE_KEY = 'sag_custom_products_v1';
@@ -84,6 +84,9 @@ const hasRealProductImage = (product: Product): boolean =>
     (image) => typeof image === 'string' && image.trim() !== '' && !image.startsWith('data:image/svg+xml') && !image.includes('placeholder.com')
   );
 
+const productImageUrls = (product: Product) =>
+  [...product.images, ...product.colors.map((color) => color.imageUrl || '')].filter(Boolean);
+
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(() => {
     const local = getLocalStorageProducts();
@@ -91,61 +94,49 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Helper functions to map products to and from Supabase database schemas
-  const mapProductToSupabase = (p: any, isInsert = false) => {
-    const stockQuantity = Math.max(0, Number(p.stockQuantity ?? p.stock) || 0);
-    const payload: any = {
-      category: p.category || 'Suits',
-      description: p.description || '',
-      discount: Number(p.discount) || 0,
-      fabric: p.fabric || '',
-      sku: p.sku || `SAG-${Date.now().toString().slice(-6)}`,
+  // Normalises a product for the Firestore `products` collection (frontend Product shape).
+  const mapProductToDb = (p: any) => {
+    const stockQuantity = Math.max(0, Number(p.stockQuantity) || 0);
+    const images: string[] = Array.isArray(p.images)
+      ? p.images.filter((img: unknown) => typeof img === 'string' && img.trim().length > 0)
+      : [];
+    return {
       name: p.name || 'Untitled Product',
+      sku: p.sku || `SAG-${Date.now().toString().slice(-6)}`,
+      category: p.category || 'Suits',
+      subcategory: p.subcategory || '',
+      image: p.image || images[0] || '',
       price: Number(p.price) || 0,
-      mrp: Number(p.originalPrice ?? p.mrp ?? p.price) || 0,
-      stock: stockQuantity,
-      status: p.inStock === false || stockQuantity === 0 ? 'inactive' : 'active',
-      colors: Array.isArray(p.colors) ? JSON.stringify(p.colors) : p.colors || '[]',
-      sizes: Array.isArray(p.sizes) ? JSON.stringify(p.sizes) : p.sizes || '[]',
+      originalPrice: Number(p.originalPrice ?? p.price) || 0,
+      discount: Number(p.discount) || 0,
+      rating: Number(p.rating) || 4.5,
+      reviewCount: Number(p.reviewCount) || 0,
+      images,
+      colors: Array.isArray(p.colors) ? p.colors : [],
+      sizes: Array.isArray(p.sizes) ? p.sizes : [],
+      stockQuantity,
+      inStock: p.inStock !== false && stockQuantity > 0,
+      description: p.description || '',
+      fabric: p.fabric || '',
+      fit: p.fit || '',
+      occasion: p.occasion || '',
+      washCare: p.washCare || '',
+      isNewArrival: p.isNewArrival ?? false,
+      isBestSeller: p.isBestSeller ?? false,
+      isTrending: p.isTrending ?? false,
+      isFestive: p.isFestive ?? false,
+      isSale: p.isSale ?? false,
+      isFeatured: p.isFeatured ?? false,
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      videoUrl: p.videoUrl || '',
     };
-    if (!isInsert && p.id) {
-      const numId = Number(p.id);
-      if (!isNaN(numId)) {
-        payload.id = numId;
-      }
-    }
-    return payload;
   };
 
-  const mapProductFromSupabase = (p: any): Product => {
-    let images: string[] = [];
-    const rawImages = p.images ?? p.image_urls ?? p.imageUrls ?? p.product_images ?? p.photos;
-    if (typeof rawImages === 'string') {
-      try {
-        const parsed = JSON.parse(rawImages);
-        if (Array.isArray(parsed)) {
-          images = parsed;
-        } else if (typeof parsed === 'string' && parsed.trim()) {
-          images = [parsed.trim()];
-        }
-      } catch {
-        if (rawImages.trim()) {
-          images = [rawImages.trim()];
-        }
-      }
-    } else if (Array.isArray(rawImages)) {
-      images = rawImages;
-    }
+  // Tolerant normaliser for product documents read from Firestore.
+  const mapProductFromDb = (p: any): Product => {
+    let images: string[] = Array.isArray(p.images) ? p.images : [];
 
-    let colors = p.colors;
-    if (typeof colors === 'string') {
-      try {
-        colors = JSON.parse(colors);
-      } catch {
-        colors = [];
-      }
-    }
-    if (!Array.isArray(colors)) colors = [];
+    let colors: any[] = Array.isArray(p.colors) ? p.colors : [];
     colors = colors
       .map((color: any, index: number) => {
         if (typeof color === 'string' && color.trim()) {
@@ -158,75 +149,47 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       })
       .filter((color: any) => color && typeof color === 'object' && typeof color.name === 'string');
 
-    // If images array is empty, check if colors has imageUrl or image
-    if (images.length === 0 && Array.isArray(colors)) {
-      colors.forEach((c: any) => {
-        if (c && typeof c === 'object') {
-          if (c.imageUrl && typeof c.imageUrl === 'string' && c.imageUrl.trim()) {
-            images.push(c.imageUrl.trim());
-          } else if (c.image && typeof c.image === 'string' && c.image.trim()) {
-            images.push(c.image.trim());
-          }
-        }
-      });
+    // If images array is empty, fall back to colour images
+    if (images.length === 0) {
+      images = colors
+        .map((c: any) => (typeof c.imageUrl === 'string' ? c.imageUrl.trim() : ''))
+        .filter(Boolean);
     }
 
-    // Check single image fields if still empty
-    if (images.length === 0) {
-      const single = p.image || p.image_url || p.imageUrl || p.photo;
-      if (single && typeof single === 'string' && single.trim()) {
-        images = [single.trim()];
-      }
+    // Check single image field if still empty
+    if (images.length === 0 && typeof p.image === 'string' && p.image.trim()) {
+      images = [p.image.trim()];
     }
 
     // Filter out invalid/empty strings
     images = images.filter((img) => typeof img === 'string' && img.trim().length > 0);
 
-    let sizes = p.sizes;
-    if (typeof sizes === 'string') {
-      try {
-        sizes = JSON.parse(sizes);
-      } catch {
-        sizes = [];
-      }
-    }
-    const availableSizes = Array.isArray(sizes)
-      ? sizes.filter((size): size is ProductSize => ALL_STANDARD_SIZES.includes(size))
+    const availableSizes = Array.isArray(p.sizes)
+      ? p.sizes.filter((size: unknown): size is ProductSize => ALL_STANDARD_SIZES.includes(size as ProductSize))
       : [];
-    sizes = availableSizes.length > 0 ? availableSizes : ALL_STANDARD_SIZES;
+    const sizes = availableSizes.length > 0 ? availableSizes : ALL_STANDARD_SIZES;
 
-    if (!Array.isArray(colors) || colors.length === 0) {
+    if (colors.length === 0) {
       colors = [{ name: 'Standard', hex: '#241D1B' }];
     }
 
-    let reviews = p.reviews;
-    if (typeof reviews === 'string') {
-      try {
-        reviews = JSON.parse(reviews);
-      } catch {
-        reviews = [];
-      }
-    }
-
-    const stockValue = Number(p.stock ?? p.stockQuantity ?? p.stock_quantity);
+    const stockValue = Number(p.stockQuantity);
     const stockQuantity = Number.isFinite(stockValue) && stockValue >= 0 ? stockValue : 0;
-    const hasStatus = typeof p.status === 'string';
-    const inStock = hasStatus
-      ? p.status.toLowerCase() === 'active' && stockQuantity > 0
-      : p.inStock !== false && stockQuantity > 0;
+    const inStock = p.inStock !== false && stockQuantity > 0;
 
     return {
       id: String(p.id),
       name: p.name || '',
       category: p.category || 'Suits',
       subcategory: p.subcategory || '',
+      image: p.image || images[0] || '',
       price: Number(p.price) || 0,
-      originalPrice: Number(p.mrp ?? p.originalPrice) || Number(p.price) || 0,
+      originalPrice: Number(p.originalPrice) || Number(p.price) || 0,
       discount: Number(p.discount) || 0,
       description: p.description || '',
-      images: Array.isArray(images) ? images : [],
+      images,
       sizes,
-      colors: Array.isArray(colors) ? colors : [],
+      colors,
       inStock,
       sku: p.sku || '',
       stockQuantity,
@@ -236,67 +199,28 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       washCare: p.washCare || '',
       rating: Number(p.rating) || 4.5,
       reviewCount: Number(p.reviewCount) || 0,
-      reviews: Array.isArray(reviews) ? reviews : [],
+      reviews: Array.isArray(p.reviews) ? p.reviews : [],
       isNewArrival: p.isNewArrival ?? false,
       isBestSeller: p.isBestSeller ?? false,
       isTrending: p.isTrending ?? false,
       isFestive: p.isFestive ?? false,
       isSale: p.isSale ?? false,
       isFeatured: p.isFeatured ?? false,
-      videoUrl: p.video_url || p.videoUrl || '',
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      videoUrl: p.videoUrl || '',
     };
   };
 
-  const syncProductImages = async (productId: string, imageUrls: string[]) => {
-    const desiredUrls = Array.from(new Set(imageUrls.filter((url) => typeof url === 'string' && url.trim())));
-    const { data: existingRows, error: readError } = await supabase
-      .from('product_images')
-      .select('image_url,storage_path')
-      .eq('product_id', productId);
-    if (readError) throw readError;
-
-    const existingUrls = (existingRows || []).map((row) => String(row.image_url || row.storage_path || ''));
-
-    for (const [sortOrder, imageUrl] of desiredUrls.entries()) {
-      if (existingUrls.includes(imageUrl)) {
-        const { error } = await supabase
-          .from('product_images')
-          .update({ is_primary: sortOrder === 0, sort_order: sortOrder })
-          .eq('product_id', productId)
-          .eq('image_url', imageUrl);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('product_images').insert([{
-          product_id: productId,
-          image_url: imageUrl,
-          is_primary: sortOrder === 0,
-          sort_order: sortOrder,
-        }]);
-        if (error) throw error;
-      }
-    }
-
-    const removedUrls = existingUrls.filter((url) => url && !desiredUrls.includes(url));
-    if (removedUrls.length > 0) {
-      const { error } = await supabase
-        .from('product_images')
-        .delete()
-        .eq('product_id', productId)
-        .in('image_url', removedUrls);
-      if (error) throw error;
-    }
-  };
-
-  const mergeProducts = (supaProds: Product[], localProds: Product[]): Product[] => {
-    if (supaProds && supaProds.length > 0) {
+  const mergeProducts = (dbProds: Product[], localProds: Product[]): Product[] => {
+    if (dbProds && dbProds.length > 0) {
       // Find any newly created unsynced local products.
       const unsyncedNewLocal = localProds.filter(
-        (lp) => lp && lp.id != null && String(lp.id).startsWith('sag-prod-') && !supaProds.some((sp) => sp.name === lp.name || sp.sku === lp.sku)
+        (lp) => lp && lp.id != null && String(lp.id).startsWith('sag-prod-') && !dbProds.some((sp) => sp.name === lp.name || sp.sku === lp.sku)
       );
-      return [...supaProds, ...unsyncedNewLocal];
+      return [...dbProds, ...unsyncedNewLocal];
     }
 
-    // Only fallback to real local data if Supabase returned 0 items
+    // Only fallback to real local data if the database returned 0 items
     const nonDefaultLocal = localProds.filter((p) => p && p.id != null);
     if (nonDefaultLocal.length > 0) {
       return nonDefaultLocal;
@@ -304,78 +228,43 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return [];
   };
 
+  // Applies a fresh set of product documents (from a fetch or a live snapshot) to state.
+  const applyProductRows = (rows: any[]) => {
+    const localCache = getLocalStorageProducts();
+    if (!rows || rows.length === 0) {
+      setProducts(localCache);
+      saveLocalStorageProducts(localCache);
+      return;
+    }
+    // Newest first by createdAt
+    const sortedRows = [...rows].sort((a, b) =>
+      String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
+    );
+    const productsWithImages = sortedRows.map(mapProductFromDb).filter(hasRealProductImage);
+    const merged = productsWithImages.length > 0
+      ? mergeProducts(productsWithImages, localCache)
+      : localCache;
+    setProducts(merged);
+    saveLocalStorageProducts(merged);
+  };
+
   const fetchProducts = async () => {
     const localCache = getLocalStorageProducts();
-    const fallbackProducts = localCache;
 
     // Immediately unblock UI with local cache if available
-    setProducts(fallbackProducts);
+    setProducts(localCache);
 
-    // Background fetch from Supabase with 5s timeout protection
+    // Background fetch from Firestore with 5s timeout protection
     try {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Supabase fetch timeout')), 5000)
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Database fetch timeout')), 5000)
       );
-
-      const fetchPromise = Promise.all([
-        supabase.from('products').select('*').order('id', { ascending: false }),
-        supabase.from('product_images').select('product_id,image_url,storage_path,is_primary,sort_order').order('sort_order', { ascending: true }),
-      ]).then(([productResult, imageResult]) => ({ productResult, imageResult }));
-
-      const res: any = await Promise.race([fetchPromise, timeoutPromise]);
-      const { data, error } = res?.productResult || {};
-      const imageRows = Array.isArray(res?.imageResult?.data) ? res.imageResult.data : [];
-
-      if (!error && data && data.length > 0) {
-        const imagesByProduct = new Map<string, string[]>();
-        const imageRowsByProduct = new Map<string, any[]>();
-        imageRows.forEach((image: any) => {
-          const imageUrl = image?.image_url || image?.url || image?.storage_path;
-          if (!imageUrl || image?.product_id == null) return;
-          const productKey = String(image.product_id);
-          const current = imagesByProduct.get(productKey) || [];
-          const currentRows = imageRowsByProduct.get(productKey) || [];
-          current.push(String(imageUrl));
-          currentRows.push(image);
-          imagesByProduct.set(productKey, current);
-          imageRowsByProduct.set(productKey, currentRows);
-        });
-
-        const supaNormalized = data.map((rawProduct: any) => {
-          const product = mapProductFromSupabase(rawProduct);
-          const relatedImages = imagesByProduct.get(String(rawProduct.id)) || [];
-          const relatedRows = imageRowsByProduct.get(String(rawProduct.id)) || [];
-          const colorsWithImages = product.colors.map((color, index) => ({
-            ...color,
-            imageUrl: color.imageUrl || relatedRows[index]?.image_url || relatedRows[index]?.url || relatedRows[index]?.storage_path,
-          }));
-          const hasNamedColors = colorsWithImages.some((color) => color.name !== 'Standard');
-          const derivedShadeNames = ['Original', 'Alternate', 'Detail View', 'Back View'];
-          const derivedColors = relatedRows.map((image, index) => ({
-            name: derivedShadeNames[index % derivedShadeNames.length],
-            hex: ['#241D1B', '#9A6A3A', '#211C1A', '#D8C8B8'][index % 4],
-            imageUrl: image.image_url || image.url || image.storage_path,
-          }));
-          return {
-            ...product,
-            images: product.images.length > 0 ? product.images : relatedImages,
-            colors: hasNamedColors ? colorsWithImages : (derivedColors.length > 0 ? derivedColors : product.colors),
-          };
-        });
-        const productsWithImages = supaNormalized.filter(hasRealProductImage);
-        const merged = productsWithImages.length > 0
-          ? mergeProducts(productsWithImages, localCache)
-          : fallbackProducts;
-        setProducts(merged);
-        saveLocalStorageProducts(merged);
-      } else if (error || !data || data.length === 0) {
-        setProducts(fallbackProducts);
-        saveLocalStorageProducts(fallbackProducts);
-      }
+      const rows = await Promise.race([listDocs(COLLECTIONS.products), timeoutPromise]);
+      applyProductRows(rows);
     } catch (err) {
-      console.warn('Background Supabase fetch products notice:', err);
-      setProducts(fallbackProducts);
-      saveLocalStorageProducts(fallbackProducts);
+      console.warn('Background database fetch products notice:', err);
+      setProducts(localCache);
+      saveLocalStorageProducts(localCache);
     } finally {
       setIsLoading(false);
     }
@@ -384,19 +273,12 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     fetchProducts();
 
-    const channel = supabase
-      .channel('products-channel')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'products' },
-        () => {
-          fetchProducts();
-        }
-      )
-      .subscribe();
+    const unsubscribe = watchCollection(COLLECTIONS.products, (rows) => {
+      applyProductRows(rows);
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, []);
 
@@ -424,50 +306,27 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       throw new Error('At least one product image is required');
     }
 
-    const fallbackId = `sag-prod-${Date.now()}`;
-    const newLocalProduct: Product = {
-      id: fallbackId,
-      ...productData,
+    const newId = newDocId('p');
+    const payload = {
+      ...mapProductToDb(productData),
       rating: productData.rating || 5.0,
       reviewCount: productData.reviewCount || 1,
-      reviews: productData.reviews || [],
-      inStock: productData.inStock ?? true,
-    } as Product;
+    };
+    const newProduct = mapProductFromDb({ ...payload, id: newId });
 
     // 1. Immediately update state and localStorage
     setProducts((prev) => {
-      const updated = [newLocalProduct, ...prev];
+      const updated = [newProduct, ...prev];
       saveLocalStorageProducts(updated);
       return updated;
     });
 
-    let createdProductId: string | undefined;
     try {
-      const payload = mapProductToSupabase(productData, true);
-      const { data, error } = await supabase.from('products').insert([payload]).select();
-
-      if (error) throw error;
-      if (!data?.[0]) {
-        throw new Error('Product insert returned no row; check database write/read permissions.');
-      }
-
-      createdProductId = String(data[0].id);
-      await syncProductImages(createdProductId, productData.images);
-      const supaProduct = { ...mapProductFromSupabase(data[0]), images: productData.images };
-      setProducts((prev) => {
-        const updated = prev.map((p) => (p.id === fallbackId ? supaProduct : p));
-        saveLocalStorageProducts(updated);
-        return updated;
-      });
-      return supaProduct;
+      await saveDoc(COLLECTIONS.products, newId, { ...payload, createdAt: new Date().toISOString() }, false);
+      return newProduct;
     } catch (error) {
-      if (createdProductId) {
-        try {
-          await supabase.from('products').delete().eq('id', createdProductId);
-        } catch {}
-      }
       setProducts((prev) => {
-        const updated = prev.filter((p) => p.id !== fallbackId);
+        const updated = prev.filter((p) => p.id !== newId);
         saveLocalStorageProducts(updated);
         return updated;
       });
@@ -481,18 +340,10 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const nextProduct = { ...existingProduct, ...updated };
 
     try {
-      const payload = mapProductToSupabase(nextProduct);
-      const { data, error } = await supabase.from('products').update(payload).eq('id', id).select();
-      if (error) throw error;
-      if (!data?.[0]) {
-        throw new Error('Product update returned no row; check the product ID and database permissions.');
-      }
-      await syncProductImages(id, nextProduct.images);
+      const payload = mapProductToDb(nextProduct);
+      await saveDoc(COLLECTIONS.products, id, payload);
 
-      const freshProduct = {
-        ...mapProductFromSupabase(data[0]),
-        images: nextProduct.images,
-      };
+      const freshProduct = mapProductFromDb({ ...payload, id });
       setProducts((prev) => {
         const synced = prev.map((product) => product.id === id ? freshProduct : product);
         saveLocalStorageProducts(synced);
@@ -518,9 +369,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return;
     }
 
-    const { data, error } = await supabase.from('products').delete().eq('id', id).select('id');
-    if (error) throw error;
-    if (!data?.length) throw new Error('Product delete returned no row; check the product ID and database permissions.');
+    const target = products.find((product) => product.id === id);
+    await removeDoc(COLLECTIONS.products, id);
+    if (target) {
+      // Duplicated products share image URLs, so keep any image another product still uses
+      const stillUsed = new Set(products.filter((product) => product.id !== id).flatMap(productImageUrls));
+      const imageUrls = productImageUrls(target).filter((url) => !stillUsed.has(url));
+      deleteImages(imageUrls).catch((error) => console.error('Error deleting product images from Cloudinary:', error));
+    }
 
     setProducts((prev) => {
       const updatedList = prev.filter((product) => product.id !== id);

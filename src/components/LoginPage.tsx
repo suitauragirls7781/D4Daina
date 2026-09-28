@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useShop } from '../context/ShopContext';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, emailKey, getDocById, saveDoc } from '../lib/dataStore';
 import { db } from '../lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { 
@@ -49,23 +49,6 @@ export const LoginPage: React.FC = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Auto-detect Supabase Auth redirect session
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user?.email) {
-        const userEmail = session.user.email;
-        const nameFromEmail = deriveNameFromEmail(userEmail);
-        await registerRealCustomerInSupabase(userEmail, nameFromEmail);
-        showToast(`Welcome! Signed in successfully as ${userEmail}`, 'success');
-        setActivePage('account');
-      }
-    });
-
-    return () => {
-      authListener?.subscription?.unsubscribe();
-    };
-  }, []);
 
   // Cooldown timer for OTP resend button
   useEffect(() => {
@@ -174,8 +157,8 @@ export const LoginPage: React.FC = () => {
     localStorage.setItem('sag_registered_accounts', JSON.stringify(users));
   };
 
-  // Register or Sync Real Customer in Firestore, Supabase, and local storage
-  const registerRealCustomerInSupabase = async (
+  // Register or Sync Real Customer in the database and local storage
+  const registerCustomerInDb = async (
     custEmail: string, 
     custName: string, 
     custPhone: string = '', 
@@ -249,40 +232,20 @@ export const LoginPage: React.FC = () => {
       console.warn('Firestore customer registration notice:', fsErr);
     }
 
-    // 3. Insert/Update into Supabase 'profiles' table
+    // 3. Insert/Update the customer's database profile (never stores the password)
     try {
-      const { data: existingProf } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', normalizedEmail)
-        .maybeSingle();
+      const profileId = emailKey(normalizedEmail);
+      const existingProf = await getDocById(COLLECTIONS.profiles, profileId);
 
-      if (existingProf) {
-        await supabase
-          .from('profiles')
-          .update({
-            full_name: effectiveName,
-            phone: effectivePhone,
-            pincode: profileDetails.pincode || '',
-            updated_at: new Date().toISOString()
-          })
-          .eq('email', normalizedEmail);
-      } else {
-        await supabase
-          .from('profiles')
-          .insert([
-            {
-              email: normalizedEmail,
-              full_name: effectiveName,
-              phone: effectivePhone,
-              pincode: profileDetails.pincode || '',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ]);
-      }
-    } catch (supErr) {
-      console.warn('Supabase profiles registration notice:', supErr);
+      await saveDoc(COLLECTIONS.profiles, profileId, {
+        email: profileId,
+        name: effectiveName,
+        phone: effectivePhone,
+        pincode: profileDetails.pincode || '',
+        ...(existingProf ? {} : { createdAt: new Date().toISOString() })
+      });
+    } catch (dbErr) {
+      console.warn('Database profile registration notice:', dbErr);
     }
 
     // 5. ONLY set login session IF shouldLogin is true (i.e. AFTER OTP verification or password login succeeds!)
@@ -371,16 +334,15 @@ export const LoginPage: React.FC = () => {
       const purpose = mode === 'signup' ? 'signup' : 'login';
       await verifyEmailOtp(normalizedEmail, enteredOtp, purpose);
       if (mode === 'signup') {
-        await registerRealCustomerInSupabase(normalizedEmail, fullName, mobileNumber, password);
+        await registerCustomerInDb(normalizedEmail, fullName, mobileNumber, password);
         showToast(`Account created successfully. Welcome, ${fullName}.`, 'success');
       } else {
         const user = await getRegisteredCustomer(normalizedEmail);
         if (!user) {
-          await supabase.auth.signOut();
           setError('No registered account found for this email. Please sign up first.');
           return;
         }
-        await registerRealCustomerInSupabase(
+        await registerCustomerInDb(
           normalizedEmail,
           user.name || deriveNameFromEmail(normalizedEmail),
           user.phone || ''
@@ -424,7 +386,7 @@ export const LoginPage: React.FC = () => {
           const storedPass = (user.password || '').trim();
           if (storedPass && storedPass !== 'BrevoVerifiedUser') {
             if (storedPass === enteredPassword) {
-              await registerRealCustomerInSupabase(normEmail, user.name || deriveNameFromEmail(normEmail), user.phone || '', enteredPassword);
+              await registerCustomerInDb(normEmail, user.name || deriveNameFromEmail(normEmail), user.phone || '', enteredPassword);
               showToast(`Welcome back, ${user.name || normEmail}! Signed in successfully.`, 'success');
               setActivePage('account');
               return;
@@ -437,22 +399,6 @@ export const LoginPage: React.FC = () => {
             return;
           }
         }
-
-        // 2. Try Supabase Auth password signin
-        try {
-          const { data: supData, error: supError } = await supabase.auth.signInWithPassword({
-            email: normEmail,
-            password: enteredPassword,
-          });
-
-          if (!supError && supData?.user) {
-            const name = supData.user.user_metadata?.full_name || deriveNameFromEmail(normEmail);
-            await registerRealCustomerInSupabase(normEmail, name, '', enteredPassword);
-            showToast(`Welcome back! Signed in successfully.`, 'success');
-            setActivePage('account');
-            return;
-          }
-        } catch {}
 
         // STRICT ACCOUNT REQUIRED: If user is not registered anywhere, DENY ACCESS!
         setError(`No account found with email "${normEmail}". Please click "Sign Up" first to create an account.`);
@@ -561,7 +507,7 @@ export const LoginPage: React.FC = () => {
         password: password
       });
 
-      await registerRealCustomerInSupabase(normEmail, userName, mobileNumber, password);
+      await registerCustomerInDb(normEmail, userName, mobileNumber, password);
 
       showToast('🔒 Password updated successfully! Logged in with your new password.', 'success');
       setActivePage('account');

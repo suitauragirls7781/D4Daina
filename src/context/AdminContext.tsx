@@ -1,7 +1,17 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { db } from '../lib/firebase';
-import { doc, updateDoc, setDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { auth, db } from '../lib/firebase';
+import { doc, updateDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import {
+  ADMIN_UID,
+  newDocId,
+  patchDoc,
+  removeDoc,
+  saveDoc,
+  signInAdminToFirebase,
+  signOutAdminFromFirebase,
+  watchCollection,
+} from '../lib/dataStore';
 import { markFirestoreQuotaExhausted, isQuotaExhausted } from '../utils/visitorTracker';
 import { 
   Product, 
@@ -141,7 +151,7 @@ interface AdminContextType {
   // Reset to sample defaults
   resetStoreDataToDefaults: () => Promise<void>;
 
-  // Global loading state for initial fetch from Supabase
+  // Global loading state for initial fetch from the database
   isLoading: boolean;
 }
 
@@ -250,8 +260,6 @@ const INITIAL_STORE_SETTINGS: StoreSettings = {
   currencySymbol: '₹',
   shippingCharge: 0,
   freeShippingThreshold: 0,
-  supabaseUrl: 'https://pgocqnrjzjaiicrljdvk.supabase.co',
-  supabaseAnonKey: 'sb_publishable_6_iQnD9HWdPxGYSLAIIuWQ_R2Fr4bi_',
 };
 const normalizeStoreBrand = (settings: StoreSettings): StoreSettings => ({
   ...settings,
@@ -314,31 +322,22 @@ const INITIAL_DEAL_OF_THE_DAY: DealOfTheDayConfig = {
   stockText: '30 Left In Stock',
 };
 
-// Schema mappers to convert between frontend and Supabase formats
-export const mapOrderFromSupabase = (o: any): Order => {
-  let richData: any = {};
-  let email = String(o.customer_email ?? o.customerEmail ?? '');
-  if (email.includes('||')) {
-    const parts = email.split('||');
-    email = parts[0];
-    try {
-      richData = JSON.parse(parts[1]);
-    } catch {}
-  }
-  const items = richData.items ?? o.items ?? [];
-  const subtotal = Number(richData.subtotal ?? o.subtotal) || 0;
-  const discountAmount = Number(richData.discountAmount) || 0;
-  const shippingCharge = Number(richData.shippingCharge) || 0;
-  const paymentStatus = richData.paymentStatus ?? o.payment_status ?? 'Pending';
+// Schema mappers between frontend objects and Firestore documents
+export const mapOrderFromDb = (o: any): Order => {
+  const items = o.items ?? [];
+  const subtotal = Number(o.subtotal) || 0;
+  const discountAmount = Number(o.discountAmount) || 0;
+  const shippingCharge = Number(o.shippingCharge) || 0;
+  const paymentStatus = o.paymentStatus ?? 'Pending';
 
   return {
-    orderNumber: String(o.order_number ?? o.orderNumber ?? ''),
-    status: (richData.status ?? o.status ?? (paymentStatus === 'Paid' ? 'Processing' : 'Pending')) as AdminOrderStatus,
-    finalTotal: Number(richData.finalTotal ?? o.final_total) || Math.max(0, subtotal - discountAmount + shippingCharge),
-    customerEmail: email,
-    customerName: richData.customerName ?? o.customer_name ?? '',
-    customerMobile: richData.customerMobile || '',
-    deliveryAddress: richData.deliveryAddress || {
+    orderNumber: String(o.orderNumber ?? o.id ?? ''),
+    status: (o.status ?? (paymentStatus === 'Paid' ? 'Processing' : 'Pending')) as AdminOrderStatus,
+    finalTotal: Number(o.finalTotal) || Math.max(0, subtotal - discountAmount + shippingCharge),
+    customerEmail: String(o.customerEmail ?? ''),
+    customerName: o.customerName ?? '',
+    customerMobile: o.customerMobile || '',
+    deliveryAddress: o.deliveryAddress || {
       fullName: '',
       addressLine1: '',
       addressLine2: '',
@@ -350,57 +349,54 @@ export const mapOrderFromSupabase = (o: any): Order => {
     items: Array.isArray(items) ? items : [],
     subtotal,
     shippingCharge,
-    couponCode: richData.couponCode || '',
+    couponCode: o.couponCode || '',
     discountAmount,
     paymentStatus,
-    paymentMethod: richData.paymentMethod ?? o.payment_method ?? 'razorpay',
-    paymentRef: richData.paymentRef || '',
-    date: richData.date ?? o.created_at ?? new Date().toISOString(),
-    estimatedDeliveryDate: richData.estimatedDeliveryDate || '',
-    trackingNumber: richData.trackingNumber || '',
-    notes: richData.notes || '',
+    paymentMethod: o.paymentMethod ?? 'razorpay',
+    paymentRef: o.paymentRef || '',
+    date: o.date ?? new Date().toISOString(),
+    estimatedDeliveryDate: o.estimatedDeliveryDate || '',
+    trackingNumber: o.trackingNumber || '',
+    notes: o.notes || '',
   };
 };
 
-export const mapOrderToSupabase = (o: any) => {
-  const richData = {
-    status: o.status,
-    customerMobile: o.customerMobile,
-    deliveryAddress: o.deliveryAddress,
-    shippingCharge: o.shippingCharge,
-    couponCode: o.couponCode,
-    discountAmount: o.discountAmount,
-    paymentRef: o.paymentRef,
-    estimatedDeliveryDate: o.estimatedDeliveryDate,
-    trackingNumber: o.trackingNumber,
-    courierPartner: o.courierPartner,
-    notes: o.notes,
-    finalTotal: Number(o.finalTotal) || 0,
-  };
-  return {
-    order_number: o.orderNumber,
-    customer_email: `${o.customerEmail || ''}||${JSON.stringify(richData)}`,
-    customer_name: o.customerName || '',
-    items: Array.isArray(o.items) ? o.items : [],
-    subtotal: Number(o.subtotal) || 0,
-    payment_method: o.paymentMethod || 'razorpay',
-    payment_status: o.paymentStatus || 'Pending',
-    created_at: o.date || new Date().toISOString(),
-  };
-};
+/** Firestore order document; the document id is the order number. */
+export const mapOrderToDb = (o: any) => ({
+  orderNumber: String(o.orderNumber),
+  status: o.status,
+  customerEmail: String(o.customerEmail || '').trim().toLowerCase(),
+  customerName: o.customerName || '',
+  customerMobile: o.customerMobile || '',
+  deliveryAddress: o.deliveryAddress || null,
+  items: Array.isArray(o.items) ? o.items : [],
+  subtotal: Number(o.subtotal) || 0,
+  shippingCharge: Number(o.shippingCharge) || 0,
+  couponCode: o.couponCode || '',
+  discountAmount: Number(o.discountAmount) || 0,
+  finalTotal: Number(o.finalTotal) || 0,
+  paymentMethod: o.paymentMethod || 'razorpay',
+  paymentStatus: o.paymentStatus || 'Pending',
+  paymentRef: o.paymentRef || '',
+  date: o.date || new Date().toISOString(),
+  estimatedDeliveryDate: o.estimatedDeliveryDate || '',
+  trackingNumber: o.trackingNumber || '',
+  courierPartner: o.courierPartner || '',
+  notes: o.notes || '',
+});
 
-export const mapCouponFromSupabase = (c: any): Coupon => ({
+export const mapCouponFromDb = (c: any): Coupon => ({
   id: String(c.id),
   code: c.code || '',
-  discountType: (c.discount_type ?? c.discountType) === 'fixed' ? 'fixed' : 'percentage',
-  discountValue: Number(c.discount_value ?? c.discountValue) || 0,
-  minOrderValue: Number(c.min_order_amount ?? c.minOrderValue) || 0,
-  maxDiscount: (c.max_discount ?? c.maxDiscount) != null ? Number(c.max_discount ?? c.maxDiscount) : undefined,
-  startDate: c.valid_from ?? c.startDate ?? '',
-  expiryDate: c.valid_to ?? c.expiryDate ?? '',
-  usageLimit: Number(c.usage_limit ?? c.usageLimit) || 100,
-  usageCount: Number(c.used_count ?? c.usageCount) || 0,
-  isActive: c.is_active ?? c.isActive ?? true,
+  discountType: c.discountType === 'fixed' ? 'fixed' : 'percentage',
+  discountValue: Number(c.discountValue) || 0,
+  minOrderValue: Number(c.minOrderValue) || 0,
+  maxDiscount: c.maxDiscount != null ? Number(c.maxDiscount) : undefined,
+  startDate: c.startDate ?? '',
+  expiryDate: c.expiryDate ?? '',
+  usageLimit: Number(c.usageLimit) || 100,
+  usageCount: Number(c.usageCount) || 0,
+  isActive: c.isActive ?? true,
 });
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -486,9 +482,16 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setIsAdminLoggedIn(false);
             setAdminEmail(null);
             localStorage.removeItem('sag_admin_email');
+            void signOutAdminFromFirebase().catch(() => {});
             return;
           }
           const session = await response.json();
+          try {
+            await signInAdminToFirebase(session.firebaseToken);
+          } catch (firebaseErr) {
+            console.warn('Firebase admin sign-in notice:', firebaseErr);
+          }
+          if (!active) return;
           setIsAdminLoggedIn(true);
           setAdminEmail(session.username || null);
           const securityResponse = await fetch('/api/admin-config?action=security', { credentials: 'same-origin' });
@@ -533,8 +536,29 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [securityConfig.sessionVersion]);
 
-  // Datasets initialized from empty/defaults, fully controlled by Supabase single source of truth
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  // Tracks whether the admin is signed into Firebase with the custom token (required for admin-only data)
+  const [isFirebaseAdmin, setIsFirebaseAdmin] = useState<boolean>(() => auth.currentUser?.uid === ADMIN_UID);
+  useEffect(() => onAuthStateChanged(auth, (user) => setIsFirebaseAdmin(user?.uid === ADMIN_UID)), []);
+
+  // Datasets initialized from empty/defaults, fully controlled by the Firestore single source of truth
+  const [categoryDocs, setCategoryDocs] = useState<CategoryItem[]>([]);
+  const setCategories = setCategoryDocs;
+  // Live product counts per category are derived from the product catalog
+  const categories = useMemo<CategoryItem[]>(() => {
+    const liveCountsMap: Record<string, number> = {};
+    (products || []).forEach((p: any) => {
+      if (p.category) {
+        liveCountsMap[p.category] = (liveCountsMap[p.category] || 0) + 1;
+      }
+    });
+    return categoryDocs.map((c) => {
+      const liveCount = liveCountsMap[c.name] ?? 0;
+      return {
+        ...c,
+        itemCount: liveCount > 0 ? `${liveCount}+ Designs` : `${liveCount} Designs`,
+      };
+    });
+  }, [categoryDocs, products]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>(() => {
     try {
@@ -666,32 +690,27 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (typeof window === 'undefined' || ['localhost', '127.0.0.1'].includes(window.location.hostname)) return;
     let settingsConnected = false;
-    let paymentConnected = false;
     const refreshSharedSettings = () => {
       void loadSharedStorefrontSettings();
     };
     refreshSharedSettings();
-    const settingsChannel = supabase
-      .channel('storefront-settings-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'storefront_settings' }, () => {
-        refreshSharedSettings();
-      })
-      .subscribe((status) => { settingsConnected = status === 'SUBSCRIBED'; });
-    const paymentChannel = supabase
-      .channel('storefront-payment-settings-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'storefront_payment_settings' }, () => {
-        refreshSharedSettings();
-      })
-      .subscribe((status) => { paymentConnected = status === 'SUBSCRIBED'; });
+    // Any change to a storefront setting document (including payment settings) triggers a refresh via the API.
+    // The first snapshot only confirms the listener is connected; the initial load already happened above.
+    const unsubscribeSettings = watchCollection('storefront_settings', () => {
+      if (!settingsConnected) {
+        settingsConnected = true;
+        return;
+      }
+      refreshSharedSettings();
+    });
     const fallbackSync = window.setInterval(() => {
-      if (!settingsConnected || !paymentConnected) refreshSharedSettings();
+      if (!settingsConnected) refreshSharedSettings();
     }, 15000);
     window.addEventListener('focus', refreshSharedSettings);
     return () => {
       window.clearInterval(fallbackSync);
       window.removeEventListener('focus', refreshSharedSettings);
-      supabase.removeChannel(settingsChannel);
-      supabase.removeChannel(paymentChannel);
+      unsubscribeSettings();
     };
   }, []);
 
@@ -702,166 +721,65 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
   }, [customers, banners]);
 
-  const mapBannerToSupabase = (b: any) => {
-    const titleData = {
-      title: b.title,
-      subtitle: b.subtitle,
-      badge: b.badge,
-      buttonText: b.buttonText,
-      buttonLink: b.buttonLink,
-    };
-    const payload: any = {
-      title: JSON.stringify(titleData),
-      image: b.image,
-      isActive: b.isActive,
-      position: b.position,
-    };
-    if (b.id && !String(b.id).startsWith('ban-')) {
-      payload.id = Number(b.id);
-    }
-    return payload;
-  };
-
-  const mapBannerFromSupabase = (b: any): Banner => {
-    let parsedTitle = { title: b.title, subtitle: '', badge: '', buttonText: '', buttonLink: '' };
-    try {
-      if (b.title && (String(b.title).startsWith('{') || String(b.title).startsWith('['))) {
-        parsedTitle = { ...parsedTitle, ...JSON.parse(b.title) };
-      }
-    } catch {}
-
-    return {
-      id: String(b.id),
-      title: parsedTitle.title || b.title || '',
-      subtitle: parsedTitle.subtitle || '',
-      badge: parsedTitle.badge || '',
-      buttonText: parsedTitle.buttonText || '',
-      buttonLink: parsedTitle.buttonLink || '',
-      image: b.image || '',
-      isActive: b.isActive ?? true,
-      position: b.position || 'midpage',
-    };
-  };
-
-  const mapCategoryToSupabase = (c: any) => ({
-    id: c.id,
-    name: c.name,
-    title: c.title,
-    image: c.image,
+  // Firestore documents store the frontend shapes directly; these helpers only normalize defaults.
+  const mapCategoryFromDb = (c: any): CategoryItem => ({
+    id: String(c.id),
+    name: c.name || '',
+    title: c.title || '',
+    image: c.image || '',
     isActive: c.isActive ?? true,
     itemCount: c.itemCount || '0 Designs',
     tagline: c.tagline || '',
   });
 
-  const mapCouponToSupabase = (c: any) => ({
-    id: c.id,
-    code: c.code,
-      discount_value: Number(c.discountValue) || 0,
-      is_active: c.isActive ?? true,
-      used_count: Number(c.usageCount) || 0,
-      discount_type: c.discountType || 'percentage',
-      min_order_amount: Number(c.minOrderValue) || 0,
-      valid_from: c.startDate || new Date().toISOString(),
-      valid_to: c.expiryDate || new Date().toISOString(),
-      usage_limit: Number(c.usageLimit) || 100,
-  });
-
-  const mapReviewFromSupabase = (r: any): Review => {
-    let comment = String(r.comment || '');
-    let status: 'approved' | 'pending' | 'hidden' = 'approved';
-    let adminReply = '';
-    let date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    let sizePurchased: any = undefined;
-    let location = 'Artisan, India';
-    let productName = '';
-    let imageUrl = '';
-    let verifiedPurchase = false;
-
-    if (comment.includes('||')) {
-      const parts = comment.split('||');
-      comment = parts[0];
-      try {
-        const rich = JSON.parse(parts[1]);
-        status = rich.status || 'approved';
-        adminReply = rich.adminReply || '';
-        date = rich.date || date;
-        sizePurchased = rich.sizePurchased;
-        location = rich.location || location;
-        productName = rich.productName || '';
-        imageUrl = rich.imageUrl || '';
-        verifiedPurchase = Boolean(rich.verifiedPurchase);
-      } catch {}
-    }
-
-    return {
-      id: String(r.id),
-      productId: String(r.productId || '0'),
-      productName: productName || r.productName || '',
-      userName: r.userName || 'Anonymous',
-      rating: Number(r.rating) || 5,
-      comment,
-      status,
-      adminReply,
-      date,
-      verifiedPurchase: Boolean(r.verified_purchase ?? verifiedPurchase),
-      sizePurchased,
-      location,
-      imageUrl,
-    };
-  };
-
-  const mapReviewToSupabase = (r: any) => {
-    const richData = {
-      status: r.status || 'pending',
-      adminReply: r.adminReply || '',
-      date: r.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      sizePurchased: r.sizePurchased,
-      location: r.location,
-      productName: r.productName,
-      imageUrl: r.imageUrl,
-      verifiedPurchase: Boolean(r.verifiedPurchase),
-    };
-    const payload: any = {
-      productId: r.productId ? (isNaN(Number(r.productId)) ? 0 : Number(r.productId)) : 0,
-      userName: r.userName,
-      rating: r.rating,
-      comment: `${r.comment}||${JSON.stringify(richData)}`,
-    };
-    if (r.id && !isNaN(Number(r.id))) {
-      payload.id = Number(r.id);
-    }
-    return payload;
-  };
-
-  const mapCustomerFromSupabase = (c: any): Customer => ({
-    id: String(c.id),
-    name: c.name || '',
-    email: c.email || '',
-    status: c.status || 'active',
-    totalSpent: Number(c.totalSpent) || 0,
-    phone: '',
-    totalOrders: 0,
-    lastOrderDate: '',
-    joinedDate: new Date().toISOString().split('T')[0],
-  });
-
-  const mapCustomerToSupabase = (c: any) => ({
+  const mapCategoryToDb = (c: Partial<CategoryItem>) => ({
     name: c.name,
-    email: c.email,
-    status: c.status,
-    totalSpent: Number(c.totalSpent) || 0,
+    title: c.title,
+    image: c.image,
+    isActive: c.isActive,
+    tagline: c.tagline,
+  });
+
+  const mapCouponToDb = (c: Partial<Coupon>) => ({
+    code: c.code,
+    discountType: c.discountType,
+    discountValue: c.discountValue != null ? Number(c.discountValue) || 0 : undefined,
+    minOrderValue: c.minOrderValue != null ? Number(c.minOrderValue) || 0 : undefined,
+    maxDiscount: c.maxDiscount != null ? Number(c.maxDiscount) : undefined,
+    startDate: c.startDate,
+    expiryDate: c.expiryDate,
+    usageLimit: c.usageLimit != null ? Number(c.usageLimit) || 0 : undefined,
+    usageCount: c.usageCount != null ? Number(c.usageCount) || 0 : undefined,
+    isActive: c.isActive,
+  });
+
+  const mapReviewFromDb = (r: any): Review => ({
+    id: String(r.id),
+    productId: String(r.productId || '0'),
+    productName: r.productName || '',
+    userName: r.userName || 'Anonymous',
+    userEmail: r.userEmail || undefined,
+    rating: Number(r.rating) || 5,
+    comment: String(r.comment || ''),
+    status: r.status || 'pending',
+    adminReply: r.adminReply || '',
+    date: r.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    verifiedPurchase: Boolean(r.verifiedPurchase),
+    sizePurchased: r.sizePurchased,
+    location: r.location || 'Artisan, India',
+    imageUrl: r.imageUrl || '',
   });
 
   // Public storefront settings are persisted through the protected server API.
-  const saveHomepageSectionsToSupabase = async (nextSections: HomepageSectionConfig[]) => {
+  const saveHomepageSectionsSetting = async (nextSections: HomepageSectionConfig[]) => {
     await persistStorefrontSetting('homepageSections', nextSections, 'sag_homepage_sections_local');
   };
 
-  const saveStoreSettingsToSupabase = async (nextStore: StoreSettings) => {
+  const saveStoreSettingsSetting = async (nextStore: StoreSettings) => {
     await persistStorefrontSetting('storeSettings', toPublicStoreSettings(nextStore), 'sag_store_settings_local');
   };
 
-  const savePaymentSettingsToSupabase = async (nextPayment: PaymentGatewaySettings) => {
+  const savePaymentSettingsSetting = async (nextPayment: PaymentGatewaySettings) => {
     await persistStorefrontSetting(
       'paymentSettings',
       toPublicPaymentSettings(nextPayment),
@@ -869,108 +787,59 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
-  const saveHeroConfigToSupabase = async (nextHero: HeroBannerConfig) => {
+  const saveHeroConfigSetting = async (nextHero: HeroBannerConfig) => {
     await persistStorefrontSetting('heroConfig', nextHero, 'sag_hero_config_local');
   };
 
-  // Fetch store data from Supabase, loading tables independently to prevent single-table failures from blocking others
-  const fetchData = async () => {
-    try {
-      // 1. Fetch Categories & Live Product Counts from Supabase 'products'
-      const { data: catData, error: catError } = await supabase.from('categories').select('*');
-      const { data: prodCatData } = await supabase.from('products').select('category');
-
-      const liveCountsMap: Record<string, number> = {};
-      if (prodCatData) {
-        prodCatData.forEach((p: any) => {
-          if (p.category) {
-            liveCountsMap[p.category] = (liveCountsMap[p.category] || 0) + 1;
-          }
-        });
-      }
-
-      if (catError) {
-        console.error('Supabase fetch categories error:', catError);
-      } else if (catData) {
-        setCategories(catData.map((c: any) => {
-          const liveCount = liveCountsMap[c.name] ?? 0;
-          return {
-            id: String(c.id),
-            name: c.name || '',
-            title: c.title || '',
-            image: c.image || '',
-            isActive: c.isActive ?? true,
-            itemCount: liveCount > 0 ? `${liveCount}+ Designs` : `${liveCount} Designs`,
-            tagline: c.tagline || '',
-          };
-        }));
-      }
-
-      // 2. Fetch Orders
-      let parsedOrders: Order[] = [];
-      try {
-        const { data: ordData, error: ordError } = await supabase.from('orders').select('*');
-        if (ordError) {
-          console.warn('Supabase fetch orders notice:', ordError.message || ordError);
-        } else if (ordData) {
-          parsedOrders = ordData.map(mapOrderFromSupabase);
-          setOrders(parsedOrders);
-        }
-      } catch (err) {
-        console.warn('Orders fetch network notice:', err);
-      }
-
-      // 4. Fetch Coupons
-      try {
-        const { data: coupData, error: coupError } = await supabase.from('coupons').select('*');
-        if (coupError) {
-          console.warn('Supabase fetch coupons notice:', coupError.message || coupError);
-        } else if (coupData) {
-          setCoupons(coupData.map(mapCouponFromSupabase));
-        }
-      } catch (err) {
-        console.warn('Coupons fetch network notice:', err);
-      }
-
-      // 5. Fetch Reviews
-      try {
-        const { data: revData, error: revError } = await supabase.from('reviews').select('*');
-        if (revError) {
-          console.warn('Supabase fetch reviews notice:', revError.message || revError);
-        } else if (revData) {
-          setReviewsList(revData.map(mapReviewFromSupabase));
-        }
-      } catch (err) {
-        console.warn('Reviews fetch network notice:', err);
-      }
-
-      // Store settings and promotional banners use localStorage until a protected API exists.
-    } catch (err) {
-      console.error('General Supabase fetch data error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Public collections (categories, reviews): live Firestore listeners for multi-device synchronization.
+  // Each collection is watched independently so a single failure does not block the others.
   useEffect(() => {
-    fetchData();
+    let categoriesLoaded = false;
+    let reviewsLoaded = false;
+    const markLoaded = () => {
+      if (categoriesLoaded && reviewsLoaded) setIsLoading(false);
+    };
+    // Never keep the storefront in a loading state if a listener cannot connect
+    const loadingFallback = window.setTimeout(() => setIsLoading(false), 6000);
 
-    // Listen to real-time updates for automatic multi-device synchronization
-    const tables = ['categories', 'orders', 'coupons', 'reviews'];
-    const channels = tables.map(table => {
-      return supabase
-        .channel(`${table}-channel`)
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table },
-          () => {
-            fetchData();
-          }
-        )
-        .subscribe();
+    const unsubscribeCategories = watchCollection('categories', (rows) => {
+      setCategoryDocs(rows.map(mapCategoryFromDb));
+      categoriesLoaded = true;
+      markLoaded();
+    });
+    const unsubscribeReviews = watchCollection('reviews', (rows) => {
+      setReviewsList(rows.map(mapReviewFromDb));
+      reviewsLoaded = true;
+      markLoaded();
     });
 
-    // Real-time leads from Firestore with quota protection
+    return () => {
+      window.clearTimeout(loadingFallback);
+      unsubscribeCategories();
+      unsubscribeReviews();
+    };
+  }, []);
+
+  // Admin-only collections (orders, coupons): only readable once the admin is signed into Firebase.
+  useEffect(() => {
+    const isLocalHost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (!isFirebaseAdmin && !(isLocalHost && isAdminLoggedIn)) return;
+
+    const unsubscribeOrders = watchCollection('orders', (rows) => {
+      setOrders(rows.map(mapOrderFromDb));
+    });
+    const unsubscribeCoupons = watchCollection('coupons', (rows) => {
+      setCoupons(rows.map(mapCouponFromDb));
+    });
+
+    return () => {
+      unsubscribeOrders();
+      unsubscribeCoupons();
+    };
+  }, [isFirebaseAdmin, isAdminLoggedIn]);
+
+  // Real-time leads from Firestore with quota protection
+  useEffect(() => {
     let unsubscribeLeads: () => void = () => {};
     if (!isQuotaExhausted()) {
       try {
@@ -998,18 +867,17 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     return () => {
-      channels.forEach(ch => supabase.removeChannel(ch));
       unsubscribeLeads();
     };
   }, []);
 
-  // Auto-sync hero slides when real products are available or updated from Supabase
+  // Auto-sync hero slides when real products are available or updated in the database
   useEffect(() => {
     if (products && products.length > 0) {
       if (!heroConfig?.slides || heroConfig.slides.length === 0) {
         const freshSlides = generateHeroSlidesFromProducts(products);
         const newConfig: HeroBannerConfig = { slides: freshSlides };
-        void saveHeroConfigToSupabase(newConfig)
+        void saveHeroConfigSetting(newConfig)
           .then(() => setHeroConfig(newConfig))
           .catch((error) => console.warn('Hero live sync notice:', error));
         return;
@@ -1054,7 +922,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       if (updatedSome) {
         const newConfig: HeroBannerConfig = { slides: updatedSlides };
-        void saveHeroConfigToSupabase(newConfig)
+        void saveHeroConfigSetting(newConfig)
           .then(() => setHeroConfig(newConfig))
           .catch((error) => console.warn('Hero live sync notice:', error));
       }
@@ -1081,6 +949,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) return { success: false, message: result.error || 'Admin authentication failed.' };
+        // Admin-only database writes require the Firebase custom token issued by the server
+        try {
+          await signInAdminToFirebase(result.firebaseToken);
+        } catch (firebaseErr) {
+          console.warn('Firebase admin sign-in notice:', firebaseErr);
+          return { success: false, message: 'Database authorization failed. Please try signing in again.' };
+        }
         const securityResponse = await fetch('/api/admin-config?action=security', { credentials: 'same-origin' });
         if (securityResponse.ok) {
           const securityResult = await securityResponse.json();
@@ -1131,6 +1006,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (typeof window !== 'undefined' && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
       void fetch('/api/admin-config?action=logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
     }
+    void signOutAdminFromFirebase().catch(() => {});
     setIsAdminLoggedIn(false);
     setAdminEmail(null);
     localStorage.removeItem('sag_admin_auth');
@@ -1167,33 +1043,31 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Category Operations
   const addCategory = async (cat: Omit<CategoryItem, 'id'>) => {
-    const newId = `cat-${Date.now().toString().slice(-6)}`;
+    const newId = newDocId('cat-');
     const newCat = { id: newId, ...cat };
     setCategories((prev) => [...prev, newCat]);
     try {
-      const payload = mapCategoryToSupabase(newCat);
-      await supabase.from('categories').insert([payload]);
+      await saveDoc('categories', newId, mapCategoryToDb(newCat), false);
     } catch (error) {
-      console.warn('Supabase add category notice:', error);
+      console.warn('Firebase add category notice:', error);
     }
   };
 
   const updateCategory = async (id: string, updated: Partial<CategoryItem>) => {
     setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
     try {
-      const payload = mapCategoryToSupabase({ ...updated, id });
-      await supabase.from('categories').update(payload).eq('id', id);
+      await saveDoc('categories', id, mapCategoryToDb(updated));
     } catch (error) {
-      console.warn('Supabase update category notice:', error);
+      console.warn('Firebase update category notice:', error);
     }
   };
 
   const deleteCategory = async (id: string) => {
     setCategories((prev) => prev.filter((c) => c.id !== id));
     try {
-      await supabase.from('categories').delete().eq('id', id);
+      await removeDoc('categories', id);
     } catch (error) {
-      console.warn('Supabase delete category notice:', error);
+      console.warn('Firebase delete category notice:', error);
     }
   };
 
@@ -1219,12 +1093,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     try {
-      const payload = mapOrderToSupabase(updatedOrder);
-      const { error } = await supabase.from('orders').update(payload).eq('order_number', orderNumber);
-      if (error) throw error;
-      
+      await patchDoc('orders', orderNumber, {
+        status,
+        ...(trackingNumber ? { trackingNumber } : {}),
+        ...(notes ? { notes } : {}),
+      });
     } catch (error) {
-      console.warn('Supabase update order notice:', error);
+      console.warn('Firebase update order notice:', error);
     }
   };
 
@@ -1245,19 +1120,20 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
 
     try {
-      const payload = mapOrderToSupabase(updatedOrder);
-      const { error } = await supabase.from('orders').update(payload).eq('order_number', orderNumber);
-      if (error) throw error;
-      
+      await patchDoc('orders', orderNumber, { paymentStatus });
     } catch (error) {
-      console.warn('Supabase update payment status notice:', error);
+      console.warn('Firebase update payment status notice:', error);
     }
   };
 
   const addOrder = async (order: Order) => {
-    const payload = mapOrderToSupabase(order);
-    const { error } = await supabase.from('orders').upsert([payload], { onConflict: 'order_number' });
-    if (error) throw new Error(`Order could not be saved: ${error.message}`);
+    const payload = mapOrderToDb(order);
+    try {
+      // Document id = order number; checkout creates the order document in one write.
+      await saveDoc('orders', payload.orderNumber, payload, false);
+    } catch (error) {
+      throw new Error(`Order could not be saved: ${error instanceof Error ? error.message : String(error)}`);
+    }
 
     setOrders((prev) => [order, ...prev.filter((existing) => existing.orderNumber !== order.orderNumber)]);
 
@@ -1292,10 +1168,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const deleteOrder = async (orderNumber: string) => {
     setOrders((prev) => prev.filter((o) => o.orderNumber !== orderNumber));
     try {
-      const { error } = await supabase.from('orders').delete().eq('order_number', orderNumber);
-      if (error) throw error;
+      await removeDoc('orders', orderNumber);
     } catch (error) {
-      console.warn('Supabase delete order notice:', error);
+      console.warn('Firebase delete order notice:', error);
     }
   };
 
@@ -1308,14 +1183,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Coupon Operations
   const addCoupon = async (coupon: Omit<Coupon, 'id' | 'usageCount'>) => {
-    const newId = `coup-${Date.now().toString().slice(-6)}`;
+    const newId = newDocId('coup-');
     const newCoup = { id: newId, usageCount: 0, ...coupon };
     setCoupons((prev) => [newCoup, ...prev]);
     try {
-      const payload = mapCouponToSupabase(newCoup);
-      await supabase.from('coupons').insert([payload]);
+      await saveDoc('coupons', newId, mapCouponToDb(newCoup), false);
     } catch (error) {
-      console.warn('Supabase add coupon notice:', error);
+      console.warn('Firebase add coupon notice:', error);
     }
   };
 
@@ -1324,19 +1198,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
     );
     try {
-      const payload = mapCouponToSupabase({ ...updated, id });
-      await supabase.from('coupons').update(payload).eq('id', id);
+      await saveDoc('coupons', id, mapCouponToDb(updated));
     } catch (error) {
-      console.warn('Supabase update coupon notice:', error);
+      console.warn('Firebase update coupon notice:', error);
     }
   };
 
   const deleteCoupon = async (id: string) => {
     setCoupons((prev) => prev.filter((c) => c.id !== id));
     try {
-      await supabase.from('coupons').delete().eq('id', id);
+      await removeDoc('coupons', id);
     } catch (error) {
-      console.warn('Supabase delete coupon notice:', error);
+      console.warn('Firebase delete coupon notice:', error);
     }
   };
 
@@ -1349,7 +1222,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Homepage Operations
   const toggleHomepageSection = async (id: string) => {
     const nextSections = homepageSections.map((sec) => (sec.id === id ? { ...sec, enabled: !sec.enabled } : sec));
-    await saveHomepageSectionsToSupabase(nextSections);
+    await saveHomepageSectionsSetting(nextSections);
     setHomepageSections(nextSections);
   };
 
@@ -1364,24 +1237,24 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     updated[idx] = updated[targetIdx];
     updated[targetIdx] = temp;
     const nextSections = updated.map((sec, i) => ({ ...sec, order: i + 1 }));
-    await saveHomepageSectionsToSupabase(nextSections);
+    await saveHomepageSectionsSetting(nextSections);
     setHomepageSections(nextSections);
   };
 
   const reorderHomepageSections = async (newSections: HomepageSectionConfig[]) => {
     const formatted = newSections.map((sec, i) => ({ ...sec, order: i + 1 }));
-    await saveHomepageSectionsToSupabase(formatted);
+    await saveHomepageSectionsSetting(formatted);
     setHomepageSections(formatted);
   };
 
   const resetHomepageSectionsToDefault = async () => {
-    await saveHomepageSectionsToSupabase(INITIAL_SECTIONS);
+    await saveHomepageSectionsSetting(INITIAL_SECTIONS);
     setHomepageSections(INITIAL_SECTIONS);
   };
 
   const updateHeroConfig = async (updated: Partial<HeroBannerConfig>) => {
     const nextHero = { ...heroConfig, ...updated };
-    await saveHeroConfigToSupabase(nextHero);
+    await saveHeroConfigSetting(nextHero);
     setHeroConfig(nextHero);
   };
 
@@ -1425,37 +1298,27 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Review Operations
   const addReview = async (reviewData: Omit<Review, 'id'> & { id?: string }) => {
-    const numericId = Date.now();
-    const newId = reviewData.id || String(numericId);
+    const newId = reviewData.id || newDocId('rev-');
     const newReview: Review = {
-      id: newId,
       date: reviewData.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: reviewData.status || 'pending',
       verifiedPurchase: reviewData.verifiedPurchase ?? true,
       ...reviewData,
+      id: newId,
     };
 
     setReviewsList((prev) => [newReview, ...prev]);
 
     try {
-      const payload = {
-        id: numericId,
-        productId: reviewData.productId ? (isNaN(Number(reviewData.productId)) ? 0 : Number(reviewData.productId)) : 0,
-        userName: reviewData.userName,
-        rating: Number(reviewData.rating) || 5,
-        comment: `${reviewData.comment}||${JSON.stringify({
-          status: reviewData.status || 'pending',
-          adminReply: reviewData.adminReply || '',
-          date: newReview.date,
-          sizePurchased: reviewData.sizePurchased,
-          location: reviewData.location || 'India',
-          productName: reviewData.productName || '',
-          imageUrl: reviewData.imageUrl || '',
-        })}`
-      };
-      await supabase.from('reviews').insert([payload]);
+      await saveDoc('reviews', newId, {
+        ...newReview,
+        productId: newReview.productId ? String(newReview.productId) : '0',
+        rating: Number(newReview.rating) || 5,
+        location: newReview.location || 'India',
+        createdAt: new Date().toISOString(),
+      }, false);
     } catch (error) {
-      console.warn('Supabase add review notice:', error);
+      console.warn('Firebase add review notice:', error);
     }
   };
 
@@ -1465,10 +1328,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedReview = { ...target, ...updatedData };
     setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
     try {
-      const payload = mapReviewToSupabase(updatedReview);
-      await supabase.from('reviews').update(payload).eq('id', id);
+      await patchDoc('reviews', id, updatedData);
     } catch (error) {
-      console.warn('Supabase update review notice:', error);
+      console.warn('Firebase update review notice:', error);
     }
   };
 
@@ -1478,10 +1340,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedReview = { ...target, status };
     setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
     try {
-      const payload = mapReviewToSupabase(updatedReview);
-      await supabase.from('reviews').update(payload).eq('id', id);
+      await patchDoc('reviews', id, { status });
     } catch (error) {
-      console.warn('Supabase update review notice:', error);
+      console.warn('Firebase update review notice:', error);
     }
   };
 
@@ -1491,26 +1352,25 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updatedReview = { ...target, adminReply: reply };
     setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
     try {
-      const payload = mapReviewToSupabase(updatedReview);
-      await supabase.from('reviews').update(payload).eq('id', id);
+      await patchDoc('reviews', id, { adminReply: reply });
     } catch (error) {
-      console.warn('Supabase update review notice:', error);
+      console.warn('Firebase update review notice:', error);
     }
   };
 
   const deleteReview = async (id: string) => {
     setReviewsList((prev) => prev.filter((r) => r.id !== id));
     try {
-      await supabase.from('reviews').delete().eq('id', id);
+      await removeDoc('reviews', id);
     } catch (error) {
-      console.warn('Supabase delete review notice:', error);
+      console.warn('Firebase delete review notice:', error);
     }
   };
 
   // Store & Payment Settings
   const updateStoreSettings = async (updated: Partial<StoreSettings>) => {
     const nextStore = normalizeStoreBrand({ ...storeSettings, ...updated });
-    await saveStoreSettingsToSupabase(nextStore);
+    await saveStoreSettingsSetting(nextStore);
     setStoreSettings(nextStore);
   };
 
@@ -1524,7 +1384,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Keep allowCod permanently false
     const nextPayment = { ...paymentSettings, ...updated, allowCod: false, prepaidOnly: true };
     setPaymentSettings(nextPayment);
-    await savePaymentSettingsToSupabase(nextPayment);
+    await savePaymentSettingsSetting(nextPayment);
   };
 
   const resetStoreDataToDefaults = async () => {
@@ -1540,9 +1400,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setStoreSettings(INITIAL_STORE_SETTINGS);
     setPaymentSettings(INITIAL_PAYMENT_SETTINGS);
     await Promise.all([
-      saveHomepageSectionsToSupabase(INITIAL_SECTIONS),
-      saveHeroConfigToSupabase(INITIAL_HERO_CONFIG),
-      saveStoreSettingsToSupabase(INITIAL_STORE_SETTINGS),
+      saveHomepageSectionsSetting(INITIAL_SECTIONS),
+      saveHeroConfigSetting(INITIAL_HERO_CONFIG),
+      saveStoreSettingsSetting(INITIAL_STORE_SETTINGS),
       persistStorefrontSetting('banners', INITIAL_BANNERS, 'sag_banners_local'),
       persistStorefrontSetting('dealOfTheDay', INITIAL_DEAL_OF_THE_DAY, 'sag_deal_of_the_day'),
     ]);

@@ -1,11 +1,9 @@
 {
-  "projectId": "nifty-folio-6lcf1",
-  "appId": "1:453799838706:web:5d75178eff668b254aa16b",
-  "apiKey": "AIzaSyDoewK3ZIe-eOY9TR2dBa7HyageJRESfRY",
-  "authDomain": "nifty-folio-6lcf1.firebaseapp.com",
-  "storageBucket": "nifty-folio-6lcf1.firebasestorage.app",
-  "messagingSenderId": "453799838706",
-  "measurementId": "",
-  "oAuthClientId": "453799838706-urfss0a57t1bm3n1tc2lq57i879h9kle.apps.googleusercontent.com",
-  "recaptchaSiteKey": ""
+  "projectId": "thor-217e7",
+  "appId": "1:531923624003:web:142d48455dafad3cb734f6",
+  "apiKey": "AIzaSyBmxK1-MEUd_zhAQ7r_7XJ0kurPh7e0O3g",
+  "authDomain": "thor-217e7.firebaseapp.com",
+  "storageBucket": "thor-217e7.firebasestorage.app",
+  "messagingSenderId": "531923624003",
+  "measurementId": "G-RXNWSY9SBM"
 }

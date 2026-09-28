@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { supabase } from '../../lib/supabase';
+import { uploadImage } from '../../lib/dataStore';
 import { 
   Image as ImageIcon, 
   Plus, 
@@ -97,43 +97,13 @@ export const AdminBanners: React.FC = () => {
     setIsUploading(true);
     let imageUrl = '';
 
-    // Try Supabase Storage
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `banners/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-        if (publicUrlData?.publicUrl) {
-          imageUrl = publicUrlData.publicUrl;
-        }
-      }
-    } catch (err) {
-      console.warn('Supabase banner storage upload notice:', err);
-    }
-
-    // Fallback to local Data URL reader
-    if (!imageUrl) {
-      try {
-        imageUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      } catch (err) {
-        console.error('Error reading local banner image:', err);
-        showToast('Failed to load image file.', 'error');
-        setIsUploading(false);
-        return;
-      }
+      imageUrl = await uploadImage(file, 'banners');
+    } catch (err: any) {
+      console.error('Cloudinary banner upload failed:', err);
+      showToast(`Failed to upload banner image: ${err?.message || 'Please try again.'}`, 'error');
+      setIsUploading(false);
+      return;
     }
 
     if (imageUrl) {

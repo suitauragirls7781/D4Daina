@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { ADMIN_UID } from '../lib/dataStore';
 
 interface AuthContextType {
   user: { email: string; uid: string; displayName?: string; name?: string } | null;
@@ -32,7 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (hasLocalUser) {
         return; // Pattern user is active, prefer that
       }
-      if (fbUser) {
+      // The admin panel's Firebase session is not a storefront customer.
+      if (fbUser && fbUser.uid !== ADMIN_UID) {
         setUser({
           email: fbUser.email || '',
           uid: fbUser.uid,
@@ -78,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
 
     try {
-      await fbSignOut(auth);
+      if (auth.currentUser?.uid !== ADMIN_UID) await fbSignOut(auth);
     } catch (e) {
       // Ignored
     }

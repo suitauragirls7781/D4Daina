@@ -12,7 +12,7 @@ interface Service {
 export const SystemStatusMonitor: React.FC = () => {
   const [services, setServices] = useState<Service[]>([
     { name: 'Razorpay API', status: 'operational', lastChecked: 'Just now' },
-    { name: 'Supabase Connection', status: 'operational', lastChecked: 'Just now' },
+    { name: 'Firebase Connection', status: 'operational', lastChecked: 'Just now' },
     { name: 'Courier Sync', status: 'operational', lastChecked: 'Just now' },
   ]);
 

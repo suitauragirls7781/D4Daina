@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { useRouter } from '../../context/RouterContext';
@@ -71,6 +71,10 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   
   // Images - start empty, never use fake stock images
   const [images, setImages] = useState<string[]>([]);
+  // Images uploaded in this editing session (not yet referenced by a saved product)
+  const [sessionUploads, setSessionUploads] = useState<string[]>([]);
+  // Previously saved images the admin removed; deleted from Cloudinary only after a successful save
+  const [pendingDeletes, setPendingDeletes] = useState<string[]>([]);
 
   // Sizes - standard available sizes
   const [selectedSizes, setSelectedSizes] = useState<ProductSize[]>(['S', 'M', 'L', 'XL', 'XXL']);
@@ -160,46 +164,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
       }
 
       let imageUrl = '';
-
-      // Try Supabase storage first if configured
       try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-        const filePath = `products/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('product-images')
-          .upload(filePath, file);
-
-        if (!uploadError) {
-          const { data: publicUrlData } = supabase.storage
-            .from('product-images')
-            .getPublicUrl(filePath);
-          if (publicUrlData?.publicUrl) {
-            imageUrl = publicUrlData.publicUrl;
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase storage not available, using local data URL:', err);
-      }
-
-      // Fallback to local Data URL reader if Supabase storage upload didn't yield a URL
-      if (!imageUrl) {
-        try {
-          imageUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-        } catch (readerErr) {
-          console.error('Error reading local file:', readerErr);
-          showToast(`Failed to load image "${file.name}".`, 'error');
-          continue;
-        }
+        imageUrl = await uploadImage(file, 'product-images');
+      } catch (err: any) {
+        console.error('Cloudinary upload failed:', err);
+        showToast(`Failed to upload "${file.name}": ${err?.message || 'Please try again.'}`, 'error');
+        continue;
       }
 
       if (imageUrl) {
+        setSessionUploads((current) => [...current, imageUrl]);
         setImages((currentImages) => [...currentImages, imageUrl]);
         setColors((currentColors) => {
           if (!currentColors.some(c => c.imageUrl === imageUrl)) {
@@ -217,22 +191,24 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   const handleRemoveImage = async (index: number) => {
     const imageUrlToRemove = images[index];
     
-    // Attempt to delete from storage if it's a supabase storage URL
-    if (imageUrlToRemove.includes('product-images')) {
-      try {
-        const urlParts = imageUrlToRemove.split('/');
-        const filePath = urlParts.slice(urlParts.indexOf('product-images') + 1).join('/');
-        
-        await supabase.storage
-          .from('product-images')
-          .remove([filePath]);
-      } catch (error) {
-        console.error('Error removing image from storage:', error);
-      }
+    if (sessionUploads.includes(imageUrlToRemove)) {
+      // Never saved on a product, so it can be deleted from Cloudinary right away
+      setSessionUploads((current) => current.filter((url) => url !== imageUrlToRemove));
+      deleteImages([imageUrlToRemove]).catch((error) => console.error('Error deleting image from Cloudinary:', error));
+    } else {
+      setPendingDeletes((current) => [...current, imageUrlToRemove]);
     }
 
     setImages(images.filter((_, i) => i !== index));
     setColors(colors.map(c => c.imageUrl === imageUrlToRemove ? { ...c, imageUrl: undefined } : c));
+  };
+
+  // Leaving without saving discards any images uploaded during this session
+  const handleCancel = () => {
+    if (sessionUploads.length > 0) {
+      deleteImages(sessionUploads).catch((error) => console.error('Error deleting unsaved images:', error));
+    }
+    navigate('/admin/products');
   };
 
   const toggleSize = (size: ProductSize) => {
@@ -308,6 +284,18 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         await addProduct(payload);
         showToast(`Product "${name}" added to catalog successfully.`, 'success');
       }
+      // Duplicated products share image URLs, so keep any image another product still uses
+      const usedElsewhere = new Set(
+        products
+          .filter((product) => product.id !== productId)
+          .flatMap((product) => [...product.images, ...product.colors.map((color) => color.imageUrl || '')]),
+      );
+      const removedImages = pendingDeletes.filter((url) => !images.includes(url) && !usedElsewhere.has(url));
+      if (removedImages.length > 0) {
+        deleteImages(removedImages).catch((error) => console.error('Error deleting removed images from Cloudinary:', error));
+      }
+      setSessionUploads([]);
+      setPendingDeletes([]);
       navigate('/admin/products');
     } catch (err: any) {
       console.error('Failed to save product:', err);
@@ -325,7 +313,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/admin/products')}
+            onClick={handleCancel}
             className="p-2 bg-[#D8C8B8]/20 hover:bg-[#D8C8B8]/40 text-[#211C1A] rounded-xl transition"
             title="Back to Products"
           >
@@ -347,7 +335,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           <button
             type="button"
             disabled={isSaving}
-            onClick={() => navigate('/admin/products')}
+            onClick={handleCancel}
             className="px-4 py-2.5 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold uppercase tracking-wider transition disabled:opacity-50"
           >
             Cancel
@@ -878,7 +866,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           <button
             type="button"
             disabled={isSaving}
-            onClick={() => navigate('/admin/products')}
+            onClick={handleCancel}
             className="px-5 py-2.5 border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-xl text-xs font-semibold uppercase tracking-wider transition disabled:opacity-50"
           >
             Cancel

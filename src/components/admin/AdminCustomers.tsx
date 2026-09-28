@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { supabase } from '../../lib/supabase';
+import { listDocs } from '../../lib/dataStore';
 import { db } from '../../lib/firebase';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { 
@@ -57,7 +57,7 @@ export const AdminCustomers: React.FC = () => {
   const [combinedCustomers, setCombinedCustomers] = useState<DetailedRealCustomer[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Load and combine registered accounts from Firestore, local storage, and Supabase Profiles.
+  // Load and combine registered accounts from Firestore, local storage, and database profiles.
   const refreshCustomerDirectory = async () => {
     setLoading(true);
     try {
@@ -182,30 +182,35 @@ export const AdminCustomers: React.FC = () => {
         console.warn('LocalStorage accounts parse warning:', err);
       }
 
-      // 2. Fetch Supabase Profiles
+      // 3. Fetch database profiles (Firestore, document id = normalized email)
       try {
-        const { data: profiles } = await supabase.from('profiles').select('*');
+        const profiles = await listDocs('profiles');
         if (profiles && Array.isArray(profiles)) {
           profiles.forEach((p: any) => {
-            if (p.email) {
-              const normEmail = p.email.toLowerCase().trim();
+            const profileEmail = String(p.email || p.id || '');
+            if (profileEmail.includes('@')) {
+              const normEmail = profileEmail.toLowerCase().trim();
+              const profileName = p.fullName || p.name || '';
               const existing = customerMap.get(normEmail);
               if (existing) {
-                existing.name = existing.name || p.full_name || '';
+                existing.name = existing.name || profileName;
                 existing.phone = existing.phone || p.phone || '';
                 existing.pincode = existing.pincode || p.pincode || '';
+                existing.city = existing.city || p.city || '';
+                existing.state = existing.state || p.state || '';
               } else {
+                const joined = p.createdAt || p.updatedAt;
                 customerMap.set(normEmail, {
-                  id: String(p.id || `prof_${normEmail}`),
-                  name: p.full_name || normEmail.split('@')[0],
+                  id: `prof_${normEmail}`,
+                  name: profileName || normEmail.split('@')[0],
                   email: normEmail,
                   phone: p.phone || '',
                   status: 'active',
-                  joinedDate: p.updated_at ? new Date(p.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                  joinedDate: joined ? new Date(joined).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                   pincode: p.pincode || '',
-                  city: '',
-                  state: '',
-                  streetAddress: '',
+                  city: p.city || '',
+                  state: p.state || '',
+                  streetAddress: p.street || p.streetAddress || '',
                   hasPassword: false,
                   authMethod: 'Brevo OTP Verified',
                   totalOrders: 0,
@@ -218,7 +223,7 @@ export const AdminCustomers: React.FC = () => {
           });
         }
       } catch (pErr) {
-        console.warn('Supabase profiles fetch warning:', pErr);
+        console.warn('Database profiles fetch warning:', pErr);
       }
 
       // 4. Enrich with orders placed across the store

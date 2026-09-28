@@ -1,18 +1,94 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Leads collection: Public can create, Admin can manage
-    match /leads/{leadId} {
-      allow create: if true;
-      // Note: In a production app, we would restrict read/update/delete to authorized admins only.
-      // For the current setup where admin uses a custom login system, we'll allow read for now
-      // so the dashboard can function.
-      allow read, update, delete: if true;
+    // The admin panel signs into Firebase with a custom token (claim `admin`) issued by /api/admin-config.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
     }
 
-    // Order records are sourced through the customer/order API, never exposed through client Firestore.
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // Catalog: public read, admin write. Checkout may only decrement stock.
+    match /products/{productId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (
+        onlyChanges(['stockQuantity', 'inStock', 'updatedAt'])
+        && request.resource.data.stockQuantity is number
+        && request.resource.data.stockQuantity >= 0
+        && request.resource.data.stockQuantity < resource.data.stockQuantity
+      );
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /hero_slides/{slideId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Coupons are validated at checkout, so customers can read them.
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Customers submit reviews for moderation; only the admin can approve, reply or delete.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAdmin() || (
+        request.resource.data.status == 'pending'
+        && !('adminReply' in request.resource.data)
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // Orders: anyone can place one and look it up by order number; only the admin can list them all.
     match /orders/{orderNumber} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if request.resource.data.orderNumber == orderNumber;
+      allow update: if isAdmin() || (
+        onlyChanges(['status', 'notes', 'updatedAt'])
+        && request.resource.data.status == 'Refund Requested'
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Customer profile (cart, wishlist, address), keyed by lowercase email.
+    match /profiles/{email} {
+      allow get, create, update: if true;
+      allow list, delete: if isAdmin();
+    }
+
+    match /abandoned_checkouts/{sessionId} {
+      allow create, update: if true;
+      allow read, delete: if isAdmin();
+    }
+
+    // Written only by the server API; clients just watch for changes.
+    match /storefront_settings/{settingKey} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Server-only collections (Admin SDK bypasses these rules).
+    match /admin_credentials/{docId} {
       allow read, write: if false;
+    }
+    match /customer_email_otps/{docId} {
+      allow read, write: if false;
+    }
+
+    // Newsletter / contact leads: public can create, admin manages.
+    match /leads/{leadId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
     }
 
     // Visitor Sessions collection: Anyone can log their visitor actions
@@ -28,6 +104,11 @@ service cloud.firestore {
     // Users collection: Users can manage their own profile
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+
+    match /customers/{customerId} {
+      allow read: if isAdmin();
     }
 
     // Default deny for all other collections

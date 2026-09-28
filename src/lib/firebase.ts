@@ -1,21 +1,21 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
 import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-const firestoreDatabaseId = ['ai-studio-suit', 'bliss', 'aura-1b0f5b7e-7ee0-4d00-bf33-b4d6d0af9318'].join('');
+const firestoreDatabaseId = '(default)';
 
 export const auth = getAuth(app);
-export const storage = getStorage(app);
 
 // Initialize Firestore with auto-detect long polling to ensure smooth connection in sandboxed preview environments
 let firestoreDb;
 try {
   firestoreDb = initializeFirestore(app, {
     experimentalAutoDetectLongPolling: true,
+    // Firestore rejects undefined fields; drop them instead of failing writes.
+    ignoreUndefinedProperties: true,
   }, firestoreDatabaseId);
 } catch {
   firestoreDb = getFirestore(app, firestoreDatabaseId);

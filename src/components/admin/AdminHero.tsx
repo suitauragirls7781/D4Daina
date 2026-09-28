@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { supabase } from '../../lib/supabase';
+import { uploadImage } from '../../lib/dataStore';
 import { 
   Save, 
   Sparkles, 
@@ -65,7 +65,7 @@ export const AdminHero: React.FC = () => {
     setIsSaving(true);
     try {
       await updateHeroConfig(heroForm);
-      showToast('Hero banner slides saved & synced to Supabase successfully!', 'success');
+      showToast('Hero banner slides saved & synced to the database successfully!', 'success');
     } catch (err) {
       console.error(err);
       showToast('Error saving hero slides.', 'error');
@@ -78,7 +78,7 @@ export const AdminHero: React.FC = () => {
     setIsSyncing(true);
     try {
       await syncHeroWithLiveProducts();
-      showToast('6 live products synchronized with Hero Slides & Supabase!', 'success');
+      showToast('6 live products synchronized with Hero Slides & the database!', 'success');
     } catch (e) {
       console.error(e);
       showToast('Error syncing products with hero slides', 'error');
@@ -102,40 +102,12 @@ export const AdminHero: React.FC = () => {
     let imageUrl = '';
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      const filePath = `hero-slides/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (!uploadError) {
-        const { data: publicUrlData } = supabase.storage
-          .from('product-images')
-          .getPublicUrl(filePath);
-        if (publicUrlData?.publicUrl) {
-          imageUrl = publicUrlData.publicUrl;
-        }
-      }
-    } catch (err) {
-      console.warn('Supabase upload exception:', err);
-    }
-
-    if (!imageUrl) {
-      try {
-        imageUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-      } catch (err) {
-        console.error('Error reading file:', err);
-        showToast('Failed to load image file.', 'error');
-        setUploadingSlideId(null);
-        return;
-      }
+      imageUrl = await uploadImage(file, 'hero');
+    } catch (err: any) {
+      console.error('Cloudinary hero upload failed:', err);
+      showToast(`Failed to upload banner image: ${err?.message || 'Please try again.'}`, 'error');
+      setUploadingSlideId(null);
+      return;
     }
 
     if (imageUrl) {
@@ -535,7 +507,7 @@ export const AdminHero: React.FC = () => {
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                <span>Saving to Supabase...</span>
+                <span>Saving to database...</span>
               </>
             ) : (
               <>

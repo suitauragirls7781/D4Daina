@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, emailKey, getDocById, patchDoc, saveDoc } from '../lib/dataStore';
 import { auth, db } from '../lib/firebase';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -80,14 +80,10 @@ export const AccountPage: React.FC = () => {
       if (!targetOrder) throw new Error('The selected order could not be found in your account.');
       const returnNote = `[RETURN/EXCHANGE REQUEST] Type: ${returnForm.requestType} | Reason: ${returnForm.reason} | Note: ${returnForm.comments || 'None'}`;
 
-      const { error } = await supabase
-        .from('orders')
-        .update({
-          status: 'Refund Requested',
-          notes: targetOrder.notes ? `${targetOrder.notes}\n${returnNote}` : returnNote
-        })
-        .eq('order_number', targetOrder.orderNumber);
-      if (error) throw error;
+      await patchDoc(COLLECTIONS.orders, targetOrder.orderNumber, {
+        status: 'Refund Requested',
+        notes: targetOrder.notes ? `${targetOrder.notes}\n${returnNote}` : returnNote
+      });
 
       showToast(`Your ${returnForm.requestType.toLowerCase()} request for Order ${returnForm.orderId} is registered! Courier pickup will be scheduled within 48 hours.`, 'success');
       setReturnForm({ orderId: '', requestType: 'Return', reason: 'Size does not fit', comments: '' });
@@ -118,7 +114,7 @@ export const AccountPage: React.FC = () => {
   const [favoriteColor, setFavoriteColor] = useState<string>('Maroon');
   const [isLoungeSaved, setIsLoungeSaved] = useState(false);
 
-  // Load profile from Supabase & LocalStorage (NO fake default values!)
+  // Load profile from the database & LocalStorage (NO fake default values!)
   useEffect(() => {
     if (user?.email) {
       const normEmail = user.email.toLowerCase().trim();
@@ -162,25 +158,17 @@ export const AccountPage: React.FC = () => {
             }
           } catch (fsErr) {}
 
-          // 3. Load from Supabase profiles table
-          const { data: profData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', normEmail)
-            .maybeSingle();
+          // 3. Load from the database profile
+          const profData = await getDocById(COLLECTIONS.profiles, emailKey(normEmail));
 
           if (profData) {
-            if (profData.full_name && !loadedName) loadedName = profData.full_name;
+            if (profData.name && !loadedName) loadedName = profData.name;
             if (profData.phone && !loadedPhone) loadedPhone = profData.phone;
-            if (profData.address) {
-              const addr = typeof profData.address === 'string' ? JSON.parse(profData.address) : profData.address;
-              if (addr.city && !loadedCity) loadedCity = addr.city;
-              if (addr.state && !loadedState) loadedState = addr.state;
-              if (addr.pincode && !loadedPincode) loadedPincode = addr.pincode;
-              if ((addr.streetAddress || addr.houseFlat) && !loadedAddress) {
-                loadedAddress = addr.streetAddress || addr.houseFlat;
-              }
-            }
+            if (profData.city && !loadedCity) loadedCity = profData.city;
+            if (profData.state && !loadedState) loadedState = profData.state;
+            if (profData.pincode && !loadedPincode) loadedPincode = profData.pincode;
+            if (profData.streetAddress && !loadedAddress) loadedAddress = profData.streetAddress;
+            if (profData.gender && !savedLocal) loadedGender = profData.gender;
           }
 
           // Format derived name from email if name is still empty
@@ -272,49 +260,17 @@ export const AccountPage: React.FC = () => {
           }, { merge: true });
         } catch (fsErr) {}
 
-        // Save / Update in Supabase profiles table
-        const { data: existingProf } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', normEmail)
-          .maybeSingle();
-
-        if (existingProf) {
-          await supabase
-            .from('profiles')
-            .update({
-              full_name: profileData.fullName,
-              phone: profileData.phone,
-              pincode: profileData.pincode,
-              address: {
-                city: profileData.city,
-                state: profileData.state,
-                pincode: profileData.pincode,
-                streetAddress: profileData.streetAddress,
-                gender: profileData.gender
-              },
-              updated_at: new Date().toISOString()
-            })
-            .eq('email', normEmail);
-        } else {
-          await supabase
-            .from('profiles')
-            .insert([{
-              email: normEmail,
-              full_name: profileData.fullName,
-              phone: profileData.phone,
-              pincode: profileData.pincode,
-              address: {
-                city: profileData.city,
-                state: profileData.state,
-                pincode: profileData.pincode,
-                streetAddress: profileData.streetAddress,
-                gender: profileData.gender
-              },
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }]);
-        }
+        // Save / Update the database profile
+        await saveDoc(COLLECTIONS.profiles, emailKey(normEmail), {
+          email: emailKey(normEmail),
+          name: profileData.fullName,
+          phone: profileData.phone,
+          pincode: profileData.pincode,
+          city: profileData.city,
+          state: profileData.state,
+          streetAddress: profileData.streetAddress,
+          gender: profileData.gender
+        });
 
         setIsEditing(false);
         showToast('✨ Your wardrobe profile and delivery address saved successfully!', 'success');

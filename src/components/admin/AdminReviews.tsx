@@ -287,7 +287,7 @@ export const AdminReviews: React.FC = () => {
                   type="text"
                   value={formData.imageUrl}
                   onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                  placeholder="Paste direct image link here (Unsplash, Firebase Storage, etc.)"
+                  placeholder="Paste direct image link here (Unsplash, Cloudinary, etc.)"
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
                 />
                 {formData.imageUrl && (

@@ -7,7 +7,7 @@ import { ShimmerPDP } from './ShimmerPDP';
 import { ProductSize, ProductColor } from '../types';
 import { getCleanImageUrl, getShareableUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { supabase } from '../lib/supabase';
+import { COLLECTIONS, getDocById } from '../lib/dataStore';
 import { 
   Star, 
   Heart, 
@@ -122,7 +122,7 @@ export const ProductDetailPage: React.FC = () => {
   const dbProduct = products.find((p) => String(p.id) === String(selectedProductId));
 
   // If we are currently loading products from the server, show a beautiful branded shimmer loading screen
-  // Keep the detail view tied to the active Supabase catalog instead of bundled stock products.
+  // Keep the detail view tied to the active database catalog instead of bundled stock products.
   if (isLoading || (selectedProductId && !dbProduct && products.length === 0)) {
     return (
       <ShimmerPDP />
@@ -323,7 +323,7 @@ export const ProductDetailPage: React.FC = () => {
     setZoomPosition({ x, y });
   };
 
-  // Supabase Live Stock Revalidation state
+  // Live database stock revalidation state
   const [dbStockState, setDbStockState] = useState<{
     inStock: boolean;
     stockQuantity: number;
@@ -336,26 +336,22 @@ export const ProductDetailPage: React.FC = () => {
     isChecking: true,
   });
 
-  // Revalidate product stock status directly from Supabase DB on PDP mount & when product ID changes
+  // Revalidate product stock status directly from the database on PDP mount & when product ID changes
   useEffect(() => {
     let isMounted = true;
 
-    const revalidateStockFromSupabase = async () => {
+    const revalidateStockFromDb = async () => {
       if (!product || !product.id) return;
 
       setDbStockState((prev) => ({ ...prev, isChecking: true }));
 
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('stock, status')
-          .eq('id', String(product.id))
-          .maybeSingle();
+        const data = await getDocById(COLLECTIONS.products, String(product.id));
 
-        if (!error && data && isMounted) {
-          const qty = Number(data.stock ?? product.stockQuantity ?? 10);
+        if (data && isMounted) {
+          const qty = Number(data.stockQuantity ?? product.stockQuantity ?? 10);
 
-          const isAvailable = data.status !== 'inactive' && qty > 0;
+          const isAvailable = data.inStock !== false && qty > 0;
 
           setDbStockState({
             inStock: isAvailable,
@@ -379,7 +375,7 @@ export const ProductDetailPage: React.FC = () => {
       }
     };
 
-    revalidateStockFromSupabase();
+    revalidateStockFromDb();
 
     return () => {
       isMounted = false;

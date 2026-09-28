@@ -29,25 +29,15 @@ export const getCleanImageUrl = (url: string | undefined | null, targetWidth?: n
     return cleanUrl;
   }
 
-  // Resize public Supabase originals before they reach the storefront.
-  if (cleanUrl.includes('/storage/v1/object/public/')) {
-    try {
-      const urlObj = new URL(cleanUrl);
-      urlObj.pathname = urlObj.pathname.replace(
-        '/storage/v1/object/public/',
-        '/storage/v1/render/image/public/'
-      );
-      const width = Math.max(64, Math.min(1600, Math.round(targetWidth || 960)));
-      const height = Math.round(width * 1.25);
-      urlObj.searchParams.set('width', String(width));
-      urlObj.searchParams.set('height', String(height));
-      urlObj.searchParams.set('resize', 'cover');
-      urlObj.searchParams.set('quality', '75');
-      urlObj.searchParams.set('format', 'webp');
-      return urlObj.toString();
-    } catch {
-      return cleanUrl;
+  // Serve Cloudinary originals resized, in the best format and quality for the browser.
+  const cloudinaryUpload = '/image/upload/';
+  if (cleanUrl.startsWith('https://res.cloudinary.com/') && cleanUrl.includes(cloudinaryUpload)) {
+    const [base, rest] = cleanUrl.split(cloudinaryUpload);
+    const hasTransform = !/^(v\d+\/|suitauragirls\/)/.test(rest);
+    if (!hasTransform) {
+      return `${base}${cloudinaryUpload}f_auto,q_auto,c_limit,w_${targetWidth || 960}/${rest}`;
     }
+    return cleanUrl;
   }
 
   // Optimize Unsplash image loading speed & cross-browser compatibility (Android, iOS, WebViews)

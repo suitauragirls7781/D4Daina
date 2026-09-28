@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { firestore } from './_lib/firebaseAdmin.js';
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
@@ -12,12 +12,8 @@ const reply = (res, status, body) => {
   res.end(JSON.stringify(body));
 };
 
-const getDatabase = () => {
-  const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) throw new Error('SERVER_CONFIG_MISSING');
-  return createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
-};
+// One OTP document per email + purpose, only reachable through the Admin SDK.
+const otpDoc = (email, purpose) => firestore().collection('customer_email_otps').doc(`${email}__${purpose}`);
 
 const hashCode = (email, purpose, code) => createHmac('sha256', process.env.ADMIN_SESSION_SECRET)
   .update(`${email}:${purpose}:${code}`)
@@ -89,15 +85,10 @@ export default async function handler(req, res) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(res, 400, { error: 'Enter a valid email address.' });
     if (!['signup', 'login', 'password_reset'].includes(purpose)) return reply(res, 400, { error: 'Invalid verification purpose.' });
 
-    const db = getDatabase();
+    const otpRef = otpDoc(email, purpose);
     if (body.action === 'send') {
-      const { data: previous, error: lookupError } = await db
-        .from('customer_email_otps')
-        .select('sent_at')
-        .eq('email', email)
-        .eq('purpose', purpose)
-        .maybeSingle();
-      if (lookupError) throw lookupError;
+      const previousSnapshot = await otpRef.get();
+      const previous = previousSnapshot.exists ? previousSnapshot.data() : null;
       if (previous?.sent_at && Date.now() - new Date(previous.sent_at).getTime() < RESEND_COOLDOWN_MS) {
         return reply(res, 429, { error: 'Please wait 30 seconds before requesting another code.' });
       }
@@ -105,43 +96,38 @@ export default async function handler(req, res) {
       const code = String(randomInt(100000, 1000000));
       await sendEmail({ email, name: String(body.name || 'Customer').slice(0, 100), code, purpose });
       const now = new Date();
-      const { error: saveError } = await db.from('customer_email_otps').upsert({
+      await otpRef.set({
         email,
         purpose,
         code_hash: hashCode(email, purpose, code),
         attempts: 0,
         sent_at: now.toISOString(),
         expires_at: new Date(now.getTime() + OTP_LIFETIME_MS).toISOString(),
-      }, { onConflict: 'email,purpose' });
-      if (saveError) throw saveError;
+      });
       return reply(res, 200, { success: true, expiresInSeconds: OTP_LIFETIME_MS / 1000 });
     }
 
     if (body.action === 'verify') {
       const code = String(body.code || '').trim();
       if (!/^\d{6}$/.test(code)) return reply(res, 400, { error: 'Enter the complete 6-digit code.' });
-      const { data: record, error: lookupError } = await db.from('customer_email_otps')
-        .select('code_hash,attempts,expires_at')
-        .eq('email', email)
-        .eq('purpose', purpose)
-        .maybeSingle();
-      if (lookupError) throw lookupError;
+      const recordSnapshot = await otpRef.get();
+      const record = recordSnapshot.exists ? recordSnapshot.data() : null;
       if (!record || new Date(record.expires_at).getTime() <= Date.now() || record.attempts >= MAX_VERIFY_ATTEMPTS) {
-        if (record) await db.from('customer_email_otps').delete().eq('email', email).eq('purpose', purpose);
+        if (record) await otpRef.delete();
         return reply(res, 400, { error: 'Code is invalid or expired. Request a new code.' });
       }
 
       if (!safeCompare(hashCode(email, purpose, code), record.code_hash)) {
         const nextAttempts = record.attempts + 1;
         if (nextAttempts >= MAX_VERIFY_ATTEMPTS) {
-          await db.from('customer_email_otps').delete().eq('email', email).eq('purpose', purpose);
+          await otpRef.delete();
         } else {
-          await db.from('customer_email_otps').update({ attempts: nextAttempts }).eq('email', email).eq('purpose', purpose);
+          await otpRef.update({ attempts: nextAttempts });
         }
         return reply(res, 400, { error: 'Incorrect code. Check your email and try again.' });
       }
 
-      await db.from('customer_email_otps').delete().eq('email', email).eq('purpose', purpose);
+      await otpRef.delete();
       return reply(res, 200, { success: true, verified: true, email });
     }
 

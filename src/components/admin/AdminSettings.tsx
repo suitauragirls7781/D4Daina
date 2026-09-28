@@ -596,53 +596,17 @@ export const AdminSettings: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 3: Database-Ready Architecture & Supabase Credentials */}
+      {/* Tab 3: Database Architecture (Firebase Firestore + Cloudinary images) */}
       {activeTab === 'database' && (
         <div className="bg-\[#FAF7F2\] p-6 sm:p-8 rounded-2xl border border-rose-100 shadow-xs space-y-6">
           <div className="border-b border-gray-100 pb-3">
             <h3 className="font-serif text-xl font-bold text-gray-900 flex items-center gap-2">
               <Database className="w-5 h-5 text-[#211C1A]" />
-              Supabase Database & Schema Configuration
+              Firebase Database & Schema Overview
             </h3>
             <p className="text-xs text-gray-500">
-              Manage Supabase connection credentials (Project URL and Anon API Key) and review backend schema mapping.
+              Store data lives in Firebase (Cloud Firestore for records, Cloudinary for images). The connection is configured at build time, so there are no credentials to manage here.
             </p>
-          </div>
-
-          {/* Supabase Key Inputs Form */}
-          <div className="p-5 bg-[#D8C8B8]/40 rounded-xl border border-rose-100 space-y-4">
-            <h4 className="font-bold text-[#211C1A] uppercase tracking-wider text-xs">Supabase Project Connection</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">Supabase Project URL</label>
-                <input
-                  type="text"
-                  value={storeForm.supabaseUrl || ''}
-                  onChange={(e) => setStoreForm({ ...storeForm, supabaseUrl: e.target.value })}
-                  placeholder="https://xxx.supabase.co"
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl font-mono bg-\[#FAF7F2\] text-gray-800"
-                />
-              </div>
-              <div>
-                <label className="block font-bold text-gray-700 uppercase mb-1">Supabase Anon / Public API Key</label>
-                <input
-                  type="password"
-                  value={storeForm.supabaseAnonKey || ''}
-                  onChange={(e) => setStoreForm({ ...storeForm, supabaseAnonKey: e.target.value })}
-                  placeholder="eyJhbGciOiJIUzI1Ni..."
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl font-mono bg-\[#FAF7F2\] text-gray-800"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={handleSaveGeneral}
-                className="px-5 py-2 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-lg text-xs font-bold uppercase tracking-wider transition shadow-xs flex items-center gap-1.5"
-              >
-                <Save className="w-3.5 h-3.5" /> Save Supabase Keys
-              </button>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
@@ -673,7 +637,7 @@ export const AdminSettings: React.FC = () => {
                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">Connected</span>
               </div>
               <p className="text-gray-600 text-[11px]">
-                Fields: email, full_name, phone, house_flat, street, city, state, pincode.
+                Fields: email, fullName, phone, address details, pincode, cart[], wishlist[] (document id = email).
               </p>
             </div>
 
@@ -712,7 +676,7 @@ export const AdminSettings: React.FC = () => {
           <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs text-gray-600 flex items-start gap-2">
             <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
             <span>
-              <strong>Supabase Active Sync:</strong> All customer profile data, orders, categories, and reviews sync in real-time with your configured Supabase database instance.
+              <strong>Firebase Live Sync:</strong> Customer profiles, orders, categories, coupons, and reviews are stored in Cloud Firestore and sync in real time; product and banner images are stored in Cloudinary.
             </span>
           </div>
 
@@ -1023,7 +987,7 @@ export const AdminSettings: React.FC = () => {
                 <span>BREVO API SYNC STATUS: CONNECTED</span>
               </div>
               <p className="text-[11px] text-emerald-800 leading-relaxed">
-                Direct REST API mode is active. Customer OTP verification emails bypass Supabase rate limits and land directly in user inboxes within 1 second.
+                Direct REST API mode is active. Customer OTP verification emails bypass auth-provider rate limits and land directly in user inboxes within 1 second.
               </p>
             </div>
 

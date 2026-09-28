@@ -87,7 +87,7 @@ export const AdminDealOfTheDay: React.FC = () => {
         stockText,
       });
 
-      showToast('✨ Deal of the Day saved & synced live to Supabase!', 'success');
+      showToast('✨ Deal of the Day saved & synced live to Firebase!', 'success');
     } catch (err) {
       console.error('Error saving deal:', err);
       showToast('Error saving deal configuration', 'error');
@@ -117,7 +117,7 @@ export const AdminDealOfTheDay: React.FC = () => {
           </div>
           <h1 className="font-serif font-black text-2xl text-white">Deal of the Day Manager</h1>
           <p className="text-xs text-[#F1E8DF]/80 font-sans">
-            Sync any product from your catalog to the homepage with a single click. Connected to Supabase & live state.
+            Sync any product from your catalog to the homepage with a single click. Connected to Firebase & live state.
           </p>
         </div>
 

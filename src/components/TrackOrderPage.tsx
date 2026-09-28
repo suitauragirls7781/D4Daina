@@ -18,10 +18,8 @@ import {
   RefreshCw,
   Crown
 } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { supabase } from '../lib/supabase';
-import { mapOrderFromSupabase } from '../context/AdminContext';
+import { getDocById } from '../lib/dataStore';
+import { mapOrderFromDb } from '../context/AdminContext';
 
 export const TrackOrderPage: React.FC = () => {
   const { confirmedOrder, recentOrders = [], setActivePage, showToast } = useShop();
@@ -111,21 +109,17 @@ export const TrackOrderPage: React.FC = () => {
         }
       }
 
-      // 3. Query Supabase database
+      // 3. Look up the order document in Firestore (document id = order number)
       if (!foundOrder) {
         try {
-          const { data: supaOrder, error: supaErr } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('order_number', cleanOrderId)
-            .maybeSingle();
-          if (!supaErr && supaOrder) {
-            const mapped = mapOrderFromSupabase(supaOrder);
+          const orderDoc = await getDocById('orders', cleanOrderId);
+          if (orderDoc) {
+            const mapped = mapOrderFromDb(orderDoc);
             const mobileMatches = mapped.customerMobile?.replace(/\D/g, '') === cleanPhone;
             if (mobileMatches) foundOrder = mapped;
           }
-        } catch (supaErr) {
-          console.warn('Supabase order lookup notice:', supaErr);
+        } catch (lookupErr) {
+          console.warn('Order lookup notice:', lookupErr);
         }
       }
 
