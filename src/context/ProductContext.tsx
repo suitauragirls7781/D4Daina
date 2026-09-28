@@ -211,41 +211,17 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
   };
 
-  const mergeProducts = (dbProds: Product[], localProds: Product[]): Product[] => {
-    if (dbProds && dbProds.length > 0) {
-      // Find any newly created unsynced local products.
-      const unsyncedNewLocal = localProds.filter(
-        (lp) => lp && lp.id != null && String(lp.id).startsWith('sag-prod-') && !dbProds.some((sp) => sp.name === lp.name || sp.sku === lp.sku)
-      );
-      return [...dbProds, ...unsyncedNewLocal];
-    }
-
-    // Only fallback to real local data if the database returned 0 items
-    const nonDefaultLocal = localProds.filter((p) => p && p.id != null);
-    if (nonDefaultLocal.length > 0) {
-      return nonDefaultLocal;
-    }
-    return [];
-  };
-
   // Applies a fresh set of product documents (from a fetch or a live snapshot) to state.
+  // Only called after a successful read, so the database is the source of truth: products
+  // deleted by the admin must disappear even if an older copy is cached in the browser.
   const applyProductRows = (rows: any[]) => {
-    const localCache = getLocalStorageProducts();
-    if (!rows || rows.length === 0) {
-      setProducts(localCache);
-      saveLocalStorageProducts(localCache);
-      return;
-    }
     // Newest first by createdAt
-    const sortedRows = [...rows].sort((a, b) =>
+    const sortedRows = [...(rows || [])].sort((a, b) =>
       String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
     );
     const productsWithImages = sortedRows.map(mapProductFromDb).filter(hasRealProductImage);
-    const merged = productsWithImages.length > 0
-      ? mergeProducts(productsWithImages, localCache)
-      : localCache;
-    setProducts(merged);
-    saveLocalStorageProducts(merged);
+    setProducts(productsWithImages);
+    saveLocalStorageProducts(productsWithImages);
   };
 
   const fetchProducts = async () => {

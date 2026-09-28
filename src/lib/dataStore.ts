@@ -14,7 +14,7 @@ import {
 import { signInWithCustomToken, signOut } from 'firebase/auth';
 import { auth, db } from './firebase';
 
-// Firestore collections that replaced the old Supabase tables.
+// Firestore collections used by the store.
 export const COLLECTIONS = {
   products: 'products',
   categories: 'categories',
@@ -83,7 +83,7 @@ export const watchCollection = (name: CollectionName, onChange: (rows: Row[]) =>
     (error) => console.warn(`Live updates for ${name} unavailable:`, error.message),
   );
 
-export type ImageFolder = 'product-images' | 'banners' | 'hero';
+export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals';
 
 const adminImageRequest = async (action: 'cloudinary-sign' | 'cloudinary-delete', body: object) => {
   const response = await fetch(`/api/admin-config?action=${action}`, {

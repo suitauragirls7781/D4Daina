@@ -13,6 +13,9 @@ export const BestSellersSection: React.FC = () => {
     : activeProducts.filter(p => !p.isNewArrival)
   ).slice(0, 4);
 
+  // Hide the whole section instead of showing an empty heading
+  if (bestSellers.length === 0) return null;
+
   return (
     <section id="best-sellers-section" className="py-8 sm:py-14 bg-[#FAF7F2] border-b border-[#9A6A3A]/25">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -60,6 +63,8 @@ export const FestiveCollectionSection: React.FC = () => {
     ? festiveList 
     : activeProducts.filter(p => !p.isNewArrival && !p.isBestSeller)
   ).slice(0, 4);
+
+  if (festiveItems.length === 0) return null;
 
   return (
     <section id="festive-collection-section" className="py-8 sm:py-14 bg-[#FAF7F2] border-b border-[#9A6A3A]/25">

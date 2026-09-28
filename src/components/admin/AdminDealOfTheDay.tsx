@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { 
-  Flame, 
-  Sparkles, 
-  Save, 
-  CheckCircle2, 
-  Clock, 
-  RefreshCw, 
-  Zap, 
-  Search, 
-  Eye, 
+import {
+  Flame,
+  Sparkles,
+  Save,
+  CheckCircle2,
+  Clock,
+  RefreshCw,
+  Zap,
+  Search,
+  Eye,
   ShoppingBag,
-  Star
+  Star,
+  Upload,
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 import { getCleanImageUrl } from '../../utils/imageHelper';
+import { deleteImages, uploadImage } from '../../lib/dataStore';
 
 export const AdminDealOfTheDay: React.FC = () => {
   const { products = [], dealOfTheDay, updateDealOfTheDay } = useAdmin();
@@ -23,9 +27,10 @@ export const AdminDealOfTheDay: React.FC = () => {
   const [enabled, setEnabled] = useState<boolean>(dealOfTheDay?.enabled ?? true);
   const [productId, setProductId] = useState<string>(dealOfTheDay?.productId || (products[0]?.id || ''));
   const [badgeText, setBadgeText] = useState<string>(dealOfTheDay?.badgeText || "DEAL OF THE DAY");
-  const [dealPrice, setDealPrice] = useState<number>(dealOfTheDay?.dealPrice || (products[0]?.price ? Math.round(products[0].price * 0.85) : 899));
   const [durationHours, setDurationHours] = useState<number>(dealOfTheDay?.durationHours || 24);
-  const [stockText, setStockText] = useState<string>(dealOfTheDay?.stockText || "🔥 Only 30 left at this price!");
+  // Photo shown on the homepage deal card only; the product page keeps its own images
+  const [bannerImage, setBannerImage] = useState<string>(dealOfTheDay?.bannerImage || '');
+  const [isUploading, setIsUploading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -33,10 +38,39 @@ export const AdminDealOfTheDay: React.FC = () => {
 
   // Currently selected active product
   const activeProduct = products.find((p) => p.id === productId) || products[0];
+  const previewImage = bannerImage || activeProduct?.images?.[0] || activeProduct?.image;
+
+  // Deletes the previously saved deal banner from Cloudinary once it is no longer used anywhere
+  const cleanupOldBanner = (nextBanner: string) => {
+    const oldBanner = dealOfTheDay?.bannerImage;
+    if (!oldBanner || oldBanner === nextBanner) return;
+    const usedByProduct = products.some((product) => (product.images || []).includes(oldBanner));
+    if (!usedByProduct) deleteImages([oldBanner]).catch((error) => console.error('Error deleting old deal banner:', error));
+  };
+
+  const handleBannerUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Only image files can be uploaded.', 'error');
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const url = await uploadImage(file, 'deals');
+      setBannerImage(url);
+      showToast('Deal banner photo uploaded. Click "Save & Sync" to publish it.', 'success');
+    } catch (err: any) {
+      showToast(`Failed to upload photo: ${err?.message || 'Please try again.'}`, 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Filtered products for 1-click catalog picker
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           p.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCat = selectedCategory === 'All' || p.category === selectedCategory;
     return matchesSearch && matchesCat;
@@ -47,8 +81,9 @@ export const AdminDealOfTheDay: React.FC = () => {
   // 1-Click Set as Deal of the Day Handler
   const handleOneClickSelect = async (prod: any) => {
     setProductId(prod.id);
-    const suggestedPrice = Math.round(prod.price * 0.82); // 18% additional deal discount
-    setDealPrice(suggestedPrice);
+    // A banner photo belongs to the previous deal product, so start the new deal with the product's photo
+    const nextBanner = prod.id === dealOfTheDay?.productId ? bannerImage : '';
+    setBannerImage(nextBanner);
     const newBadge = `DEAL OF THE DAY - ${prod.name.toUpperCase()}`;
     setBadgeText(newBadge);
 
@@ -59,13 +94,13 @@ export const AdminDealOfTheDay: React.FC = () => {
         enabled: true,
         productId: prod.id,
         badgeText: newBadge,
-        dealPrice: suggestedPrice,
         durationHours: Number(durationHours),
         endTime: futureEndTime,
-        stockText: stockText || "🔥 Only 25 left at this special price!",
+        bannerImage: nextBanner,
       });
+      cleanupOldBanner(nextBanner);
       setEnabled(true);
-      showToast(`⚡ 1-CLICK SYNC: "${prod.name}" is now LIVE as Deal of the Day at ₹${suggestedPrice}!`, 'success');
+      showToast(`⚡ "${prod.name}" is now LIVE as Deal of the Day at ₹${Number(prod.price).toLocaleString('en-IN')}!`, 'success');
     } catch (err) {
       console.error('Error syncing deal:', err);
       showToast('Error syncing deal of the day', 'error');
@@ -81,11 +116,11 @@ export const AdminDealOfTheDay: React.FC = () => {
         enabled,
         productId,
         badgeText,
-        dealPrice: Number(dealPrice),
         durationHours: Number(durationHours),
         endTime: futureEndTime,
-        stockText,
+        bannerImage,
       });
+      cleanupOldBanner(bannerImage);
 
       showToast('✨ Deal of the Day saved & synced live to Firebase!', 'success');
     } catch (err) {
@@ -107,7 +142,7 @@ export const AdminDealOfTheDay: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      
+
       {/* 1. Header Banner */}
       <div className="bg-gradient-to-r from-[#241D1B] via-[#241D1B] to-[#241D1B] text-[#211C1A] p-6 rounded-2xl border border-[#9A6A3A]/40 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -148,9 +183,9 @@ export const AdminDealOfTheDay: React.FC = () => {
         </div>
 
         <label className="relative inline-flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={enabled} 
+          <input
+            type="checkbox"
+            checked={enabled}
             onChange={(e) => {
               const val = e.target.checked;
               setEnabled(val);
@@ -180,8 +215,8 @@ export const AdminDealOfTheDay: React.FC = () => {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-48">
               <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-3" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search products..."
@@ -208,11 +243,11 @@ export const AdminDealOfTheDay: React.FC = () => {
             const thumb = getCleanImageUrl(prod.images?.[0] || prod.image);
 
             return (
-              <div 
+              <div
                 key={prod.id}
                 className={`p-3 rounded-xl border transition-all flex flex-col justify-between relative ${
-                  isActive 
-                    ? 'border-[#241D1B] bg-[#F1E8DF] ring-2 ring-[#9A6A3A] shadow-md' 
+                  isActive
+                    ? 'border-[#241D1B] bg-[#F1E8DF] ring-2 ring-[#9A6A3A] shadow-md'
                     : 'border-gray-200 bg-white hover:border-[#9A6A3A]/50'
                 }`}
               >
@@ -223,9 +258,9 @@ export const AdminDealOfTheDay: React.FC = () => {
                 )}
 
                 <div className="flex items-center gap-3">
-                  <img 
-                    src={thumb} 
-                    alt={prod.name} 
+                  <img
+                    src={thumb}
+                    alt={prod.name}
                     className="w-14 h-18 object-cover object-top rounded-lg border border-gray-200 shrink-0 bg-gray-50"
                   />
                   <div className="min-w-0 space-y-1">
@@ -245,8 +280,8 @@ export const AdminDealOfTheDay: React.FC = () => {
                   type="button"
                   onClick={() => handleOneClickSelect(prod)}
                   className={`mt-3 w-full py-2 px-3 text-[11px] font-serif font-black uppercase tracking-wider rounded-lg border flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                    isActive 
-                      ? 'bg-emerald-600 text-white border-emerald-700' 
+                    isActive
+                      ? 'bg-emerald-600 text-white border-emerald-700'
                       : 'bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] border-[#9A6A3A]'
                   }`}
                 >
@@ -261,14 +296,14 @@ export const AdminDealOfTheDay: React.FC = () => {
 
       {/* 4. ACTIVE DEAL PARAMETERS FORM */}
       <form onSubmit={handleSaveForm} className="bg-white rounded-2xl p-6 border border-[#9A6A3A]/30 shadow-xs space-y-6">
-        
+
         <div className="border-b border-gray-100 pb-3">
           <h2 className="font-serif text-lg font-bold text-[#211C1A] flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-black" />
             <span>Customize Active Deal Parameters</span>
           </h2>
           <p className="text-xs text-gray-500">
-            Fine-tune promotional pricing, custom banner text, and stock warnings.
+            Set the deal photo, headline and timer. The price shown is the product's price, which is what customers pay.
           </p>
         </div>
 
@@ -276,9 +311,9 @@ export const AdminDealOfTheDay: React.FC = () => {
         {activeProduct && (
           <div className="p-4 bg-[#F1E8DF] rounded-2xl border border-[#9A6A3A]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <img 
-                src={getCleanImageUrl(activeProduct.images?.[0] || activeProduct.image)} 
-                alt="" 
+              <img
+                src={getCleanImageUrl(previewImage)}
+                alt=""
                 className="w-14 h-18 object-cover object-top rounded-xl border border-[#9A6A3A]/40 shrink-0"
               />
               <div className="space-y-0.5">
@@ -289,66 +324,79 @@ export const AdminDealOfTheDay: React.FC = () => {
             </div>
 
             <div className="text-right">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">PROMOTIONAL DEAL PRICE</span>
-              <span className="font-serif text-2xl font-black text-[#211C1A]">₹{dealPrice.toLocaleString('en-IN')}</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">PRICE CUSTOMERS PAY</span>
+              <span className="font-serif text-2xl font-black text-[#211C1A]">₹{activeProduct.price.toLocaleString('en-IN')}</span>
+              <span className="text-[10px] text-gray-500 block">Change it from Products → Edit</span>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
-              Promotional Deal Price (₹) *
-            </label>
-            <input 
-              type="number" 
-              required
-              min="1"
-              value={dealPrice} 
-              onChange={(e) => setDealPrice(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-[#211C1A] focus:ring-2 focus:ring-[#241D1B] outline-none"
-            />
+        {/* Deal banner photo */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+          <div className="md:col-span-4">
+            <div className="relative w-full max-w-[220px] mx-auto aspect-[4/5] rounded-2xl overflow-hidden border border-[#9A6A3A]/30 bg-[#FAF7F2]">
+              {previewImage ? (
+                <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-cover object-top" />
+              ) : (
+                <div className="w-full h-full grid place-items-center text-gray-400"><ImageIcon className="w-8 h-8" /></div>
+              )}
+              {isUploading && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2 text-white text-xs font-bold">
+                  <Loader2 className="w-5 h-5 animate-spin" /> Uploading...
+                </div>
+              )}
+            </div>
           </div>
+          <div className="md:col-span-8 space-y-3">
+            <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">Deal Banner Photo</label>
+            <p className="text-xs text-gray-600 leading-relaxed">
+              Upload a special photo for the homepage deal card. It is used only here; the product page keeps its own photos.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="px-4 py-2.5 bg-[#241D1B] hover:bg-[#3a2e2b] text-white rounded-xl text-xs font-bold flex items-center gap-2 cursor-pointer transition">
+                <Upload className="w-4 h-4" />
+                <span>{bannerImage ? 'Replace Photo' : 'Upload Photo'}</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={isUploading} />
+              </label>
+              {bannerImage && (
+                <button
+                  type="button"
+                  onClick={() => setBannerImage('')}
+                  className="px-4 py-2.5 rounded-xl border border-[#9A6A3A]/40 text-xs font-bold text-[#800020] hover:bg-[#FAF7F2] cursor-pointer"
+                >
+                  Use product photo instead
+                </button>
+              )}
+            </div>
+            <p className={`text-[11px] font-bold ${bannerImage ? 'text-emerald-700' : 'text-gray-500'}`}>
+              {bannerImage ? 'Custom deal photo selected.' : "Currently showing the product's own photo."}
+            </p>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
-              Timer Duration (Hours) *
-            </label>
-            <select
-              value={durationHours}
-              onChange={(e) => setDurationHours(Number(e.target.value))}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-[#211C1A] focus:ring-2 focus:ring-[#241D1B] outline-none bg-white"
-            >
-              <option value={6}>6 Hours</option>
-              <option value={12}>12 Hours</option>
-              <option value={24}>24 Hours (Default)</option>
-              <option value={48}>48 Hours</option>
-            </select>
+            <div className="space-y-1.5 pt-2 max-w-xs">
+              <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
+                Timer Duration (Hours) *
+              </label>
+              <select
+                value={durationHours}
+                onChange={(e) => setDurationHours(Number(e.target.value))}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-bold text-[#211C1A] focus:ring-2 focus:ring-[#241D1B] outline-none bg-white"
+              >
+                <option value={6}>6 Hours</option>
+                <option value={12}>12 Hours</option>
+                <option value={24}>24 Hours (Default)</option>
+                <option value={48}>48 Hours</option>
+              </select>
+            </div>
           </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
-              Stock Urgency Notice
-            </label>
-            <input 
-              type="text" 
-              value={stockText} 
-              onChange={(e) => setStockText(e.target.value)}
-              placeholder="e.g. 🔥 Only 30 left at this price!"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-medium focus:ring-2 focus:ring-[#241D1B] outline-none"
-            />
-          </div>
-
         </div>
 
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
             Top Banner Headline Text
           </label>
-          <input 
-            type="text" 
-            value={badgeText} 
+          <input
+            type="text"
+            value={badgeText}
             onChange={(e) => setBadgeText(e.target.value)}
             placeholder="e.g. DEAL OF THE DAY - FULL COMBO SET"
             className="w-full px-3.5 py-2.5 rounded-xl border border-gray-300 text-xs font-medium focus:ring-2 focus:ring-[#241D1B] outline-none"
@@ -388,19 +436,23 @@ export const AdminDealOfTheDay: React.FC = () => {
             </div>
 
             <div className="p-3 grid grid-cols-12 gap-3 items-center">
-              <img 
-                src={getCleanImageUrl(activeProduct.images?.[0] || activeProduct.image)} 
-                alt="" 
+              <img
+                src={getCleanImageUrl(previewImage)}
+                alt=""
                 className="col-span-4 aspect-[4/5] object-cover object-top rounded-xl border border-gray-200"
               />
               <div className="col-span-8 space-y-1.5">
                 <span className="text-[9px] font-bold text-black uppercase">{activeProduct.category}</span>
                 <h4 className="font-serif font-bold text-sm text-[#211C1A] leading-tight">{activeProduct.name}</h4>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-serif font-black text-lg text-[#211C1A]">₹{dealPrice.toLocaleString('en-IN')}</span>
-                  <span className="text-xs text-gray-400 line-through">₹{activeProduct.price.toLocaleString('en-IN')}</span>
+                  <span className="font-serif font-black text-lg text-[#211C1A]">₹{activeProduct.price.toLocaleString('en-IN')}</span>
+                  {activeProduct.originalPrice > activeProduct.price && (
+                    <span className="text-xs text-gray-400 line-through">₹{activeProduct.originalPrice.toLocaleString('en-IN')}</span>
+                  )}
                 </div>
-                <div className="text-[10px] font-bold text-black">{stockText}</div>
+                <div className="text-[10px] font-bold text-black">
+                  {activeProduct.stockQuantity > 0 && activeProduct.stockQuantity <= 10 ? `Only ${activeProduct.stockQuantity} left in stock` : 'In stock, ships in 24–48 hours'}
+                </div>
               </div>
             </div>
           </div>

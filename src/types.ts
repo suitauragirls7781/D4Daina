@@ -180,7 +180,8 @@ export interface HeroBannerConfig {
     title: string;
     subtitle: string;
     badge: string;
-    image: string;
+    image: string; // product photo, kept in sync with the linked product
+    bannerImage?: string; // admin-uploaded banner photo; shown instead of the product photo when set
     price: number;
     originalPrice: number;
     linkText: string;
@@ -253,6 +254,7 @@ export interface DealOfTheDayConfig {
   endTime?: string;
   durationHours?: number;
   stockText?: string;
+  bannerImage?: string; // admin-uploaded photo for the deal card, separate from the product's own images
 }
 
 export interface Lead {
@@ -280,7 +282,15 @@ export type AdminTab =
   | 'hero'
   | 'banners'
   | 'reviews'
+  | 'instagram'
   | 'settings';
+
+/** An Instagram reel or post shown in the homepage "Follow the Aura" section. */
+export interface InstagramReel {
+  id: string;
+  url: string; // canonical https://www.instagram.com/reel/<code>/ (or /p/<code>/)
+  caption?: string;
+}
 
 export type ActivePage = 
   | 'home'

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { uploadImage } from '../../lib/dataStore';
+import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { 
   Save, 
   Sparkles, 
@@ -43,7 +43,8 @@ export const AdminHero: React.FC = () => {
     products,
     heroConfig, 
     updateHeroConfig,
-    syncHeroWithLiveProducts
+    syncHeroWithLiveProducts,
+    dealOfTheDay
   } = useAdmin();
   const { showToast, setActivePage } = useShop();
 
@@ -64,8 +65,19 @@ export const AdminHero: React.FC = () => {
     e.preventDefault();
     setIsSaving(true);
     try {
+      const previousBanners = (heroConfig?.slides || []).map((slide) => slide.bannerImage).filter(Boolean) as string[];
       await updateHeroConfig(heroForm);
       showToast('Hero banner slides saved & synced to the database successfully!', 'success');
+      // Delete banner photos that were replaced or removed, unless something else still shows them
+      const stillUsed = new Set<string>([
+        ...heroForm.slides.map((slide) => slide.bannerImage || ''),
+        dealOfTheDay?.bannerImage || '',
+        ...products.flatMap((product) => product.images || []),
+      ]);
+      const removed = previousBanners.filter((url) => !stillUsed.has(url));
+      if (removed.length > 0) {
+        deleteImages(removed).catch((error) => console.error('Error deleting old banner photos:', error));
+      }
     } catch (err) {
       console.error(err);
       showToast('Error saving hero slides.', 'error');
@@ -111,8 +123,9 @@ export const AdminHero: React.FC = () => {
     }
 
     if (imageUrl) {
-      updateSlide(slideId, { image: imageUrl });
-      showToast('Banner image added successfully!', 'success');
+      // Stored separately from the product photo so product sync never replaces it
+      updateSlide(slideId, { bannerImage: imageUrl });
+      showToast('Banner photo uploaded. Click "Save" to publish it.', 'success');
     }
     setUploadingSlideId(null);
   };
@@ -265,7 +278,7 @@ export const AdminHero: React.FC = () => {
             </div>
           ) : (
             heroForm.slides.map((slide, index) => {
-              const slideImg = getCleanImageUrl(slide.image);
+              const slideImg = getCleanImageUrl(slide.bannerImage || slide.image);
 
               return (
                 <div 
@@ -374,11 +387,32 @@ export const AdminHero: React.FC = () => {
 
                         <input
                           type="text"
-                          placeholder="Or paste image URL directly..."
-                          value={slide.image || ''}
-                          onChange={(e) => updateSlide(slide.id, { image: e.target.value })}
+                          placeholder="Or paste banner image URL..."
+                          value={slide.bannerImage || ''}
+                          onChange={(e) => updateSlide(slide.id, { bannerImage: e.target.value.trim() || undefined })}
                           className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:border-rose-300 outline-none"
                         />
+
+                        {slide.bannerImage ? (
+                          <div className="flex items-center justify-between gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-2">
+                            <span className="text-[11px] font-bold text-emerald-800">Custom banner photo (not used on the product page)</span>
+                            {slide.productId && (
+                              <button
+                                type="button"
+                                onClick={() => updateSlide(slide.id, { bannerImage: undefined })}
+                                className="shrink-0 text-[11px] font-bold text-[#800020] underline cursor-pointer"
+                              >
+                                Use product photo
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-gray-500 leading-snug">
+                            {slide.productId
+                              ? "Showing the product's own photo. Upload a banner photo to use a different image here only."
+                              : 'Upload a banner photo for this slide.'}
+                          </p>
+                        )}
                       </div>
                     </div>
 

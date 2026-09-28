@@ -13,6 +13,7 @@ import {
   LayoutTemplate, 
   Image as ImageIcon, 
   MessageSquare, 
+  Instagram,
   Settings, 
   LogOut, 
   Store, 
@@ -68,6 +69,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'hero', label: 'Hero Slides', route: '/admin/hero', icon: Sparkles },
     { id: 'banners', label: 'Banners', route: '/admin/banners', icon: ImageIcon },
     { id: 'reviews', label: 'Reviews', route: '/admin/reviews', icon: MessageSquare, badge: reviews.length },
+    { id: 'instagram', label: 'Instagram Reels', route: '/admin/instagram', icon: Instagram },
     { id: 'settings', label: 'Settings', route: '/admin/settings', icon: Settings },
   ];
 

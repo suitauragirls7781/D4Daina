@@ -13,6 +13,9 @@ export const TrendingNowSection: React.FC = () => {
     : activeProducts.filter(p => !p.isNewArrival)
   ).slice(0, 4);
 
+  // Hide the whole section instead of showing an empty heading
+  if (trendingProducts.length === 0) return null;
+
   return (
     <section id="trending-now-section" className="py-8 sm:py-14 bg-[#FAF7F2] border-b border-[#9A6A3A]/25">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">

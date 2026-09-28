@@ -38,37 +38,35 @@ export const PrepaidTrustBanner: React.FC = () => {
   };
 
   const visibleCategories = categories.filter((category) => getCategoryCount(category.name) > 0);
+  if (visibleCategories.length === 0) return null;
 
   return (
-    <section 
-      id="silhouette-curations-strip" 
-      className="w-full bg-[#FDFBF7] py-5 sm:py-7 px-3 sm:px-6 border-b border-antique-gold/25 select-none"
+    <section
+      id="silhouette-curations-strip"
+      className="w-full bg-[#FDFBF7] pt-6 pb-5 sm:pt-9 sm:pb-8 border-b border-antique-gold/20 select-none"
     >
-      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-5">
-        
-        {/* Sleek Minimalist Luxury Section Header */}
-        <div className="flex items-center justify-between gap-2 px-1">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-[0.22em] text-antique-gold font-semibold">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-end justify-between gap-3 px-4 sm:px-6 lg:px-8 mb-4 sm:mb-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.25em] text-antique-gold font-semibold">
               <Sparkles className="w-3 h-3" />
               <span>Artisan Craft Legacies</span>
             </div>
-            <h3 className="font-serif text-xl sm:text-2xl font-semibold text-[#3D0F1F] leading-tight">
+            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#3D0F1F] leading-tight">
               Shop By Silhouette
-            </h3>
+            </h2>
           </div>
-          
           <button
             onClick={() => navigateToCategory('All')}
-            className="text-[10px] sm:text-xs text-bottle-maroon hover:text-antique-gold font-semibold uppercase tracking-wider flex items-center gap-1 transition-colors group cursor-pointer"
+            className="shrink-0 text-[11px] sm:text-xs text-bottle-maroon hover:text-antique-gold font-semibold uppercase tracking-[0.18em] flex items-center gap-1 transition-colors group cursor-pointer"
           >
             <span>View All</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>
 
-        {/* Categories Track: All circles fit on one screen without horizontal scroll */}
-        <div className="flex flex-wrap justify-center sm:justify-between items-start gap-x-2 sm:gap-3 gap-y-2.5 pt-0.5">
+        {/* Story-style circles: swipe on mobile, evenly spread on larger screens */}
+        <div className="flex gap-5 sm:gap-8 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1 snap-x [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {visibleCategories.map((cat) => {
             const count = getCategoryCount(cat.name);
             const coverImage = getCategoryImage(cat.name);
@@ -76,38 +74,33 @@ export const PrepaidTrustBanner: React.FC = () => {
             return (
               <button
                 key={cat.name}
-                id={`silhouette-card-${cat.name.toLowerCase().replace(/\s+/g, '-')}`}
+                id={`silhouette-card-${cat.name.toLowerCase().replace(/s+/g, '-')}`}
                 onClick={() => navigateToCategory(cat.name as 'Suits' | 'Kurtis' | 'Anarkali' | 'Dresses')}
-                className="flex flex-col items-center text-center group cursor-pointer w-18 sm:w-21.5 md:w-24 transition-transform duration-200 active:scale-95"
+                className="snap-start shrink-0 flex flex-col items-center text-center group cursor-pointer w-[84px] sm:w-[112px] transition-transform duration-200 active:scale-95"
               >
-                {/* Circular Image Container with Royal Gold Border */}
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full border border-antique-gold/40 p-0.5 bg-ivory group-hover:border-bottle-maroon transition-colors duration-300">
-                  <div className="w-full h-full rounded-full overflow-hidden relative bg-ivory">
-                    <img 
-                      src={coverImage} 
-                      alt={cat.label} 
-                      className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500 ease-out"
-                      referrerPolicy="no-referrer"
-                      loading="lazy"
-                    />
+                <div className="w-[76px] h-[76px] sm:w-[104px] sm:h-[104px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#9A6A3A] via-[#E9D7B9] to-[#3D0F1F] group-hover:rotate-6 transition-transform duration-500">
+                  <div className="w-full h-full rounded-full p-[3px] bg-[#FDFBF7]">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-ivory">
+                      <img
+                        src={coverImage}
+                        alt={cat.label}
+                        className="w-full h-full object-cover object-top group-hover:scale-110 transition-transform duration-500 ease-out"
+                        referrerPolicy="no-referrer"
+                        loading="lazy"
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Typography metadata */}
-                <div className="mt-1.5 space-y-0.5 max-w-full">
-                  <span className="text-[8px] sm:text-[9px] font-semibold uppercase tracking-wider block leading-none text-antique-gold group-hover:text-bottle-maroon transition-colors">
-                    {count} DESIGNS
-                  </span>
-                  
-                  <h4 className="font-serif text-[10px] sm:text-xs font-semibold text-bottle-maroon group-hover:text-antique-gold transition-colors leading-tight line-clamp-2">
-                    {cat.label}
-                  </h4>
-                </div>
+                <h3 className="mt-2 font-serif text-[13px] sm:text-sm font-semibold text-bottle-maroon group-hover:text-antique-gold transition-colors leading-tight line-clamp-2">
+                  {cat.label}
+                </h3>
+                <span className="mt-0.5 text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.18em] text-antique-gold">
+                  {count} {count === 1 ? 'Design' : 'Designs'}
+                </span>
               </button>
             );
           })}
         </div>
-
       </div>
     </section>
   );

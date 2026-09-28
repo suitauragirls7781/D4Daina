@@ -11,7 +11,23 @@ const PUBLIC_SETTINGS = new Set([
   'banners',
   'dealOfTheDay',
   'paymentSettings',
+  'instagramReels',
 ]);
+
+// Only real Instagram reel/post links are stored, normalised to https://www.instagram.com/<type>/<code>/
+const sanitizeInstagramReels = (value) => (Array.isArray(value) ? value : [])
+  .map((reel) => {
+    const match = String(reel?.url || '').trim().match(/^https?:\/\/(?:www\.)?instagram\.com\/(?:[A-Za-z0-9_.]+\/)?(reel|reels|p|tv)\/([A-Za-z0-9_-]{5,40})/);
+    if (!match) return null;
+    const type = match[1] === 'reels' ? 'reel' : match[1];
+    return {
+      id: String(reel.id || match[2]).slice(0, 60),
+      url: `https://www.instagram.com/${type}/${match[2]}/`,
+      caption: typeof reel.caption === 'string' ? reel.caption.trim().slice(0, 120) : '',
+    };
+  })
+  .filter(Boolean)
+  .slice(0, 24);
 
 const sanitizePublicPaymentSettings = (value) => ({
   mode: value?.mode === 'live' ? 'live' : 'test',
@@ -207,6 +223,7 @@ export default async function handler(req, res) {
       });
       if (settings.storeSettings) settings.storeSettings = sanitizePublicStoreSettings(settings.storeSettings);
       if (settings.paymentSettings) settings.paymentSettings = sanitizePublicPaymentSettings(settings.paymentSettings);
+      if (settings.instagramReels) settings.instagramReels = sanitizeInstagramReels(settings.instagramReels);
       return reply(res, 200, { settings });
     }
 
@@ -280,7 +297,11 @@ export default async function handler(req, res) {
     if (entries.length === 0 || entries.some(([key]) => !PUBLIC_SETTINGS.has(key))) {
       return reply(res, 400, { error: 'Unsupported storefront setting.' });
     }
-    const sanitizers = { storeSettings: sanitizePublicStoreSettings, paymentSettings: sanitizePublicPaymentSettings };
+    const sanitizers = {
+      storeSettings: sanitizePublicStoreSettings,
+      paymentSettings: sanitizePublicPaymentSettings,
+      instagramReels: sanitizeInstagramReels,
+    };
     const batch = client.batch();
     entries.forEach(([key, value]) => {
       const safeValue = sanitizers[key] ? sanitizers[key](value) : value;

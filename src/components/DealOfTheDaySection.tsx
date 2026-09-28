@@ -82,17 +82,22 @@ export const DealOfTheDaySection: React.FC = () => {
   // Pricing calculations
   const prodPrice = Number(product.price) || 0;
   const originalPrice = Number(product.originalPrice) || Math.round(prodPrice * 1.85);
-  const dealPrice = (dealOfTheDay?.dealPrice && Number(dealOfTheDay.dealPrice) > 0) ? Number(dealOfTheDay.dealPrice) : prodPrice;
-  const discountPercent = (originalPrice > dealPrice && originalPrice > 0) 
-    ? Math.round(((originalPrice - dealPrice) / originalPrice) * 100) 
-    : (Number(product.discount) || 30);
+  // Show exactly what the bag charges: the cart and checkout use the product's own price,
+  // so a separate "deal price" would promise a price the customer never gets.
+  const dealPrice = prodPrice;
+  const discountPercent = (originalPrice > dealPrice && originalPrice > 0)
+    ? Math.round(((originalPrice - dealPrice) / originalPrice) * 100)
+    : 0;
+  const stockLeft = Math.max(0, Number(product.stockQuantity) || 0);
+  const stockNotice = stockLeft > 0 && stockLeft <= 10 ? `Only ${stockLeft} left in stock` : 'In stock, ships in 24–48 hours';
 
   // Images list
   const productImages = (product.images && product.images.length > 0) 
     ? product.images 
     : [product.image || ELEGANT_PLACEHOLDER_SVG];
   
-  const heroImage = getCleanImageUrl(productImages[0]);
+  // The admin can upload a deal-only photo; otherwise the product's first photo is used
+  const heroImage = getCleanImageUrl(dealOfTheDay?.bannerImage || productImages[0]);
   const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -252,15 +257,17 @@ export const DealOfTheDaySection: React.FC = () => {
                     </span>
                   )}
 
-                  <span className="px-1.5 py-0.5 rounded bg-[#241D1B] text-[#211C1A] font-extrabold text-[9px] sm:text-[10px] border border-[#9A6A3A]/40">
-                    {discountPercent}% OFF
-                  </span>
+                  {discountPercent > 0 && (
+                    <span className="px-1.5 py-0.5 rounded bg-[#241D1B] text-[#211C1A] font-extrabold text-[9px] sm:text-[10px] border border-[#9A6A3A]/40">
+                      {discountPercent}% OFF
+                    </span>
+                  )}
                 </div>
 
                 {/* Stock Urgency Notice */}
                 <div className="text-[10px] sm:text-xs font-bold text-black flex items-center gap-1 pt-0.5">
                   <Flame className="w-3 h-3 text-black shrink-0" />
-                  <span className="truncate">{dealOfTheDay?.stockText || '🔥 Only 30 left at this price!'}</span>
+                  <span className="truncate">{stockNotice}</span>
                 </div>
 
               </div>

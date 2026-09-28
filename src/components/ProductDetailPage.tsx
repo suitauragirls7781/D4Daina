@@ -1021,7 +1021,7 @@ export const ProductDetailPage: React.FC = () => {
               <div className="flex flex-wrap gap-2 text-[11px] font-bold">
                 <span className="px-3 py-1 bg-[#F1E8DF] border border-[#9A6A3A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#211C1A]">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A3A]"></span>
-                  Premium {product.fabric || 'Pure Artisan Cotton'}
+                  {/^premium\b/i.test(product.fabric || '') ? product.fabric : `Premium ${product.fabric || 'Pure Artisan Cotton'}`}
                 </span>
                 <span className="px-3 py-1 bg-[#F1E8DF] border border-[#9A6A3A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#211C1A]">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#9A6A3A]"></span>

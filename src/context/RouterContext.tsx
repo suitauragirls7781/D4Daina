@@ -90,7 +90,8 @@ function parsePath(pathname: string, search: string = ''): RouteState {
     }
 
     const normalizedTab = 
-      subRoute === 'combo-offers' || subRoute === 'deal-of-the-day' ? 'comboOffers' : 
+      subRoute === 'combo-offers' ? 'comboOffers' :
+      subRoute === 'deal-of-the-day' ? 'dealOfTheDay' : 
       subRoute === 'ai-controller' || subRoute === 'ai-command' || subRoute === 'command-center' ? 'aiController' : 
       subRoute;
 

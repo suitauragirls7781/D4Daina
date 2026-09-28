@@ -1,102 +1,94 @@
 import React from 'react';
-import { Instagram, Heart, ArrowUpRight } from 'lucide-react';
+import { Instagram, ArrowUpRight } from 'lucide-react';
+import { useAdmin } from '../context/AdminContext';
+import { instagramEmbedUrl, instagramProfile } from '../utils/instagram';
 
+// Reels are managed from Admin → Instagram Reels and synced through the storefront settings.
 export const InstagramGallery: React.FC = () => {
-  const galleryItems = [
-    {
-      id: 'ig-1',
-      image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=600&q=80',
-      tag: '#FloralSuitDiaries',
-      likes: '1.4k',
-    },
-    {
-      id: 'ig-2',
-      image: 'https://images.unsplash.com/photo-1566737236500-c8ac43014a67?auto=format&fit=crop&w=600&q=80',
-      tag: '#AnarkaliRoyalty',
-      likes: '2.8k',
-    },
-    {
-      id: 'ig-3',
-      image: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=600&q=80',
-      tag: '#CottonElegance',
-      likes: '980',
-    },
-    {
-      id: 'ig-4',
-      image: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80',
-      tag: '#FestiveGlow',
-      likes: '3.1k',
-    },
-    {
-      id: 'ig-5',
-      image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=600&q=80',
-      tag: '#CoordEnsemble',
-      likes: '1.9k',
-    },
-    {
-      id: 'ig-6',
-      image: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=600&q=80',
-      tag: '#WineSuitLove',
-      likes: '2.2k',
-    },
-  ];
+  const { instagramReels = [], storeSettings } = useAdmin();
+  const profile = instagramProfile(storeSettings?.instagramUrl);
+
+  const followButton = (
+    <a
+      href={profile.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#3D0F1F] text-white text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#561A2E] active:scale-95 transition"
+    >
+      <Instagram className="w-4 h-4" />
+      Follow {profile.handle}
+      <ArrowUpRight className="w-3.5 h-3.5" />
+    </a>
+  );
 
   return (
-    <section id="instagram-gallery-section" className="py-8 sm:py-12 bg-[#FFFDFC]">
+    <section id="instagram-gallery-section" className="py-14 sm:py-20 bg-[#FFFDFC] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
         {/* Header */}
-        <div className="text-center max-w-xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D8C8B8]/20 border border-rose-100 text-[#211C1A] text-xs font-semibold uppercase tracking-widest mb-2">
-            <Instagram className="w-3.5 h-3.5 text-[#C84B70]" />
-            @suitauragirls
-          </div>
-          <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#2C1820] tracking-tight">
-            FOLLOW THE AURA
-          </h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-2">
-            Discover our latest styles. Tag <span className="font-semibold text-[#211C1A]">#SuitAuraGirls</span> on Instagram to be featured on our official lookbook.
-          </p>
-        </div>
-
-        {/* 6 Column Image Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-          {galleryItems.map((item) => (
-            <div
-              key={item.id}
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden shadow-xs bg-[#D8C8B8]/20 border border-rose-100"
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8 sm:mb-12">
+          <div className="max-w-xl">
+            <a
+              href={profile.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mb-3 text-[11px] font-bold uppercase tracking-[0.25em] text-[#9A6A3A] hover:text-[#3D0F1F] transition"
             >
-              {item.image && (
-                <img
-                  src={item.image}
-                  alt="Suit Aura Girls Lookbook"
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  loading="lazy"
-                />
-              )}
-
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-3 text-white">
-                <div className="self-end">
-                  <Instagram className="w-4 h-4 text-white drop-shadow-md" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-bold text-black truncate">{item.tag}</p>
-                  <div className="flex items-center justify-between mt-1 text-[10px] text-gray-200">
-                    <span className="flex items-center gap-1">
-                      <Heart className="w-3 h-3 fill-rose-400 text-rose-400" />
-                      {item.likes}
-                    </span>
-                    <span className="underline flex items-center">
-                      Shop <ArrowUpRight className="w-2.5 h-2.5 ml-0.5" />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+              <span className="grid place-items-center w-7 h-7 rounded-full bg-gradient-to-tr from-[#F9CE34] via-[#EE2A7B] to-[#6228D7]">
+                <Instagram className="w-3.5 h-3.5 text-white" />
+              </span>
+              {profile.handle}
+            </a>
+            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#2C1820] tracking-tight leading-[1.05]">
+              Follow the Aura
+            </h2>
+            <p className="text-sm text-[#211C1A]/70 mt-3 leading-relaxed">
+              Fresh looks, styling reels and behind-the-scenes from our atelier. Tag{' '}
+              <span className="font-semibold text-[#211C1A]">#SuitAuraGirls</span> to be featured.
+            </p>
+          </div>
+          {instagramReels.length > 0 && <div className="hidden md:block">{followButton}</div>}
         </div>
 
+        {instagramReels.length === 0 ? (
+          <div className="relative rounded-3xl overflow-hidden border border-[#9A6A3A]/25 bg-[#FAF7F2] px-6 py-12 sm:py-16 text-center">
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-gradient-to-tr from-[#F9CE34]/20 via-[#EE2A7B]/15 to-[#6228D7]/15 blur-2xl" aria-hidden="true" />
+            <div className="relative max-w-md mx-auto space-y-5">
+              <span className="mx-auto grid place-items-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#F9CE34] via-[#EE2A7B] to-[#6228D7] shadow-lg">
+                <Instagram className="w-8 h-8 text-white" />
+              </span>
+              <p className="font-serif text-2xl text-[#2C1820]">New reels are on their way</p>
+              <p className="text-sm text-[#211C1A]/70">Catch our latest drops and styling videos first on Instagram.</p>
+              {followButton}
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Swipe row on mobile, grid from large screens */}
+            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scroll-px-4 sm:scroll-px-0 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {instagramReels.map((reel, index) => (
+                <figure
+                  key={reel.url}
+                  className="snap-start shrink-0 w-[78vw] max-w-[320px] lg:w-auto lg:max-w-none rounded-2xl overflow-hidden bg-white border border-[#9A6A3A]/20 shadow-[0_8px_30px_-12px_rgba(61,15,31,0.25)]"
+                >
+                  <iframe
+                    src={instagramEmbedUrl(reel)}
+                    title={reel.caption || `Suit Aura Girls on Instagram ${index + 1}`}
+                    className="block w-full h-[600px] border-0 bg-white"
+                    loading="lazy"
+                    scrolling="no"
+                    allow="encrypted-media; picture-in-picture; clipboard-write"
+                  />
+                  {reel.caption && (
+                    <figcaption className="px-4 py-3 text-xs text-[#211C1A]/80 border-t border-[#9A6A3A]/15 truncate">
+                      {reel.caption}
+                    </figcaption>
+                  )}
+                </figure>
+              ))}
+            </div>
+            <div className="mt-8 flex justify-center md:hidden">{followButton}</div>
+          </>
+        )}
       </div>
     </section>
   );

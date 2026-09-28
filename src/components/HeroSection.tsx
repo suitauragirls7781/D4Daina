@@ -16,8 +16,9 @@ export const HeroSection: React.FC = () => {
   const liveProductSlides = React.useMemo<LiveHeroSlide[]>(() => {
     // 1. If live products are synced from the database, ALWAYS generate slides from real synced products!
     if (products && products.length > 0) {
-      // Check if admin has explicitly customized hero slides that match real products or have real uploaded images
+      // Admin-configured slides: linked to a live product, or carrying their own uploaded banner photo
       const customMatchingSlides = (heroConfig?.slides || []).filter((slide) => {
+        if (slide.bannerImage) return true;
         if (!slide.image || slide.image.includes('images.unsplash.com')) return false;
         return products.some(
           (p) =>
@@ -47,12 +48,13 @@ export const HeroSection: React.FC = () => {
               title: matchedProd.name || slide.title,
               price: livePrice,
               originalPrice: liveOrigPrice,
-              image: liveImg || slide.image,
+              // A dedicated banner photo wins over the product's own photo
+              image: slide.bannerImage || liveImg || slide.image,
               subtitle: matchedProd.fabric || (matchedProd.description ? matchedProd.description.slice(0, 65) + '...' : slide.subtitle),
               rawProduct: matchedProd,
             };
           }
-          return slide;
+          return { ...slide, image: slide.bannerImage || slide.image };
         });
       }
 
@@ -62,7 +64,9 @@ export const HeroSection: React.FC = () => {
 
     // Fallback if products not loaded yet
     if (heroConfig?.slides && heroConfig.slides.length > 0) {
-      const nonStockSlides = heroConfig.slides.filter(s => s.image && !s.image.includes('images.unsplash.com'));
+      const nonStockSlides = heroConfig.slides
+        .filter((s) => s.bannerImage || (s.image && !s.image.includes('images.unsplash.com')))
+        .map((s) => ({ ...s, image: s.bannerImage || s.image }));
       return nonStockSlides.slice(0, 6);
     }
 
@@ -149,11 +153,19 @@ export const HeroSection: React.FC = () => {
           className="group relative block w-full cursor-pointer overflow-hidden bg-[#FAF5EB] text-left lg:col-span-7"
           aria-label={`View ${currentSlide.title}`}
         >
-          <div className="aspect-[4/5] max-h-[78vh] w-full">
+          <div className="relative aspect-[4/5] max-h-[78vh] w-full lg:aspect-auto lg:h-full lg:min-h-[640px]">
+            {/* Blurred fill so any photo ratio fills the frame without cropping the outfit */}
+            <img
+              src={getCleanImageUrl(currentSlide.image, 400) || ELEGANT_PLACEHOLDER_SVG}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#3D0F1F]/35 via-transparent to-transparent" aria-hidden="true" />
             <img
               src={getCleanImageUrl(currentSlide.image, 1200) || ELEGANT_PLACEHOLDER_SVG}
               alt={currentSlide.title || 'Featured Suit Aura Girls design'}
-              className="h-full w-full object-contain"
+              className="relative h-full w-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
               loading="eager"
               decoding="async"
               onError={(event) => {
@@ -213,7 +225,7 @@ export const HeroSection: React.FC = () => {
               <span className="text-xs text-[#FAF5EB]/45">/ {String(slides.length).padStart(2, '0')}</span>
               <span className="ml-2 max-w-[140px] truncate text-xs text-[#FAF5EB]/75">{currentSlide.title}</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 ${slides.length > 1 ? '' : 'hidden'}`}>
               <button
                 type="button"
                 onClick={handlePrev}

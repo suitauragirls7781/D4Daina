@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 // Every upload lands under this folder, and deletes are refused outside it.
 export const CLOUDINARY_ROOT_FOLDER = 'suitauragirls';
-const ALLOWED_FOLDERS = new Set(['product-images', 'banners', 'hero']);
+const ALLOWED_FOLDERS = new Set(['product-images', 'banners', 'hero', 'deals']);
 
 const config = () => {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;

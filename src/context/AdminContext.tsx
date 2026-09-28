@@ -28,6 +28,7 @@ import {
   AdminTab,
   AdminOrderStatus,
   DealOfTheDayConfig,
+  InstagramReel,
   Lead
 } from '../types';
 import { useProducts } from './ProductContext';
@@ -125,6 +126,10 @@ interface AdminContextType {
   // Deal of the Day
   dealOfTheDay: DealOfTheDayConfig;
   updateDealOfTheDay: (updated: Partial<DealOfTheDayConfig>) => Promise<void>;
+
+  // Instagram reels shown in the homepage "Follow the Aura" section
+  instagramReels: InstagramReel[];
+  updateInstagramReels: (reels: InstagramReel[]) => Promise<void>;
 
   // Banners
   banners: Banner[];
@@ -622,6 +627,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } catch {}
     return INITIAL_DEAL_OF_THE_DAY;
   });
+  const [instagramReels, setInstagramReels] = useState<InstagramReel[]>(() => {
+    try {
+      const saved = localStorage.getItem('sag_instagram_reels');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [];
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const persistStorefrontSetting = async (key: string, value: unknown, localKey: string) => {
@@ -677,6 +689,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setDealOfTheDay(settings.dealOfTheDay);
         localStorage.setItem('sag_deal_of_the_day', JSON.stringify(settings.dealOfTheDay));
       }
+      // Always apply (an empty list means the admin removed every reel)
+      const reels = Array.isArray(settings.instagramReels) ? settings.instagramReels : [];
+      setInstagramReels(reels);
+      localStorage.setItem('sag_instagram_reels', JSON.stringify(reels));
       if (settings.paymentSettings) {
         const value = toPublicPaymentSettings(settings.paymentSettings);
         setPaymentSettings(value);
@@ -871,8 +887,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, []);
 
-  // Auto-sync hero slides when real products are available or updated in the database
+  // Auto-sync hero slides when real products are available or updated in the database.
+  // Only the admin can save settings, so visitors never attempt this. Slide bannerImage is never touched.
   useEffect(() => {
+    if (!isAdminLoggedIn) return;
     if (products && products.length > 0) {
       if (!heroConfig?.slides || heroConfig.slides.length === 0) {
         const freshSlides = generateHeroSlidesFromProducts(products);
@@ -927,7 +945,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           .catch((error) => console.warn('Hero live sync notice:', error));
       }
     }
-  }, [products]);
+  }, [products, isAdminLoggedIn]);
 
   // Auth Handler with hardened security & PIN check
   const loginAdmin = async (
@@ -1259,7 +1277,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const syncHeroWithLiveProducts = async () => {
-    const freshSlides = generateHeroSlidesFromProducts(products);
+    // Keep any banner photo the admin uploaded for a product that stays in the slides
+    const bannerByProduct = new Map(
+      (heroConfig?.slides || []).filter((s) => s.bannerImage && s.productId).map((s) => [String(s.productId), s.bannerImage]),
+    );
+    const freshSlides = generateHeroSlidesFromProducts(products).map((slide) => ({
+      ...slide,
+      bannerImage: slide.productId ? bannerByProduct.get(String(slide.productId)) : undefined,
+    }));
     const newConfig: HeroBannerConfig = { slides: freshSlides };
     setHeroConfig(newConfig);
     try {
@@ -1372,6 +1397,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nextStore = normalizeStoreBrand({ ...storeSettings, ...updated });
     await saveStoreSettingsSetting(nextStore);
     setStoreSettings(nextStore);
+  };
+
+  const updateInstagramReels = async (reels: InstagramReel[]) => {
+    await persistStorefrontSetting('instagramReels', reels, 'sag_instagram_reels');
+    setInstagramReels(reels);
   };
 
   const updateDealOfTheDay = async (updated: Partial<DealOfTheDayConfig>) => {
@@ -1490,6 +1520,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         syncHeroWithLiveProducts,
         dealOfTheDay,
         updateDealOfTheDay,
+        instagramReels,
+        updateInstagramReels,
         banners,
         addBanner,
         updateBanner,

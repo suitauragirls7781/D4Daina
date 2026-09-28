@@ -13,6 +13,7 @@ import { AdminCustomers } from './admin/AdminCustomers';
 import { AdminCoupons } from './admin/AdminCoupons';
 import { AdminLeads } from './admin/AdminLeads';
 import { AdminHomepage } from './admin/AdminHomepage';
+import { AdminInstagram } from './admin/AdminInstagram';
 import { AdminHero } from './admin/AdminHero';
 import { AdminBanners } from './admin/AdminBanners';
 import { AdminReviews } from './admin/AdminReviews';
@@ -184,6 +185,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminBanners />;
       case 'reviews':
         return <AdminReviews />;
+      case 'instagram':
+        return <AdminInstagram />;
       case 'settings':
         return <AdminSettings />;
       case 'dashboard':
