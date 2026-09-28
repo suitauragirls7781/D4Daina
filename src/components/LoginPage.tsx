@@ -544,7 +544,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] py-8 sm:py-10 px-4 sm:px-6 flex items-center justify-center font-sans">
+    <div className="min-h-screen bg-[#120205] py-8 sm:py-10 px-4 sm:px-6 flex items-center justify-center font-sans">
       
       <div className="max-w-md w-full space-y-6">
         
@@ -552,42 +552,42 @@ export const LoginPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <button
             onClick={() => setActivePage('home')}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#3D0F1F] hover:text-[#B8935A] transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#E8D2A4] hover:text-[#D7B77A] transition-colors cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4 text-black" />
+            <ArrowLeft className="w-4 h-4 text-[#F7F0E5]" />
             <span>Return to Boutique</span>
           </button>
           
-          <div className="inline-flex items-center gap-1.5 bg-[#3D0F1F] text-[#FAF5EB] text-[10px] font-semibold uppercase tracking-widest px-3 py-1 border border-[#B8935A]/40">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#FAF7F2]" />
+          <div className="inline-flex items-center gap-1.5 bg-transparent text-[#D7B77A] text-[10px] font-semibold uppercase tracking-widest px-3 py-1 border border-[#D7B77A]/40">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#F7F0E5]" />
             <span>100% Encrypted Security</span>
           </div>
         </div>
 
         {/* Main Auth Card */}
-        <div className="bg-[#FAF5EB] border border-[#B8935A]/35 overflow-hidden">
+        <div className="bg-[#180306] border border-[#D7B77A]/35 overflow-hidden">
           
           {/* Card Banner Header */}
-          <div className="bg-[#3D0F1F] text-[#FAF5EB] p-6 text-center space-y-2 relative border-b border-[#B8935A]/30">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#F1E8DF]/10 rounded-full border border-[#C7A77A]/40 mb-1">
-              <Crown className="w-6 h-6 text-[#FAF7F2]" />
+          <div className="bg-[#2A0710] text-[#F7F0E5] p-6 text-center space-y-2 relative border-b border-[#D7B77A]/30">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#2A0710]/10 rounded-full border border-[#D7B77A]/40 mb-1">
+              <Crown className="w-6 h-6 text-[#F7F0E5]" />
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-[#F1E8DF]">
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-wide text-[#F7F0E5]">
               Suit Aura Girls
             </h1>
-            <p className="text-xs text-[#FAF7F2]/80 font-medium tracking-wider uppercase">
+            <p className="text-xs text-[#F7F0E5]/80 font-medium tracking-wider uppercase">
               Artisan Royal Ethnic Couture • Member Lounge
             </p>
           </div>
 
           {/* Mode Navigation Tabs */}
-          <div className="grid grid-cols-3 bg-[#FDFBF7] border-b border-[#B8935A]/25 p-1">
+          <div className="grid grid-cols-3 bg-[#120205] border-b border-[#D7B77A]/25 p-1">
             <button
               onClick={() => switchMode('signup')}
               className={`py-2.5 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 rounded-lg ${
                 mode === 'signup' 
-                  ? 'bg-[#3D0F1F] text-[#FAF5EB]' 
-                  : 'text-[#3D0F1F]/65 hover:text-[#3D0F1F]'
+                  ? 'bg-[#D7B77A] text-[#F7F0E5]' 
+                  : 'text-[#E8D2A4]/65 hover:text-[#E8D2A4]'
               }`}
             >
               <UserPlus className="w-3.5 h-3.5" />
@@ -597,8 +597,8 @@ export const LoginPage: React.FC = () => {
               onClick={() => switchMode('login')}
               className={`py-2.5 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 rounded-lg ${
                 mode === 'login' 
-                  ? 'bg-[#3D0F1F] text-[#FAF5EB]' 
-                  : 'text-[#3D0F1F]/65 hover:text-[#3D0F1F]'
+                  ? 'bg-[#D7B77A] text-[#F7F0E5]' 
+                  : 'text-[#E8D2A4]/65 hover:text-[#E8D2A4]'
               }`}
             >
               <LogIn className="w-3.5 h-3.5" />
@@ -608,8 +608,8 @@ export const LoginPage: React.FC = () => {
               onClick={() => switchMode('forgot_password')}
               className={`py-2.5 text-xs font-bold uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-1 rounded-lg ${
                 mode === 'forgot_password' 
-                  ? 'bg-[#3D0F1F] text-[#FAF5EB]' 
-                  : 'text-[#3D0F1F]/65 hover:text-[#3D0F1F]'
+                  ? 'bg-[#D7B77A] text-[#F7F0E5]' 
+                  : 'text-[#E8D2A4]/65 hover:text-[#E8D2A4]'
               }`}
             >
               <KeyRound className="w-3.5 h-3.5" />
@@ -624,9 +624,9 @@ export const LoginPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-800 text-xs flex items-start gap-2.5 shadow-2xs"
+                className="p-3.5 bg-[#2A0710] border border-[#D7B77A]/15 rounded text-rose-300 text-xs flex items-start gap-2.5 shadow-2xs"
               >
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-rose-300 shrink-0 mt-0.5" />
                 <span className="leading-relaxed font-medium">{error}</span>
               </motion.div>
             )}
@@ -637,64 +637,64 @@ export const LoginPage: React.FC = () => {
                 {!otpStep ? (
                   <form onSubmit={handleSignUpSubmit} className="space-y-4 text-left">
                     <div className="text-center space-y-1 pb-1">
-                      <h2 className="font-serif text-lg font-bold text-[#211C1A]">
+                      <h2 className="font-serif text-lg font-bold text-[#F7F0E5]">
                         Create Your Aura Account
                       </h2>
-                      <p className="text-xs text-gray-600 leading-relaxed">
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
                         Enter your details and password. An OTP code will be sent to your email to verify before account creation.
                       </p>
                     </div>
 
                     {/* FULL NAME */}
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                        Full Name <span className="text-rose-600">*</span>
+                      <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                        Full Name <span className="text-rose-300">*</span>
                       </label>
                       <div className="relative">
-                        <User className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <User className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           required
                           placeholder="e.g. Ananya Sharma"
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
-                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                         />
                       </div>
                     </div>
 
                     {/* MOBILE PHONE */}
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                        Mobile Phone <span className="text-rose-600">*</span>
+                      <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                        Mobile Phone <span className="text-rose-300">*</span>
                       </label>
                       <div className="relative">
-                        <Phone className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Phone className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="tel"
                           required
                           placeholder="10-digit mobile number"
                           value={mobileNumber}
                           onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
-                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                         />
                       </div>
                     </div>
 
                     {/* EMAIL ADDRESS */}
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                        Email Address <span className="text-rose-600">*</span>
+                      <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                        Email Address <span className="text-rose-300">*</span>
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Mail className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="email"
                           required
                           placeholder="name@example.com"
                           value={emailAddress}
                           onChange={(e) => handleEmailChange(e.target.value)}
-                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                         />
                       </div>
                     </div>
@@ -702,23 +702,23 @@ export const LoginPage: React.FC = () => {
                     {/* PASSWORD */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                          Password <span className="text-rose-600">*</span>
+                        <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                          Password <span className="text-rose-300">*</span>
                         </label>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             placeholder="Min 6 characters"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-10 pr-9 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                            className="w-full pl-10 pr-9 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75 cursor-pointer"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -726,18 +726,18 @@ export const LoginPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                          Confirm Password <span className="text-rose-600">*</span>
+                        <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                          Confirm Password <span className="text-rose-300">*</span>
                         </label>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             placeholder="Re-enter password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                            className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                           />
                         </div>
                       </div>
@@ -746,17 +746,17 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Sending Brevo Verification Code...</span>
                         </>
                       ) : (
                         <>
                           <span>Send Verification OTP</span>
-                          <ArrowRight className="w-4 h-4 text-black" />
+                          <ArrowRight className="w-4 h-4 text-[#F7F0E5]" />
                         </>
                       )}
                     </button>
@@ -764,18 +764,18 @@ export const LoginPage: React.FC = () => {
                 ) : (
                   /* VERIFY SIGNUP OTP */
                   <form onSubmit={handleVerifyEmailOtp} className="space-y-5 text-left">
-                    <div className="p-4 bg-[#F1E8DF] border border-[#9A6A3A]/40 rounded-xl text-left space-y-2 shadow-2xs">
-                      <div className="flex items-center gap-2 text-[#211C1A] font-bold text-xs uppercase tracking-wider">
-                        <Mail className="w-4 h-4 text-black" />
+                    <div className="p-4 bg-[#2A0710] border border-[#D7B77A]/40 rounded text-left space-y-2 shadow-2xs">
+                      <div className="flex items-center gap-2 text-[#F7F0E5] font-bold text-xs uppercase tracking-wider">
+                        <Mail className="w-4 h-4 text-[#F7F0E5]" />
                         <span>VERIFY YOUR EMAIL OTP</span>
                       </div>
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        A 6-digit verification code has been sent to <strong className="text-[#211C1A] font-semibold">{emailAddress}</strong>. Enter it to confirm account creation:
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
+                        A 6-digit verification code has been sent to <strong className="text-[#F7F0E5] font-semibold">{emailAddress}</strong>. Enter it to confirm account creation:
                       </p>
                     </div>
 
                     <div className="space-y-2 text-center">
-                      <span className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
                         ENTER 6-DIGIT VERIFICATION CODE
                       </span>
 
@@ -794,15 +794,15 @@ export const LoginPage: React.FC = () => {
                                 document.getElementById(`otp-input-${idx - 1}`)?.focus();
                               }
                             }}
-                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#211C1A] bg-white border-2 border-gray-300 focus:border-[#241D1B] rounded-xl focus:outline-none transition shadow-inner"
+                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#F7F0E5] bg-[#180306] border-2 border-[#D7B77A]/15 focus:border-[#D7B77A]/40 rounded focus:outline-none transition shadow-inner"
                           />
                         ))}
                       </div>
 
-                      <p className="text-[11px] text-gray-500 pt-1">
+                      <p className="text-[11px] text-[#F7F0E5]/55 pt-1">
                         Didn't receive code?{' '}
                         {resendCooldown > 0 ? (
-                          <span className="text-[#211C1A] font-bold">Resend in {resendCooldown}s</span>
+                          <span className="text-[#F7F0E5] font-bold">Resend in {resendCooldown}s</span>
                         ) : (
                           <button
                             type="button"
@@ -819,7 +819,7 @@ export const LoginPage: React.FC = () => {
                                 setLoading(false);
                               }
                             }}
-                            className="text-[#211C1A] font-bold underline hover:text-black cursor-pointer inline-flex items-center gap-1"
+                            className="text-[#F7F0E5] font-bold underline hover:text-[#F7F0E5] cursor-pointer inline-flex items-center gap-1"
                           >
                             <RefreshCw className="w-3 h-3" />
                             <span>Resend Email OTP</span>
@@ -831,16 +831,16 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Creating Account...</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-black" />
+                          <CheckCircle2 className="w-4 h-4 text-[#F7F0E5]" />
                           <span>VERIFY OTP &amp; CREATE ACCOUNT</span>
                         </>
                       )}
@@ -849,7 +849,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setOtpStep(false)}
-                      className="text-xs text-gray-500 hover:text-gray-800 underline font-medium block mx-auto cursor-pointer pt-1"
+                      className="text-xs text-[#F7F0E5]/55 hover:text-[#F7F0E5] underline font-medium block mx-auto cursor-pointer pt-1"
                     >
                       ← Back to Form
                     </button>
@@ -864,23 +864,23 @@ export const LoginPage: React.FC = () => {
                 {!otpStep ? (
                   <form onSubmit={handleLoginSubmit} className="space-y-4 text-left">
                     <div className="text-center space-y-1 pb-1">
-                      <h2 className="font-serif text-lg font-bold text-[#211C1A]">
+                      <h2 className="font-serif text-lg font-bold text-[#F7F0E5]">
                         Welcome Back to Suit Aura Girls
                       </h2>
-                      <p className="text-xs text-gray-600 leading-relaxed">
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
                         Sign in with your Password or get an Instant OTP sent to your email.
                       </p>
                     </div>
 
                     {/* LOGIN SUB-TABS: Password vs Instant OTP */}
-                    <div className="flex justify-center gap-4 border-b border-gray-200 pb-2">
+                    <div className="flex justify-center gap-4 border-b border-[#D7B77A]/15 pb-2">
                       <button
                         type="button"
                         onClick={() => setLoginType('password')}
                         className={`text-xs font-bold uppercase tracking-wider pb-1 transition cursor-pointer ${
                           loginType === 'password'
-                            ? 'text-[#211C1A] border-b-2 border-[#241D1B]'
-                            : 'text-gray-400 hover:text-gray-600'
+                            ? 'text-[#F7F0E5] border-b-2 border-[#D7B77A]/40'
+                            : 'text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75'
                         }`}
                       >
                         Login with Password
@@ -890,8 +890,8 @@ export const LoginPage: React.FC = () => {
                         onClick={() => setLoginType('otp')}
                         className={`text-xs font-bold uppercase tracking-wider pb-1 transition cursor-pointer ${
                           loginType === 'otp'
-                            ? 'text-[#211C1A] border-b-2 border-[#241D1B]'
-                            : 'text-gray-400 hover:text-gray-600'
+                            ? 'text-[#F7F0E5] border-b-2 border-[#D7B77A]/40'
+                            : 'text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75'
                         }`}
                       >
                         Login with Email OTP
@@ -900,18 +900,18 @@ export const LoginPage: React.FC = () => {
 
                     {/* EMAIL ADDRESS */}
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                        Email Address <span className="text-rose-600">*</span>
+                      <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                        Email Address <span className="text-rose-300">*</span>
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Mail className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="email"
                           required
                           placeholder="name@example.com"
                           value={emailAddress}
                           onChange={(e) => handleEmailChange(e.target.value)}
-                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                         />
                       </div>
                     </div>
@@ -920,31 +920,31 @@ export const LoginPage: React.FC = () => {
                     {loginType === 'password' && (
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                            Password <span className="text-rose-600">*</span>
+                          <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                            Password <span className="text-rose-300">*</span>
                           </label>
                           <button
                             type="button"
                             onClick={() => switchMode('forgot_password')}
-                            className="text-[11px] font-semibold text-[#211C1A] hover:underline cursor-pointer"
+                            className="text-[11px] font-semibold text-[#F7F0E5] hover:underline cursor-pointer"
                           >
                             Forgot Password?
                           </button>
                         </div>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             placeholder="Enter your account password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-10 pr-9 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                            className="w-full pl-10 pr-9 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75 cursor-pointer"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -955,17 +955,17 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Signing In...</span>
                         </>
                       ) : (
                         <>
                           <span>{loginType === 'password' ? 'Sign In Now' : 'Send Login OTP Code'}</span>
-                          <ArrowRight className="w-4 h-4 text-black" />
+                          <ArrowRight className="w-4 h-4 text-[#F7F0E5]" />
                         </>
                       )}
                     </button>
@@ -973,18 +973,18 @@ export const LoginPage: React.FC = () => {
                 ) : (
                   /* VERIFY LOGIN OTP */
                   <form onSubmit={handleVerifyEmailOtp} className="space-y-5 text-left">
-                    <div className="p-4 bg-[#F1E8DF] border border-[#9A6A3A]/40 rounded-xl text-left space-y-2 shadow-2xs">
-                      <div className="flex items-center gap-2 text-[#211C1A] font-bold text-xs uppercase tracking-wider">
-                        <Mail className="w-4 h-4 text-black" />
+                    <div className="p-4 bg-[#2A0710] border border-[#D7B77A]/40 rounded text-left space-y-2 shadow-2xs">
+                      <div className="flex items-center gap-2 text-[#F7F0E5] font-bold text-xs uppercase tracking-wider">
+                        <Mail className="w-4 h-4 text-[#F7F0E5]" />
                         <span>LOGIN OTP SENT</span>
                       </div>
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        A 6-digit login verification code has been sent to <strong className="text-[#211C1A] font-semibold">{emailAddress}</strong>:
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
+                        A 6-digit login verification code has been sent to <strong className="text-[#F7F0E5] font-semibold">{emailAddress}</strong>:
                       </p>
                     </div>
 
                     <div className="space-y-2 text-center">
-                      <span className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
                         ENTER 6-DIGIT VERIFICATION CODE
                       </span>
 
@@ -1003,15 +1003,15 @@ export const LoginPage: React.FC = () => {
                                 document.getElementById(`otp-input-${idx - 1}`)?.focus();
                               }
                             }}
-                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#211C1A] bg-white border-2 border-gray-300 focus:border-[#241D1B] rounded-xl focus:outline-none transition shadow-inner"
+                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#F7F0E5] bg-[#180306] border-2 border-[#D7B77A]/15 focus:border-[#D7B77A]/40 rounded focus:outline-none transition shadow-inner"
                           />
                         ))}
                       </div>
 
-                      <p className="text-[11px] text-gray-500 pt-1">
+                      <p className="text-[11px] text-[#F7F0E5]/55 pt-1">
                         Didn't receive code?{' '}
                         {resendCooldown > 0 ? (
-                          <span className="text-[#211C1A] font-bold">Resend in {resendCooldown}s</span>
+                          <span className="text-[#F7F0E5] font-bold">Resend in {resendCooldown}s</span>
                         ) : (
                           <button
                             type="button"
@@ -1028,7 +1028,7 @@ export const LoginPage: React.FC = () => {
                                 setLoading(false);
                               }
                             }}
-                            className="text-[#211C1A] font-bold underline hover:text-black cursor-pointer inline-flex items-center gap-1"
+                            className="text-[#F7F0E5] font-bold underline hover:text-[#F7F0E5] cursor-pointer inline-flex items-center gap-1"
                           >
                             <RefreshCw className="w-3 h-3" />
                             <span>Resend Email OTP</span>
@@ -1040,16 +1040,16 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Verifying OTP...</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-black" />
+                          <CheckCircle2 className="w-4 h-4 text-[#F7F0E5]" />
                           <span>VERIFY &amp; LOG IN</span>
                         </>
                       )}
@@ -1058,7 +1058,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setOtpStep(false)}
-                      className="text-xs text-gray-500 hover:text-gray-800 underline font-medium block mx-auto cursor-pointer pt-1"
+                      className="text-xs text-[#F7F0E5]/55 hover:text-[#F7F0E5] underline font-medium block mx-auto cursor-pointer pt-1"
                     >
                       ← Back to Login
                     </button>
@@ -1073,27 +1073,27 @@ export const LoginPage: React.FC = () => {
                 {!otpStep ? (
                   <form onSubmit={handleForgotPasswordRequest} className="space-y-4 text-left">
                     <div className="text-center space-y-1 pb-1">
-                      <h2 className="font-serif text-lg font-bold text-[#211C1A]">
+                      <h2 className="font-serif text-lg font-bold text-[#F7F0E5]">
                         Forgot Your Password?
                       </h2>
-                      <p className="text-xs text-gray-600 leading-relaxed">
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
                         Enter your registered email address. We will send a 6-digit OTP code to your email to reset your password.
                       </p>
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                        Registered Email Address <span className="text-rose-600">*</span>
+                      <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                        Registered Email Address <span className="text-rose-300">*</span>
                       </label>
                       <div className="relative">
-                        <Mail className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Mail className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                         <input
                           type="email"
                           required
                           placeholder="name@example.com"
                           value={emailAddress}
                           onChange={(e) => setEmailAddress(e.target.value)}
-                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                          className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                         />
                       </div>
                     </div>
@@ -1101,17 +1101,17 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Sending Reset OTP Code...</span>
                         </>
                       ) : (
                         <>
                           <span>Send Reset OTP Code to Email</span>
-                          <ArrowRight className="w-4 h-4 text-black" />
+                          <ArrowRight className="w-4 h-4 text-[#F7F0E5]" />
                         </>
                       )}
                     </button>
@@ -1119,18 +1119,18 @@ export const LoginPage: React.FC = () => {
                 ) : (
                   /* STEP 2: VERIFY RESET OTP & ENTER NEW PASSWORD */
                   <form onSubmit={handleResetPasswordSubmit} className="space-y-4 text-left">
-                    <div className="p-4 bg-[#F1E8DF] border border-[#9A6A3A]/40 rounded-xl text-left space-y-1.5 shadow-2xs">
-                      <div className="flex items-center gap-2 text-[#211C1A] font-bold text-xs uppercase tracking-wider">
-                        <KeyRound className="w-4 h-4 text-black" />
+                    <div className="p-4 bg-[#2A0710] border border-[#D7B77A]/40 rounded text-left space-y-1.5 shadow-2xs">
+                      <div className="flex items-center gap-2 text-[#F7F0E5] font-bold text-xs uppercase tracking-wider">
+                        <KeyRound className="w-4 h-4 text-[#F7F0E5]" />
                         <span>RESET PASSWORD OTP SENT</span>
                       </div>
-                      <p className="text-xs text-gray-700 leading-relaxed">
-                        A 6-digit reset code has been sent to <strong className="text-[#211C1A] font-semibold">{emailAddress}</strong>. Enter code and choose a new password:
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
+                        A 6-digit reset code has been sent to <strong className="text-[#F7F0E5] font-semibold">{emailAddress}</strong>. Enter code and choose a new password:
                       </p>
                     </div>
 
                     <div className="space-y-1.5 text-center">
-                      <span className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
+                      <span className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
                         ENTER 6-DIGIT RESET CODE
                       </span>
 
@@ -1149,7 +1149,7 @@ export const LoginPage: React.FC = () => {
                                 document.getElementById(`otp-input-${idx - 1}`)?.focus();
                               }
                             }}
-                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#211C1A] bg-white border-2 border-gray-300 focus:border-[#241D1B] rounded-xl focus:outline-none transition shadow-inner"
+                            className="w-10 h-12 sm:w-12 sm:h-14 text-center font-mono font-bold text-lg sm:text-xl text-[#F7F0E5] bg-[#180306] border-2 border-[#D7B77A]/15 focus:border-[#D7B77A]/40 rounded focus:outline-none transition shadow-inner"
                           />
                         ))}
                       </div>
@@ -1158,23 +1158,23 @@ export const LoginPage: React.FC = () => {
                     {/* NEW PASSWORD FIELDS */}
                     <div className="space-y-3 pt-1">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                          New Password <span className="text-rose-600">*</span>
+                        <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                          New Password <span className="text-rose-300">*</span>
                         </label>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             placeholder="Min 6 characters"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full pl-10 pr-9 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                            className="w-full pl-10 pr-9 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75 cursor-pointer"
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                           </button>
@@ -1182,18 +1182,18 @@ export const LoginPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-[#211C1A] uppercase tracking-wider block">
-                          Confirm New Password <span className="text-rose-600">*</span>
+                        <label className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider block">
+                          Confirm New Password <span className="text-rose-300">*</span>
                         </label>
                         <div className="relative">
-                          <Lock className="w-4 h-4 text-black absolute left-3.5 top-1/2 -translate-y-1/2" />
+                          <Lock className="w-4 h-4 text-[#F7F0E5] absolute left-3.5 top-1/2 -translate-y-1/2" />
                           <input
                             type={showPassword ? 'text' : 'password'}
                             required
                             placeholder="Re-enter new password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
-                            className="w-full pl-10 pr-3.5 py-3 text-xs bg-white border border-gray-300 focus:border-[#241D1B] focus:ring-1 focus:ring-[#241D1B] rounded-xl font-medium text-gray-900 transition focus:outline-none shadow-2xs"
+                            className="w-full pl-10 pr-3.5 py-3 text-xs bg-[#180306] border border-[#D7B77A]/15 focus:border-[#D7B77A]/40 focus:ring-1 focus:ring-[#D7B77A]/40 rounded font-medium text-[#F7F0E5] transition focus:outline-none shadow-2xs"
                           />
                         </div>
                       </div>
@@ -1202,16 +1202,16 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3.5 bg-[#241D1B] hover:bg-[#20050E] text-[#211C1A] rounded-xl font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
+                      className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-serif font-bold uppercase tracking-wider text-xs sm:text-sm transition flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 mt-2"
                     >
                       {loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-black" />
+                          <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                           <span>Updating Password...</span>
                         </>
                       ) : (
                         <>
-                          <CheckCircle2 className="w-4 h-4 text-black" />
+                          <CheckCircle2 className="w-4 h-4 text-[#F7F0E5]" />
                           <span>RESET PASSWORD &amp; SIGN IN</span>
                         </>
                       )}
@@ -1220,7 +1220,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setOtpStep(false)}
-                      className="text-xs text-gray-500 hover:text-gray-800 underline font-medium block mx-auto cursor-pointer pt-1"
+                      className="text-xs text-[#F7F0E5]/55 hover:text-[#F7F0E5] underline font-medium block mx-auto cursor-pointer pt-1"
                     >
                       ← Back to Email Request
                     </button>

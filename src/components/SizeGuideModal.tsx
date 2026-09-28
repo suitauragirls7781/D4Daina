@@ -85,32 +85,32 @@ export const SizeGuideModal: React.FC = () => {
     <div 
       id="size-guide-modal-overlay" 
       onClick={() => setIsSizeGuideOpen(false)} 
-      className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all"
+      className="fixed inset-0 z-[999] bg-[#5C0B1B]/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all"
     >
       <div 
         id="size-guide-modal" 
         onClick={(event) => event.stopPropagation()}
-        className="bg-[#FFFDFB] rounded-2xl max-w-3xl w-full p-5 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl relative border border-rose-100 animate-in fade-in zoom-in-95 duration-250"
+        className="bg-[#120205] rounded-md max-w-3xl w-full p-5 sm:p-8 max-h-[92vh] overflow-y-auto shadow-2xl relative border border-[#D7B77A]/15 animate-in fade-in zoom-in-95 duration-250"
       >
         {/* Close Button */}
         <button 
           id="close-size-guide-btn"
           onClick={() => setIsSizeGuideOpen(false)}
-          className="absolute top-4 right-4 sm:top-5 sm:right-5 text-gray-400 hover:text-[#8B1E3F] p-2 rounded-full hover:bg-[#D8C8B8]/20 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 sm:top-5 sm:right-5 text-[#F7F0E5]/55 hover:text-[#E8D2A4] p-2 rounded-full hover:bg-[#2A0710]/20 transition-colors cursor-pointer"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-1.5 text-[#8B1E3F] mb-1">
-          <Ruler className="w-5 h-5 text-[#8B1E3F]" />
+        <div className="flex items-center gap-1.5 text-[#E8D2A4] mb-1">
+          <Ruler className="w-5 h-5 text-[#E8D2A4]" />
           <span className="text-[10px] sm:text-xs uppercase tracking-widest font-bold">Measurements Chart</span>
         </div>
-        <h3 className="font-serif text-2xl sm:text-3xl font-black text-[#2C1820] mb-2 tracking-wide">
+        <h3 className="font-serif text-2xl sm:text-3xl font-black text-[#F7F0E5] mb-2 tracking-wide">
           Women's Size & Fitting Guide
         </h3>
-        <p className="text-xs sm:text-sm text-gray-600 mb-6 max-w-2xl">
+        <p className="text-xs sm:text-sm text-[#F7F0E5]/75 mb-6 max-w-2xl">
           Ye measurements seedhe garment ke taiyar dimension ko represent karti hain. Perfect fitting ke liye, aisi size chune jo aapki body measurement se 2 inch badi ho.
         </p>
 
@@ -118,18 +118,18 @@ export const SizeGuideModal: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start mb-6">
           
           {/* Left Column: Smart Size Finder Calculator */}
-          <div className="lg:col-span-4 bg-[#FFF5F7] border border-[#F3C5D1]/60 rounded-xl p-4 sm:p-5">
-            <div className="flex items-center gap-1.5 text-[#8B1E3F] mb-3">
-              <Sparkles className="w-4 h-4 text-[#8B1E3F] animate-pulse" />
+          <div className="lg:col-span-4 bg-[#180306] border border-[#D7B77A]/15 rounded p-4 sm:p-5">
+            <div className="flex items-center gap-1.5 text-[#E8D2A4] mb-3">
+              <Sparkles className="w-4 h-4 text-[#E8D2A4] animate-pulse" />
               <h4 className="text-xs uppercase font-bold tracking-wider">Aapki Perfect Size Khoje</h4>
             </div>
-            <p className="text-[11px] text-gray-600 mb-4 leading-relaxed">
+            <p className="text-[11px] text-[#F7F0E5]/75 mb-4 leading-relaxed">
               Apna actual chest/bust measurements enter karein, hamara algorithm instantly aapke liye sahi size batayega.
             </p>
             
             <div className="space-y-3.5">
               <div>
-                <label className="block text-[10px] font-bold text-gray-600 uppercase mb-1">
+                <label className="block text-[10px] font-bold text-[#F7F0E5]/75 uppercase mb-1">
                   Apna Chest/Bust Size dalo ({unit === 'inches' ? 'Inches' : 'CM'}):
                 </label>
                 <div className="relative">
@@ -138,9 +138,9 @@ export const SizeGuideModal: React.FC = () => {
                     value={bodyBustInput}
                     onChange={(e) => handleBustInputChange(e.target.value)}
                     placeholder={unit === 'inches' ? 'e.g. 36' : 'e.g. 91'}
-                    className="w-full bg-\[#FAF7F2\] border border-[#F3C5D1] rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#8B1E3F] focus:border-[#8B1E3F] font-bold text-gray-800"
+                    className="w-full bg-\[#FAF7F2\] border border-[#D7B77A]/15 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:ring-1 focus:ring-[#D7B77A]/40 focus:border-[#D7B77A]/40 font-bold text-[#F7F0E5]"
                   />
-                  <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold uppercase">
+                  <span className="absolute right-3 top-2.5 text-xs text-[#F7F0E5]/55 font-bold uppercase">
                     {unit === 'inches' ? 'In' : 'CM'}
                   </span>
                 </div>
@@ -148,9 +148,9 @@ export const SizeGuideModal: React.FC = () => {
 
               {suggestedSize ? (
                 <div className="bg-\[#FAF7F2\] border border-emerald-100 rounded-lg p-3 text-center animate-in fade-in slide-in-from-bottom-2 duration-200">
-                  <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider mb-0.5">Recommended Size:</p>
-                  <p className="text-3xl font-black text-emerald-600 tracking-wide">{suggestedSize}</p>
-                  <p className="text-[10px] text-gray-500 mt-1">
+                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider mb-0.5">Recommended Size:</p>
+                  <p className="text-3xl font-black text-emerald-400 tracking-wide">{suggestedSize}</p>
+                  <p className="text-[10px] text-[#F7F0E5]/55 mt-1">
                     (Perfect fit with standard 2" comfort margin)
                   </p>
                   <button
@@ -158,13 +158,13 @@ export const SizeGuideModal: React.FC = () => {
                       setSelectedRowSize(suggestedSize);
                       // Auto highlights size in size table
                     }}
-                    className="mt-2 text-[10px] text-[#8B1E3F] hover:underline font-bold flex items-center justify-center gap-1 w-full"
+                    className="mt-2 text-[10px] text-[#E8D2A4] hover:underline font-bold flex items-center justify-center gap-1 w-full"
                   >
-                    <Check className="w-3 h-3 text-emerald-600" /> Highlight inside chart
+                    <Check className="w-3 h-3 text-emerald-400" /> Highlight inside chart
                   </button>
                 </div>
               ) : bodyBustInput ? (
-                <div className="bg-[#D8C8B8]/50 border border-rose-100 rounded-lg p-2.5 text-center text-[10px] text-rose-700 font-bold">
+                <div className="bg-[#2A0710]/50 border border-[#D7B77A]/15 rounded-lg p-2.5 text-center text-[10px] text-rose-300 font-bold">
                   Invalid measurement! Please input correct numbers.
                 </div>
               ) : null}
@@ -175,17 +175,17 @@ export const SizeGuideModal: React.FC = () => {
           <div className="lg:col-span-8 space-y-4">
             {/* Unit Toggle Banner */}
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-gray-500 font-medium italic">
+              <span className="text-[11px] text-[#F7F0E5]/55 font-medium italic">
                 💡 Size row select karke measurement check karein
               </span>
-              <div className="inline-flex rounded-lg border border-rose-200 p-0.5 bg-[#D8C8B8]/50 shrink-0">
+              <div className="inline-flex rounded-lg border border-[#D7B77A]/15 p-0.5 bg-[#2A0710]/50 shrink-0">
                 <button
                   id="unit-inches-btn"
                   onClick={() => handleUnitSwitch('inches')}
                   className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all cursor-pointer ${
                     unit === 'inches'
-                      ? 'bg-[#8B1E3F] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#8B1E3F]'
+                      ? 'bg-[#D7B77A] text-[#F7F0E5] shadow-sm'
+                      : 'text-[#F7F0E5]/75 hover:text-[#E8D2A4]'
                   }`}
                 >
                   Inches (in)
@@ -195,8 +195,8 @@ export const SizeGuideModal: React.FC = () => {
                   onClick={() => handleUnitSwitch('cm')}
                   className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-md transition-all cursor-pointer ${
                     unit === 'cm'
-                      ? 'bg-[#8B1E3F] text-white shadow-sm'
-                      : 'text-gray-600 hover:text-[#8B1E3F]'
+                      ? 'bg-[#D7B77A] text-[#F7F0E5] shadow-sm'
+                      : 'text-[#F7F0E5]/75 hover:text-[#E8D2A4]'
                   }`}
                 >
                   CM (cm)
@@ -205,9 +205,9 @@ export const SizeGuideModal: React.FC = () => {
             </div>
 
             {/* Table wrapper */}
-            <div className="overflow-x-auto border border-rose-100/70 rounded-xl bg-\[#FAF7F2\] shadow-xs">
-              <table className="w-full text-left text-xs sm:text-sm text-[#2C1820]">
-                <thead className="bg-[#FFF5F7] text-[10px] uppercase tracking-wider text-[#8B1E3F] font-black border-b border-rose-100/80">
+            <div className="overflow-x-auto border border-[#D7B77A]/15 rounded bg-\[#FAF7F2\] shadow-xs">
+              <table className="w-full text-left text-xs sm:text-sm text-[#F7F0E5]">
+                <thead className="bg-[#180306] text-[10px] uppercase tracking-wider text-[#E8D2A4] font-black border-b border-[#D7B77A]/15">
                   <tr>
                     <th className="py-3 px-3 sm:px-4 text-center">Size</th>
                     <th className="py-3 px-3 sm:px-4">Bust (Chest)</th>
@@ -217,7 +217,7 @@ export const SizeGuideModal: React.FC = () => {
                     <th className="py-3 px-3 sm:px-4">Shoulder</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-rose-50/50 font-medium">
+                <tbody className="divide-y divide-[#D7B77A]/15 font-medium">
                   {chart.map((row) => {
                     const isRowHighlighted = selectedRowSize === row.size;
                     const suffix = unit === 'inches' ? '"' : ' cm';
@@ -228,13 +228,13 @@ export const SizeGuideModal: React.FC = () => {
                         onClick={() => setSelectedRowSize(isRowHighlighted ? null : row.size)}
                         className={`transition-all cursor-pointer duration-150 ${
                           isRowHighlighted 
-                            ? 'bg-[#D8C8B8]/40/50 text-[#8B1E3F] font-bold' 
-                            : 'hover:bg-[#D8C8B8]/30 text-gray-700'
+                            ? 'bg-[#D8C8B8]/40/50 text-[#E8D2A4] font-bold' 
+                            : 'hover:bg-[#2A0710]/30 text-[#F7F0E5]/75'
                         }`}
                       >
-                        <td className="py-3 px-3 sm:px-4 font-black text-center text-[#8B1E3F]">
+                        <td className="py-3 px-3 sm:px-4 font-black text-center text-[#E8D2A4]">
                           <span className={`inline-block w-7 h-7 leading-7 rounded-full text-center ${
-                            isRowHighlighted ? 'bg-[#8B1E3F] text-white' : ''
+                            isRowHighlighted ? 'bg-[#D7B77A] text-[#F7F0E5]' : ''
                           }`}>
                             {row.size}
                           </span>
@@ -257,12 +257,12 @@ export const SizeGuideModal: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
           
           {/* Instructions Box */}
-          <div className="bg-[#FFFDFB] border border-rose-200/40 rounded-xl p-4 text-[11px] sm:text-xs text-gray-700">
-            <div className="flex items-center gap-1.5 font-bold text-[#8B1E3F] mb-2">
-              <HelpCircle className="w-4 h-4 text-[#8B1E3F]" />
+          <div className="bg-[#120205] border border-[#D7B77A]/15 rounded p-4 text-[11px] sm:text-xs text-[#F7F0E5]/75">
+            <div className="flex items-center gap-1.5 font-bold text-[#E8D2A4] mb-2">
+              <HelpCircle className="w-4 h-4 text-[#E8D2A4]" />
               <span>Sahi Measurement Kaise Lein?</span>
             </div>
-            <ul className="list-disc pl-4 space-y-1.5 text-gray-600">
+            <ul className="list-disc pl-4 space-y-1.5 text-[#F7F0E5]/75">
               <li><strong>Bust/Chest:</strong> Apne dono arms ke niche se chest ke fullest part tak tape ko halke se wrap karein.</li>
               <li><strong>Waist:</strong> Apni natural waistline (pait ka sabse patla hissa) par measurement tape se napen.</li>
               <li><strong>Hips:</strong> Dono pairon ko sath khada karke hips ke sabse widest part ko napen.</li>
@@ -271,11 +271,11 @@ export const SizeGuideModal: React.FC = () => {
           </div>
 
           {/* Size Warning / Note */}
-          <div className="bg-[#D8C8B8]/20 border border-rose-100 rounded-xl p-4 flex gap-2.5 items-start">
-            <Info className="w-4.5 h-4.5 text-[#8B1E3F] shrink-0 mt-0.5" />
+          <div className="bg-[#2A0710]/20 border border-[#D7B77A]/15 rounded p-4 flex gap-2.5 items-start">
+            <Info className="w-4.5 h-4.5 text-[#E8D2A4] shrink-0 mt-0.5" />
             <div>
-              <h5 className="font-bold text-[#8B1E3F] text-[11px] sm:text-xs uppercase tracking-wide mb-1">Earthy/Handcrafted Garment Note</h5>
-              <p className="text-[10px] sm:text-[11px] text-gray-600 leading-relaxed">
+              <h5 className="font-bold text-[#E8D2A4] text-[11px] sm:text-xs uppercase tracking-wide mb-1">Earthy/Handcrafted Garment Note</h5>
+              <p className="text-[10px] sm:text-[11px] text-[#F7F0E5]/75 leading-relaxed">
                 Hamare sabhi Heritage and Gota Patti suits premium handloom cotton fabrics se banaye jate hain. Thode thode shrink hone ki natural tendency ko dhyaan me rakhte hue, standard sizes comfortable fit ke liye optimal loose alignment me design kiye gaye hain.
               </p>
             </div>

@@ -18,20 +18,20 @@ export const NewArrivalsSection: React.FC = () => {
     : activeProducts.filter((product) => product.category === selectedTab);
 
   return (
-    <section id="new-arrivals-section" className="py-12 sm:py-16 bg-[#FDFBF7] border-b border-[#B8935A]/25">
+    <section id="new-arrivals-section" className="py-12 sm:py-16 bg-[#120205] border-b border-[#D7B77A]/25">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-10 gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] mb-2.5 text-[#B8935A]">
+            <div className="inline-flex items-center gap-2 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] mb-2.5 text-[#D7B77A]">
               <Sparkles className="w-3.5 h-3.5" />
               <span>FRESH OFF THE LOOM</span>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#3D0F1F]">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-semibold text-[#E8D2A4]">
               Shop All Styles
             </h2>
-            <p className="text-sm sm:text-base text-[#3D0F1F]/75 mt-2 max-w-xl font-normal leading-relaxed">
+            <p className="text-sm sm:text-base text-[#E8D2A4]/75 mt-2 max-w-xl font-normal leading-relaxed">
               Explore every available style, organized by its collection.
             </p>
           </div>
@@ -46,8 +46,8 @@ export const NewArrivalsSection: React.FC = () => {
                 aria-pressed={selectedTab === tab}
                 className={`px-3.5 py-2 text-xs font-sans font-semibold transition-colors duration-200 cursor-pointer border ${
                   selectedTab === tab
-                    ? 'bg-[#3D0F1F] text-[#FAF5EB] border-[#3D0F1F]'
-                    : 'bg-transparent text-[#3D0F1F] border-[#B8935A]/35 hover:border-[#B8935A]'
+                    ? 'bg-[#D7B77A] text-[#F7F0E5] border-[#D7B77A]/40'
+                    : 'bg-transparent text-[#E8D2A4] border-[#D7B77A]/35 hover:border-[#D7B77A]'
                 }`}
               >
                 <span>{tab}</span>
@@ -64,7 +64,7 @@ export const NewArrivalsSection: React.FC = () => {
             ))}
           </div>
         ) : (
-          <p className="py-12 text-center text-sm text-[#3D0F1F]/70" role="status">
+          <p className="py-12 text-center text-sm text-[#E8D2A4]/70" role="status">
             No styles are currently available.
           </p>
         )}
@@ -74,10 +74,10 @@ export const NewArrivalsSection: React.FC = () => {
           <button
             id="view-all-new-arrivals-btn"
             onClick={() => navigateToCategory('All')}
-            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 bg-[#3D0F1F] text-[#FAF5EB] hover:bg-[#3D0F1F]/90 border border-[#3D0F1F] text-xs font-sans font-bold tracking-[0.14em] uppercase transition-colors cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 sm:px-8 py-3 bg-[#D7B77A] text-[#F7F0E5] hover:bg-[#D7B77A]/90 border border-[#D7B77A]/40 text-xs font-sans font-bold tracking-[0.14em] uppercase transition-colors cursor-pointer"
           >
             <span>SHOP ALL PRODUCTS</span>
-            <ArrowRight className="w-4 h-4 text-[#211C1A]" />
+            <ArrowRight className="w-4 h-4 text-[#F7F0E5]" />
           </button>
         </div>
 

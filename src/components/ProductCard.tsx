@@ -93,13 +93,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   return (
     <div 
       id={`product-card-${product.id}`}
-      className="group relative flex flex-col bg-[#FDFBF7] rounded-lg overflow-hidden border border-[#3D0F1F]/10 hover:border-[#B8935A]/60 transition-colors duration-300 h-full justify-between cursor-pointer"
+      className="group relative flex flex-col bg-[#120205] rounded-lg overflow-hidden border border-[#D7B77A]/10 hover:border-[#D7B77A]/60 transition-colors duration-300 h-full justify-between cursor-pointer"
       onClick={() => navigateToProduct(product.id)}
     >
       {/* 1. PRODUCT IMAGE CONTAINER (100% Unmasked & Beautiful Model Portraits) */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#FAF5EB]">
+      <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#180306]">
         {/* Subtle Luxury Shimmer pulse while downloading image */}
-        <div className="absolute inset-0 bg-[#FAF5EB] animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 bg-[#180306] animate-pulse pointer-events-none" />
 
         {/* Primary Product Image */}
         <img
@@ -137,12 +137,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       </div>
 
       {/* 2. DETAILS CONTENT BLOCK - Compact & Elegant (Matches IMG_20260919_153826.jpg but with single optimized Add To Bag) */}
-      <div className="p-3 sm:p-4 bg-[#FDFBF7] flex flex-col flex-grow justify-between gap-3">
+      <div className="p-3 sm:p-4 bg-[#120205] flex flex-col flex-grow justify-between gap-3">
         
         <div className="space-y-2.5">
           {/* Row 1: Bestseller / Save discount badge on Left, elegant wishlist Heart on Right */}
           <div className="flex items-center justify-between gap-2">
-            <div className="bg-[#3D0F1F] !text-[#FAF5EB] text-[10px] font-semibold tracking-wider px-2.5 py-1 uppercase">
+            <div className="bg-[#D7B77A] !text-[#FAF5EB] text-[10px] font-semibold tracking-wider px-2.5 py-1 uppercase">
               {product.isBestSeller 
                 ? 'BESTSELLER' 
                 : calculatedDiscount > 0 
@@ -156,16 +156,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               id={`wishlist-btn-${product.id}`}
               type="button"
               onClick={handleWishlistToggle}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-3xs border border-[#9A6A3A]/20 cursor-pointer ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-3xs border border-[#D7B77A]/20 cursor-pointer ${
                 isFav
-                  ? 'bg-[#3D0F1F] text-[#FAF5EB]'
-                  : 'bg-[#FDFBF7] text-[#3D0F1F] hover:bg-[#FAF5EB]'
+                  ? 'bg-[#D7B77A] text-[#F7F0E5]'
+                  : 'bg-[#120205] text-[#E8D2A4] hover:bg-[#180306]'
               }`}
               aria-label={isFav ? 'Remove from wishlist' : 'Add to wishlist'}
             >
               <Heart 
                 className={`w-4 h-4 transition-transform duration-200 ${
-                  isFav ? 'fill-white text-white' : 'text-[#211C1A]'
+                  isFav ? 'fill-white text-[#F7F0E5]' : 'text-[#F7F0E5]'
                 } ${isHeartPopping ? 'scale-125' : 'scale-100'}`} 
               />
             </button>
@@ -173,11 +173,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Row 2: Category and Shades Counter */}
           <div className="flex items-center justify-between gap-1 flex-wrap pt-0.5">
-            <span className="font-extrabold text-black tracking-[0.15em] uppercase text-[10px] sm:text-[11px] font-sans">
+            <span className="font-extrabold text-[#F7F0E5] tracking-[0.15em] uppercase text-[10px] sm:text-[11px] font-sans">
               {product.category}
             </span>
             {colorsList.length > 0 && (
-              <span className="text-[10px] text-gray-500 font-bold tracking-wide">
+              <span className="text-[10px] text-[#F7F0E5]/55 font-bold tracking-wide">
                 {colorsList.length} {colorsList.length === 1 ? 'Shade' : 'Shades'}
               </span>
             )}
@@ -185,7 +185,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Row 3: Product Title wraps beautifully to show full name */}
           <h3 
-            className="font-serif text-sm font-semibold text-[#3D0F1F] leading-snug line-clamp-2 min-h-[38px] sm:min-h-[44px]"
+            className="font-serif text-sm font-semibold text-[#E8D2A4] leading-snug line-clamp-2 min-h-[38px] sm:min-h-[44px]"
             title={product.name}
           >
             {product.name}
@@ -203,8 +203,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     onClick={(e) => handleColorSelect(e, idx)}
                     className={`w-5.5 h-5.5 rounded-full border transition-all duration-200 cursor-pointer p-0.5 ${
                       isSelected 
-                        ? 'ring-2 ring-[#B8935A] border-white scale-110' 
-                        : 'border-gray-200 hover:border-[#3D0F1F]'
+                        ? 'ring-2 ring-[#D7B77A] border-[#D7B77A]/15 scale-110' 
+                        : 'border-[#D7B77A]/15 hover:border-[#D7B77A]/40'
                     }`}
                     title={col.name}
                   >
@@ -222,20 +222,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           )}
 
           {/* Fine golden hairline divider */}
-          <div className="border-t border-[#B8935A]/25 my-2" />
+          <div className="border-t border-[#D7B77A]/25 my-2" />
 
           {/* Row 5: Pricing block (Force Single Line Side-by-Side without wrapping) */}
           <div className="flex items-center gap-1.5 pt-0.5 flex-nowrap overflow-hidden">
-            <span className="font-serif text-sm sm:text-base font-semibold text-[#3D0F1F] shrink-0">
+            <span className="font-serif text-sm sm:text-base font-semibold text-[#E8D2A4] shrink-0">
               ₹{product.price.toLocaleString('en-IN')}
             </span>
             {product.originalPrice > product.price && (
-              <span className="text-[10px] sm:text-xs line-through text-gray-400 font-medium shrink-0">
+              <span className="text-[10px] sm:text-xs line-through text-[#F7F0E5]/55 font-medium shrink-0">
                 ₹{product.originalPrice.toLocaleString('en-IN')}
               </span>
             )}
             {calculatedDiscount > 0 && (
-              <span className="text-[9px] font-semibold text-[#3D0F1F] bg-[#FAF5EB] border border-[#B8935A]/35 px-1.5 py-0.5 rounded-sm shrink-0 uppercase tracking-tight">
+              <span className="text-[9px] font-semibold text-[#E8D2A4] bg-[#180306] border border-[#D7B77A]/35 px-1.5 py-0.5 rounded-sm shrink-0 uppercase tracking-tight">
                 {calculatedDiscount}% OFF
               </span>
             )}
@@ -250,20 +250,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               onClick={handleAddToCart}
               className={`w-full py-3 px-3 rounded-sm text-xs font-semibold tracking-widest uppercase transition-colors duration-200 flex items-center justify-center gap-2 cursor-pointer border ${
                 isOutOfStock
-                  ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                  ? 'bg-[#2A0710] border-[#D7B77A]/15 text-[#F7F0E5]/55 cursor-not-allowed'
                   : isJustAdded
-                  ? 'bg-emerald-700 border-emerald-700 text-white'
-                  : 'bg-[#3D0F1F] border-[#3D0F1F] text-[#FAF5EB] hover:bg-[#3D0F1F]/90 hover:text-[#FAF5EB]'
+                  ? 'bg-emerald-700 border-emerald-700 text-[#F7F0E5]'
+                  : 'bg-[#D7B77A] border-[#D7B77A]/40 text-[#F7F0E5] hover:bg-[#D7B77A]/90 hover:text-[#F7F0E5]'
               }`}
             >
               {isOutOfStock ? (
                 <>
-                  <X className="w-4 h-4 text-gray-400 shrink-0" />
+                  <X className="w-4 h-4 text-[#F7F0E5]/55 shrink-0" />
                   <span>OUT OF STOCK</span>
                 </>
               ) : isJustAdded ? (
                 <>
-                  <Check className="w-4 h-4 text-white shrink-0 animate-bounce" />
+                  <Check className="w-4 h-4 text-[#F7F0E5] shrink-0 animate-bounce" />
                   <span>ADDED TO BAG</span>
                 </>
               ) : (

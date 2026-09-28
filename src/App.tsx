@@ -101,7 +101,7 @@ const MainContent: React.FC = () => {
   // render the dedicated, isolated Admin back-office interface without customer storefront wrapper
   if (isAdminRoute || activePage === 'admin') {
     return (
-      <div id="admin-root-container" className="min-h-screen bg-[#FDF8F9]">
+      <div id="admin-root-container" className="min-h-screen bg-[#FDF8F9] text-[#211C1A]">
         <AdminDashboardPage />
         <Toast />
       </div>
@@ -110,7 +110,7 @@ const MainContent: React.FC = () => {
 
   // Customer-facing Storefront
   return (
-    <main id="app-main-content" className="min-h-screen flex flex-col bg-[#FDFBF7] w-full max-w-full overflow-x-hidden">
+    <main id="app-main-content" className="min-h-screen flex flex-col bg-[#120205] text-[#F7F0E5] w-full max-w-full overflow-x-hidden">
       <Header />
       <MobileMenuDrawer />
 

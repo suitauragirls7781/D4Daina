@@ -76,16 +76,16 @@ export const CategoryGrid: React.FC = () => {
     : CATEGORIES_DATA.map((c, i) => ({ id: `cat-${i}`, ...c, isActive: true }));
 
   return (
-    <section id="shop-by-category-section" className="py-6 sm:py-10 bg-[#FAF7F2]">
+    <section id="shop-by-category-section" className="py-6 sm:py-10 bg-[#180306]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-6 sm:mb-8">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/80 backdrop-blur-xs border border-[#9A6A3A]/30 shadow-xs text-[#211C1A] text-[10px] font-bold uppercase tracking-widest mb-2">
-            <Sparkles className="w-3 h-3 text-black" />
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#180306]/80 backdrop-blur-xs border border-[#D7B77A]/30 shadow-xs text-[#F7F0E5] text-[10px] font-bold uppercase tracking-widest mb-2">
+            <Sparkles className="w-3 h-3 text-[#F7F0E5]" />
             Curated Wardrobe
           </div>
-          <h2 className="font-serif text-2xl sm:text-4xl font-bold text-[#211C1A] tracking-tight">
+          <h2 className="font-serif text-2xl sm:text-4xl font-bold text-[#F7F0E5] tracking-tight">
             Shop by Category
           </h2>
         </div>
@@ -100,7 +100,7 @@ export const CategoryGrid: React.FC = () => {
               className="group flex flex-col items-center gap-2 sm:gap-3 focus:outline-none cursor-pointer"
             >
               {/* Circular Image Container */}
-              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-[#9A6A3A]/35 shadow-sm group-hover:shadow-md transition-all duration-300 bg-[#F1E8DF] relative">
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full overflow-hidden border border-[#D7B77A]/35 shadow-sm group-hover:shadow-md transition-all duration-300 bg-[#2A0710] relative">
                 <img
                   src={getCleanImageUrl(cat.image)}
                   alt={`Suit Aura Girls - ${cat.name}`}
@@ -116,10 +116,10 @@ export const CategoryGrid: React.FC = () => {
               </div>
               
               <div className="text-center">
-                <h3 className="font-serif text-xs sm:text-sm font-bold text-[#211C1A] leading-tight">
+                <h3 className="font-serif text-xs sm:text-sm font-bold text-[#F7F0E5] leading-tight">
                   {cat.name}
                 </h3>
-                <p className="text-[9px] sm:text-[10px] text-black uppercase tracking-widest font-bold mt-0.5">
+                <p className="text-[9px] sm:text-[10px] text-[#F7F0E5] uppercase tracking-widest font-bold mt-0.5">
                   {getLiveCountTag(cat.name)}
                 </p>
               </div>

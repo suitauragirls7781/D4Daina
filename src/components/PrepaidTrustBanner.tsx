@@ -43,7 +43,7 @@ export const PrepaidTrustBanner: React.FC = () => {
   return (
     <section
       id="silhouette-curations-strip"
-      className="w-full bg-[#FDFBF7] pt-6 pb-5 sm:pt-9 sm:pb-8 border-b border-antique-gold/20 select-none"
+      className="w-full bg-[#120205] pt-6 pb-5 sm:pt-9 sm:pb-8 border-b border-antique-gold/20 select-none"
     >
       <div className="max-w-7xl mx-auto">
         <div className="flex items-end justify-between gap-3 px-4 sm:px-6 lg:px-8 mb-4 sm:mb-6">
@@ -52,7 +52,7 @@ export const PrepaidTrustBanner: React.FC = () => {
               <Sparkles className="w-3 h-3" />
               <span>Artisan Craft Legacies</span>
             </div>
-            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#3D0F1F] leading-tight">
+            <h2 className="font-serif text-2xl sm:text-3xl font-semibold text-[#E8D2A4] leading-tight">
               Shop By Silhouette
             </h2>
           </div>
@@ -78,8 +78,8 @@ export const PrepaidTrustBanner: React.FC = () => {
                 onClick={() => navigateToCategory(cat.name as 'Suits' | 'Kurtis' | 'Anarkali' | 'Dresses')}
                 className="snap-start shrink-0 flex flex-col items-center text-center group cursor-pointer w-[84px] sm:w-[112px] transition-transform duration-200 active:scale-95"
               >
-                <div className="w-[76px] h-[76px] sm:w-[104px] sm:h-[104px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#9A6A3A] via-[#E9D7B9] to-[#3D0F1F] group-hover:rotate-6 transition-transform duration-500">
-                  <div className="w-full h-full rounded-full p-[3px] bg-[#FDFBF7]">
+                <div className="w-[76px] h-[76px] sm:w-[104px] sm:h-[104px] rounded-full p-[2.5px] bg-gradient-to-tr from-[#D7B77A] via-[#E9D7B9] to-[#D7B77A] group-hover:rotate-6 transition-transform duration-500">
+                  <div className="w-full h-full rounded-full p-[3px] bg-[#120205]">
                     <div className="w-full h-full rounded-full overflow-hidden bg-ivory">
                       <img
                         src={coverImage}

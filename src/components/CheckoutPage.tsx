@@ -441,23 +441,6 @@ export const CheckoutPage: React.FC = () => {
   };
 
   // Fast Auto-Fill Demo Handler
-  const handleExpressAutoFill = () => {
-    setFirstName('Ananya');
-    setLastName('Sharma');
-    setAddress({
-      fullName: 'Ananya Sharma',
-      mobile: '9876543210',
-      email: 'ananya@example.com',
-      houseFlat: 'Flat 302, Palm Heights',
-      street: 'MG Road, Near Central Mall',
-      area: 'Connaught Place',
-      city: 'New Delhi',
-      state: 'Delhi NCR',
-      pincode: '110001',
-    });
-    showToast('Express Fast Checkout Auto-Filled!', 'success');
-  };
-
   const handleSaveAddressToDb = async (currentAddr: DeliveryAddress) => {
     try {
       const combinedFullName = `${firstName.trim()} ${lastName.trim()}`;
@@ -854,19 +837,19 @@ export const CheckoutPage: React.FC = () => {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="min-h-[80vh] bg-[#FDFBF7] flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 bg-[#241D1B]/10 text-[#211C1A] rounded-full flex items-center justify-center mb-4">
+      <div className="min-h-[80vh] bg-[#120205] flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 bg-[#5C0B1B]/10 text-[#F7F0E5] rounded-full flex items-center justify-center mb-4">
           <ShoppingBag className="w-10 h-10" />
         </div>
-        <h2 className="font-serif text-3xl font-bold text-[#211C1A] mb-2">
+        <h2 className="font-serif text-3xl font-bold text-[#F7F0E5] mb-2">
           Your Shopping Bag is Empty
         </h2>
-        <p className="text-stone-600 max-w-md mb-6 text-sm">
+        <p className="text-[#F7F0E5]/75 max-w-md mb-6 text-sm">
           Explore our handcrafted ethnic couture collections and add your favorite suits to complete your purchase.
         </p>
         <button
           onClick={() => setActivePage('shop')}
-          className="px-8 py-3.5 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md"
+          className="px-8 py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md"
         >
           Explore Luxury Collection
         </button>
@@ -875,30 +858,30 @@ export const CheckoutPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#3D0F1F] pb-6 sm:pb-8 font-sans text-left">
+    <div className="min-h-screen bg-[#120205] text-[#E8D2A4] pb-6 sm:pb-8 font-sans text-left">
       
       {/* Top Header Bar */}
-      <div className="sticky top-0 z-40 bg-[#FDFBF7] border-b border-[#B8935A]/30 py-3.5 px-4 sm:px-8">
+      <div className="sticky top-0 z-40 bg-[#120205] border-b border-[#D7B77A]/30 py-3.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
             <div>
-              <h1 className="font-serif text-xl sm:text-2xl font-semibold text-[#3D0F1F] leading-none flex items-center gap-2">
-                Suit Aura Girls <span className="font-sans text-[10px] sm:text-xs uppercase tracking-widest text-[#B8935A] font-semibold border-l border-[#B8935A]/40 pl-2">Checkout</span>
+              <h1 className="font-serif text-xl sm:text-2xl font-semibold text-[#E8D2A4] leading-none flex items-center gap-2">
+                Suit Aura Girls <span className="font-sans text-[10px] sm:text-xs uppercase tracking-widest text-[#D7B77A] font-semibold border-l border-[#D7B77A]/40 pl-2">Checkout</span>
               </h1>
-              <div className="flex items-center gap-2.5 text-[11px] text-stone-600 font-medium mt-1">
-                <span className="flex items-center gap-1 text-emerald-800 font-semibold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" /> 256-Bit Bank Grade SSL
+              <div className="flex items-center gap-2.5 text-[11px] text-[#F7F0E5]/75 font-medium mt-1">
+                <span className="flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-800">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> 256-Bit Bank Grade SSL
                 </span>
                 <span className="hidden sm:inline text-stone-300">•</span>
-                <span className="hidden sm:inline text-stone-700 font-semibold">⚡ Priority Dispatch Active</span>
+                <span className="hidden sm:inline text-[#F7F0E5]/75 font-semibold">⚡ Priority Dispatch Active</span>
               </div>
             </div>
           </div>
 
           <button
             onClick={() => setActivePage('cart')}
-            className="w-10 h-10 bg-transparent hover:bg-[#FAF5EB] text-[#3D0F1F] flex items-center justify-center transition-colors cursor-pointer border border-[#B8935A]/35 shrink-0"
+            className="w-10 h-10 bg-transparent hover:bg-[#180306] text-[#E8D2A4] flex items-center justify-center transition-colors cursor-pointer border border-[#D7B77A]/35 shrink-0"
             title="Return to Bag"
           >
             <X className="w-5 h-5" />
@@ -908,14 +891,14 @@ export const CheckoutPage: React.FC = () => {
       </div>
 
       {/* Progress Step Bar */}
-      <div className="bg-[#FAF5EB] border-b border-[#B8935A]/20 py-2.5 px-4 sm:px-8">
+      <div className="bg-[#180306] border-b border-[#D7B77A]/20 py-2.5 px-4 sm:px-8">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 text-xs font-bold tracking-wider">
             <button
               type="button"
               onClick={() => setCheckoutStep('details')}
               className={`flex items-center gap-1.5 cursor-pointer ${
-                checkoutStep === 'details' ? 'text-[#3D0F1F] font-semibold border-b border-[#B8935A] pb-0.5' : 'text-[#3D0F1F]/45 hover:text-[#3D0F1F]'
+                checkoutStep === 'details' ? 'text-[#E8D2A4] font-semibold border-b border-[#D7B77A] pb-0.5' : 'text-[#E8D2A4]/45 hover:text-[#E8D2A4]'
               }`}
             >
               <span>1. Details</span>
@@ -927,15 +910,15 @@ export const CheckoutPage: React.FC = () => {
                 if (validateForm()) setCheckoutStep('payment');
               }}
               className={`flex items-center gap-1.5 cursor-pointer ${
-                checkoutStep === 'payment' ? 'text-[#3D0F1F] font-semibold border-b border-[#B8935A] pb-0.5' : 'text-[#3D0F1F]/45 hover:text-[#3D0F1F]'
+                checkoutStep === 'payment' ? 'text-[#E8D2A4] font-semibold border-b border-[#D7B77A] pb-0.5' : 'text-[#E8D2A4]/45 hover:text-[#E8D2A4]'
               }`}
             >
               <span>2. Payment</span>
             </button>
           </div>
 
-          <div className="text-xs font-bold text-[#211C1A]">
-            {cart.reduce((a, c) => a + c.quantity, 0)} items • <span className="text-[#211C1A] font-serif font-extrabold">₹{finalCartTotal.toLocaleString('en-IN')}</span>
+          <div className="text-xs font-bold text-[#F7F0E5]">
+            {cart.reduce((a, c) => a + c.quantity, 0)} items • <span className="text-[#F7F0E5] font-serif font-extrabold">₹{finalCartTotal.toLocaleString('en-IN')}</span>
           </div>
         </div>
       </div>
@@ -947,11 +930,11 @@ export const CheckoutPage: React.FC = () => {
         <div className="lg:col-span-7 space-y-6">
 
           {errorMessage && (
-            <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-semibold flex items-start gap-2 animate-in fade-in">
-              <AlertCircle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
+            <div className="p-4 bg-[#2A0710] border border-[#D7B77A]/15 rounded-md text-rose-300 text-xs font-semibold flex items-start gap-2 animate-in fade-in">
+              <AlertCircle className="w-5 h-5 shrink-0 text-rose-300 mt-0.5" />
               <div>
                 <p className="font-bold">Checkout Notice</p>
-                <p className="mt-0.5 text-rose-700">{errorMessage}</p>
+                <p className="mt-0.5 text-rose-300">{errorMessage}</p>
               </div>
             </div>
           )}
@@ -960,38 +943,18 @@ export const CheckoutPage: React.FC = () => {
           {checkoutStep === 'details' && (
             <div className="space-y-6 animate-in fade-in duration-200">
               
-              {/* Express Fast Checkout Banner */}
-              <div className="bg-[#3D0F1F] text-[#FAF5EB] p-4 sm:p-5 border border-[#B8935A]/35 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-[#DFBE65]">
-                    EXPRESS FAST CHECKOUT
-                  </span>
-                  <p className="font-serif text-sm font-bold text-white mt-0.5">
-                    Returning Customer or Demo Autofill?
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleExpressAutoFill}
-                  className="px-4 py-2 bg-[#B8935A] hover:bg-[#DFBE65] text-[#3D0F1F] font-semibold text-xs uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
-                >
-                  <Zap className="w-3.5 h-3.5 fill-[#241D1B]" />
-                  <span>Express Auto-Fill</span>
-                </button>
-              </div>
-
               {/* Contact Information Box */}
-              <div className="bg-[#FAF5EB] border border-[#B8935A]/30 p-5 sm:p-7 space-y-4">
-                <div className="border-b border-[#B8935A]/25 pb-3 flex items-center justify-between">
-                  <h3 className="font-serif text-lg font-semibold text-[#3D0F1F] flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-[#F1E8DF] text-[#211C1A] border border-[#9A6A3A]/40 text-xs flex items-center justify-center font-bold">1</span>
+              <div className="bg-[#180306] border border-[#D7B77A]/30 p-5 sm:p-7 space-y-4">
+                <div className="border-b border-[#D7B77A]/25 pb-3 flex items-center justify-between">
+                  <h3 className="font-serif text-lg font-semibold text-[#E8D2A4] flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#2A0710] text-[#F7F0E5] border border-[#D7B77A]/40 text-xs flex items-center justify-center font-bold">1</span>
                     Contact Information
                   </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                       First Name *
                     </label>
                     <input
@@ -999,13 +962,13 @@ export const CheckoutPage: React.FC = () => {
                       value={firstName}
                       onChange={(e) => handleFieldChangeDebounced('firstName', e.target.value)}
                       onBlur={handleFieldBlur}
-                      placeholder="Ananya"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      placeholder="First name"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                       Last Name *
                     </label>
                     <input
@@ -1013,18 +976,18 @@ export const CheckoutPage: React.FC = () => {
                       value={lastName}
                       onChange={(e) => handleFieldChangeDebounced('lastName', e.target.value)}
                       onBlur={handleFieldBlur}
-                      placeholder="Sharma"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      placeholder="Last name"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                     Mobile Number *
                   </label>
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-2.5 bg-stone-100 border border-stone-200 rounded-xl text-xs font-bold text-stone-700">
+                    <span className="px-3 py-2.5 bg-[#2A0710] border border-[#D7B77A]/15 rounded text-xs font-bold text-[#F7F0E5]/75">
                       +91
                     </span>
                     <input
@@ -1034,13 +997,13 @@ export const CheckoutPage: React.FC = () => {
                       onChange={(e) => handleFieldChangeDebounced('mobile', e.target.value)}
                       onBlur={handleFieldBlur}
                       placeholder="10-digit mobile number"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                     Email Address *
                   </label>
                   <input
@@ -1048,17 +1011,17 @@ export const CheckoutPage: React.FC = () => {
                     value={address.email}
                     onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
                     onBlur={handleFieldBlur}
-                    placeholder="ananya@example.com"
-                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                    placeholder="you@example.com"
+                    className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                   />
                 </div>
               </div>
 
               {/* Shipping Address Box */}
-              <div className="bg-[#FFFDFC] border border-[#9A6A3A]/30 rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
-                <div className="border-b border-[#9A6A3A]/20 pb-3 flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="font-serif text-lg font-bold text-[#211C1A] flex items-center gap-2">
-                    <span className="w-6 h-6 rounded-full bg-[#F1E8DF] text-[#211C1A] border border-[#9A6A3A]/40 text-xs flex items-center justify-center font-bold">2</span>
+              <div className="bg-[#120205] border border-[#D7B77A]/30 rounded-md p-5 sm:p-7 shadow-xs space-y-4">
+                <div className="border-b border-[#D7B77A]/20 pb-3 flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="font-serif text-lg font-bold text-[#F7F0E5] flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-[#2A0710] text-[#F7F0E5] border border-[#D7B77A]/40 text-xs flex items-center justify-center font-bold">2</span>
                     Shipping Address
                   </h3>
 
@@ -1066,19 +1029,19 @@ export const CheckoutPage: React.FC = () => {
                     type="button"
                     onClick={handleAutoDetectLocation}
                     disabled={isDetectingLocation}
-                    className="px-3 py-1.5 bg-[#F1E8DF] hover:bg-[#f3e9d7] text-[#211C1A] border border-[#9A6A3A]/40 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
+                    className="px-3 py-1.5 bg-[#2A0710] hover:bg-[#180306] text-[#F7F0E5] border border-[#D7B77A]/40 rounded font-bold text-[11px] transition-all cursor-pointer flex items-center gap-1.5"
                   >
                     {isDetectingLocation ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-black" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#F7F0E5]" />
                     ) : (
-                      <MapPin className="w-3.5 h-3.5 text-black" />
+                      <MapPin className="w-3.5 h-3.5 text-[#F7F0E5]" />
                     )}
                     <span>Auto-Detect GPS</span>
                   </button>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                     PIN Code *
                   </label>
                   <div className="relative">
@@ -1088,21 +1051,21 @@ export const CheckoutPage: React.FC = () => {
                       value={address.pincode}
                       onChange={(e) => setAddress(prev => ({ ...prev, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
                       placeholder="6-digit PIN code (e.g. 110001)"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     />
                     {pincodeLoading && (
                       <div className="absolute right-3 top-2.5">
-                        <Loader2 className="w-4 h-4 animate-spin text-black" />
+                        <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                       </div>
                     )}
                   </div>
                   {pincodeError && (
-                    <p className="text-[11px] text-rose-700 font-bold mt-1">⚠️ {pincodeError}</p>
+                    <p className="text-[11px] text-rose-300 font-bold mt-1">⚠️ {pincodeError}</p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                     Flat, House No., Building Name *
                   </label>
                   <input
@@ -1110,12 +1073,12 @@ export const CheckoutPage: React.FC = () => {
                     value={address.houseFlat}
                     onChange={(e) => setAddress(prev => ({ ...prev, houseFlat: e.target.value }))}
                     placeholder="Flat 302, Palm Heights"
-                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                    className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                  <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                     Street, Area, Landmark *
                   </label>
                   <input
@@ -1123,13 +1086,13 @@ export const CheckoutPage: React.FC = () => {
                     value={address.street}
                     onChange={(e) => setAddress(prev => ({ ...prev, street: e.target.value, area: e.target.value }))}
                     placeholder="MG Road, Near Central Mall"
-                    className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                    className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                       City / District *
                     </label>
                     <input
@@ -1137,18 +1100,18 @@ export const CheckoutPage: React.FC = () => {
                       value={address.city}
                       onChange={(e) => setAddress(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="New Delhi"
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-bold text-[#211C1A] uppercase tracking-wider mb-1">
+                    <label className="block text-[11px] font-bold text-[#F7F0E5] uppercase tracking-wider mb-1">
                       State *
                     </label>
                     <select
                       value={address.state}
                       onChange={(e) => setAddress(prev => ({ ...prev, state: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20 focus:border-[#241D1B]"
+                      className="w-full px-3.5 py-2.5 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20 focus:border-[#D7B77A]/40"
                     >
                       {INDIAN_STATES.map(s => (
                         <option key={s} value={s}>{s}</option>
@@ -1165,7 +1128,7 @@ export const CheckoutPage: React.FC = () => {
                     onChange={(e) => setSaveAddressOption(e.target.checked)}
                     className="w-4 h-4 accent-[#211C1A] rounded cursor-pointer"
                   />
-                  <label htmlFor="saveAddr" className="text-xs text-stone-700 cursor-pointer">
+                  <label htmlFor="saveAddr" className="text-xs text-[#F7F0E5]/75 cursor-pointer">
                     Save this address to my account for future orders
                   </label>
                 </div>
@@ -1176,10 +1139,10 @@ export const CheckoutPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleProceedToPaymentStep}
-                className="w-full py-4 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-2xl font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 group"
+                className="w-full py-4 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded-md font-bold text-xs uppercase tracking-widest transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 group"
               >
                 <span>PROCEED TO SECURE PAYMENT</span>
-                <ArrowRight className="w-4 h-4 text-black group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="w-4 h-4 text-[#F7F0E5] group-hover:translate-x-1 transition-transform" />
               </button>
 
             </div>
@@ -1193,34 +1156,34 @@ export const CheckoutPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setCheckoutStep('details')}
-                className="text-xs font-bold text-[#211C1A] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-xs font-bold text-[#F7F0E5] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Back to Delivery Details</span>
               </button>
 
               {/* Delivery Address Summary Card */}
-              <div className="bg-[#FFFDFC] border border-[#9A6A3A]/30 rounded-2xl p-4 sm:p-5 shadow-xs text-xs space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+              <div className="bg-[#120205] border border-[#D7B77A]/30 rounded-md p-4 sm:p-5 shadow-xs text-xs space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#F7F0E5]/55">
                   DELIVERING TO:
                 </span>
-                <p className="font-bold text-[#211C1A] text-sm">
+                <p className="font-bold text-[#F7F0E5] text-sm">
                   {firstName} {lastName} • {address.mobile}
                 </p>
-                <p className="text-stone-600 leading-relaxed">
+                <p className="text-[#F7F0E5]/75 leading-relaxed">
                   {address.houseFlat}, {address.street}, {address.city}, {address.state} - {address.pincode}
                 </p>
               </div>
 
               {/* Select Payment Method Container */}
-              <div className="bg-[#FFFDFC] border border-[#9A6A3A]/30 rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
+              <div className="bg-[#120205] border border-[#D7B77A]/30 rounded-md p-5 sm:p-7 shadow-xs space-y-5">
                 
-                <div className="border-b border-[#9A6A3A]/20 pb-3 flex items-center justify-between flex-wrap gap-2">
-                  <h3 className="font-serif text-lg font-bold text-[#211C1A] flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-black" />
+                <div className="border-b border-[#D7B77A]/20 pb-3 flex items-center justify-between flex-wrap gap-2">
+                  <h3 className="font-serif text-lg font-bold text-[#F7F0E5] flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-[#F7F0E5]" />
                     Select Payment Method
                   </h3>
-                  <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200/60 rounded-full font-bold text-[10px] flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 bg-emerald-950/40 text-emerald-400 border border-emerald-800 rounded-full font-bold text-[10px] flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3" /> 100% Encrypted
                   </span>
                 </div>
@@ -1228,10 +1191,10 @@ export const CheckoutPage: React.FC = () => {
                 {/* Option 1: Online Payment (UPI, Cards, NetBanking) */}
                 <div
                   onClick={() => setSelectedPaymentOption('online')}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${
+                  className={`p-4 rounded-md border transition-all cursor-pointer relative ${
                     selectedPaymentOption === 'online'
-                      ? 'border-[#241D1B] bg-[#F1E8DF]/80 ring-2 ring-[#241D1B]/20'
-                      : 'border-stone-200 bg-white hover:border-[#9A6A3A]/40'
+                      ? 'border-[#D7B77A]/40 bg-[#2A0710]/80 ring-2 ring-[#D7B77A]/20'
+                      : 'border-[#D7B77A]/15 bg-[#180306] hover:border-[#D7B77A]/40'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -1244,22 +1207,22 @@ export const CheckoutPage: React.FC = () => {
                     />
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="font-bold text-[#211C1A] text-sm">
+                        <span className="font-bold text-[#F7F0E5] text-sm">
                           Online Payment (UPI, Cards, NetBanking)
                         </span>
-                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-900 text-[10px] font-extrabold rounded-full flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-emerald-950/40 text-emerald-900 text-[10px] font-extrabold rounded-full flex items-center gap-1">
                           <Zap className="w-3 h-3 fill-emerald-700" /> FAST & RECOMMENDED
                         </span>
                       </div>
-                      <p className="text-xs text-stone-600 leading-relaxed">
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
                         Instant UPI (GPay, PhonePe, Paytm), Credit/Debit Cards, Net Banking & Wallet payments.
                       </p>
 
                       <div className="pt-2 flex flex-wrap items-center gap-2 text-[10px] font-bold">
-                        <span className="px-2 py-0.5 bg-[#241D1B] text-[#211C1A] rounded">
+                        <span className="px-2 py-0.5 bg-[#5C0B1B] text-[#F7F0E5] rounded">
                           Priority Express Dispatch (within 24 hours)
                         </span>
-                        <span className="px-2 py-0.5 bg-[#F1E8DF] text-[#211C1A] border border-[#9A6A3A]/30 rounded">
+                        <span className="px-2 py-0.5 bg-[#2A0710] text-[#F7F0E5] border border-[#D7B77A]/30 rounded">
                           Instant Confirmation
                         </span>
                       </div>
@@ -1270,10 +1233,10 @@ export const CheckoutPage: React.FC = () => {
                 {/* Option 2: Cash On Delivery (COD) */}
                 <div
                   onClick={() => setSelectedPaymentOption('cod')}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer relative ${
+                  className={`p-4 rounded-md border transition-all cursor-pointer relative ${
                     selectedPaymentOption === 'cod'
-                      ? 'border-amber-600 bg-amber-50/40 ring-2 ring-amber-500/20'
-                      : 'border-stone-200 bg-white hover:border-[#9A6A3A]/40'
+                      ? 'border-[#D7B77A] bg-[#2A0710]/40 ring-2 ring-amber-500/20'
+                      : 'border-[#D7B77A]/15 bg-[#180306] hover:border-[#D7B77A]/40'
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -1286,14 +1249,14 @@ export const CheckoutPage: React.FC = () => {
                     />
                     <div className="flex-1 space-y-1">
                       <div className="flex items-center justify-between flex-wrap gap-2">
-                        <span className="font-bold text-stone-800 text-sm">
+                        <span className="font-bold text-[#F7F0E5] text-sm">
                           Cash On Delivery (COD)
                         </span>
-                        <span className="px-2 py-0.5 bg-amber-100 text-black border border-amber-300 text-[10px] font-extrabold rounded-full flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3 text-black" /> PINCODE CHECK NEEDED
+                        <span className="px-2 py-0.5 bg-[#2A0710] text-[#F7F0E5] border border-amber-300 text-[10px] font-extrabold rounded-full flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-[#F7F0E5]" /> PINCODE CHECK NEEDED
                         </span>
                       </div>
-                      <p className="text-xs text-stone-600 leading-relaxed">
+                      <p className="text-xs text-[#F7F0E5]/75 leading-relaxed">
                         Pay cash at doorstep upon delivery. Subject to courier slot availability for Pincode {address.pincode || '110001'}.
                       </p>
                     </div>
@@ -1302,29 +1265,29 @@ export const CheckoutPage: React.FC = () => {
 
                 {/* DYNAMIC COD CURRENTLY UNAVAILABLE BOX (triggers when COD selected) */}
                 {selectedPaymentOption === 'cod' && (
-                  <div className="p-4 sm:p-5 bg-[#FFFDFC] border-2 border-amber-500/60 rounded-2xl space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm">
+                  <div className="p-4 sm:p-5 bg-[#120205] border-2 border-amber-500/60 rounded-md space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200 shadow-sm">
                     <div className="flex items-start gap-3">
-                      <div className="p-2 bg-amber-100 text-black rounded-xl shrink-0 mt-0.5 border border-amber-300">
-                        <AlertCircle className="w-5 h-5 text-black" />
+                      <div className="p-2 bg-[#2A0710] text-[#F7F0E5] rounded shrink-0 mt-0.5 border border-amber-300">
+                        <AlertCircle className="w-5 h-5 text-[#F7F0E5]" />
                       </div>
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h4 className="font-bold text-[#211C1A] text-xs uppercase tracking-wider">
+                          <h4 className="font-bold text-[#F7F0E5] text-xs uppercase tracking-wider">
                             COD Currently Unavailable
                           </h4>
-                          <span className="px-2 py-0.5 bg-amber-100 text-black font-mono text-[10px] font-bold rounded border border-amber-300">
+                          <span className="px-2 py-0.5 bg-[#2A0710] text-[#F7F0E5] font-mono text-[10px] font-bold rounded border border-amber-300">
                             PINCODE: {address.pincode || '380054'}
                           </span>
                         </div>
-                        <p className="text-xs text-stone-700 leading-relaxed font-medium pt-1">
+                        <p className="text-xs text-[#F7F0E5]/75 leading-relaxed font-medium pt-1">
                           {getPincodeCodReason(address.pincode)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-[#9A6A3A]/25 space-y-2.5">
-                      <p className="text-xs text-[#211C1A] font-bold flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-black shrink-0" />
+                    <div className="pt-3 border-t border-[#D7B77A]/25 space-y-2.5">
+                      <p className="text-xs text-[#F7F0E5] font-bold flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-[#F7F0E5] shrink-0" />
                         <span>Pay Online via UPI or Cards for FREE Shipping + Priority Dispatch!</span>
                       </p>
 
@@ -1334,33 +1297,33 @@ export const CheckoutPage: React.FC = () => {
                           setSelectedPaymentOption('online');
                           showToast('Switched to Online Payment! Priority dispatch activated.', 'success');
                         }}
-                        className="w-full p-3.5 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-xl font-bold text-xs transition-all cursor-pointer shadow-md flex items-center justify-between gap-3 text-left group border border-[#9A6A3A]/40"
+                        className="w-full p-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded font-bold text-xs transition-all cursor-pointer shadow-md flex items-center justify-between gap-3 text-left group border border-[#D7B77A]/40"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-[#C7A77A]/20 text-black flex items-center justify-center shrink-0 border border-[#C7A77A]/40">
-                            <Zap className="w-4 h-4 fill-black" />
+                          <div className="w-8 h-8 rounded-full bg-[#D7B77A]/20 text-[#F7F0E5] flex items-center justify-center shrink-0 border border-[#D7B77A]/40">
+                            <Zap className="w-4 h-4 fill-[#D7B77A]" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-bold text-white text-xs leading-snug">Switch to Online Payment (UPI / Cards)</p>
-                            <p className="text-[11px] text-black font-semibold leading-tight mt-0.5">Get ₹100 Extra Discount + Priority Dispatch</p>
+                            <p className="font-bold text-[#F7F0E5] text-xs leading-snug">Switch to Online Payment (UPI / Cards)</p>
+                            <p className="text-[11px] text-[#F7F0E5] font-semibold leading-tight mt-0.5">Get ₹100 Extra Discount + Priority Dispatch</p>
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-black group-hover:translate-x-1 transition-transform shrink-0" />
+                        <ChevronRight className="w-4 h-4 text-[#F7F0E5] group-hover:translate-x-1 transition-transform shrink-0" />
                       </button>
                     </div>
                   </div>
                 )}
 
                 {/* Festive Gift Note Checkbox */}
-                <div className="pt-2 border-t border-[#9A6A3A]/15 space-y-3">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-[#211C1A] cursor-pointer">
+                <div className="pt-2 border-t border-[#D7B77A]/15 space-y-3">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-[#F7F0E5] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={addGiftNote}
                       onChange={(e) => setAddGiftNote(e.target.checked)}
                       className="w-4 h-4 accent-[#211C1A] rounded cursor-pointer"
                     />
-                    <Gift className="w-4 h-4 text-black" />
+                    <Gift className="w-4 h-4 text-[#F7F0E5]" />
                     <span>Add Complimentary Festive Gift Note</span>
                   </label>
 
@@ -1370,7 +1333,7 @@ export const CheckoutPage: React.FC = () => {
                       value={giftNoteText}
                       onChange={(e) => setGiftNoteText(e.target.value)}
                       placeholder="Enter personal greeting message for the recipient..."
-                      className="w-full p-3 bg-white border border-stone-200 rounded-xl text-xs text-[#211C1A] focus:outline-none focus:ring-2 focus:ring-[#241D1B]/20"
+                      className="w-full p-3 bg-[#180306] border border-[#D7B77A]/15 rounded text-xs text-[#F7F0E5] focus:outline-none focus:ring-2 focus:ring-[#D7B77A]/20"
                     />
                   )}
                 </div>
@@ -1380,22 +1343,22 @@ export const CheckoutPage: React.FC = () => {
                   type="button"
                   onClick={handlePlacePrepaidOrder}
                   disabled={isProcessing}
-                  className="w-full py-4 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-2xl font-bold text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group border border-[#9A6A3A]/30"
+                  className="w-full py-4 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded-md font-bold text-sm uppercase tracking-wider transition-all cursor-pointer shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group border border-[#D7B77A]/30"
                 >
                   {isProcessing ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-black" />
+                      <Loader2 className="w-4 h-4 animate-spin text-[#F7F0E5]" />
                       <span>Connecting to Razorpay Gateway...</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-black" />
+                      <Lock className="w-4 h-4 text-[#F7F0E5]" />
                       <span>PAY NOW • ₹{finalCartTotal.toLocaleString('en-IN')}</span>
                     </div>
                   )}
                 </button>
 
-                <p className="text-center text-[11px] text-stone-500">
+                <p className="text-center text-[11px] text-[#F7F0E5]/55">
                   🔒 256-Bit Encrypted Razorpay Checkout • Order saved ONLY after successful payment
                 </p>
 
@@ -1409,18 +1372,18 @@ export const CheckoutPage: React.FC = () => {
         {/* Right Column: Order Summary & Karigari Guarantee (5 Cols) */}
         <div className="lg:col-span-5 space-y-6 lg:sticky lg:top-24">
           
-          <div className="bg-[#FFFDFC] border border-[#9A6A3A]/30 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+          <div className="bg-[#120205] border border-[#D7B77A]/30 rounded-md p-5 sm:p-6 shadow-xs space-y-5">
             
-            <div className="border-b border-[#9A6A3A]/20 pb-3 flex items-center justify-between gap-2">
+            <div className="border-b border-[#D7B77A]/20 pb-3 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="font-serif text-base sm:text-lg font-bold text-[#211C1A] tracking-tight">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#F7F0E5] tracking-tight">
                   Order Summary
                 </h3>
-                <p className="text-[11px] font-sans text-stone-500 font-medium">
+                <p className="text-[11px] font-sans text-[#F7F0E5]/55 font-medium">
                   {cart.reduce((a, c) => a + c.quantity, 0)} {cart.reduce((a, c) => a + c.quantity, 0) === 1 ? 'Item' : 'Items'} in Bag
                 </p>
               </div>
-              <span className="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200/80 rounded-full font-bold text-[10px] sm:text-[11px] uppercase tracking-wider whitespace-nowrap shrink-0">
+              <span className="px-3 py-1 bg-emerald-950/40 text-emerald-400 border border-emerald-800 rounded-full font-bold text-[10px] sm:text-[11px] uppercase tracking-wider whitespace-nowrap shrink-0">
                 Free Delivery
               </span>
             </div>
@@ -1446,53 +1409,53 @@ export const CheckoutPage: React.FC = () => {
                 const categoryName = item.product?.category || 'Royal Ethnic Couture';
 
                 return (
-                  <div key={`${item.id}-${itemSize}-${itemColor}`} className="p-3.5 bg-[#F1E8DF]/90 border border-[#9A6A3A]/30 rounded-2xl flex items-start gap-3.5 shadow-2xs">
+                  <div key={`${item.id}-${itemSize}-${itemColor}`} className="p-3.5 bg-[#2A0710]/90 border border-[#D7B77A]/30 rounded-md flex items-start gap-3.5 shadow-2xs">
                     <img
                       src={getCleanImageUrl(itemImg)}
                       alt={itemTitle}
-                      className="w-20 h-28 sm:w-22 sm:h-30 object-cover rounded-xl border border-[#9A6A3A]/25 shrink-0 shadow-xs"
+                      className="w-20 h-28 sm:w-22 sm:h-30 object-cover rounded border border-[#D7B77A]/25 shrink-0 shadow-xs"
                     />
                     <div className="flex-1 min-w-0 text-xs space-y-1.5">
                       <div className="flex items-center justify-between gap-1">
-                        <span className="inline-block px-2 py-0.5 bg-[#241D1B] text-[#211C1A] text-[9px] font-extrabold uppercase tracking-widest rounded-md">
+                        <span className="inline-block px-2 py-0.5 bg-[#5C0B1B] text-[#F7F0E5] text-[9px] font-extrabold uppercase tracking-widest rounded-md">
                           {categoryName}
                         </span>
-                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        <span className="text-[10px] text-emerald-400 font-bold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800">
                           In Stock
                         </span>
                       </div>
                       
-                      <h4 className="font-serif font-bold text-[#211C1A] text-sm leading-snug line-clamp-2">
+                      <h4 className="font-serif font-bold text-[#F7F0E5] text-sm leading-snug line-clamp-2">
                         {itemTitle}
                       </h4>
 
                       <div className="flex flex-wrap items-center gap-1.5 text-[11px] pt-0.5">
-                        <span className="px-2 py-0.5 bg-white border border-stone-200 text-[#211C1A] font-bold rounded-md shadow-2xs">
-                          Size: <strong className="text-[#211C1A]">{itemSize}</strong>
+                        <span className="px-2 py-0.5 bg-[#180306] border border-[#D7B77A]/15 text-[#F7F0E5] font-bold rounded-md shadow-2xs">
+                          Size: <strong className="text-[#F7F0E5]">{itemSize}</strong>
                         </span>
                         {itemColor && (
-                          <span className="px-2 py-0.5 bg-white border border-stone-200 text-[#211C1A] font-bold rounded-md shadow-2xs">
-                            Color: <strong className="text-[#211C1A]">{itemColor}</strong>
+                          <span className="px-2 py-0.5 bg-[#180306] border border-[#D7B77A]/15 text-[#F7F0E5] font-bold rounded-md shadow-2xs">
+                            Color: <strong className="text-[#F7F0E5]">{itemColor}</strong>
                           </span>
                         )}
-                        <span className="px-2 py-0.5 bg-white border border-stone-200 text-[#211C1A] font-bold rounded-md shadow-2xs">
-                          Qty: <strong className="text-[#211C1A]">{item.quantity}</strong>
+                        <span className="px-2 py-0.5 bg-[#180306] border border-[#D7B77A]/15 text-[#F7F0E5] font-bold rounded-md shadow-2xs">
+                          Qty: <strong className="text-[#F7F0E5]">{item.quantity}</strong>
                         </span>
                       </div>
 
                       <div className="pt-1 flex items-baseline justify-between gap-2">
                         <div className="flex items-baseline gap-2">
-                          <span className="font-serif font-extrabold text-[#211C1A] text-base">
+                          <span className="font-serif font-extrabold text-[#F7F0E5] text-base">
                             ₹{(itemPrice * item.quantity).toLocaleString('en-IN')}
                           </span>
                           {origPrice > itemPrice && (
-                            <span className="text-stone-400 line-through text-xs font-mono">
+                            <span className="text-[#F7F0E5]/55 line-through text-xs font-mono">
                               ₹{(origPrice * item.quantity).toLocaleString('en-IN')}
                             </span>
                           )}
                         </div>
                         {origPrice > itemPrice && (
-                          <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-950/70 px-1.5 py-0.5 rounded">
                             {Math.round(((origPrice - itemPrice) / origPrice) * 100)}% OFF
                           </span>
                         )}
@@ -1504,25 +1467,25 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             {/* Royal Gift Packaging Perk Progress Bar */}
-            <div className="p-4 bg-[#F1E8DF] rounded-2xl border border-[#9A6A3A]/25 space-y-2">
-              <div className="flex items-center justify-between text-xs font-bold text-[#211C1A]">
+            <div className="p-4 bg-[#2A0710] rounded-md border border-[#D7B77A]/25 space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold text-[#F7F0E5]">
                 <span className="flex items-center gap-1.5">
-                  <Gift className="w-4 h-4 text-black" />
+                  <Gift className="w-4 h-4 text-[#F7F0E5]" />
                   Royal Gift Packaging Perk
                 </span>
-                <span className="text-[10px] text-stone-500 font-mono">
+                <span className="text-[10px] text-[#F7F0E5]/55 font-mono">
                   {amountToGiftPack > 0 ? `Add ₹${amountToGiftPack.toLocaleString('en-IN')} more` : 'Unlocked!'}
                 </span>
               </div>
 
-              <div className="w-full h-2 bg-stone-200 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-[#2A0710] rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-[#241D1B] to-[#9A6A3A] transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#5C0B1B] to-[#D7B77A] transition-all duration-500"
                   style={{ width: `${giftPackProgress}%` }}
                 />
               </div>
 
-              <p className="text-[11px] text-stone-600 leading-tight">
+              <p className="text-[11px] text-[#F7F0E5]/75 leading-tight">
                 {amountToGiftPack > 0 
                   ? `Orders above ₹2,999 unlock complimentary Royal Satin Gift Box & Calligraphy Greeting Card.`
                   : `✨ Congratulations! Your order includes a complimentary Royal Satin Gift Box & Greeting Card.`}
@@ -1530,16 +1493,16 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             {/* Promo Code / Coupon Section */}
-            <div className="space-y-2.5 pt-2 border-t border-[#9A6A3A]/20">
+            <div className="space-y-2.5 pt-2 border-t border-[#D7B77A]/20">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-black" />
+                <p className="text-[11px] font-bold text-[#F7F0E5]/55 uppercase tracking-widest flex items-center gap-1.5">
+                  <Tag className="w-4 h-4 text-[#F7F0E5]" />
                   Apply Promo Code
                 </p>
                 <button
                   type="button"
                   onClick={() => setShowCouponsModal(true)}
-                  className="text-xs font-bold text-black hover:text-[#211C1A] flex items-center gap-1 transition cursor-pointer underline underline-offset-2"
+                  className="text-xs font-bold text-[#F7F0E5] hover:text-[#F7F0E5] flex items-center gap-1 transition cursor-pointer underline underline-offset-2"
                 >
                   <span>View All Coupons ({coupons ? coupons.length : 0})</span>
                   <ChevronRight className="w-3.5 h-3.5" />
@@ -1548,14 +1511,14 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Applied Coupon Info or Manual Input Form */}
               {appliedCoupon ? (
-                <div className="p-3 bg-[#F1E8DF]/50 border border-dashed border-[#9A6A3A]/40 rounded-xl flex items-center justify-between text-xs">
+                <div className="p-3 bg-[#2A0710]/50 border border-dashed border-[#D7B77A]/40 rounded flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2 min-w-0">
-                    <Tag className="w-4 h-4 text-black shrink-0" />
+                    <Tag className="w-4 h-4 text-[#F7F0E5] shrink-0" />
                     <div className="min-w-0">
-                      <p className="font-bold text-[#211C1A] text-xs">
-                        Coupon <span className="font-mono font-bold bg-[#241D1B] text-[#211C1A] px-1.5 py-0.5 rounded-md text-[10px] ml-1 uppercase">{appliedCoupon.code}</span> Applied
+                      <p className="font-bold text-[#F7F0E5] text-xs">
+                        Coupon <span className="font-mono font-bold bg-[#5C0B1B] text-[#F7F0E5] px-1.5 py-0.5 rounded-md text-[10px] ml-1 uppercase">{appliedCoupon.code}</span> Applied
                       </p>
-                      <p className="text-[10px] text-stone-500 font-medium mt-0.5">
+                      <p className="text-[10px] text-[#F7F0E5]/55 font-medium mt-0.5">
                         Saved additional ₹{discountAmount.toLocaleString('en-IN')} on this order
                       </p>
                     </div>
@@ -1563,7 +1526,7 @@ export const CheckoutPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={removeCoupon}
-                    className="text-xs font-bold text-[#211C1A] uppercase tracking-wider underline underline-offset-2 hover:text-black transition cursor-pointer shrink-0 ml-3"
+                    className="text-xs font-bold text-[#F7F0E5] uppercase tracking-wider underline underline-offset-2 hover:text-[#F7F0E5] transition cursor-pointer shrink-0 ml-3"
                   >
                     Remove
                   </button>
@@ -1575,11 +1538,11 @@ export const CheckoutPage: React.FC = () => {
                     value={couponCodeInput}
                     onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
                     placeholder="Enter coupon code"
-                    className="flex-1 px-3 py-2 bg-white border border-[#9A6A3A]/30 rounded-xl text-xs font-mono font-bold text-[#211C1A] uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#241D1B] placeholder:font-sans placeholder:font-normal placeholder:text-stone-400 placeholder:normal-case"
+                    className="flex-1 px-3 py-2 bg-[#180306] border border-[#D7B77A]/30 rounded text-xs font-mono font-bold text-[#F7F0E5] uppercase tracking-wider focus:outline-none focus:ring-1 focus:ring-[#D7B77A]/40 placeholder:font-sans placeholder:font-normal placeholder:text-[#F7F0E5]/55 placeholder:normal-case"
                   />
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#241D1B] text-[#211C1A] hover:bg-[#241D1B] rounded-xl font-bold text-xs uppercase tracking-wider cursor-pointer shadow-2xs transition active:scale-95 border border-[#9A6A3A]/30"
+                    className="px-5 py-2 bg-[#5C0B1B] text-[#F7F0E5] hover:bg-[#5C0B1B] rounded font-bold text-xs uppercase tracking-wider cursor-pointer shadow-2xs transition active:scale-95 border border-[#D7B77A]/30"
                   >
                     Apply
                   </button>
@@ -1588,79 +1551,79 @@ export const CheckoutPage: React.FC = () => {
             </div>
 
             {/* Official High-End Price Breakdown */}
-            <div className="pt-3 border-t border-[#9A6A3A]/25 space-y-3 text-xs">
+            <div className="pt-3 border-t border-[#D7B77A]/25 space-y-3 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">
+                <span className="text-[11px] font-bold text-[#F7F0E5]/55 uppercase tracking-widest">
                   Price Details ({cart.reduce((a, c) => a + c.quantity, 0)} {cart.reduce((a, c) => a + c.quantity, 0) === 1 ? 'Item' : 'Items'})
                 </span>
               </div>
 
               <div className="space-y-2.5 py-1">
                 {/* Total Item MRP */}
-                <div className="flex justify-between items-center text-stone-600">
+                <div className="flex justify-between items-center text-[#F7F0E5]/75">
                   <span>Total MRP</span>
-                  <span className="font-mono text-stone-800 font-medium">₹{totalMRP.toLocaleString('en-IN')}</span>
+                  <span className="font-mono text-[#F7F0E5] font-medium">₹{totalMRP.toLocaleString('en-IN')}</span>
                 </div>
 
                 {/* Catalog Savings */}
                 {catalogDiscount > 0 && (
-                  <div className="flex justify-between items-center text-stone-600">
+                  <div className="flex justify-between items-center text-[#F7F0E5]/75">
                     <span>Discount on MRP</span>
-                    <span className="font-mono font-bold text-emerald-700">-₹{catalogDiscount.toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold text-emerald-400">-₹{catalogDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
 
                 {/* Bag Subtotal */}
-                <div className="flex justify-between items-center text-[#211C1A] font-semibold pt-1 border-t border-[#9A6A3A]/15">
+                <div className="flex justify-between items-center text-[#F7F0E5] font-semibold pt-1 border-t border-[#D7B77A]/15">
                   <span>Subtotal</span>
-                  <span className="font-mono font-bold text-[#211C1A]">₹{cartSubtotal.toLocaleString('en-IN')}</span>
+                  <span className="font-mono font-bold text-[#F7F0E5]">₹{cartSubtotal.toLocaleString('en-IN')}</span>
                 </div>
 
                 {/* Express Delivery */}
-                <div className="flex justify-between items-center text-stone-600">
+                <div className="flex justify-between items-center text-[#F7F0E5]/75">
                   <span>Delivery Charges</span>
-                  <span className="font-semibold text-emerald-700">
-                    FREE <span className="text-stone-400 line-through text-[10px] font-normal font-mono ml-1">₹199</span>
+                  <span className="font-semibold text-emerald-400">
+                    FREE <span className="text-[#F7F0E5]/55 line-through text-[10px] font-normal font-mono ml-1">₹199</span>
                   </span>
                 </div>
 
                 {/* Coupon Savings */}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-stone-600">
+                  <div className="flex justify-between items-center text-[#F7F0E5]/75">
                     <span>Coupon Discount ({appliedCoupon?.code})</span>
-                    <span className="font-mono font-bold text-emerald-700">-₹{discountAmount.toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold text-emerald-400">-₹{discountAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
 
                 {/* Online Payment Discount */}
                 {prepaidDiscount > 0 && (
-                  <div className="flex justify-between items-center text-stone-600">
+                  <div className="flex justify-between items-center text-[#F7F0E5]/75">
                     <span>Online Prepayment Discount</span>
-                    <span className="font-mono font-bold text-emerald-700">-₹{prepaidDiscount.toLocaleString('en-IN')}</span>
+                    <span className="font-mono font-bold text-emerald-400">-₹{prepaidDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
               </div>
 
               {/* Total Savings Callout Banner */}
               {totalSavings > 0 && (
-                <div className="p-3 bg-emerald-50/60 border border-dashed border-emerald-600/20 rounded-xl flex items-center justify-between text-xs">
-                  <span className="text-stone-600 font-medium flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <div className="p-3 bg-emerald-950/60 border border-dashed border-emerald-600/20 rounded flex items-center justify-between text-xs">
+                  <span className="text-[#F7F0E5]/75 font-medium flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     Total Savings
                   </span>
-                  <span className="font-mono font-bold text-emerald-800">
+                  <span className="font-mono font-bold text-emerald-400">
                     ₹{totalSavings.toLocaleString('en-IN')}
                   </span>
                 </div>
               )}
 
               {/* Grand Payable Total */}
-              <div className="pt-3.5 border-t border-[#241D1B]/30 flex justify-between items-baseline text-[#211C1A]">
+              <div className="pt-3.5 border-t border-[#D7B77A]/30 flex justify-between items-baseline text-[#F7F0E5]">
                 <div>
-                  <span className="font-serif font-bold text-sm block text-[#211C1A] tracking-wide">Grand Payable Total</span>
-                  <span className="text-[10px] text-stone-400 font-sans">Inclusive of all GST, taxes & express shipping</span>
+                  <span className="font-serif font-bold text-sm block text-[#F7F0E5] tracking-wide">Grand Payable Total</span>
+                  <span className="text-[10px] text-[#F7F0E5]/55 font-sans">Inclusive of all GST, taxes & express shipping</span>
                 </div>
-                <span className="font-serif font-bold text-2xl sm:text-3xl text-[#211C1A]">
+                <span className="font-serif font-bold text-2xl sm:text-3xl text-[#F7F0E5]">
                   ₹{finalCartTotal.toLocaleString('en-IN')}
                 </span>
               </div>
@@ -1669,60 +1632,60 @@ export const CheckoutPage: React.FC = () => {
           </div>
 
           {/* Suit Aura Girls Karigari Guarantee Card */}
-          <div className="bg-[#FFFDFC] border border-[#9A6A3A]/35 rounded-2xl p-5 text-xs space-y-4 shadow-xs text-left">
+          <div className="bg-[#120205] border border-[#D7B77A]/35 rounded-md p-5 text-xs space-y-4 shadow-xs text-left">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#241D1B] text-[#211C1A] flex items-center justify-center shrink-0 border border-[#9A6A3A]/30">
-                <Award className="w-5 h-5 text-black" />
+              <div className="w-10 h-10 rounded bg-[#5C0B1B] text-[#F7F0E5] flex items-center justify-center shrink-0 border border-[#D7B77A]/30">
+                <Award className="w-5 h-5 text-[#F7F0E5]" />
               </div>
               <div>
-                <h4 className="font-serif font-bold text-[#211C1A] text-base leading-tight">
+                <h4 className="font-serif font-bold text-[#F7F0E5] text-base leading-tight">
                   Suit Aura Girls • Karigari Guarantee
                 </h4>
-                <p className="text-[10px] text-black font-extrabold uppercase tracking-widest mt-0.5">
+                <p className="text-[10px] text-[#F7F0E5] font-extrabold uppercase tracking-widest mt-0.5">
                   Authentic Artisanal Heritage
                 </p>
               </div>
             </div>
 
-            <div className="h-0.5 bg-[#9A6A3A]/20 rounded-full" />
+            <div className="h-0.5 bg-[#D7B77A]/20 rounded-full" />
 
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#241D1B]/10 text-[#211C1A] flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                  <Sparkles className="w-3.5 h-3.5 text-black" />
+                <div className="w-6 h-6 rounded-full bg-[#5C0B1B]/10 text-[#F7F0E5] flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                  <Sparkles className="w-3.5 h-3.5 text-[#F7F0E5]" />
                 </div>
                 <div>
-                  <p className="font-bold text-[#211C1A] text-xs">100% Handcrafted Couture</p>
-                  <p className="text-[11px] text-stone-500">Pure cotton, authentic gota patti & hand-block prints</p>
+                  <p className="font-bold text-[#F7F0E5] text-xs">100% Handcrafted Couture</p>
+                  <p className="text-[11px] text-[#F7F0E5]/55">Pure cotton, authentic gota patti & hand-block prints</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#241D1B]/10 text-[#211C1A] flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                  <Scissors className="w-3.5 h-3.5 text-black" />
+                <div className="w-6 h-6 rounded-full bg-[#5C0B1B]/10 text-[#F7F0E5] flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                  <Scissors className="w-3.5 h-3.5 text-[#F7F0E5]" />
                 </div>
                 <div>
-                  <p className="font-bold text-[#211C1A] text-xs">Free Custom Stitching & Fit Assistance</p>
-                  <p className="text-[11px] text-stone-500">Personal size alteration & custom fit support from master karigars</p>
+                  <p className="font-bold text-[#F7F0E5] text-xs">Free Custom Stitching & Fit Assistance</p>
+                  <p className="text-[11px] text-[#F7F0E5]/55">Personal size alteration & custom fit support from master karigars</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#241D1B]/10 text-[#211C1A] flex items-center justify-center shrink-0 mt-0.5 font-bold">
-                  <RotateCcw className="w-3.5 h-3.5 text-black" />
+                <div className="w-6 h-6 rounded-full bg-[#5C0B1B]/10 text-[#F7F0E5] flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                  <RotateCcw className="w-3.5 h-3.5 text-[#F7F0E5]" />
                 </div>
                 <div>
-                  <p className="font-bold text-[#211C1A] text-xs">Hassle-Free 7-Day Easy Exchange</p>
-                  <p className="text-[11px] text-stone-500">Direct WhatsApp pickup & replacement support</p>
+                  <p className="font-bold text-[#F7F0E5] text-xs">Hassle-Free 7-Day Easy Exchange</p>
+                  <p className="text-[11px] text-[#F7F0E5]/55">Direct WhatsApp pickup & replacement support</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Need Order or Size Help? Concierge Box */}
-          <div className="bg-[#241D1B] text-[#211C1A] rounded-2xl p-4 flex items-center justify-between gap-3 shadow-md">
+          <div className="bg-[#5C0B1B] text-[#F7F0E5] rounded-md p-4 flex items-center justify-between gap-3 shadow-md">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-[#C7A77A]/20 text-black flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#D7B77A]/20 text-[#F7F0E5] flex items-center justify-center shrink-0">
                 <MessageCircle className="w-4 h-4" />
               </div>
               <div className="text-xs">
@@ -1735,7 +1698,7 @@ export const CheckoutPage: React.FC = () => {
               href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need help with my order checkout.')}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-3.5 py-2 bg-[#F1E8DF] text-[#211C1A] hover:bg-white rounded-xl font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer shrink-0"
+              className="px-3.5 py-2 bg-[#2A0710] text-[#F7F0E5] hover:bg-[#180306] rounded font-bold text-[11px] uppercase tracking-wider transition-all cursor-pointer shrink-0"
             >
               Chat Concierge
             </a>
@@ -1747,40 +1710,40 @@ export const CheckoutPage: React.FC = () => {
 
       {/* COD Unavailable Popup Modal */}
       {showCodWarningModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-          <div className="bg-[#FFFDFC] border-2 border-[#9A6A3A]/50 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 relative text-left">
+        <div className="fixed inset-0 z-50 bg-[#5C0B1B]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-[#120205] border-2 border-[#D7B77A]/50 rounded-md p-6 max-w-md w-full shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 relative text-left">
             <button
               type="button"
               onClick={() => setShowCodWarningModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-[#2A0710] hover:bg-[#2A0710] text-[#F7F0E5]/75 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3 pr-6">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-black flex items-center justify-center shrink-0 border border-amber-300">
-                <AlertCircle className="w-6 h-6 text-black" />
+              <div className="w-12 h-12 rounded-md bg-[#2A0710] text-[#F7F0E5] flex items-center justify-center shrink-0 border border-amber-300">
+                <AlertCircle className="w-6 h-6 text-[#F7F0E5]" />
               </div>
               <div>
-                <h3 className="font-serif font-bold text-lg text-[#211C1A]">
+                <h3 className="font-serif font-bold text-lg text-[#F7F0E5]">
                   COD Currently Restricted
                 </h3>
-                <span className="px-2 py-0.5 bg-amber-100 text-black font-mono text-[10px] font-bold rounded border border-amber-300">
+                <span className="px-2 py-0.5 bg-[#2A0710] text-[#F7F0E5] font-mono text-[10px] font-bold rounded border border-amber-300">
                   PINCODE: {address.pincode || '380054'}
                 </span>
               </div>
             </div>
 
-            <p className="text-xs text-stone-700 leading-relaxed font-medium bg-[#F1E8DF] p-3.5 rounded-2xl border border-[#9A6A3A]/20">
+            <p className="text-xs text-[#F7F0E5]/75 leading-relaxed font-medium bg-[#2A0710] p-3.5 rounded-md border border-[#D7B77A]/20">
               {getPincodeCodReason(address.pincode)}
             </p>
 
-            <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-900 space-y-1">
-              <p className="font-bold flex items-center gap-1.5 text-emerald-800">
-                <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="p-3.5 bg-emerald-950/40 border border-emerald-800 rounded-md text-xs text-emerald-900 space-y-1">
+              <p className="font-bold flex items-center gap-1.5 text-emerald-400">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
                 <span>Pay Online & Get Priority Dispatch!</span>
               </p>
-              <p className="text-[11px] text-emerald-800/90 leading-tight">
+              <p className="text-[11px] text-emerald-400 leading-tight">
                 Enjoy ₹100 extra savings + 24-hour priority dispatch with 256-Bit SSL protection.
               </p>
             </div>
@@ -1793,16 +1756,16 @@ export const CheckoutPage: React.FC = () => {
                   setSelectedPaymentOption('online');
                   showToast('Switched to Online Payment! Priority dispatch activated.', 'success');
                 }}
-                className="w-full py-3.5 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] rounded-2xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 border border-[#9A6A3A]/40"
+                className="w-full py-3.5 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] rounded-md font-bold text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md flex items-center justify-center gap-2 border border-[#D7B77A]/40"
               >
-                <Zap className="w-4 h-4 text-black fill-black" />
+                <Zap className="w-4 h-4 text-[#F7F0E5] fill-[#D7B77A]" />
                 <span>Switch to UPI / Online Payment</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowCodWarningModal(false)}
-                className="w-full py-2 text-stone-500 hover:text-stone-800 font-bold text-xs transition-colors cursor-pointer"
+                className="w-full py-2 text-[#F7F0E5]/55 hover:text-[#F7F0E5] font-bold text-xs transition-colors cursor-pointer"
               >
                 Go Back
               </button>
@@ -1813,31 +1776,31 @@ export const CheckoutPage: React.FC = () => {
 
       {/* All Available Coupons Modal / Drawer */}
       {showCouponsModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all animate-fadeIn">
-          <div className="bg-[#FFFDFC] border border-[#9A6A3A]/40 rounded-3xl max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-scaleUp">
+        <div className="fixed inset-0 z-50 bg-[#5C0B1B]/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all animate-fadeIn">
+          <div className="bg-[#120205] border border-[#D7B77A]/40 rounded-md max-w-lg w-full max-h-[85vh] overflow-hidden flex flex-col shadow-2xl animate-scaleUp">
             
             {/* Modal Header */}
-            <div className="p-5 bg-[#241D1B] text-[#211C1A] flex items-center justify-between border-b border-[#9A6A3A]/30">
+            <div className="p-5 bg-[#5C0B1B] text-[#F7F0E5] flex items-center justify-between border-b border-[#D7B77A]/30">
               <div>
-                <h3 className="font-serif text-lg font-bold text-[#F1E8DF] flex items-center gap-2">
-                  <Tag className="w-5 h-5 text-black" />
+                <h3 className="font-serif text-lg font-bold text-[#F7F0E5] flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-[#F7F0E5]" />
                   <span>Available Promo Coupons</span>
                 </h3>
-                <p className="text-[11px] text-black font-medium mt-0.5">
+                <p className="text-[11px] text-[#F7F0E5] font-medium mt-0.5">
                   Select a coupon to apply directly to your order
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowCouponsModal(false)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-[#F1E8DF] flex items-center justify-center transition cursor-pointer"
+                className="w-8 h-8 rounded-full bg-[#180306]/10 hover:bg-[#180306]/20 text-[#F7F0E5] flex items-center justify-center transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Coupons List */}
-            <div className="p-5 overflow-y-auto space-y-3.5 bg-[#F1E8DF]/50 flex-1">
+            <div className="p-5 overflow-y-auto space-y-3.5 bg-[#2A0710]/50 flex-1">
               {coupons && coupons.length > 0 ? (
                 coupons.map((cp) => {
                   const isApplied = appliedCoupon?.code === cp.code;
@@ -1849,24 +1812,24 @@ export const CheckoutPage: React.FC = () => {
                   return (
                     <div
                       key={cp.id}
-                      className={`p-4 rounded-2xl border transition-all space-y-2.5 ${
+                      className={`p-4 rounded-md border transition-all space-y-2.5 ${
                         isApplied
-                          ? 'bg-white border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
-                          : 'bg-white border-[#9A6A3A]/30 hover:border-[#241D1B] shadow-xs'
+                          ? 'bg-[#180306] border-emerald-500 ring-2 ring-emerald-500/30 shadow-md'
+                          : 'bg-[#180306] border-[#D7B77A]/30 hover:border-[#D7B77A]/40 shadow-xs'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-[#211C1A] text-sm bg-[#F1E8DF] px-3 py-1 rounded-lg border border-[#9A6A3A]/40 tracking-wider">
+                          <span className="font-mono font-extrabold text-[#F7F0E5] text-sm bg-[#2A0710] px-3 py-1 rounded-lg border border-[#D7B77A]/40 tracking-wider">
                             {cp.code}
                           </span>
-                          <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                          <span className="text-xs font-extrabold text-emerald-400 bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-800">
                             {discountLabel}
                           </span>
                         </div>
 
                         {isApplied ? (
-                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+                          <span className="text-xs font-bold text-emerald-400 bg-emerald-950/40 px-3 py-1 rounded-full border border-emerald-800 flex items-center gap-1">
                             Applied ✓
                           </span>
                         ) : (
@@ -1878,10 +1841,10 @@ export const CheckoutPage: React.FC = () => {
                               setShowCouponsModal(false);
                             }}
                             disabled={!isEligible}
-                            className={`px-4 py-1.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-2xs ${
+                            className={`px-4 py-1.5 rounded text-xs font-extrabold uppercase tracking-wider transition cursor-pointer shadow-2xs ${
                               isEligible
-                                ? 'bg-[#241D1B] text-[#211C1A] hover:bg-[#241D1B] border border-[#9A6A3A]/30'
-                                : 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                                ? 'bg-[#5C0B1B] text-[#F7F0E5] hover:bg-[#5C0B1B] border border-[#D7B77A]/30'
+                                : 'bg-[#2A0710] text-[#F7F0E5]/55 cursor-not-allowed'
                             }`}
                           >
                             APPLY
@@ -1889,14 +1852,14 @@ export const CheckoutPage: React.FC = () => {
                         )}
                       </div>
 
-                      <p className="text-xs text-stone-600 font-medium">
+                      <p className="text-xs text-[#F7F0E5]/75 font-medium">
                         {cp.description || (cp.minOrderValue > 0
                           ? `Save ${discountLabel} on orders above ₹${cp.minOrderValue.toLocaleString('en-IN')}`
                           : `Save ${discountLabel} on your entire cart with no minimum order limit.`)}
                       </p>
 
                       {!isEligible && (
-                        <p className="text-[11px] text-rose-700 font-bold bg-rose-50 p-1.5 rounded-lg border border-rose-200">
+                        <p className="text-[11px] text-rose-300 font-bold bg-[#2A0710] p-1.5 rounded-lg border border-[#D7B77A]/15">
                           Add ₹{(cp.minOrderValue - cartSubtotal).toLocaleString('en-IN')} more to unlock this coupon.
                         </p>
                       )}
@@ -1904,19 +1867,19 @@ export const CheckoutPage: React.FC = () => {
                   );
                 })
               ) : (
-                <p className="text-center text-xs text-stone-500 py-8">No promo coupons available right now.</p>
+                <p className="text-center text-xs text-[#F7F0E5]/55 py-8">No promo coupons available right now.</p>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-white border-t border-[#9A6A3A]/20 flex items-center justify-between">
-              <p className="text-xs text-stone-500">
+            <div className="p-4 bg-[#180306] border-t border-[#D7B77A]/20 flex items-center justify-between">
+              <p className="text-xs text-[#F7F0E5]/55">
                 Coupons applied at checkout are non-transferable.
               </p>
               <button
                 type="button"
                 onClick={() => setShowCouponsModal(false)}
-                className="px-5 py-2 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl font-bold text-xs uppercase cursor-pointer transition"
+                className="px-5 py-2 bg-[#2A0710] hover:bg-[#2A0710] text-[#F7F0E5] rounded font-bold text-xs uppercase cursor-pointer transition"
               >
                 Close
               </button>

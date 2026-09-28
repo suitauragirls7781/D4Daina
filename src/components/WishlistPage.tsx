@@ -28,24 +28,24 @@ export const WishlistPage: React.FC = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div id="wishlist-empty-state" className="py-16 sm:py-24 bg-[#FDFBF7] px-4">
+      <div id="wishlist-empty-state" className="py-16 sm:py-24 bg-[#120205] px-4">
         <div className="max-w-2xl mx-auto text-center space-y-8">
           
           {/* Elegant Artisan Traditional Arch Ornament & Medallion */}
           <div className="relative flex flex-col items-center justify-center">
             {/* Subtle rotating background pattern */}
-            <div className="absolute w-44 h-44 rounded-full border border-[#9A6A3A]/20 animate-spin-slow opacity-60"></div>
-            <div className="absolute w-36 h-36 rounded-full border border-dashed border-[#9A6A3A]/30 opacity-80"></div>
+            <div className="absolute w-44 h-44 rounded-full border border-[#D7B77A]/20 animate-spin-slow opacity-60"></div>
+            <div className="absolute w-36 h-36 rounded-full border border-dashed border-[#D7B77A]/30 opacity-80"></div>
             
             {/* The Royal Medallion */}
-            <div className="relative w-28 h-28 rounded-full bg-white border-2 border-[#9A6A3A]/50 flex items-center justify-center text-[#211C1A] shadow-lg">
+            <div className="relative w-28 h-28 rounded-full bg-[#180306] border-2 border-[#D7B77A]/50 flex items-center justify-center text-[#F7F0E5] shadow-lg">
               {/* Inner glowing ring */}
-              <div className="absolute inset-1.5 rounded-full border border-[#9A6A3A]/30 bg-[#241D1B]/5 flex items-center justify-center">
-                <Heart className="w-11 h-11 text-[#211C1A] fill-[#241D1B]/10 stroke-[1.25] transform group-hover:scale-110 transition duration-300" />
+              <div className="absolute inset-1.5 rounded-full border border-[#D7B77A]/30 bg-[#5C0B1B]/5 flex items-center justify-center">
+                <Heart className="w-11 h-11 text-[#F7F0E5] fill-[#D7B77A]/10 stroke-[1.25] transform group-hover:scale-110 transition duration-300" />
               </div>
               
               {/* Small accent sparkles */}
-              <span className="absolute -top-1 -right-1 p-1 bg-[#F1E8DF] rounded-full border border-[#9A6A3A]/40 text-black">
+              <span className="absolute -top-1 -right-1 p-1 bg-[#2A0710] rounded-full border border-[#D7B77A]/40 text-[#F7F0E5]">
                 <Sparkles className="w-3.5 h-3.5" />
               </span>
             </div>
@@ -53,14 +53,14 @@ export const WishlistPage: React.FC = () => {
 
           {/* Typography & Messaging */}
           <div className="space-y-3 max-w-lg mx-auto">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-black font-black block">
+            <span className="text-[10px] uppercase tracking-[0.3em] text-[#F7F0E5] font-black block">
               YOUR PERSONAL VAULT
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl font-black text-[#211C1A] tracking-wide leading-tight">
+            <h2 className="font-serif text-3xl sm:text-4xl font-black text-[#F7F0E5] tracking-wide leading-tight">
               Your Wishlist Is Empty
             </h2>
-            <div className="w-16 h-0.5 bg-[#9A6A3A]/40 mx-auto"></div>
-            <p className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed pt-2">
+            <div className="w-16 h-0.5 bg-[#D7B77A]/40 mx-auto"></div>
+            <p className="text-xs sm:text-sm text-[#F7F0E5]/75 font-medium leading-relaxed pt-2">
               Tap the heart icon on any design while exploring our collections to curate your dream wardrobe of elegant handpicked Artisan couture here.
             </p>
           </div>
@@ -70,15 +70,15 @@ export const WishlistPage: React.FC = () => {
             <button
               id="empty-wishlist-shop-btn"
               onClick={() => navigateToCategory('All')}
-              className="px-10 py-4 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] hover:text-[#211C1A] rounded-full text-xs sm:text-sm font-black tracking-[0.2em] uppercase transition-all duration-300 shadow-md border-2 border-[#9A6A3A] cursor-pointer"
+              className="px-10 py-4 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full text-xs sm:text-sm font-black tracking-[0.2em] uppercase transition-all duration-300 shadow-md border-2 border-[#D7B77A] cursor-pointer"
             >
               DISCOVER FAVORITES
             </button>
           </div>
 
           {/* Curated Collection Discovery Section */}
-          <div className="pt-10 border-t border-[#9A6A3A]/20 max-w-xl mx-auto space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#211C1A]">
+          <div className="pt-10 border-t border-[#D7B77A]/20 max-w-xl mx-auto space-y-4">
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#F7F0E5]">
               Or Browse Royal Collections
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -93,14 +93,14 @@ export const WishlistPage: React.FC = () => {
                 <button
                   key={item.name}
                   onClick={() => navigateToCategory(item.name as any)}
-                  className="p-3.5 rounded-2xl bg-white hover:bg-[#241D1B] text-[#211C1A] hover:text-[#211C1A] border border-[#9A6A3A]/30 transition-all duration-300 text-left flex flex-col justify-between min-h-[75px] shadow-2xs group cursor-pointer"
+                  className="p-3.5 rounded-md bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] border border-[#D7B77A]/30 transition-all duration-300 text-left flex flex-col justify-between min-h-[75px] shadow-2xs group cursor-pointer"
                 >
-                  <span className={`text-[8px] font-black uppercase tracking-wider ${item.isSale ? 'text-red-600 group-hover:text-red-200' : 'text-black group-hover:text-black'}`}>
+                  <span className={`text-[8px] font-black uppercase tracking-wider ${item.isSale ? 'text-red-600 group-hover:text-red-200' : 'text-[#F7F0E5] group-hover:text-[#F7F0E5]'}`}>
                     {item.count}+ Designs
                   </span>
                   <span className="font-serif text-xs sm:text-sm font-extrabold tracking-wide flex items-center justify-between mt-1">
                     {item.label}
-                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-black" />
+                    <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-[#F7F0E5]" />
                   </span>
                 </button>
               ))}
@@ -113,29 +113,29 @@ export const WishlistPage: React.FC = () => {
   }
 
   return (
-    <div id="wishlist-page-container" className="py-12 sm:py-20 bg-[#FDFBF7]">
+    <div id="wishlist-page-container" className="py-12 sm:py-20 bg-[#120205]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[10px] sm:text-xs text-[#3D0F1F]/55 mb-8 w-fit">
-          <button onClick={() => setActivePage('home')} className="hover:text-[#3D0F1F] font-medium">Home</button>
-          <ChevronRight className="w-3 h-3 text-[#B8935A]" />
-          <span className="text-[#3D0F1F] font-semibold">My Wishlist</span>
+        <nav className="flex items-center gap-2 text-[10px] sm:text-xs text-[#E8D2A4]/55 mb-8 w-fit">
+          <button onClick={() => setActivePage('home')} className="hover:text-[#E8D2A4] font-medium">Home</button>
+          <ChevronRight className="w-3 h-3 text-[#D7B77A]" />
+          <span className="text-[#E8D2A4] font-semibold">My Wishlist</span>
         </nav>
 
         {/* Title Header with elegant alignment */}
-        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 mb-10 border-b border-[#B8935A]/30 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-4 mb-10 border-b border-[#D7B77A]/30 pb-6">
           <div className="space-y-1">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-[#B8935A] font-semibold block">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#D7B77A] font-semibold block">
               Curated Masterpieces
             </span>
-            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#3D0F1F]">
-              My Wishlist <span className="font-sans text-lg font-bold text-gray-500 ml-1">({wishlist.length} {wishlist.length === 1 ? 'Item' : 'Items'})</span>
+            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#E8D2A4]">
+              My Wishlist <span className="font-sans text-lg font-bold text-[#F7F0E5]/55 ml-1">({wishlist.length} {wishlist.length === 1 ? 'Item' : 'Items'})</span>
             </h1>
           </div>
           <button
             onClick={() => navigateToCategory('All')}
-            className="text-xs sm:text-sm text-[#3D0F1F] hover:text-[#B8935A] font-semibold cursor-pointer flex items-center gap-1.5 transition-colors group w-fit"
+            className="text-xs sm:text-sm text-[#E8D2A4] hover:text-[#D7B77A] font-semibold cursor-pointer flex items-center gap-1.5 transition-colors group w-fit"
           >
             Continue Shopping
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -147,11 +147,11 @@ export const WishlistPage: React.FC = () => {
           {wishlist.map((product) => (
             <div
               key={product.id}
-              className="group bg-[#FDFBF7] rounded-lg overflow-hidden border border-[#B8935A]/25 hover:border-[#3D0F1F]/60 transition-colors duration-300 flex flex-col justify-between"
+              className="group bg-[#120205] rounded-lg overflow-hidden border border-[#D7B77A]/25 hover:border-[#D7B77A]/60 transition-colors duration-300 flex flex-col justify-between"
             >
               {/* Product Image Stage */}
               <div 
-                className="relative aspect-[4/5] overflow-hidden bg-[#FAF5EB] cursor-pointer group"
+                className="relative aspect-[4/5] overflow-hidden bg-[#180306] cursor-pointer group"
                 onClick={() => navigateToProduct(product.id)}
               >
                 {product.images[0] ? (
@@ -162,14 +162,14 @@ export const WishlistPage: React.FC = () => {
                     referrerPolicy="no-referrer"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#241D1B]/5 flex items-center justify-center">
-                    <span className="text-[10px] uppercase tracking-wider text-black">No Image</span>
+                  <div className="w-full h-full bg-[#5C0B1B]/5 flex items-center justify-center">
+                    <span className="text-[10px] uppercase tracking-wider text-[#F7F0E5]">No Image</span>
                   </div>
                 )}
 
                 {/* Exclusive Elegant Off Badge */}
                 {product.discount > 0 && (
-                    <span className="absolute top-3 left-3 bg-[#3D0F1F] text-[#FAF5EB] text-[9px] font-semibold px-2.5 py-1 border border-[#B8935A]/30 tracking-wider uppercase">
+                    <span className="absolute top-3 left-3 bg-[#D7B77A] text-[#F7F0E5] text-[9px] font-semibold px-2.5 py-1 border border-[#D7B77A]/30 tracking-wider uppercase">
                     {product.discount}% OFF
                   </span>
                 )}
@@ -181,7 +181,7 @@ export const WishlistPage: React.FC = () => {
                     e.stopPropagation();
                     toggleWishlist(product);
                   }}
-                  className="absolute top-3 right-3 w-8.5 h-8.5 rounded-full bg-white/95 hover:bg-red-50 text-gray-500 hover:text-red-600 flex items-center justify-center shadow-xs transition-all duration-200 border border-[#9A6A3A]/20 cursor-pointer"
+                  className="absolute top-3 right-3 w-8.5 h-8.5 rounded-full bg-[#180306]/95 hover:bg-rose-950/40 text-[#F7F0E5]/55 hover:text-red-600 flex items-center justify-center shadow-xs transition-all duration-200 border border-[#D7B77A]/20 cursor-pointer"
                   title="Remove from wishlist"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -189,25 +189,25 @@ export const WishlistPage: React.FC = () => {
               </div>
 
               {/* Product Info & CTA */}
-              <div className="p-4 flex flex-col flex-1 justify-between bg-white">
+              <div className="p-4 flex flex-col flex-1 justify-between bg-[#180306]">
                 <div className="space-y-1.5">
-                  <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-black text-black">
+                  <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.15em] font-black text-[#F7F0E5]">
                     {product.category}
                   </span>
                   <h3 
                     onClick={() => navigateToProduct(product.id)}
-                    className="font-serif text-sm sm:text-base font-bold text-[#211C1A] hover:text-black truncate cursor-pointer transition-colors"
+                    className="font-serif text-sm sm:text-base font-bold text-[#F7F0E5] hover:text-[#F7F0E5] truncate cursor-pointer transition-colors"
                   >
                     {product.name}
                   </h3>
                   
                   {/* Pricing Matrix */}
                   <div className="flex items-baseline gap-2 pt-0.5">
-                    <span className="font-serif font-black text-base text-[#211C1A]">
+                    <span className="font-serif font-black text-base text-[#F7F0E5]">
                       ₹{product.price.toLocaleString('en-IN')}
                     </span>
                     {product.originalPrice > product.price && (
-                      <span className="text-xs line-through text-gray-400 font-medium">
+                      <span className="text-xs line-through text-[#F7F0E5]/55 font-medium">
                         ₹{product.originalPrice.toLocaleString('en-IN')}
                       </span>
                     )}
@@ -215,11 +215,11 @@ export const WishlistPage: React.FC = () => {
                 </div>
 
                 {/* Royal Move To Bag Button */}
-                <div className="pt-4 mt-3 border-t border-[#9A6A3A]/10">
+                <div className="pt-4 mt-3 border-t border-[#D7B77A]/10">
                   <button
                     id={`move-to-bag-${product.id}`}
                     onClick={() => moveToCartFromWishlist(product, 'M')}
-                    className="w-full py-3 bg-[#241D1B] hover:bg-[#241D1B] active:scale-97 text-[#211C1A] hover:text-[#211C1A] rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-1.5 border border-[#9A6A3A]/40 shadow-xs cursor-pointer"
+                    className="w-full py-3 bg-[#5C0B1B] hover:bg-[#5C0B1B] active:scale-97 text-[#F7F0E5] hover:text-[#F7F0E5] rounded text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all duration-200 flex items-center justify-center gap-1.5 border border-[#D7B77A]/40 shadow-xs cursor-pointer"
                   >
                     <ShoppingBag className="w-3.5 h-3.5" />
                     Move To Bag (M)

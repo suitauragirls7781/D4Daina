@@ -17,19 +17,19 @@ export const TrendingNowSection: React.FC = () => {
   if (trendingProducts.length === 0) return null;
 
   return (
-    <section id="trending-now-section" className="py-8 sm:py-14 bg-[#FAF7F2] border-b border-[#9A6A3A]/25">
+    <section id="trending-now-section" className="py-8 sm:py-14 bg-[#180306] border-b border-[#D7B77A]/25">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 sm:mb-10 gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#241D1B] text-[#211C1A] text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-2.5 border border-[#9A6A3A]/40">
-              <TrendingUp className="w-3.5 h-3.5 text-black" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5C0B1B] text-[#F7F0E5] text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-2.5 border border-[#D7B77A]/40">
+              <TrendingUp className="w-3.5 h-3.5 text-[#F7F0E5]" />
               <span>IN THE SPOTLIGHT</span>
             </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#211C1A] tracking-tight">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F7F0E5] tracking-tight">
               Trending Now
             </h2>
-            <p className="text-xs sm:text-sm text-[#211C1A]/80 mt-2 max-w-lg font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#F7F0E5]/80 mt-2 max-w-lg font-normal leading-relaxed">
               Explore the most-loved ethnic silhouettes, floral prints, and modern co-ord sets currently turning heads across India.
             </p>
           </div>
@@ -37,10 +37,10 @@ export const TrendingNowSection: React.FC = () => {
           <button
             id="view-all-trending-btn"
             onClick={() => navigateToCategory('Trending')}
-            className="px-5 py-2.5 bg-[#FAF7F2] text-[#211C1A] hover:bg-[#241D1B]/10 border border-[#241D1B] rounded-xl text-xs font-sans font-bold tracking-wider uppercase transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 self-start sm:self-auto"
+            className="px-5 py-2.5 bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/10 border border-[#D7B77A]/40 rounded text-xs font-sans font-bold tracking-wider uppercase transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 self-start sm:self-auto"
           >
             <span>VIEW ALL TRENDING</span>
-            <ArrowRight className="w-4 h-4 text-[#211C1A]" />
+            <ArrowRight className="w-4 h-4 text-[#F7F0E5]" />
           </button>
         </div>
 

@@ -284,33 +284,33 @@ export const ShopPage: React.FC = () => {
     (localSearch ? 1 : 0);
 
   return (
-    <div id="shop-catalog-page" className="bg-[#FDFBF7]">
+    <div id="shop-catalog-page" className="bg-[#120205]">
       {/* Luxury Announcement Marquee Strip Below Header */}
       <BrandMarqueeHeader />
 
       <div className="py-6 sm:py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-xs text-[#3D0F1F]/55 mb-6">
-          <button onClick={() => setActivePage('home')} className="hover:text-[#3D0F1F] font-medium transition-colors">Home</button>
-          <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-          <span className="text-[#3D0F1F] font-semibold">Catalog</span>
+        <nav className="flex items-center gap-2 text-xs text-[#E8D2A4]/55 mb-6">
+          <button onClick={() => setActivePage('home')} className="hover:text-[#E8D2A4] font-medium transition-colors">Home</button>
+          <ChevronRight className="w-3.5 h-3.5 text-[#F7F0E5]/55" />
+          <span className="text-[#E8D2A4] font-semibold">Catalog</span>
           {selectedCategory !== 'All' && (
             <>
-              <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
-              <span className="text-[#3D0F1F] font-semibold">{selectedCategory}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-[#F7F0E5]/55" />
+              <span className="text-[#E8D2A4] font-semibold">{selectedCategory}</span>
             </>
           )}
         </nav>
 
         {/* Page Title & Sort Bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-[#B8935A]/30 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between pb-6 mb-8 border-b border-[#D7B77A]/30 gap-4">
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#3D0F1F]">
+            <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-[#E8D2A4]">
               {selectedCategory === 'All' ? "All Women's Collections" : selectedCategory}
             </h1>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Showing <strong className="text-[#211C1A]">{filteredProducts.length}</strong> handcrafted ethnic styles
+            <p className="text-xs sm:text-sm text-[#F7F0E5]/55 mt-1">
+              Showing <strong className="text-[#F7F0E5]">{filteredProducts.length}</strong> handcrafted ethnic styles
             </p>
           </div>
 
@@ -327,21 +327,21 @@ export const ShopPage: React.FC = () => {
                   setSearchQuery(e.target.value);
                 }}
                 placeholder="Filter by keyword..."
-                className="pl-8 pr-3 py-2 border border-[#B8935A]/35 text-xs bg-[#FDFBF7] focus:outline-none focus:ring-1 focus:ring-[#3D0F1F] w-40 sm:w-48 text-[#3D0F1F]"
+                className="pl-8 pr-3 py-2 border border-[#D7B77A]/35 text-xs bg-[#120205] focus:outline-none focus:ring-1 focus:ring-[#D7B77A]/40 w-40 sm:w-48 text-[#E8D2A4]"
               />
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-[#F7F0E5]/55 absolute left-2.5 top-1/2 -translate-y-1/2" />
             </div>
 
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-gray-600 hidden sm:inline">
+              <label className="text-xs font-bold text-[#F7F0E5]/75 hidden sm:inline">
                 Sort by:
               </label>
               <select
                 id="shop-sort-select"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 bg-[#FDFBF7] border border-[#B8935A]/35 text-xs font-semibold text-[#3D0F1F] focus:outline-none focus:ring-1 focus:ring-[#3D0F1F] cursor-pointer"
+                className="px-3 py-2 bg-[#120205] border border-[#D7B77A]/35 text-xs font-semibold text-[#E8D2A4] focus:outline-none focus:ring-1 focus:ring-[#D7B77A]/40 cursor-pointer"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -356,22 +356,22 @@ export const ShopPage: React.FC = () => {
             <button
               id="side-filter-drawer-trigger"
               onClick={() => setIsMobileFilterOpen(true)}
-              className="px-4 py-2 bg-[#FAF5EB] hover:bg-[#3D0F1F] hover:text-[#FAF5EB] border border-[#B8935A]/50 text-xs font-semibold text-[#3D0F1F] flex items-center gap-1.5 transition-colors cursor-pointer group"
+              className="px-4 py-2 bg-[#180306] hover:bg-[#D7B77A] hover:text-[#F7F0E5] border border-[#D7B77A]/50 text-xs font-semibold text-[#E8D2A4] flex items-center gap-1.5 transition-colors cursor-pointer group"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-black group-hover:text-black" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#F7F0E5] group-hover:text-[#F7F0E5]" />
               <span>Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}</span>
             </button>
 
             {/* Mobile Layout Toggle (1-Col vs 2-Col Grid) */}
-            <div className="flex sm:hidden items-center border border-[#B8935A]/35 p-0.5 bg-[#FDFBF7] gap-1 select-none">
+            <div className="flex sm:hidden items-center border border-[#D7B77A]/35 p-0.5 bg-[#120205] gap-1 select-none">
               <button
                 type="button"
                 id="layout-toggle-2col"
                 onClick={() => setMobileColumns('2')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                   mobileColumns === '2'
-                    ? 'bg-[#3D0F1F] text-[#FAF5EB]'
-                      : 'text-[#3D0F1F]/55 hover:text-[#3D0F1F]'
+                    ? 'bg-[#D7B77A] text-[#F7F0E5]'
+                      : 'text-[#E8D2A4]/55 hover:text-[#E8D2A4]'
                 }`}
                 title="2-Column Grid View"
               >
@@ -383,8 +383,8 @@ export const ShopPage: React.FC = () => {
                 onClick={() => setMobileColumns('1')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                   mobileColumns === '1'
-                    ? 'bg-[#3D0F1F] text-[#FAF5EB]'
-                      : 'text-[#3D0F1F]/55 hover:text-[#3D0F1F]'
+                    ? 'bg-[#D7B77A] text-[#F7F0E5]'
+                      : 'text-[#E8D2A4]/55 hover:text-[#E8D2A4]'
                 }`}
                 title="1-Column Full Width View"
               >
@@ -399,16 +399,16 @@ export const ShopPage: React.FC = () => {
           {/* Desktop Filter Sidebar */}
           <div className="hidden lg:block lg:col-span-3 space-y-6">
             
-            <div className="bg-[#FAF5EB] border border-[#B8935A]/25 p-5 space-y-6">
-              <div className="flex items-center justify-between border-b border-[#B8935A]/25 pb-3">
-                <span className="font-serif text-lg font-semibold text-[#3D0F1F] flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-[#B8935A]" /> Filters
+            <div className="bg-[#180306] border border-[#D7B77A]/25 p-5 space-y-6">
+              <div className="flex items-center justify-between border-b border-[#D7B77A]/25 pb-3">
+                <span className="font-serif text-lg font-semibold text-[#E8D2A4] flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-[#D7B77A]" /> Filters
                 </span>
                 {activeFiltersCount > 0 && (
                   <button
                     id="desktop-clear-filters-btn"
                     onClick={resetFilters}
-                    className="text-xs text-[#B8935A] hover:text-[#3D0F1F] hover:underline font-semibold"
+                    className="text-xs text-[#D7B77A] hover:text-[#E8D2A4] hover:underline font-semibold"
                   >
                     Reset All
                   </button>
@@ -416,8 +416,8 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Fabric Filter */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-800 mb-2.5">
+              <div className="border-t border-[#D7B77A]/10 pt-4">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] mb-2.5">
                   Fabric Material
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -437,8 +437,8 @@ export const ShopPage: React.FC = () => {
                         onClick={() => toggleFabric(f.id)}
                         className={`px-2.5 py-1.5 text-[11px] font-bold rounded-lg border transition-all duration-200 cursor-pointer ${
                           isSelected
-                            ? 'bg-[#3D0F1F] text-[#FAF5EB] border-[#3D0F1F]'
-                            : 'bg-[#FDFBF7] text-[#3D0F1F] border-[#B8935A]/25 hover:border-[#B8935A]'
+                            ? 'bg-[#D7B77A] text-[#F7F0E5] border-[#D7B77A]/40'
+                            : 'bg-[#120205] text-[#E8D2A4] border-[#D7B77A]/25 hover:border-[#D7B77A]'
                         }`}
                       >
                         {f.label}
@@ -449,8 +449,8 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Category Filter */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-800 mb-2.5">
+              <div className="border-t border-[#D7B77A]/10 pt-4">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] mb-2.5">
                   Category
                 </label>
                 <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
@@ -461,20 +461,20 @@ export const ShopPage: React.FC = () => {
                       onClick={() => setSelectedCategory(cat)}
                       className={`w-full text-left py-1.5 px-2 rounded-md text-xs font-bold transition-all duration-200 flex items-center justify-between ${
                         selectedCategory === cat
-                          ? 'bg-[#3D0F1F] text-[#FAF5EB]'
-                          : 'text-[#3D0F1F]/70 hover:bg-[#FDFBF7] hover:text-[#3D0F1F]'
+                          ? 'bg-[#D7B77A] text-[#F7F0E5]'
+                          : 'text-[#E8D2A4]/70 hover:bg-[#120205] hover:text-[#E8D2A4]'
                       }`}
                     >
                       <span>{cat}</span>
-                      {selectedCategory === cat && <Check className="w-3.5 h-3.5 text-black" />}
+                      {selectedCategory === cat && <Check className="w-3.5 h-3.5 text-[#F7F0E5]" />}
                     </button>
                   ))}
                 </div>
               </div>
 
               {/* Size Filter */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-800 mb-2.5">
+              <div className="border-t border-[#D7B77A]/10 pt-4">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] mb-2.5">
                   Size
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -485,8 +485,8 @@ export const ShopPage: React.FC = () => {
                       onClick={() => toggleSize(sz)}
                       className={`py-1.5 text-xs font-bold rounded-lg border transition-all duration-250 ${
                         selectedSizes.includes(sz)
-                          ? 'bg-[#3D0F1F] text-[#FAF5EB] border-[#3D0F1F]'
-                          : 'bg-[#FDFBF7] text-[#3D0F1F] border-[#B8935A]/25 hover:border-[#B8935A]'
+                          ? 'bg-[#D7B77A] text-[#F7F0E5] border-[#D7B77A]/40'
+                          : 'bg-[#120205] text-[#E8D2A4] border-[#D7B77A]/25 hover:border-[#D7B77A]'
                       }`}
                     >
                       {sz}
@@ -496,10 +496,10 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Price Range Filter */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4 space-y-2">
-                <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-gray-800">
+              <div className="border-t border-[#D7B77A]/10 pt-4 space-y-2">
+                <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-[#F7F0E5]">
                   <span>Max Price:</span>
-                  <span className="text-[#211C1A] font-bold">₹{maxPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-[#F7F0E5] font-bold">₹{maxPrice.toLocaleString('en-IN')}</span>
                 </div>
                 <input
                   type="range"
@@ -510,25 +510,25 @@ export const ShopPage: React.FC = () => {
                   onChange={(e) => setMaxPrice(Number(e.target.value))}
                   className="w-full accent-[#3D0F1F] cursor-pointer"
                 />
-                <div className="flex justify-between text-[10px] text-gray-400 font-mono">
+                <div className="flex justify-between text-[10px] text-[#F7F0E5]/55 font-mono">
                   <span>₹700</span>
                   <span>₹3,000</span>
                 </div>
               </div>
 
               {/* Discount Filter */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-800 mb-2">
+              <div className="border-t border-[#D7B77A]/10 pt-4">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] mb-2">
                   Minimum Discount
                 </label>
-                <div className="space-y-1.5 text-xs text-gray-700">
+                <div className="space-y-1.5 text-xs text-[#F7F0E5]/75">
                   {[
                     { label: 'All Discounts', val: 0 },
                     { label: '30% or more', val: 30 },
                     { label: '35% or more', val: 35 },
                     { label: '40% or more', val: 40 },
                   ].map((d) => (
-                    <label key={d.val} className="flex items-center gap-2 cursor-pointer font-bold text-gray-600">
+                    <label key={d.val} className="flex items-center gap-2 cursor-pointer font-bold text-[#F7F0E5]/75">
                       <input
                         type="radio"
                         name="discountFilter"
@@ -543,17 +543,17 @@ export const ShopPage: React.FC = () => {
               </div>
 
               {/* Minimum Rating */}
-              <div className="border-t border-[#9A6A3A]/10 pt-4">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-gray-800 mb-2">
+              <div className="border-t border-[#D7B77A]/10 pt-4">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] mb-2">
                   Rating
                 </label>
-                <div className="space-y-1.5 text-xs text-gray-700">
+                <div className="space-y-1.5 text-xs text-[#F7F0E5]/75">
                   {[
                     { label: 'All Ratings', val: 0 },
                     { label: '4.8', val: 4.8 },
                     { label: '4.5', val: 4.5 },
                   ].map((r) => (
-                    <label key={r.val} className="flex items-center gap-2 cursor-pointer font-bold text-gray-600">
+                    <label key={r.val} className="flex items-center gap-2 cursor-pointer font-bold text-[#F7F0E5]/75">
                       <input
                         type="radio"
                         name="ratingFilter"
@@ -562,7 +562,7 @@ export const ShopPage: React.FC = () => {
                         className="accent-[#241D1B]"
                       />
                       <span className="flex items-center gap-1">
-                        {r.val > 0 ? <><span>{r.label}</span><Star className="w-3 h-3 fill-[#DFBE65] text-[#B8935A]" aria-hidden="true" /><span>and above</span></> : r.label}
+                        {r.val > 0 ? <><span>{r.label}</span><Star className="w-3 h-3 fill-[#D7B77A] text-[#D7B77A]" aria-hidden="true" /><span>and above</span></> : r.label}
                       </span>
                     </label>
                   ))}
@@ -587,11 +587,11 @@ export const ShopPage: React.FC = () => {
                     onClick={() => setSelectedCategory(cat)}
                     className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 flex items-center gap-1.5 shadow-xs cursor-pointer ${
                       isSelected
-                        ? 'bg-[#3D0F1F] text-[#FAF5EB] border border-[#3D0F1F]'
-                        : 'bg-[#FDFBF7] hover:bg-[#FAF5EB] text-[#3D0F1F]/75 border border-[#B8935A]/25 hover:border-[#B8935A]/50'
+                        ? 'bg-[#D7B77A] text-[#F7F0E5] border border-[#D7B77A]/40'
+                        : 'bg-[#120205] hover:bg-[#180306] text-[#E8D2A4]/75 border border-[#D7B77A]/25 hover:border-[#D7B77A]/50'
                     }`}
                   >
-                    {isSelected && <Sparkles className="w-3.5 h-3.5 text-black" />}
+                    {isSelected && <Sparkles className="w-3.5 h-3.5 text-[#F7F0E5]" />}
                     <span>{cat}</span>
                   </button>
                 );
@@ -600,8 +600,8 @@ export const ShopPage: React.FC = () => {
 
             {isLoading ? (
               <div className="py-24 flex flex-col items-center justify-center text-center">
-                <div className="w-10 h-10 border-4 border-[#9A6A3A]/30 border-t-[#241D1B] rounded-full animate-spin mb-4"></div>
-                <h3 className="font-serif text-xl text-[#211C1A] font-semibold">Curating Exquisite Couture...</h3>
+                <div className="w-10 h-10 border-4 border-[#D7B77A]/30 border-t-[#241D1B] rounded-full animate-spin mb-4"></div>
+                <h3 className="font-serif text-xl text-[#F7F0E5] font-semibold">Curating Exquisite Couture...</h3>
               </div>
             ) : (
               <VirtualizedCatalogGrid 

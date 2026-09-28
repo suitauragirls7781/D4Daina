@@ -117,9 +117,9 @@ export const HeroSection: React.FC = () => {
 
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="grid min-h-[420px] animate-pulse grid-cols-1 bg-[#FAF5EB] lg:grid-cols-12">
-        <div className="aspect-[4/5] bg-[#B8935A]/10 lg:col-span-7 lg:aspect-auto" />
-        <div className="hidden bg-[#3D0F1F] lg:col-span-5 lg:block" />
+      <div className="grid min-h-[420px] animate-pulse grid-cols-1 bg-[#180306] lg:grid-cols-12">
+        <div className="aspect-[4/5] bg-[#D7B77A]/10 lg:col-span-7 lg:aspect-auto" />
+        <div className="hidden bg-[#D7B77A] lg:col-span-5 lg:block" />
       </div>
     );
   }
@@ -133,7 +133,7 @@ export const HeroSection: React.FC = () => {
     ? Math.max(0, Math.round(((originalPrice - slidePrice) / originalPrice) * 100))
     : 0;
   return (
-    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full border-y border-[#B8935A]/35 bg-[#FAF5EB]">
+    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full border-y border-[#D7B77A]/35 bg-[#180306]">
       <div
         className="mx-auto grid max-w-[1440px] lg:grid-cols-12"
         onMouseEnter={() => setIsPaused(true)}
@@ -150,7 +150,7 @@ export const HeroSection: React.FC = () => {
             if (delta < -45) handlePrev();
             setTouchStart(null);
           }}
-          className="group relative block w-full cursor-pointer overflow-hidden bg-[#FAF5EB] text-left lg:col-span-7"
+          className="group relative block w-full cursor-pointer overflow-hidden bg-[#180306] text-left lg:col-span-7"
           aria-label={`View ${currentSlide.title}`}
         >
           <div className="relative aspect-[4/5] max-h-[78vh] w-full lg:aspect-auto lg:h-full lg:min-h-[640px]">
@@ -161,7 +161,7 @@ export const HeroSection: React.FC = () => {
               aria-hidden="true"
               className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#3D0F1F]/35 via-transparent to-transparent" aria-hidden="true" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#D7B77A]/35 via-transparent to-transparent" aria-hidden="true" />
             <img
               src={getCleanImageUrl(currentSlide.image, 1200) || ELEGANT_PLACEHOLDER_SVG}
               alt={currentSlide.title || 'Featured Suit Aura Girls design'}
@@ -178,32 +178,32 @@ export const HeroSection: React.FC = () => {
           <span className="sr-only">Open featured design</span>
         </button>
 
-        <div className="flex min-h-[360px] flex-col justify-between bg-[#3D0F1F] px-6 py-8 text-[#FAF5EB] sm:px-10 sm:py-11 lg:col-span-5 lg:px-12 lg:py-14">
+        <div className="flex min-h-[360px] flex-col justify-between bg-[#180306] border-t border-[#D7B77A]/15 lg:border-t-0 lg:border-l px-6 py-8 text-[#F7F0E5] sm:px-10 sm:py-11 lg:col-span-5 lg:px-12 lg:py-14">
           <div>
-            <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#DFBE65] sm:text-xs">
+            <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#E8D2A4] sm:text-xs">
               {currentSlide.badge || 'Jaipur artisan edit'}
             </p>
-            <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-[#FAF5EB]/65">
+            <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-[#F7F0E5]/65">
               {currentSlide.rawProduct?.category || 'Hand-finished in Jaipur'}
             </p>
             <h1 className="max-w-xl font-serif text-4xl font-medium leading-[1.04] sm:text-5xl lg:text-6xl">
               {currentSlide.title}
             </h1>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-[#FAF5EB]/80 sm:text-base">
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-[#F7F0E5]/80 sm:text-base">
               {currentSlide.subtitle || 'A considered silhouette, crafted for the moments you make your own.'}
             </p>
 
-            <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-[#B8935A]/35 pt-5">
-              <span className="font-serif text-2xl font-semibold text-[#FAF5EB] sm:text-3xl">
+            <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-[#D7B77A]/35 pt-5">
+              <span className="font-serif text-2xl font-semibold text-[#F7F0E5] sm:text-3xl">
                 ₹{slidePrice.toLocaleString('en-IN')}
               </span>
               {originalPrice > slidePrice && (
-                <span className="text-sm text-[#FAF5EB]/55 line-through">
+                <span className="text-sm text-[#F7F0E5]/55 line-through">
                   ₹{originalPrice.toLocaleString('en-IN')}
                 </span>
               )}
               {discountPercent > 0 && (
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#DFBE65]">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E8D2A4]">
                   Save {discountPercent}%
                 </span>
               )}
@@ -213,24 +213,24 @@ export const HeroSection: React.FC = () => {
               type="button"
               id="hero-view-style-btn"
               onClick={() => handleSlideClick(currentSlide)}
-              className="mt-7 inline-flex min-h-12 items-center justify-center gap-3 bg-[#B8935A] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[#3D0F1F] transition-colors hover:bg-[#DFBE65]"
+              className="mt-7 inline-flex min-h-12 items-center justify-center gap-3 bg-[#D7B77A] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[#E8D2A4] transition-colors hover:bg-[#D7B77A]"
             >
               Discover this design <ArrowRight className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mt-10 flex items-center justify-between border-t border-[#B8935A]/35 pt-5">
+          <div className="mt-10 flex items-center justify-between border-t border-[#D7B77A]/35 pt-5">
             <div className="flex items-center gap-2" aria-label={`Slide ${currentSlideIdx + 1} of ${slides.length}`}>
-              <span className="font-serif text-lg text-[#DFBE65]">{String(currentSlideIdx + 1).padStart(2, '0')}</span>
-              <span className="text-xs text-[#FAF5EB]/45">/ {String(slides.length).padStart(2, '0')}</span>
-              <span className="ml-2 max-w-[140px] truncate text-xs text-[#FAF5EB]/75">{currentSlide.title}</span>
+              <span className="font-serif text-lg text-[#E8D2A4]">{String(currentSlideIdx + 1).padStart(2, '0')}</span>
+              <span className="text-xs text-[#F7F0E5]/45">/ {String(slides.length).padStart(2, '0')}</span>
+              <span className="ml-2 max-w-[140px] truncate text-xs text-[#F7F0E5]/75">{currentSlide.title}</span>
             </div>
             <div className={`flex items-center gap-2 ${slides.length > 1 ? '' : 'hidden'}`}>
               <button
                 type="button"
                 onClick={handlePrev}
                 aria-label="Previous featured design"
-                className="flex h-10 w-10 items-center justify-center border border-[#B8935A]/50 text-[#FAF5EB] transition-colors hover:bg-[#FAF5EB]/10"
+                className="flex h-10 w-10 items-center justify-center border border-[#D7B77A]/50 text-[#F7F0E5] transition-colors hover:bg-[#180306]/10"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -238,7 +238,7 @@ export const HeroSection: React.FC = () => {
                 type="button"
                 onClick={handleNext}
                 aria-label="Next featured design"
-                className="flex h-10 w-10 items-center justify-center border border-[#B8935A]/50 text-[#FAF5EB] transition-colors hover:bg-[#FAF5EB]/10"
+                className="flex h-10 w-10 items-center justify-center border border-[#D7B77A]/50 text-[#F7F0E5] transition-colors hover:bg-[#180306]/10"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

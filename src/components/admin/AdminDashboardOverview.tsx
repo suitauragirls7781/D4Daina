@@ -222,7 +222,7 @@ export const AdminDashboardOverview: React.FC = () => {
             <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight">
               Suit Aura Girls Admin
             </h2>
-            <p className="text-xs sm:text-sm text-black/90 max-w-xl">
+            <p className="text-xs sm:text-sm text-[#F1E8DF]/80 max-w-xl">
               Live metrics across product inventory, prepaid order fulfillment, customers, and revenues.
             </p>
           </div>
