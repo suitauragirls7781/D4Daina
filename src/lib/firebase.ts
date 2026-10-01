@@ -23,6 +23,18 @@ try {
 
 export const db = firestoreDb;
 
+// The admin signs in on a separate Firebase app, so opening the admin panel in a browser
+// never replaces (logs out) a customer session there, and vice versa.
+const adminApp = getApps().find((a) => a.name === 'sag-admin') || initializeApp(firebaseConfig, 'sag-admin');
+export const adminAuth = getAuth(adminApp);
+let adminFirestore;
+try {
+  adminFirestore = initializeFirestore(adminApp, { experimentalAutoDetectLongPolling: true, ignoreUndefinedProperties: true }, firestoreDatabaseId);
+} catch {
+  adminFirestore = getFirestore(adminApp, firestoreDatabaseId);
+}
+export const adminDb = adminFirestore;
+
 // Initialize analytics conditionally if supported and not in development/preview environments
 isSupported().then((supported) => {
   if (supported && typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('run.app') && !window.location.hostname.includes('webcontainer')) {

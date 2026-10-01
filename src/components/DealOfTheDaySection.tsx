@@ -2,109 +2,84 @@ import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useShop } from '../context/ShopContext';
 import { ProductSize } from '../types';
-import { 
-  Flame, 
-  Sparkles, 
-  ShoppingBag, 
-  Heart, 
-  Star, 
-  Zap,
-  Check,
-  Crown,
-  Clock,
-  ShieldCheck,
-  TrendingUp
-} from 'lucide-react';
+import { ShoppingBag, Heart, Zap, Check, ArrowRight, Clock } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { BagIcon } from './BrandIcons';
+
+type TimeLeft = { days: number; hours: number; minutes: number; seconds: number; fraction: number };
+
+// Remaining time until the admin's end time; null when there is no end time or it has passed.
+const readTimeLeft = (endTime?: string, durationHours?: number): TimeLeft | null => {
+  if (!endTime) return null;
+  const endMs = new Date(endTime).getTime();
+  const diffMs = endMs - Date.now();
+  if (!Number.isFinite(diffMs) || diffMs <= 0) return null;
+  const totalMs = Math.max(diffMs, (Number(durationHours) || 24) * 3600000);
+  return {
+    days: Math.floor(diffMs / 86400000),
+    hours: Math.floor((diffMs / 3600000) % 24),
+    minutes: Math.floor((diffMs / 60000) % 60),
+    seconds: Math.floor((diffMs / 1000) % 60),
+    fraction: Math.min(1, diffMs / totalMs),
+  };
+};
 
 export const DealOfTheDaySection: React.FC = () => {
   const { dealOfTheDay } = useAdmin();
   const { products = [], navigateToProduct, toggleWishlist, isInWishlist, addToCart, buyNow, showToast } = useShop();
 
-  // Selected Product resolution
   const targetProductId = dealOfTheDay?.productId || (products[0]?.id || '');
   const product = products.find((p) => p.id === targetProductId) || products[0];
 
   const [selectedSize, setSelectedSize] = useState<ProductSize>('M');
   const [isAddedToBag, setIsAddedToBag] = useState<boolean>(false);
+  const [activeImage, setActiveImage] = useState(0);
 
-  // Time remaining state
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number; seconds: number }>({
-    hours: 6,
-    minutes: 45,
-    seconds: 19
-  });
+  // The countdown is shown only when the admin turned the timer on and set an end time that has not passed.
+  const timerOn = dealOfTheDay?.showTimer !== false && !!dealOfTheDay?.endTime;
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(() => readTimeLeft(dealOfTheDay?.endTime, dealOfTheDay?.durationHours));
 
-  // Synchronize size selection on product change
   useEffect(() => {
-    if (product && product.sizes && product.sizes.length > 0) {
-      setSelectedSize(product.sizes[0]);
-    }
+    if (product && product.sizes && product.sizes.length > 0) setSelectedSize(product.sizes[0]);
+    setActiveImage(0);
   }, [product?.id]);
 
-  // Live Timer Countdown Effect (Always 24H or Admin Custom End Time)
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      let diffMs = 0;
-      if (dealOfTheDay?.endTime) {
-        const endMs = new Date(dealOfTheDay.endTime).getTime();
-        const nowMs = Date.now();
-        diffMs = endMs - nowMs;
-      }
-
-      // Fallback: If no endTime or if past, default to 24-hour daily countdown to midnight
-      if (diffMs <= 0) {
-        const now = new Date();
-        const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
-        diffMs = endOfDay.getTime() - now.getTime();
-      }
-
-      const hours = Math.floor(diffMs / (1000 * 60 * 60));
-      const minutes = Math.floor((diffMs / 1000 / 60) % 60);
-      const seconds = Math.floor((diffMs / 1000) % 60);
-
-      return { hours, minutes, seconds };
-    };
-
-    setTimeLeft(calculateTimeLeft());
-    const interval = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-
+    const tick = () => setTimeLeft(readTimeLeft(dealOfTheDay?.endTime, dealOfTheDay?.durationHours));
+    tick();
+    if (!timerOn) return;
+    const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, [dealOfTheDay?.endTime]);
+  }, [dealOfTheDay?.endTime, dealOfTheDay?.durationHours, timerOn]);
 
-  // Early return if deal explicitly disabled or no valid product
-  if ((dealOfTheDay && dealOfTheDay.enabled === false) || !product) {
-    return null;
-  }
+  if ((dealOfTheDay && dealOfTheDay.enabled === false) || !product) return null;
+  // A timed deal that has ended: hidden when the admin chose so, otherwise shown without the countdown
+  const ended = timerOn && !timeLeft;
+  if (ended && dealOfTheDay?.hideWhenEnded === true) return null;
 
-  // Pricing calculations
-  const prodPrice = Number(product.price) || 0;
-  const originalPrice = Number(product.originalPrice) || Math.round(prodPrice * 1.85);
-  // Show exactly what the bag charges: the cart and checkout use the product's own price,
-  // so a separate "deal price" would promise a price the customer never gets.
-  const dealPrice = prodPrice;
-  const discountPercent = (originalPrice > dealPrice && originalPrice > 0)
-    ? Math.round(((originalPrice - dealPrice) / originalPrice) * 100)
-    : 0;
+  // Show exactly what the bag charges: cart and checkout use the product's own price.
+  const dealPrice = Number(product.price) || 0;
+  const originalPrice = Math.max(dealPrice, Number(product.originalPrice) || dealPrice);
+  const discountPercent = originalPrice > dealPrice && originalPrice > 0 ? Math.round(((originalPrice - dealPrice) / originalPrice) * 100) : 0;
   const stockLeft = Math.max(0, Number(product.stockQuantity) || 0);
-  const stockNotice = stockLeft > 0 && stockLeft <= 10 ? `Only ${stockLeft} left in stock` : 'In stock, ships in 24–48 hours';
+  const soldOut = !product.inStock || stockLeft <= 0;
+  const stockNotice = soldOut ? 'Sold out' : stockLeft <= 5 ? `Only ${stockLeft} left in stock` : '';
 
-  // Images list
-  const productImages = (product.images && product.images.length > 0) 
-    ? product.images 
-    : [product.image || ELEGANT_PLACEHOLDER_SVG];
-  
-  // The admin can upload a deal-only photo; otherwise the product's first photo is used
-  const heroImage = getCleanImageUrl(dealOfTheDay?.bannerImage || productImages[0]);
+  const productImages = product.images && product.images.length > 0 ? product.images : [product.image || ELEGANT_PLACEHOLDER_SVG];
+  // The admin's deal-only photo leads; the product's own photos follow as thumbnails
+  const gallery = Array.from(new Set([dealOfTheDay?.bannerImage, ...productImages].filter(Boolean) as string[])).slice(0, 5);
+  const mainImage = gallery[Math.min(activeImage, gallery.length - 1)];
   const isWishlisted = isInWishlist(product.id);
+  // The admin's own label shows as a small tag, unless it just repeats "Deal of the day – product name"
+  const cleanBadge = (dealOfTheDay?.badgeText || '').replace(/[^\p{L}\p{N}\s%₹.,:-]/gu, '').trim();
+  const badgeTag = cleanBadge && !/^deal of the day/i.test(cleanBadge) && cleanBadge.length <= 40 ? cleanBadge : '';
+  const subtitle = dealOfTheDay?.customSubtitle || product.description;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product, selectedSize);
     setIsAddedToBag(true);
-    showToast(`Added ${product.name} to Bag at ₹${dealPrice.toLocaleString('en-IN')}!`, 'success');
+    showToast(`Added ${product.name} to bag`, 'success');
     setTimeout(() => setIsAddedToBag(false), 2000);
   };
 
@@ -113,194 +88,145 @@ export const DealOfTheDaySection: React.FC = () => {
     buyNow(product, selectedSize);
   };
 
+  const units: Array<[string, number]> = timeLeft
+    ? [...(timeLeft.days > 0 ? [['Days', timeLeft.days] as [string, number]] : []), ['Hours', timeLeft.hours], ['Mins', timeLeft.minutes], ['Secs', timeLeft.seconds]]
+    : [];
+
   return (
-    <section 
-      id="deal-of-the-day-section" 
-      className="py-3 sm:py-5 bg-[#2A0710] border-b border-[#D7B77A]/25 relative overflow-hidden"
-    >
-      <div className="max-w-4xl mx-auto px-3 sm:px-6 relative z-10">
+    <section id="deal-of-the-day-section" aria-label="Deal of the day" className="w-full bg-[#FBF7F3] px-3 py-8 sm:px-6 sm:py-12 lg:px-8">
+      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[28px] sm:rounded-[36px] bg-[#4B1D3F] text-white shadow-[0_40px_80px_-50px_rgba(42,26,38,0.9)]">
+        {/* Plain decorative rings (beside the photo, never on it) */}
+        <div aria-hidden="true" className="pointer-events-none absolute -right-28 -top-28 h-80 w-80 rounded-full border border-[#C5A46D]/25" />
+        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full border border-[#C5A46D]/15" />
 
-        {/* ============================================================ */}
-        {/* 1. HIGH-LEVEL ULTRA LUXURY DIGITAL COUNTDOWN TIMER HEADER   */}
-        {/* ============================================================ */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
-          
-          {/* Section Pill Badge & Title (Matching FRESH OFF THE LOOM / New Arrivals Exactly) */}
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#5C0B1B] text-[#F7F0E5] text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] mb-2.5 border border-[#D7B77A]/40 shadow-xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#F7F0E5]" />
-              <span>LIMITED TIME OFFER</span>
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F7F0E5] tracking-tight">
-              Deal of the Day
-            </h2>
-            <p className="text-xs sm:text-sm text-[#F7F0E5]/80 mt-1.5 max-w-xl font-normal leading-relaxed">
-              Handpicked artisanal ensembles with exclusive festive pricing and limited-time deals.
-            </p>
-          </div>
-
-          {/* Sleek Compact Micro-Timer Pill (Non-disturbing, Premium Aesthetic) */}
-          <div className="inline-flex items-center gap-2 bg-[#5C0B1B] text-[#F7F0E5] px-3 py-1.5 rounded border border-[#D7B77A]/50 shadow-md shrink-0 self-start md:self-end">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-[#F7F0E5] animate-spin" style={{ animationDuration: '8s' }} />
-              <span className="text-[10px] font-serif font-bold uppercase text-[#F7F0E5] tracking-wider">
-                ENDS IN
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1 font-mono text-xs">
-              <span className="bg-[#5C0B1B] border border-[#D7B77A]/40 text-[#F7F0E5] font-black px-1.5 py-0.5 rounded text-[11px]">
-                {String(timeLeft.hours).padStart(2, '0')}h
-              </span>
-              <span className="text-[#F7F0E5] font-bold text-[10px] animate-pulse">:</span>
-              <span className="bg-[#5C0B1B] border border-[#D7B77A]/40 text-[#F7F0E5] font-black px-1.5 py-0.5 rounded text-[11px]">
-                {String(timeLeft.minutes).padStart(2, '0')}m
-              </span>
-              <span className="text-[#F7F0E5] font-bold text-[10px] animate-pulse">:</span>
-              <span className="bg-rose-950 border border-rose-500/60 text-rose-300 font-black px-1.5 py-0.5 rounded text-[11px] animate-pulse">
-                {String(timeLeft.seconds).padStart(2, '0')}s
-              </span>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ============================================================ */}
-        {/* 2. COMPACT SINGLE SPOTLIGHT CARD (HERO MATCHING COLOR SYSTEM)*/}
-        {/* ============================================================ */}
-        <div className="bg-[#180306] rounded-md sm:rounded-md border-2 border-[#D7B77A]/40 shadow-xl overflow-hidden max-w-3xl mx-auto">
-          
-          {/* Top Dark Banner Header (Matching Hero Slide Style) */}
-          <div className="bg-[#5C0B1B] text-[#F7F0E5] px-3.5 sm:px-5 py-2 flex items-center justify-between border-b border-[#D7B77A]/35">
-            <div className="flex items-center gap-2 min-w-0 pr-2">
-              <Crown className="w-3.5 h-3.5 text-[#F7F0E5] shrink-0 animate-pulse" />
-              <span className="font-serif font-bold text-[11px] sm:text-xs tracking-wider uppercase text-[#F7F0E5] truncate">
-                {dealOfTheDay?.badgeText || `DEAL OF THE DAY - ${product.name}`}
-              </span>
-            </div>
-            
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#2A0710]/10 border border-[#D7B77A]/40 text-[#F7F0E5] text-[8px] sm:text-[9px] font-black uppercase tracking-widest shrink-0">
-              <Sparkles className="w-2.5 h-2.5 text-[#F7F0E5]" />
-              <span>EXCLUSIVE OFFER</span>
-            </span>
-          </div>
-
-          {/* Card Content: Side-by-Side Horizontal Layout */}
-          <div className="p-2.5 sm:p-4 flex flex-row items-center gap-3 sm:gap-4">
-            
-            {/* Left Image Column (100% Uncropped Aspect Ratio) */}
-            <div className="w-[110px] sm:w-[150px] md:w-[170px] shrink-0 relative">
-              <div 
-                onClick={() => navigateToProduct(product.id)}
-                className="relative aspect-[3/4] sm:aspect-[4/5] rounded overflow-hidden border border-[#D7B77A]/30 cursor-pointer group bg-[#2A0710] shadow-2xs p-0.5 flex items-center justify-center"
-              >
-                <img 
-                  src={heroImage} 
-                  alt={product.name} 
-                  className="w-full h-full object-contain object-center transition-transform duration-500 group-hover:scale-102"
-                />
-
-                {/* Wishlist Heart Overlay */}
-                <button
-                  type="button"
-                  id="deal-wishlist-toggle"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWishlist(product);
-                  }}
-                  className={`absolute top-1.5 right-1.5 p-1.5 rounded-full border transition cursor-pointer shadow-xs ${
-                    isWishlisted 
-                      ? 'bg-[#2A0710] border-rose-300 text-rose-300' 
-                      : 'bg-[#180306]/90 border-[#D7B77A]/40 text-[#F7F0E5]/75 hover:text-[#F7F0E5] backdrop-blur-xs'
-                  }`}
-                  title="Wishlist Product"
-                >
-                  <Heart className={`w-3.5 h-3.5 ${isWishlisted ? 'fill-rose-600' : ''}`} />
-                </button>
+        <div className="relative grid lg:grid-cols-12">
+          {/* Photos */}
+          <div className="p-3 sm:p-5 lg:col-span-6 lg:p-7">
+            <button
+              type="button"
+              onClick={() => navigateToProduct(product.id)}
+              className="group block w-full overflow-hidden rounded-[22px] sm:rounded-[28px] bg-[#F3EEF8] cursor-pointer"
+              aria-label={`View ${product.name}`}
+            >
+              <img
+                key={mainImage}
+                src={getCleanImageUrl(mainImage, 1000)}
+                alt={product.name}
+                loading="lazy"
+                className="w-full aspect-[4/5] object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+                onError={(event) => { if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
+              />
+            </button>
+            {gallery.length > 1 && (
+              <div className="mt-3 flex gap-2 sag-scroll-x overflow-x-auto" role="tablist" aria-label="Deal photos">
+                {gallery.map((img, index) => (
+                  <button
+                    key={img}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === activeImage}
+                    aria-label={`Photo ${index + 1}`}
+                    onClick={() => setActiveImage(index)}
+                    className={`h-[72px] w-14 sm:h-20 sm:w-16 shrink-0 overflow-hidden rounded-xl bg-[#F3EEF8] transition-all cursor-pointer ${index === activeImage ? 'ring-2 ring-[#C5A46D] ring-offset-2 ring-offset-[#4B1D3F]' : 'opacity-55 hover:opacity-100'}`}
+                  >
+                    <img src={getCleanImageUrl(img, 160)} alt="" loading="lazy" className="h-full w-full object-cover object-top" />
+                  </button>
+                ))}
               </div>
+            )}
+          </div>
+
+          {/* Details */}
+          <div className="flex flex-col justify-center px-5 pb-7 pt-2 sm:px-8 sm:pb-10 lg:col-span-6 lg:py-12 lg:pl-4 lg:pr-12">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="h-px w-8 bg-[#C5A46D]" />
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.28em] text-[#C5A46D]">Deal of the day</p>
+              {badgeTag && <span className="rounded-full border border-[#C5A46D]/40 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wider text-[#FBF7F3]/85">{badgeTag}</span>}
+            </div>
+            <h2 className="mt-3 font-serif text-[30px] leading-[1.08] sm:text-4xl lg:text-5xl text-[#FBF7F3] line-clamp-3">{product.name}</h2>
+            {subtitle && <p className="mt-3 text-sm sm:text-[15px] leading-relaxed text-white/70 line-clamp-2">{subtitle}</p>}
+
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span className="text-3xl sm:text-4xl font-semibold text-white">₹{dealPrice.toLocaleString('en-IN')}</span>
+              {originalPrice > dealPrice && <span className="text-base text-white/55 line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
+              {discountPercent > 0 && <span className="rounded-full bg-[#F7E4EA] px-3 py-1 text-xs font-bold text-[#8A2E55]">{discountPercent}% off</span>}
             </div>
 
-            {/* Right Details Column */}
-            <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-2 flex flex-col justify-between">
-              
-              <div className="space-y-1">
-                
-                {/* Category & Rating Row */}
-                <div className="flex items-center justify-between gap-1.5">
-                  <span className="inline-block px-2 py-0.5 rounded-md bg-[#2A0710] text-[#F7F0E5] font-mono font-bold text-[9px] sm:text-[10px] uppercase tracking-wider border border-[#D7B77A]/30 truncate">
-                    {product.category || 'KURTIS'}
+            {timeLeft && timerOn && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:p-5" role="timer" aria-live="off" aria-label="Offer ends in">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#C5A46D]">
+                    <Clock className="h-3.5 w-3.5" /> Offer ends in
+                  </p>
+                  <span className="relative flex h-2 w-2" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#F7E4EA] opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#F7E4EA]" />
                   </span>
-
-                  <div className="flex items-center gap-0.5 text-[#F7F0E5] text-[10px] sm:text-xs font-bold shrink-0">
-                    <Star className="w-3 h-3 fill-[#D7B77A] text-[#F7F0E5]" />
-                    <span>{product.rating ? product.rating.toFixed(1) : '4.9'}</span>
-                  </div>
                 </div>
-
-                {/* Product Name */}
-                <h3 
-                  onClick={() => navigateToProduct(product.id)}
-                  className="font-serif text-xs sm:text-base font-bold text-[#F7F0E5] leading-tight line-clamp-2 hover:text-[#F7F0E5] transition cursor-pointer"
-                >
-                  {product.name}
-                </h3>
-
-                {/* Pricing Row */}
-                <div className="flex items-baseline gap-1.5 flex-wrap pt-0.5">
-                  <span className="font-serif text-base sm:text-xl font-black text-[#F7F0E5]">
-                    ₹{dealPrice.toLocaleString('en-IN')}
-                  </span>
-
-                  {originalPrice > dealPrice && (
-                    <span className="text-[10px] sm:text-xs text-[#F7F0E5]/55 line-through font-medium">
-                      ₹{originalPrice.toLocaleString('en-IN')}
-                    </span>
-                  )}
-
-                  {discountPercent > 0 && (
-                    <span className="px-1.5 py-0.5 rounded bg-[#5C0B1B] text-[#F7F0E5] font-extrabold text-[9px] sm:text-[10px] border border-[#D7B77A]/40">
-                      {discountPercent}% OFF
-                    </span>
-                  )}
+                <div className="mt-3 flex items-start gap-1.5 sm:gap-2.5">
+                  {units.map(([label, value], index) => (
+                    <React.Fragment key={label}>
+                      {index > 0 && <span className="pt-2.5 sm:pt-3 font-serif text-2xl text-[#C5A46D]/70" aria-hidden="true">:</span>}
+                      <div className="flex-1 max-w-[84px] text-center">
+                        <div className="rounded-xl bg-[#FBF7F3] py-2.5 sm:py-3 shadow-[inset_0_-2px_0_rgba(75,29,63,0.12)]">
+                          <span key={value} className="sag-tick block font-serif text-[28px] sm:text-4xl font-semibold leading-none text-[#4B1D3F] tabular-nums">
+                            {String(value).padStart(2, '0')}
+                          </span>
+                        </div>
+                        <p className="mt-1.5 text-[11px] uppercase tracking-[0.18em] text-white/60">{label}</p>
+                      </div>
+                    </React.Fragment>
+                  ))}
                 </div>
-
-                {/* Stock Urgency Notice */}
-                <div className="text-[10px] sm:text-xs font-bold text-[#F7F0E5] flex items-center gap-1 pt-0.5">
-                  <Flame className="w-3 h-3 text-[#F7F0E5] shrink-0" />
-                  <span className="truncate">{stockNotice}</span>
+                <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
+                  <div className="h-full rounded-full bg-[#C5A46D] transition-[width] duration-1000 ease-linear" style={{ width: `${Math.max(2, timeLeft.fraction * 100)}%` }} />
                 </div>
-
               </div>
+            )}
 
-              {/* Action Buttons: ADD TO BAG & BUY NOW (Matching Hero Slides Style) */}
-              <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-[#D7B77A]/15">
-                <button
-                  type="button"
-                  id="deal-add-to-bag-btn"
-                  onClick={handleAddToCart}
-                  className="py-1.5 sm:py-2 px-2 bg-[#2A0710] hover:bg-[#180306] text-[#F7F0E5] font-serif font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-lg border border-[#D7B77A]/50 flex items-center justify-center gap-1 shadow-2xs transition active:scale-95 cursor-pointer"
-                >
-                  {isAddedToBag ? <Check className="w-3 h-3 text-emerald-400" /> : <ShoppingBag className="w-3 h-3 text-[#F7F0E5]" />}
-                  <span>{isAddedToBag ? 'ADDED' : 'ADD TO BAG'}</span>
-                </button>
+            {stockNotice && <p className="mt-4 text-sm font-medium text-[#F7E4EA]">{stockNotice}</p>}
 
-                <button
-                  type="button"
-                  id="deal-buy-now-btn"
-                  onClick={handleBuyNow}
-                  className="py-1.5 sm:py-2 px-2 bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] font-serif font-bold text-[10px] sm:text-xs uppercase tracking-wider rounded-lg border border-[#D7B77A] flex items-center justify-center gap-1 shadow-xs transition active:scale-95 cursor-pointer"
-                >
-                  <Zap className="w-3 h-3 text-[#F7F0E5] fill-[#D7B77A]" />
-                  <span>BUY NOW</span>
-                </button>
+            {product.sizes && product.sizes.length > 0 && !(product.sizes.length === 1 && /free/i.test(product.sizes[0])) && (
+              <div className="mt-5">
+                <p className="mb-2 text-[11px] uppercase tracking-[0.22em] text-white/60">Select size</p>
+                <div className="flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(size)}
+                      aria-pressed={selectedSize === size}
+                      className={`h-10 min-w-[44px] rounded-full border px-3.5 text-sm transition-colors cursor-pointer ${selectedSize === size ? 'border-[#FBF7F3] bg-[#FBF7F3] font-semibold text-[#4B1D3F]' : 'border-white/25 text-white hover:border-white/70'}`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
+            )}
 
+            <div className="mt-6 flex gap-2.5">
+              <button type="button" onClick={handleBuyNow} disabled={soldOut}
+                className="flex-1 sm:flex-none h-12 whitespace-nowrap rounded-full bg-[#FBF7F3] px-4 sm:px-7 text-xs font-bold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-[#4B1D3F] inline-flex items-center justify-center gap-2 transition-colors hover:bg-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <Zap className="h-4 w-4" /> Buy now
+              </button>
+              <button type="button" onClick={handleAddToCart} disabled={soldOut}
+                className="flex-1 sm:flex-none h-12 whitespace-nowrap rounded-full border border-white/35 px-4 sm:px-6 text-xs font-semibold uppercase tracking-[0.12em] sm:tracking-[0.16em] text-white inline-flex items-center justify-center gap-2 transition-colors hover:bg-white/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                {isAddedToBag ? <><Check className="h-4 w-4" /> Added</> : <><BagIcon mono className="h-[18px] w-[18px]" /> Add to bag</>}
+              </button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+                aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={isWishlisted}
+                className="h-12 w-12 shrink-0 rounded-full border border-white/35 flex items-center justify-center transition-colors hover:bg-white/10 cursor-pointer">
+                <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-[#F7E4EA] text-[#F7E4EA]' : 'text-white'}`} />
+              </button>
             </div>
 
+            <button type="button" onClick={() => navigateToProduct(product.id)}
+              className="mt-5 inline-flex items-center gap-2 self-start text-xs font-semibold uppercase tracking-[0.18em] text-[#C5A46D] hover:text-[#FBF7F3] transition-colors cursor-pointer">
+              View full details <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
-
         </div>
-
       </div>
     </section>
   );

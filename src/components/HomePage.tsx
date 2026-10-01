@@ -1,19 +1,21 @@
 import React from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { BrandMarqueeHeader } from './BrandMarqueeHeader';
-import { PrepaidTrustBanner } from './PrepaidTrustBanner';
 import { HeroSection } from './HeroSection';
 import { ArtisanalPromises } from './ArtisanalPromises';
 import { FestiveComboOffers } from './FestiveComboOffers';
-import { NewArrivalsSection } from './NewArrivalsSection';
 import { DealOfTheDaySection } from './DealOfTheDaySection';
-import { BestSellersSection, FestiveCollectionSection } from './BestSellersSection';
+import { FestiveCollectionSection } from './BestSellersSection';
 import { TrendingNowSection } from './TrendingNowSection';
-import { SpecialOfferBanner } from './SpecialOfferBanner';
 import { InstagramGallery } from './InstagramGallery';
-import { Newsletter } from './Newsletter';
-import { WhyShopWithUs } from './WhyShopWithUs';
 import { CustomerReviews } from './CustomerReviews';
+import { Reveal } from './Reveal';
+import { ShopByCategory } from './ShopByCategory';
+import { PrepaidPerks } from './PrepaidPerks';
+import { PersonalRails } from './PersonalRails';
+import { OccasionSection } from './OccasionSection';
+import { AuraReelsSection } from './AuraReels';
+import { FeaturedCollection, KidsCorner, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
 
 export const HomePage: React.FC = () => {
   const { homepageSections = [] } = useAdmin();
@@ -23,9 +25,12 @@ export const HomePage: React.FC = () => {
       case 'brandHeader':
         return <BrandMarqueeHeader />;
       case 'categoryGrid':
-        return <PrepaidTrustBanner />;
+        return <ShopByCategory />;
       case 'hero':
-        return <HeroSection />;
+        // The deal sits straight after the hero (just under the category circles) when both are on
+        return dealOn
+          ? <><HeroSection /><DealOfTheDaySection /><PrepaidPerks /></>
+          : <><HeroSection /><PrepaidPerks /></>;
       case 'artisanalPromises':
         return <ArtisanalPromises />;
       case 'comboOffers':
@@ -33,37 +38,46 @@ export const HomePage: React.FC = () => {
       case 'dealOfTheDay':
         return <DealOfTheDaySection />;
       case 'newArrivals':
-        return <NewArrivalsSection />;
+        return <NewArrivalsRail />;
+      case 'auraReels':
+        return <AuraReelsSection />;
+      case 'kidsCorner':
+        return <KidsCorner />;
       case 'bestSellers':
-        return <BestSellersSection />;
+        return <FeaturedCollection />;
       case 'trending':
         return <TrendingNowSection />;
       case 'festive':
         return <FestiveCollectionSection />;
       case 'specialOffer':
-        return <SpecialOfferBanner />;
+        return <OfferBanner />;
       case 'whyShop':
-        return <WhyShopWithUs />;
+        return <WhyShop />;
       case 'reviews':
         return <CustomerReviews />;
       case 'instagram':
         return <InstagramGallery />;
       case 'newsletter':
-        return <Newsletter />;
+        return <NewsletterSignup />;
       default:
         return null;
     }
   };
 
+  const enabledKeys = new Set(homepageSections.filter((section) => section.enabled !== false).map((section) => section.key));
+  const dealOn = enabledKeys.has('hero') && enabledKeys.has('dealOfTheDay');
+
   const visibleSections = [...homepageSections]
-    .filter((section) => section.enabled !== false)
+    .filter((section) => section.enabled !== false && !(dealOn && section.key === 'dealOfTheDay'))
     .sort((first, second) => first.order - second.order);
 
   return (
     <div id="dynamic-storefront-homepage" className="flex flex-col relative gap-0">
-      {visibleSections.map((section) => (
+      {visibleSections.map((section, index) => (
         <React.Fragment key={section.id}>
-          {renderSectionComponent(section.key)}
+          {index <= 1 ? renderSectionComponent(section.key) : <Reveal>{renderSectionComponent(section.key)}</Reveal>}
+          {index === 2 && <Reveal><PersonalRails /></Reveal>}
+          {index === 3 && <Reveal><OccasionSection /></Reveal>}
         </React.Fragment>
       ))}
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useRouter } from '../context/RouterContext';
 import { AdminLogin } from './admin/AdminLogin';
@@ -8,6 +8,8 @@ import { AdminProducts } from './admin/AdminProducts';
 import { AdminProductForm } from './admin/AdminProductForm';
 import { AdminCategories } from './admin/AdminCategories';
 import { AdminOrders } from './admin/AdminOrders';
+import { isAdminAreaPath, isAdminEntryPath } from '../utils/adminEntry';
+import { AdminReturns } from './admin/AdminReturns';
 import { AdminOrderDetails } from './admin/AdminOrderDetails';
 import { AdminCustomers } from './admin/AdminCustomers';
 import { AdminCoupons } from './admin/AdminCoupons';
@@ -19,25 +21,31 @@ import { AdminBanners } from './admin/AdminBanners';
 import { AdminReviews } from './admin/AdminReviews';
 import { AdminSettings } from './admin/AdminSettings';
 import { AdminComboOffers } from './admin/AdminComboOffers';
+import { AdminDiscovery } from './admin/AdminDiscovery';
+import { AdminReels } from './admin/AdminReels';
+import { AdminLooks } from './admin/AdminLooks';
+import { AdminKids } from './admin/AdminKids';
+import { AdminToys } from './admin/AdminToys';
 import { AdminDealOfTheDay } from './admin/AdminDealOfTheDay';
-import { ShieldCheck, KeyRound, ArrowRight, Lock } from 'lucide-react';
+import { AdminPaymentGateways } from './admin/AdminPaymentGateways';
 
 export const AdminDashboardPage: React.FC = () => {
-  const { isAdminLoggedIn, adminTab, securityConfig } = useAdmin();
-  const { currentPath, routeParams, activeAdminTab, navigate } = useRouter();
+  const { isAdminLoggedIn, adminSessionChecked, adminTab, securityConfig } = useAdmin();
+  const { currentPath, routeParams, activeAdminTab } = useRouter();
 
-  const [staffModalOpen, setStaffModalOpen] = useState(false);
-  const [enteredPin, setEnteredPin] = useState('');
-  const [pinError, setPinError] = useState('');
 
-  const secretSlug = (securityConfig?.secretPathSlug || 'sag-vault').toLowerCase();
-  const isSecretVaultPath = 
-    currentPath === `/${secretSlug}` || 
-    currentPath === '/sag-vault' || 
-    currentPath === '/admin-vault';
+  const isSecretVaultPath = isAdminEntryPath(currentPath, securityConfig?.secretPathSlug);
 
-  // 1. If on secret vault route and not logged in, show the Admin Login Vault
+  // 1. On the private sign-in link: wait for the session check first (a signed-in owner goes straight in,
+  //    with no flash of the sign-in form), then show the form to everyone else.
   if (isSecretVaultPath && !isAdminLoggedIn) {
+    if (!adminSessionChecked) {
+      return (
+        <div className="min-h-screen bg-[#FBF7F3] flex items-center justify-center" role="status" aria-label="Loading">
+          <span className="w-8 h-8 rounded-full border-2 border-[#4B1D3F]/15 border-t-[#4B1D3F] animate-spin" />
+        </div>
+      );
+    }
     return <AdminLogin />;
   }
 
@@ -46,96 +54,28 @@ export const AdminDashboardPage: React.FC = () => {
     return <AdminLogin />;
   }
 
-  // 3. If unauthorized visitor attempts to access /admin or /admin/* without authentication,
-  // return strict 404 screen to obfuscate administrative presence
-  if (!isAdminLoggedIn) {
-    const handleVerifyStaffPin = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (enteredPin.trim() === (securityConfig?.securityPin || '829146').trim()) {
-        navigate(`/${secretSlug}`);
-      } else {
-        setPinError('Invalid Security PIN.');
-      }
-    };
-
+  // 3. Anyone else who opens /admin sees the store's ordinary "page not found": nothing on the
+  // public site hints that an admin panel exists (the owner signs in from the private link).
+  if (!isAdminLoggedIn && !adminSessionChecked) {
+    // Still checking the session (a signed-in owner reloading an admin page): a plain loader, no branding
     return (
-      <div id="admin-404-guard" className="min-h-screen bg-[#FFFDFC] flex flex-col items-center justify-center p-6 text-center relative">
-        <div className="max-w-md w-full bg-\[#FAF7F2\] border border-[#F3C5D1] rounded-3xl p-8 sm:p-10 shadow-pink-glow">
-          <span className="text-6xl font-serif font-black text-[#211C1A] block mb-2">404</span>
-          <h1 className="text-xl font-bold text-gray-900 mb-2">Page Not Found</h1>
-          <p className="text-xs text-gray-600 mb-6 leading-relaxed">
-            The page you are looking for does not exist on Suit Aura Girls or has been moved.
-          </p>
-
-          <button
-            onClick={() => window.location.href = '/'}
-            className="w-full py-3 bg-[#241D1B] hover:bg-[#241D1B] text-[#211C1A] text-xs font-black uppercase tracking-widest rounded-xl transition cursor-pointer shadow-pink-glow mb-4"
-          >
-            Return to Store
-          </button>
-
-          {/* Discrete Staff Access Trigger */}
-          <div className="pt-2 border-t border-rose-50 text-center">
-            <button
-              onClick={() => setStaffModalOpen(true)}
-              className="text-[11px] text-gray-400 hover:text-[#211C1A] font-medium transition cursor-pointer inline-flex items-center gap-1"
-            >
-              <Lock className="w-3 h-3" />
-              <span>Authorized Personnel Verification</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Discrete PIN Modal */}
-        {staffModalOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-            <div className="bg-\[#FAF7F2\] rounded-2xl max-w-xs w-full p-6 border border-rose-100 shadow-2xl text-left">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-[#D8C8B8]/40 text-[#211C1A] flex items-center justify-center">
-                  <KeyRound className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-gray-900">Staff Vault</h4>
-                  <p className="text-[10px] text-gray-500">Enter your 6-digit PIN</p>
-                </div>
-              </div>
-
-              {pinError && (
-                <div className="p-2 mb-3 bg-[#D8C8B8]/20 text-rose-800 text-[11px] rounded-lg border border-rose-200">
-                  {pinError}
-                </div>
-              )}
-
-              <form onSubmit={handleVerifyStaffPin} className="space-y-3">
-                <input
-                  type="password"
-                  maxLength={6}
-                  autoFocus
-                  value={enteredPin}
-                  onChange={(e) => setEnteredPin(e.target.value.replace(/\D/g, ''))}
-                  placeholder="••••••"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-center font-mono tracking-widest text-lg"
-                />
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setStaffModalOpen(false); setPinError(''); setEnteredPin(''); }}
-                    className="flex-1 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 py-2 text-xs font-bold text-[#211C1A] bg-[#241D1B] rounded-lg hover:bg-[#241D1B] transition"
-                  >
-                    Verify
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
+      <div className="min-h-screen bg-[#FBF7F3] flex items-center justify-center" role="status" aria-label="Loading">
+        <span className="w-8 h-8 rounded-full border-2 border-[#4B1D3F]/15 border-t-[#4B1D3F] animate-spin" />
+      </div>
+    );
+  }
+  if (!isAdminLoggedIn && isAdminAreaPath(window.location.pathname)) {
+    return <AdminLogin />;
+  }
+  if (!isAdminLoggedIn) {
+    return (
+      <div id="admin-404-guard" className="min-h-screen bg-[#FBF7F3] flex flex-col items-center justify-center px-6 text-center">
+        <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" className="h-14 w-auto mb-8" />
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#9C7A45]">Error 404</p>
+        <p className="mt-2 font-serif text-7xl sm:text-8xl font-semibold leading-none text-[#4B1D3F]">404</p>
+        <h1 className="mt-4 font-serif text-2xl sm:text-3xl text-[#2A1A26]">This page could not be found</h1>
+        <p className="mt-2 max-w-sm text-sm text-[#2A1A26]/65 leading-relaxed">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
+        <a href="/" className="mt-8 sag-btn-primary h-12 px-8 inline-flex items-center text-sm font-semibold tracking-wide">Back to the store</a>
       </div>
     );
   }
@@ -167,6 +107,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminCategories />;
       case 'orders':
         return <AdminOrders />;
+      case 'returns':
+        return <AdminReturns />;
       case 'customers':
         return <AdminCustomers />;
       case 'leads':
@@ -179,6 +121,18 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminHero />;
       case 'comboOffers':
         return <AdminComboOffers />;
+      case 'discovery':
+        return <AdminDiscovery />;
+      case 'reels':
+        return <AdminReels />;
+      case 'looks':
+        return <AdminLooks />;
+      case 'kids':
+        return <AdminKids />;
+      case 'toys':
+        return <AdminToys />;
+      case 'payments':
+        return <AdminPaymentGateways />;
       case 'dealOfTheDay':
         return <AdminDealOfTheDay />;
       case 'banners':

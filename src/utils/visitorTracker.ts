@@ -1,5 +1,3 @@
-import { db } from '../lib/firebase';
-import { doc, setDoc, updateDoc, arrayUnion, increment, getDoc } from 'firebase/firestore';
 import { getStoredUtmParams } from './utmTracker';
 
 export interface VisitorLog {
@@ -21,13 +19,20 @@ export interface VisitorAnalytics {
   cartAddCount: number;
   checkoutCount: number;
   visitorLogs: VisitorLog[];
+  /** Every visit ever (repeat visits count again); never reset. */
+  lifetimeVisits?: number;
+  /** Devices seen for the first time ever. */
+  lifetimeUniqueVisitors?: number;
+  todayVisits?: number;
+  returningToday?: number;
+  /** When per-visit counting started (earlier days counted one visit per visitor per day). */
+  countingSince?: string;
 }
 
 const STORAGE_KEY_VISITOR_ID = 'sag_unique_visitor_id';
 const STORAGE_KEY_TRACKED_DATE = 'sag_tracked_date_v1';
 const STORAGE_KEY_CART_DATE = 'sag_cart_date_v1';
 const STORAGE_KEY_CHECKOUT_DATE = 'sag_checkout_date_v1';
-const STORAGE_KEY_PURCHASE_DATE = 'sag_purchase_date_v1';
 const STORAGE_KEY_QUOTA_EXCEEDED = 'sag_fs_quota_exceeded';
 
 export function isLocalPreviewEnvironment(): boolean {
@@ -282,7 +287,30 @@ function cleanAndroidModel(raw: string): string {
   return raw || 'Android Phone';
 }
 
-// Tracks page view / heartbeat safely without exhausting Firestore quota
+// Counting happens on the server (api/track.js), which also stops repeat and scripted counts.
+const sendEvent = (event: 'visit' | 'add_to_cart' | 'checkout_initiated', extra: Record<string, string> = {}) => {
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ event, visitorId: getOrCreateVisitorId(), path: window.location.pathname || '/', ...extra }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // Analytics must never break the store
+  }
+};
+
+const STORAGE_KEY_LAST_ACTIVITY = 'sag_last_activity_v1';
+const SESSION_GAP_MS = 30 * 60 * 1000;
+
+/** Marks the shopper as still active (keeps one long browse from counting as several visits). */
+export function touchActivity() {
+  try { localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(Date.now())); } catch {}
+}
+
+// Records a visit when a new session starts: the first visit of the day, or coming back after 30 minutes away.
+// The server applies the same rules again, so repeated calls can't inflate the numbers.
 export function recordHeartbeat(currentPath: string = '/'): VisitorAnalytics {
   const fallbackAnalytics: VisitorAnalytics = {
     totalUniqueVisitors: 1,
@@ -293,183 +321,65 @@ export function recordHeartbeat(currentPath: string = '/'): VisitorAnalytics {
     visitorLogs: []
   };
 
-  if (typeof window === 'undefined') {
-    return fallbackAnalytics;
-  }
-
-  // If Firestore quota was already hit or flagged today, exit immediately
-  if (isFirestoreQuotaExhausted) {
+  if (typeof window === 'undefined' || isFirestoreQuotaExhausted) {
     return fallbackAnalytics;
   }
 
   const today = new Date().toISOString().split('T')[0];
-  const trackedToday = localStorage.getItem(STORAGE_KEY_TRACKED_DATE);
-
-  // If this device has already recorded their visitor session for today, DO NOT write to Firestore again!
-  // This single check reduces Firestore writes by >95% while keeping unique daily visitor stats 100% accurate.
-  if (trackedToday === today) {
+  try {
+    const now = Date.now();
+    const lastActivity = Number(localStorage.getItem(STORAGE_KEY_LAST_ACTIVITY)) || 0;
+    localStorage.setItem(STORAGE_KEY_LAST_ACTIVITY, String(now));
+    if (localStorage.getItem(STORAGE_KEY_TRACKED_DATE) === today && now - lastActivity < SESSION_GAP_MS) return fallbackAnalytics;
+    localStorage.setItem(STORAGE_KEY_TRACKED_DATE, today);
+  } catch {
     return fallbackAnalytics;
   }
 
-  // Pre-mark today in localStorage immediately to debounce parallel calls
-  localStorage.setItem(STORAGE_KEY_TRACKED_DATE, today);
-
-  const visitorId = getOrCreateVisitorId();
   const utm = getStoredUtmParams();
   const details = getDeviceDetails();
-  const isInstagram = utm.utm_source === 'instagram' || utm.fbclid || details.deviceType === 'instagram_webview';
-
-  const sessionDocRef = doc(db, 'visitor_sessions', visitorId);
-  const dailyDocRef = doc(db, 'daily_analytics', today);
-  const nowStr = new Date().toISOString();
-
-  // Create action object
-  const actionObj = {
-    time: nowStr,
-    type: 'page_view',
+  sendEvent('visit', {
     path: currentPath,
-    label: `Visited ${currentPath}`
-  };
-
-  const docPayload = {
-    id: visitorId,
-    sessionId: visitorId,
-    date: today,
-    firstSeen: nowStr,
-    lastActive: nowStr,
-    deviceType: details.deviceType,
     deviceModel: details.deviceModel,
     browser: details.browser,
-    userAgent: details.userAgent,
-    utm_source: utm.utm_source || (utm.fbclid ? 'meta_ads' : 'direct'),
+    utm_source: utm.utm_source || '',
     utm_medium: utm.utm_medium || '',
     utm_campaign: utm.utm_campaign || '',
     fbclid: utm.fbclid || '',
     referrer: typeof document !== 'undefined' ? document.referrer : '',
-    page: currentPath,
-    actions: [actionObj]
-  };
-
-  // Perform single initial setDoc for the visitor session
-  setDoc(sessionDocRef, docPayload)
-    .then(() => {
-      const dailyPayload = {
-        date: today,
-        totalUniqueVisitors: increment(1),
-        instagramVisitors: isInstagram ? increment(1) : increment(0),
-        otherVisitors: !isInstagram ? increment(1) : increment(0),
-        cartAdditions: increment(0),
-        checkoutsInitiated: increment(0),
-        purchases: increment(0)
-      };
-      return setDoc(dailyDocRef, dailyPayload, { merge: true });
-    })
-    .catch((err: any) => {
-      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota') || err?.message?.includes('exhausted')) {
-        markFirestoreQuotaExhausted();
-      } else {
-        console.warn('Session init notice:', err?.message || err);
-      }
-    });
+  });
 
   return fallbackAnalytics;
 }
 
-// Tracks cart additions & checkout initiations in Firestore with quota protection
-export function trackFunnelEvent(event: 'add_to_cart' | 'checkout_initiated', label: string = '') {
+// Tracks cart additions & checkout initiations, once per device per day each
+export function trackFunnelEvent(event: 'add_to_cart' | 'checkout_initiated', _label: string = '') {
   if (typeof window === 'undefined' || isFirestoreQuotaExhausted) return;
-
   const today = new Date().toISOString().split('T')[0];
-  const trackedCartDate = localStorage.getItem(STORAGE_KEY_CART_DATE);
-  const trackedCheckoutDate = localStorage.getItem(STORAGE_KEY_CHECKOUT_DATE);
-
-  let incrementDaily = false;
-  let fieldToIncrement = '';
-
-  if (event === 'add_to_cart' && trackedCartDate !== today) {
-    localStorage.setItem(STORAGE_KEY_CART_DATE, today);
-    incrementDaily = true;
-    fieldToIncrement = 'cartAdditions';
-  } else if (event === 'checkout_initiated' && trackedCheckoutDate !== today) {
-    localStorage.setItem(STORAGE_KEY_CHECKOUT_DATE, today);
-    incrementDaily = true;
-    fieldToIncrement = 'checkoutsInitiated';
+  const key = event === 'add_to_cart' ? STORAGE_KEY_CART_DATE : STORAGE_KEY_CHECKOUT_DATE;
+  try {
+    if (localStorage.getItem(key) === today) return;
+    localStorage.setItem(key, today);
+  } catch {
+    return;
   }
-
-  // If this event has already been recorded today by this visitor, skip Firestore writes
-  if (!incrementDaily) return;
-
-  const visitorId = getOrCreateVisitorId();
-  const nowStr = new Date().toISOString();
-  const sessionDocRef = doc(db, 'visitor_sessions', visitorId);
-  const dailyDocRef = doc(db, 'daily_analytics', today);
-
-  const actionObj = {
-    time: nowStr,
-    type: event,
-    path: window.location.pathname || '/',
-    label: label || (event === 'add_to_cart' ? 'Added item to cart' : 'Initiated checkout')
-  };
-
-  updateDoc(sessionDocRef, {
-    actions: arrayUnion(actionObj),
-    lastActive: nowStr
-  })
-    .then(() => {
-      if (incrementDaily && fieldToIncrement) {
-        return setDoc(dailyDocRef, {
-          date: today,
-          [fieldToIncrement]: increment(1)
-        }, { merge: true });
-      }
-    })
-    .catch((err: any) => {
-      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota') || err?.message?.includes('exhausted')) {
-        markFirestoreQuotaExhausted();
-      }
-    });
+  sendEvent(event);
 }
 
-// Tracks successful prepaid checkout purchases in Firestore with quota protection
-export function trackPurchaseEvent(orderNumber: string, amount: number) {
-  if (typeof window === 'undefined' || isFirestoreQuotaExhausted) return;
-
-  const today = new Date().toISOString().split('T')[0];
-  const trackedPurchaseDate = localStorage.getItem(STORAGE_KEY_PURCHASE_DATE);
-  let incrementDaily = false;
-
-  if (trackedPurchaseDate !== today) {
-    localStorage.setItem(STORAGE_KEY_PURCHASE_DATE, today);
-    incrementDaily = true;
-  }
-
-  const visitorId = getOrCreateVisitorId();
-  const nowStr = new Date().toISOString();
-  const sessionDocRef = doc(db, 'visitor_sessions', visitorId);
-  const dailyDocRef = doc(db, 'daily_analytics', today);
-
-  const actionObj = {
-    time: nowStr,
-    type: 'purchase_completed',
-    path: '/checkout/success',
-    label: `Purchased Order #${orderNumber} for ₹${amount}`
-  };
-
-  updateDoc(sessionDocRef, {
-    actions: arrayUnion(actionObj),
-    lastActive: nowStr
-  })
-    .then(() => {
-      if (incrementDaily) {
-        return setDoc(dailyDocRef, {
-          date: today,
-          purchases: increment(1)
-        }, { merge: true });
-      }
-    })
-    .catch((err: any) => {
-      if (err?.code === 'resource-exhausted' || err?.message?.includes('Quota') || err?.message?.includes('exhausted')) {
-        markFirestoreQuotaExhausted();
-      }
-    });
+// Product views, wishlist saves and searches (counted on the server once per visitor per item per day)
+export function trackItem(event: 'product_view' | 'wishlist_add' | 'search' | 'reel_view' | 'reel_click' | 'feature_use', value: string) {
+  if (typeof window === 'undefined' || !value) return;
+  const key = `sag_ti_${event}_${value.toLowerCase().slice(0, 60)}`;
+  try {
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+  } catch {}
+  try {
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(event === 'search' ? { event, term: value } : event === 'reel_view' || event === 'reel_click' ? { event, reelId: value } : event === 'feature_use' ? { event, feature: value } : { event, productId: value }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
 }

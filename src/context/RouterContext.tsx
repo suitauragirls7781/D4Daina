@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { withPageTransition } from '../utils/pageTransition';
+import { isAdminEntryPath, toAppPath, toBrowserPath } from '../utils/adminEntry';
 
 export interface RouteState {
   path: string;
@@ -28,21 +30,8 @@ const RouterContext = createContext<RouterContextType | undefined>(undefined);
 function parsePath(pathname: string, search: string = ''): RouteState {
   const cleanPath = pathname.trim() || '/';
   
-  // Check for Secret Admin Vault Routes (e.g. /sag-vault, /admin-vault, or configured slug)
-  let secretSlug = 'sag-vault';
-  try {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('sag_admin_security_v2') : null;
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.secretPathSlug) secretSlug = parsed.secretPathSlug.trim().toLowerCase();
-    }
-  } catch {}
-
-  const isSecretVault = 
-    cleanPath === `/${secretSlug}` || 
-    cleanPath === '/sag-vault' || 
-    cleanPath === '/admin-vault';
-
+  // The private admin sign-in link (/d4daina, or the owner's own slug from Settings → Security)
+  const isSecretVault = isAdminEntryPath(cleanPath);
   if (isSecretVault) {
     return {
       path: cleanPath,
@@ -168,6 +157,8 @@ function parsePath(pathname: string, search: string = ''): RouteState {
     customerRoute = 'login';
   } else if (segments[0] === 'cancellation-policy') {
     customerRoute = 'cancellation-policy';
+  } else {
+    customerRoute = 'not-found';
   }
 
   return {
@@ -182,14 +173,14 @@ function parsePath(pathname: string, search: string = ''): RouteState {
 export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentPath, setCurrentPath] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return window.location.pathname || '/';
+      return toAppPath(window.location.pathname || '/');
     }
     return '/';
   });
 
   const [routeState, setRouteState] = useState<RouteState>(() => {
     if (typeof window !== 'undefined') {
-      return parsePath(window.location.pathname, window.location.search);
+      return parsePath(toAppPath(window.location.pathname), window.location.search);
     }
     return parsePath('/');
   });
@@ -197,10 +188,12 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const navigate = useCallback((path: string, options?: { replace?: boolean }) => {
     const target = path.startsWith('/') ? path : `/${path}`;
     if (typeof window !== 'undefined') {
+      // Admin pages show under the private link in the address bar (/admin/orders → /drdaina/orders)
+      const address = toBrowserPath(target);
       if (options?.replace) {
-        window.history.replaceState(null, '', target);
+        window.history.replaceState(null, '', address);
       } else {
-        window.history.pushState(null, '', target);
+        window.history.pushState(null, '', address);
       }
     }
     // Extract pathname and search for parsing
@@ -211,12 +204,12 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Listen to popstate (browser back / forward buttons)
   useEffect(() => {
-    const handlePopState = () => {
-      const path = window.location.pathname || '/';
+    const handlePopState = () => withPageTransition(() => {
+      const path = toAppPath(window.location.pathname || '/');
       const search = window.location.search;
       setCurrentPath(path);
       setRouteState(parsePath(path, search));
-    };
+    });
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);

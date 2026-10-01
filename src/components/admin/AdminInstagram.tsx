@@ -4,6 +4,7 @@ import { useShop } from '../../context/ShopContext';
 import { ArrowDown, ArrowUp, ExternalLink, Instagram, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import type { InstagramReel } from '../../types';
 import { instagramEmbedUrl, instagramProfile, normalizeInstagramUrl } from '../../utils/instagram';
+import { AdminPageHeader } from './kidsToysShared';
 
 const MAX_REELS = 24;
 
@@ -66,32 +67,28 @@ export const AdminInstagram: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-[#241D1B] p-6 rounded-2xl border border-[#9A6A3A]/40 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 border border-[#9A6A3A]/50 rounded-full text-xs font-bold text-[#E9D7B9]">
-            <Instagram className="w-4 h-4" />
-            <span>{profile.handle}</span>
-          </div>
-          <h1 className="font-serif font-black text-2xl text-white">Instagram Reels</h1>
-          <p className="text-xs text-[#F1E8DF]/80 font-sans max-w-xl">
-            Paste links of your reels or posts. They play inside the homepage "Follow the Aura" section, in the order shown here.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={isSaving || !isDirty}
-          className="px-5 py-2.5 bg-[#C5A572] hover:bg-[#D6B884] disabled:opacity-50 disabled:cursor-not-allowed text-[#211C1A] text-xs font-bold rounded-xl flex items-center gap-2 transition cursor-pointer shrink-0"
-        >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          <span>{isSaving ? 'SAVING…' : isDirty ? 'SAVE & PUBLISH' : 'ALL CHANGES SAVED'}</span>
-        </button>
-      </div>
+      <AdminPageHeader
+        eyebrow={`Social · ${profile.handle}`}
+        title="Instagram reels"
+        icon={<Instagram className="text-current" />}
+        description={'Paste links of your reels or posts. They play inside the homepage "Follow the Aura" section, in the order shown here.'}
+        actions={
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isSaving || !isDirty}
+            className="h-11 px-5 bg-[#4B1D3F] hover:bg-[#3B1532] disabled:bg-[#F3EEF8] disabled:text-[#4B1D3F] disabled:cursor-not-allowed text-white text-sm font-semibold rounded-full flex items-center gap-2 transition-colors cursor-pointer shrink-0"
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
+            <span>{isSaving ? 'Saving…' : isDirty ? 'Save & publish' : 'All changes saved'}</span>
+          </button>
+        }
+      />
 
       {/* Add form */}
-      <form onSubmit={handleAdd} className="bg-white rounded-2xl p-5 border border-[#9A6A3A]/35 shadow-xs space-y-3">
-        <h2 className="text-sm font-serif font-bold text-[#211C1A]">Add a reel</h2>
-        <p className="text-xs text-gray-600">
+      <form onSubmit={handleAdd} className="bg-white rounded-3xl p-5 sm:p-6 border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-3">
+        <h2 className="font-serif text-xl font-semibold text-[#2A1A26]">Add a reel</h2>
+        <p className="text-sm text-[#2A1A26]/65">
           On Instagram open the reel → tap ⋯ / Share → <strong>Copy link</strong>, then paste it below.
         </p>
         <div className="flex flex-col md:flex-row gap-3">
@@ -100,7 +97,7 @@ export const AdminInstagram: React.FC = () => {
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="https://www.instagram.com/reel/…"
-            className="flex-1 px-4 py-2.5 rounded-xl border border-[#9A6A3A]/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#C5A572]"
+            className="flex-1 min-w-0 w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
             required
           />
           <input
@@ -109,31 +106,32 @@ export const AdminInstagram: React.FC = () => {
             onChange={(e) => setCaptionInput(e.target.value)}
             placeholder="Short caption (optional)"
             maxLength={120}
-            className="md:w-64 px-4 py-2.5 rounded-xl border border-[#9A6A3A]/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#C5A572]"
+            className="w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 md:w-64"
           />
           <button
             type="submit"
-            className="px-5 py-2.5 bg-[#3D0F1F] hover:bg-[#561A2E] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition cursor-pointer"
+            className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            ADD
+            <Plus className="w-4 h-4 text-current" />
+            Add
           </button>
         </div>
         {isDirty && (
-          <p className="text-xs font-semibold text-amber-700">You have unsaved changes. Click "Save &amp; Publish" to put them live.</p>
+          <p className="inline-flex rounded-full bg-[#F7E4EA] px-3 py-1 text-xs font-semibold text-[#8A2E55]">You have unsaved changes. Click "Save &amp; Publish" to put them live.</p>
         )}
       </form>
 
       {/* List */}
       {draft.length === 0 ? (
-        <div className="bg-white rounded-2xl p-10 border border-dashed border-[#9A6A3A]/40 text-center text-sm text-gray-600">
+        <div className="bg-white rounded-3xl px-6 py-14 border border-dashed border-[#4B1D3F]/20 text-center text-sm text-[#2A1A26]/65">
+          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center"><Instagram className="w-6 h-6 text-current" /></span>
           No reels yet. Until you add some, the homepage shows a "Follow us on Instagram" card linking to {profile.handle}.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
           {draft.map((reel, index) => (
-            <div key={reel.url} className="bg-white rounded-2xl border border-[#9A6A3A]/30 shadow-xs overflow-hidden flex flex-col">
-              <div className="bg-[#FAF7F2] flex justify-center">
+            <div key={reel.url} className="bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] overflow-hidden flex flex-col">
+              <div className="bg-[#FBF7F3] flex justify-center border-b border-[#4B1D3F]/10">
                 <iframe
                   src={instagramEmbedUrl(reel)}
                   title={reel.caption || `Instagram reel ${index + 1}`}
@@ -150,21 +148,21 @@ export const AdminInstagram: React.FC = () => {
                   onChange={(e) => setDraft(draft.map((r) => (r.url === reel.url ? { ...r, caption: e.target.value } : r)))}
                   placeholder="Caption (optional)"
                   maxLength={120}
-                  className="w-full px-3 py-2 rounded-lg border border-[#9A6A3A]/30 text-xs focus:outline-none focus:ring-2 focus:ring-[#C5A572]"
+                  className="w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
                 />
                 <div className="flex items-center justify-between gap-2 mt-auto">
-                  <span className="text-[11px] font-bold text-gray-500">#{index + 1}</span>
-                  <div className="flex items-center gap-1.5">
-                    <a href={reel.url} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg border border-[#9A6A3A]/30 hover:bg-[#FAF7F2]" title="Open on Instagram">
-                      <ExternalLink className="w-4 h-4 text-[#211C1A]" />
+                  <span className="w-8 h-8 rounded-full bg-[#4B1D3F] text-white font-serif text-sm font-semibold flex items-center justify-center">{index + 1}</span>
+                  <div className="flex items-center gap-0.5">
+                    <a href={reel.url} target="_blank" rel="noopener noreferrer" className="w-9 h-9 inline-flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors" title="Open on Instagram" aria-label="Open on Instagram">
+                      <ExternalLink className="w-4 h-4 text-current" />
                     </a>
-                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="p-2 rounded-lg border border-[#9A6A3A]/30 hover:bg-[#FAF7F2] disabled:opacity-30 cursor-pointer" title="Move up">
-                      <ArrowUp className="w-4 h-4 text-[#211C1A]" />
+                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="w-9 h-9 inline-flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors disabled:opacity-30 cursor-pointer" title="Move up" aria-label="Move up">
+                      <ArrowUp className="w-4 h-4 text-current" />
                     </button>
-                    <button type="button" onClick={() => move(index, 1)} disabled={index === draft.length - 1} className="p-2 rounded-lg border border-[#9A6A3A]/30 hover:bg-[#FAF7F2] disabled:opacity-30 cursor-pointer" title="Move down">
-                      <ArrowDown className="w-4 h-4 text-[#211C1A]" />
+                    <button type="button" onClick={() => move(index, 1)} disabled={index === draft.length - 1} className="w-9 h-9 inline-flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors disabled:opacity-30 cursor-pointer" title="Move down" aria-label="Move down">
+                      <ArrowDown className="w-4 h-4 text-current" />
                     </button>
-                    <button type="button" onClick={() => setDraft(draft.filter((r) => r.url !== reel.url))} className="p-2 rounded-lg border border-rose-200 hover:bg-rose-50 cursor-pointer" title="Remove">
+                    <button type="button" onClick={() => setDraft(draft.filter((r) => r.url !== reel.url))} className="w-9 h-9 inline-flex items-center justify-center rounded-full hover:bg-rose-50 transition-colors cursor-pointer" title="Remove" aria-label="Remove">
                       <Trash2 className="w-4 h-4 text-rose-700" />
                     </button>
                   </div>

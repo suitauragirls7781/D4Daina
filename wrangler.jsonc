@@ -1,0 +1,38 @@
+// Cloudflare Worker "d4daina": the store's API (api/** behind a small adapter, data in D1) plus the
+// built storefront as static assets. Cloudflare's Git build runs `npx wrangler deploy` from the repo root,
+// which first runs the build command below.
+{
+  "name": "d4daina",
+  "main": "worker/src/index.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // The storefront for Cloudflare: Firebase SDK imports resolve to src/shims (see vite.config.ts)
+  "build": { "command": "npm run build:cf" },
+
+  // api/** still imports firebase-admin; these stand-ins run it on D1 and our own tokens
+  "alias": {
+    "firebase-admin/app": "./worker/src/shims/firebase-admin-app.js",
+    "firebase-admin/firestore": "./worker/src/shims/firebase-admin-firestore.js",
+    "firebase-admin/auth": "./worker/src/shims/firebase-admin-auth.js"
+  },
+
+  "assets": {
+    "directory": "./dist-cf",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/sitemap.xml"]
+  },
+
+  "d1_databases": [
+    { "binding": "DB", "database_name": "suitauragirls-db", "database_id": "bae4a715-99a3-4021-9d42-56843baed258" }
+  ],
+
+  // The handlers mark cookies Secure when this is "1" (as on Vercel)
+  "vars": { "VERCEL": "1" },
+
+  // Secrets set on the Worker are kept when the Git build deploys
+  "keep_vars": true,
+
+  "observability": { "enabled": true, "logs": { "enabled": true } }
+}

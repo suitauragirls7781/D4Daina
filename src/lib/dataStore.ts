@@ -12,7 +12,10 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { signInWithCustomToken, signOut } from 'firebase/auth';
-import { auth, db } from './firebase';
+import { adminAuth, adminDb, db as customerDb } from './firebase';
+
+/** Admin reads/writes go through the admin's Firebase app; everyone else uses the storefront one. */
+const store = () => (adminAuth.currentUser ? adminDb : customerDb);
 
 // Firestore collections used by the store.
 export const COLLECTIONS = {
@@ -25,6 +28,9 @@ export const COLLECTIONS = {
   heroSlides: 'hero_slides',
   abandonedCheckouts: 'abandoned_checkouts',
   storefrontSettings: 'storefront_settings',
+  // Admin only (firestore.rules): private admin preferences and the stock change log
+  adminSettings: 'admin_settings',
+  inventoryLog: 'inventory_log',
 } as const;
 
 export type CollectionName = typeof COLLECTIONS[keyof typeof COLLECTIONS];
@@ -46,44 +52,48 @@ export const newDocId = (prefix = '') =>
 export const emailKey = (email: string) => String(email || '').trim().toLowerCase();
 
 export const listDocs = async (name: CollectionName): Promise<Row[]> => {
-  const snapshot = await getDocs(collection(db, name));
+  const snapshot = await getDocs(collection(store(), name));
   return snapshot.docs.map(withId);
 };
 
 export const listDocsWhere = async (name: CollectionName, field: string, value: unknown): Promise<Row[]> => {
-  const snapshot = await getDocs(query(collection(db, name), where(field, '==', value)));
+  const snapshot = await getDocs(query(collection(store(), name), where(field, '==', value)));
   return snapshot.docs.map(withId);
 };
 
 export const getDocById = async (name: CollectionName, id: string): Promise<Row | null> => {
-  const snapshot = await getDoc(doc(db, name, String(id)));
+  const snapshot = await getDoc(doc(store(), name, String(id)));
   return snapshot.exists() ? withId(snapshot) : null;
 };
 
 /** Creates or replaces a document. Pass merge=true to keep fields that are not in `data`. */
 export const saveDoc = async (name: CollectionName, id: string, data: DocumentData, merge = true) => {
   const { id: _ignored, ...payload } = data;
-  await setDoc(doc(db, name, String(id)), { ...payload, updatedAt: new Date().toISOString() }, { merge });
+  await setDoc(doc(store(), name, String(id)), { ...payload, updatedAt: new Date().toISOString() }, { merge });
 };
 
 export const patchDoc = async (name: CollectionName, id: string, data: DocumentData) => {
   const { id: _ignored, ...payload } = data;
-  await updateDoc(doc(db, name, String(id)), { ...payload, updatedAt: new Date().toISOString() });
+  await updateDoc(doc(store(), name, String(id)), { ...payload, updatedAt: new Date().toISOString() });
 };
 
 export const removeDoc = async (name: CollectionName, id: string) => {
-  await deleteDoc(doc(db, name, String(id)));
+  await deleteDoc(doc(store(), name, String(id)));
 };
 
 /** Live listener for a whole collection. Returns the unsubscribe function. */
-export const watchCollection = (name: CollectionName, onChange: (rows: Row[]) => void) =>
+// meta.fromCache: the rows came from the browser's local cache, not the server (e.g. while offline)
+export const watchCollection = (name: CollectionName, onChange: (rows: Row[], meta: { fromCache: boolean }) => void, onError?: (error: Error) => void) =>
   onSnapshot(
-    collection(db, name),
-    (snapshot) => onChange(snapshot.docs.map(withId)),
-    (error) => console.warn(`Live updates for ${name} unavailable:`, error.message),
+    collection(store(), name),
+    (snapshot) => onChange(snapshot.docs.map(withId), { fromCache: snapshot.metadata.fromCache }),
+    (error) => {
+      console.warn(`Live updates for ${name} unavailable:`, error.message);
+      onError?.(error);
+    },
   );
 
-export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals';
+export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals' | 'categories';
 
 const adminImageRequest = async (action: 'cloudinary-sign' | 'cloudinary-delete', body: object) => {
   const response = await fetch(`/api/admin-config?action=${action}`, {
@@ -129,10 +139,10 @@ export const deleteImages = async (urls: string[]) => {
 /** Signs the admin into Firebase with the custom token issued by /api/admin-config. */
 export const signInAdminToFirebase = async (token?: string) => {
   if (!token) return;
-  if (auth.currentUser?.uid === ADMIN_UID) return;
-  await signInWithCustomToken(auth, token);
+  if (adminAuth.currentUser?.uid === ADMIN_UID) return;
+  await signInWithCustomToken(adminAuth, token);
 };
 
 export const signOutAdminFromFirebase = async () => {
-  if (auth.currentUser?.uid === ADMIN_UID) await signOut(auth);
+  if (adminAuth.currentUser?.uid === ADMIN_UID) await signOut(adminAuth);
 };

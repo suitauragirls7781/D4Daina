@@ -1,6 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { COLLECTIONS, deleteImages, listDocs, newDocId, removeDoc, saveDoc, watchCollection } from '../lib/dataStore';
+import { COLLECTIONS, deleteImages, newDocId, removeDoc, saveDoc, watchCollection } from '../lib/dataStore';
+import { doc, runTransaction } from 'firebase/firestore';
+import { adminAuth, adminDb as db } from '../lib/firebase';
+import { apiPost } from '../lib/api';
+
+// After the admin changes a product, the server compares it with its last known price/stock and
+// sends any real price-drop or back-in-stock emails (see api/alerts.js).
+const checkAlerts = (productId: string) => {
+  if (!adminAuth.currentUser) return;
+  apiPost('/api/alerts', { action: 'check-product', productId }).catch(() => {});
+};
 import { Product, ProductSize } from '../types';
+import { ACCESSORY_SIZE, FOOTWEAR_SIZES } from '../utils/looks';
+import { KIDS_SIZES } from '../utils/kids';
+import { fromCatalogOrLive } from '../lib/catalog';
 
 const LOCAL_STORAGE_KEY = 'sag_custom_products_v1';
 
@@ -10,17 +23,32 @@ export interface ProductContextType {
   allProducts: Product[];
   activeProducts: Product[];
   addProduct: (productData: Omit<Product, 'id'>) => Promise<Product>;
-  updateProduct: (id: string, updated: Partial<Product>) => Promise<void>;
+  /** reason: shown in Admin → Products → Stock history when the update changes stock. */
+  updateProduct: (id: string, updated: Partial<Product>, reason?: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   duplicateProduct: (id: string) => Promise<Product | undefined>;
   toggleProductStatus: (id: string) => Promise<void>;
+  /** Atomically changes stock by delta (never below zero). */
+  adjustStock: (id: string, delta: number, reason?: string) => Promise<number>;
   getProductById: (id: string | null | undefined) => Product | undefined;
   resetToDefaultProducts: () => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-const ALL_STANDARD_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+// Every size a product can be saved with (Admin → Add product offers S–5XL and Free Size; XS is
+// kept for older products; heels and other footwear accessories use UK shoe sizes). Sizes outside
+// this list are dropped as invalid data.
+const ALL_STANDARD_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'Free Size', ...FOOTWEAR_SIZES, ...KIDS_SIZES];
+// Shown when a product has no valid sizes saved (unchanged long-standing default for outfits).
+const FALLBACK_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
+// Accessories without valid sizes are sold as one size (never offered in clothing sizes).
+const ACCESSORY_FALLBACK_SIZES: ProductSize[] = [ACCESSORY_SIZE];
+// Kids wear and toys without valid sizes are sold as one size too (sizes are never invented for them).
+const fallbackSizesFor = (p: any): ProductSize[] => (['accessory', 'kids', 'toy'].includes(p?.productType) ? ACCESSORY_FALLBACK_SIZES : FALLBACK_SIZES);
+// outfit (women's wear), accessory ("Complete the look"), kids (Admin → Kids Wear) or toy (Admin → Toys)
+const PRODUCT_TYPES = ['outfit', 'accessory', 'kids', 'toy'] as const;
+const productTypeOf = (p: any): (typeof PRODUCT_TYPES)[number] => (PRODUCT_TYPES.includes(p?.productType) ? p.productType : 'outfit');
 
 // Helper to retrieve any products saved in local storage across version keys
 const getLocalStorageProducts = (): Product[] => {
@@ -54,8 +82,8 @@ const getLocalStorageProducts = (): Product[] => {
               return {
                 ...p,
                 images: Array.isArray(imgs) && imgs.length > 0 ? imgs : (p.image ? [p.image] : []),
-                image: p.image || p.image_url || p.imageUrl || (Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : ''),
-                sizes: sizes.length > 0 ? sizes : ALL_STANDARD_SIZES,
+                image: (Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : '') || p.image || p.image_url || p.imageUrl || '',
+                sizes: sizes.length > 0 ? sizes : fallbackSizesFor(p),
                 inStock: p.inStock ?? (p.status ? p.status === 'active' && stockQuantity > 0 : stockQuantity > 0),
                 stockQuantity,
               };
@@ -87,6 +115,34 @@ const hasRealProductImage = (product: Product): boolean =>
 const productImageUrls = (product: Product) =>
   [...product.images, ...product.colors.map((color) => color.imageUrl || '')].filter(Boolean);
 
+// Short admin labels (set type "3 piece", accessory type "Bag"); anything else is dropped.
+const shortLabel = (value: unknown) => (typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 40) : '');
+// SEO / search text fields: plain single-line text, trimmed to a sensible length.
+const plainText = (value: unknown, max: number) => (typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '');
+// hidden stays the one visibility switch the store and server read; status only says why a hidden product is hidden.
+const productStatusOf = (p: any): 'draft' | 'published' | 'archived' => (!p?.hidden ? 'published' : p.status === 'archived' ? 'archived' : 'draft');
+const lowStockOverride = (value: unknown) => {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) && n > 0 ? Math.min(9999, n) : 0;
+};
+
+/**
+ * Appends one entry to the admin-only inventory_log collection. Only called for changes made in the admin
+ * panel (never from the storefront); a failed log write never undoes the stock change.
+ */
+const logStockChange = (product: { id: string; name?: string }, from: number, to: number, reason: string) => {
+  if (!adminAuth.currentUser || from === to) return;
+  saveDoc(COLLECTIONS.inventoryLog, newDocId('inv-'), {
+    at: new Date().toISOString(),
+    by: 'admin',
+    productId: String(product.id),
+    productName: String(product.name || '').slice(0, 160),
+    from,
+    to,
+    reason: String(reason || 'Stock updated').slice(0, 120),
+  }, false).catch((error) => console.warn('Stock history entry not saved:', error?.message || error));
+};
+
 export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(() => {
     const local = getLocalStorageProducts();
@@ -105,11 +161,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       sku: p.sku || `SAG-${Date.now().toString().slice(-6)}`,
       category: p.category || 'Suits',
       subcategory: p.subcategory || '',
-      image: p.image || images[0] || '',
+      image: images[0] || p.image || '',
       price: Number(p.price) || 0,
       originalPrice: Number(p.originalPrice ?? p.price) || 0,
       discount: Number(p.discount) || 0,
-      rating: Number(p.rating) || 4.5,
+      rating: Number(p.rating) || 0,
       reviewCount: Number(p.reviewCount) || 0,
       images,
       colors: Array.isArray(p.colors) ? p.colors : [],
@@ -129,6 +185,18 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isFeatured: p.isFeatured ?? false,
       tags: Array.isArray(p.tags) ? p.tags : [],
       videoUrl: p.videoUrl || '',
+      hidden: Boolean(p.hidden),
+      status: productStatusOf(p),
+      seoTitle: plainText(p.seoTitle, 120),
+      seoDescription: plainText(p.seoDescription, 320),
+      searchKeywords: plainText(p.searchKeywords, 300),
+      lowStockThreshold: lowStockOverride(p.lowStockThreshold),
+      // Accessories are sold only in "Complete the look"; a set type marks combo / set outfits.
+      productType: productTypeOf(p),
+      accessoryType: productTypeOf(p) === 'accessory' ? shortLabel(p.accessoryType) : '',
+      // Only women's outfits can be combos; kids wear, toys and accessories never are
+      setType: productTypeOf(p) === 'outfit' ? shortLabel(p.setType) : '',
+      ageRange: productTypeOf(p) === 'toy' ? shortLabel(p.ageRange) : '',
     };
   };
 
@@ -167,7 +235,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const availableSizes = Array.isArray(p.sizes)
       ? p.sizes.filter((size: unknown): size is ProductSize => ALL_STANDARD_SIZES.includes(size as ProductSize))
       : [];
-    const sizes = availableSizes.length > 0 ? availableSizes : ALL_STANDARD_SIZES;
+    const sizes = availableSizes.length > 0 ? availableSizes : fallbackSizesFor(p);
 
     if (colors.length === 0) {
       colors = [{ name: 'Standard', hex: '#241D1B' }];
@@ -182,7 +250,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       name: p.name || '',
       category: p.category || 'Suits',
       subcategory: p.subcategory || '',
-      image: p.image || images[0] || '',
+      image: images[0] || p.image || '',
       price: Number(p.price) || 0,
       originalPrice: Number(p.originalPrice) || Number(p.price) || 0,
       discount: Number(p.discount) || 0,
@@ -197,7 +265,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       fit: p.fit || '',
       occasion: p.occasion || '',
       washCare: p.washCare || '',
-      rating: Number(p.rating) || 4.5,
+      rating: Number(p.rating) || 0,
       reviewCount: Number(p.reviewCount) || 0,
       reviews: Array.isArray(p.reviews) ? p.reviews : [],
       isNewArrival: p.isNewArrival ?? false,
@@ -208,6 +276,17 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isFeatured: p.isFeatured ?? false,
       tags: Array.isArray(p.tags) ? p.tags : [],
       videoUrl: p.videoUrl || '',
+      hidden: Boolean(p.hidden),
+      status: productStatusOf(p),
+      seoTitle: plainText(p.seoTitle, 120),
+      seoDescription: plainText(p.seoDescription, 320),
+      searchKeywords: plainText(p.searchKeywords, 300),
+      lowStockThreshold: lowStockOverride(p.lowStockThreshold) || undefined,
+      productType: productTypeOf(p),
+      accessoryType: productTypeOf(p) === 'accessory' ? shortLabel(p.accessoryType) : '',
+      // Only women's outfits can be combos; kids wear, toys and accessories never are
+      setType: productTypeOf(p) === 'outfit' ? shortLabel(p.setType) : '',
+      ageRange: productTypeOf(p) === 'toy' ? shortLabel(p.ageRange) : '',
     };
   };
 
@@ -224,37 +303,48 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     saveLocalStorageProducts(productsWithImages);
   };
 
-  const fetchProducts = async () => {
-    const localCache = getLocalStorageProducts();
-
-    // Immediately unblock UI with local cache if available
-    setProducts(localCache);
-
-    // Background fetch from Firestore with 5s timeout protection
-    try {
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Database fetch timeout')), 5000)
-      );
-      const rows = await Promise.race([listDocs(COLLECTIONS.products), timeoutPromise]);
-      applyProductRows(rows);
-    } catch (err) {
-      console.warn('Background database fetch products notice:', err);
-      setProducts(localCache);
-      saveLocalStorageProducts(localCache);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // One live listener is the only product read: its first snapshot replaces the browser cache.
   useEffect(() => {
-    fetchProducts();
-
-    const unsubscribe = watchCollection(COLLECTIONS.products, (rows) => {
-      applyProductRows(rows);
-    });
-
+    const cached = getLocalStorageProducts();
+    if (cached.length) {
+      setProducts(cached);
+      setIsLoading(false); // show the cached catalogue immediately; the snapshot refreshes it
+    }
+    let settled = false;
+    const settle = () => {
+      if (!settled) {
+        settled = true;
+        setIsLoading(false);
+      }
+    };
+    const timer = window.setTimeout(settle, 6000);
+    // Shoppers: the shared cached catalogue (one CDN request). Admins and fallback: the live listener.
+    const stop = fromCatalogOrLive(
+      (catalog) => {
+        applyProductRows(catalog.products);
+        settle();
+      },
+      () => watchCollection(
+        COLLECTIONS.products,
+        (rows, meta) => {
+          // Unreachable database (offline, blocked network): an empty answer from the local cache must not
+          // wipe the catalogue the shopper already has; the live answer replaces it when the connection is back.
+          if (meta?.fromCache && rows.length === 0) {
+            settle();
+            return;
+          }
+          applyProductRows(rows);
+          settle();
+        },
+        (error) => {
+          console.warn('Live product updates unavailable:', error);
+          settle();
+        },
+      ),
+    );
     return () => {
-      unsubscribe();
+      window.clearTimeout(timer);
+      stop();
     };
   }, []);
 
@@ -285,8 +375,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const newId = newDocId('p');
     const payload = {
       ...mapProductToDb(productData),
-      rating: productData.rating || 5.0,
-      reviewCount: productData.reviewCount || 1,
+      rating: productData.rating || 0,
+      reviewCount: productData.reviewCount || 0,
     };
     const newProduct = mapProductFromDb({ ...payload, id: newId });
 
@@ -299,6 +389,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       await saveDoc(COLLECTIONS.products, newId, { ...payload, createdAt: new Date().toISOString() }, false);
+      logStockChange(newProduct, 0, payload.stockQuantity, 'New product');
       return newProduct;
     } catch (error) {
       setProducts((prev) => {
@@ -310,16 +401,29 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  const updateProduct = async (id: string, updated: Partial<Product>) => {
+  const updateProduct = async (id: string, updated: Partial<Product>, reason = 'Edited in admin') => {
     const existingProduct = products.find((product) => product.id === id);
     if (!existingProduct) throw new Error('Product not found in the active catalog.');
     const nextProduct = { ...existingProduct, ...updated };
+    // Setting only a status also sets visibility: published = shown; draft / archived = hidden
+    if ('status' in updated && !('hidden' in updated)) nextProduct.hidden = updated.status !== 'published';
 
     try {
-      const payload = mapProductToDb(nextProduct);
-      await saveDoc(COLLECTIONS.products, id, payload);
+      // Write only the fields that changed, so a stale copy never overwrites stock the server deducted.
+      const full = mapProductToDb(nextProduct);
+      const keys = new Set(Object.keys(updated));
+      if (keys.has('images')) keys.add('image');
+      if (keys.has('stockQuantity')) keys.add('inStock');
+      if (keys.has('hidden') || keys.has('status')) {
+        keys.add('hidden');
+        keys.add('status');
+      }
+      const payload = Object.fromEntries(Object.entries(full).filter(([key]) => keys.has(key)));
+      if (Object.keys(payload).length) await saveDoc(COLLECTIONS.products, id, payload);
+      if ('stockQuantity' in payload) logStockChange(existingProduct, Math.max(0, Number(existingProduct.stockQuantity) || 0), Number(payload.stockQuantity) || 0, reason);
 
-      const freshProduct = mapProductFromDb({ ...payload, id });
+      if ('price' in updated || 'stockQuantity' in updated || 'inStock' in updated || 'hidden' in updated) checkAlerts(id);
+      const freshProduct = mapProductFromDb({ ...mapProductToDb(existingProduct), ...payload, id });
       setProducts((prev) => {
         const synced = prev.map((product) => product.id === id ? freshProduct : product);
         saveLocalStorageProducts(synced);
@@ -365,13 +469,31 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const target = products.find((p) => p.id === id);
     if (!target) return undefined;
     const { id: _, ...rest } = target;
-    return await addProduct({ ...rest, name: `${target.name} (Copy)` });
+    // Copies start hidden and without stock so they are never sold by accident.
+    return await addProduct({ ...rest, name: `${target.name} (Copy)`, hidden: true, status: 'draft', stockQuantity: 0, inStock: false });
   };
 
   const toggleProductStatus = async (id: string) => {
     const target = products.find((p) => p.id === id);
     if (!target) return;
-    await updateProduct(id, { inStock: !target.inStock });
+    await updateProduct(id, { hidden: !target.hidden });
+  };
+
+  const adjustStock = async (id: string, delta: number, reason = delta > 0 ? 'Quick adjust (+)' : 'Quick adjust (−)'): Promise<number> => {
+    const ref = doc(db, COLLECTIONS.products, id);
+    const moved = await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists()) throw new Error('Product not found.');
+      const current = Math.max(0, Number(snap.data().stockQuantity) || 0);
+      const value = Math.max(0, current + delta);
+      tx.update(ref, { stockQuantity: value, inStock: value > 0, updatedAt: new Date().toISOString() });
+      return { current, value, name: String(snap.data().name || '') };
+    });
+    logStockChange({ id, name: moved.name }, moved.current, moved.value, reason);
+    const next = moved.value;
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stockQuantity: next, inStock: next > 0 } : p)));
+    checkAlerts(id);
+    return next;
   };
 
   const getProductById = (id: string | null | undefined): Product | undefined => {
@@ -396,6 +518,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         deleteProduct,
         duplicateProduct,
         toggleProductStatus,
+        adjustStock,
         getProductById,
         resetToDefaultProducts,
       }}

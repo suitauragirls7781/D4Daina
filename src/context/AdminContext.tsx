@@ -1,9 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { auth, db } from '../lib/firebase';
-import { doc, updateDoc, collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { adminAuth as auth, adminDb as db } from '../lib/firebase';
+import { doc, updateDoc, collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { isAdminAreaPath, isAdminEntryPath } from '../utils/adminEntry';
+import { fromCatalogOrLive, loadCatalog, readsLive, setAdminLive } from '../lib/catalog';
+import { DEFAULT_LOW_STOCK_THRESHOLD, cleanLowStockThreshold } from '../utils/inventory';
 import {
   ADMIN_UID,
+  COLLECTIONS,
+  getDocById,
   newDocId,
   patchDoc,
   removeDoc,
@@ -13,17 +18,17 @@ import {
   watchCollection,
 } from '../lib/dataStore';
 import { markFirestoreQuotaExhausted, isQuotaExhausted } from '../utils/visitorTracker';
-import { 
-  Product, 
-  CategoryItem, 
-  Order, 
-  Customer, 
-  Coupon, 
-  HomepageSectionConfig, 
-  HeroBannerConfig, 
-  Banner, 
-  Review, 
-  StoreSettings, 
+import {
+  Product,
+  CategoryItem,
+  Order,
+  Customer,
+  Coupon,
+  HomepageSectionConfig,
+  HeroBannerConfig,
+  Banner,
+  Review,
+  StoreSettings,
   PaymentGatewaySettings,
   AdminTab,
   AdminOrderStatus,
@@ -32,6 +37,7 @@ import {
   Lead
 } from '../types';
 import { useProducts } from './ProductContext';
+import { ordersApi } from '../lib/api';
 import { CATEGORIES_DATA } from '../data/categories';
 
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
@@ -50,7 +56,7 @@ export const DEFAULT_SECURITY_CONFIG: AdminSecurityConfig = {
   adminUsername: '',
   adminPassword: '',
   securityPin: '',
-  secretPathSlug: 'sag-vault',        // Secret administrative portal route e.g. /sag-vault
+  secretPathSlug: 'drdaina',          // Private admin link, e.g. /drdaina
   allowDirectAdminRoute: false,      // When false, typing /admin returns 404 to protect route secrecy
   requirePin: true,                  // 2-Step PIN authentication
   sessionVersion: 2,                 // Incremented from 1: instantly invalidates old sessions
@@ -58,10 +64,12 @@ export const DEFAULT_SECURITY_CONFIG: AdminSecurityConfig = {
 
 interface AdminContextType {
   isAdminLoggedIn: boolean;
+  /** True once the first admin session check has finished (admin pages show a neutral loader until then). */
+  adminSessionChecked: boolean;
   adminEmail: string | null;
   adminTab: AdminTab;
   setAdminTab: (tab: AdminTab) => void;
-  loginAdmin: (email: string, pass: string, pin?: string) => Promise<{ success: boolean; message?: string }>;
+  loginAdmin: (email: string, pass: string, pin?: string, remember?: boolean) => Promise<{ success: boolean; message?: string }>;
   logoutAdmin: () => void;
   securityConfig: AdminSecurityConfig;
   updateSecurityConfig: (updated: Partial<AdminSecurityConfig>) => Promise<void>;
@@ -70,23 +78,29 @@ interface AdminContextType {
   // Products
   products: Product[];
   addProduct: (product: Omit<Product, 'id'>) => Promise<Product>;
-  updateProduct: (id: string, updated: Partial<Product>) => Promise<void>;
+  updateProduct: (id: string, updated: Partial<Product>, reason?: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   duplicateProduct: (id: string) => Promise<Product | undefined>;
   toggleProductStatus: (id: string) => Promise<void>;
 
   // Categories
   categories: CategoryItem[];
-  addCategory: (cat: Omit<CategoryItem, 'id'>) => void;
-  updateCategory: (id: string, updated: Partial<CategoryItem>) => void;
-  deleteCategory: (id: string) => void;
+  addCategory: (cat: Omit<CategoryItem, 'id'>) => Promise<void>;
+  updateCategory: (id: string, updated: Partial<CategoryItem>) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
 
   // Orders
   orders: Order[];
   addOrder: (order: Order) => Promise<void>;
-  updateOrderStatus: (orderNumber: string, status: AdminOrderStatus, trackingNumber?: string, notes?: string) => void;
+  updateOrderStatus: (
+    orderNumber: string,
+    status: AdminOrderStatus,
+    trackingNumber?: string,
+    notes?: string,
+    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string }
+  ) => Promise<void>;
   updateOrderPaymentStatus: (orderNumber: string, paymentStatus: 'Paid' | 'Pending Verification' | 'Unpaid') => void;
-  deleteOrder: (orderNumber: string) => void;
+  deleteOrder: (orderNumber: string) => Promise<void>;
 
   // Customers
   customers: Customer[];
@@ -99,10 +113,10 @@ interface AdminContextType {
 
   // Coupons
   coupons: Coupon[];
-  addCoupon: (coupon: Omit<Coupon, 'id' | 'usageCount'>) => void;
-  updateCoupon: (id: string, updated: Partial<Coupon>) => void;
-  deleteCoupon: (id: string) => void;
-  toggleCouponStatus: (id: string) => void;
+  addCoupon: (coupon: Omit<Coupon, 'id' | 'usageCount'>) => Promise<void>;
+  updateCoupon: (id: string, updated: Partial<Coupon>) => Promise<void>;
+  deleteCoupon: (id: string) => Promise<void>;
+  toggleCouponStatus: (id: string) => Promise<void>;
 
   // Visitor Analytics
   visitorStats: {
@@ -142,14 +156,17 @@ interface AdminContextType {
   reviewsList: Review[];
   reviews: Review[];
   addReview: (review: Omit<Review, 'id'> & { id?: string }) => Promise<void>;
-  updateReviewStatus: (id: string, status: 'approved' | 'pending' | 'hidden') => void;
+  updateReviewStatus: (id: string, status: 'approved' | 'pending' | 'hidden') => Promise<void>;
   updateReview: (id: string, updatedData: Partial<Review>) => Promise<void>;
-  replyToReview: (id: string, reply: string) => void;
-  deleteReview: (id: string) => void;
+  replyToReview: (id: string, reply: string) => Promise<void>;
+  deleteReview: (id: string) => Promise<void>;
 
   // Settings
   storeSettings: StoreSettings;
   updateStoreSettings: (updated: Partial<StoreSettings>) => void;
+  /** Stock at or below this counts as low (admin only; saved in admin_settings/inventory). */
+  lowStockThreshold: number;
+  updateLowStockThreshold: (value: number) => Promise<void>;
   paymentSettings: PaymentGatewaySettings;
   updatePaymentSettings: (updated: Partial<PaymentGatewaySettings>) => void;
 
@@ -178,11 +195,11 @@ export const generateHeroSlidesFromProducts = (productsList: Product[]): HeroBan
   ];
 
   return picked.map((prod, idx) => {
-    let rawImg = (prod.images && prod.images.length > 0) 
-      ? prod.images[0] 
+    let rawImg = (prod.images && prod.images.length > 0)
+      ? prod.images[0]
       : ((prod as any).image || ELEGANT_PLACEHOLDER_SVG);
     rawImg = getCleanImageUrl(rawImg);
-    const originalPrice = prod.originalPrice || Math.round(prod.price * 1.85);
+    const originalPrice = Math.max(prod.price, Number(prod.originalPrice) || prod.price);
 
     return {
       id: `slide-prod-${prod.id || idx + 1}`,
@@ -204,21 +221,23 @@ const INITIAL_CUSTOMERS: Customer[] = [];
 const INITIAL_ORDERS: Order[] = [];
 const INITIAL_COUPONS: Coupon[] = [];
 export const INITIAL_SECTIONS: HomepageSectionConfig[] = [
-  { id: 'sec-brand-header', title: 'Announcement Marquee', key: 'brandHeader', enabled: true, order: 1 },
-  { id: 'sec-categories', title: 'Shop By Silhouette', key: 'categoryGrid', enabled: true, order: 2 },
-  { id: 'sec-hero', title: 'Hero Banner Showcase', key: 'hero', enabled: true, order: 3 },
-  { id: 'sec-promises', title: 'Artisanal Promises', key: 'artisanalPromises', enabled: true, order: 4 },
-  { id: 'sec-combo', title: 'Festive Combo Offers', key: 'comboOffers', enabled: true, order: 5 },
-  { id: 'sec-deal', title: 'Deal of the Day', key: 'dealOfTheDay', enabled: true, order: 6 },
-  { id: 'sec-new-arrivals', title: 'All Products & Categories', key: 'newArrivals', enabled: true, order: 7 },
-  { id: 'sec-best-sellers', title: 'Best Sellers', key: 'bestSellers', enabled: true, order: 8 },
-  { id: 'sec-trending', title: 'Trending Now', key: 'trending', enabled: true, order: 9 },
-  { id: 'sec-festive', title: 'Festive Collection', key: 'festive', enabled: true, order: 10 },
-  { id: 'sec-special-offer', title: 'Special Offer Banner', key: 'specialOffer', enabled: true, order: 11 },
-  { id: 'sec-why-shop', title: 'Why Shop With Us', key: 'whyShop', enabled: true, order: 12 },
-  { id: 'sec-reviews', title: 'Customer Reviews', key: 'reviews', enabled: true, order: 13 },
-  { id: 'sec-instagram', title: 'Instagram Gallery', key: 'instagram', enabled: true, order: 14 },
-  { id: 'sec-newsletter', title: 'Newsletter Signup', key: 'newsletter', enabled: true, order: 15 },
+  { id: 'sec-categories', title: 'Shop by Category', key: 'categoryGrid', enabled: true, order: 1 },
+  { id: 'sec-hero', title: 'Hero', key: 'hero', enabled: true, order: 2 },
+  { id: 'sec-deal', title: 'Deal of the Day', key: 'dealOfTheDay', enabled: true, order: 3 },
+  { id: 'sec-best-sellers', title: 'Featured Collection', key: 'bestSellers', enabled: true, order: 4 },
+  { id: 'sec-new-arrivals', title: 'New Arrivals', key: 'newArrivals', enabled: true, order: 5 },
+  { id: 'sec-aura-reels', title: 'Aura Reels', key: 'auraReels', enabled: true, order: 6 },
+  { id: 'sec-kids', title: 'Kids & Toys', key: 'kidsCorner', enabled: true, order: 7 },
+  { id: 'sec-special-offer', title: 'Offer Banner', key: 'specialOffer', enabled: true, order: 8 },
+  { id: 'sec-combo', title: 'Combo Offer Builder', key: 'comboOffers', enabled: false, order: 9 },
+  { id: 'sec-why-shop', title: 'Why Shop With Us', key: 'whyShop', enabled: true, order: 10 },
+  { id: 'sec-reviews', title: 'Customer Reviews', key: 'reviews', enabled: true, order: 11 },
+  { id: 'sec-instagram', title: 'Instagram Reels', key: 'instagram', enabled: true, order: 12 },
+  { id: 'sec-newsletter', title: 'Newsletter', key: 'newsletter', enabled: true, order: 13 },
+  { id: 'sec-brand-header', title: 'Brand Marquee', key: 'brandHeader', enabled: false, order: 14 },
+  { id: 'sec-promises', title: 'Artisanal Promises', key: 'artisanalPromises', enabled: false, order: 15 },
+  { id: 'sec-trending', title: 'Trending Now', key: 'trending', enabled: false, order: 16 },
+  { id: 'sec-festive', title: 'Festive Collection', key: 'festive', enabled: false, order: 17 },
 ];
 
 export const mergeHomepageSections = (parsed: any[]): HomepageSectionConfig[] => {
@@ -230,12 +249,12 @@ export const mergeHomepageSections = (parsed: any[]): HomepageSectionConfig[] =>
   const existingKeys = new Set(sanitized.map(p => p.key));
   const merged = [...sanitized];
 
-  INITIAL_SECTIONS.forEach((defaultSec) => {
+  INITIAL_SECTIONS.forEach((defaultSec, defaultIdx) => {
     if (!existingKeys.has(defaultSec.key)) {
-      merged.push({
-        ...defaultSec,
-        order: merged.length + 1,
-      });
+      const previousKey = INITIAL_SECTIONS[defaultIdx - 1]?.key;
+      const at = merged.findIndex((s) => s.key === previousKey);
+      merged.splice(at >= 0 ? at + 1 : merged.length, 0, { ...defaultSec, order: merged.length + 1 });
+      existingKeys.add(defaultSec.key);
     }
   });
 
@@ -265,6 +284,18 @@ const INITIAL_STORE_SETTINGS: StoreSettings = {
   currencySymbol: '₹',
   shippingCharge: 0,
   freeShippingThreshold: 0,
+  minOrderAmount: 0,
+  maxOrderAmount: 0,
+  couponsEnabled: true,
+  cancellationWindowHours: 0,
+  processingDays: 0,
+  deliveryMinDays: 0,
+  deliveryMaxDays: 0,
+  legalName: '',
+  gstin: '',
+  invoicePrefix: 'SAG-INV',
+  invoiceAddress: '',
+  invoiceNote: '',
 };
 const normalizeStoreBrand = (settings: StoreSettings): StoreSettings => ({
   ...settings,
@@ -286,8 +317,23 @@ const toPublicStoreSettings = (settings: Partial<StoreSettings>): StoreSettings 
   currencySymbol: '₹',
   shippingCharge: Math.max(0, Number(settings.shippingCharge) || 0),
   freeShippingThreshold: Math.max(0, Number(settings.freeShippingThreshold) || 0),
+  prepaidDiscount: Math.max(0, Number(settings.prepaidDiscount) || 0),
   announcementText: settings.announcementText?.trim().slice(0, 500),
   announcementActive: settings.announcementActive ?? true,
+  minOrderAmount: Math.max(0, Math.floor(Number(settings.minOrderAmount) || 0)),
+  maxOrderAmount: Math.max(0, Math.floor(Number(settings.maxOrderAmount) || 0)),
+  couponsEnabled: settings.couponsEnabled !== false,
+  cancellationWindowHours: settings.cancellationWindowHours === undefined || settings.cancellationWindowHours === null
+    ? INITIAL_STORE_SETTINGS.cancellationWindowHours
+    : Math.max(0, Math.floor(Number(settings.cancellationWindowHours) || 0)),
+  processingDays: Math.max(0, Math.floor(Number(settings.processingDays) || 0)),
+  deliveryMinDays: Math.max(0, Math.floor(Number(settings.deliveryMinDays) || 0)),
+  deliveryMaxDays: Math.max(0, Math.floor(Number(settings.deliveryMaxDays) || 0)),
+  legalName: settings.legalName?.trim() || '',
+  gstin: settings.gstin?.trim() || '',
+  invoicePrefix: settings.invoicePrefix?.trim() || INITIAL_STORE_SETTINGS.invoicePrefix,
+  invoiceAddress: settings.invoiceAddress?.trim() || '',
+  invoiceNote: settings.invoiceNote?.trim() || '',
 });
 const INITIAL_PAYMENT_SETTINGS: PaymentGatewaySettings = {
   mode: 'test',
@@ -319,10 +365,10 @@ const INITIAL_DEAL_OF_THE_DAY: DealOfTheDayConfig = {
   enabled: true,
   productId: 'ae986604-cb06-4bbf-99b6-59d58fea0263',
   customTitle: 'Full Combo Set – Kurti, Palazzo, Bag & Heels',
-  customSubtitle: 'Complete coordinated look at a limited-time price.',
-  badgeText: '🔥 24-HOUR SPECIAL DEAL',
+  customSubtitle: '',
+  badgeText: 'Deal of the day',
   dealPrice: 850,
-  endTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  // No end time by default: a countdown appears only after the admin starts a timer
   durationHours: 24,
   stockText: '30 Left In Stock',
 };
@@ -361,8 +407,22 @@ export const mapOrderFromDb = (o: any): Order => {
     paymentRef: o.paymentRef || '',
     date: o.date ?? new Date().toISOString(),
     estimatedDeliveryDate: o.estimatedDeliveryDate || '',
+    testPayment: Boolean(o.testPayment),
     trackingNumber: o.trackingNumber || '',
+    courierPartner: o.courierPartner || '',
     notes: o.notes || '',
+    customerNote: o.customerNote || '',
+    giftNote: o.giftNote || '',
+    couponDiscount: Number(o.couponDiscount) || 0,
+    comboDiscount: Number(o.comboDiscount) || 0,
+    prepaidDiscount: Number(o.prepaidDiscount) || 0,
+    timeline: Array.isArray(o.timeline) ? o.timeline : [],
+    paidAt: o.paidAt || '',
+    razorpayOrderId: o.razorpayOrderId || '',
+    stockShortfall: Array.isArray(o.stockShortfall) ? o.stockShortfall : [],
+    emailLog: Array.isArray(o.emailLog) ? o.emailLog : [],
+    returnRequest: o.returnRequest || null,
+    cancelRequest: o.cancelRequest || null,
   };
 };
 
@@ -399,9 +459,12 @@ export const mapCouponFromDb = (c: any): Coupon => ({
   maxDiscount: c.maxDiscount != null ? Number(c.maxDiscount) : undefined,
   startDate: c.startDate ?? '',
   expiryDate: c.expiryDate ?? '',
-  usageLimit: Number(c.usageLimit) || 100,
+  usageLimit: Math.max(0, Number(c.usageLimit) || 0),
   usageCount: Number(c.usageCount) || 0,
   isActive: c.isActive ?? true,
+  perUserLimit: Math.max(0, Math.floor(Number(c.perUserLimit) || 0)),
+  allowedCategories: Array.isArray(c.allowedCategories) ? c.allowedCategories.map(String).filter(Boolean) : [],
+  allowedProductIds: Array.isArray(c.allowedProductIds) ? c.allowedProductIds.map(String).filter(Boolean) : [],
 });
 
 export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -475,21 +538,38 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [adminTab, setAdminTab] = useState<AdminTab>('dashboard');
 
   // Active session validation guard: boots out stale logins immediately if tab is reactivated
+  const [adminSessionChecked, setAdminSessionChecked] = useState(false);
   useEffect(() => {
     let active = true;
     const isProductionHost = !['localhost', '127.0.0.1'].includes(window.location.hostname);
+    // Only admin pages (or a browser still holding an admin Firebase session) need this check.
+    const needsCheck = () => isAdminAreaPath(window.location.pathname)
+      || auth.currentUser?.uid === ADMIN_UID
+      || isAdminEntryPath(window.location.pathname, securityConfig.secretPathSlug);
     const validateSession = async () => {
+      if (isProductionHost && !needsCheck()) return;
       if (isProductionHost) {
         try {
-          const response = await fetch('/api/admin-config?action=session', { credentials: 'same-origin' });
-          if (!active) return;
-          if (!response.ok) {
+          let response: Response | null = null;
+          for (let attempt = 0; attempt < 3 && active; attempt++) {
+            try {
+              response = await fetch('/api/admin-config?action=session', { credentials: 'same-origin' });
+              if (response.ok || response.status === 401 || response.status === 403) break;
+            } catch {
+              response = null;
+            }
+            await new Promise((resolve) => window.setTimeout(resolve, 1200));
+          }
+          if (!active || !response) return;
+          if (response.status === 401 || response.status === 403) {
             setIsAdminLoggedIn(false);
             setAdminEmail(null);
             localStorage.removeItem('sag_admin_email');
             void signOutAdminFromFirebase().catch(() => {});
             return;
           }
+          // Server busy or a network hiccup: keep the admin where they are; the next check tries again
+          if (!response.ok) return;
           const session = await response.json();
           try {
             await signInAdminToFirebase(session.firebaseToken);
@@ -507,10 +587,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             localStorage.setItem('sag_admin_security_v2', JSON.stringify(safeConfig));
           }
         } catch {
-          if (active) {
-            setIsAdminLoggedIn(false);
-            setAdminEmail(null);
-          }
+          // No connection for a moment: never sign the admin out for that
         }
         return;
       }
@@ -531,11 +608,15 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } catch {}
     };
 
-    validateSession();
+    validateSession().finally(() => { if (active) setAdminSessionChecked(true); });
     window.addEventListener('focus', validateSession);
     window.addEventListener('storage', validateSession);
+    window.addEventListener('popstate', validateSession);
+    const interval = window.setInterval(validateSession, 5 * 60 * 1000);
     return () => {
       active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('popstate', validateSession);
       window.removeEventListener('focus', validateSession);
       window.removeEventListener('storage', validateSession);
     };
@@ -575,6 +656,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   });
   const [leads, setLeads] = useState<Lead[]>([]);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [lowStockThreshold, setLowStockThreshold] = useState<number>(DEFAULT_LOW_STOCK_THRESHOLD);
   const [homepageSections, setHomepageSections] = useState<HomepageSectionConfig[]>(() => {
     try {
       const saved = localStorage.getItem('sag_homepage_sections_local');
@@ -663,9 +745,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const loadSharedStorefrontSettings = async () => {
     if (typeof window === 'undefined' || ['localhost', '127.0.0.1'].includes(window.location.hostname)) return;
     try {
-      const response = await fetch('/api/admin-config', { credentials: 'same-origin' });
-      if (!response.ok) return;
-      const { settings = {} } = await response.json();
+      // Shoppers get the settings inside the shared catalogue; admins read them fresh from the API
+      let settings: any = !readsLive() ? (await loadCatalog())?.settings || null : null;
+      if (!settings) {
+        const response = await fetch('/api/admin-config', { credentials: 'same-origin' });
+        if (!response.ok) return;
+        settings = (await response.json()).settings || {};
+      }
 
       if (settings.homepageSections) {
         const value = mergeHomepageSections(settings.homepageSections);
@@ -710,6 +796,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       void loadSharedStorefrontSettings();
     };
     refreshSharedSettings();
+    // Shoppers: the catalogue already carried the settings; no live listener needed
+    if (!readsLive()) return;
     // Any change to a storefront setting document (including payment settings) triggers a refresh via the API.
     // The first snapshot only confirms the listener is connected; the initial load already happened above.
     const unsubscribeSettings = watchCollection('storefront_settings', () => {
@@ -722,10 +810,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fallbackSync = window.setInterval(() => {
       if (!settingsConnected) refreshSharedSettings();
     }, 15000);
-    window.addEventListener('focus', refreshSharedSettings);
     return () => {
       window.clearInterval(fallbackSync);
-      window.removeEventListener('focus', refreshSharedSettings);
       unsubscribeSettings();
     };
   }, []);
@@ -761,12 +847,15 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     discountType: c.discountType,
     discountValue: c.discountValue != null ? Number(c.discountValue) || 0 : undefined,
     minOrderValue: c.minOrderValue != null ? Number(c.minOrderValue) || 0 : undefined,
-    maxDiscount: c.maxDiscount != null ? Number(c.maxDiscount) : undefined,
+    maxDiscount: c.maxDiscount != null && String(c.maxDiscount) !== '' ? Number(c.maxDiscount) : ('maxDiscount' in c ? null : undefined),
     startDate: c.startDate,
     expiryDate: c.expiryDate,
     usageLimit: c.usageLimit != null ? Number(c.usageLimit) || 0 : undefined,
     usageCount: c.usageCount != null ? Number(c.usageCount) || 0 : undefined,
     isActive: c.isActive,
+    perUserLimit: c.perUserLimit != null ? Math.max(0, Math.floor(Number(c.perUserLimit) || 0)) : undefined,
+    allowedCategories: Array.isArray(c.allowedCategories) ? c.allowedCategories.map(String).filter(Boolean).slice(0, 50) : undefined,
+    allowedProductIds: Array.isArray(c.allowedProductIds) ? c.allowedProductIds.map(String).filter(Boolean).slice(0, 200) : undefined,
   });
 
   const mapReviewFromDb = (r: any): Review => ({
@@ -811,30 +900,49 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Each collection is watched independently so a single failure does not block the others.
   useEffect(() => {
     let categoriesLoaded = false;
-    let reviewsLoaded = false;
     const markLoaded = () => {
-      if (categoriesLoaded && reviewsLoaded) setIsLoading(false);
+      if (categoriesLoaded) setIsLoading(false);
     };
     // Never keep the storefront in a loading state if a listener cannot connect
     const loadingFallback = window.setTimeout(() => setIsLoading(false), 6000);
 
-    const unsubscribeCategories = watchCollection('categories', (rows) => {
-      setCategoryDocs(rows.map(mapCategoryFromDb));
-      categoriesLoaded = true;
-      markLoaded();
-    });
-    const unsubscribeReviews = watchCollection('reviews', (rows) => {
-      setReviewsList(rows.map(mapReviewFromDb));
-      reviewsLoaded = true;
-      markLoaded();
-    });
-
+    const stopCategories = fromCatalogOrLive(
+      (catalog) => {
+        setCategoryDocs(catalog.categories.map(mapCategoryFromDb));
+        categoriesLoaded = true;
+        markLoaded();
+      },
+      () => watchCollection('categories', (rows) => {
+        setCategoryDocs(rows.map(mapCategoryFromDb));
+        categoriesLoaded = true;
+        markLoaded();
+      }),
+    );
     return () => {
       window.clearTimeout(loadingFallback);
-      unsubscribeCategories();
-      unsubscribeReviews();
+      stopCategories();
     };
   }, []);
+
+  // Shoppers only receive approved reviews; the admin sees every review for moderation.
+  useEffect(() => {
+    // Shoppers (not signed in as admin): approved reviews come with the shared catalogue
+    if (!isFirebaseAdmin && !readsLive()) {
+      let cancelled = false;
+      loadCatalog().then((catalog) => {
+        if (!cancelled && catalog) setReviewsList(catalog.reviews.map((r: any) => mapReviewFromDb(r)));
+      });
+      return () => { cancelled = true; };
+    }
+    const source = isFirebaseAdmin
+      ? collection(db, 'reviews')
+      : query(collection(db, 'reviews'), where('status', '==', 'approved'));
+    return onSnapshot(
+      source,
+      (snapshot) => setReviewsList(snapshot.docs.map((d) => mapReviewFromDb({ id: d.id, ...d.data() }))),
+      (error) => console.warn('Live reviews unavailable:', error.message),
+    );
+  }, [isFirebaseAdmin]);
 
   // Admin-only collections (orders, coupons): only readable once the admin is signed into Firebase.
   useEffect(() => {
@@ -854,10 +962,24 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   }, [isFirebaseAdmin, isAdminLoggedIn]);
 
-  // Real-time leads from Firestore with quota protection
+  // Admin-only inventory preferences (low-stock threshold): one small document, read once per admin session.
+  useEffect(() => {
+    if (!isFirebaseAdmin) return;
+    let cancelled = false;
+    getDocById(COLLECTIONS.adminSettings, 'inventory')
+      .then((row) => {
+        if (!cancelled && row) setLowStockThreshold(cleanLowStockThreshold(row.lowStockThreshold));
+      })
+      .catch((error) => console.warn('Inventory settings unavailable:', error?.message || error));
+    return () => {
+      cancelled = true;
+    };
+  }, [isFirebaseAdmin]);
+
+  // Real-time leads (admin only; restarts once the admin's Firebase session is ready)
   useEffect(() => {
     let unsubscribeLeads: () => void = () => {};
-    if (!isQuotaExhausted()) {
+    if (isFirebaseAdmin && !isQuotaExhausted()) {
       try {
         const leadsQuery = query(collection(db, 'leads'), orderBy('createdAt', 'desc'));
         unsubscribeLeads = onSnapshot(
@@ -885,7 +1007,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return () => {
       unsubscribeLeads();
     };
-  }, []);
+  }, [isFirebaseAdmin]);
 
   // Auto-sync hero slides when real products are available or updated in the database.
   // Only the admin can save settings, so visitors never attempt this. Slide bannerImage is never touched.
@@ -893,7 +1015,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (!isAdminLoggedIn) return;
     if (products && products.length > 0) {
       if (!heroConfig?.slides || heroConfig.slides.length === 0) {
-        const freshSlides = generateHeroSlidesFromProducts(products);
+        const freshSlides = generateHeroSlidesFromProducts(products.filter((p) => !p.hidden && p.productType !== 'accessory'));
         const newConfig: HeroBannerConfig = { slides: freshSlides };
         void saveHeroConfigSetting(newConfig)
           .then(() => setHeroConfig(newConfig))
@@ -913,9 +1035,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         if (matched) {
           const freshPrice = Number(matched.price) || slide.price;
-          const freshOrigPrice = Number(matched.originalPrice) || Math.round(freshPrice * 1.85);
+          const freshOrigPrice = Math.max(freshPrice, Number(matched.originalPrice) || freshPrice);
           const freshImg = (matched.images && matched.images.length > 0) ? matched.images[0] : ((matched as any).image || slide.image);
-          const freshTitle = matched.name || slide.title;
+          // A title the admin typed stays; otherwise follow the product's current name
+          const freshTitle = slide.customText ? slide.title : (matched.name || slide.title);
 
           if (
             slide.price !== freshPrice ||
@@ -949,9 +1072,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Auth Handler with hardened security & PIN check
   const loginAdmin = async (
-    usernameOrEmail: string, 
-    pass: string, 
-    pin?: string
+    usernameOrEmail: string,
+    pass: string,
+    pin?: string,
+    // "Save login on this phone": the sign-in stays for 400 days (renewed on every visit) instead of 12 hours
+    remember = true
   ): Promise<{ success: boolean; message?: string }> => {
     if (!usernameOrEmail || !pass) {
       return { success: false, message: 'Please provide both username and password.' };
@@ -963,7 +1088,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: usernameOrEmail, password: pass, pin }),
+          body: JSON.stringify({ username: usernameOrEmail, password: pass, pin, remember }),
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) return { success: false, message: result.error || 'Admin authentication failed.' };
@@ -974,11 +1099,11 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           console.warn('Firebase admin sign-in notice:', firebaseErr);
           return { success: false, message: 'Database authorization failed. Please try signing in again.' };
         }
-        const securityResponse = await fetch('/api/admin-config?action=security', { credentials: 'same-origin' });
-        if (securityResponse.ok) {
-          const securityResult = await securityResponse.json();
-          setSecurityConfig((previous) => ({ ...previous, ...securityResult.securityConfig }));
-        }
+        // Open the panel straight away; the security settings load in the background
+        fetch('/api/admin-config?action=security', { credentials: 'same-origin' })
+          .then((securityResponse) => (securityResponse.ok ? securityResponse.json() : null))
+          .then((securityResult) => { if (securityResult?.securityConfig) setSecurityConfig((previous) => ({ ...previous, ...securityResult.securityConfig })); })
+          .catch(() => {});
         setIsAdminLoggedIn(true);
         setAdminEmail(usernameOrEmail);
         localStorage.setItem('sag_admin_auth', 'true');
@@ -992,10 +1117,10 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const inputLower = usernameOrEmail.trim().toLowerCase();
     const configuredUser = (securityConfig.adminUsername || 'muskan').trim().toLowerCase();
-    const isUsernameMatch = 
-      inputLower === configuredUser || 
+    const isUsernameMatch =
+      inputLower === configuredUser ||
       inputLower === `${configuredUser}@suitauragirls.com` ||
-      inputLower === 'muskan' || 
+      inputLower === 'muskan' ||
       inputLower === 'muskan@suitauragirls.com';
 
     // Strictly check configured admin password (old 'abhi' is permanently rejected)
@@ -1020,7 +1145,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return { success: true };
   };
 
+  // Remember on this browser that the admin is signed in, so the store shows the admin's changes live here
+  useEffect(() => {
+    if (isAdminLoggedIn) setAdminLive(true);
+  }, [isAdminLoggedIn]);
+
   const logoutAdmin = () => {
+    setAdminLive(false);
     if (typeof window !== 'undefined' && !['localhost', '127.0.0.1'].includes(window.location.hostname)) {
       void fetch('/api/admin-config?action=logout', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
     }
@@ -1063,85 +1194,56 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const addCategory = async (cat: Omit<CategoryItem, 'id'>) => {
     const newId = newDocId('cat-');
     const newCat = { id: newId, ...cat };
+    await saveDoc('categories', newId, mapCategoryToDb(newCat), false);
     setCategories((prev) => [...prev, newCat]);
-    try {
-      await saveDoc('categories', newId, mapCategoryToDb(newCat), false);
-    } catch (error) {
-      console.warn('Firebase add category notice:', error);
-    }
   };
 
   const updateCategory = async (id: string, updated: Partial<CategoryItem>) => {
+    await saveDoc('categories', id, mapCategoryToDb(updated));
     setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
-    try {
-      await saveDoc('categories', id, mapCategoryToDb(updated));
-    } catch (error) {
-      console.warn('Firebase update category notice:', error);
-    }
   };
 
   const deleteCategory = async (id: string) => {
+    await removeDoc('categories', id);
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    try {
-      await removeDoc('categories', id);
-    } catch (error) {
-      console.warn('Firebase delete category notice:', error);
-    }
   };
 
-  // Order Operations
+  // Order Operations go through /api/orders so stock restores and customer emails happen on the server.
+  const applyServerOrder = (row: any) => {
+    const mapped = mapOrderFromDb(row);
+    setOrders((prev) => prev.map((ord) => (ord.orderNumber === mapped.orderNumber ? mapped : ord)));
+  };
+
   const updateOrderStatus = async (
     orderNumber: string,
     status: AdminOrderStatus,
     trackingNumber?: string,
-    notes?: string
+    notes?: string,
+    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string }
   ) => {
-    const originalOrder = orders.find(o => o.orderNumber === orderNumber);
-    if (!originalOrder) return;
-
-    const updatedOrder = {
-      ...originalOrder,
-      status,
-      ...(trackingNumber ? { trackingNumber } : {}),
-      ...(notes ? { notes } : {}),
-    };
-
-    setOrders((prev) =>
-      prev.map((ord) => (ord.orderNumber === orderNumber ? updatedOrder : ord))
-    );
-
-    try {
-      await patchDoc('orders', orderNumber, {
-        status,
-        ...(trackingNumber ? { trackingNumber } : {}),
-        ...(notes ? { notes } : {}),
-      });
-    } catch (error) {
-      console.warn('Firebase update order notice:', error);
-    }
+    const payload: Record<string, unknown> = { orderNumber, status };
+    if (trackingNumber !== undefined) payload.trackingNumber = trackingNumber;
+    if (notes !== undefined) payload.notes = notes;
+    if (extra?.courierPartner !== undefined) payload.courierPartner = extra.courierPartner;
+    if (extra?.customerNote !== undefined) payload.customerNote = extra.customerNote;
+    if (extra?.trackingUrl !== undefined) payload.trackingUrl = extra.trackingUrl;
+    if (extra?.expectedDeliveryDate !== undefined) payload.expectedDeliveryDate = extra.expectedDeliveryDate;
+    if (extra?.deliveryAgentName !== undefined) payload.deliveryAgentName = extra.deliveryAgentName;
+    if (extra?.deliveryAgentPhone !== undefined) payload.deliveryAgentPhone = extra.deliveryAgentPhone;
+    if (extra?.notify === false) payload.notify = false;
+    const result = await ordersApi<{ order: any }>('admin-update', payload);
+    applyServerOrder(result.order);
   };
 
   const updateOrderPaymentStatus = async (
     orderNumber: string,
     paymentStatus: 'Paid' | 'Pending Verification' | 'Unpaid'
   ) => {
-    const originalOrder = orders.find(o => o.orderNumber === orderNumber);
-    if (!originalOrder) return;
-
-    const updatedOrder = {
-      ...originalOrder,
-      paymentStatus,
-    };
-
-    setOrders((prev) =>
-      prev.map((ord) => (ord.orderNumber === orderNumber ? updatedOrder : ord))
-    );
-
-    try {
-      await patchDoc('orders', orderNumber, { paymentStatus });
-    } catch (error) {
-      console.warn('Firebase update payment status notice:', error);
-    }
+    const result = await ordersApi<{ order: any }>('admin-update', {
+      orderNumber,
+      paymentStatus: paymentStatus === 'Pending Verification' ? 'Unpaid' : paymentStatus,
+    });
+    applyServerOrder(result.order);
   };
 
   const addOrder = async (order: Order) => {
@@ -1184,12 +1286,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteOrder = async (orderNumber: string) => {
-    setOrders((prev) => prev.filter((o) => o.orderNumber !== orderNumber));
-    try {
-      await removeDoc('orders', orderNumber);
-    } catch (error) {
-      console.warn('Firebase delete order notice:', error);
+    const target = orders.find((o) => o.orderNumber === orderNumber);
+    // Paid orders are records of money received; cancel/refund them instead of deleting.
+    if (target && target.paymentStatus === 'Paid' && !['Cancelled', 'Refunded'].includes(target.status)) {
+      throw new Error('Paid orders cannot be deleted. Cancel or refund the order first.');
     }
+    await removeDoc('orders', orderNumber);
+    setOrders((prev) => prev.filter((o) => o.orderNumber !== orderNumber));
   };
 
   // Customer Operations
@@ -1201,40 +1304,33 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Coupon Operations
   const addCoupon = async (coupon: Omit<Coupon, 'id' | 'usageCount'>) => {
+    const code = String(coupon.code || '').trim().toUpperCase();
+    if (!code) throw new Error('Coupon code is required.');
+    if (coupons.some((c) => c.code.trim().toUpperCase() === code)) throw new Error(`A coupon with code ${code} already exists.`);
     const newId = newDocId('coup-');
-    const newCoup = { id: newId, usageCount: 0, ...coupon };
+    const newCoup = { id: newId, usageCount: 0, ...coupon, code };
+    await saveDoc('coupons', newId, mapCouponToDb(newCoup), false);
     setCoupons((prev) => [newCoup, ...prev]);
-    try {
-      await saveDoc('coupons', newId, mapCouponToDb(newCoup), false);
-    } catch (error) {
-      console.warn('Firebase add coupon notice:', error);
-    }
   };
 
   const updateCoupon = async (id: string, updated: Partial<Coupon>) => {
-    setCoupons((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
-    );
-    try {
-      await saveDoc('coupons', id, mapCouponToDb(updated));
-    } catch (error) {
-      console.warn('Firebase update coupon notice:', error);
+    const next = updated.code !== undefined ? { ...updated, code: String(updated.code).trim().toUpperCase() } : updated;
+    if (next.code && coupons.some((c) => c.id !== id && c.code.trim().toUpperCase() === next.code)) {
+      throw new Error(`A coupon with code ${next.code} already exists.`);
     }
+    await saveDoc('coupons', id, mapCouponToDb(next));
+    setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, ...next } : c)));
   };
 
   const deleteCoupon = async (id: string) => {
+    await removeDoc('coupons', id);
     setCoupons((prev) => prev.filter((c) => c.id !== id));
-    try {
-      await removeDoc('coupons', id);
-    } catch (error) {
-      console.warn('Firebase delete coupon notice:', error);
-    }
   };
 
-  const toggleCouponStatus = (id: string) => {
+  const toggleCouponStatus = async (id: string) => {
     const target = coupons.find(c => c.id === id);
     if (!target) return;
-    updateCoupon(id, { isActive: !target.isActive });
+    await updateCoupon(id, { isActive: !target.isActive });
   };
 
   // Homepage Operations
@@ -1277,14 +1373,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const syncHeroWithLiveProducts = async () => {
-    // Keep any banner photo the admin uploaded for a product that stays in the slides
-    const bannerByProduct = new Map(
-      (heroConfig?.slides || []).filter((s) => s.bannerImage && s.productId).map((s) => [String(s.productId), s.bannerImage]),
+    // Keep the banner photo and any text the admin wrote for a product that stays in the slides
+    const previousByProduct = new Map(
+      (heroConfig?.slides || []).filter((s) => s.productId).map((s) => [String(s.productId), s]),
     );
-    const freshSlides = generateHeroSlidesFromProducts(products).map((slide) => ({
-      ...slide,
-      bannerImage: slide.productId ? bannerByProduct.get(String(slide.productId)) : undefined,
-    }));
+    const freshSlides = generateHeroSlidesFromProducts(products.filter((p) => !p.hidden && p.productType !== 'accessory')).map((slide) => {
+      const previous = slide.productId ? previousByProduct.get(String(slide.productId)) : undefined;
+      if (!previous) return slide;
+      return {
+        ...slide,
+        bannerImage: previous.bannerImage,
+        badge: previous.badge || slide.badge,
+        linkText: previous.linkText || slide.linkText,
+        ...(previous.customText ? { title: previous.title, subtitle: previous.subtitle, customText: true } : {}),
+      };
+    });
     const newConfig: HeroBannerConfig = { slides: freshSlides };
     setHeroConfig(newConfig);
     try {
@@ -1327,69 +1430,64 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const newReview: Review = {
       date: reviewData.date || new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: reviewData.status || 'pending',
-      verifiedPurchase: reviewData.verifiedPurchase ?? true,
+      verifiedPurchase: reviewData.verifiedPurchase ?? false,
       ...reviewData,
       id: newId,
     };
 
-    setReviewsList((prev) => [newReview, ...prev]);
 
-    try {
-      await saveDoc('reviews', newId, {
+    await saveDoc('reviews', newId, {
         ...newReview,
         productId: newReview.productId ? String(newReview.productId) : '0',
         rating: Number(newReview.rating) || 5,
         location: newReview.location || 'India',
         createdAt: new Date().toISOString(),
       }, false);
-    } catch (error) {
-      console.warn('Firebase add review notice:', error);
-    }
+    setReviewsList((prev) => [newReview, ...prev]);
   };
 
   const updateReview = async (id: string, updatedData: Partial<Review>) => {
     const target = reviewsList.find(r => r.id === id);
     if (!target) return;
     const updatedReview = { ...target, ...updatedData };
-    setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
-    try {
-      await patchDoc('reviews', id, updatedData);
-    } catch (error) {
-      console.warn('Firebase update review notice:', error);
-    }
+    await patchDoc('reviews', id, updatedData);
+    const nextReviews = reviewsList.map((r) => (r.id === id ? updatedReview : r));
+    setReviewsList(nextReviews);
+    await syncProductRating(String(target.productId), nextReviews);
+  };
+
+  // Product rating = average of its approved reviews (nothing else feeds it).
+  const syncProductRating = async (productId: string, nextReviews: Review[]) => {
+    if (!productId || productId === '0') return;
+    const approved = nextReviews.filter((r) => String(r.productId) === String(productId) && r.status === 'approved');
+    const reviewCount = approved.length;
+    const rating = reviewCount ? Math.round((approved.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviewCount) * 10) / 10 : 0;
+    await patchDoc('products', productId, { rating, reviewCount });
   };
 
   const updateReviewStatus = async (id: string, status: 'approved' | 'pending' | 'hidden') => {
     const target = reviewsList.find(r => r.id === id);
     if (!target) return;
     const updatedReview = { ...target, status };
-    setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
-    try {
-      await patchDoc('reviews', id, { status });
-    } catch (error) {
-      console.warn('Firebase update review notice:', error);
-    }
+    const nextReviews = reviewsList.map((r) => (r.id === id ? updatedReview : r));
+    setReviewsList(nextReviews);
+    await patchDoc('reviews', id, { status });
+    await syncProductRating(String(target.productId), nextReviews);
   };
 
   const replyToReview = async (id: string, reply: string) => {
     const target = reviewsList.find(r => r.id === id);
     if (!target) return;
-    const updatedReview = { ...target, adminReply: reply };
-    setReviewsList((prev) => prev.map((r) => (r.id === id ? updatedReview : r)));
-    try {
-      await patchDoc('reviews', id, { adminReply: reply });
-    } catch (error) {
-      console.warn('Firebase update review notice:', error);
-    }
+    await patchDoc('reviews', id, { adminReply: reply });
+    setReviewsList((prev) => prev.map((r) => (r.id === id ? { ...target, adminReply: reply } : r)));
   };
 
   const deleteReview = async (id: string) => {
-    setReviewsList((prev) => prev.filter((r) => r.id !== id));
-    try {
-      await removeDoc('reviews', id);
-    } catch (error) {
-      console.warn('Firebase delete review notice:', error);
-    }
+    const target = reviewsList.find((r) => r.id === id);
+    const nextReviews = reviewsList.filter((r) => r.id !== id);
+    setReviewsList(nextReviews);
+    await removeDoc('reviews', id);
+    if (target) await syncProductRating(String(target.productId), nextReviews);
   };
 
   // Store & Payment Settings
@@ -1397,6 +1495,13 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const nextStore = normalizeStoreBrand({ ...storeSettings, ...updated });
     await saveStoreSettingsSetting(nextStore);
     setStoreSettings(nextStore);
+  };
+
+  const updateLowStockThreshold = async (value: number) => {
+    const next = cleanLowStockThreshold(value, -1);
+    if (next < 0) throw new Error('Enter a whole number of pieces (0 or more).');
+    await saveDoc(COLLECTIONS.adminSettings, 'inventory', { lowStockThreshold: next });
+    setLowStockThreshold(next);
   };
 
   const updateInstagramReels = async (reels: InstagramReel[]) => {
@@ -1440,36 +1545,21 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Lead Operations
   const updateLeadOfferStatus = async (id: string, status: boolean) => {
+    await updateDoc(doc(db, 'leads', id), { offerSent: status });
     setLeads((prev) => prev.map((l) => (l.id === id ? { ...l, offerSent: status } : l)));
-    if (!isQuotaExhausted()) {
-      try {
-        await updateDoc(doc(db, 'leads', id), { offerSent: status });
-      } catch (error: any) {
-        if (error?.code === 'resource-exhausted' || error?.message?.includes('Quota')) {
-          markFirestoreQuotaExhausted();
-        }
-      }
-    }
   };
 
   const deleteLead = async (id: string) => {
+    const { deleteDoc } = await import('firebase/firestore');
+    await deleteDoc(doc(db, 'leads', id));
     setLeads((prev) => prev.filter((l) => l.id !== id));
-    if (!isQuotaExhausted()) {
-      try {
-        const { deleteDoc } = await import('firebase/firestore');
-        await deleteDoc(doc(db, 'leads', id));
-      } catch (error: any) {
-        if (error?.code === 'resource-exhausted' || error?.message?.includes('Quota')) {
-          markFirestoreQuotaExhausted();
-        }
-      }
-    }
   };
 
   return (
     <AdminContext.Provider
       value={{
         isAdminLoggedIn,
+        adminSessionChecked,
         adminEmail,
         adminTab,
         setAdminTab,
@@ -1536,6 +1626,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         deleteReview,
         storeSettings,
         updateStoreSettings,
+        lowStockThreshold,
+        updateLowStockThreshold,
         paymentSettings,
         updatePaymentSettings,
         resetStoreDataToDefaults,

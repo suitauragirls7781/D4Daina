@@ -1,47 +1,53 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Manrope:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/* Dark luxury palette
-   #120205 page · #180306 sections/cards · #2A0710 raised surfaces · #5C0B1B wine
-   #D7B77A champagne gold · #E8D2A4 soft gold · #F7F0E5 ivory text */
+/* Lavender & plum luxury palette
+   #FBF7F3 ivory page · #FFFFFF cards · #F3EEF8 soft lavender · #F7E4EA blush
+   #4B1D3F deep plum (primary) · #3B1532 plum hover · #2A1A26 ink
+   #C5A46D champagne gold (decor) · #9C7A45 gold text */
 @theme {
-  --color-bottle-maroon: #E8D2A4;
-  --color-brand-maroon: #E8D2A4;
-  --color-antique-gold: #D7B77A;
-  --color-ivory: #180306;
-  --color-dusty-rose: #E8D2A4;
-  --color-charcoal: #F7F0E5;
+  --color-bottle-maroon: #4B1D3F;
+  --color-brand-maroon: #4B1D3F;
+  --color-antique-gold: #C5A46D;
+  --color-ivory: #FBF7F3;
+  --color-dusty-rose: #F7E4EA;
+  --color-charcoal: #2A1A26;
+  --color-lavender: #F3EEF8;
+  --color-plum: #4B1D3F;
+  --color-blush: #F7E4EA;
 }
 
 :root {
-  --lux-ink-0: #120205;
-  --lux-ink-1: #180306;
-  --lux-ink-2: #2A0710;
-  --lux-wine: #5C0B1B;
-  --lux-gold: #D7B77A;
-  --lux-gold-soft: #E8D2A4;
-  --lux-ivory: #F7F0E5;
-  --marketplace-surface: #180306;
-  --marketplace-muted: #120205;
-  --marketplace-border: rgba(215, 183, 122, 0.18);
-  --marketplace-shadow: none;
+  --sag-page: #FBF7F3;
+  --sag-surface: #FFFFFF;
+  --sag-lavender: #F3EEF8;
+  --sag-lavender-deep: #E6DDF0;
+  --sag-blush: #F7E4EA;
+  --sag-plum: #4B1D3F;
+  --sag-plum-dark: #3B1532;
+  --sag-ink: #2A1A26;
+  --sag-gold: #C5A46D;
+  --sag-line: rgba(75, 29, 63, 0.12);
+  --sag-shadow: 0 1px 2px rgba(42, 26, 38, 0.04), 0 8px 24px -12px rgba(42, 26, 38, 0.12);
+  --marketplace-surface: #FFFFFF;
+  --marketplace-muted: #FBF7F3;
+  --marketplace-border: rgba(75, 29, 63, 0.12);
+  --marketplace-shadow: var(--sag-shadow);
 }
 
 @layer base {
   html, body, #root {
     font-family: 'Manrope', system-ui, sans-serif;
     scroll-behavior: smooth;
-    background-color: #120205;
-    color-scheme: dark;
+    background-color: #FBF7F3;
+    color-scheme: light;
     max-width: 100vw;
     overflow-x: hidden;
     width: 100%;
-    color: #F7F0E5;
+    color: #2A1A26;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Editorial serif: lighter weights and tight leading read like a fashion magazine */
   h1, h2, h3, h4, h5, h6, .font-serif {
     font-family: 'Cormorant Garamond', serif !important;
     font-weight: 500;
@@ -49,35 +55,39 @@
   }
 
   h1, h2 {
-    line-height: 1.05;
+    line-height: 1.08;
   }
 
   ::selection {
-    background: #D7B77A;
-    color: #120205;
+    background: #E6DDF0;
+    color: #2A1A26;
   }
 
   input, select, textarea {
-    color: #F7F0E5;
-    background-color: #180306;
+    color: #2A1A26;
+    background-color: #FFFFFF;
   }
 
   input::placeholder, textarea::placeholder {
-    color: rgba(247, 240, 229, 0.4);
+    color: rgba(42, 26, 38, 0.4);
   }
 
   select option {
-    background-color: #180306;
-    color: #F7F0E5;
+    background-color: #FFFFFF;
+    color: #2A1A26;
+  }
+
+  :focus-visible {
+    outline: 2px solid #4B1D3F;
+    outline-offset: 2px;
   }
 
   img {
-    color-scheme: light;
     forced-color-adjust: none;
   }
 }
 
-/* The admin panel keeps its light working theme */
+/* The admin panel keeps its own light working theme */
 #admin-root-container {
   color: #211C1A;
   color-scheme: light;
@@ -90,75 +100,40 @@
   background-color: #FFFFFF;
 }
 
-#admin-root-container select option {
-  background-color: #FFFFFF;
-  color: #211C1A;
-}
-
 #admin-root-container input::placeholder,
 #admin-root-container textarea::placeholder {
   color: #9CA3AF;
 }
 
-/* Quiet luxury scrollbar */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #120205;
+  background: #FBF7F3;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #5C0B1B;
+  background: #D9CCE6;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #D7B77A;
+  background: #4B1D3F;
 }
 
 /* Brand palette helper classes */
-.bg-ivory {
-  background-color: #180306;
-}
-
-.bg-bottle-maroon {
-  background-color: #5C0B1B;
-}
-
-.bg-antique-gold {
-  background-color: #D7B77A;
-}
-
-.bg-dusty-rose {
-  background-color: #E8D2A4;
-}
-
-.text-bottle-maroon {
-  color: #E8D2A4;
-}
-
-.text-antique-gold {
-  color: #D7B77A;
-}
-
-.text-dusty-rose {
-  color: #E8D2A4;
-}
-
-.border-antique-gold {
-  border-color: #D7B77A;
-}
-
-.border-bottle-maroon {
-  border-color: #D7B77A;
-}
-
-.border-dusty-rose {
-  border-color: #E8D2A4;
-}
+.bg-ivory { background-color: #FBF7F3; }
+.bg-bottle-maroon { background-color: #4B1D3F; }
+.bg-antique-gold { background-color: #C5A46D; }
+.bg-dusty-rose { background-color: #F7E4EA; }
+.text-bottle-maroon { color: #4B1D3F; }
+.text-antique-gold { color: #7E5F33; }
+.text-dusty-rose { color: #4B1D3F; }
+.border-antique-gold { border-color: #C5A46D; }
+.border-bottle-maroon { border-color: #4B1D3F; }
+.border-dusty-rose { border-color: #F7E4EA; }
 
 .marketplace-surface {
   background-color: var(--marketplace-surface);
@@ -170,48 +145,32 @@
   background-color: var(--marketplace-muted);
 }
 
-/* Champagne-gold surfaces (primary CTAs, active chips) always carry dark ink */
-[class~="bg-[#D7B77A]"],
-[class~="bg-[#E8D2A4]"],
-[class*="hover:bg-[#D7B77A]"]:hover,
-[class*="hover:bg-[#E8D2A4]"]:hover {
-  color: #120205 !important;
+/* Plum surfaces (primary buttons, active chips, banners) always carry white ink */
+#app-main-content [class~="bg-[#4B1D3F]"],
+#app-main-content [class*="hover:bg-[#3B1532]"]:hover {
+  color: #FFFFFF;
 }
 
-[class~="bg-[#D7B77A]"] :is([class*="text-[#F7F0E5]"], [class*="text-[#E8D2A4]"], [class*="text-[#D7B77A]"], [class~="text-white"]),
-[class~="bg-[#E8D2A4]"] :is([class*="text-[#F7F0E5]"], [class*="text-[#E8D2A4]"], [class*="text-[#D7B77A]"], [class~="text-white"]),
-[class*="hover:bg-[#D7B77A]"]:hover :is([class*="text-[#F7F0E5]"], [class*="text-[#E8D2A4]"], [class*="text-[#D7B77A]"]) {
-  color: #120205 !important;
+#app-main-content :is(button, a, span, label)[class~="bg-[#4B1D3F]"] :is([class*="text-[#2A1A26]"], [class*="text-[#4B1D3F]"], [class*="text-[#9C7A45]"]),
+#app-main-content :is(button, a, span, label)[class~="bg-[#4B1D3F]"] svg.lucide,
+#app-main-content :is(button, a)[class*="hover:bg-[#3B1532]"]:hover :is([class*="text-[#2A1A26]"], [class*="text-[#4B1D3F]"], svg.lucide) {
+  color: #FFFFFF !important;
 }
 
-[class~="bg-[#D7B77A]"] svg.lucide,
-[class~="bg-[#E8D2A4]"] svg.lucide,
-[class*="hover:bg-[#D7B77A]"]:hover svg.lucide {
-  color: #120205 !important;
+#app-main-content :is(button, a, span, label, div)[class~="bg-[#4B1D3F]"]:is([class*="text-[#2A1A26]"], [class*="text-[#4B1D3F]"], [class*="text-[#9C7A45]"]) {
+  color: #FFFFFF !important;
 }
 
-/* Wine surfaces carry ivory ink */
-[class~="bg-[#5C0B1B]"] {
-  color: #F7F0E5;
-}
-
-/* Icons: champagne gold by default on the storefront */
+/* Icons: plum by default on the storefront */
 svg.lucide:not([class*="text-"]) {
-  color: #D7B77A;
+  color: #4B1D3F;
 }
 
+/* Admin icons take their button / text colour (delete stays rose, primary stays plum) */
 #admin-root-container svg.lucide:not([class*="text-"]) {
-  color: #B8935A;
+  color: inherit;
 }
 
-#admin-root-container svg.lucide[class*="text-black"],
-#admin-root-container svg.lucide[class*="text-gray-"],
-#admin-root-container svg.lucide[class*="text-[#211C1A]"],
-#admin-root-container svg.lucide[class*="text-[#241D1B]"] {
-  color: #9A6A3A !important;
-}
-
-/* Admin panel keeps the original dark-on-light pill rules */
 #admin-root-container :is([class~="bg-[#241D1B]"], [class~="bg-[#211C1A]"], [class~="bg-[#3D0F1F]"], [class~="from-[#241D1B]"], [class~="bg-black"]) {
   color: #FAF5EB !important;
 }
@@ -220,6 +179,56 @@ svg.lucide:not([class*="text-"]) {
   color: #FAF7F2 !important;
 }
 
+/* Storefront cards: rounded, refined border, soft shadow */
+.sag-card {
+  background: #FFFFFF;
+  border: 1px solid var(--sag-line);
+  border-radius: 1rem;
+  box-shadow: var(--sag-shadow);
+}
+
+.sag-btn-primary {
+  background: #4B1D3F;
+  color: #FFFFFF;
+  border-radius: 9999px;
+  transition: background-color 180ms ease, transform 180ms ease;
+}
+
+.sag-btn-primary:hover { background: #3B1532; }
+
+.sag-btn-outline {
+  background: transparent;
+  color: #4B1D3F;
+  border: 1px solid rgba(75, 29, 63, 0.35);
+  border-radius: 9999px;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.sag-btn-outline:hover { background: #F3EEF8; border-color: #4B1D3F; }
+
+.sag-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #7E5F33;
+}
+
+/* Horizontal scrollers without a visible scrollbar */
+.sag-scroll-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+/* Snapping keeps the page gutter, so the first card never sits flush against the screen edge
+   (in a layer so a scroller's own scroll-px-* utility still wins) */
+@layer components {
+  .sag-scroll-x { scroll-padding-inline: 1rem; }
+  @media (min-width: 640px) { .sag-scroll-x { scroll-padding-inline: 1.5rem; } }
+  @media (min-width: 1024px) { .sag-scroll-x { scroll-padding-inline: 2rem; } }
+}
+.sag-scroll-x::-webkit-scrollbar { display: none; }
+.sag-scroll-x > * { scroll-snap-align: start; }
+
 @media (prefers-reduced-motion: no-preference) {
   svg.lucide {
     transition: color 180ms ease, transform 180ms ease;
@@ -227,11 +236,11 @@ svg.lucide:not([class*="text-"]) {
 }
 
 .gold-hairline {
-  border-color: rgba(215, 183, 122, 0.25);
+  border-color: rgba(197, 164, 109, 0.35);
 }
 
 .gold-gradient-text {
-  color: #E8D2A4;
+  color: #4B1D3F;
   background: none;
   -webkit-text-fill-color: currentColor;
 }
@@ -292,3 +301,200 @@ svg.lucide:not([class*="text-"]) {
 
 
 
+
+/* ------------------------------------------------------------------
+   Motion system
+   The components use tailwindcss-animate style class names
+   (animate-in, fade-in, zoom-in-95, slide-in-from-*); they are defined
+   here so every modal, drawer and notice enters smoothly.
+------------------------------------------------------------------- */
+@keyframes sag-enter {
+  from {
+    opacity: var(--sag-enter-opacity, 1);
+    transform: translate3d(var(--sag-enter-x, 0), var(--sag-enter-y, 0), 0) scale(var(--sag-enter-scale, 1));
+  }
+}
+
+.animate-in {
+  animation: sag-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fade-in { --sag-enter-opacity: 0; }
+.zoom-in-95 { --sag-enter-scale: 0.95; }
+.zoom-in-90 { --sag-enter-scale: 0.9; }
+.slide-in-from-top-2 { --sag-enter-y: -0.5rem; }
+.slide-in-from-top-5 { --sag-enter-y: -1.25rem; }
+.slide-in-from-bottom-2 { --sag-enter-y: 0.5rem; }
+.slide-in-from-bottom-5 { --sag-enter-y: 1.25rem; }
+.slide-in-from-right { --sag-enter-x: 100%; }
+.slide-in-from-left { --sag-enter-x: -100%; }
+.animate-fadeIn { animation: sag-enter 280ms ease-out both; --sag-enter-opacity: 0; }
+.animate-scaleUp { animation: sag-enter 320ms cubic-bezier(0.22, 1, 0.36, 1) both; --sag-enter-opacity: 0; --sag-enter-scale: 0.95; }
+
+/* Page change: the new page fades up gently */
+.sag-page {
+  animation: sag-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --sag-enter-opacity: 0;
+  --sag-enter-y: 12px;
+}
+
+/* Dropdowns, search panel, accordion bodies */
+.sag-pop { animation: sag-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both; --sag-enter-opacity: 0; --sag-enter-scale: 0.97; --sag-enter-y: -4px; }
+.sag-drop { animation: sag-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both; --sag-enter-opacity: 0; --sag-enter-y: -8px; }
+.sag-fade { animation: sag-enter 300ms ease-out both; --sag-enter-opacity: 0; }
+
+/* Homepage sections reveal as they scroll into view */
+.sag-reveal {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1), transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sag-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Buttons: soft press feedback */
+#app-main-content button:not(:disabled):active,
+#app-main-content a[role="button"]:active {
+  transform: scale(0.98);
+}
+#app-main-content button { transition-property: color, background-color, border-color, box-shadow, transform, opacity; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in, .animate-fadeIn, .animate-scaleUp, .sag-page, .sag-pop, .sag-drop, .sag-fade { animation: none !important; }
+  .sag-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  #app-main-content button:active { transform: none; }
+}
+
+/* ------------------------------------------------------------------
+   Page transitions (View Transitions API, see utils/pageTransition.ts)
+   Old page fades out, new page fades up; the header stays put and a
+   tapped product photo grows into the product page photo.
+------------------------------------------------------------------- */
+@keyframes sag-vt-out { to { opacity: 0; transform: translate3d(0, -6px, 0); } }
+@keyframes sag-vt-in { from { opacity: 0; transform: translate3d(0, 14px, 0); } }
+::view-transition-old(root) { animation: 180ms ease-in both sag-vt-out; }
+::view-transition-new(root) { animation: 360ms cubic-bezier(0.22, 1, 0.36, 1) 60ms both sag-vt-in; }
+::view-transition-group(pdp-hero) { animation-duration: 460ms; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); z-index: 5; }
+::view-transition-old(pdp-hero), ::view-transition-new(pdp-hero) { height: 100%; object-fit: cover; object-position: top; }
+::view-transition-group(site-header), ::view-transition-group(mobile-nav) { animation: none; }
+.sag-vt header.sticky { view-transition-name: site-header; }
+.sag-vt nav.fixed.bottom-0 { view-transition-name: mobile-nav; }
+/* With view transitions the CSS page fade would run twice */
+.sag-vt .sag-page, .sag-vt [data-vt-hero] { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ------------------------------------------------------------------
+   Homepage motion
+------------------------------------------------------------------- */
+@keyframes sag-kenburns { from { transform: scale(1.06); } to { transform: scale(1); } }
+.sag-kenburns { animation: sag-kenburns 7s cubic-bezier(0.22, 1, 0.36, 1) both; transform-origin: 50% 20%; }
+@keyframes sag-slide-in-kf { from { opacity: 0; transform: translate3d(18px, 0, 0); } }
+.sag-slide-in > * { animation: sag-slide-in-kf 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.sag-slide-in > *:nth-child(2) { animation-delay: 80ms; }
+.sag-slide-in > *:nth-child(3) { animation-delay: 160ms; }
+.sag-slide-in > *:nth-child(4) { animation-delay: 240ms; }
+.sag-slide-in > *:nth-child(5) { animation-delay: 320ms; }
+
+/* Hero: the active slide bar fills while the slide shows (matches the 6s autoplay) */
+@keyframes sag-hero-progress-kf { from { width: 0; } to { width: 100%; } }
+.sag-hero-progress { animation: sag-hero-progress-kf 6s linear both; }
+
+/* Deal countdown: each digit change drops in softly */
+@keyframes sag-tick-kf { from { opacity: 0; transform: translate3d(0, -6px, 0); } }
+.sag-tick { animation: sag-tick-kf 360ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Items pop in one after another */
+@keyframes sag-pop-in { from { opacity: 0; transform: translate3d(0, 14px, 0) scale(0.94); } }
+.sag-stagger > * { animation: sag-pop-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+
+/* Product cards rise in sequence when their section scrolls into view */
+.sag-reveal [id^="product-card-"] { opacity: 0; transform: translate3d(0, 18px, 0); transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1), transform 600ms cubic-bezier(0.22, 1, 0.36, 1); }
+.sag-reveal.is-visible [id^="product-card-"] { opacity: 1; transform: none; }
+.sag-reveal.is-visible :nth-child(2) > [id^="product-card-"], .sag-reveal.is-visible [id^="product-card-"]:nth-child(2) { transition-delay: 70ms; }
+.sag-reveal.is-visible :nth-child(3) > [id^="product-card-"], .sag-reveal.is-visible [id^="product-card-"]:nth-child(3) { transition-delay: 140ms; }
+.sag-reveal.is-visible :nth-child(4) > [id^="product-card-"], .sag-reveal.is-visible [id^="product-card-"]:nth-child(4) { transition-delay: 210ms; }
+.sag-reveal.is-visible :nth-child(n+5) > [id^="product-card-"], .sag-reveal.is-visible [id^="product-card-"]:nth-child(n+5) { transition-delay: 280ms; }
+
+/* Category rail: ring turns plum and the photo lifts on hover */
+.sag-cat-ring { transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 300ms ease; }
+.sag-cat:hover .sag-cat-ring, .sag-cat:focus-visible .sag-cat-ring { transform: translateY(-3px); box-shadow: 0 10px 22px -12px rgba(75, 29, 63, 0.55); }
+
+@keyframes sag-perks-scroll { to { transform: translate3d(-50%, 0, 0); } }
+.sag-perks-track { animation: sag-perks-scroll 32s linear infinite; }
+.sag-perks:hover .sag-perks-track { animation-play-state: paused; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sag-kenburns, .sag-slide-in > *, .sag-stagger > *, .sag-perks-track { animation: none !important; }
+  .sag-hero-progress { animation: none !important; width: 100%; }
+  .sag-tick { animation: none !important; }
+  .sag-reveal [id^="product-card-"] { opacity: 1 !important; transform: none !important; }
+}
+
+/* Order placed moment (checkout success) */
+@keyframes sag-placed-pop-kf { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes sag-placed-check-kf { from { transform: scale(0.4) rotate(-20deg); opacity: 0; } }
+@keyframes sag-placed-glow-kf { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes sag-placed-spark-kf { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+@keyframes sag-placed-rise-kf { from { transform: translate3d(0, 12px, 0); opacity: 0; } }
+.sag-placed-pop { animation: sag-placed-pop-kf 520ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.sag-placed-check { animation: sag-placed-check-kf 420ms 220ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.sag-placed-glow { animation: sag-placed-glow-kf 700ms ease-out both; }
+.sag-placed-spark { animation: sag-placed-spark-kf 600ms 300ms ease-out both; }
+.sag-placed-rise { animation: sag-placed-rise-kf 500ms 350ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@media (prefers-reduced-motion: reduce) { .sag-placed-pop, .sag-placed-check, .sag-placed-glow, .sag-placed-spark, .sag-placed-rise { animation: none !important; } }
+
+/* Live icons (StoreIcons / BagIcon with `live`): slow, quiet loops that rest most of the time */
+.sag-ic { overflow: visible; }
+.sag-live, .sag-live * { transform-box: view-box; }
+.sag-live .sag-p-gold { animation: sag-ic-gold 3.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+@keyframes sag-ic-gold { 0%, 70%, 100% { opacity: 1; } 82% { opacity: 0.45; } }
+.sag-live.sag-a-beat { animation: sag-ic-beat 2.8s ease-in-out infinite; transform-origin: 12px 14px; }
+@keyframes sag-ic-beat { 0%, 60%, 100% { transform: scale(1); } 68% { transform: scale(1.14); } 76% { transform: scale(0.97); } 84% { transform: scale(1.08); } }
+.sag-live.sag-a-drive { animation: sag-ic-drive 3.2s ease-in-out infinite; }
+@keyframes sag-ic-drive { 0%, 55%, 100% { transform: translateX(0); } 70% { transform: translateX(1.6px); } 85% { transform: translateX(-0.6px); } }
+.sag-live .sag-p-lines { animation: sag-ic-lines 3.2s ease-in-out infinite; }
+@keyframes sag-ic-lines { 0%, 55%, 100% { opacity: 1; transform: translateX(0); } 70% { opacity: 0.2; transform: translateX(-2px); } }
+.sag-live .sag-p-spin { animation: sag-ic-spin 4s cubic-bezier(0.65, 0, 0.35, 1) infinite; transform-origin: 12px 12px; }
+@keyframes sag-ic-spin { 0%, 55%, 100% { transform: rotate(0deg); } 75% { transform: rotate(-360deg); } }
+.sag-live.sag-a-sway { animation: sag-ic-sway 3.4s ease-in-out infinite; transform-origin: 12px 4px; }
+@keyframes sag-ic-sway { 0%, 60%, 100% { transform: rotate(0deg); } 72% { transform: rotate(-7deg); } 86% { transform: rotate(5deg); } }
+.sag-live .sag-p-shackle { animation: sag-ic-shackle 3.6s ease-in-out infinite; }
+@keyframes sag-ic-shackle { 0%, 55%, 100% { transform: translateY(0); } 66%, 76% { transform: translateY(-1.8px); } 82% { transform: translateY(0.3px); } }
+.sag-live .sag-p-draw { stroke-dasharray: 12; animation: sag-ic-draw 3.6s ease-in-out infinite; }
+@keyframes sag-ic-draw { 0%, 12% { stroke-dashoffset: 12; } 40%, 100% { stroke-dashoffset: 0; } }
+.sag-live.sag-a-search { animation: sag-ic-search 4s ease-in-out infinite; transform-origin: 10.6px 10.6px; }
+@keyframes sag-ic-search { 0%, 60%, 100% { transform: rotate(0deg); } 72% { transform: rotate(-12deg); } 86% { transform: rotate(6deg); } }
+.sag-live.sag-a-float { animation: sag-ic-float 2.6s ease-in-out infinite; }
+@keyframes sag-ic-float { 0%, 50%, 100% { transform: translateY(0); } 65% { transform: translateY(-1.8px); } 80% { transform: translateY(0.4px); } }
+.sag-live.sag-a-swing { animation: sag-ic-swing 3.4s ease-in-out infinite; transform-origin: 12px 3px; }
+@keyframes sag-ic-swing { 0%, 58%, 100% { transform: rotate(0deg); } 70% { transform: rotate(8deg); } 82% { transform: rotate(-5deg); } 92% { transform: rotate(2deg); } }
+.sag-live.sag-a-bob { animation: sag-ic-bob 3.4s ease-in-out infinite; }
+@keyframes sag-ic-bob { 0%, 60%, 100% { transform: translateY(0); } 70% { transform: translateY(-1.4px); } 80% { transform: translateY(0.3px); } 88% { transform: translateY(-0.5px); } }
+.sag-live.sag-a-tilt { animation: sag-ic-tilt 3.8s ease-in-out infinite; transform-origin: 12px 12px; }
+@keyframes sag-ic-tilt { 0%, 62%, 100% { transform: rotate(0deg); } 72% { transform: rotate(-8deg); } 84% { transform: rotate(5deg); } 92% { transform: rotate(-1deg); } }
+.sag-live.sag-a-nod { animation: sag-ic-nod 3.6s ease-in-out infinite; transform-origin: 12px 20px; }
+@keyframes sag-ic-nod { 0%, 60%, 100% { transform: rotate(0deg); } 70% { transform: rotate(-5deg); } 82% { transform: rotate(4deg); } }
+.sag-live.sag-a-tag { animation: sag-ic-tag 3.6s ease-in-out infinite; transform-origin: 5px 5px; }
+@keyframes sag-ic-tag { 0%, 58%, 100% { transform: rotate(0deg); } 70% { transform: rotate(10deg); } 82% { transform: rotate(-6deg); } 92% { transform: rotate(2deg); } }
+.sag-live.sag-a-pop { animation: sag-ic-pop 3.2s ease-in-out infinite; transform-origin: 12px 12px; }
+@keyframes sag-ic-pop { 0%, 62%, 100% { transform: scale(1); } 72% { transform: scale(1.12); } 82% { transform: scale(0.97); } 90% { transform: scale(1.03); } }
+@media (prefers-reduced-motion: reduce) { .sag-live, .sag-live * { animation: none !important; } }
+
+/* Header: a quiet entrance once, spring badges when a count changes; no loops */
+@keyframes sag-hdr-in { from { opacity: 0; transform: translate3d(0, -6px, 0); } }
+.sag-hdr-in { animation: sag-hdr-in 650ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(80ms + var(--i, 0) * 70ms); }
+@keyframes sag-hdr-logo { from { opacity: 0; transform: translate3d(0, 4px, 0) scale(0.97); } }
+.sag-hdr-logo { animation: sag-hdr-logo 800ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes sag-badge-pop { 0% { opacity: 0; transform: scale(0.4); } 60% { opacity: 1; transform: scale(1.14); } 100% { transform: scale(1); } }
+.sag-badge-pop { animation: sag-badge-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .sag-hdr-in, .sag-hdr-logo, .sag-badge-pop { animation: none !important; }
+  .sag-hbtn, .sag-hbtn * { transition-duration: 0ms !important; }
+}
+
+@supports (overflow: clip) {
+  html, body, #root { overflow-x: clip; }
+}

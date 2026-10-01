@@ -1,19 +1,19 @@
-import { firestore } from './_lib/firebaseAdmin.js';
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
+import { getAuth } from 'firebase-admin/auth';
+import { createCustomerFirebaseToken, firebaseApp, firestore } from './_lib/firebaseAdmin.js';
+import { cleanText, clientIp, isSameOrigin, isValidEmail, parseBody, reply } from './_lib/http.js';
+import { sendOtpEmail } from './_lib/email.js';
 
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 const RESEND_COOLDOWN_MS = 30 * 1000;
 const MAX_VERIFY_ATTEMPTS = 5;
-
-const reply = (res, status, body) => {
-  res.status(status)
-    .setHeader('Content-Type', 'application/json; charset=utf-8')
-    .setHeader('Cache-Control', 'no-store, max-age=0');
-  res.end(JSON.stringify(body));
-};
+const LOCKOUT_MS = 30 * 60 * 1000;
+const MAX_SENDS_PER_DAY = 8;
+const MAX_SENDS_PER_IP_HOUR = 15;
+const PURPOSES = ['signup', 'login'];
 
 // One OTP document per email + purpose, only reachable through the Admin SDK.
-const otpDoc = (email, purpose) => firestore().collection('customer_email_otps').doc(`${email}__${purpose}`);
+const otpDoc = (db, email, purpose) => db.collection('customer_email_otps').doc(`${email}__${purpose}`);
 
 const hashCode = (email, purpose, code) => createHmac('sha256', process.env.ADMIN_SESSION_SECRET)
   .update(`${email}:${purpose}:${code}`)
@@ -25,52 +25,129 @@ const safeCompare = (actual, expected) => {
   return actualBuffer.length === expectedBuffer.length && actualBuffer.length > 0 && timingSafeEqual(actualBuffer, expectedBuffer);
 };
 
-const parseBody = (req) => {
-  if (req.body && typeof req.body === 'object') return req.body;
-  if (typeof req.body === 'string') return JSON.parse(req.body);
-  return {};
-};
-
-const isSameOrigin = (req) => {
-  const origin = req.headers.origin;
-  if (!origin) return true;
-  try {
-    return new URL(origin).host === (req.headers['x-forwarded-host'] || req.headers.host);
-  } catch {
-    return false;
-  }
-};
-
-const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({
-  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-}[character]));
-
-const sendEmail = async ({ email, name, code, purpose }) => {
-  const apiKey = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'starkhell69@gmail.com';
-  if (!apiKey || !senderEmail) throw new Error('OTP_EMAIL_NOT_CONFIGURED');
-
-  const purposeLabels = {
-    signup: 'Create your account',
-    login: 'Sign in to your account',
-    password_reset: 'Reset your password',
-  };
-  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { accept: 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      sender: { name: 'Suit Aura Girls', email: senderEmail },
-      to: [{ email, name: name || 'Customer' }],
-      subject: `${code} is your Suit Aura Girls verification code`,
-      htmlContent: `<!doctype html><html><body style="font-family:Arial,sans-serif;background:#faf5eb;padding:24px;color:#3d0f1f"><main style="max-width:480px;margin:auto;background:#fff;padding:28px;border:1px solid #b8935a"><h2>Suit Aura Girls</h2><p>${escapeHtml(purposeLabels[purpose])}</p><p>Your one-time code is:</p><p style="font-size:32px;font-weight:bold;letter-spacing:8px;color:#3d0f1f">${code}</p><p>This code expires in 10 minutes and can be used only once. If you did not request it, ignore this email.</p></main></body></html>`,
-      textContent: `Your Suit Aura Girls code is ${code}. It expires in 10 minutes. If you did not request it, ignore this email.`,
-    }),
+const ipAllowed = async (db, ip) => {
+  const ref = db.collection('rate_limits').doc(`otp_ip:${ip}`.replace(/[^A-Za-z0-9_.:-]/g, '_'));
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const now = Date.now();
+    const data = snap.exists ? snap.data() : null;
+    if (!data || now - data.windowStart > 60 * 60 * 1000) {
+      tx.set(ref, { windowStart: now, count: 1, expiresAt: new Date(now + 60 * 60 * 1000) });
+      return true;
+    }
+    if (data.count >= MAX_SENDS_PER_IP_HOUR) return false;
+    tx.update(ref, { count: data.count + 1 });
+    return true;
   });
-  if (!response.ok) {
-    const result = await response.json().catch(() => ({}));
-    console.error('OTP email provider rejected request:', response.status, result.code || result.message || 'unknown');
-    throw new Error('OTP_EMAIL_DELIVERY_FAILED');
+};
+
+class OtpError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.status = status;
+    this.userFacing = true;
   }
+}
+
+const sendCode = async (db, req, email, purpose, name) => {
+  if (!(await ipAllowed(db, clientIp(req)))) throw new OtpError('Too many codes requested from this network. Please try again later.', 429);
+  const ref = otpDoc(db, email, purpose);
+  const code = String(randomInt(100000, 1000000));
+  const now = Date.now();
+
+  // Reserve the send inside a transaction so parallel requests cannot bypass the cooldown.
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const previous = snap.exists ? snap.data() : null;
+    if (previous?.locked_until && previous.locked_until > now) {
+      throw new OtpError('Too many incorrect attempts. Please try again in 30 minutes.', 429);
+    }
+    if (previous?.sent_at_ms && now - previous.sent_at_ms < RESEND_COOLDOWN_MS) {
+      throw new OtpError('Please wait 30 seconds before requesting another code.', 429);
+    }
+    const recentSends = (previous?.sends || []).filter((at) => now - at < 24 * 60 * 60 * 1000);
+    if (recentSends.length >= MAX_SENDS_PER_DAY) throw new OtpError('Daily limit for verification codes reached. Please try again tomorrow.', 429);
+    const stillValid = previous && previous.expires_at_ms > now;
+    tx.set(ref, {
+      email,
+      purpose,
+      code_hash: hashCode(email, purpose, code),
+      // Wrong guesses carry over to the new code while the previous one was still live.
+      attempts: stillValid ? Number(previous.attempts) || 0 : 0,
+      sent_at_ms: now,
+      expires_at_ms: now + OTP_LIFETIME_MS,
+      sends: [...recentSends, now],
+      locked_until: 0,
+    });
+  });
+
+  try {
+    await sendOtpEmail({ email, name, code, purpose });
+  } catch (error) {
+    await ref.update({ sent_at_ms: 0 }).catch(() => {});
+    throw error;
+  }
+};
+
+const verifyCode = async (db, email, purpose, code) => {
+  const ref = otpDoc(db, email, purpose);
+  const now = Date.now();
+  const outcome = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const record = snap.exists ? snap.data() : null;
+    if (!record || !record.code_hash) return 'invalid';
+    if (record.locked_until && record.locked_until > now) return 'locked';
+    if (record.expires_at_ms <= now) {
+      tx.update(ref, { code_hash: '' });
+      return 'expired';
+    }
+    if (!safeCompare(hashCode(email, purpose, code), record.code_hash)) {
+      const attempts = (Number(record.attempts) || 0) + 1;
+      if (attempts >= MAX_VERIFY_ATTEMPTS) {
+        tx.update(ref, { attempts, code_hash: '', locked_until: now + LOCKOUT_MS });
+        return 'locked';
+      }
+      tx.update(ref, { attempts });
+      return 'wrong';
+    }
+    // Single use: the code is burned the moment it succeeds.
+    tx.update(ref, { code_hash: '', attempts: 0 });
+    return 'ok';
+  });
+  if (outcome === 'ok') return;
+  if (outcome === 'locked') throw new OtpError('Too many incorrect attempts. Please request a new code in 30 minutes.', 429);
+  if (outcome === 'wrong') throw new OtpError('Incorrect code. Check your email and try again.');
+  throw new OtpError('This code is invalid or has expired. Please request a new code.');
+};
+
+/** Creates or updates the server-side customer record, then returns it. */
+const upsertCustomer = async (db, email, { name, phone }) => {
+  const ref = db.collection('customers').doc(email);
+  const snap = await ref.get();
+  const now = new Date().toISOString();
+  const existing = snap.exists ? snap.data() : {};
+  const record = {
+    email,
+    name: existing.name || name || '',
+    phone: existing.phone || phone || '',
+    status: existing.status || 'active',
+    createdAt: existing.createdAt || now,
+    lastLoginAt: now,
+    updatedAt: now,
+  };
+  if (name && !existing.name) record.name = name;
+  if (phone && !existing.phone) record.phone = phone;
+  await ref.set(record, { merge: true });
+
+  // Seed the customer's own profile document (cart, wishlist, address live there).
+  const profileRef = db.collection('profiles').doc(email);
+  const profile = await profileRef.get();
+  const profileData = profile.exists ? profile.data() : {};
+  const seed = { email, updatedAt: now };
+  if (!profileData.fullName && record.name) seed.fullName = record.name;
+  if (!profileData.phone && record.phone) seed.phone = record.phone;
+  await profileRef.set(seed, { merge: true });
+  return record;
 };
 
 export default async function handler(req, res) {
@@ -79,65 +156,71 @@ export default async function handler(req, res) {
 
   try {
     if (!process.env.ADMIN_SESSION_SECRET) throw new Error('SERVER_CONFIG_MISSING');
+    const db = firestore();
     const body = parseBody(req);
-    const email = String(body.email || '').trim().toLowerCase();
-    const purpose = String(body.purpose || '');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return reply(res, 400, { error: 'Enter a valid email address.' });
-    if (!['signup', 'login', 'password_reset'].includes(purpose)) return reply(res, 400, { error: 'Invalid verification purpose.' });
 
-    const otpRef = otpDoc(email, purpose);
-    if (body.action === 'send') {
-      const previousSnapshot = await otpRef.get();
-      const previous = previousSnapshot.exists ? previousSnapshot.data() : null;
-      if (previous?.sent_at && Date.now() - new Date(previous.sent_at).getTime() < RESEND_COOLDOWN_MS) {
-        return reply(res, 429, { error: 'Please wait 30 seconds before requesting another code.' });
+    // "Continue with Google": the browser signs in with Google on a throwaway Firebase app and sends that ID token.
+    // Only a Google-verified email is accepted; the customer then gets the same session as after an email code.
+    if (body.action === 'google') {
+      let decoded;
+      try {
+        decoded = await getAuth(firebaseApp()).verifyIdToken(String(body.idToken || ''));
+      } catch {
+        return reply(res, 401, { error: 'Google sign-in could not be verified. Please try again.' });
       }
-
-      const code = String(randomInt(100000, 1000000));
-      await sendEmail({ email, name: String(body.name || 'Customer').slice(0, 100), code, purpose });
-      const now = new Date();
-      await otpRef.set({
-        email,
-        purpose,
-        code_hash: hashCode(email, purpose, code),
-        attempts: 0,
-        sent_at: now.toISOString(),
-        expires_at: new Date(now.getTime() + OTP_LIFETIME_MS).toISOString(),
+      const googleEmail = String(decoded.email || '').toLowerCase();
+      if (decoded.firebase?.sign_in_provider !== 'google.com' || decoded.email_verified !== true || !isValidEmail(googleEmail)) {
+        return reply(res, 401, { error: 'Please use a Google account with a verified email.' });
+      }
+      const customer = await upsertCustomer(db, googleEmail, { name: cleanText(decoded.name, 100), phone: '' });
+      const firebaseToken = await createCustomerFirebaseToken(googleEmail);
+      // The Google-only Firebase user was just a bridge; the customer session uses the c_ account
+      getAuth(firebaseApp()).deleteUser(decoded.uid).catch(() => {});
+      return reply(res, 200, {
+        success: true,
+        verified: true,
+        email: googleEmail,
+        firebaseToken,
+        customer: { name: customer.name, phone: customer.phone, createdAt: customer.createdAt },
       });
-      return reply(res, 200, { success: true, expiresInSeconds: OTP_LIFETIME_MS / 1000 });
+    }
+
+    const email = cleanText(body.email, 160).toLowerCase();
+    const purpose = PURPOSES.includes(body.purpose) ? body.purpose : 'login';
+    if (!isValidEmail(email)) return reply(res, 400, { error: 'Enter a valid email address.' });
+
+    if (body.action === 'send') {
+      await sendCode(db, req, email, purpose, cleanText(body.name, 100) || 'Customer');
+      return reply(res, 200, { success: true, expiresInSeconds: OTP_LIFETIME_MS / 1000, cooldownSeconds: RESEND_COOLDOWN_MS / 1000 });
     }
 
     if (body.action === 'verify') {
       const code = String(body.code || '').trim();
       if (!/^\d{6}$/.test(code)) return reply(res, 400, { error: 'Enter the complete 6-digit code.' });
-      const recordSnapshot = await otpRef.get();
-      const record = recordSnapshot.exists ? recordSnapshot.data() : null;
-      if (!record || new Date(record.expires_at).getTime() <= Date.now() || record.attempts >= MAX_VERIFY_ATTEMPTS) {
-        if (record) await otpRef.delete();
-        return reply(res, 400, { error: 'Code is invalid or expired. Request a new code.' });
-      }
-
-      if (!safeCompare(hashCode(email, purpose, code), record.code_hash)) {
-        const nextAttempts = record.attempts + 1;
-        if (nextAttempts >= MAX_VERIFY_ATTEMPTS) {
-          await otpRef.delete();
-        } else {
-          await otpRef.update({ attempts: nextAttempts });
-        }
-        return reply(res, 400, { error: 'Incorrect code. Check your email and try again.' });
-      }
-
-      await otpRef.delete();
-      return reply(res, 200, { success: true, verified: true, email });
+      await verifyCode(db, email, purpose, code);
+      const phone = String(body.phone || '').replace(/\D/g, '').slice(-10);
+      const customer = await upsertCustomer(db, email, {
+        name: cleanText(body.name, 100),
+        phone: /^[6-9]\d{9}$/.test(phone) ? phone : '',
+      });
+      const firebaseToken = await createCustomerFirebaseToken(email);
+      return reply(res, 200, {
+        success: true,
+        verified: true,
+        email,
+        firebaseToken,
+        customer: { name: customer.name, phone: customer.phone, createdAt: customer.createdAt },
+      });
     }
 
     return reply(res, 400, { error: 'Invalid OTP action.' });
   } catch (error) {
+    if (error?.userFacing) return reply(res, error.status, { error: error.message });
     const message = error?.message || 'OTP request failed.';
     console.error('Customer OTP API error:', message);
     if (message === 'SERVER_CONFIG_MISSING') return reply(res, 503, { error: 'Email verification is temporarily unavailable.' });
-    if (message === 'OTP_EMAIL_NOT_CONFIGURED') return reply(res, 503, { error: 'Email verification is not configured yet. Please contact support.' });
-    if (message === 'OTP_EMAIL_DELIVERY_FAILED') return reply(res, 502, { error: 'Could not deliver the verification email. Please try again later.' });
+    if (message === 'EMAIL_NOT_CONFIGURED') return reply(res, 503, { error: 'Email verification is not configured yet. Please contact support.' });
+    if (message === 'EMAIL_DELIVERY_FAILED') return reply(res, 502, { error: 'Could not deliver the verification email. Please try again later.' });
     return reply(res, 500, { error: 'Verification request failed. Please try again.' });
   }
 }

@@ -1,0 +1,9 @@
+// Only for worker/test/real-d1.test.mjs: gives getPlatformProxy() a local D1 binding.
+// Never deployed; the database id is a placeholder and nothing here talks to Cloudflare.
+{
+  "name": "suitauragirls-docstore-test",
+  "compatibility_date": "2025-09-01",
+  "d1_databases": [
+    { "binding": "DB", "database_name": "docstore-test", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ]
+}

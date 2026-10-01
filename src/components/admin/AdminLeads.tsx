@@ -1,34 +1,35 @@
 import React, { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
-import { 
-  MessageSquare, 
-  Search, 
-  Filter, 
-  Download, 
-  CheckCircle2, 
-  Clock, 
-  Mail, 
+import { useShop } from '../../context/ShopContext';
+import {
+  MessageSquare,
+  Search,
+  Filter,
+  Download,
+  CheckCircle2,
+  Clock,
+  Mail,
   Phone,
   Trash2,
   Users,
   Zap
 } from 'lucide-react';
-import { motion } from 'motion/react';
 import { Lead } from '../../types';
 
 export const AdminLeads: React.FC = () => {
   const { leads, updateLeadOfferStatus, deleteLead } = useAdmin();
+  const { showToast } = useShop();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSource, setFilterSource] = useState<'all' | 'newsletter' | 'contact' | 'direct'>('all');
 
   const filteredLeads = leads.filter(lead => {
-    const matchesSearch = 
+    const matchesSearch =
       lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (lead.name && lead.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (lead.phone && lead.phone.includes(searchTerm));
-    
+
     const matchesSource = filterSource === 'all' || lead.source === filterSource;
-    
+
     return matchesSearch && matchesSource;
   });
 
@@ -39,10 +40,10 @@ export const AdminLeads: React.FC = () => {
     }
 
     const cleanPhone = lead.phone.replace(/\D/g, '');
-    const message = `Namaste ${lead.name || ''}! Thank you for showing interest in Suit Aura Girls. We have a special boutique offer just for you. Use code AURA10 for 10% OFF on your first designer suit set. Shop now: https://suitauragirls.com`;
-    
+    const message = `Namaste ${lead.name || ''}! Thank you for showing interest in Suit Aura Girls. Browse our latest collection here: https://www.suitauragirls.in`;
+
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
-    updateLeadOfferStatus(lead.id, true);
+    updateLeadOfferStatus(lead.id, true).catch(() => showToast('Could not mark the offer as sent.', 'error'));
   };
 
   const formatDate = (dateString: string) => {
@@ -59,82 +60,121 @@ export const AdminLeads: React.FC = () => {
     }
   };
 
+  const exportLeadsCsv = () => {
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + "Email,Name,Phone,Source,Date,Offer Sent\n"
+      + leads.map(l => `${l.email},${l.name || ''},${l.phone || ''},${l.source},${l.createdAt},${l.offerSent ? 'Yes' : 'No'}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `sag_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+  };
+
+  const sourceBadge = (source: string) => (
+    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${
+      source === 'newsletter' ? 'bg-[#F3EEF8] text-[#4B1D3F]' :
+      source === 'contact' ? 'bg-[#E6DDF0] text-[#4B1D3F]' :
+      'bg-[#FBF7F3] border border-[#4B1D3F]/10 text-[#2A1A26]/75'
+    }`}>
+      {source}
+    </span>
+  );
+
+  const statusBadge = (lead: Lead) => lead.offerSent ? (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
+      <CheckCircle2 className="w-3.5 h-3.5" />
+      Offer Sent
+    </span>
+  ) : (
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FBF7F3] border border-[#C5A46D]/60 text-[#2A1A26]/80 text-[11px] font-semibold">
+      <Clock className="w-3.5 h-3.5" />
+      Pending
+    </span>
+  );
+
+  const actions = (lead: Lead) => (
+    <div className="flex items-center justify-end gap-2">
+      {lead.phone && (
+        <button
+          onClick={() => handleSendWhatsAppOffer(lead)}
+          className={`h-9 flex items-center gap-2 px-3.5 rounded-full text-[12px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${
+            lead.offerSent
+              ? 'bg-white border border-[#4B1D3F]/20 text-[#4B1D3F] hover:bg-[#F3EEF8]'
+              : 'bg-[#4B1D3F] text-white hover:bg-[#3B1532]'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          <span>{lead.offerSent ? 'Resend Offer' : 'Send WhatsApp Offer'}</span>
+        </button>
+      )}
+      <button
+        onClick={() => { if (window.confirm('Delete this lead?')) deleteLead(lead.id).then(() => showToast('Lead deleted.', 'info')).catch(() => showToast('Could not delete the lead.', 'error')); }}
+        className="w-9 h-9 flex items-center justify-center text-[#2A1A26]/45 hover:text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
+        title="Delete lead"
+        aria-label="Delete lead"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+    </div>
+  );
+
+  const stats = [
+    { label: 'Total Leads', value: leads.length, icon: Users, tone: 'bg-[#F3EEF8] text-[#4B1D3F]' },
+    { label: 'Offers Sent', value: leads.filter(l => l.offerSent).length, icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-700' },
+    { label: 'Pending Conversion', value: leads.filter(l => !l.offerSent).length, icon: Zap, tone: 'bg-[#FBF7F3] border border-[#C5A46D]/40 text-[#9C7A45]' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-serif font-bold text-[#2C1820]">Real-time Captured Leads</h2>
-          <p className="text-sm text-gray-500 mt-1">Manage and convert newsletter subscribers & contact inquiries.</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9C7A45]">Audience</p>
+          <h2 className="mt-1 text-3xl sm:text-4xl font-serif font-semibold text-[#4B1D3F] leading-tight">Real-time Captured Leads</h2>
+          <p className="text-sm text-[#2A1A26]/60 mt-1">Manage and convert newsletter subscribers & contact inquiries.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-rose-100 rounded-xl text-xs font-bold text-[#211C1A] hover:bg-rose-50 transition shadow-sm cursor-pointer"
-            onClick={() => {
-              const csvContent = "data:text/csv;charset=utf-8," 
-                + "Email,Name,Phone,Source,Date,Offer Sent\n"
-                + leads.map(l => `${l.email},${l.name || ''},${l.phone || ''},${l.source},${l.createdAt},${l.offerSent ? 'Yes' : 'No'}`).join("\n");
-              const encodedUri = encodeURI(csvContent);
-              const link = document.createElement("a");
-              link.setAttribute("href", encodedUri);
-              link.setAttribute("download", `sag_leads_${new Date().toISOString().split('T')[0]}.csv`);
-              document.body.appendChild(link);
-              link.click();
-            }}
-          >
-            <Download className="w-4 h-4" />
-            <span>Export CSV</span>
-          </button>
-        </div>
+        <button
+          className="self-start lg:self-auto h-10 flex items-center gap-2 px-4 bg-white border border-[#4B1D3F]/20 rounded-full text-[13px] font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
+          onClick={exportLeadsCsv}
+        >
+          <Download className="w-4 h-4" />
+          <span>Export CSV</span>
+        </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-rose-50 text-[#211C1A] flex items-center justify-center">
-            <Users className="w-6 h-6" />
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-white p-3.5 sm:p-5 rounded-2xl border border-[#4B1D3F]/10 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 ${stat.tone}`}>
+              <stat.icon className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold text-[#2A1A26]/55 uppercase tracking-[0.12em] leading-tight">{stat.label}</p>
+              <h3 className="text-2xl font-serif font-semibold text-[#2A1A26] tabular-nums">{stat.value}</h3>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Leads</p>
-            <h3 className="text-xl font-bold text-[#2C1820]">{leads.length}</h3>
-          </div>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Offers Sent</p>
-            <h3 className="text-xl font-bold text-[#2C1820]">{leads.filter(l => l.offerSent).length}</h3>
-          </div>
-        </div>
-        <div className="bg-white p-5 rounded-2xl border border-rose-100 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-black flex items-center justify-center">
-            <Zap className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Pending Conversion</p>
-            <h3 className="text-xl font-bold text-[#2C1820]">{leads.filter(l => !l.offerSent).length}</h3>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-rose-100 shadow-sm flex flex-col sm:flex-row gap-4 items-center">
+      <div className="bg-white p-3 sm:p-4 rounded-3xl border border-[#4B1D3F]/10 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input 
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B1D3F]/50" />
+          <input
             type="text"
             placeholder="Search leads by name, email or phone..."
-            className="w-full pl-10 pr-4 py-2 bg-rose-50/30 border border-rose-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#241D1B] focus:border-transparent"
+            className="w-full h-11 pl-11 pr-4 bg-[#FBF7F3] border border-[#4B1D3F]/15 rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#4B1D3F]/10 focus:border-[#4B1D3F]/40 transition"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="w-4 h-4 text-gray-400" />
-          <select 
-            className="flex-1 sm:flex-none px-3 py-2 bg-rose-50/30 border border-rose-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#241D1B]"
+        <div className="relative w-full sm:w-56">
+          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B1D3F]/50 pointer-events-none" />
+          <select
+            className="w-full h-11 pl-10 pr-4 bg-white border border-[#4B1D3F]/15 rounded-full text-sm text-[#2A1A26] focus:outline-none focus:ring-4 focus:ring-[#4B1D3F]/10 focus:border-[#4B1D3F]/40 cursor-pointer"
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value as any)}
           >
@@ -146,115 +186,84 @@ export const AdminLeads: React.FC = () => {
         </div>
       </div>
 
-      {/* Table Section */}
-      <div className="bg-white rounded-2xl border border-rose-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-rose-50/50 border-b border-rose-100">
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Lead Info</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Source</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Captured At</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-rose-50">
-              {filteredLeads.length > 0 ? (
-                filteredLeads.map((lead) => (
-                  <motion.tr 
-                    key={lead.id}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-rose-50/20 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="text-sm font-bold text-gray-900">{lead.name || 'Anonymous Lead'}</p>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                            <Mail className="w-3 h-3" />
+      {filteredLeads.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 py-14 px-6 text-center">
+          <span className="mx-auto w-14 h-14 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center mb-3"><MessageSquare className="w-6 h-6" /></span>
+          <p className="text-sm font-medium text-[#2A1A26]/65">No leads found matching your criteria.</p>
+        </div>
+      ) : (
+        <>
+          {/* Phone: cards */}
+          <ul className="md:hidden space-y-3">
+            {filteredLeads.map((lead) => (
+              <li key={lead.id} className="bg-white rounded-2xl border border-[#4B1D3F]/10 p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#2A1A26] truncate">{lead.name || 'Anonymous Lead'}</p>
+                    <p className="text-[12px] text-[#2A1A26]/55 flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDate(lead.createdAt)}</p>
+                  </div>
+                  {sourceBadge(lead.source)}
+                </div>
+                <div className="space-y-1 text-[13px] text-[#2A1A26]/75">
+                  <p className="flex items-center gap-2 break-all"><Mail className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />{lead.email}</p>
+                  {lead.phone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />{lead.phone}</p>}
+                </div>
+                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#4B1D3F]/[0.08]">
+                  {statusBadge(lead)}
+                  {actions(lead)}
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* Tablet / desktop: table */}
+          <div className="hidden md:block bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] overflow-hidden">
+            <div className="overflow-x-auto max-h-[75vh] overflow-y-auto">
+              <table className="w-full text-left">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-[#FBF7F3] border-b border-[#4B1D3F]/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/55">
+                    <th className="pl-5 pr-3 py-3.5 font-semibold">Lead Info</th>
+                    <th className="px-3 py-3.5 font-semibold">Source</th>
+                    <th className="px-3 py-3.5 font-semibold">Captured At</th>
+                    <th className="px-3 py-3.5 font-semibold">Status</th>
+                    <th className="pl-3 pr-5 py-3.5 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#4B1D3F]/[0.06]">
+                  {filteredLeads.map((lead) => (
+                    <tr key={lead.id} className="hover:bg-[#FBF7F3] transition-colors">
+                      <td className="pl-5 pr-3 py-4">
+                        <p className="text-sm font-semibold text-[#2A1A26]">{lead.name || 'Anonymous Lead'}</p>
+                        <div className="mt-1 flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60">
+                            <Mail className="w-3.5 h-3.5 text-[#4B1D3F]/45" />
                             {lead.email}
                           </div>
                           {lead.phone && (
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                              <Phone className="w-3 h-3" />
+                            <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60">
+                              <Phone className="w-3.5 h-3.5 text-[#4B1D3F]/45" />
                               {lead.phone}
                             </div>
                           )}
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        lead.source === 'newsletter' ? 'bg-blue-50 text-blue-700' :
-                        lead.source === 'contact' ? 'bg-purple-50 text-purple-700' :
-                        'bg-gray-50 text-gray-700'
-                      }`}>
-                        {lead.source}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <Clock className="w-3.5 h-3.5" />
-                        {formatDate(lead.createdAt)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      {lead.offerSent ? (
-                        <span className="flex items-center gap-1 text-emerald-600 text-[10px] font-bold uppercase">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          Offer Sent
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-black text-[10px] font-bold uppercase">
+                      </td>
+                      <td className="px-3 py-4">{sourceBadge(lead.source)}</td>
+                      <td className="px-3 py-4">
+                        <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60 whitespace-nowrap">
                           <Clock className="w-3.5 h-3.5" />
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {lead.phone && (
-                          <button
-                            onClick={() => handleSendWhatsAppOffer(lead)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                              lead.offerSent 
-                                ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                                : 'bg-[#25D366] text-white hover:bg-[#128C7E] shadow-sm'
-                            }`}
-                          >
-                            <MessageSquare className="w-3.5 h-3.5" />
-                            <span>{lead.offerSent ? 'Resend Offer' : 'Send WhatsApp Offer'}</span>
-                          </button>
-                        )}
-                        <button 
-                          onClick={() => { if(confirm('Delete lead?')) deleteLead(lead.id); }}
-                          className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center gap-3 text-gray-400">
-                      <MessageSquare className="w-12 h-12 opacity-20" />
-                      <p className="text-sm font-medium">No leads found matching your criteria.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                          {formatDate(lead.createdAt)}
+                        </div>
+                      </td>
+                      <td className="px-3 py-4">{statusBadge(lead)}</td>
+                      <td className="pl-3 pr-5 py-4 text-right">{actions(lead)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

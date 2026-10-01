@@ -1,0 +1,7 @@
+{
+  // Local-only check Worker (see check.mjs). Same compatibility settings as the real worker/wrangler.jsonc.
+  "name": "sag-crypto-compat-check",
+  "main": "worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"]
+}

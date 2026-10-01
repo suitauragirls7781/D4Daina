@@ -9,3 +9,11 @@ coverage/
 
 .vercel
 .env*
+
+# Data exports for the migration (contain customer details: never commit)
+migration/data/
+dist-cf/
+worker/.wrangler/
+worker/.dev.vars
+.wrangler/
+.wrangler-dry/

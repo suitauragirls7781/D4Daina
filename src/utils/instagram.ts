@@ -17,6 +17,7 @@ export const instagramEmbedUrl = (reel: InstagramReel) => `${reel.url.replace(/\
 /** "@handle" and profile link from the store's Instagram URL. */
 export const instagramProfile = (instagramUrl?: string) => {
   const match = (instagramUrl || '').match(/instagram\.com\/([A-Za-z0-9_.]+)/);
-  const handle = match ? match[1] : 'suitauragirls';
+  // falls back to the store's real handle (same as STORE_INSTAGRAM_URL) when the admin has not set a link
+  const handle = match ? match[1] : 'suit_aura_girls';
   return { handle: `@${handle}`, url: `https://www.instagram.com/${handle}/` };
 };

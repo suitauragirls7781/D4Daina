@@ -1,697 +1,472 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { VoiceSearchButton } from './VoiceSearchButton';
+import { useDiscovery } from '../utils/discovery';
+import { KIDS_TOYS, departmentOf, isKidsToysListing } from '../utils/kids';
+// Photo search is off by default; its code loads only when the owner switches it on
+const FindThisLookButton = lazy(() => import('./FindThisLook').then((m) => ({ default: m.FindThisLookButton })));
+import { withPageTransition } from '../utils/pageTransition';
 import { useShop } from '../context/ShopContext';
-import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
+import { useRouter } from '../context/RouterContext';
 import { fuzzyMatchProduct } from '../utils/fuzzySearch';
-import { RotatableBannerTicker } from './RotatableBannerTicker';
-import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { 
-  Search, 
-  Home,
-  Heart, 
-  ShoppingBag, 
-  Menu, 
-  X, 
-  ChevronRight, 
-  Sparkles,
-  User,
-  Package,
-  Headphones,
-  Info,
-  Clock,
-  TrendingUp,
-  Trash2,
-  MessageSquare,
-  Star
-} from 'lucide-react';
-import * as motion from 'motion/react-client';
+import { getCleanImageUrl } from '../utils/imageHelper';
+import { ChevronDown, ChevronRight, Clock, Trash2, X } from 'lucide-react';
+import { BagIcon } from './BrandIcons';
+import { HeartIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
+
+const RECENT_KEY = 'sag_recent_searches_v1';
 
 export const Header: React.FC = () => {
-  const { storeSettings } = useAdmin();
-  const { 
+  const { user } = useAuth();
+  const { navigate } = useRouter();
+  const {
     products = [],
-    cartCount, 
-    wishlist, 
-    activePage, 
-    setActivePage, 
-    selectedCategory, 
-    navigateToCategory, 
+    cartCount,
+    wishlist,
+    activePage,
+    setActivePage,
+    selectedCategory,
+    navigateToCategory,
     navigateToProduct,
     setIsCartDrawerOpen,
     isMobileMenuOpen,
     setIsMobileMenuOpen,
     isSearchOpen,
     setIsSearchOpen,
-    setSearchQuery
+    setSearchQuery,
   } = useShop();
 
+  const { features } = useDiscovery();
   const [searchInput, setSearchInput] = useState('');
-  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  
-  // Recent Searches state with localStorage persistence
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('sag_recent_searches_v1');
-      return saved ? JSON.parse(saved) : ['Anarkali Suits', 'Silk Dupatta', 'Organza Sets', 'Cotton Kurtis'];
+      const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+      return Array.isArray(saved) ? saved : [];
     } catch {
-      return ['Anarkali Suits', 'Silk Dupatta', 'Organza Sets', 'Cotton Kurtis'];
+      return [];
     }
   });
-
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const accountMenuRef = useRef<HTMLDivElement>(null);
+  // Phones: a search bar under the logo that tucks away while scrolling down and returns on scroll up
+  const [compact, setCompact] = useState(false);
+  // The bar turns clean white once the page moves under it
+  const [scrolled, setScrolled] = useState(false);
+  const [hintIndex, setHintIndex] = useState(0);
+  const collectionsRef = useRef<HTMLDivElement>(null);
 
-  const saveSearchTerm = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-    setRecentSearches((prev) => {
-      const filtered = prev.filter((item) => item.toLowerCase() !== trimmed.toLowerCase());
-      const updated = [trimmed, ...filtered].slice(0, 6);
-      try {
-        localStorage.setItem('sag_recent_searches_v1', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  };
+  const activeProducts = useMemo(() => products.filter((p) => p.inStock), [products]);
 
-  const removeRecentSearch = (termToRemove: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-    setRecentSearches((prev) => {
-      const updated = prev.filter((t) => t.toLowerCase() !== termToRemove.toLowerCase());
-      try {
-        localStorage.setItem('sag_recent_searches_v1', JSON.stringify(updated));
-      } catch {}
-      return updated;
-    });
-  };
+  // Collections = women's categories that actually have products (kids wear and toys have their own page).
+  const collections = useMemo(() => {
+    const counts = new Map<string, number>();
+    products.forEach((p) => { if (departmentOf(p) === 'women') counts.set(p.category, (counts.get(p.category) || 0) + 1); });
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  }, [products]);
+  const hasKidsToys = useMemo(() => products.some((p) => departmentOf(p) !== 'women'), [products]);
 
-  const clearAllRecentSearches = () => {
-    setRecentSearches([]);
-    try {
-      localStorage.removeItem('sag_recent_searches_v1');
-    } catch {}
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    searchInputRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsSearchOpen(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    let last = window.scrollY;
+    let lockUntil = 0;
+    let isCompact = false;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      const now = performance.now();
+      // The header height changes when the bar tucks away; ignore the scroll jump that causes
+      if (now < lockUntil) { last = y; return; }
+      let next = isCompact;
+      if (y < 80) next = false;
+      else if (y > last + 8) next = true;
+      else if (y < last - 8) next = false;
+      last = y;
+      if (next !== isCompact) {
+        isCompact = next;
+        lockUntil = now + 450;
+        setCompact(next);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      if (collectionsRef.current && !collectionsRef.current.contains(event.target as Node)) setCollectionsOpen(false);
+    };
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') setCollectionsOpen(false); };
+    document.addEventListener('mousedown', onClick);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [isMobileMenuOpen]);
+
+  const saveRecent = (next: string[]) => {
+    setRecentSearches(next);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)); } catch {}
   };
 
   const executeSearch = (query: string) => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    saveSearchTerm(trimmed);
-    setSearchQuery(trimmed);
-    navigateToCategory('All');
+    saveRecent([trimmed, ...recentSearches.filter((t) => t.toLowerCase() !== trimmed.toLowerCase())].slice(0, 6));
+    withPageTransition(() => {
+      setSearchQuery(trimmed);
+      setActivePage('shop');
+      navigate(`/shop?q=${encodeURIComponent(trimmed)}`);
+    });
     setIsSearchOpen(false);
+    setSearchInput('');
   };
 
-  // Focus search input when drawer opens
+  const showMobileSearch = !['shop', 'checkout', 'cart', 'login', 'order-confirmation', 'product-detail'].includes(activePage);
+  // Search hints use real collection names only
+  const hints = useMemo(() => ['Search suits, kurtis & more', ...collections.slice(0, 5).map(([name]) => `Search “${name}”`)], [collections]);
   useEffect(() => {
-    if (isSearchOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isSearchOpen]);
+    if (!showMobileSearch || hints.length < 2) return;
+    const timer = window.setInterval(() => setHintIndex((i) => i + 1), 3200);
+    return () => window.clearInterval(timer);
+  }, [showMobileSearch, hints.length]);
 
-  // Click outside listener for account dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
-        setIsAccountMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Lock body scroll when mobile menu is open to prevent background scrolling
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileMenuOpen]);
-
-  // Filter products for instant search dropdown with fuzzy ethnic matching (on 2-letter input)
-  const activeProducts = products.filter((p) => p.inStock);
   const searchTrimmed = searchInput.trim();
-  const filteredSearchResults = searchTrimmed.length >= 2
-    ? activeProducts.filter((p) => fuzzyMatchProduct(p, searchTrimmed)).slice(0, 6)
-    : [];
+  const matches = searchTrimmed.length >= 2 ? activeProducts.filter((p) => fuzzyMatchProduct(p, searchTrimmed)) : [];
+  const results = matches.slice(0, 6);
 
-  // Top 4 Bestseller ethnic sets for fallback when search returns zero direct matches
-  const top4Bestsellers = useMemo(() => {
-    const tagged = activeProducts.filter((p) => p.isBestSeller);
-    if (tagged.length >= 4) {
-      return tagged.slice(0, 4);
-    }
-    const sorted = [...activeProducts].sort((a, b) => (b.rating * (b.reviewCount || 1)) - (a.rating * (a.reviewCount || 1)));
-    return sorted.slice(0, 4);
-  }, [activeProducts]);
-
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchInput.trim()) {
-      executeSearch(searchInput.trim());
-    }
-  };
-
-  const navItems = [
-    {
-      label: 'Home',
-      action: () => setActivePage('home'),
-      isActive: activePage === 'home',
-    },
-    {
-      label: 'New Arrivals',
-      action: () => navigateToCategory('New Arrivals'),
-      isActive: activePage === 'shop' && selectedCategory === 'New Arrivals',
-    },
-    {
-      label: 'Suits',
-      action: () => navigateToCategory('Suits'),
-      isActive: activePage === 'shop' && selectedCategory === 'Suits',
-    },
-    {
-      label: 'Kurtis',
-      action: () => navigateToCategory('Kurtis'),
-      isActive: activePage === 'shop' && selectedCategory === 'Kurtis',
-    },
-    {
-      label: 'Dresses',
-      action: () => navigateToCategory('Dresses'),
-      isActive: activePage === 'shop' && selectedCategory === 'Dresses',
-    },
-    {
-      label: 'Dupatta Sets',
-      action: () => navigateToCategory('Dupatta Sets'),
-      isActive: activePage === 'shop' && selectedCategory === 'Dupatta Sets',
-    },
-    {
-      label: 'Co-ord Sets',
-      action: () => navigateToCategory('Co-ord Sets'),
-      isActive: activePage === 'shop' && selectedCategory === 'Co-ord Sets',
-    },
-    {
-      label: 'Anarkali',
-      action: () => navigateToCategory('Anarkali'),
-      isActive: activePage === 'shop' && selectedCategory === 'Anarkali',
-    },
-    {
-      label: 'Festive Wear',
-      action: () => navigateToCategory('Festive Wear'),
-      isActive: activePage === 'shop' && selectedCategory === 'Festive Wear',
-    },
-    {
-      label: 'Sale',
-      action: () => navigateToCategory('Sale'),
-      isSale: true,
-      isActive: activePage === 'shop' && selectedCategory === 'Sale',
-    },
+  const navItems: Array<{ label: string; action: () => void; active: boolean }> = [
+    { label: 'Home', action: () => setActivePage('home'), active: activePage === 'home' },
+    { label: 'Shop', action: () => navigateToCategory('All'), active: activePage === 'shop' && selectedCategory === 'All' },
+    { label: 'New Arrivals', action: () => navigateToCategory('New Arrivals'), active: activePage === 'shop' && selectedCategory === 'New Arrivals' },
+    ...(hasKidsToys ? [{ label: KIDS_TOYS, action: () => navigateToCategory(KIDS_TOYS as any), active: activePage === 'shop' && isKidsToysListing(selectedCategory) }] : []),
   ];
 
-  const getCategoryCount = (categoryName: string) => {
-    if (!products) return 0;
-    const activeProds = products.filter(p => p.inStock);
-    if (categoryName === 'Sale') {
-      return activeProds.filter(p => p.isSale || p.discount >= 36).length;
-    }
-    if (categoryName === 'Festive Wear') {
-      return activeProds.filter(p => p.category === 'Festive Wear' || p.isFestive).length;
-    }
-    if (categoryName === 'Dupatta Sets') {
-      return activeProds.filter(p => p.category === 'Dupatta Sets' || p.subcategory?.toLowerCase().includes('dupatta')).length;
-    }
-    return activeProds.filter(p => p.category === categoryName).length;
-  };
+  // A solid white surface once the page moves under the bar (or while search is open)
+  const surface = scrolled || isSearchOpen;
+  const ease = 'ease-[cubic-bezier(0.22,1,0.36,1)]';
+  const spring = 'ease-[cubic-bezier(0.34,1.56,0.64,1)]';
+  const iconButton = `sag-hbtn group relative w-11 h-11 rounded-full flex items-center justify-center text-[#4B1D3F] cursor-pointer transition-[background-color,transform] duration-300 ${ease} hover:bg-[#F3EEF8] active:scale-[0.92] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4B1D3F]/25 lg:w-auto lg:h-auto lg:min-w-[68px] lg:px-2.5 lg:pt-2 lg:pb-1.5 lg:rounded-2xl lg:flex-col lg:gap-1.5`;
+  const iconGlyph = `relative flex transition-transform duration-500 ${spring}`;
+  const iconLabel = 'hidden lg:block text-[11px] font-semibold uppercase tracking-[0.16em] leading-none text-[#2A1A26]/55 group-hover:text-[#4B1D3F] transition-colors duration-300';
+  const badge = `sag-badge-pop absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-[#4B1D3F] text-[#FBF7F3] text-[10px] font-bold tabular-nums leading-none flex items-center justify-center ring-2 transition-[box-shadow] duration-300 ${surface ? 'ring-white' : 'ring-[#FBF7F3]'} group-hover:ring-[#F3EEF8]`;
+  const menuLine = `absolute left-0 h-[1.75px] rounded-full bg-current transition-all duration-300 ${ease}`;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#120205] text-[#E8D2A4] border-b border-[#D7B77A]/25 select-none">
-      
-      {/* Main Luxury Header Content Area */}
-      <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3 flex items-center justify-between gap-2 min-h-[68px] sm:min-h-[78px]">
+    <header className={`sticky top-0 z-50 w-full border-b select-none transition-[background-color,box-shadow,border-color] duration-500 ${ease} ${surface ? 'bg-white border-[#4B1D3F]/[0.08] shadow-[0_14px_32px_-26px_rgba(42,26,38,0.6)]' : 'bg-[#FBF7F3] border-[#4B1D3F]/[0.06] shadow-none'}`}>
+      {/* A fine champagne hairline appears under the bar once the page scrolls */}
+      <span aria-hidden="true" className={`pointer-events-none absolute inset-x-0 -bottom-px h-px bg-gradient-to-r from-transparent via-[#C5A46D]/50 to-transparent transition-opacity duration-500 ${surface ? 'opacity-100' : 'opacity-0'}`} />
 
-        {/* Column 1 (Left): Mobile Menu Trigger & Status Indicator */}
-        <div className="relative z-10 flex items-center shrink-0">
+      <div className="max-w-7xl mx-auto pl-1.5 pr-2 sm:px-6 lg:px-8 h-16 sm:h-[72px] lg:h-[78px] flex items-center justify-between gap-2 sm:gap-3">
+        <div className="flex items-center gap-0.5 lg:gap-0 min-w-0">
           <button
             id="mobile-menu-trigger"
-            onClick={() => {
-              setIsSearchOpen(false);
-              setIsMobileMenuOpen(!isMobileMenuOpen);
-            }}
-            className="w-10 h-10 sm:w-11 sm:h-11 bg-transparent hover:bg-[#180306] text-[#E8D2A4] focus:outline-none lg:hidden transition-colors border border-[#D7B77A]/35 flex items-center justify-center cursor-pointer"
-            aria-label="Toggle Navigation Menu"
+            onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+            className={`${iconButton} sag-hdr-in lg:hidden`}
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMobileMenuOpen}
           >
-            {isMobileMenuOpen ? <X className="w-4.5 h-4.5" /> : <Menu className="w-4.5 h-4.5" />}
-          </button>
-
-          <div className="hidden lg:flex flex-col items-start gap-0.5 text-[9px] uppercase font-medium text-[#E8D2A4]">
-            <span className="flex items-center gap-1.5 whitespace-nowrap font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A]" />
-              JAIPUR ATELIER
+            {/* Three fine lines of different lengths that fold into a cross */}
+            <span aria-hidden="true" className="relative block w-[22px] h-[15px]">
+              <span className={`${menuLine} w-[22px] ${isMobileMenuOpen ? 'top-[6.6px] rotate-45' : 'top-0'}`} />
+              <span className={`${menuLine} top-[6.6px] ${isMobileMenuOpen ? 'w-0 opacity-0' : 'w-[14px] group-hover:w-[22px]'}`} />
+              <span className={`${menuLine} ${isMobileMenuOpen ? 'top-[6.6px] w-[22px] -rotate-45' : 'top-[13.2px] w-[18px] group-hover:w-[22px]'}`} />
             </span>
-            <span className="text-[#E8D2A4]/70 whitespace-nowrap font-medium">MADE IN INDIA</span>
-          </div>
-        </div>
-
-        {/* Column 2 (Center): Merged Logo & High-Fashion Title */}
-        <div className="relative z-10 flex-1 flex items-center justify-center text-center px-0.5 sm:px-2">
+          </button>
           <button
             id="header-brand-logo"
             onClick={() => setActivePage('home')}
-            className="flex items-center justify-center group shrink-0 cursor-pointer"
+            className="sag-hdr-logo group flex items-center shrink-0 rounded-xl cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4B1D3F]/25"
+            aria-label="Suit Aura Girls home"
           >
-            <motion.img
-              src="/suit-aura-logo.png"
-              alt="Suit Aura Girls logo"
-              initial={{ scale: 0.96 }}
-              animate={{ scale: 1 }}
-              transition={{ duration: 0.35 }}
-              className="w-24 h-12 xs:w-28 xs:h-14 sm:w-36 sm:h-[72px] object-contain"
+            <img
+              src="/suit-aura-logo-480.webp"
+              alt="Suit Aura Girls"
+              width="480"
+              height="240"
+              className={`h-12 sm:h-14 lg:h-[62px] w-auto object-contain origin-left transition-[transform,opacity] duration-500 ${ease} group-hover:opacity-90 ${surface ? 'scale-[0.94]' : 'scale-100'}`}
             />
           </button>
         </div>
 
-        {/* Column 3 (Right): Action Buttons */}
-        <div className="relative z-10 flex items-center justify-end space-x-1 sm:space-x-2 shrink-0">
-          
-          {/* Search Trigger */}
+        {/* Desktop: a wide search field in the middle of the bar */}
+        <div className="sag-hdr-in hidden lg:block relative flex-1 max-w-xl mx-6 xl:mx-12 group/search" style={{ '--i': 1 } as React.CSSProperties}>
           <button
-            id="header-search-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              setIsSearchOpen(!isSearchOpen);
-            }}
-            className="w-9 h-9 sm:w-10 sm:h-10 bg-transparent hover:bg-[#180306] text-[#E8D2A4] transition-colors border border-[#D7B77A]/35 flex items-center justify-center cursor-pointer"
-            aria-label="Search styles"
+            type="button"
+            id="desktop-search-field"
+            onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+            className={`w-full h-12 pl-12 pr-14 rounded-full border border-[#4B1D3F]/[0.12] hover:bg-white hover:border-[#4B1D3F]/30 hover:shadow-[0_10px_24px_-18px_rgba(42,26,38,0.55)] focus-visible:outline-none focus-visible:bg-white focus-visible:border-[#4B1D3F]/40 focus-visible:ring-4 focus-visible:ring-[#4B1D3F]/10 text-left text-[14.5px] text-[#2A1A26]/55 truncate cursor-pointer transition-[background-color,border-color,box-shadow] duration-300 ${ease} ${surface ? 'bg-[#FBF7F3]' : 'bg-white'}`}
           >
-            <Search className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#F7F0E5]" />
+            <span key={hintIndex % hints.length} className="sag-fade inline-block">{hints[hintIndex % hints.length]}</span>
           </button>
-
-          {/* Account / Login Button (Visible on Mobile & Desktop) */}
-          <div className="relative" ref={accountMenuRef}>
-            <button
-              id="header-account-btn"
-              onClick={() => {
-                if (window.innerWidth < 640) {
-                  setActivePage('account');
-                } else {
-                  setIsAccountMenuOpen(!isAccountMenuOpen);
-                }
-              }}
-              className="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-lg bg-[#180306] hover:bg-[#180306] text-[#F7F0E5] transition border border-[#D7B77A]/15 flex items-center justify-center cursor-pointer"
-              aria-label="Account & Login"
-              title="Account & Login"
-            >
-              <User className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#F7F0E5]" />
-            </button>
-
-            {/* Account Dropdown (Desktop) */}
-            {isAccountMenuOpen && (
-              <div 
-                id="account-dropdown-menu"
-                className="absolute right-0 mt-3 w-60 bg-[#180306] rounded shadow-lg border border-[#D7B77A]/30 py-2 z-50 text-[#F7F0E5]"
-              >
-                <div className="px-4 py-2.5 border-b border-[#D7B77A]/20 bg-[#180306]/50">
-                  <p className="text-[10px] text-[#F7F0E5] uppercase tracking-wider font-bold">Welcome to</p>
-                  <p className="text-sm font-serif font-bold text-[#F7F0E5] tracking-wide">Suit Aura Girls</p>
-                </div>
-
-                <button
-                  id="acc-profile-btn"
-                  onClick={() => {
-                    setActivePage('account');
-                    setIsAccountMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-[#F7F0E5] hover:bg-[#2A0710]/20 flex items-center gap-2.5 transition cursor-pointer"
-                >
-                  <User className="w-4 h-4 text-[#F7F0E5]" />
-                  My Profile & Addresses
-                </button>
-
-                <button
-                  id="acc-track-orders-btn"
-                  onClick={() => {
-                    setActivePage('track-order');
-                    setIsAccountMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-[#F7F0E5] hover:bg-[#2A0710]/20 flex items-center gap-2.5 transition cursor-pointer"
-                >
-                  <Package className="w-4 h-4 text-[#F7F0E5]" />
-                  Track My Order
-                </button>
-
-                <button
-                  id="acc-about-btn"
-                  onClick={() => {
-                    setActivePage('about');
-                    setIsAccountMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-[#F7F0E5] hover:bg-[#2A0710]/20 flex items-center gap-2.5 transition cursor-pointer"
-                >
-                  <Info className="w-4 h-4 text-[#F7F0E5]" />
-                  About Suit Aura Girls
-                </button>
-
-                <button
-                  id="acc-contact-btn"
-                  onClick={() => {
-                    setActivePage('contact');
-                    setIsAccountMenuOpen(false);
-                  }}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-[#F7F0E5] hover:bg-[#2A0710]/20 flex items-center gap-2.5 transition cursor-pointer"
-                >
-                  <Headphones className="w-4 h-4 text-[#F7F0E5]" />
-                  24/7 VIP Support
-                </button>
-
-                <a
-                  id="acc-whatsapp-stylist-btn"
-                  href={createSupportWhatsAppUrl('Hi Suit Aura Girls! I have a question regarding suits and orders.')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => setIsAccountMenuOpen(false)}
-                  className="w-full px-4 py-2.5 text-left text-xs font-medium text-[#F7F0E5] hover:bg-[#2A0710]/20 flex items-center justify-between transition cursor-pointer border-t border-[#D7B77A]/15"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <MessageSquare className="w-4 h-4 text-emerald-400" />
-                    <span>WhatsApp Stylist</span>
-                  </span>
-                  <span className="text-[9px] bg-emerald-950/40 text-emerald-400 font-bold px-1.5 py-0.5 rounded-full">Active</span>
-                </a>
-
-              </div>
-            )}
-          </div>
-
-          {/* Shopping Cart Button (Desktop Only) */}
-          <button
-            id="header-cart-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              setIsSearchOpen(false);
-              setIsCartDrawerOpen(true);
-            }}
-            className="hidden md:flex w-10 h-10 bg-[#D7B77A] hover:bg-[#D7B77A]/90 text-[#F7F0E5] transition-colors items-center justify-center relative group border border-[#D7B77A]/40 cursor-pointer shrink-0"
-            aria-label="Shopping Bag"
-          >
-            <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#F7F0E5] font-extrabold group-hover:scale-105 transition-transform" />
-            {cartCount > 0 && (
-              <span key={`header-cart-badge-${cartCount}`} className="absolute -top-1.5 -right-1.5 flex h-4.5 w-4.5 items-center justify-center">
-                <span className="relative inline-flex rounded-full h-4.5 w-4.5 bg-[#D7B77A] text-[#F7F0E5] text-[9px] font-bold items-center justify-center border border-[#D7B77A]/15 shadow-xs">
-                  {cartCount > 99 ? '99+' : cartCount}
-                </span>
-              </span>
-            )}
-          </button>
-
+          <span className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none flex transition-transform duration-500 ${spring} group-hover/search:scale-110 group-hover/search:-rotate-6`}>
+            <SearchIcon className="w-5 h-5" live={false} />
+          </span>
+          <VoiceSearchButton onResult={executeSearch} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
         </div>
 
+        <div className="flex items-center gap-0 sm:gap-1 lg:gap-1.5 shrink-0">
+          <button id="header-search-btn" onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(!isSearchOpen); }} className={`${iconButton} sag-pop lg:!hidden ${showMobileSearch && !compact && !isSearchOpen ? 'hidden' : ''}`} aria-label="Search">
+            <span className={`${iconGlyph} group-hover:-rotate-12 group-hover:scale-110`}>
+              <SearchIcon className="w-[22px] h-[22px]" live={false} />
+            </span>
+          </button>
+          <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className={`${iconButton} sag-hdr-in`} style={{ '--i': 2 } as React.CSSProperties} aria-label={`Wishlist, ${wishlist.length} items`}>
+            <span className={`${iconGlyph} group-hover:scale-[1.14] group-active:scale-90`}>
+              <HeartIcon className="w-[22px] h-[22px]" live={false} />
+              {wishlist.length > 0 && <span key={`w${wishlist.length}`} className={badge}>{wishlist.length > 99 ? '99+' : wishlist.length}</span>}
+            </span>
+            <span className={iconLabel}>Wishlist</span>
+          </button>
+          <button id="header-account-btn" onClick={() => setActivePage('account')} className={`${iconButton} sag-hdr-in hidden sm:flex`} style={{ '--i': 3 } as React.CSSProperties} aria-label={user ? 'My account' : 'Sign in'}>
+            <span className={`${iconGlyph} group-hover:-translate-y-0.5`}>
+              <UserIcon className="w-[22px] h-[22px]" live={false} />
+              {user && <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ${surface ? 'ring-white' : 'ring-[#FBF7F3]'} group-hover:ring-[#F3EEF8]`} />}
+            </span>
+            <span className={iconLabel}>{user ? 'Account' : 'Sign in'}</span>
+          </button>
+          <button
+            id="header-cart-btn"
+            onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
+            className={`${iconButton} sag-hdr-in`}
+            style={{ '--i': 4 } as React.CSSProperties}
+            aria-label={`Bag, ${cartCount} items`}
+          >
+            <span className={`${iconGlyph} origin-top group-hover:-translate-y-0.5 group-hover:-rotate-6`}>
+              <BagIcon className="w-[22px] h-[22px]" live={false} />
+              {cartCount > 0 && <span key={`c${cartCount}`} className={badge}>{cartCount > 99 ? '99+' : cartCount}</span>}
+            </span>
+            <span className={iconLabel}>Bag</span>
+          </button>
+        </div>
       </div>
 
-      {/* 3. Desktop Navigation Bar (Categories Strip) */}
-      <div className="relative z-10 bg-[#120205] text-[#E8D2A4] border-t border-[#D7B77A]/20 hidden lg:block">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex items-center justify-center gap-x-6 xl:gap-x-10 min-h-11 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Desktop: the menu on its own row under the logo and search */}
+      <div className="hidden lg:block border-t border-[#4B1D3F]/[0.06]">
+            <nav className="sag-hdr-in max-w-7xl mx-auto px-8 h-12 flex items-center justify-center gap-9 xl:gap-12" style={{ '--i': 2 } as React.CSSProperties} aria-label="Main">
             {navItems.map((item) => (
               <button
                 key={item.label}
-                id={`nav-link-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
+                id={`nav-link-${item.label.toLowerCase().replace(/&/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`}
                 onClick={item.action}
-                className={`text-[11px] xl:text-xs tracking-[0.18em] uppercase font-semibold py-3 relative transition-all duration-200 shrink-0 cursor-pointer ${
-                  item.isSale
-                    ? 'text-[#D7B77A] hover:text-[#E8D2A4]'
-                    : item.isActive
-                    ? 'text-[#E8D2A4]'
-                    : 'text-[#E8D2A4]/70 hover:text-[#E8D2A4]'
-                }`}
+                aria-current={item.active ? 'page' : undefined}
+                className={`group relative py-2 text-[12.5px] uppercase tracking-[0.16em] transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:text-[#4B1D3F] ${item.active ? 'text-[#4B1D3F] font-semibold' : 'font-medium text-[#2A1A26]/70 hover:text-[#4B1D3F]'}`}
               >
                 {item.label}
-                {item.isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-px bg-[#D7B77A]" />
-                )}
+                <span aria-hidden="true" className={`absolute left-0 right-0 bottom-0.5 h-px bg-[#C5A46D] origin-center transition-transform duration-500 ${ease} ${item.active ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100'}`} />
+                {item.active && <span aria-hidden="true" className="absolute left-1/2 -translate-x-1/2 -bottom-1 w-1 h-1 rounded-full bg-[#C5A46D]" />}
               </button>
             ))}
-          </nav>
-        </div>
-      </div>
-
-      {/* 4. Live Search Overlay Drawer */}
-      {isSearchOpen && (
-        <div id="search-drawer-overlay" className="relative z-20 border-t border-[#D7B77A]/30 bg-[#180306] py-5 px-4 sm:px-8 text-[#E8D2A4]">
-          <div className="max-w-3xl mx-auto">
-            <form onSubmit={handleSearchSubmit} className="relative">
-              <input
-                ref={searchInputRef}
-                id="search-input-field"
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search by style (Suits, Anarkali, Kurtis, Silk, Festive)..."
-                className="w-full pl-11 pr-24 py-3.5 bg-[#120205] border border-[#D7B77A]/40 text-sm sm:text-base text-[#E8D2A4] placeholder-[#E8D2A4]/45 focus:outline-none focus:ring-1 focus:ring-[#D7B77A]/40 focus:border-transparent transition"
-              />
-              <Search className="w-5 h-5 text-[#F7F0E5] absolute left-4 top-1/2 -translate-y-1/2" />
-              
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                {searchInput && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchInput('')}
-                    className="p-1 text-[#F7F0E5]/55 hover:text-[#F7F0E5]/75 rounded-full"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-                <button
-                  type="submit"
-                  id="search-submit-btn"
-                  className="bg-[#D7B77A] hover:bg-[#D7B77A]/90 text-[#F7F0E5] border border-[#D7B77A]/40 px-4 py-2 text-xs font-semibold uppercase transition-colors cursor-pointer"
-                >
-                  Search
-                </button>
-              </div>
-            </form>
-
-            {/* Quick Live Search Results OR Recent & Trending Searches */}
-            {searchInput.trim().length > 0 ? (
-              <div className="mt-3 bg-[#180306] rounded-md border border-[#D7B77A]/30 shadow-md p-3 max-h-96 overflow-y-auto">
-                {searchInput.trim().length === 1 ? (
-                  <div className="py-4 text-center">
-                    <p className="text-xs font-semibold text-[#F7F0E5] flex items-center justify-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#F7F0E5] animate-spin" /> Type 1 more character for live thumbnail results...
-                    </p>
+            <div className="relative" ref={collectionsRef}>
+              <button
+                id="nav-link-collections"
+                onClick={() => setCollectionsOpen(!collectionsOpen)}
+                aria-expanded={collectionsOpen}
+                aria-haspopup="true"
+                aria-controls="collections-menu"
+                className={`group flex items-center gap-1 py-2 text-[12.5px] uppercase tracking-[0.16em] transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:text-[#4B1D3F] ${collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory)) ? 'text-[#4B1D3F] font-semibold' : 'font-medium text-[#2A1A26]/70 hover:text-[#4B1D3F]'}`}
+              >
+                Collections <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-500 ${ease} ${collectionsOpen ? 'rotate-180' : 'group-hover:translate-y-px'}`} />
+              </button>
+              {collectionsOpen && (
+                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[440px] bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[0_24px_48px_-24px_rgba(42,26,38,0.35)] p-3 z-50 sag-pop">
+                  <span aria-hidden="true" className="absolute -top-[7px] left-1/2 -translate-x-1/2 w-3.5 h-3.5 rotate-45 bg-white border-l border-t border-[#4B1D3F]/10" />
+                  <div className="flex items-center justify-between px-3 pt-2 pb-3">
+                    <p className="font-serif text-xl text-[#4B1D3F]">Shop by collection</p>
+                    {collections.length > 0 && <span className="text-[12px] text-[#2A1A26]/55">{collections.length} {collections.length === 1 ? 'collection' : 'collections'}</span>}
                   </div>
-                ) : filteredSearchResults.length > 0 ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-2 pb-1 border-b border-[#D7B77A]/20">
-                      <p className="text-[11px] font-black uppercase tracking-wider text-[#F7F0E5]">
-                        Live Matching Styles ({filteredSearchResults.length})
-                      </p>
-                      <span className="text-[10px] text-[#F7F0E5]/55 font-medium">Auto-matched for "{searchInput.trim()}"</span>
-                    </div>
-                    {filteredSearchResults.map((prod) => (
-                      <button
-                        key={prod.id}
-                        id={`search-result-${prod.id}`}
-                        onClick={() => {
-                          saveSearchTerm(prod.name);
-                          navigateToProduct(prod.id);
-                          setIsSearchOpen(false);
-                          setSearchInput('');
-                        }}
-                        className="w-full flex items-center gap-3.5 p-2.5 hover:bg-[#180306] rounded transition text-left group cursor-pointer border border-transparent hover:border-[#D7B77A]/30"
-                      >
-                        <div className="relative shrink-0">
-                          <img 
-                            src={prod.images[0]} 
-                            alt={prod.name} 
-                            className="w-14 h-14 object-cover rounded-lg border border-[#D7B77A]/30 shadow-2xs group-hover:scale-105 transition-transform" 
-                          />
-                          {prod.originalPrice && prod.originalPrice > prod.price && (
-                            <span className="absolute -top-1.5 -left-1.5 bg-[#5C0B1B] text-[#F7F0E5] text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-2xs">
-                              {Math.round(((prod.originalPrice - prod.price) / prod.originalPrice) * 100)}% OFF
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] bg-[#D7B77A]/15 px-2 py-0.5 rounded-md">
-                              {prod.category}
-                            </span>
-                            {prod.fabric && (
-                              <span className="text-[10px] font-medium text-[#F7F0E5]/55 hidden sm:inline-block">
-                                • {prod.fabric}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-sm font-bold text-[#F7F0E5] group-hover:text-[#F7F0E5] truncate">
-                            {prod.name}
-                          </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-black text-[#F7F0E5]">
-                              ₹{prod.price.toLocaleString('en-IN')}
-                            </span>
-                            {prod.originalPrice && prod.originalPrice > prod.price && (
-                              <span className="text-[11px] text-[#F7F0E5]/55 line-through">
-                                ₹{prod.originalPrice.toLocaleString('en-IN')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-[#F7F0E5]/55 group-hover:text-[#F7F0E5] group-hover:translate-x-0.5 transition-transform" />
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-2 px-1 space-y-3">
-                    <div className="bg-[#180306] border border-[#D7B77A]/30 rounded p-3 text-center">
-                      <p className="text-xs font-bold text-[#F7F0E5]">
-                        No direct matches found for "{searchInput}".
-                      </p>
-                      <p className="text-[11px] text-[#F7F0E5]/75 mt-0.5 font-medium">
-                        Explore our Top 4 Bestseller Ethnic Sets instead:
-                      </p>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between px-1 pb-1">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-[#F7F0E5] flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 text-[#F7F0E5] fill-[#D7B77A]" />
-                          Top 4 Bestselling Sets
-                        </span>
-                        <span className="text-[10px] text-emerald-400 font-extrabold bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-800">
-                          ⭐ Customer Favorites
-                        </span>
-                      </div>
-                      {top4Bestsellers.map((prod) => (
+                  {collections.length === 0 && <p className="px-3 pb-3 text-sm text-[#2A1A26]/70">Collections appear as products are added.</p>}
+                  <div className="grid grid-cols-2 gap-1">
+                    {collections.map(([name, count]) => {
+                      const current = activePage === 'shop' && selectedCategory === name;
+                      return (
                         <button
-                          key={prod.id}
-                          id={`bestseller-search-result-${prod.id}`}
-                          onClick={() => {
-                            saveSearchTerm(prod.name);
-                            navigateToProduct(prod.id);
-                            setIsSearchOpen(false);
-                            setSearchInput('');
-                          }}
-                          className="w-full flex items-center gap-3 p-2 hover:bg-[#180306] rounded transition text-left group cursor-pointer border border-transparent hover:border-[#D7B77A]/30"
+                          key={name}
+                          onClick={() => { navigateToCategory(name as any); setCollectionsOpen(false); }}
+                          aria-current={current ? 'page' : undefined}
+                          className={`group w-full flex items-center justify-between gap-2 px-3.5 py-3 rounded-2xl text-left text-[14px] transition-colors cursor-pointer ${current ? 'bg-[#F3EEF8] text-[#4B1D3F] font-semibold' : 'text-[#2A1A26] hover:bg-[#F3EEF8] hover:text-[#4B1D3F]'}`}
                         >
-                          <div className="relative shrink-0">
-                            <img 
-                              src={prod.images[0]} 
-                              alt={prod.name} 
-                              className="w-12 h-12 object-cover rounded-lg border border-[#D7B77A]/30 shadow-2xs group-hover:scale-105 transition-transform" 
-                            />
-                            <span className="absolute -top-1.5 -left-1.5 bg-[#5C0B1B] text-[#F7F0E5] text-[7px] font-black px-1.5 py-0.5 rounded-full shadow-2xs">
-                              BESTSELLER
-                            </span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className="text-[9px] font-black uppercase tracking-wider text-[#F7F0E5] bg-[#D7B77A]/15 px-1.5 py-0.5 rounded">
-                                {prod.category}
-                              </span>
-                              <span className="text-[9px] text-[#F7F0E5] font-bold">
-                                <Star className="inline-block w-2.5 h-2.5 fill-[#D7B77A] text-[#D7B77A] mr-0.5" aria-hidden="true" />
-                                {prod.rating}
-                              </span>
-                            </div>
-                            <p className="text-xs font-bold text-[#F7F0E5] group-hover:text-[#F7F0E5] truncate">
-                              {prod.name}
-                            </p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs font-black text-[#F7F0E5]">
-                                ₹{prod.price.toLocaleString('en-IN')}
-                              </span>
-                              {prod.originalPrice && prod.originalPrice > prod.price && (
-                                <span className="text-[10px] text-[#F7F0E5]/55 line-through">
-                                  ₹{prod.originalPrice.toLocaleString('en-IN')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-[#F7F0E5]/55 group-hover:text-[#F7F0E5] group-hover:translate-x-0.5 transition-transform" />
+                          <span className="truncate">{name}</span>
+                          <span className="shrink-0 min-w-[26px] h-[22px] px-2 rounded-full bg-[#FBF7F3] group-hover:bg-white text-[11px] font-semibold text-[#2A1A26]/60 flex items-center justify-center">{count}</span>
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            ) : null}
-
-            {/* Recent & Trending Searches Container */}
-            <div className="mt-4 space-y-4">
-              {/* Recent Searches */}
-              {recentSearches.length > 0 && (
-                <div id="recent-searches-container" className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-black text-xs uppercase tracking-wider text-[#F7F0E5] flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-[#F7F0E5]" /> Recent Searches
-                    </span>
-                    <button
-                      type="button"
-                      id="clear-recent-searches-btn"
-                      onClick={clearAllRecentSearches}
-                      className="text-[11px] font-bold text-[#F7F0E5]/55 hover:text-[#F7F0E5] transition flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3 h-3" /> Clear All
+                  <div className="mt-2 pt-3 px-1 pb-1 border-t border-[#4B1D3F]/10 flex items-center gap-2">
+                    <button onClick={() => { navigateToCategory('All'); setCollectionsOpen(false); }} className="sag-btn-primary flex-1 h-10 px-4 text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                      View all styles <ChevronRight className="w-4 h-4 text-white" />
                     </button>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {recentSearches.map((term) => (
-                      <div
-                        key={term}
-                        className="inline-flex items-center gap-1.5 bg-[#180306] hover:bg-[#180306] text-[#F7F0E5] px-3 py-1 rounded-full border border-[#D7B77A]/30 transition text-xs font-bold shadow-2xs group cursor-pointer"
-                        onClick={() => executeSearch(term)}
-                      >
-                        <Clock className="w-3 h-3 text-[#F7F0E5]/70" />
-                        <span>{term}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => removeRecentSearch(term, e)}
-                          aria-label={`Remove ${term}`}
-                          className="p-0.5 text-[#F7F0E5]/55 hover:text-rose-300 rounded-full transition ml-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
+                    <button onClick={() => { navigateToCategory('New Arrivals'); setCollectionsOpen(false); }} className="sag-btn-outline flex-1 h-10 px-4 text-[13px] font-semibold cursor-pointer">
+                      New arrivals
+                    </button>
                   </div>
                 </div>
               )}
-
-              {/* Trending Searches Tags */}
-              <div id="trending-searches-container" className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-black text-xs uppercase tracking-wider text-[#F7F0E5] flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-[#F7F0E5]" /> Trending Searches
-                  </span>
-                  <Sparkles className="w-3 h-3 text-[#F7F0E5]" />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {[
-                    'Chanderi Anarkali', 
-                    'Velvet Suit Sets', 
-                    'Cotton Kurtis', 
-                    'Organza Dupatta Sets', 
-                    'Silk Co-ord Sets', 
-                    'Festive Party Wear',
-                    'Georgette Suits'
-                  ].map((tag) => (
-                    <button
-                      key={tag}
-                      id={`trending-search-${tag.toLowerCase().replace(/\s+/g, '-')}`}
-                      onClick={() => executeSearch(tag)}
-                      className="bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] px-3.5 py-1.5 rounded-full border border-[#D7B77A]/40 transition text-xs font-bold cursor-pointer shadow-2xs flex items-center gap-1.5 group"
-                    >
-                      <span className="text-[10px] text-[#F7F0E5] group-hover:scale-125 transition-transform">🔥</span>
-                      <span>{tag}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
+            <button
+              id="nav-link-offers"
+              onClick={() => navigateToCategory('Sale')}
+              aria-current={activePage === 'shop' && selectedCategory === 'Sale' ? 'page' : undefined}
+              className={`group inline-flex items-center gap-1.5 h-8 px-3.5 -mx-1 rounded-full text-[12.5px] uppercase tracking-[0.16em] transition-colors duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8A2E55]/25 ${activePage === 'shop' && selectedCategory === 'Sale' ? 'bg-[#F7E4EA] text-[#8A2E55] font-semibold' : 'font-medium text-[#8A2E55] hover:bg-[#F7E4EA]'}`}
+            >
+              <span className={`flex transition-transform duration-500 ${spring} group-hover:rotate-12`}><TagIcon className="w-4 h-4" live={false} /></span> Offers
+            </button>
+          </nav>
+      </div>
+
+      {showMobileSearch && !isSearchOpen && (
+        <div className={`sag-hdr-in lg:hidden overflow-hidden transition-[max-height,opacity,transform] duration-500 ${ease} ${compact ? 'max-h-0 opacity-0 -translate-y-1' : 'max-h-28 opacity-100 translate-y-0'}`} style={{ '--i': 3 } as React.CSSProperties} aria-hidden={compact}>
+          <div className="relative mx-3 mb-2.5">
+            <button
+              type="button"
+              id="mobile-search-pill"
+              tabIndex={compact ? -1 : 0}
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+              className={`w-full h-11 pl-11 pr-12 rounded-full border border-[#4B1D3F]/[0.12] text-left text-[14px] text-[#2A1A26]/55 truncate cursor-pointer shadow-[0_8px_20px_-18px_rgba(42,26,38,0.6)] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4B1D3F]/10 transition-[background-color,transform] duration-300 ${ease} ${surface ? 'bg-[#FBF7F3]' : 'bg-white'}`}
+            >
+              <span key={hintIndex % hints.length} className="sag-fade inline-block">{hints[hintIndex % hints.length]}</span>
+            </button>
+            <SearchIcon className="w-[18px] h-[18px] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" live={false} />
+            <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
+          </div>
+          {/* Quick collections (only ones that have products), one swipe away */}
+          <div className="sag-scroll-x flex gap-2 overflow-x-auto px-3 pb-2.5" aria-label="Quick collections">
+            <button type="button" tabIndex={compact ? -1 : 0} onClick={() => navigateToCategory('New Arrivals')} className="shrink-0 h-8 px-3.5 rounded-full bg-[#4B1D3F] text-white text-[13px] font-medium cursor-pointer">New in</button>
+            <button type="button" tabIndex={compact ? -1 : 0} onClick={() => navigateToCategory('Sale')} className="shrink-0 h-8 px-3.5 rounded-full bg-[#F7E4EA] text-[#8A2E55] text-[13px] font-semibold inline-flex items-center gap-1 cursor-pointer"><TagIcon className="w-3.5 h-3.5" live={false} /> Offers</button>
+            {collections.slice(0, 8).map(([name]) => (
+              <button key={name} type="button" tabIndex={compact ? -1 : 0} onClick={() => navigateToCategory(name as any)} className="shrink-0 h-8 px-3.5 rounded-full bg-white border border-[#4B1D3F]/12 text-[13px] text-[#2A1A26]/80 hover:border-[#4B1D3F]/30 active:scale-95 active:bg-[#F3EEF8] transition-[transform,background-color,border-color] cursor-pointer">{name}</button>
+            ))}
+            {hasKidsToys && <button type="button" tabIndex={compact ? -1 : 0} onClick={() => navigateToCategory(KIDS_TOYS as any)} className="shrink-0 h-8 px-3.5 rounded-full bg-white border border-[#4B1D3F]/12 text-[13px] text-[#2A1A26]/80 hover:border-[#4B1D3F]/30 active:scale-95 active:bg-[#F3EEF8] transition-[transform,background-color,border-color] cursor-pointer">{KIDS_TOYS}</button>}
           </div>
         </div>
       )}
 
+      {isSearchOpen && (
+        <div id="search-drawer-overlay" className="sag-drop relative border-t border-[#4B1D3F]/10 bg-white shadow-[0_18px_32px_-20px_rgba(42,26,38,0.35)]">
+          {/* Dim the page under the panel; a tap outside closes it */}
+          <div className="absolute left-0 right-0 top-full h-screen bg-[#2A1A26]/30 sag-fade" onClick={() => setIsSearchOpen(false)} aria-hidden="true" />
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-8 pt-4 pb-6 max-h-[calc(100vh-5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain">
+            <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="relative">
+              <SearchIcon className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" live={false} />
+              <input
+                ref={searchInputRef}
+                id="search-input-field"
+                type="search"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Try “red lehenga under 1500”"
+                aria-label="Search products"
+                enterKeyHint="search"
+                autoComplete="off"
+                className={`w-full pl-12 ${searchInput ? 'pr-[9.5rem] sm:pr-44' : 'pr-32 sm:pr-36'} h-[52px] bg-[#FBF7F3] border border-[#4B1D3F]/15 rounded-full text-[15px] text-[#2A1A26] placeholder:text-[#2A1A26]/45 focus:outline-none focus:bg-white focus:border-[#4B1D3F]/50 focus:ring-4 focus:ring-[#4B1D3F]/10 [&::-webkit-search-cancel-button]:appearance-none`}
+              />
+              <span className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                {searchInput && (
+                  <button type="button" onClick={() => { setSearchInput(''); searchInputRef.current?.focus(); }} aria-label="Clear search" className="w-9 h-9 rounded-full flex items-center justify-center text-[#2A1A26]/60 hover:bg-[#F3EEF8] cursor-pointer">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                <VoiceSearchButton onResult={executeSearch} />
+                <button type="submit" id="search-submit-btn" className="sag-btn-primary h-10 px-4 sm:px-5 text-xs font-semibold tracking-[0.12em] uppercase cursor-pointer">
+                  Search
+                </button>
+              </span>
+            </form>
+            {features.visualSearch && <Suspense fallback={null}><FindThisLookButton variant="chip" className="mt-3" /></Suspense>}
+
+            {searchTrimmed.length >= 2 && (
+              <div className="mt-5">
+                {results.length > 0 ? (
+                  <>
+                    <p className="sag-eyebrow mb-2 px-1">Styles</p>
+                    <div className="grid gap-1">
+                      {results.map((prod) => {
+                        const mrp = Math.max(prod.price, Number(prod.originalPrice) || prod.price);
+                        const off = mrp > prod.price ? Math.round(((mrp - prod.price) / mrp) * 100) : 0;
+                        return (
+                          <button
+                            key={prod.id}
+                            id={`search-result-${prod.id}`}
+                            onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
+                            className="w-full flex items-center gap-3 p-2 rounded-2xl hover:bg-[#F3EEF8] focus-visible:bg-[#F3EEF8] text-left transition-colors cursor-pointer"
+                          >
+                            <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 object-cover object-top rounded-xl bg-[#F3EEF8]" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-serif text-[16px] leading-snug text-[#2A1A26] truncate">{prod.name}</p>
+                              <p className="mt-0.5 text-[13px] text-[#2A1A26]/60 truncate">{prod.category}</p>
+                              <p className="mt-0.5 flex items-baseline gap-1.5 text-[13px]">
+                                <span className="font-semibold text-[#4B1D3F]">₹{prod.price.toLocaleString('en-IN')}</span>
+                                {off > 0 && <span className="text-xs text-[#2A1A26]/50 line-through">₹{mrp.toLocaleString('en-IN')}</span>}
+                                {off > 0 && <span className="text-xs font-semibold text-[#8A2E55]">{off}% off</span>}
+                              </p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 shrink-0 text-[#4B1D3F]/40" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button type="button" onClick={() => executeSearch(searchInput)} className="mt-2 w-full h-11 rounded-full border border-[#4B1D3F]/15 text-sm font-medium text-[#4B1D3F] hover:bg-[#F3EEF8] inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer">
+                      <span className="truncate">See all {matches.length} {matches.length === 1 ? 'result' : 'results'} for “{searchTrimmed}”</span>
+                      <ChevronRight className="w-4 h-4 shrink-0" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/10 px-4 py-5 text-center">
+                    <p className="font-serif text-xl text-[#2A1A26] break-words">No styles match “{searchTrimmed}”</p>
+                    <p className="mt-1 text-sm text-[#2A1A26]/65">Check the spelling or pick a collection below.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="mt-6 space-y-5">
+              {recentSearches.length > 0 && (
+                <div id="recent-searches-container">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="sag-eyebrow flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-[#9C7A45]" /> Recent searches</span>
+                    <button type="button" id="clear-recent-searches-btn" onClick={() => saveRecent([])} className="h-9 px-2 -mr-2 rounded-full text-[13px] text-[#2A1A26]/65 hover:text-[#4B1D3F] flex items-center gap-1 cursor-pointer">
+                      <Trash2 className="w-3.5 h-3.5" /> Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recentSearches.map((term) => (
+                      <button key={term} onClick={() => executeSearch(term)} className="h-10 max-w-full px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] hover:bg-[#F3EEF8] inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <Clock className="w-3.5 h-3.5 shrink-0 text-[#2A1A26]/40" />
+                        <span className="truncate">{term}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {collections.length > 0 && (
+                <div id="trending-searches-container">
+                  <span className="sag-eyebrow block mb-2.5">Shop collections</span>
+                  <div className="flex flex-wrap gap-2">
+                    {collections.map(([name, count]) => (
+                      <button
+                        key={name}
+                        onClick={() => { navigateToCategory(name as any); setIsSearchOpen(false); }}
+                        className="h-10 px-4 rounded-full bg-[#F3EEF8] text-sm text-[#4B1D3F] hover:bg-[#E6DDF0] inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        {name} <span className="text-xs text-[#4B1D3F]/55 tabular-nums">{count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

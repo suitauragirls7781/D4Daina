@@ -1,0 +1,41 @@
+# Local secrets for `wrangler dev`. Copy to worker/.dev.vars (git-ignored) and fill in.
+# In production each of these is a Worker secret: `wrangler secret put <NAME>`.
+# Never put real values in this example file.
+
+# Signs the customer and admin session tokens (new; any long random string).
+AUTH_TOKEN_SECRET=
+
+# Signs the admin cookie, customer OTP codes and PayU result links.
+ADMIN_SESSION_SECRET=
+
+# First admin login on an empty database (only used while admin_credentials/singleton does not exist).
+ADMIN_INITIAL_USERNAME=
+ADMIN_INITIAL_PASSWORD=
+ADMIN_INITIAL_PIN=
+
+# Cloudinary (image upload signatures and deletes).
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# Razorpay fallbacks, used when no keys are saved in Admin -> Payment Gateways.
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+
+# Brevo (order and OTP emails).
+BREVO_API_KEY=
+BREVO_SENDER_EMAIL=
+
+# Gemini fallback key, used when none is saved in Admin.
+GEMINI_API_KEY=
+
+# Optional. JSON whose "private_key" keys the ids of customer reviews (api/reviews.js). Keep the value used
+# on Vercel so customers can still edit the reviews they already wrote; without it a fixed default is used.
+FIREBASE_SERVICE_ACCOUNT=
+
+# Optional. Google sign-in client id (default: the one in src/utils/googleSignIn.ts).
+GOOGLE_CLIENT_ID=
+
+# Optional. Daily cap on analytics writes (default 8000).
+TRACK_WRITE_BUDGET=

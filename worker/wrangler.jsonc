@@ -1,0 +1,34 @@
+// Cloudflare Worker for www.suitauragirls.in: the API (unchanged handlers from ../api) + the static site.
+// Secrets are not in this file. They are set once with `wrangler secret put <NAME>` (names: .dev.vars.example).
+{
+  "name": "suitauragirls",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+  // Gives api/** what it uses from Node: process.env, Buffer, node:crypto, node:stream.
+  "compatibility_flags": ["nodejs_compat"],
+
+  // api/** keeps importing firebase-admin; these files answer with the D1 document store instead.
+  "alias": {
+    "firebase-admin/app": "./src/shims/firebase-admin-app.js",
+    "firebase-admin/firestore": "./src/shims/firebase-admin-firestore.js",
+    "firebase-admin/auth": "./src/shims/firebase-admin-auth.js"
+  },
+
+  "assets": {
+    "directory": "../dist-cf",
+    "binding": "ASSETS",
+    // Any path that is not a file gets index.html (was the catch-all rewrite in vercel.json).
+    "not_found_handling": "single-page-application",
+    // Without this, PayU's return (a browser form POST to /api/payu, i.e. a navigation) would get the app shell.
+    "run_worker_first": ["/api/*", "/sitemap.xml"]
+  },
+
+  "d1_databases": [
+    { "binding": "DB", "database_name": "suitauragirls-db", "database_id": "bae4a715-99a3-4021-9d42-56843baed258" }
+  ],
+
+  // The handlers add "Secure" to the admin cookie when VERCEL is "1".
+  "vars": { "VERCEL": "1" },
+
+  "observability": { "enabled": true, "logs": { "enabled": true } }
+}

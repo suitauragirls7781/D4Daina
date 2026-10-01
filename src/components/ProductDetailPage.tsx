@@ -1,2765 +1,743 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { addDoc, collection } from 'firebase/firestore';
+import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
+import { FindMySize } from './FindMySize';
+import { CompleteTheLook } from './CompleteTheLook';
+import { isAccessory } from '../utils/looks';
+import { KIDS_ALL, TOYS, isKids, isToy, kindOf, sortKidsSizes } from '../utils/kids';
+import { DeliveryCheck } from './DeliveryCheck';
+import { categoryToSlug } from '../utils/slugHelper';
+import { trackItem } from '../utils/visitorTracker';
+import { doc as fsDocRef, getDoc as fsGetDoc } from 'firebase/firestore';
+import { apiPost } from '../lib/api';
+import { useDiscovery } from '../utils/discovery';
+import { similarProducts } from '../utils/recommend';
+import { toggleCompare, useShopperMemory } from '../utils/shopperMemory';
+import { productColourFamilies, productOccasions } from '../utils/smartQuery';
 import { useAdmin } from '../context/AdminContext';
+import { useAuth } from '../context/AuthContext';
 import { ProductCard } from './ProductCard';
+import { ProductReviews } from './ProductReviews';
 import { ShimmerPDP } from './ShimmerPDP';
-import { ProductSize, ProductColor } from '../types';
-import { getCleanImageUrl, getShareableUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { ProductColor, ProductSize } from '../types';
+import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { COLLECTIONS, getDocById } from '../lib/dataStore';
-import { 
-  Star, 
-  Heart, 
-  ShoppingBag, 
-  Zap, 
-  Ruler, 
-  Check, 
-  Truck, 
-  RotateCcw, 
-  ShieldCheck, 
-  Sparkles, 
-  Share2, 
-  MapPin, 
-  ChevronRight,
-  ChevronLeft,
-  ZoomIn,
-  ZoomOut,
-  Info,
-  CheckCircle,
-  HelpCircle,
-  Clock,
-  Tag,
-  MessageSquarePlus,
-  MessageSquare,
-  X,
-  Loader2,
-  Video,
-  Bell,
-  Gift,
-  Layers,
-  Palette,
-  Droplets,
-  ChevronDown,
-  ChevronsRight,
-  Camera,
-  Home,
-  AlertTriangle
-} from 'lucide-react';
+import { Baby, Blocks, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Heart, Lock, Minus, Plus, RotateCcw, Ruler, Share2, ShoppingBag, Star, Tag, Truck, X, Zap, GitCompare } from 'lucide-react';
+import { WhatsAppIcon } from './BrandIcons';
+import { BagIcon } from './BrandIcons';
+import { HeartIcon, LockIcon, OrdersIcon, QualityIcon, ReturnIcon, TruckIcon } from './StoreIcons';
 
-interface ProductQA {
-  q: string;
-  a: string;
-}
+const MAX_QTY = 10;
 
-const getProductQAs = (product: any): ProductQA[] => {
-  if (!product) return [];
-  const name = product.name || "this exquisite royal ensemble";
-  const fabric = product.fabric || "Premium Handloom Fabric";
-  const washCare = product.washCare || "Gentle cold handwash separately or dry clean.";
-  const fit = product.fit || "Flattering regular boutique fit.";
-  const occasion = product.occasion || "Festive wear, special celebrations, and wedding ceremonies.";
-  const mainColor = (product.colors && product.colors[0]?.name) || "this authentic shade";
-  const category = product.category || "Suits";
-
-  const qas: ProductQA[] = [];
-
-  // Q1: Specific to the exact Fabric & quality
-  qas.push({
-    q: `What is the exact quality of the fabric in this "${name}"?`,
-    a: `We use only premium, authentic "${fabric}" for this piece. The fabric is meticulously pre-softened at our boutique atelier to ensure it is highly breathable, beautifully drapeable, and extremely comfortable to wear for hours.`
-  });
-
-  // Q2: Specific to Category, Fit & Alteration
-  if (category === 'Anarkali' || name.toLowerCase().includes('anarkali') || name.toLowerCase().includes('gown')) {
-    qas.push({
-      q: `What is the total flare (ghera) of this "${name}" and is there any alteration margin?`,
-      a: `This premium Anarkali features a majestic, wide flared panel (kalis) design yielding a full floor-sweeping flare of approximately 3.8 to 4.2 meters. We also provide a generous 2-inch stitch margin on both sides inside the side seams, so you can easily adjust the fit locally if needed.`
-    });
-  } else if (category === 'Co-ord Sets' || name.toLowerCase().includes('co-ord') || name.toLowerCase().includes('pants')) {
-    qas.push({
-      q: `How is the fit of the pants/trousers in this "${name}"?`,
-      a: `The trousers are styled in a tailored comfort fit with a modern flat-front and elasticated back waistband. This guarantees an elegant, gap-free fit and absolute comfort all day. It also features a hidden side pocket for your convenience.`
-    });
-  } else {
-    qas.push({
-      q: `How does the fitting of this "${name}" run and is it true to size?`,
-      a: `This outfit is tailored in a graceful "${fit}" which aligns perfectly with our boutique size chart. We recommend selecting your exact chest size. For any future alterations, we've provided a standard 2-inch premium inner margin inside the side seams.`
-    });
-  }
-
-  // Q3: Specific to Color fastness & Wash instructions
-  qas.push({
-    q: `Will the vibrant "${mainColor}" color bleed or fade over time?`,
-    a: `Absolutely not. The fabric undergoes a specialized organic color-locking wash at our atelier before stitching. To preserve the royal hand-guided detailing, we recommend: "${washCare}". Always dry in shade.`
-  });
-
-  // Q4: Specific to Occasion & Styling tips
-  qas.push({
-    q: `What are the best occasions to style this "${name}"?`,
-    a: `This elegant creation is custom-tailored for "${occasion}". We recommend styling it with traditional kundan earrings, matching juttis, and a subtle clutch to let the authentic craftsmanship truly stand out.`
-  });
-
-  return qas;
-};
+type Accordion = 'details' | 'fabric' | 'shipping' | 'returns';
 
 export const ProductDetailPage: React.FC = () => {
-  const { 
-    products = [],
-    selectedProductId, 
-    selectedProduct,
-    addToCart, 
-    buyNow,
-    toggleWishlist, 
-    isInWishlist, 
-    setIsSizeGuideOpen, 
-    setActivePage,
-    navigateToCategory,
-    showToast,
-    isLoading
+  const {
+    products = [], selectedProductId, selectedProduct, addToCart, buyNow, toggleWishlist, isInWishlist,
+    setIsSizeGuideOpen, setActivePage, navigateToCategory, showToast, isLoading, coupons = [], comboOffer,
+    storeOffers, freeShippingThreshold,
   } = useShop();
+  const prepaidDiscount = storeOffers?.prepaidDiscount || 0;
+  const { reviewsList = [] } = useAdmin();
+  const { user } = useAuth();
 
-  const dbProduct = products.find((p) => String(p.id) === String(selectedProductId));
+  const product = useMemo(() => {
+    const found = products.find((p) => String(p.id) === String(selectedProductId))
+      || (selectedProduct && String(selectedProduct.id) === String(selectedProductId) ? selectedProduct : undefined);
+    // Accessories are sold only inside their outfit's "Complete the look", never on a page of their own
+    return found && !isAccessory(found) ? found : undefined;
+  }, [products, selectedProductId, selectedProduct]);
 
-  // If we are currently loading products from the server, show a beautiful branded shimmer loading screen
-  // Keep the detail view tied to the active database catalog instead of bundled stock products.
-  if (isLoading || (selectedProductId && !dbProduct && products.length === 0)) {
-    return (
-      <ShimmerPDP />
-    );
-  }
-
-  const product = dbProduct
-    || (selectedProduct && String(selectedProduct.id) === String(selectedProductId) ? selectedProduct : undefined)
-    || products[0] 
-    || {
-      id: 'catalog-fallback',
-      name: 'Artisanal Suit Set',
-      category: 'Suits',
-      price: 999,
-      originalPrice: 1599,
-      discount: 38,
-      rating: 5.0,
-      reviewCount: 1,
-      images: [],
-      colors: [{ name: 'Standard', hex: '#FAF5EB' }],
-      sizes: ['S', 'M', 'L', 'XL'],
-      description: 'Artisanal pure cotton ethnic ensemble.',
-      fabric: '100% Pure Cambric Cotton',
-      fit: 'Regular Straight Fit',
-      occasion: 'Festive & Workwear',
-      washCare: 'Gentle Hand Wash',
-      inStock: true,
-    };
-
-  let rawImages: unknown = product.images;
-  if (typeof rawImages === 'string') {
-    try {
-      rawImages = JSON.parse(rawImages);
-    } catch {
-      rawImages = [rawImages];
-    }
-  }
-  const normalizedImages = Array.isArray(rawImages)
-    ? rawImages.filter((image): image is string => typeof image === 'string')
-    : [];
-  const productImages = normalizedImages.length > 0
-    ? normalizedImages
-    : (product as any).image 
-      ? [(product as any).image]
-      : ['https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=800&q=80'];
-  const storedColors = Array.isArray(product.colors)
-    ? product.colors.filter(
-        (color) => color && typeof color === 'object' && typeof color.name === 'string' && color.name.trim().length > 0
-      )
-    : [];
-  const productColors = storedColors.length > 0
-    ? storedColors
-    : productImages.map((image, index) => ({
-        name: ['Original', 'Alternate', 'Detail View', 'Back View'][index % 4],
-        hex: '#FAF5EB',
-        imageUrl: image,
-      }));
-  const safeProductColors = productColors.length > 0
-    ? productColors
-    : [{ name: 'Standard', hex: '#FAF5EB' }];
-
-  const availableSizes: ProductSize[] = Array.isArray(product.sizes) ? product.sizes : [];
-
-  const [selectedImageIdx, setSelectedImageIdx] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<ProductSize | null>('M');
-  const [selectedColor, setSelectedColor] = useState<ProductColor>(
-    safeProductColors[0]
-  );
-  const [isImageLightboxOpen, setIsImageLightboxOpen] = useState(false);
-  const { reviewsList = [], addReview } = useAdmin();
-  const [quantity, setQuantity] = useState(1);
-  const [pincode, setPincode] = useState('');
-  const [pincodeStatus, setPincodeStatus] = useState<{ 
-    checked: boolean; 
-    valid?: boolean; 
-    message?: string; 
-    isChecking?: boolean; 
-    district?: string; 
-    state?: string; 
-    postOfficeName?: string; 
-    estimatedDate?: string; 
-    logisticsPartner?: string; 
-  } | null>(null);
-  const [activeTab, setActiveTab] = useState<'details' | 'fabric' | 'shipping' | 'reviews'>('details');
-  const [isJustAdded, setIsJustAdded] = useState(false);
-
-  // Reference Image Feature States: Interactive Coupons & Simulator
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountPercent: number; maxDiscount: number } | null>(null);
-  const [showOffersModal, setShowOffersModal] = useState(false);
-
-  // Swipe & Zoom States & Refs
-  const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
-  const recentlyBrowsedRef = React.useRef<HTMLDivElement>(null);
-  const recommendationsRef = React.useRef<HTMLDivElement>(null);
-  const popularProductsRef = React.useRef<HTMLDivElement>(null);
-  const lastTapRef = React.useRef<number>(0);
-  const [isZoomed, setIsZoomed] = useState(false);
-  const [zoomScale, setZoomScale] = useState(1);
-  const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
-
-  // Sticky Bottom Action Bar Size Selector State & Ref
-  const [showStickySizePicker, setShowStickySizePicker] = useState(false);
-  const stickySizePickerRef = React.useRef<HTMLDivElement>(null);
+  const [imageIdx, setImageIdx] = useState(0);
+  const [size, setSize] = useState<ProductSize | null>(null);
+  const [color, setColor] = useState<ProductColor | null>(null);
+  const [qty, setQty] = useState(1);
+  const [findSizeOpen, setFindSizeOpen] = useState(false);
+  const [restockAsk, setRestockAsk] = useState(false);
+  // Real counts for today (server-counted, one per visitor); shown only when meaningful
+  const [todayStats, setTodayStats] = useState<{ views: number; wishlists: number } | null>(null);
+  useEffect(() => {
+    setTodayStats(null);
+    const productId = selectedProductId ? String(selectedProductId) : "";
+    if (!productId) return;
+    const day = new Date().toISOString().slice(0, 10);
+    fsGetDoc(fsDocRef(db, 'product_daily', `${day}_${productId}`))
+      .then((snap) => { if (snap.exists()) setTodayStats({ views: Number(snap.data().views) || 0, wishlists: Number(snap.data().wishlists) || 0 }); })
+      .catch(() => {});
+  }, [selectedProductId]);
+  const [restockEmail, setRestockEmail] = useState('');
+  const { features } = useDiscovery();
+  const { compare: compareIds } = useShopperMemory();
+  const [open, setOpen] = useState<Accordion | null>('details');
+  const [lightbox, setLightbox] = useState(false);
+  const [touchX, setTouchX] = useState<number | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
+  const [needSize, setNeedSize] = useState(false);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
-      if (stickySizePickerRef.current && !stickySizePickerRef.current.contains(event.target as Node)) {
-        setShowStickySizePicker(false);
-      }
-    };
-    if (showStickySizePicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [showStickySizePicker]);
-
-  // Reset zoom states on photo index change or modal open/close
-  useEffect(() => {
-    setIsZoomed(false);
-    setZoomScale(1);
-  }, [selectedImageIdx, isImageLightboxOpen]);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent, onSwipeLeft: () => void, onSwipeRight: () => void) => {
-    if (!touchStartRef.current) return;
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartRef.current.x;
-    const deltaY = touch.clientY - touchStartRef.current.y;
-    
-    const SWIPE_THRESHOLD = 50;
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
-      if (deltaX < 0) {
-        onSwipeLeft();
-      } else {
-        onSwipeRight();
-      }
-    }
-    touchStartRef.current = null;
-  };
-
-  const toggleZoom = (e: React.MouseEvent | React.TouchEvent) => {
-    e.preventDefault();
-    if (isZoomed) {
-      setIsZoomed(false);
-      setZoomScale(1);
-    } else {
-      setIsZoomed(true);
-      setZoomScale(2.5);
-      
-      let clientX = 0;
-      let clientY = 0;
-      
-      if ('touches' in e && e.touches.length > 0) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else if ('clientX' in e) {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-      
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((clientX - rect.left) / rect.width) * 100;
-      const y = ((clientY - rect.top) / rect.height) * 100;
-      setZoomPosition({ x, y });
-    }
-  };
-
-  const handleDoubleTapOrClick = (e: React.MouseEvent | React.TouchEvent) => {
-    const now = Date.now();
-    const DOUBLE_PRESS_DELAY = 300;
-    if (now - lastTapRef.current < DOUBLE_PRESS_DELAY) {
-      toggleZoom(e);
-    }
-    lastTapRef.current = now;
-  };
-
-  const handleZoomMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isZoomed) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    setZoomPosition({ x, y });
-  };
-
-  const handleZoomTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isZoomed || e.touches.length === 0) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.touches[0].clientX - rect.left) / rect.width) * 100;
-    const y = ((e.touches[0].clientY - rect.top) / rect.height) * 100;
-    setZoomPosition({ x, y });
-  };
-
-  // Live database stock revalidation state
-  const [dbStockState, setDbStockState] = useState<{
-    inStock: boolean;
-    stockQuantity: number;
-    revalidated: boolean;
-    isChecking: boolean;
-  }>({
-    inStock: product.inStock !== false && (product.stockQuantity === undefined || product.stockQuantity > 0),
-    stockQuantity: product.stockQuantity ?? 10,
-    revalidated: false,
-    isChecking: true,
-  });
-
-  // Revalidate product stock status directly from the database on PDP mount & when product ID changes
-  useEffect(() => {
-    let isMounted = true;
-
-    const revalidateStockFromDb = async () => {
-      if (!product || !product.id) return;
-
-      setDbStockState((prev) => ({ ...prev, isChecking: true }));
-
+    setImageIdx(0);
+    setQty(1);
+    setNeedSize(false);
+    setSize(product?.sizes?.length === 1 ? product.sizes[0] : null);
+    setColor(product?.colors?.[0] || null);
+    if (product?.id) {
       try {
-        const data = await getDocById(COLLECTIONS.products, String(product.id));
-
-        if (data && isMounted) {
-          const qty = Number(data.stockQuantity ?? product.stockQuantity ?? 10);
-
-          const isAvailable = data.inStock !== false && qty > 0;
-
-          setDbStockState({
-            inStock: isAvailable,
-            stockQuantity: qty,
-            revalidated: true,
-            isChecking: false,
-          });
-        } else if (isMounted) {
-          setDbStockState({
-            inStock: product.inStock !== false && (product.stockQuantity === undefined || product.stockQuantity > 0),
-            stockQuantity: product.stockQuantity ?? 10,
-            revalidated: true,
-            isChecking: false,
-          });
-        }
-      } catch (e) {
-        console.warn('PDP stock revalidation notice:', e);
-        if (isMounted) {
-          setDbStockState((prev) => ({ ...prev, revalidated: true, isChecking: false }));
-        }
-      }
-    };
-
-    revalidateStockFromDb();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [product.id]);
-
-  const baseIsItemInStock = dbStockState.revalidated 
-    ? dbStockState.inStock 
-    : (product.inStock !== false && (product.stockQuantity === undefined || product.stockQuantity > 0));
-
-  const baseEffectiveStockQty = dbStockState.revalidated 
-    ? dbStockState.stockQuantity 
-    : (product.stockQuantity ?? 12);
-
-  // Swapping swatches dynamically updates SKU
-  const baseSku = product.sku || `SAG-SUIT-${String(product.id).slice(-4).toUpperCase()}`;
-  const currentSku = `${baseSku}-${selectedColor.name.replace(/\s+/g, '').substring(0, 3).toUpperCase()}`;
-
-  // Swapping swatches dynamically updates price
-  const rawPdpPrice = Number(product.price) || 0;
-  const rawPdpOrigPrice = Number(product.originalPrice) || Math.round(rawPdpPrice * 1.85);
-  const currentPrice = rawPdpPrice;
-  const currentOriginalPrice = rawPdpOrigPrice;
-  
-  // Coupon Discount Calculation from Reference Image
-  const couponDiscountAmount = appliedCoupon 
-    ? Math.min(appliedCoupon.maxDiscount, Math.round((currentPrice * (appliedCoupon.discountPercent || 0)) / 100))
-    : 0;
-  const discountedPrice = Math.max(0, currentPrice - couponDiscountAmount);
-
-  const currentDiscount = (currentOriginalPrice > 0 && !isNaN(currentOriginalPrice) && !isNaN(discountedPrice)) 
-    ? Math.round(((currentOriginalPrice - discountedPrice) / currentOriginalPrice) * 100) 
-    : (Number(product.discount) || 0);
-
-  // Swapping swatches dynamically updates stock count
-  const effectiveStockQty = baseEffectiveStockQty;
-  const isItemInStock = baseIsItemInStock;
-
-  const isSizeOutOfStock = (_sz: ProductSize) => !isItemInStock;
-
-  const [isNotified, setIsNotified] = useState(false);
-  const handleNotifyMe = () => {
-    setIsNotified(true);
-    showToast(`Shabash! Size ${selectedSize} ke liye aapka notification register ho gaya hai. Restock hote hi aapko update kiya jayega! 🔔`, 'success');
-    setTimeout(() => setIsNotified(false), 3000);
-  };
-
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [showDispatchTimer, setShowDispatchTimer] = useState(false);
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
-    fabric: true,
-    work: false,
-    length: false,
-    care: false
-  });
-
-  const toggleAccordion = (key: string) => {
-    setOpenAccordions(prev => ({ 
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
-
-  const handleWhatsAppShare = () => {
-    const shareUrl = getShareableUrl(product.id);
-    const currentImg = selectedColor.imageUrl || product.images[0];
-    const imageLink = getCleanImageUrl(currentImg);
-    const message = `Hey! Look at this beautiful ethnic suit from Suit Aura Girls! ✨\n\n🛍️ *${product.name}*\n💰 Price: ₹${product.price.toLocaleString('en-IN')}\n\n🔗 *Buy Link:* ${shareUrl}\n📸 *Product Image Link:* ${imageLink}\n\nFree shipping & 7-day easy exchange. Order yours today! 🚚`;
-    const finalUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
-    window.open(finalUrl, '_blank');
-  };
-
-  const handleInstagramShare = () => {
-    const shareUrl = getShareableUrl(product.id);
-    const currentImg = selectedColor.imageUrl || product.images[0];
-    const imageLink = getCleanImageUrl(currentImg);
-    const textToCopy = `Suit Aura Girls ✨\nProduct: ${product.name}\nPrice: ₹${product.price.toLocaleString('en-IN')}\n🔗 Link: ${shareUrl}\n📸 Image: ${imageLink}`;
-    
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(textToCopy);
-      showToast('Product info & direct image link copied! Paste in Instagram chats or stories 📸', 'success');
-    } else {
-      showToast('Copied product share description!', 'success');
+        const list: string[] = JSON.parse(localStorage.getItem('sag_recently_browsed') || '[]');
+        localStorage.setItem('sag_recently_browsed', JSON.stringify([String(product.id), ...list.filter((id) => id !== String(product.id))].slice(0, 12)));
+      } catch {}
+      trackItem('product_view', String(product.id));
+      document.title = product.seoTitle?.trim() || `${product.name} | Suit Aura Girls`;
     }
-    setTimeout(() => {
-      window.open('https://instagram.com', '_blank');
-    }, 1200);
-  };
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      
-      // Dispatch works between 8:00 AM and 5:00 PM (17:00:00) daily local time
-      if (currentHour >= 8 && currentHour < 17) {
-        setShowDispatchTimer(true);
-        const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-        const diffMs = target.getTime() - now.getTime();
-        const diffSec = Math.max(0, Math.floor(diffMs / 1000));
-        
-        const h = Math.floor(diffSec / 3600);
-        const m = Math.floor((diffSec % 3600) / 60);
-        const s = diffSec % 60;
-        setTimeLeft({ hours: h, minutes: m, seconds: s });
-      } else {
-        setShowDispatchTimer(false);
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Review submission state
-  const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-  const [zoomedReviewPhoto, setZoomedReviewPhoto] = useState<string | null>(null);
-  const [recentlyBrowsed, setRecentlyBrowsed] = useState<any[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [popularProducts, setPopularProducts] = useState<any[]>([]);
-  const [reviewForm, setReviewForm] = useState<{
-    userName: string;
-    rating: number;
-    sizePurchased: ProductSize;
-    location: string;
-    comment: string;
-    photoUrl: string;
-  }>({
-    userName: '',
-    rating: 5,
-    sizePurchased: 'M',
-    location: 'Artisan, India',
-    comment: '',
-    photoUrl: ''
-  });
-
-  // Load Popular products based on Pincode/District
-  useEffect(() => {
-    if (!pincodeStatus?.district) return;
-    
-    const district = pincodeStatus?.district?.toLowerCase();
-    const allProducts = products;
-    
-    const popular = allProducts.filter(p => 
-      (p.tags || []).some(tag => tag.toLowerCase() === district)
-    ).slice(0, 8);
-    
-    setPopularProducts(popular);
-  }, [pincodeStatus?.district, products]);
-
-  // Track and save recently browsed products to local session
-  useEffect(() => {
-    // Load saved pincode
-    const savedPincode = localStorage.getItem('sag_user_pincode');
-    if (savedPincode) {
-        setPincode(savedPincode);
-        // Note: We might want to re-run the check logic here if desired, but 
-        // for now just populating the input is enough for user interaction.
-    }
-
-    if (product && product.id) {
-      const stored = localStorage.getItem('sag_recently_browsed');
-      let list: string[] = [];
-      try {
-        if (stored) {
-          list = JSON.parse(stored);
-        }
-      } catch (e) {
-        list = [];
-      }
-      
-      list = list.filter(id => String(id) !== String(product.id));
-      list.unshift(String(product.id));
-      list = list.slice(0, 15);
-      localStorage.setItem('sag_recently_browsed', JSON.stringify(list));
-    }
+    window.scrollTo({ top: 0 });
   }, [product?.id]);
 
-  // Load recently browsed products from local session
+  // Search/share metadata and Product structured data, built only from real product fields.
   useEffect(() => {
-    const stored = localStorage.getItem('sag_recently_browsed');
-    if (stored) {
-      try {
-        const list: string[] = JSON.parse(stored);
-        const mapped = list
-          .filter(id => String(id) !== String(product?.id))
-          .map(id => {
-            return (products || []).find(p => String(p.id) === String(id)) 
-              || undefined;
-          })
-          .filter(Boolean);
-        setRecentlyBrowsed(mapped);
-      } catch (e) {
-        // Safe fallback
-      }
+    if (!product) return;
+    const url = `https://www.suitauragirls.in/product/${product.id}`;
+    const description = (product.seoDescription?.trim() || product.description || `${product.name} — ${product.category} by Suit Aura Girls.`).slice(0, 160);
+    const image = product.images?.find(Boolean) || product.image || '';
+    const setMeta = (selector: string, attr: string, value: string) => document.querySelector(selector)?.setAttribute(attr, value);
+    setMeta('meta[name="description"]', 'content', description);
+    setMeta('meta[property="og:title"]', 'content', product.seoTitle?.trim() || `${product.name} | Suit Aura Girls`);
+    setMeta('meta[property="og:description"]', 'content', description);
+    setMeta('meta[property="og:type"]', 'content', 'product');
+    if (image) setMeta('meta[property="og:image"]', 'content', getCleanImageUrl(image, 1200));
+    setMeta('link[rel="canonical"]', 'href', url);
+    setMeta('meta[property="og:url"]', 'content', url);
+
+    const approved = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved');
+    const data: Record<string, unknown> = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description,
+      sku: product.sku || String(product.id),
+      category: product.category,
+      brand: { '@type': 'Brand', name: 'Suit Aura Girls' },
+      image: (product.images || []).filter(Boolean).slice(0, 6).map((img) => getCleanImageUrl(img, 1200)),
+      offers: {
+        '@type': 'Offer',
+        url,
+        priceCurrency: 'INR',
+        price: Number(product.price) || 0,
+        availability: product.inStock && Number(product.stockQuantity ?? 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
+      },
+    };
+    if (approved.length) {
+      data.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: (approved.reduce((s, r) => s + (Number(r.rating) || 0), 0) / approved.length).toFixed(1),
+        reviewCount: approved.length,
+      };
+    }
+    let script = document.getElementById('product-jsonld') as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.id = 'product-jsonld';
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(data);
+    // Breadcrumb: Home › Category › Product
+    const origin = window.location.origin;
+    const crumbs = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${origin}/` },
+        product.productType === 'accessory'
+          ? { '@type': 'ListItem', position: 2, name: 'Shop', item: `${origin}/shop` }
+          : { '@type': 'ListItem', position: 2, name: product.category, item: `${origin}/category/${categoryToSlug(product.category)}` },
+        { '@type': 'ListItem', position: 3, name: product.name, item: `${origin}/product/${product.id}` },
+      ],
+    };
+    let crumbScript = document.getElementById('breadcrumb-jsonld') as HTMLScriptElement | null;
+    if (!crumbScript) {
+      crumbScript = document.createElement('script');
+      crumbScript.type = 'application/ld+json';
+      crumbScript.id = 'breadcrumb-jsonld';
+      document.head.appendChild(crumbScript);
+    }
+    crumbScript.textContent = JSON.stringify(crumbs);
+    return () => {
+      document.getElementById('product-jsonld')?.remove();
+      document.getElementById('breadcrumb-jsonld')?.remove();
+      setMeta('meta[property="og:type"]', 'content', 'website');
+      setMeta('meta[name="description"]', 'content', "Shop elegant women's suits, kurtis, dresses, anarkali and ethnic fashion at Suit Aura Girls.");
+    };
+  }, [product?.id, product?.price, product?.stockQuantity, reviewsList.length]);
+
+  const recentlyViewed = useMemo(() => {
+    try {
+      const ids: string[] = JSON.parse(localStorage.getItem('sag_recently_browsed') || '[]');
+      return ids
+        .filter((id) => id !== String(product?.id))
+        .map((id) => products.find((p) => String(p.id) === id))
+        .filter((p): p is NonNullable<typeof p> => Boolean(p && p.inStock))
+        .slice(0, 4);
+    } catch {
+      return [];
     }
   }, [product?.id, products]);
 
-  // Calculate Recommendations based on Color and Category
-  useEffect(() => {
-    if (!product || !products) return;
+  if (isLoading && !product) return <ShimmerPDP />;
 
-    const allProducts = products;
-    
-    // Get primary color hex or name
-    const targetColor = selectedColor.name || '';
-    const targetCategory = product.category;
-    
-    const recs = allProducts
-      .filter(p => String(p.id) !== String(product.id))
-      .map(p => {
-        let score = 0;
-        // Category match
-        if (p.category === targetCategory) score += 5;
-        // Color match (name check)
-        if (p.colors.some(c => c.name === targetColor)) score += 3;
-        // Tag match
-        const matchingTags = (p.tags || []).filter(t => (product.tags || []).includes(t));
-        score += matchingTags.length * 2;
-        
-        return { product: p, score };
-      })
-      .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 8)
-      .map(item => item.product);
-
-    setRecommendations(recs);
-  }, [product?.id, selectedColor, products]);
-
-  // Filter approved user-submitted reviews for this product (strictly excluding any English text)
-  const approvedProductReviews = reviewsList.filter((r) => {
-    const matchesProduct = String(r.productId) === String(product.id) || (r.productName && r.productName === product.name);
-    const isApproved = (r.status || 'approved') === 'approved';
-    const comment = String(r.comment || '').trim();
-    return matchesProduct && isApproved && !!comment;
-  });
-
-  const displayReviews = approvedProductReviews;
-  const productReviewCount = displayReviews.length;
-
-  const handleReviewSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewForm.userName.trim() || !reviewForm.comment.trim()) {
-      showToast('Please fill in your name and review note.', 'error');
-      return;
-    }
-
-    setIsSubmittingReview(true);
-    try {
-      await addReview({
-        productId: String(product.id),
-        productName: product.name,
-        userName: reviewForm.userName.trim(),
-        rating: Number(reviewForm.rating),
-        sizePurchased: reviewForm.sizePurchased,
-        date: new Date().toISOString(),
-        verifiedPurchase: false,
-        location: reviewForm.location.trim() || 'Artisan, India',
-        comment: reviewForm.comment.trim(),
-        imageUrl: reviewForm.photoUrl || undefined,
-        status: 'pending',
-      });
-
-      showToast('Dhanyawad! Aapka review submit ho gaya hai. Admin dwara approve hone ke baad ye site par live ho jayega.', 'success');
-      setIsWriteReviewOpen(false);
-      setReviewForm({
-        userName: '',
-        rating: 5,
-        sizePurchased: selectedSize || 'M',
-        location: 'Artisan, India',
-        comment: '',
-        photoUrl: ''
-      });
-    } catch (err) {
-      console.error('Review submit error:', err);
-      showToast('Dhanyawad! Aapka review submit ho gaya hai. Admin dwara approve hone ke baad ye site par live ho jayega.', 'success');
-      setIsWriteReviewOpen(false);
-    } finally {
-      setIsSubmittingReview(false);
-    }
-  };
-
-  // Reset states when product changes
-  useEffect(() => {
-    setSelectedImageIdx(0);
-    setSelectedSize(availableSizes[0] || 'M');
-    setSelectedColor(productColors[0] || { name: 'Standard', hex: '#FAF5EB' });
-    setQuantity(1);
-    setPincodeStatus(null);
-  }, [product.id]);
-
-  const handleSelectColor = (c: ProductColor) => {
-    setSelectedColor(c);
-    if (c.imageUrl) {
-      const idx = productImages.findIndex(
-        (img) => img === c.imageUrl || (img && c.imageUrl && img.split('/').pop() === c.imageUrl.split('/').pop())
-      );
-      if (idx !== -1) {
-        setSelectedImageIdx(idx);
-        return;
-      }
-    }
-    // Fallback: match by index if colors array aligns with productImages
-    const colorIdx = productColors.findIndex(
-      (col) => col.name === c.name && col.hex === c.hex
+  if (!product) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center bg-[#FBF7F3]">
+        <h1 className="font-serif text-3xl text-[#4B1D3F]">This style is no longer available</h1>
+        <p className="text-sm text-[#2A1A26]/65">It may have sold out or been removed. Explore what is in stock now.</p>
+        <button onClick={() => navigateToCategory('All')} className="sag-btn-primary h-12 px-8 text-xs uppercase tracking-[0.16em] cursor-pointer">Shop all styles</button>
+      </div>
     );
-    if (colorIdx !== -1 && productImages[colorIdx]) {
-      setSelectedImageIdx(colorIdx);
+  }
+
+  const images = (Array.isArray(product.images) ? product.images.filter(Boolean) : []).length
+    ? product.images.filter(Boolean)
+    : [product.image || ELEGANT_PLACEHOLDER_SVG];
+  const colors = (product.colors || []).filter((c) => c && c.name);
+  // Accessories are sold only through "Complete the look": no size finder, size chart, compare or similar outfits
+  const accessoryPage = isAccessory(product);
+  // Kids wear is sized by age and toys are one size: the women's size finder and size chart don't apply
+  const kidsPage = isKids(product);
+  const toyPage = isToy(product);
+  const womenSizing = !accessoryPage && !kidsPage && !toyPage;
+  const sizes = (kidsPage ? sortKidsSizes((product.sizes || []).map(String)) : (product.sizes || [])) as ProductSize[];
+  // A single "Free Size" (toys, one-size pieces) needs no choosing
+  const oneSize = sizes.length === 1 && sizes[0] === 'Free Size';
+  const sizeWord = kidsPage ? 'Age' : 'Size';
+  const price = Number(product.price) || 0;
+  const mrp = Math.max(price, Number(product.originalPrice) || price);
+  const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+  const stock = Math.max(0, Number(product.stockQuantity ?? 0));
+  const soldOut = product.inStock === false || stock <= 0;
+  const maxQty = Math.max(1, Math.min(MAX_QTY, stock));
+  const fav = isInWishlist(product.id);
+  const reviews = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved' && String(r.comment || '').trim());
+  const avgRating = reviews.length ? reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length : 0;
+  const bestCoupon = [...coupons].sort((a, b) => b.discountValue - a.discountValue)[0];
+  const related = similarProducts(product, products, 4);
+  const inCompare = compareIds.includes(String(product.id));
+  // "Why you'll love it": only facts entered for this product
+  const highlights = [
+    product.fabric && `${toyPage ? 'Material' : 'Fabric'}: ${product.fabric}`,
+    !toyPage && product.fit && `Fit: ${product.fit}`,
+    !toyPage && (product.occasion || productOccasions(product).length > 0) && `Made for: ${product.occasion || productOccasions(product).join(', ')}`,
+    colors.length > 0 && colors[0].name !== 'Default' && `Colour: ${colors.map((c) => c.name).join(', ')}`,
+    kidsPage && kindOf(product) && `Type: ${kindOf(product)}`,
+    toyPage && kindOf(product) && `Type: ${kindOf(product)}`,
+    toyPage && product.ageRange && `Suitable for: ${product.ageRange}`,
+    sizes.length > 0 && !oneSize && `${kidsPage ? 'Ages' : 'Sizes'}: ${sizes.join(', ')}`,
+    product.washCare && `Care: ${product.washCare}`,
+  ].filter(Boolean) as string[];
+  const shareWhatsApp = () => {
+    const url = `${window.location.origin}/product/${product.id}`;
+    const text = `${product.name} — ₹${price.toLocaleString('en-IN')}${discount ? ` (${discount}% off)` : ''}\n${url}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener');
+  };
+  const onCompare = () => {
+    const r = toggleCompare(String(product.id));
+    if (r.full) showToast('You can compare up to 4 styles. Remove one first.', 'info');
+    else showToast(r.added ? 'Added to compare.' : 'Removed from compare.', 'info');
+  };
+
+  const go = (delta: number) => setImageIdx((i) => (i + delta + images.length) % images.length);
+
+  const pickColor = (c: ProductColor) => {
+    setColor(c);
+    if (c.imageUrl) {
+      const idx = images.indexOf(c.imageUrl);
+      if (idx >= 0) setImageIdx(idx);
     }
   };
 
-  const handleSelectThumbnail = (idx: number) => {
-    setSelectedImageIdx(idx);
-    const targetUrl = productImages[idx];
-    if (targetUrl) {
-      const targetFilename = targetUrl.split('/').pop();
-      const matched = productColors.find(
-        (c) => c.imageUrl && (c.imageUrl === targetUrl || (targetFilename && c.imageUrl.split('/').pop() === targetFilename))
-      );
-      if (matched) {
-        setSelectedColor(matched);
-      }
+  const requireSize = () => {
+    if (sizes.length > 0 && !size && !oneSize) {
+      setNeedSize(true);
+      document.getElementById('pdp-size-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      showToast(kidsPage ? "Please choose your child's age size." : 'Please choose a size.', 'info');
+      return false;
     }
+    return true;
   };
 
-  const isFav = isInWishlist(product.id);
-
-  const handleAddToCart = () => {
-    if (!isItemInStock || effectiveStockQty <= 0) {
-      showToast('Sorry! This item is currently Out of Stock in our database.', 'error');
-      return;
-    }
-    if (!selectedSize) {
-      showToast('Please select your size before adding to bag.', 'error');
-      return;
-    }
-    if (isSizeOutOfStock(selectedSize)) {
-      handleNotifyMe();
-      return;
-    }
-    const dynamicProduct = {
-      ...product,
-      price: currentPrice,
-      originalPrice: currentOriginalPrice,
-      sku: currentSku
-    };
-    addToCart(dynamicProduct, selectedSize, selectedColor, quantity, false);
-
-    showToast(`Added ${product.name} to Bag!`, 'success');
-    setIsJustAdded(true);
-    setTimeout(() => setIsJustAdded(false), 2500);
+  const onAdd = () => {
+    if (soldOut || !requireSize()) return;
+    addToCart(product, (size || 'Free Size') as ProductSize, color || undefined, qty, false);
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 1800);
   };
 
-  const handleBuyNow = () => {
-    if (!isItemInStock || effectiveStockQty <= 0) {
-      showToast('Sorry! This item is currently Out of Stock in our database.', 'error');
-      return;
-    }
-    if (!selectedSize) {
-      showToast('Please select your size to proceed.', 'error');
-      return;
-    }
-    if (isSizeOutOfStock(selectedSize)) {
-      handleNotifyMe();
-      return;
-    }
-    const dynamicProduct = {
-      ...product,
-      price: currentPrice,
-      originalPrice: currentOriginalPrice,
-      sku: currentSku
-    };
-
-    buyNow(dynamicProduct, selectedSize, selectedColor, quantity);
+  const onBuy = () => {
+    if (soldOut || !requireSize()) return;
+    buyNow(product, (size || 'Free Size') as ProductSize, color || undefined, qty);
   };
 
-  const handleCheckPincode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pincode || pincode.length !== 6 || isNaN(Number(pincode))) {
-      setPincodeStatus({
-        checked: true,
-        valid: false,
-        message: 'Please enter a valid 6-digit Indian PIN code.'
-      });
-      return;
-    }
-
-    setPincodeStatus({
-      checked: true,
-      valid: true,
-      isChecking: true,
-      message: '🔍 Checking delivery eligibility with Postal database...'
-    });
-
+  const share = async () => {
+    const url = `${window.location.origin}/product/${product.id}`;
     try {
-      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-      const data = await res.json();
-      if (data && data[0] && data[0].Status === 'Success') {
-        const postOffices = data[0].PostOffice;
-        if (postOffices && postOffices.length > 0) {
-          const firstPO = postOffices[0];
-          
-          // Save valid pincode to local storage
-          localStorage.setItem('sag_user_pincode', pincode);
-          
-          // Let's determine if it is a metropolitan city for Express Air delivery
-          const stateName = String(firstPO.State).toLowerCase();
-          const cityName = String(firstPO.District).toLowerCase();
-          const isMetro = stateName.includes('delhi') || 
-                          stateName.includes('maharashtra') || 
-                          stateName.includes('karnataka') || 
-                          stateName.includes('tamil nadu') || 
-                          stateName.includes('west bengal') || 
-                          cityName.includes('mumbai') || 
-                          cityName.includes('bangalore') || 
-                          cityName.includes('kolkata') || 
-                          cityName.includes('chennai') || 
-                          cityName.includes('artisan') ||
-                          cityName.includes('ahmedabad') ||
-                          cityName.includes('hyderabad');
-          
-          const daysToDeliver = isMetro ? 2 : 4;
-          const deliveryDate = new Date();
-          deliveryDate.setDate(deliveryDate.getDate() + daysToDeliver);
-          
-          const options: Intl.DateTimeFormatOptions = { weekday: 'long', month: 'short', day: 'numeric' };
-          const formattedDate = deliveryDate.toLocaleDateString('en-IN', options);
-          
-          const partner = isMetro ? 'Bluedart' : 'Delhivery';
-          
-          setPincodeStatus({
-            checked: true,
-            valid: true,
-            isChecking: false,
-            district: firstPO.District,
-            state: firstPO.State,
-            postOfficeName: firstPO.Name,
-            estimatedDate: formattedDate,
-            logisticsPartner: partner,
-            message: `✅ Express Delivery Available! delivering to ${firstPO.District}, ${firstPO.State}.`
-          });
-          showToast(`Super Fast Delivery available at ${firstPO.District}!`, 'success');
-        } else {
-          throw new Error();
-        }
-      } else {
-        setPincodeStatus({
-          checked: true,
-          valid: false,
-          isChecking: false,
-          message: '❌ Invalid PIN code / Non-Indian address. Delivery not available!'
-        });
-        showToast('Invalid / Non-Indian Pincode Rejected!', 'error');
+      if (navigator.share) await navigator.share({ title: product.name, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied.', 'success');
       }
-    } catch (err) {
-      setPincodeStatus({
-        checked: true,
-        valid: false,
-        isChecking: false,
-        message: '❌ Invalid Pincode. No delivery records found in India.'
-      });
-      showToast('Pincode validation failed.', 'error');
+    } catch {}
+  };
+
+  const notifyRestock = async () => {
+    const email = user?.email || restockEmail.trim();
+    if (!user?.email && !restockAsk) { setRestockAsk(true); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { showToast('Please enter a valid email address.', 'error'); return; }
+    try {
+      await apiPost('/api/alerts', { action: 'restock-subscribe', productId: String(product.id), size: size || '', colour: color?.name || '', email });
+      setRestockAsk(false);
+      showToast(`We will email ${email} when it is back${size ? ` in size ${size}` : ''}.`, 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Could not save your request. Please try again.', 'error');
     }
   };
 
-  const activeProducts = products.filter((p) => p.inStock);
-  const relatedProducts = activeProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
-  const fallbackRelated = relatedProducts.length > 0 
-    ? relatedProducts 
-    : activeProducts.filter((p) => p.id !== product.id).slice(0, 4);
+  const accordionItems: Array<{ key: Accordion; title: string; body: React.ReactNode }> = [
+    {
+      key: 'details',
+      title: toyPage ? 'About this toy' : 'Product details',
+      body: (
+        <div className="space-y-3">
+          {product.description && <p>{product.description}</p>}
+          <dl className="grid grid-cols-[110px_1fr] gap-y-1.5">
+            {(kidsPage || toyPage) && kindOf(product) && <><dt className="text-[#2A1A26]/65">Type</dt><dd>{kindOf(product)}</dd></>}
+            {kidsPage && <><dt className="text-[#2A1A26]/65">For</dt><dd>{product.category}</dd></>}
+            {product.fit && <><dt className="text-[#2A1A26]/65">Fit</dt><dd>{product.fit}</dd></>}
+            {product.occasion && <><dt className="text-[#2A1A26]/65">Occasion</dt><dd>{product.occasion}</dd></>}
+          </dl>
+        </div>
+      ),
+    },
+    {
+      key: 'fabric',
+      title: toyPage ? 'Material & care' : 'Fabric & care',
+      body: (
+        <dl className="grid grid-cols-[110px_1fr] gap-y-1.5">
+          <dt className="text-[#2A1A26]/65">{toyPage ? 'Material' : 'Fabric'}</dt><dd>{product.fabric || 'Details on request — ask us on WhatsApp.'}</dd>
+          {toyPage && product.ageRange && <><dt className="text-[#2A1A26]/65">Suitable for</dt><dd>{product.ageRange}</dd></>}
+          {product.washCare && <><dt className="text-[#2A1A26]/65">Care</dt><dd>{product.washCare}</dd></>}
+        </dl>
+      ),
+    },
+    {
+      key: 'shipping',
+      title: 'Shipping',
+      body: (
+        <div className="space-y-2">
+          <p>We ship across India. Every order is prepaid online and a tracking number is emailed when it ships.</p>
+          {freeShippingThreshold > 0 && <p>Free shipping on orders above ₹{freeShippingThreshold.toLocaleString('en-IN')}.</p>}
+          <button onClick={() => setActivePage('shipping-policy')} className="text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Read the shipping policy</button>
+        </div>
+      ),
+    },
+    {
+      key: 'returns',
+      title: 'Returns & exchanges',
+      body: (
+        <div className="space-y-2">
+          <p>Once your order is delivered you can request a return from your account. Our team will contact you to arrange it.</p>
+          <button onClick={() => setActivePage('return-policy')} className="text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Read the return policy</button>
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div id="product-detail-page-container" className="bg-[#120205] py-6 sm:py-10 pb-36 sm:pb-28">
+    <div id="product-detail-page" className="bg-[#FBF7F3] pb-28 md:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Breadcrumb Navigation */}
-        <nav className="flex items-center gap-2 text-xs text-[#E8D2A4]/65 mb-6 overflow-x-auto whitespace-nowrap border-b border-[#D7B77A]/25 pb-3">
-          <button 
-            onClick={() => setActivePage('home')}
-            className="hover:text-[#E8D2A4] font-medium transition flex items-center gap-1"
-          >
-            <Home className="w-3.5 h-3.5 text-[#D7B77A]" />
-            <span>Home</span>
-          </button>
-          <ChevronRight className="w-3 h-3 text-[#D7B77A] shrink-0" />
-          <button 
-            onClick={() => navigateToCategory(product.category)}
-            className="hover:text-[#E8D2A4] font-medium transition"
-          >
-            {product.category}
-          </button>
-          <ChevronRight className="w-3 h-3 text-[#D7B77A] shrink-0" />
-          <span className="text-[#E8D2A4] font-semibold truncate">{product.name}</span>
+        <nav aria-label="Breadcrumb" className="py-4 text-xs text-[#2A1A26]/65 flex items-center gap-1.5 overflow-hidden">
+          <button onClick={() => setActivePage('home')} className="hover:text-[#4B1D3F] cursor-pointer shrink-0">Home</button>
+          <ChevronRight className="w-3 h-3 shrink-0" />
+          {kidsPage && (
+            <>
+              <button onClick={() => navigateToCategory(KIDS_ALL as any)} className="hover:text-[#4B1D3F] cursor-pointer shrink-0">Kids</button>
+              <ChevronRight className="w-3 h-3 shrink-0" />
+            </>
+          )}
+          <button onClick={() => navigateToCategory((product.productType === 'accessory' ? 'All' : product.category) as any)} className="hover:text-[#4B1D3F] cursor-pointer shrink-0">{product.productType === 'accessory' ? 'Shop' : product.category}</button>
+          <ChevronRight className="w-3 h-3 shrink-0" />
+          <span className="text-[#2A1A26] truncate">{product.name}</span>
         </nav>
 
-        {/* Main Product Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          
-          {/* Left Column: Image Gallery */}
-          <div className="lg:col-span-7 space-y-4">
-            
-            {/* Main Stage Image (100% CLEAN & UNOBSTRUCTED IMAGE CONTAINER) */}
-            <motion.div 
-              className="relative lg:aspect-[4/5] aspect-[3/4] overflow-hidden bg-[#180306] border border-[#D7B77A]/25 group select-none touch-pan-y"
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -50) {
-                  const nextIdx = (selectedImageIdx + 1) % productImages.length;
-                  handleSelectThumbnail(nextIdx);
-                } else if (info.offset.x > 50) {
-                  const prevIdx = (selectedImageIdx - 1 + productImages.length) % productImages.length;
-                  handleSelectThumbnail(prevIdx);
-                }
-              }}
-              onClick={() => {
-                setIsImageLightboxOpen(true);
-              }}
-              title="Click to enlarge or swipe to change image"
-            >
-              {(productImages[selectedImageIdx] || selectedColor.imageUrl || productImages[0]) ? (
-                <img
-                  src={getCleanImageUrl(productImages[selectedImageIdx] || selectedColor.imageUrl || productImages[0])}
-                  alt={product.name}
-                  className="w-full h-full object-contain object-center"
-                  referrerPolicy="no-referrer"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.includes('data:image/svg+xml')) {
-                      target.src = ELEGANT_PLACEHOLDER_SVG;
-                    }
-                  }}
-                />
-              ) : (
-                <div className="w-full h-full bg-[#2A0710]" />
-              )}
-            </motion.div>
-
-            {/* Dedicated Outside Slot for Media Bar: Wishlist, Discount Tag, Dot Indicators, Tap to Zoom */}
-            <div className="flex items-center justify-between gap-2 px-1 pt-1 flex-wrap">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="bg-[#5C0B1B] text-[#F7F0E5] text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider border border-[#D7B77A]/35">
-                  {product.discount}% OFF
-                </span>
-
-                {/* Dot Indicators for Mobile Swipe */}
-                {productImages.length > 1 && (
-                  <div className="flex gap-1.5 items-center px-2 py-1 bg-[#5C0B1B]/5 rounded-full border border-[#D7B77A]/15">
-                    {productImages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => handleSelectThumbnail(idx)}
-                        className={`h-1.5 rounded-full transition-all ${
-                          selectedImageIdx === idx ? 'w-4 bg-[#5C0B1B]' : 'w-1.5 bg-[#5C0B1B]/30'
-                        }`}
-                        aria-label={`Go to slide ${idx + 1}`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsImageLightboxOpen(true)}
-                  className="bg-[#2A0710] border border-[#D7B77A]/30 hover:bg-[#5C0B1B]/5 text-[#F7F0E5] text-[11px] font-black px-3.5 py-1.5 rounded-full flex items-center gap-1.5 transition-all shadow-3xs cursor-pointer"
-                >
-                  <ZoomIn className="w-3.5 h-3.5 text-[#F7F0E5]" />
-                  <span>Tap to Zoom</span>
-                </button>
-
-                {/* Dedicated Wishlist Icon (Outside Photo Bounding Box) */}
-                <button
-                  id="pdp-wishlist-toggle-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWishlist(product);
-                  }}
-                  className={`p-2.5 rounded-full shadow-3xs transition-all border cursor-pointer flex items-center justify-center ${
-                    isFav
-                      ? 'bg-[#5C0B1B] text-[#F7F0E5] border-[#D7B77A]/40'
-                      : 'bg-[#2A0710] text-[#F7F0E5] border-[#D7B77A]/35 hover:bg-[#5C0B1B] hover:text-[#F7F0E5]'
-                  }`}
-                  aria-label="Wishlist"
-                  title={isFav ? "Remove from Wishlist" : "Add to Wishlist"}
-                >
-                  <Heart className={`w-3.5 h-3.5 ${isFav ? 'fill-[#F1E8DF]' : ''}`} />
-                </button>
-              </div>
-            </div>
-
-            {/* Thumbnails Row */}
-            <div className="flex gap-2.5 overflow-x-auto pb-2 items-center">
-              {productImages.map((img, idx) => (
-                <button
-                  key={idx}
-                  id={`pdp-thumb-${idx}`}
-                  onClick={() => handleSelectThumbnail(idx)}
-                  className={`w-16 h-20 rounded overflow-hidden border transition cursor-pointer ${
-                    selectedImageIdx === idx 
-                      ? 'border-[#D7B77A]/40 ring-2 ring-[#D7B77A]/30' 
-                      : 'border-[#D7B77A]/25 opacity-70 hover:opacity-100 bg-[#2A0710]'
-                  }`}
-                >
-                  {img && <img src={getCleanImageUrl(img)} alt="Product view" className="w-full h-full object-cover" />}
-                </button>
-              ))}
-            </div>
-
-            {/* Value Props Strip / Trust Guarantee Grid */}
-            <div className="bg-[#180306] border border-[#D7B77A]/30 p-4 grid grid-cols-3 gap-2 text-center text-xs text-[#E8D2A4] font-medium">
-              <div className="flex flex-col items-center">
-                <ShieldCheck className="w-5 h-5 text-[#F7F0E5] mb-1" />
-                <span className="font-extrabold text-[#F7F0E5]">100% Authentic</span>
-                <span className="text-[9px] text-[#F7F0E5]/70 font-normal">Artisan Craftsmanship</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <Truck className="w-5 h-5 text-[#F7F0E5] mb-1" />
-                <span className="font-extrabold text-[#F7F0E5]">Express Delivery</span>
-                <span className="text-[9px] text-[#F7F0E5]/70 font-normal">Fast Dispatch Pan-India</span>
-              </div>
-              <div className="flex flex-col items-center">
-                <RotateCcw className="w-5 h-5 text-[#F7F0E5] mb-1" />
-                <span className="font-extrabold text-[#F7F0E5]">Easy Exchange</span>
-                <span className="text-[9px] text-[#F7F0E5]/70 font-normal">7-Day Doorstep Exchange</span>
-              </div>
-            </div>
-
-            {/* ✨ DESIGN & FIT HIGHLIGHTS Card (Truly dynamic to prevent identical fake feel) */}
-            <div className="bg-[#120205] border border-[#D7B77A]/25 p-4 space-y-3 text-[#E8D2A4]">
-              <div className="flex items-center gap-2 text-[#F7F0E5] font-serif font-black text-xs uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-[#F7F0E5]" />
-                <span>DESIGN & SILHOUETTE HIGHLIGHTS</span>
-              </div>
-              <div className="flex flex-wrap gap-2 text-[11px] font-bold">
-                <span className="px-3 py-1 bg-[#2A0710] border border-[#D7B77A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#F7F0E5]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A]"></span>
-                  {/^premium\b/i.test(product.fabric || '') ? product.fabric : `Premium ${product.fabric || 'Pure Artisan Cotton'}`}
-                </span>
-                <span className="px-3 py-1 bg-[#2A0710] border border-[#D7B77A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#F7F0E5]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A]"></span>
-                  Refined {product.fit || 'A-Line Straight Fit'} Silhouette
-                </span>
-                <span className="px-3 py-1 bg-[#2A0710] border border-[#D7B77A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#F7F0E5]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A]"></span>
-                  Artisanal Handloom Detailing
-                </span>
-                <span className="px-3 py-1 bg-[#2A0710] border border-[#D7B77A]/25 rounded-full shadow-3xs flex items-center gap-1.5 text-[#F7F0E5]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A]"></span>
-                  Curated for {product.occasion || 'Festive & Celebration Wear'}
-                </span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Right Column: Buying Controls & Info */}
-          <div className="lg:col-span-5 bg-[#180306] text-[#E8D2A4] border border-[#D7B77A]/30 p-5 sm:p-7 space-y-6 lg:sticky lg:top-28 lg:self-start">
-            
-            {/* Title & Brand */}
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#F7F0E5] bg-[#2A0710] px-3 py-1 rounded-full border border-[#D7B77A]/35 shadow-3xs">
-                  CATEGORY: {product.category.toUpperCase()}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between gap-3 mt-3">
-                <div>
-                  <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-[#E8D2A4] leading-snug">
-                    {product.name}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-[#F7F0E5]/55 bg-[#2A0710] border border-[#D7B77A]/15 px-2 py-0.5 rounded font-black shadow-3xs">
-                      SKU: {currentSku}
-                    </span>
-                    <span className="text-[10px] text-[#F7F0E5] bg-[#2A0710] border border-[#D7B77A]/35 px-2 py-0.5 rounded font-black">
-                      Color: {selectedColor.name}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 shrink-0">
-                  {/* WhatsApp Share */}
-                  <button
-                    id="pdp-whatsapp-share-btn"
-                    onClick={handleWhatsAppShare}
-                    className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-emerald-950/40 text-emerald-400 hover:bg-emerald-600 hover:text-[#F7F0E5] transition-all shadow-3xs border border-emerald-800 cursor-pointer active:scale-95"
-                    aria-label="Share on WhatsApp"
-                    title="Share on WhatsApp"
-                  >
-                    <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.5-5.739-1.446L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.37 9.864-9.799.002-2.63-1.023-5.101-2.885-6.963C16.588 1.981 14.117.957 11.53.957c-5.44 0-9.866 4.372-9.87 9.802 0 1.772.465 3.502 1.345 5.027l-.993 3.628 3.73-.967zm12.333-5.26c-.307-.154-1.82-.897-2.102-.997-.282-.1-.487-.152-.692.152-.205.304-.795.997-.974 1.203-.179.205-.357.23-.664.077-.307-.154-1.3-.48-2.477-1.53-.915-.817-1.533-1.826-1.712-2.133-.179-.307-.019-.473.134-.626.138-.138.307-.359.461-.539.154-.179.205-.307.307-.512.103-.205.051-.384-.026-.538-.077-.154-.692-1.666-.948-2.28-.249-.597-.503-.516-.692-.526-.179-.009-.384-.01-.59-.01-.205 0-.538.077-.82.384-.282.308-1.077 1.051-1.077 2.564 0 1.513 1.102 2.974 1.256 3.179.154.205 2.17 3.313 5.258 4.646.734.317 1.308.507 1.753.648.739.235 1.412.201 1.944.122.593-.088 1.82-.743 2.076-1.46.256-.718.256-1.333.179-1.46-.077-.128-.282-.205-.59-.359z"/>
-                    </svg>
-                  </button>
-
-                  {/* Standard Share */}
-                  <button 
-                    onClick={async () => {
-                      const shareUrl = getShareableUrl(product.id);
-                      const shareData = {
-                        title: product.name,
-                        text: `Check out ${product.name} at Suit Aura Girls!`,
-                        url: shareUrl
-                      };
-                      if (navigator.share) {
-                        try {
-                          await navigator.share(shareData);
-                        } catch (err) {
-                          console.log('Error sharing:', err);
-                        }
-                      } else if (navigator.clipboard) {
-                        navigator.clipboard.writeText(shareUrl);
-                        showToast('Product link copied to clipboard!', 'success');
-                      }
-                    }}
-                    className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-[#2A0710] text-[#F7F0E5] hover:bg-[#5C0B1B] hover:text-[#F7F0E5] transition-all shadow-3xs border border-[#D7B77A]/35 group cursor-pointer"
-                    aria-label="Share Product"
-                  >
-                    <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Rating & Reviews Pills matching Reference Image */}
-              {(() => {
-                const count = displayReviews.length;
-                const computedAvg = count > 0
-                  ? (displayReviews.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / count).toFixed(1)
-                  : '5.0';
-
-                return (
-                  <div className="flex items-center gap-2 mt-3 flex-wrap">
-                    <div className="flex items-center gap-1 bg-[#D7B77A] text-[#F7F0E5] px-2.5 py-0.5 rounded-full text-xs font-black border border-[#D7B77A]/30 shadow-3xs animate-pulse">
-                      <Star className="w-3 h-3 fill-current text-[#F7F0E5]" />
-                      <span>{computedAvg}</span>
-                    </div>
-                    <span className="text-xs text-[#F7F0E5]/75 font-bold">
-                      ({productReviewCount} Verified Reviews)
-                    </span>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-950/40 text-emerald-400 rounded-full text-[11px] font-bold border border-emerald-500/20 shadow-3xs">
-                      <CheckCircle className="w-3 h-3 text-emerald-400" />
-                      Quality Verified
-                    </span>
-                  </div>
-                );
-              })()}
-
-              {/* Scarcity Meter Bar (Exact match to reference image, but themed beautifully) */}
-              <div className="mt-4 p-3.5 bg-[#2A0710] border border-[#D7B77A]/25 rounded-md space-y-2">
-                <div className="flex items-center justify-between text-xs font-bold text-[#F7F0E5]">
-                  <span className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-[#F7F0E5]">Current stock: {effectiveStockQty}</span>
-                  </span>
-                  <span className="text-[10px] bg-[#5C0B1B] text-[#F7F0E5] px-2 py-0.5 rounded-md border border-[#D7B77A]/35 font-black tracking-wider">
-                    {isItemInStock ? 'IN STOCK' : 'OUT OF STOCK'}
-                  </span>
-                </div>
-                <div className="w-full h-1.5 bg-[#2A0710] rounded-full overflow-hidden border border-[#D7B77A]/15">
-                  <div className="h-full bg-gradient-to-r from-[#D7B77A] to-[#D7B77A] rounded-full w-[85%]"></div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Price Box & Integrated Active Coupon Section */}
-            <div className="bg-[#120205] border border-[#D7B77A]/30 p-4 space-y-3">
-              <div className="flex items-baseline gap-2.5 flex-wrap">
-                <span className="font-serif text-3xl font-semibold text-[#E8D2A4]">
-                  ₹{discountedPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="text-base line-through text-[#F7F0E5]/55 font-medium">
-                  ₹{currentOriginalPrice.toLocaleString('en-IN')}
-                </span>
-                <span className="text-xs font-black text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-3 py-0.5 rounded-full shadow-3xs">
-                  {currentDiscount}% off onwards
-                </span>
-              </div>
-
-              {/* Integrated Active Coupon Pill matching reference image */}
-              <div className="p-3 bg-emerald-950/40 border border-emerald-500/20 rounded flex items-center justify-between gap-2 shadow-3xs">
-                <div className="flex items-center gap-2">
-                  <Tag className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <div className="text-xs">
-                    <p className="font-black text-[#F7F0E5]">
-                      {appliedCoupon 
-                        ? `₹${discountedPrice} with Coupon ${appliedCoupon.code}` 
-                        : `₹${Math.max(0, currentPrice - Math.min(150, Math.round(currentPrice * 0.1)))} with Coupon AURA10`}
-                    </p>
-                    <p className="text-[10px] text-emerald-400 font-bold">
-                      {appliedCoupon ? `Saved ₹${couponDiscountAmount} extra!` : 'Extra 10% OFF up to ₹150'}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (appliedCoupon) {
-                      setAppliedCoupon(null);
-                      showToast('Coupon removed.', 'info');
-                    } else {
-                      setAppliedCoupon({ code: 'AURA10', discountPercent: 10, maxDiscount: 150 });
-                      showToast('Coupon AURA10 applied! Extra 10% OFF', 'success');
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0 ${
-                    appliedCoupon
-                      ? 'bg-[#2A0710] text-rose-300 hover:bg-[#2A0710] border border-[#D7B77A]/15'
-                      : 'bg-[#D7B77A] text-[#F7F0E5] hover:bg-[#D7B77A]/90'
-                  }`}
-                >
-                  {appliedCoupon ? 'Remove' : 'Apply Offer'}
-                </button>
-              </div>
-
-              {/* View all coupons bar */}
-              <div className="flex items-center justify-between pt-1 border-t border-[#D7B77A]/15 text-xs">
-                <span className="font-bold text-[#F7F0E5]/75 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  3 Active Coupons Available
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowOffersModal(true)}
-                  className="font-extrabold text-[#F7F0E5] hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  View Offers &gt;
-                </button>
-              </div>
-            </div>
-
-            {/* Color Swatches matching reference image */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-[#F7F0E5]">
-                  COLOR <span className="text-[#F7F0E5]">*</span> | <span className="text-[#F7F0E5]/80 font-serif font-extrabold">{selectedColor.name.toUpperCase()}</span>
-                </label>
-                <span className="text-xs text-[#F7F0E5]/55 font-bold">{productColors.length} Shades</span>
-              </div>
-
-              <div className="flex flex-wrap gap-2.5">
-                {productColors.map((c, idx) => {
-                  const isSelected = selectedColor === c || (selectedColor.name === c.name && selectedColor.hex === c.hex);
-                  const swatchImage = c.imageUrl || productImages[idx];
-                  return (
+        <div className="grid gap-6 lg:gap-12 lg:grid-cols-12">
+          {/* Gallery (min-w-0: the photo strip scrolls inside the screen, however many photos there are) */}
+          <div className="lg:col-span-7 min-w-0">
+            <div className="lg:sticky lg:top-36 flex flex-col-reverse gap-3 lg:flex-row min-w-0">
+              {images.length > 1 && (
+                <div className="sag-scroll-x flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto lg:max-h-[640px] lg:w-20 shrink-0 min-w-0 max-w-full scroll-px-0 pb-1 lg:pb-0">
+                  {images.map((img, idx) => (
                     <button
-                      key={`pdp-col-${c.name}-${c.hex}-${idx}`}
-                      type="button"
-                      onClick={() => handleSelectColor(c)}
-                      className={`px-3 py-1.5 rounded border text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-                        isSelected 
-                          ? 'border-[#D7B77A]/40 bg-[#D7B77A] text-[#F7F0E5] font-semibold' 
-                          : 'border-[#D7B77A]/30 bg-[#120205] text-[#E8D2A4] hover:border-[#D7B77A]/40'
-                      }`}
+                      key={img + idx}
+                      onClick={() => setImageIdx(idx)}
+                      aria-label={`Show image ${idx + 1}`}
+                      aria-current={idx === imageIdx}
+                      className={`shrink-0 w-16 lg:w-20 aspect-[4/5] rounded-xl overflow-hidden border-2 transition-colors cursor-pointer ${idx === imageIdx ? 'border-[#4B1D3F]' : 'border-transparent opacity-70 hover:opacity-100'}`}
                     >
-                      <span className="w-3.5 h-3.5 rounded-full border border-[#D7B77A]/10 overflow-hidden bg-[#180306] shrink-0" aria-hidden="true">
-                        {swatchImage ? (
-                          <img src={getCleanImageUrl(swatchImage, 80)} alt="" className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <span className="block w-full h-full" style={{ backgroundColor: c.hex }} />
-                        )}
-                      </span>
-                      <span>{c.name}</span>
+                      <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Size Selector matching reference image */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-black uppercase tracking-wider text-[#F7F0E5]">
-                  SELECT SIZE <span className="text-[#F7F0E5]">*</span>
-                </label>
-                <button
-                  id="pdp-size-guide-modal-btn"
-                  type="button"
-                  onClick={() => setIsSizeGuideOpen(true)}
-                  className="text-xs text-[#F7F0E5]/80 hover:underline font-extrabold flex items-center gap-1 cursor-pointer"
-                >
-                  <Ruler className="w-3.5 h-3.5 text-[#F7F0E5]" />
-                  Size Guide
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {availableSizes.map((sz) => {
-                  const outOfStock = isSizeOutOfStock(sz);
-                  const isSelected = selectedSize === sz;
-                  
-                  return (
-                    <button
-                      key={sz}
-                      id={`pdp-size-${sz}`}
-                      type="button"
-                      onClick={() => setSelectedSize(sz)}
-                      className={`w-11 h-11 rounded flex items-center justify-center text-xs font-black border transition-all relative overflow-hidden cursor-pointer ${
-                        outOfStock
-                          ? 'bg-[#2A0710] border-[#D7B77A]/15 text-[#F7F0E5]/55'
-                          : isSelected
-                          ? 'bg-[#D7B77A] text-[#F7F0E5] border-[#D7B77A]/40'
-                          : 'bg-[#120205] border-[#D7B77A]/30 text-[#E8D2A4] hover:border-[#D7B77A]/40'
-                      }`}
-                    >
-                      <span>{sz}</span>
-                      {outOfStock && (
-                        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                          <div className="absolute top-1/2 left-1/2 w-[140%] h-[1.2px] bg-red-400/50 -translate-x-1/2 -translate-y-1/2 rotate-45 transform" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {selectedSize && !isSizeOutOfStock(selectedSize) && (
-                <p className="text-[11px] text-emerald-400 font-bold pt-1 flex items-center gap-1">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>Size {selectedSize} is in stock for immediate dispatch.</span>
-                </p>
-              )}
-            </div>
-
-            {/* High Demand Urgency Stock Alert */}
-            {!isItemInStock || effectiveStockQty <= 0 ? (
-              <div className="flex items-center gap-2 p-3.5 bg-[#2A0710] border border-red-500/20 rounded text-red-800 text-xs font-bold shadow-2xs">
-                <X className="w-4 h-4 text-red-600 shrink-0" />
-                <span>This ethnic suit set is sold out. Check back soon for restocking or contact support on WhatsApp.</span>
-              </div>
-            ) : selectedSize && isSizeOutOfStock(selectedSize) ? (
-              <div className="flex items-center gap-2 p-3.5 bg-[#2A0710] border border-amber-500/20 rounded text-[#F7F0E5] text-xs font-bold shadow-2xs">
-                <span>Size {selectedSize} is Out of Stock, but other sizes are Selling Fast!</span>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {/* Premium Luxury Stock Indicator (No cheap emojis, randomized by product ID and varies dynamically over time) */}
-                <div 
-                  id="pdp-dynamic-stock-warning"
-                  className="flex items-center justify-between p-3.5 bg-[#2A0710] border border-[#D7B77A]/25 rounded text-[#F7F0E5]/75 text-xs font-semibold shadow-3xs"
-                >
-                  <div className="flex items-center gap-2">
-                    {/* Pulsing elegant status dot instead of cheap emoji */}
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#D7B77A] animate-pulse shrink-0"></span>
-                    <span>
-                      <span className="font-black text-[#F7F0E5]">{effectiveStockQty}</span> items remaining in Size <span className="font-extrabold text-[#F7F0E5]">{selectedSize || 'M'}</span>
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-extrabold text-[#F7F0E5] uppercase tracking-widest bg-[#2A0710] px-2 py-0.5 rounded border border-amber-500/15">
-                    In Stock
-                  </span>
-                </div>
-
-                {/* Elegant Dispatch Timer showing only when active (8 AM to 5 PM) */}
-                {showDispatchTimer && (
-                  <div 
-                    id="pdp-dispatch-countdown"
-                    className="flex items-center gap-2.5 p-3.5 bg-[#2A0710] border border-[#D7B77A]/20 rounded text-[#F7F0E5]/75 text-xs font-semibold shadow-3xs"
-                  >
-                    <Clock className="w-4 h-4 text-[#F7F0E5] shrink-0" />
-                    <span>
-                      Order within <span className="text-[#F7F0E5] font-black tracking-tight font-mono">{String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s</span> for <span className="font-extrabold text-emerald-400">Same-Day Dispatch</span>
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Quantity Selector */}
-            <div className="flex items-center gap-3">
-              <label className="text-xs font-black uppercase tracking-wider text-[#F7F0E5]">
-                Quantity:
-              </label>
-              <div className="inline-flex items-center border border-[#D7B77A]/30 rounded bg-[#2A0710]/40 shadow-2xs text-[#F7F0E5]">
-                <button
-                  id="pdp-qty-minus"
-                  disabled={!isItemInStock || effectiveStockQty <= 0}
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3.5 py-1.5 text-[#F7F0E5]/70 hover:text-[#F7F0E5] font-black transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  -
-                </button>
-                <span className="px-2 py-1.5 text-xs font-black min-w-[32px] text-center">
-                  {quantity}
-                </span>
-                <button
-                  id="pdp-qty-plus"
-                  disabled={!isItemInStock || effectiveStockQty <= 0}
-                  onClick={() => setQuantity(Math.min(Math.min(5, effectiveStockQty), quantity + 1))}
-                  className="px-3.5 py-1.5 text-[#F7F0E5]/70 hover:text-[#F7F0E5] font-black transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Action Buttons: Add to Bag & Buy Now */}
-            <div className="space-y-3 pt-1">
-              {selectedSize && isSizeOutOfStock(selectedSize) ? (
-                <button
-                  id="pdp-notify-me-btn"
-                  type="button"
-                  onClick={handleNotifyMe}
-                  className="w-full py-3.5 rounded font-black text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 bg-[#5C0B1B] hover:bg-[#5C0B1B]/90 text-[#F7F0E5] shadow-md cursor-pointer active:scale-95"
-                >
-                  <Bell className="w-4 h-4 text-[#F7F0E5] animate-pulse" />
-                  <span>Notify Me on Restock</span>
-                </button>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  {/* Full-Width Secondary Action: ADD TO BAG */}
-                  <button
-                    id="pdp-add-to-cart-btn"
-                    disabled={!isItemInStock || effectiveStockQty <= 0}
-                    onClick={handleAddToCart}
-                    className={`w-full py-3.5 rounded font-extrabold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-98 border ${
-                      !isItemInStock || effectiveStockQty <= 0
-                        ? 'bg-[#2A0710] text-[#F7F0E5]/55 border-transparent cursor-not-allowed'
-                        : isJustAdded
-                        ? 'bg-[#0B3D2E] text-[#F7F0E5] border-[#0B3D2E] shadow-sm'
-                        : 'bg-[#180306] border-[#D7B77A]/40 text-[#E8D2A4] hover:bg-[#D7B77A] hover:text-[#F7F0E5]'
-                    }`}
-                  >
-                    {!isItemInStock || effectiveStockQty <= 0 ? (
-                      <>
-                        <X className="w-4 h-4 text-[#F7F0E5]/55" />
-                        <span>OUT OF STOCK</span>
-                      </>
-                    ) : isJustAdded ? (
-                      <>
-                        <Check className="w-4 h-4 text-[#F7F0E5]" />
-                        <span>ADDED TO BAG!</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingBag className="w-4 h-4 text-[#F7F0E5] group-hover:text-[#F7F0E5]" />
-                        <span>ADD TO BAG</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Full-Width Primary Action: BUY NOW */}
-                  <button
-                    id="pdp-buy-now-btn"
-                    disabled={!isItemInStock || effectiveStockQty <= 0}
-                    onClick={handleBuyNow}
-                    className={`w-full py-3.5 font-extrabold text-xs tracking-wider uppercase transition-all duration-300 flex items-center justify-center gap-2 rounded border border-[#D7B77A]/40 cursor-pointer active:scale-98 shadow-md ${
-                      !isItemInStock || effectiveStockQty <= 0
-                        ? 'bg-[#2A0710] text-[#F7F0E5]/55 border-transparent cursor-not-allowed'
-                        : 'bg-[#D7B77A] hover:bg-[#D7B77A]/90 text-[#F7F0E5]'
-                    }`}
-                  >
-                    {!isItemInStock || effectiveStockQty <= 0 ? (
-                      <span>SOLD OUT</span>
-                    ) : (
-                      <>
-                        <Zap className="w-4 h-4 text-[#F7F0E5] fill-white" />
-                        <span>BUY NOW</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-
-              {/* Ask Question on WhatsApp - Redesigned to be Premium, Clean & Warm Luxury */}
-              <a
-                id="pdp-whatsapp-ask-btn"
-                href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I am interested in "${product.name}" (₹${product.price}). Could you help me with a question? Link: ${getShareableUrl(product.id)}`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full p-4 bg-[#2A0710] border border-[#D7B77A]/30 rounded hover:bg-[#2A0710]/80 hover:border-[#D7B77A]/50 transition-all duration-200 flex items-center justify-between gap-3 group cursor-pointer active:scale-99 shadow-3xs"
-              >
-                <div className="flex items-center gap-3">
-                  {/* Styled Elegant WhatsApp Icon Base */}
-                  <div className="w-9 h-9 rounded-full bg-[#0B3D2E] text-[#F7F0E5] flex items-center justify-center shadow-3xs group-hover:scale-105 transition-transform duration-200">
-                    <svg className="w-4.5 h-4.5 fill-current" viewBox="0 0 24 24">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.825 1.451 5.436 0 9.86-4.413 9.863-9.83.001-2.624-1.017-5.091-2.868-6.944-1.851-1.852-4.312-2.871-6.932-2.872-5.437 0-9.863 4.414-9.866 9.832 0 1.963.518 3.882 1.502 5.584l-1.019 3.722 3.812-1.002-.525.309z" />
-                    </svg>
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[11px] font-black uppercase tracking-widest text-[#F7F0E5] leading-tight">
-                      Sizing or Fabric Query?
-                    </p>
-                    <p className="text-[10px] text-[#F7F0E5]/55 font-medium leading-none mt-1">
-                      Chat with our personal stylist in Artisan
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-[9px] font-black uppercase text-emerald-400 tracking-wider bg-emerald-950/40 border border-emerald-600/15 px-2 py-0.5 rounded">
-                    Online
-                  </span>
-                </div>
-              </a>
-            </div>
-
-            {/* Pincode Delivery Checker */}
-            <div className="bg-[#2A0710] border border-[#D7B77A]/30 rounded-md p-4 shadow-3xs">
-              <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#F7F0E5] mb-2.5">
-                <MapPin className="w-4 h-4 text-[#F7F0E5]" />
-                <span>Check Delivery Pincode</span>
-              </div>
-              <form onSubmit={handleCheckPincode} className="flex gap-2">
-                <input
-                  id="pincode-checker-input"
-                  type="text"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\[#B76E79\]/g, ''))}
-                  placeholder="Enter 6-digit Pincode (e.g. 110001)"
-                  className="flex-1 px-3 py-2 border border-[#D7B77A]/30 rounded text-xs text-[#F7F0E5] font-semibold placeholder-[#F7F0E5]/55 focus:outline-none focus:ring-1 focus:ring-[#D7B77A]/40 bg-[#180306]"
-                />
-                <button
-                  id="pincode-check-submit-btn"
-                  type="submit"
-                  className="px-4 py-2 bg-[#5C0B1B] hover:bg-[#5C0B1B]/90 text-[#F7F0E5] border border-[#D7B77A]/40 rounded text-xs font-black uppercase tracking-wider transition cursor-pointer shadow-2xs"
-                >
-                  Check
-                </button>
-              </form>
-
-              {pincodeStatus?.checked && (
-                <div className="mt-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {pincodeStatus.isChecking ? (
-                    <div className="flex items-center gap-2 text-xs text-[#F7F0E5] font-bold">
-                      <Loader2 className="w-4 h-4 text-[#F7F0E5] animate-spin" />
-                      <span>{pincodeStatus.message}</span>
-                    </div>
-                  ) : pincodeStatus.valid ? (
-                    <div className="bg-[#180306] border border-[#D7B77A]/25 rounded p-3.5 shadow-xs space-y-3">
-                      
-                      {/* Delivery Date & Partner Info */}
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-0.5">
-                          <span className="text-[10px] text-emerald-400 font-extrabold uppercase tracking-wider block">Estimated Delivery:</span>
-                          <span className="text-sm sm:text-base font-black text-[#F7F0E5] tracking-tight block">
-                            Get it by <span className="text-[#F7F0E5] underline decoration-[#D7B77A]/40 decoration-2">{pincodeStatus.estimatedDate}</span>
-                          </span>
-                        </div>
-                        
-                        {/* Logistics Partner Logo/Badge */}
-                        {pincodeStatus.logisticsPartner === 'Bluedart' ? (
-                          <div className="bg-amber-400 text-blue-900 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-amber-500 shadow-3xs flex items-center gap-1 shrink-0">
-                            <span className="inline-block w-1.5 h-1.5 bg-blue-900 rounded-full animate-ping" />
-                            <span>Bluedart Air</span>
-                          </div>
-                        ) : (
-                          <div className="bg-[#5C0B1B] text-[#F7F0E5] px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider border border-[#D7B77A]/15 shadow-3xs flex items-center gap-1 shrink-0">
-                            <span className="inline-block w-1.5 h-1.5 bg-[#180306] rounded-full animate-ping" />
-                            <span>Delhivery</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Location Details */}
-                      <div className="pt-2 border-t border-[#D7B77A]/15 flex flex-col gap-1 text-[11px] text-[#F7F0E5]/75">
-                        <div className="flex items-center gap-1.5">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span>Delivering to <strong className="text-[#F7F0E5]">{pincodeStatus.district}, {pincodeStatus.state}</strong></span>
-                        </div>
-                        <div className="pl-5 text-[10px] text-[#F7F0E5]/55 font-medium">
-                          Serving area: {pincodeStatus.postOfficeName} Post Office
-                        </div>
-                      </div>
-
-                      {/* Logistics Service Highlights */}
-                      <div className="grid grid-cols-2 gap-2 pt-1">
-                        <div className="bg-[#2A0710] border border-[#D7B77A]/15 rounded-lg p-2 text-center">
-                          <span className="block text-[10px] text-[#F7F0E5]/55 font-bold uppercase">Dispatch:</span>
-                          <span className="text-[11px] text-[#F7F0E5] font-black">Within 24 Hours</span>
-                        </div>
-                        <div className="bg-[#2A0710] border border-[#D7B77A]/15 rounded-lg p-2 text-center">
-                          <span className="block text-[10px] text-[#F7F0E5]/55 font-bold uppercase">Shipping:</span>
-                          <span className="text-[11px] text-emerald-400 font-black">Free Standard</span>
-                        </div>
-                      </div>
-
-                    </div>
-                  ) : (
-                    <div className="bg-rose-950/40 border border-red-500/20 rounded p-3 text-xs text-red-800 font-bold flex items-start gap-2">
-                      <X className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                      <span>{pincodeStatus.message}</span>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Clean Ultra-Luxury Trust & Protection Card (Replaces former 3 repetitive boxes) */}
-            <div className="bg-[#2A0710] text-[#F7F0E5] border border-[#D7B77A]/30 rounded-md p-4 shadow-3xs space-y-3">
-              <div className="flex items-center justify-between flex-wrap gap-1">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#F7F0E5]" />
-                  <span className="font-serif font-black text-xs text-[#F7F0E5] uppercase tracking-wider">
-                    THE AURA PROMISE
-                  </span>
-                </div>
-                <span className="text-[10px] text-[#F7F0E5] font-extrabold bg-[#5C0B1B]/10 border border-[#D7B77A]/30 px-2.5 py-0.5 rounded-full shadow-3xs">
-                  100% Authentic Artisan Apparel
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="flex items-center gap-2 p-2.5 bg-[#180306] border border-[#D7B77A]/20 rounded shadow-3xs">
-                  <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="font-bold text-[#F7F0E5] text-[11px]">Authentic Fabric</p>
-                    <p className="text-[9px] text-[#F7F0E5]/55 font-medium">Pure Cotton & Silk Blends</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-2.5 bg-[#180306] border border-[#D7B77A]/20 rounded shadow-3xs">
-                  <RotateCcw className="w-4 h-4 text-[#F7F0E5] shrink-0" />
-                  <div>
-                    <p className="font-bold text-[#F7F0E5] text-[11px]">7-Day Easy Exchange</p>
-                    <p className="text-[9px] text-[#F7F0E5]/55 font-medium">Hassle-Free Doorstep Swap</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-2.5 bg-[#180306] border border-[#D7B77A]/20 rounded shadow-3xs">
-                  <Truck className="w-4 h-4 text-[#F7F0E5] shrink-0" />
-                  <div>
-                    <p className="font-bold text-[#F7F0E5] text-[11px]">Free Express Delivery</p>
-                    <p className="text-[9px] text-[#F7F0E5]/55 font-medium">On All Prepaid Orders</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 p-2.5 bg-[#180306] border border-[#D7B77A]/20 rounded shadow-3xs">
-                  <Sparkles className="w-4 h-4 text-[#F7F0E5] shrink-0" />
-                  <div>
-                    <p className="font-bold text-[#F7F0E5] text-[11px]">Secured Payments</p>
-                    <p className="text-[9px] text-[#F7F0E5]/55 font-medium">256-Bit SSL Encrypted UPI</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Product Specifications & Details Card */}
-            <div className="bg-[#2A0710] border border-[#D7B77A]/25 rounded-md p-5 sm:p-6 shadow-xs">
-              {/* Tab Navigation Pill Bar */}
-              <div className="flex items-center gap-1 sm:gap-2 border-b border-[#D7B77A]/15 pb-3 overflow-x-auto no-scrollbar">
-                <button
-                  id="tab-btn-details"
-                  onClick={() => setActiveTab('details')}
-                  className={`px-3.5 py-2 rounded text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === 'details'
-                      ? 'bg-[#5C0B1B] text-[#F7F0E5] shadow-2xs border border-[#D7B77A]/40'
-                      : 'bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/5 border border-[#D7B77A]/20'
-                  }`}
-                >
-                  Product Details
-                </button>
-                <button
-                  id="tab-btn-fabric"
-                  onClick={() => setActiveTab('fabric')}
-                  className={`px-3.5 py-2 rounded text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === 'fabric'
-                      ? 'bg-[#5C0B1B] text-[#F7F0E5] shadow-2xs border border-[#D7B77A]/40'
-                      : 'bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/5 border border-[#D7B77A]/20'
-                  }`}
-                >
-                  Fabric & Care
-                </button>
-                <button
-                  id="tab-btn-shipping"
-                  onClick={() => setActiveTab('shipping')}
-                  className={`px-3.5 py-2 rounded text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === 'shipping'
-                      ? 'bg-[#5C0B1B] text-[#F7F0E5] shadow-2xs border border-[#D7B77A]/40'
-                      : 'bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/5 border border-[#D7B77A]/20'
-                  }`}
-                >
-                  Shipping & Returns
-                </button>
-                <button
-                  id="tab-btn-reviews"
-                  onClick={() => setActiveTab('reviews')}
-                  className={`px-3.5 py-2 rounded text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
-                    activeTab === 'reviews'
-                      ? 'bg-[#5C0B1B] text-[#F7F0E5] shadow-2xs border border-[#D7B77A]/40'
-                      : 'bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/5 border border-[#D7B77A]/20'
-                  }`}
-                >
-                  Reviews ({displayReviews.length})
-                </button>
-              </div>
-
-              {/* Tab Contents */}
-              <div className="pt-3.5 text-xs sm:text-sm text-[#F7F0E5]/75 leading-relaxed">
-                {activeTab === 'details' && (
-                  <div className="space-y-4">
-                    <p className="text-[#F7F0E5]/75 font-normal leading-relaxed">{product.description}</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-[#D7B77A]/15">
-                      <div className="bg-[#180306] p-3 rounded border border-[#D7B77A]/15 shadow-3xs">
-                        <span className="font-bold text-[#F7F0E5] block text-xs uppercase tracking-wider mb-0.5">Fit & Style:</span>
-                        <span className="text-xs text-[#F7F0E5]/75 font-medium">{product.fit}</span>
-                      </div>
-                      <div className="bg-[#180306] p-3 rounded border border-[#D7B77A]/15 shadow-3xs">
-                        <span className="font-bold text-[#F7F0E5] block text-xs uppercase tracking-wider mb-0.5">Recommended Occasion:</span>
-                        <span className="text-xs text-[#F7F0E5]/75 font-medium">{product.occasion}</span>
-                      </div>
-                    </div>
-
-                    {/* Customer Q&A Section - Dynamically Curated & Redesigned for High Trust & Luxury Aesthetics */}
-                    <div className="pt-5 border-t border-[#D7B77A]/20 space-y-3">
-                      <div className="flex flex-col gap-1">
-                        <h4 className="font-serif font-black text-xs text-[#F7F0E5] flex items-center gap-2 uppercase tracking-widest">
-                          <HelpCircle className="w-4 h-4 text-[#F7F0E5]" />
-                          <span>Verified Customer Q&A</span>
-                        </h4>
-                        <p className="text-[10px] text-[#F7F0E5]/55 font-medium leading-none">
-                          Answers curated directly by our production master craftsman in Artisan
-                        </p>
-                      </div>
-
-                      <div className="space-y-3.5 pt-1">
-                        {getProductQAs(product).map((item, idx) => (
-                          <div 
-                            key={idx} 
-                            className="bg-[#180306] border border-[#D7B77A]/15 rounded p-4 space-y-2.5 hover:border-[#D7B77A]/30 transition-all duration-200 shadow-3xs"
-                          >
-                            {/* Question row */}
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs font-serif font-black text-[#F7F0E5] select-none">Q.</span>
-                              <p className="text-xs font-black text-[#F7F0E5] leading-snug">
-                                {item.q}
-                              </p>
-                            </div>
-                            
-                            {/* Answer row with elegant border-accent */}
-                            <div className="flex items-start gap-2 pl-3.5 border-l-2 border-[#D7B77A]/20">
-                              <p className="text-xs text-[#F7F0E5]/75 font-semibold leading-relaxed">
-                                {item.a}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'fabric' && (
-                  <div className="space-y-3.5" id="pdp-specs-accordion">
-                    {/* Fabric Composition Accordion */}
-                    <div className="border border-[#D7B77A]/15 rounded-md overflow-hidden bg-[#180306] shadow-3xs">
-                      <button
-                        onClick={() => toggleAccordion('fabric')}
-                        className="w-full flex items-center justify-between p-4 bg-[#180306] hover:bg-[#5C0B1B]/5 transition-all text-left font-bold text-[#F7F0E5] text-xs uppercase tracking-wider cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Layers className="w-4 h-4 text-[#F7F0E5]" />
-                          <span>Fabric Composition</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-[#F7F0E5] transition-transform duration-200 ${openAccordions.fabric ? 'rotate-180' : ''}`} />
-                      </button>
-                      <div className={`transition-all duration-300 ease-in-out ${openAccordions.fabric ? 'max-h-40 border-t border-[#D7B77A]/15 p-4 bg-[#180306] text-xs text-gray-750 font-semibold' : 'max-h-0 overflow-hidden'}`}>
-                        <p className="text-[#F7F0E5]/75 leading-relaxed">{product.fabric || '100% Pure Premium Cambric Cotton'}</p>
-                      </div>
-                    </div>
-
-                    {/* Work Type Accordion */}
-                    <div className="border border-[#D7B77A]/15 rounded-md overflow-hidden bg-[#180306] shadow-3xs">
-                      <button
-                        onClick={() => toggleAccordion('work')}
-                        className="w-full flex items-center justify-between p-4 bg-[#180306] hover:bg-[#5C0B1B]/5 transition-all text-left font-bold text-[#F7F0E5] text-xs uppercase tracking-wider cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Palette className="w-4 h-4 text-[#F7F0E5]" />
-                          <span>Work Type</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-[#F7F0E5] transition-transform duration-200 ${openAccordions.work ? 'rotate-180' : ''}`} />
-                      </button>
-                      <div className={`transition-all duration-300 ease-in-out ${openAccordions.work ? 'max-h-40 border-t border-[#D7B77A]/15 p-4 bg-[#180306] text-xs text-gray-755 font-semibold' : 'max-h-0 overflow-hidden'}`}>
-                        <p className="text-[#F7F0E5]/75 leading-relaxed">
-                          {product.name.toLowerCase().includes('gota') 
-                            ? 'Artisanal Hand-crafted Gota Patti lace detailing, intricate neckline embroidery, and golden border fringes.'
-                            : product.name.toLowerCase().includes('embroidered') || product.name.toLowerCase().includes('embroidery')
-                            ? 'Stunning hand embroidery work, floral sequin highlights, and refined zari border styling.'
-                            : 'Authentic traditional Heritage screen prints, decorative neckline keyhole chord tassels, and gota-patti piping borders.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Dress Length Accordion */}
-                    <div className="border border-[#D7B77A]/15 rounded-md overflow-hidden bg-[#180306] shadow-3xs">
-                      <button
-                        onClick={() => toggleAccordion('length')}
-                        className="w-full flex items-center justify-between p-4 bg-[#180306] hover:bg-[#5C0B1B]/5 transition-all text-left font-bold text-[#F7F0E5] text-xs uppercase tracking-wider cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Ruler className="w-4 h-4 text-[#F7F0E5]" />
-                          <span>Dress Length</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-[#F7F0E5] transition-transform duration-200 ${openAccordions.length ? 'rotate-180' : ''}`} />
-                      </button>
-                      <div className={`transition-all duration-300 ease-in-out ${openAccordions.length ? 'max-h-40 border-t border-[#D7B77A]/15 p-4 bg-[#180306] text-xs text-gray-760 font-semibold' : 'max-h-0 overflow-hidden'}`}>
-                        <p className="text-[#F7F0E5]/75 leading-relaxed">
-                          {product.name.toLowerCase().includes('gown') || product.name.toLowerCase().includes('anarkali')
-                            ? 'Anarkali/Gown Flare Length: 46 - 48 inches (Sophisticated Floor-Touch/Ankle Length) | Matching Pant: 38 inches.'
-                            : 'Premium Kurta Length: 44 inches (Classic Straight Calf Length) | Parallel Trouser Pant: 38 inches.'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Wash Care Accordion */}
-                    <div className="border border-[#D7B77A]/15 rounded-md overflow-hidden bg-[#180306] shadow-3xs">
-                      <button
-                        onClick={() => toggleAccordion('care')}
-                        className="w-full flex items-center justify-between p-4 bg-[#180306] hover:bg-[#5C0B1B]/5 transition-all text-left font-bold text-[#F7F0E5] text-xs uppercase tracking-wider cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <Droplets className="w-4 h-4 text-[#F7F0E5]" />
-                          <span>Wash Care Instructions</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 text-[#F7F0E5] transition-transform duration-200 ${openAccordions.care ? 'rotate-180' : ''}`} />
-                      </button>
-                      <div className={`transition-all duration-300 ease-in-out ${openAccordions.care ? 'max-h-40 border-t border-[#D7B77A]/15 p-4 bg-[#180306] text-xs text-gray-765 font-semibold' : 'max-h-0 overflow-hidden'}`}>
-                        <p className="text-[#F7F0E5]/75 leading-relaxed">
-                          {product.washCare || 'Dry clean recommended for the first wash to preserve colors. Subsequently, gentle cold hand wash separately. Dry in shade only.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'shipping' && (
-                  <div className="space-y-2.5 text-xs text-[#F7F0E5]/75">
-                    <div className="p-3.5 bg-[#180306] rounded border border-[#D7B77A]/15 flex items-start gap-2.5 shadow-3xs">
-                      <Clock className="w-4 h-4 text-[#F7F0E5] shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-[#F7F0E5] block font-bold mb-0.5">Fast Dispatch:</strong>
-                        <span>All orders are dispatched within 24 to 48 business hours via premium express couriers.</span>
-                      </div>
-                    </div>
-                    <div className="p-3.5 bg-[#180306] rounded border border-[#D7B77A]/15 flex items-start gap-2.5 shadow-3xs">
-                      <Truck className="w-4 h-4 text-[#F7F0E5] shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-[#F7F0E5] block font-bold mb-0.5">Express Delivery:</strong>
-                        <span>Fast and reliable shipping across India with live tracking SMS/WhatsApp.</span>
-                      </div>
-                    </div>
-                    <div className="p-3.5 bg-[#180306] rounded border border-[#D7B77A]/15 flex items-start gap-2.5 shadow-3xs">
-                      <RotateCcw className="w-4 h-4 text-[#F7F0E5] shrink-0 mt-0.5" />
-                      <div>
-                        <strong className="text-[#F7F0E5] block font-bold mb-0.5">Hassle-free 7-Day Returns:</strong>
-                        <span>7-day easy exchange/return policy for unworn items with original tags intact.</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div className="space-y-4">
-                    {/* Review Header with Write Review Button */}
-                    <div className="flex items-center justify-between bg-[#180306] p-4 rounded border border-[#D7B77A]/20 shadow-3xs">
-                      <div>
-                        <span className="font-bold text-[#F7F0E5] text-xs uppercase tracking-widest block">Customer Reviews ({productReviewCount})</span>
-                        <span className="text-[11px] text-[#F7F0E5]/55 font-medium">Verified buyers & product feedback</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsWriteReviewOpen(true)}
-                        className="px-3.5 py-1.5 bg-[#5C0B1B] hover:bg-[#5C0B1B]/90 text-[#F7F0E5] text-xs font-black rounded-lg transition shadow-2xs flex items-center gap-1.5 cursor-pointer active:scale-98"
-                      >
-                        <MessageSquarePlus className="w-3.5 h-3.5 text-[#F7F0E5]" />
-                        <span>Write a Review</span>
-                      </button>
-                    </div>
-
-                    {/* Write Review Form Card */}
-                    {isWriteReviewOpen && (
-                      <div className="p-5 bg-[#180306] rounded-md border border-[#D7B77A]/25 shadow-xs space-y-4 relative">
-                        <div className="flex items-center justify-between pb-2 border-b border-[#D7B77A]/15">
-                          <h4 className="font-serif font-black text-[#F7F0E5] text-sm">Write Review for "{product.name}"</h4>
-                          <button
-                            type="button"
-                            onClick={() => setIsWriteReviewOpen(false)}
-                            className="text-[#F7F0E5]/55 hover:text-[#F7F0E5] p-1 cursor-pointer"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-
-                        <p className="text-[11px] text-[#F7F0E5] bg-[#2A0710] p-2.5 rounded-lg border border-amber-200 font-medium">
-                          ℹ️ Note: Aapka review submit hone ke baad pehle Admin Panel me jayega. Admin dwara approve karne ke baad site par visible hoga.
-                        </p>
-
-                        <form onSubmit={handleReviewSubmit} className="space-y-3.5 text-xs">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Your Name *</label>
-                              <input
-                                type="text"
-                                required
-                                value={reviewForm.userName}
-                                onChange={(e) => setReviewForm({ ...reviewForm, userName: e.target.value })}
-                                placeholder="e.g. Ananya Sharma"
-                                className="w-full px-3 py-2 border border-[#D7B77A]/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D7B77A] bg-[#2A0710]/50 text-gray-950 font-semibold"
-                              />
-                            </div>
-                            <div>
-                              <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Location / City</label>
-                              <input
-                                type="text"
-                                value={reviewForm.location}
-                                onChange={(e) => setReviewForm({ ...reviewForm, location: e.target.value })}
-                                placeholder="e.g. Artisan, Rajasthan"
-                                className="w-full px-3 py-2 border border-[#D7B77A]/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D7B77A] bg-[#2A0710]/50 text-gray-955 font-semibold"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                              <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Rating *</label>
-                              <div className="flex items-center gap-1.5 pt-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <button
-                                    key={star}
-                                    type="button"
-                                    onClick={() => setReviewForm({ ...reviewForm, rating: star })}
-                                    className="p-0.5 cursor-pointer"
-                                  >
-                                    <Star
-                                      className={`w-5 h-5 ${
-                                        star <= reviewForm.rating
-                                          ? 'fill-current text-[#F7F0E5]'
-                                          : 'text-[#F7F0E5]/55'
-                                      }`}
-                                    />
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <div>
-                              <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Size Purchased</label>
-                              <select
-                                value={reviewForm.sizePurchased}
-                                onChange={(e) => setReviewForm({
-                                  ...reviewForm,
-                                  sizePurchased: availableSizes.find((size) => size === e.target.value) || 'M',
-                                })}
-                                className="w-full px-3 py-2 border border-[#D7B77A]/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D7B77A] bg-[#2A0710]/50 text-gray-950 font-bold"
-                              >
-                                {['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Custom'].map((sz) => (
-                                  <option key={sz} value={sz}>{sz}</option>
-                                ))}
-                              </select>
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Review Comment *</label>
-                            <textarea
-                              rows={3}
-                              required
-                              value={reviewForm.comment}
-                              onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
-                              placeholder="Describe product quality, fitting, fabric feel..."
-                              className="w-full px-3 py-2 border border-[#D7B77A]/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D7B77A] bg-[#2A0710]/50 text-gray-950 font-semibold"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block font-bold text-[#F7F0E5] mb-1 uppercase text-[10px] tracking-wider">Attach Photo (Optional)</label>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="url"
-                                value={reviewForm.photoUrl}
-                                onChange={(e) => setReviewForm({ ...reviewForm, photoUrl: e.target.value })}
-                                placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
-                                className="flex-1 px-3 py-2 border border-[#D7B77A]/30 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#D7B77A] bg-[#2A0710]/50 text-gray-950 font-medium text-xs"
-                              />
-                              <label className="px-3 py-2 bg-[#5C0B1B]/10 hover:bg-[#5C0B1B]/25 text-[#F7F0E5] border border-[#D7B77A]/30 rounded-lg text-xs font-bold cursor-pointer transition flex items-center gap-1 shrink-0">
-                                <Camera className="w-4 h-4 text-[#F7F0E5]" />
-                                <span>Upload</span>
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={(e) => {
-                                    const file = e.target.files?.[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (uploadEvent) => {
-                                        setReviewForm({ ...reviewForm, photoUrl: uploadEvent.target?.result as string });
-                                        showToast('Review photo attached successfully!', 'success');
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  }}
-                                />
-                              </label>
-                            </div>
-                            {reviewForm.photoUrl && (
-                              <div className="mt-2 relative w-16 h-16 rounded-lg overflow-hidden border border-[#D7B77A]/40 shadow-2xs">
-                                <img src={reviewForm.photoUrl} alt="Review attachment preview" className="w-full h-full object-cover" />
-                                <button
-                                  type="button"
-                                  onClick={() => setReviewForm({ ...reviewForm, photoUrl: '' })}
-                                  className="absolute top-0.5 right-0.5 bg-[#5C0B1B]/60 text-[#F7F0E5] p-0.5 rounded-full hover:bg-[#5C0B1B] cursor-pointer"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex justify-end gap-2 pt-1">
-                            <button
-                              type="button"
-                              onClick={() => setIsWriteReviewOpen(false)}
-                              className="px-3 py-1.5 border border-[#D7B77A]/15 text-[#F7F0E5]/75 rounded-lg font-bold hover:bg-[#2A0710] transition cursor-pointer"
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              type="submit"
-                              disabled={isSubmittingReview}
-                              className="px-4 py-1.5 bg-[#5C0B1B] text-[#F7F0E5] font-black rounded-lg hover:bg-[#5C0B1B]/90 transition duration-200 flex items-center gap-1.5 cursor-pointer"
-                            >
-                              {isSubmittingReview && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                              <span>{isSubmittingReview ? 'Submitting...' : 'Submit Review'}</span>
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    )}
-
-                    {/* Display Approved Reviews */}
-                    {displayReviews && displayReviews.length > 0 ? (
-                      <div className="space-y-3">
-                        {displayReviews.map((rev) => (
-                          <div key={rev.id} className="p-4 bg-[#180306] rounded border border-[#D7B77A]/15 space-y-2.5 shadow-3xs hover:border-[#D7B77A]/35 transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <span className="font-black text-[#F7F0E5] text-xs">{rev.userName}</span>
-                                {rev.verifiedPurchase && (
-                                  <span className="text-[9px] bg-emerald-950/40 text-emerald-400 px-1.5 py-0.5 rounded font-black border border-emerald-600/15 uppercase tracking-wider">
-                                    ✓ Verified Buyer
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex text-[#F7F0E5]">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    className={`w-3 h-3 ${
-                                      i < (rev.rating || 5)
-                                        ? 'fill-current text-[#F7F0E5]'
-                                        : 'text-gray-200'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-xs text-gray-750 font-semibold leading-relaxed">"{rev.comment}"</p>
-
-                            {/* Customer Review Photo Grid Thumbnail if present */}
-                            {rev.imageUrl && (
-                              <div className="flex items-center gap-2 pt-1">
-                                {[rev.imageUrl].map((photo, pIdx) => (
-                                  <button
-                                    key={pIdx}
-                                    type="button"
-                                    onClick={() => setZoomedReviewPhoto(getCleanImageUrl(photo))}
-                                    className="w-14 aspect-square rounded overflow-hidden border border-[#D7B77A]/35 hover:border-[#D7B77A] transition cursor-pointer relative group shadow-2xs"
-                                    title="Click to zoom HD photo"
-                                  >
-                                    <img src={getCleanImageUrl(photo)} alt="Customer review photo" className="w-full h-full object-cover group-hover:scale-105 transition duration-200" />
-                                    <div className="absolute inset-0 bg-[#5C0B1B]/10 group-hover:bg-[#5C0B1B]/0 transition flex items-center justify-center">
-                                      <ZoomIn className="w-4 h-4 text-[#F7F0E5] drop-shadow-md" />
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-
-                            {rev.adminReply && (
-                              <div className="p-3 bg-[#5C0B1B]/5 rounded-lg text-[11px] text-[#F7F0E5]/75 border border-[#D7B77A]/15 leading-relaxed">
-                                <strong className="text-[#F7F0E5] font-black block mb-0.5 uppercase tracking-widest text-[9px]">Official Store Response:</strong>
-                                {rev.adminReply}
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2 text-[10px] text-[#F7F0E5]/55 font-medium pt-1">
-                              {rev.sizePurchased && <span>Size: <strong className="text-[#F7F0E5]/75">{rev.sizePurchased}</strong></span>}
-                              {rev.location && <span>• {rev.location}</span>}
-                              <span>• {rev.date}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="py-8 text-center text-xs text-[#F7F0E5]/55 bg-[#2A0710] rounded-md border border-[#D7B77A]/15 space-y-3">
-                        <p className="font-semibold">No verified customer reviews yet — be the first to review this ensemble!</p>
-                        <button
-                          type="button"
-                          onClick={() => setIsWriteReviewOpen(true)}
-                          className="px-4 py-1.5 bg-[#180306] hover:bg-[#5C0B1B] hover:text-[#F7F0E5] text-[#F7F0E5] font-black rounded-lg text-xs transition border border-[#D7B77A]/30 cursor-pointer shadow-3xs"
-                        >
-                          Write First Review
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* You May Also Love Section */}
-        {recommendations && recommendations.length > 0 && (
-          <div className="my-12 py-8 border-t border-[#D7B77A]/20 relative">
-            <div className="flex items-center justify-between max-w-7xl mx-auto mb-6 px-1">
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] font-black text-[#F7F0E5] block mb-1">
-                  Tailored just for you
-                </span>
-                <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#F7F0E5] tracking-tight">
-                  You May Also Love
-                </h2>
-              </div>
-              
-              {/* Navigation Carousel Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (recommendationsRef.current) {
-                      recommendationsRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Left"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (recommendationsRef.current) {
-                      recommendationsRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Right"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Horizontal Scrollable Row */}
-            <div 
-              ref={recommendationsRef}
-              className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {recommendations.map((item) => (
-                <div key={item.id} className="w-[180px] sm:w-[240px] shrink-0">
-                  <ProductCard product={item} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Popular in Your Region Section */}
-        {popularProducts && popularProducts.length > 0 && (
-          <div className="my-12 py-8 border-t border-[#D7B77A]/20 relative">
-            <div className="flex items-center justify-between max-w-7xl mx-auto mb-6 px-1">
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] font-black text-[#F7F0E5] block mb-1">
-                  Trending in {pincodeStatus?.district || 'Your Region'}
-                </span>
-                <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#F7F0E5] tracking-tight">
-                  Popular in Your Region
-                </h2>
-              </div>
-              
-              {/* Navigation Carousel Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (popularProductsRef.current) {
-                      popularProductsRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Left"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (popularProductsRef.current) {
-                      popularProductsRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Right"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Horizontal Scrollable Row */}
-            <div 
-              ref={popularProductsRef}
-              className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {popularProducts.map((item) => (
-                <div key={item.id} className="w-[180px] sm:w-[240px] shrink-0">
-                  <ProductCard product={item} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Related Products Section */}
-        <div className="my-12 py-8 border-t border-[#D7B77A]/20">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <span className="text-xs uppercase tracking-[0.2em] font-black text-[#F7F0E5]">
-              Complete The Look
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#F7F0E5] tracking-tight mt-1">
-              You May Also Love
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-            {fallbackRelated.map((rel) => (
-              <ProductCard key={rel.id} product={rel} />
-            ))}
-          </div>
-        </div>
-
-        {/* Recently Browsed Dresses Horizontal Carousel */}
-        {recentlyBrowsed && recentlyBrowsed.length > 0 && (
-          <div className="my-12 py-8 border-t border-[#D7B77A]/20 relative">
-            <div className="flex items-center justify-between max-w-7xl mx-auto mb-6 px-1">
-              <div>
-                <span className="text-xs uppercase tracking-[0.2em] font-black text-[#F7F0E5] block mb-1">
-                  Based on your session
-                </span>
-                <h2 className="font-serif text-2xl sm:text-3xl font-black text-[#F7F0E5] tracking-tight">
-                  Recently Browsed Dresses
-                </h2>
-              </div>
-              
-              {/* Navigation Carousel Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (recentlyBrowsedRef.current) {
-                      recentlyBrowsedRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Left"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (recentlyBrowsedRef.current) {
-                      recentlyBrowsedRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-                    }
-                  }}
-                  className="p-2 sm:p-2.5 bg-[#180306] hover:bg-[#5C0B1B] text-[#F7F0E5] hover:text-[#F7F0E5] rounded-full border border-[#D7B77A]/25 shadow-3xs transition cursor-pointer"
-                  title="Scroll Right"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Horizontal Scrollable Row with Smooth Drag & Touch Scrolling */}
-            <div 
-              ref={recentlyBrowsedRef}
-              className="flex items-stretch gap-4 sm:gap-6 overflow-x-auto no-scrollbar scroll-smooth pb-4 px-1"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {recentlyBrowsed.map((item) => (
-                <div key={item.id} className="w-[180px] sm:w-[240px] shrink-0">
-                  <ProductCard product={item} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Fullscreen High-Resolution Image Lightbox Modal */}
-        {isImageLightboxOpen && (
-          <div 
-            id="pdp-image-lightbox-overlay"
-            onClick={() => setIsImageLightboxOpen(false)}
-            className="fixed inset-0 z-50 bg-[#5C0B1B]/95 backdrop-blur-md flex flex-col items-center justify-center p-4 sm:p-6 transition-all duration-300 select-none"
-          >
-            {/* Top Toolbar */}
-            <div className="w-full max-w-5xl flex items-center justify-between py-2 text-[#F7F0E5]/90 z-20">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold truncate max-w-xs sm:max-w-md">{product.name}</span>
-                <span className="text-xs bg-\[#FAF7F2\]/20 px-2.5 py-1 rounded-full text-[#F7F0E5]/80 font-mono">
-                  {selectedImageIdx + 1} / {productImages.length}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsZoomed(!isZoomed);
-                    setZoomScale(isZoomed ? 1 : 2.5);
-                    setZoomPosition({ x: 50, y: 50 });
-                  }}
-                  className="p-2 bg-\[#FAF7F2\]/10 hover:bg-\[#FAF7F2\]/20 text-[#F7F0E5] rounded-full transition cursor-pointer flex items-center justify-center gap-1.5 px-3"
-                  title="Toggle Zoom"
-                >
-                  {isZoomed ? (
-                    <>
-                      <ZoomOut className="w-4 h-4 text-[#F3C5D1]" />
-                      <span className="text-xs font-bold hidden sm:inline">Zoom Out</span>
-                    </>
-                  ) : (
-                    <>
-                      <ZoomIn className="w-4 h-4 text-[#F3C5D1]" />
-                      <span className="text-xs font-bold hidden sm:inline">Zoom In</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsImageLightboxOpen(false)}
-                  className="p-2 bg-\[#FAF7F2\]/10 hover:bg-\[#FAF7F2\]/20 text-[#F7F0E5] rounded-full transition cursor-pointer"
-                  title="Close fullscreen view"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Main Stage Image with Navigation */}
-            <div 
-              onClick={(e) => e.stopPropagation()} 
-              className="relative max-w-3xl w-full flex-1 flex items-center justify-center overflow-hidden touch-none"
-              onTouchStart={handleTouchStart}
-              onTouchEnd={(e) => {
-                if (!isZoomed) {
-                  handleTouchEnd(
-                    e,
-                    () => {
-                      const nextIdx = (selectedImageIdx + 1) % productImages.length;
-                      handleSelectThumbnail(nextIdx);
-                    },
-                    () => {
-                      const prevIdx = (selectedImageIdx - 1 + productImages.length) % productImages.length;
-                      handleSelectThumbnail(prevIdx);
-                    }
-                  );
-                }
-              }}
-            >
-              {productImages.length > 1 && !isZoomed && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const prevIdx = (selectedImageIdx - 1 + productImages.length) % productImages.length;
-                    handleSelectThumbnail(prevIdx);
-                  }}
-                  className="absolute left-2 sm:-left-6 top-1/2 -translate-y-1/2 z-10 p-2.5 sm:p-3 bg-\[#FAF7F2\]/80 hover:bg-\[#FAF7F2\] text-[#F7F0E5] rounded-full shadow-xl transition cursor-pointer"
-                  title="Previous image"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-              )}
-
-              <div 
-                className="relative overflow-hidden rounded-md max-h-[70vh] w-auto max-w-full cursor-zoom-in"
-                onClick={handleDoubleTapOrClick}
-                onMouseMove={handleZoomMouseMove}
-                onTouchMove={handleZoomTouchMove}
-              >
-                <img 
-                  src={getCleanImageUrl(productImages[selectedImageIdx] || selectedColor.imageUrl || productImages[0])}
-                  alt={product.name}
-                  style={isZoomed ? {
-                    transform: `scale(${zoomScale})`,
-                    transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    cursor: 'zoom-out'
-                  } : undefined}
-                  className="max-h-[70vh] w-auto max-w-full object-contain rounded-md shadow-2xl transition-transform duration-200"
-                />
-              </div>
-
-              {productImages.length > 1 && !isZoomed && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextIdx = (selectedImageIdx + 1) % productImages.length;
-                    handleSelectThumbnail(nextIdx);
-                  }}
-                  className="absolute right-2 sm:-right-6 top-1/2 -translate-y-1/2 z-10 p-2.5 sm:p-3 bg-\[#FAF7F2\]/80 hover:bg-\[#FAF7F2\] text-[#F7F0E5] rounded-full shadow-xl transition cursor-pointer"
-                  title="Next image"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              )}
-            </div>
-
-            {/* Instruction Helper Text */}
-            <p className="text-[10px] sm:text-xs text-[#F7F0E5]/50 text-center mt-2 font-medium">
-              {isZoomed ? 'Move mouse or drag to pan details • Double-tap to zoom out' : 'Swipe left/right to change • Double-tap to zoom HD details'}
-            </p>
-
-            {/* Thumbnail Navigation in Lightbox */}
-            {productImages.length > 1 && !isZoomed && (
-              <div 
-                onClick={(e) => e.stopPropagation()}
-                className="flex items-center gap-2 mt-4 max-w-xl overflow-x-auto p-2 z-20"
-              >
-                {productImages.map((img, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleSelectThumbnail(idx)}
-                    className={`w-14 h-16 rounded-lg overflow-hidden border-2 transition shrink-0 cursor-pointer ${
-                      selectedImageIdx === idx ? 'border-[#D7B77A]/15 scale-110 shadow-lg ring-2 ring-rose-400' : 'border-transparent opacity-60 hover:opacity-100'
-                    }`}
-                  >
-                    <img src={getCleanImageUrl(img)} alt={`Thumb ${idx + 1}`} className="w-full h-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-
-
-        {/* Full-Screen HD Zoom Modal for Customer Review Photos */}
-        {zoomedReviewPhoto && (
-          <div 
-            onClick={() => setZoomedReviewPhoto(null)}
-            className="fixed inset-0 z-[9999] bg-[#5C0B1B]/95 backdrop-blur-lg flex flex-col items-center justify-center p-4 transition-all duration-300"
-          >
-            <div className="absolute top-4 right-4 z-20">
-              <button
-                type="button"
-                onClick={() => setZoomedReviewPhoto(null)}
-                className="p-3 bg-[#180306]/10 hover:bg-[#180306]/20 text-[#F7F0E5] rounded-full transition cursor-pointer"
-                aria-label="Close HD photo"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="max-w-4xl max-h-[85vh] w-full flex items-center justify-center overflow-hidden rounded-md p-2" onClick={(e) => e.stopPropagation()}>
-              <img 
-                src={zoomedReviewPhoto} 
-                alt="HD Customer Review Photo" 
-                className="max-h-[82vh] max-w-full object-contain rounded shadow-2xl border border-[#D7B77A]/15"
-              />
-            </div>
-            <p className="text-[#F7F0E5]/60 text-xs mt-3 font-medium tracking-wide">
-              Customer Verified HD Photo • Tap anywhere to close
-            </p>
-          </div>
-        )}
-
-        {/* Offers & Coupons Modal */}
-        {showOffersModal && (
-          <div 
-            onClick={() => setShowOffersModal(false)}
-            className="fixed inset-0 z-[9999] bg-[#5C0B1B]/70 backdrop-blur-xs flex items-center justify-center p-4 transition-all"
-          >
-            <div 
-              onClick={(e) => e.stopPropagation()}
-              className="bg-[#2A0710] rounded-md max-w-lg w-full max-h-[85vh] flex flex-col p-5 sm:p-6 shadow-2xl border border-[#D7B77A]/35 animate-in fade-in zoom-in-95 duration-250"
-            >
-              {/* Sticky Header - Always Visible */}
-              <div className="flex items-center justify-between pb-3 border-b border-[#D7B77A]/20 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Tag className="w-5 h-5 text-[#F7F0E5]" />
-                  <h3 className="font-serif font-black text-base text-[#F7F0E5]">Available Offers & Coupons</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowOffersModal(false)}
-                  className="p-1 rounded-full text-[#F7F0E5]/55 hover:text-[#F7F0E5] hover:bg-[#2A0710]/50 cursor-pointer transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Scrollable Coupon Lists Container - Ensures perfect mobile scrolling without clipping header/footer */}
-              <div className="flex-1 overflow-y-auto py-4 pr-1 space-y-5 scrollbar-thin scrollbar-thumb-[#9A6A3A]/20 scrollbar-track-transparent">
-                
-                {/* Active Coupons Section */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-[#F7F0E5] uppercase tracking-wider">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                    <span>Active Boutique Offers</span>
-                  </div>
-
-                  {[
-                    { code: 'AURA10', title: '10% Extra OFF', desc: 'Get 10% OFF up to ₹150 on your order', percent: 10, max: 150, expiry: 'Valid till: 30 Sep 2026' },
-                    { code: 'BLISS100', title: 'Flat ₹100 OFF', desc: 'Flat ₹100 Instant Discount on orders over ₹800', percent: 8, max: 100, expiry: 'Valid till: 15 Oct 2026' },
-                    { code: 'SUIT20', title: '20% OFF Prepaid UPI', desc: 'Extra 20% OFF up to ₹250 on prepaid orders', percent: 20, max: 250, expiry: 'Valid till: 20 Oct 2026' },
-                  ].map((coupon) => {
-                    const isApplied = appliedCoupon?.code === coupon.code;
-                    return (
-                      <div 
-                        key={coupon.code} 
-                        className={`p-3.5 bg-[#180306] border rounded-md flex items-center justify-between gap-3 shadow-3xs hover:border-[#D7B77A]/35 transition-all duration-200 ${
-                          isApplied ? 'border-emerald-500/50 ring-1 ring-emerald-500/25' : 'border-[#D7B77A]/15'
-                        }`}
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono font-black text-[10px] px-2 py-0.5 bg-[#5C0B1B] text-[#F7F0E5] rounded-md border border-[#D7B77A]/40 uppercase tracking-wide">
-                              {coupon.code}
-                            </span>
-                            <span className="font-black text-xs text-[#F7F0E5]">{coupon.title}</span>
-                          </div>
-                          <p className="text-[11px] text-[#F7F0E5]/75 font-semibold leading-relaxed">{coupon.desc}</p>
-                          
-                          {/* Expiry Date Label with Clock Icon */}
-                          <div className="flex items-center gap-1 text-[10px] text-emerald-400 font-bold">
-                            <Clock className="w-3.5 h-3.5 text-[#F7F0E5] shrink-0" />
-                            <span>{coupon.expiry}</span>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (isApplied) {
-                              setAppliedCoupon(null);
-                              showToast(`Coupon ${coupon.code} removed`, 'info');
-                            } else {
-                              setAppliedCoupon({ code: coupon.code, discountPercent: coupon.percent, maxDiscount: coupon.max });
-                              showToast(`Coupon ${coupon.code} applied successfully!`, 'success');
-                              setShowOffersModal(false);
-                            }
-                          }}
-                          className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition cursor-pointer shrink-0 active:scale-97 ${
-                            isApplied 
-                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-400 hover:bg-emerald-950/40' 
-                              : 'bg-[#5C0B1B] text-[#F7F0E5] hover:bg-[#5C0B1B]/90 border border-[#D7B77A]/20'
-                          }`}
-                        >
-                          {isApplied ? 'Applied' : 'Apply'}
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Expired Coupons Section */}
-                <div className="space-y-3 pt-4 border-t border-[#D7B77A]/10">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-[#F7F0E5]/55 uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
-                    <span>Past / Expired Coupons</span>
-                  </div>
-
-                  {[
-                    { code: 'FESTIVE15', title: '15% OFF Festive Special', desc: 'Get 15% OFF up to ₹200 on festive collections', expiry: 'Expired on: 15 Sep 2026' },
-                    { code: 'ARTISAN50', title: 'Flat ₹50 OFF', desc: 'Flat ₹50 discount on any purchase above ₹499', expiry: 'Expired on: 10 Sep 2026' },
-                  ].map((coupon) => (
-                    <div 
-                      key={coupon.code} 
-                      className="p-3.5 bg-[#2A0710]/40 border border-[#D7B77A]/15 rounded-md flex items-center justify-between gap-3 opacity-65"
-                    >
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-[10px] px-2 py-0.5 bg-[#2A0710] text-[#F7F0E5]/55 rounded-md border border-[#D7B77A]/15 line-through">
-                            {coupon.code}
-                          </span>
-                          <span className="font-bold text-xs text-[#F7F0E5]/55">{coupon.title}</span>
-                        </div>
-                        <p className="text-[11px] text-[#F7F0E5]/55 font-medium">{coupon.desc}</p>
-                        
-                        {/* Expired Date Label */}
-                        <div className="flex items-center gap-1 text-[10px] text-rose-300 font-semibold">
-                          <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                          <span>{coupon.expiry}</span>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled
-                        className="px-3.5 py-1.5 bg-[#2A0710] text-[#F7F0E5]/55 border border-[#D7B77A]/15 rounded-lg text-xs font-black cursor-not-allowed select-none"
-                      >
-                        Expired
-                      </button>
-                    </div>
                   ))}
                 </div>
-
-              </div>
-
-              {/* Sticky Footer - Always Visible */}
-              <div className="pt-3 border-t border-[#D7B77A]/15 text-center shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setShowOffersModal(false)}
-                  className="w-full px-6 py-2.5 bg-[#5C0B1B] text-[#F7F0E5] font-black text-xs rounded border border-[#D7B77A]/25 shadow-2xs hover:bg-[#5C0B1B]/90 cursor-pointer active:scale-97 transition"
-                >
-                  Close Window
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-
-
-      </div>
-
-      {/* 
-        Sticky Bottom Product Action Bar (Mobile-first, docks above MobileAppNavbar)
-        Matches user's requested reference layout:
-        - Thumbnail + Title + Price + Size Badge
-        - "Add" Outlined Pill + "Buy Now >>" Solid Royal Maroon Pill
-      */}
-      <aside
-        id="sticky-product-action-bar"
-        aria-label="Quick Purchase Bar"
-        className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-[#120205]/95 backdrop-blur-md border-t border-[#D7B77A]/30 shadow-[0_-4px_25px_rgba(255,183,206,0.12)] px-3 py-2 sm:px-6 sm:py-2.5 select-none transition-all duration-300"
-      >
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-          
-          {/* Left: Thumbnail & Details */}
-          <div className="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-initial">
-            <button
-              type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="relative shrink-0 group cursor-pointer"
-              title="View product photos"
-            >
-              <img
-                src={getCleanImageUrl(productImages[0])}
-                alt={product.name}
-                className="w-11 h-11 sm:w-12 sm:h-12 rounded object-cover border border-[#D7B77A]/35 shadow-2xs bg-[#2A0710] group-hover:scale-105 transition-transform"
-                referrerPolicy="no-referrer"
-              />
-            </button>
-
-            <div className="min-w-0 flex-1">
-              <p
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="text-xs sm:text-sm font-bold text-[#F7F0E5] truncate max-w-[125px] xs:max-w-[165px] sm:max-w-[280px] leading-tight cursor-pointer hover:text-[#F7F0E5] transition-colors"
-                title={product.name}
+              )}
+              <div
+                className="relative flex-1 min-w-0 aspect-[4/5] -mx-4 sm:mx-0 rounded-none sm:rounded-3xl overflow-hidden bg-[#F3EEF8]"
+                onTouchStart={(e) => setTouchX(e.touches[0].clientX)}
+                onTouchEnd={(e) => {
+                  if (touchX === null) return;
+                  const d = touchX - e.changedTouches[0].clientX;
+                  if (d > 45) go(1);
+                  if (d < -45) go(-1);
+                  setTouchX(null);
+                }}
               >
-                {product.name}
-              </p>
-
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-xs sm:text-sm font-black text-[#F7F0E5]">
-                  ₹{currentPrice.toLocaleString('en-IN')}
-                </span>
-
-                {/* Size badge with interactive popover */}
-                <div className="relative" ref={stickySizePickerRef}>
-                  <button
-                    type="button"
-                    id="sticky-size-picker-btn"
-                    onClick={() => setShowStickySizePicker((prev) => !prev)}
-                    className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#2A0710] text-[#F7F0E5] border border-[#D7B77A]/40 hover:border-[#D7B77A]/40 flex items-center gap-1 cursor-pointer transition shadow-3xs"
-                    title="Select Size"
-                  >
-                    <span>{selectedSize || 'Size'}</span>
-                    <ChevronDown className={`w-2.5 h-2.5 text-[#F7F0E5] transition-transform duration-200 ${showStickySizePicker ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {/* Size Dropdown Popup */}
-                  {showStickySizePicker && (
-                    <div className="absolute bottom-full mb-2 left-0 bg-[#2A0710] border border-[#D7B77A]/40 rounded p-2 shadow-xl z-50 flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-150 whitespace-nowrap">
-                      <span className="text-[9px] font-extrabold uppercase text-[#F7F0E5] px-1">Size:</span>
-                      {availableSizes.map((sz) => {
-                        const isOutOfStock = isSizeOutOfStock(sz);
-                        const isSelected = selectedSize === sz;
-                        return (
-                          <button
-                            key={sz}
-                            type="button"
-                            disabled={isOutOfStock}
-                            onClick={() => {
-                              setSelectedSize(sz);
-                              setShowStickySizePicker(false);
-                            }}
-                            className={`px-2 py-1 rounded-md text-[10px] font-black transition cursor-pointer ${
-                              isOutOfStock
-                                ? 'opacity-40 line-through bg-[#2A0710] text-[#F7F0E5]/55 cursor-not-allowed'
-                                : isSelected
-                                ? 'bg-[#5C0B1B] text-[#F7F0E5] shadow-2xs'
-                                : 'bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B]/10 border border-[#D7B77A]/25'
-                            }`}
-                          >
-                            {sz}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <button type="button" onClick={() => setLightbox(true)} className="block w-full h-full cursor-zoom-in" aria-label="Open full-size image">
+                  <img key={images[imageIdx]} src={getCleanImageUrl(images[imageIdx], 1100)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top sag-fade" fetchPriority="high" />
+                </button>
+                {images.length > 1 && (
+                  <span className="absolute top-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold tabular-nums text-[#4B1D3F] lg:hidden" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
+                )}
+                {images.length > 1 && images.length <= 8 && (
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 lg:hidden" aria-hidden="true">
+                    {images.map((_, idx) => <span key={idx} className={`h-1.5 rounded-full transition-all ${idx === imageIdx ? 'w-5 bg-white' : 'w-1.5 bg-white/60'}`} />)}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Right: "Add" & "Buy Now >>" Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            {!isItemInStock || effectiveStockQty <= 0 || (selectedSize && isSizeOutOfStock(selectedSize)) ? (
+          {/* Details */}
+          <div className="lg:col-span-5 min-w-0">
+            <p className="sag-eyebrow">{(kidsPage || toyPage) && kindOf(product) ? `${toyPage ? TOYS : product.category} · ${kindOf(product)}` : product.category}</p>
+            <div className="mt-2 flex items-start justify-between gap-3">
+              <h1 className="font-serif text-[28px] sm:text-4xl text-[#2A1A26] leading-[1.15]">{product.name}</h1>
               <button
                 type="button"
-                id="sticky-notify-me-btn"
-                onClick={handleNotifyMe}
-                className="px-4 py-2 sm:px-6 sm:py-2.5 rounded-full font-black text-xs sm:text-sm bg-[#5C0B1B] text-[#F7F0E5] hover:bg-[#5C0B1B] transition-all cursor-pointer shadow-md flex items-center gap-1.5 active:scale-95"
+                onClick={() => toggleWishlist(product)}
+                aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'}
+                aria-pressed={fav}
+                className={`md:hidden mt-1 w-11 h-11 shrink-0 rounded-full border flex items-center justify-center transition-colors cursor-pointer ${fav ? 'border-[#C2477A]/30 bg-[#F7E4EA]' : 'border-[#4B1D3F]/15 bg-white'}`}
               >
-                <Bell className="w-3.5 h-3.5 text-[#F7F0E5] animate-pulse" />
-                <span>Notify Me</span>
+                {fav ? <Heart className="w-5 h-5 fill-[#C2477A] text-[#C2477A]" /> : <HeartIcon className="w-[22px] h-[22px]" />}
               </button>
-            ) : (
-              <>
-                {/* 1. "Add" Button (Outlined Pill) */}
-                <button
-                  type="button"
-                  id="sticky-add-to-cart-btn"
-                  onClick={handleAddToCart}
-                  className={`px-3.5 sm:px-5 py-2 sm:py-2.5 rounded-full font-extrabold text-xs sm:text-sm border-1.5 transition-all cursor-pointer active:scale-95 shadow-2xs whitespace-nowrap flex items-center gap-1 ${
-                    isJustAdded
-                      ? 'bg-emerald-700 text-[#F7F0E5] border-emerald-700'
-                      : 'border-[#D7B77A]/40 bg-[#180306] text-[#F7F0E5] hover:bg-[#5C0B1B] hover:text-[#F7F0E5]'
-                  }`}
-                >
-                  {isJustAdded ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-[#F7F0E5]" />
-                      <span>Added</span>
-                    </>
-                  ) : (
-                    <span>Add</span>
-                  )}
-                </button>
+            </div>
 
-                {/* 2. "Buy Now >>" Button (Solid Royal Maroon Pill) */}
-                <button
-                  type="button"
-                  id="sticky-buy-now-btn"
-                  onClick={handleBuyNow}
-                  className="px-4 sm:px-6 py-2 sm:py-2.5 rounded-full font-black text-xs sm:text-sm bg-[#5C0B1B] hover:bg-[#5C0B1B] text-[#F7F0E5] transition-all cursor-pointer active:scale-95 shadow-md flex items-center gap-1 whitespace-nowrap border border-[#D7B77A]/35"
-                >
-                  <span>Buy Now</span>
-                  <ChevronsRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#F7F0E5]" />
-                </button>
-              </>
+            {reviews.length > 0 && (
+              <button onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="mt-3 inline-flex items-center gap-1.5 text-sm text-[#2A1A26]/70 cursor-pointer">
+                <span className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-4 h-4 ${i <= Math.round(avgRating) ? 'fill-[#C5A46D] text-[#C5A46D]' : 'text-[#C5A46D]/40'}`} />)}</span>
+                <span>{avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+              </button>
             )}
-          </div>
 
+            <div className="mt-5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <span className="text-[32px] leading-none font-semibold text-[#4B1D3F]">₹{price.toLocaleString('en-IN')}</span>
+              {mrp > price && <span className="text-base text-[#2A1A26]/55">MRP <span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
+              {discount > 0 && <span className="rounded-full bg-[#F7E4EA] px-2.5 py-0.5 text-xs font-semibold text-[#8A2E55]">{discount}% off</span>}
+            </div>
+            <p className="mt-1.5 text-xs text-[#2A1A26]/65">
+              {mrp > price && <span className="font-semibold text-emerald-700">You save ₹{(mrp - price).toLocaleString('en-IN')} · </span>}Inclusive of all taxes
+            </p>
+            {toyPage && (
+              <div className="mt-4 flex flex-wrap gap-2" aria-label="About this toy">
+                {product.ageRange && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3EEF8] px-3 py-1.5 text-sm text-[#4B1D3F]"><Baby className="w-4 h-4" /> Suitable for {product.ageRange}</span>}
+                {kindOf(product) && <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F7E4EA] px-3 py-1.5 text-sm text-[#8A2E55]"><Blocks className="w-4 h-4" /> {kindOf(product)}</span>}
+                {product.fabric && <span className="inline-flex items-center rounded-full border border-[#4B1D3F]/15 bg-white px-3 py-1.5 text-sm text-[#2A1A26]/80">Material: {product.fabric}</span>}
+              </div>
+            )}
+            {kidsPage && sizes.length > 0 && !oneSize && (
+              <div className="mt-4 rounded-2xl bg-[#F3EEF8] px-4 py-3 text-sm text-[#2A1A26]/80 flex items-start gap-2.5">
+                <Baby className="w-5 h-5 shrink-0 text-[#4B1D3F] mt-0.5" />
+                <p>
+                  <span className="font-medium text-[#4B1D3F]">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}</span>
+                  <span className="block">Choose your child's age. If they are between two sizes, pick the bigger one.</span>
+                </p>
+              </div>
+            )}
+            {todayStats && (todayStats.wishlists >= 2 || todayStats.views >= 5) && (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#F3EEF8] px-3 py-1 text-xs text-[#4B1D3F]">
+                {todayStats.wishlists >= 2 ? `${todayStats.wishlists} people saved this today` : `${todayStats.views} people viewed this today`}
+              </p>
+            )}
+
+            {colors.length > 1 && (
+              <div className="mt-6">
+                <p className="text-sm text-[#2A1A26]"><span className="text-[#2A1A26]/65">Colour:</span> {color?.name}</p>
+                <div className="mt-2.5 flex flex-wrap gap-2.5">
+                  {colors.map((c) => (
+                    <button
+                      key={c.name}
+                      onClick={() => pickColor(c)}
+                      aria-label={c.name}
+                      aria-pressed={color?.name === c.name}
+                      className={`w-10 h-10 rounded-full p-0.5 border-2 transition-colors cursor-pointer ${color?.name === c.name ? 'border-[#4B1D3F]' : 'border-transparent hover:border-[#4B1D3F]/30'}`}
+                    >
+                      <span className="block w-full h-full rounded-full bg-cover bg-center border border-black/5" style={{ backgroundColor: c.hex || '#eee', backgroundImage: c.imageUrl ? `url(${getCleanImageUrl(c.imageUrl, 80)})` : undefined }} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {sizes.length > 0 && !oneSize && (
+              <div id="pdp-size-selector" className="mt-6">
+                <div className="flex items-center justify-between">
+                  <p className={`text-sm ${needSize ? 'text-rose-700' : 'text-[#2A1A26]'}`}>
+                    <span className="text-[#2A1A26]/65">{sizeWord}:</span> {size || (needSize ? (kidsPage ? 'Please choose an age' : 'Please choose a size') : 'Select')}
+                  </p>
+                  <span className="flex items-center gap-3">
+                    {features.findMySize && womenSizing && <button onClick={() => setFindSizeOpen((v) => !v)} className="text-xs font-semibold text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Find my size</button>}
+                    {womenSizing && (
+                      <button onClick={() => setIsSizeGuideOpen(true)} className="inline-flex items-center gap-1 text-xs text-[#4B1D3F] underline underline-offset-2 cursor-pointer">
+                        <Ruler className="w-3.5 h-3.5" /> Size guide
+                      </button>
+                    )}
+                  </span>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {sizes.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => { setSize(s); setNeedSize(false); }}
+                      aria-pressed={size === s}
+                      className={`min-w-[52px] h-11 px-3 rounded-full border text-sm transition-colors cursor-pointer ${size === s ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : `bg-white text-[#2A1A26] hover:border-[#4B1D3F] ${needSize ? 'border-rose-300' : 'border-[#4B1D3F]/20'}`}`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {findSizeOpen && sizes.length > 0 && womenSizing && (
+              <FindMySize sizes={sizes} onPick={(sz) => { setSize(sz as ProductSize); setNeedSize(false); setFindSizeOpen(false); }} onClose={() => setFindSizeOpen(false)} onOpenChart={() => setIsSizeGuideOpen(true)} />
+            )}
+
+            {!soldOut && (
+              <div className="mt-6 flex items-center gap-4">
+                <div className="inline-flex items-center rounded-full border border-[#4B1D3F]/20 bg-white">
+                  <button onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" className="w-11 h-11 flex items-center justify-center disabled:opacity-30 cursor-pointer">
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <span className="w-8 text-center text-sm tabular-nums" aria-live="polite">{qty}</span>
+                  <button onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity" className="w-11 h-11 flex items-center justify-center disabled:opacity-30 cursor-pointer">
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="text-sm">
+                  {qty > 1 && (
+                    <p className="text-[#2A1A26]">
+                      ₹{price.toLocaleString('en-IN')} × {qty} = <span className="font-semibold text-[#4B1D3F]">₹{(price * qty).toLocaleString('en-IN')}</span>
+                    </p>
+                  )}
+                  <p className="text-[#2A1A26]/65">{stock <= 5 ? `Only ${stock} left` : 'In stock'}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-6 hidden md:flex gap-3">
+              {soldOut ? (
+                <button onClick={notifyRestock} className="sag-btn-primary flex-1 h-12 text-xs font-semibold uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 cursor-pointer">
+                  <Bell className="w-4 h-4" /> Notify me when back
+                </button>
+              ) : (
+                <>
+                  <button id="pdp-add-to-bag" onClick={onAdd} className="sag-btn-outline flex-1 h-12 text-xs font-semibold uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 cursor-pointer">
+                    {justAdded ? <><Check className="w-4 h-4" /> Added to bag</> : <><BagIcon className="w-[18px] h-[18px]" /> Add to bag</>}
+                  </button>
+                  <button id="pdp-buy-now" onClick={onBuy} className="sag-btn-primary flex-1 h-12 text-xs font-semibold uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 cursor-pointer">
+                    <Zap className="w-4 h-4" /> Buy now
+                  </button>
+                </>
+              )}
+              <button onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav}
+                className="w-12 h-12 shrink-0 rounded-full border border-[#4B1D3F]/20 bg-white flex items-center justify-center hover:bg-[#F7E4EA] cursor-pointer">
+                <Heart className={`w-5 h-5 ${fav ? 'fill-[#C2477A] text-[#C2477A]' : 'text-[#4B1D3F]'}`} />
+              </button>
+            </div>
+            {!accessoryPage && (
+              <ul className="mt-5 grid grid-cols-3 gap-2" aria-label="Our promises">
+                {[
+                  [LockIcon, 'Secure payment', 'UPI · cards'],
+                  [ReturnIcon, '7-day returns', '& exchange'],
+                  [TruckIcon, 'Pan-India', 'delivery'],
+                ].map(([Icon, title, sub]) => {
+                  const I = Icon as React.FC<{ className?: string; live?: boolean }>;
+                  return (
+                    <li key={title as string} className="flex flex-col items-center text-center rounded-2xl bg-white border border-[#4B1D3F]/10 px-2 py-3">
+                      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-white to-[#F3EEF8] ring-1 ring-[#4B1D3F]/10"><I className="h-6 w-6" live /></span>
+                      <span className="mt-1.5 text-[12px] font-semibold leading-tight text-[#2A1A26]">{title as string}</span>
+                      <span className="text-[11px] leading-tight text-[#2A1A26]/60">{sub as string}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {soldOut && <p className="mt-4 text-sm text-rose-700 md:mt-3">This style is sold out right now.</p>}
+            {soldOut && restockAsk && !user?.email && (
+              <form onSubmit={(e) => { e.preventDefault(); notifyRestock(); }} className="mt-3 flex gap-2 sag-drop">
+                <input type="email" required value={restockEmail} onChange={(e) => setRestockEmail(e.target.value)} placeholder="Your email for the restock alert" aria-label="Email for restock alert"
+                  className="flex-1 min-w-0 h-11 rounded-full border border-[#4B1D3F]/15 px-4 text-sm focus:outline-none focus:border-[#4B1D3F]/50" />
+                <button type="submit" className="sag-btn-primary h-11 px-5 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Notify me</button>
+              </form>
+            )}
+            {(bestCoupon || comboOffer || prepaidDiscount > 0) && (
+              <div className="mt-5 rounded-2xl border border-[#4B1D3F]/10 bg-white p-4">
+                <p className="flex items-center gap-2 text-sm font-semibold text-[#4B1D3F]"><Tag className="h-4 w-4" /> Offers for you</p>
+                <ul className="mt-3 space-y-2.5 text-sm text-[#2A1A26]/80">
+                  {prepaidDiscount > 0 && (
+                    <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> ₹{prepaidDiscount} off at checkout when you pay online</li>
+                  )}
+                  {comboOffer && !accessoryPage && (
+                    <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> Buy {comboOffer.minItems} or more outfits and save {comboOffer.percent}%</li>
+                  )}
+                  {bestCoupon && (
+                    <li className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-[#C5A46D] bg-[#FBF7F3] px-3 py-2.5">
+                      <span className="min-w-0">
+                        <span className="font-semibold tracking-wider text-[#4B1D3F]">{bestCoupon.code}</span>
+                        <span className="block text-xs text-[#2A1A26]/65">{bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off{bestCoupon.minOrderValue ? ` on orders above ₹${bestCoupon.minOrderValue.toLocaleString('en-IN')}` : ''}</span>
+                      </span>
+                      <button onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})} className="shrink-0 h-8 px-3 rounded-full bg-[#4B1D3F] text-white text-xs font-semibold inline-flex items-center gap-1 cursor-pointer">
+                        <Copy className="w-3.5 h-3.5" /> Copy
+                      </button>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+
+
+            {highlights.length > 0 && (
+              <div className="mt-6 rounded-2xl bg-[#F3EEF8]/70 p-4 sm:p-5">
+                <p className="font-serif text-xl text-[#4B1D3F]">{kidsPage || toyPage ? 'Quick facts' : "Why you'll love it"}</p>
+                <ul className="mt-2.5 grid gap-2">
+                  {highlights.map((h) => (
+                    <li key={h} className="flex items-start gap-2.5 text-sm text-[#2A1A26]/80"><Check className="w-4 h-4 mt-0.5 text-[#4B1D3F] shrink-0" /><span>{h}</span></li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <DeliveryCheck product={product} quantity={qty} className="mt-7" />
+
+            <div className="mt-6 space-y-2.5">
+              {accordionItems.map((item) => {
+                const Icon = ({ details: OrdersIcon, fabric: QualityIcon, shipping: TruckIcon, returns: ReturnIcon } as const)[item.key];
+                const isOpen = open === item.key;
+                return (
+                  <div key={item.key} className={`rounded-2xl border bg-white transition-colors ${isOpen ? 'border-[#4B1D3F]/25 shadow-[0_10px_28px_-22px_rgba(42,26,38,0.55)]' : 'border-[#4B1D3F]/10'}`}>
+                    <button onClick={() => setOpen(isOpen ? null : item.key)} aria-expanded={isOpen} className="w-full flex items-center gap-3 px-4 py-3.5 text-left cursor-pointer">
+                      <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${isOpen ? 'bg-[#F3EEF8]' : 'bg-[#FBF7F3]'}`}>
+                        <Icon className="w-6 h-6" live={false} />
+                      </span>
+                      <span className="flex-1 text-[15px] font-medium text-[#2A1A26]">{item.title}</span>
+                      <ChevronDown className={`w-4 h-4 text-[#4B1D3F] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && <div className="px-4 pb-5 pt-0.5 text-sm leading-relaxed text-[#2A1A26]/75 sag-drop">{item.body}</div>}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-2 [&>*:last-child:nth-child(odd)]:col-span-2 sm:flex sm:flex-wrap">
+              <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about "${product.name}".`)} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-3 sm:px-4 rounded-full border whitespace-nowrap border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] hover:bg-[#F3EEF8]">
+                <WhatsAppIcon className="w-4 h-4" /> Ask on WhatsApp
+              </a>
+              <button onClick={shareWhatsApp} className="inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-3 sm:px-4 rounded-full border whitespace-nowrap border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] hover:bg-[#F3EEF8] cursor-pointer">
+                <WhatsAppIcon className="w-4 h-4" /> Share on WhatsApp
+              </button>
+              <button onClick={share} className="inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-3 sm:px-4 rounded-full border whitespace-nowrap border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] hover:bg-[#F3EEF8] cursor-pointer">
+                <Share2 className="w-4 h-4" /> Share
+              </button>
+              {features.compare && !accessoryPage && <button onClick={onCompare} aria-pressed={inCompare} className={`inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-3 sm:px-4 rounded-full border whitespace-nowrap text-sm cursor-pointer ${inCompare ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]'}`}>
+                {inCompare ? <Check className="w-4 h-4" /> : <GitCompare className="w-4 h-4" />} {inCompare ? 'In compare' : 'Compare'}
+              </button>}
+            </div>
+          </div>
         </div>
-      </aside>
+
+        {/* Complete the look: its own section, only on combo / set products */}
+        <CompleteTheLook product={product} selectedSize={size} selectedColor={color} quantity={qty} onNeedSize={requireSize} />
+
+        {/* Reviews */}
+        <ProductReviews key={product.id} product={product} />
+
+        {recentlyViewed.length > 0 && (
+          <section className="mt-16 sm:mt-20">
+            <p className="sag-eyebrow">Recently viewed</p>
+            <h2 className="mt-2 mb-6 font-serif text-3xl text-[#4B1D3F]">Pick up where you left off</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              {recentlyViewed.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+          </section>
+        )}
+
+        {related.length > 0 && !accessoryPage && (
+          <section className="mt-16 sm:mt-20">
+            <p className="sag-eyebrow">{kidsPage ? 'For little ones' : toyPage ? 'Play time' : 'You may also like'}</p>
+            <h2 className="mt-2 mb-6 font-serif text-3xl text-[#4B1D3F]">{kidsPage ? `More ${product.category}` : toyPage ? 'More toys' : 'Similar styles'}</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+              {related.map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
+          </section>
+        )}
+      </div>
+
+      {/* Mobile sticky actions: price + size on one line, then two clear buttons */}
+      <div className="md:hidden fixed left-0 right-0 bottom-0 z-40 bg-white border-t border-[#4B1D3F]/10 shadow-[0_-10px_30px_-20px_rgba(42,26,38,0.5)] px-3 pt-2 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
+        <div className="flex items-center justify-between gap-3 px-1 pb-2">
+          <p className="flex items-baseline gap-1.5 whitespace-nowrap min-w-0">
+            <span className="text-[17px] font-semibold text-[#4B1D3F]">₹{(price * qty).toLocaleString('en-IN')}</span>
+            {mrp > price && qty === 1 && <span className="text-xs text-[#2A1A26]/45 line-through">₹{mrp.toLocaleString('en-IN')}</span>}
+            {discount > 0 && qty === 1 && <span className="text-xs font-semibold text-[#8A2E55]">{discount}% off</span>}
+            {qty > 1 && <span className="text-xs text-[#2A1A26]/65">({qty} pcs)</span>}
+          </p>
+          {oneSize || !sizes.length ? null : size ? (
+            <button type="button" onClick={requireSize} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#F3EEF8] px-2.5 py-1 text-xs font-semibold text-[#4B1D3F] cursor-pointer">
+              {sizeWord} {size} <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button type="button" onClick={requireSize} className="shrink-0 inline-flex items-center gap-1 rounded-full bg-[#F7E4EA] px-2.5 py-1 text-xs font-semibold text-[#8A2E55] cursor-pointer">
+              {kidsPage ? 'Choose age' : 'Choose size'} <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+        {soldOut ? (
+          <button onClick={notifyRestock} className="sag-btn-primary w-full h-12 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer">
+            <Bell className="w-4 h-4" /> Notify me when back
+          </button>
+        ) : (
+          <div className="grid grid-cols-2 gap-2.5">
+            <button onClick={onAdd} className={`h-12 rounded-full border text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 transition-colors cursor-pointer ${justAdded ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-[#4B1D3F]/25 bg-white text-[#4B1D3F] active:bg-[#F3EEF8]'}`}>
+              {justAdded ? <><Check className="w-4 h-4" /> Added</> : <><BagIcon className="w-[18px] h-[18px]" live={false} /> Add to bag</>}
+            </button>
+            <button onClick={onBuy} className="sag-btn-primary h-12 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer">
+              <Zap className="w-4 h-4" /> Buy now
+            </button>
+          </div>
+        )}
+      </div>
+
+      {lightbox && (
+        <div className="fixed inset-0 z-[80] bg-[#2A1A26]/95 flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
+          <button onClick={() => setLightbox(false)} aria-label="Close" className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center cursor-pointer">
+            <X className="w-5 h-5 text-white" />
+          </button>
+          {images.length > 1 && (
+            <>
+              <button onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className="absolute left-3 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center cursor-pointer"><ChevronLeft className="w-5 h-5 text-white" /></button>
+              <button onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className="absolute right-3 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center cursor-pointer"><ChevronRight className="w-5 h-5 text-white" /></button>
+            </>
+          )}
+          <img src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} className="max-h-[92vh] max-w-[94vw] object-contain" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
     </div>
   );
 };

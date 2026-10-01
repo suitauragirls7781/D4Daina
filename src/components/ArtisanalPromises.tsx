@@ -32,11 +32,11 @@ export const ArtisanalPromises: React.FC = () => {
   return (
     <section 
       id="artisanal-promises-strip" 
-      className="w-full bg-[#180306] py-4 sm:py-5 px-2 sm:px-4 border-y border-[#D7B77A]/20 relative overflow-hidden z-10"
+      className="w-full bg-white py-4 sm:py-5 px-2 sm:px-4 border-y border-[#4B1D3F]/20 relative overflow-hidden z-10"
     >
       <div className="max-w-7xl mx-auto">
         {/* DESKTOP VIEW: 4 Columns with vertical gold dividers, ultra slim height */}
-        <div className="hidden md:grid md:grid-cols-4 divide-x divide-[#D7B77A]/35 items-center">
+        <div className="hidden md:grid md:grid-cols-4 divide-x divide-[#4B1D3F]/35 items-center">
           {promises.map((prom) => {
             const IconComp = prom.icon;
             return (
@@ -44,14 +44,14 @@ export const ArtisanalPromises: React.FC = () => {
                 key={prom.id}
                 className="flex items-center justify-center gap-3 px-4 py-2 group cursor-default"
               >
-                <div className="shrink-0 text-[#E8D2A4]">
+                <div className="shrink-0 text-[#4B1D3F]">
                   <IconComp className="w-5 h-5 stroke-[1.5]" />
                 </div>
                 <div className="text-left leading-tight min-w-0">
-                  <h4 className="font-serif text-xs font-semibold text-[#F7F0E5] tracking-wide uppercase truncate">
+                  <h4 className="font-serif text-xs font-semibold text-[#2A1A26] tracking-wide uppercase truncate">
                     {prom.title}
                   </h4>
-                  <p className="text-[10px] text-[#F7F0E5]/70 font-medium truncate">
+                  <p className="text-[10px] text-[#2A1A26]/70 font-medium truncate">
                     {prom.desc}
                   </p>
                 </div>
@@ -68,16 +68,16 @@ export const ArtisanalPromises: React.FC = () => {
               const IconComp = prom.icon;
               return (
                 <div key={idx} className="inline-flex items-center gap-2 shrink-0">
-                  <div className="text-[#E8D2A4] shrink-0">
+                  <div className="text-[#4B1D3F] shrink-0">
                     <IconComp className="w-3 h-3 stroke-[2]" />
                   </div>
-                  <span className="font-serif font-semibold text-[#F7F0E5] text-[11px] tracking-wide uppercase">
+                  <span className="font-serif font-semibold text-[#2A1A26] text-[11px] tracking-wide uppercase">
                     {prom.title}
                   </span>
-                  <span className="text-[10px] text-[#F7F0E5]/70 font-semibold">
+                  <span className="text-[10px] text-[#2A1A26]/70 font-semibold">
                     ({prom.desc})
                   </span>
-                  <span className="text-[#E8D2A4] ml-2 text-[8px]">◆</span>
+                  <span className="text-[#4B1D3F] ml-2 text-[8px]">◆</span>
                 </div>
               );
             })}

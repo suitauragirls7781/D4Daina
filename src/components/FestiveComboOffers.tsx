@@ -1,203 +1,142 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
-import { Sparkles, Gift, Check, ShoppingBag, Zap, ShieldCheck, Flame } from 'lucide-react';
+import { Check, ShoppingBag } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
+import { ProductSize } from '../types';
 
+const MAX_PICKS = 4;
+
+/**
+ * Multi-buy builder. The discount itself is the admin's combo rule, applied automatically
+ * to the bag (and re-applied by the server at checkout), so items are added at their normal price.
+ */
 export const FestiveComboOffers: React.FC = () => {
-  const { products, addToCart, showToast, navigateToProduct, setActivePage } = useShop();
+  const { products, addToCart, showToast, setActivePage, comboOffer, navigateToProduct } = useShop();
+  const available = useMemo(() => products.filter((p) => p.inStock && (p.stockQuantity ?? 1) > 0).slice(0, 8), [products]);
+  const [picked, setPicked] = useState<Record<string, ProductSize>>({});
 
-  const [selectedProductIds, setSelectedProductIds] = useState<string[]>(() => {
-    return products.slice(0, 2).map(p => p.id);
-  });
-  const [isComboAdded, setIsComboAdded] = useState(false);
+  if (!comboOffer || available.length < 1) return null;
 
-  if (!products || products.length < 2) return null;
+  const minItems = comboOffer.minItems;
+  const pickedProducts = available.filter((p) => picked[p.id]);
+  const rawTotal = pickedProducts.reduce((sum, p) => sum + p.price, 0);
+  const qualifies = pickedProducts.length >= minItems;
+  const discount = qualifies ? Math.round((rawTotal * comboOffer.percent) / 100) : 0;
 
-  // Combo calculation logic (15% discount when 2 or more selected)
-  const selectedProducts = products.filter(p => selectedProductIds.includes(p.id));
-  const rawTotal = selectedProducts.reduce((sum, p) => sum + p.price, 0);
-  const comboDiscountAmount = Math.round(rawTotal * 0.15); // 15% OFF
-  const finalComboPrice = rawTotal - comboDiscountAmount;
-
-  const toggleProductInCombo = (id: string) => {
-    if (selectedProductIds.includes(id)) {
-      if (selectedProductIds.length <= 2) {
-        showToast('Select at least 2 suits to build your Festive Combo!', 'info');
-        return;
+  const toggle = (id: string, defaultSize: ProductSize) => {
+    setPicked((prev) => {
+      const next = { ...prev };
+      if (next[id]) {
+        delete next[id];
+      } else {
+        if (Object.keys(next).length >= MAX_PICKS) {
+          showToast(`You can pick up to ${MAX_PICKS} pieces here. Add more from any product page.`, 'info');
+          return prev;
+        }
+        next[id] = defaultSize;
       }
-      setSelectedProductIds(prev => prev.filter(pId => pId !== id));
-    } else {
-      if (selectedProductIds.length >= 3) {
-        showToast('Max 3 suits allowed per Combo Set for maximum 15% savings!', 'info');
-        return;
-      }
-      setSelectedProductIds(prev => [...prev, id]);
-    }
-  };
-
-  const handleAddComboToBag = () => {
-    selectedProducts.forEach(prod => {
-      const sizeToUse = prod.sizes?.[0] || 'M';
-      const colorToUse = prod.colors?.[0] || { name: 'Artisan Gold', hex: '#9A6A3A' };
-      addToCart({
-        ...prod,
-        price: Math.round(prod.price * 0.85) // Apply 15% discount
-      }, sizeToUse, colorToUse, 1, false);
+      return next;
     });
-
-    setIsComboAdded(true);
-    setTimeout(() => setIsComboAdded(false), 2500);
-    showToast(`Added ${selectedProducts.length} Artisan Suits Combo to Bag at ₹${finalComboPrice.toLocaleString('en-IN')}!`, 'success');
   };
 
-  const handleBuyComboNow = () => {
-    if (selectedProducts.length < 2) {
-      showToast('Select at least 2 suits to build your Festive Combo!', 'info');
+  const addAll = (goToCheckout: boolean) => {
+    if (!qualifies) {
+      showToast(`Pick at least ${minItems} pieces to unlock ${comboOffer.percent}% off.`, 'info');
       return;
     }
-
-    selectedProducts.forEach((product) => {
-      const size = product.sizes?.[0] || 'M';
-      const color = product.colors?.[0] || { name: 'Artisan Gold', hex: '#B8935A' };
-      addToCart({ ...product, price: Math.round(product.price * 0.85) }, size, color, 1, false);
+    pickedProducts.forEach((product) => {
+      addToCart(product, picked[product.id], product.colors?.[0], 1, false);
     });
-    setActivePage('checkout');
+    setPicked({});
+    if (goToCheckout) setActivePage('checkout');
   };
 
   return (
-    <section id="festive-combo-offers-section" className="w-full py-12 sm:py-16 bg-[#120205] border-b border-[#D7B77A]/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Section Header */}
-        <div className="text-center space-y-1.5 max-w-xl mx-auto">
-          <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-[#D7B77A]">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>ROYAL FESTIVE COMBO SAVINGS</span>
-          </div>
-          <h2 className="font-serif font-semibold text-3xl sm:text-4xl text-[#E8D2A4]">
-            Buy 2 Suits & Save Extra 15% OFF
+    <section id="festive-combo-offers-section" className="w-full py-12 sm:py-16 bg-[#FBF7F3] border-y border-[#4B1D3F]/20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto space-y-3 mb-8">
+          <p className="text-[11px] uppercase tracking-[0.3em] text-[#7E5F33]">{comboOffer.title || 'Combo offer'}</p>
+          <h2 className="font-serif text-3xl sm:text-4xl text-[#2A1A26]">
+            Buy {minItems} or more, save {comboOffer.percent}%
           </h2>
-          <p className="text-sm sm:text-base text-[#E8D2A4]/75 font-sans">
-            Mix & match any handcrafted Artisan kurti or suit sets. Get instant 15% bundle discount + Free Artisan Silk Gift Tote!
+          <p className="text-sm text-[#2A1A26]/65">
+            {comboOffer.subtitle || `Mix and match any outfits. ${comboOffer.percent}% comes off automatically in your bag once it holds ${minItems} or more outfits.`}
           </p>
         </div>
 
-        {/* Combo Builder Main Card */}
-        <div className="grid grid-cols-1 items-stretch border border-[#D7B77A]/35 bg-[#180306] lg:grid-cols-12">
-          
-          {/* Product Selection Pickers (7 Cols) */}
-          <div className="space-y-4 p-4 sm:p-7 lg:col-span-7">
-            <div className="flex items-center justify-between gap-3 text-xs font-semibold text-[#E8D2A4] pb-3 border-b border-[#D7B77A]/25">
-              <span className="uppercase tracking-wider">Tap Suits To Add To Your Combo Box:</span>
-              <span className="text-[#F7F0E5]">{selectedProducts.length} Selected</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {products.slice(0, 6).map((prod) => {
-                const isSelected = selectedProductIds.includes(prod.id);
-                return (
-                  <div
-                    key={prod.id}
-                    onClick={() => toggleProductInCombo(prod.id)}
-                    className={`relative rounded-sm p-2.5 border transition-colors cursor-pointer flex flex-col items-center text-center space-y-1.5 ${
-                      isSelected 
-                        ? 'border-[#D7B77A]/40 bg-[#D7B77A]/10' 
-                        : 'border-[#D7B77A]/30 bg-[#120205] hover:border-[#D7B77A]'
-                    }`}
-                  >
-                    {/* Checkmark Ribbon */}
-                    {isSelected && (
-                      <div className="absolute top-2 right-2 bg-[#D7B77A] text-[#F7F0E5] p-1">
-                        <Check className="w-3 h-3" />
-                      </div>
+        <div className="grid lg:grid-cols-12 gap-6">
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {available.map((product) => {
+              const selected = Boolean(picked[product.id]);
+              const sizes = product.sizes?.length ? product.sizes : (['Free Size'] as unknown as ProductSize[]);
+              return (
+                <div key={product.id} className={`border bg-white flex flex-col transition ${selected ? 'border-[#4B1D3F]' : 'border-[#4B1D3F]/20'}`}>
+                  <button type="button" onClick={() => navigateToProduct(product)} className="block cursor-pointer" aria-label={`View ${product.name}`}>
+                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '')} alt={product.name} className="w-full aspect-[4/5] object-cover" loading="lazy" />
+                  </button>
+                  <div className="p-2.5 flex-1 flex flex-col gap-2">
+                    <p className="text-xs text-[#2A1A26] line-clamp-2 min-h-[2rem]">{product.name}</p>
+                    <p className="text-sm text-[#7E5F33]">₹{product.price.toLocaleString('en-IN')}</p>
+                    {selected && (
+                      <select
+                        aria-label={`Size for ${product.name}`}
+                        value={picked[product.id]}
+                        onChange={(e) => setPicked((prev) => ({ ...prev, [product.id]: e.target.value as ProductSize }))}
+                        className="w-full px-2 py-1.5 bg-[#FBF7F3] border border-[#4B1D3F]/30 rounded text-xs text-[#2A1A26]"
+                      >
+                        {sizes.map((size) => <option key={size} value={size}>Size {size}</option>)}
+                      </select>
                     )}
-
-                    <div className="w-full aspect-[4/5] overflow-hidden bg-[#180306]">
-                      <img 
-                        src={getCleanImageUrl(prod.images?.[0] || prod.image)} 
-                        alt={prod.name} 
-                        className="w-full h-full object-cover object-top"
-                      />
-                    </div>
-
-                    <h4 className="font-serif font-semibold text-xs text-[#E8D2A4] line-clamp-1">{prod.name}</h4>
-                    <span className="font-serif font-semibold text-sm text-[#E8D2A4]">₹{prod.price.toLocaleString('en-IN')}</span>
+                    <button
+                      type="button"
+                      onClick={() => toggle(product.id, sizes[0])}
+                      aria-pressed={selected}
+                      className={`mt-auto w-full py-2 text-[11px] uppercase tracking-wider rounded border cursor-pointer inline-flex items-center justify-center gap-1 ${
+                        selected ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'border-[#4B1D3F]/40 text-[#2A1A26] hover:bg-[#F3EEF8]'
+                      }`}
+                    >
+                      {selected && <Check className="w-3.5 h-3.5" />}
+                      {selected ? 'Added to combo' : 'Add to combo'}
+                    </button>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Live Bundle Savings Calculator (5 Cols) */}
-          <div className="flex flex-col justify-center space-y-5 bg-[#D7B77A] p-5 text-[#F7F0E5] sm:p-7 lg:col-span-5">
-            
-            <div className="flex items-center justify-between pb-3 border-b border-[#D7B77A]/35">
-              <div className="flex items-center gap-2">
-                <Gift className="w-5 h-5 text-[#E8D2A4]" />
-                <h3 className="font-serif font-semibold text-lg text-[#F7F0E5]">Combo Summary</h3>
-              </div>
-              <span className="text-[10px] font-bold uppercase px-2 py-1 bg-[#D7B77A] text-[#E8D2A4]">
-                15% OFF SAVINGS
-              </span>
-            </div>
-
-            {/* Price Calculations */}
-            <div className="space-y-2 text-xs font-sans">
-              <div className="flex justify-between text-[#F7F0E5]/80">
-                <span>Combined Price ({selectedProducts.length} Items):</span>
-                <span>₹{rawTotal.toLocaleString('en-IN')}</span>
-              </div>
-
-              <div className="flex justify-between text-[#E8D2A4] font-semibold">
-                <span>15% Festive Combo Discount:</span>
-                <span>-₹{comboDiscountAmount.toLocaleString('en-IN')}</span>
-              </div>
-
-              <div className="flex justify-between text-emerald-200 font-medium">
-                <span>Free Silk Gift Tote:</span>
-                <span>FREE (Valued ₹499)</span>
-              </div>
-
-              <div className="pt-3 border-t border-[#D7B77A]/35 flex justify-between items-baseline">
-                <span className="font-serif font-semibold text-sm text-[#F7F0E5]">Final Bundle Total:</span>
-                <span className="font-serif font-semibold text-2xl text-[#E8D2A4]">₹{finalComboPrice.toLocaleString('en-IN')}</span>
+          <aside className="lg:col-span-4 border border-[#4B1D3F]/25 bg-white p-5 space-y-4 h-fit lg:sticky lg:top-36">
+            <h3 className="font-serif text-xl text-[#2A1A26]">Your combo</h3>
+            <p className="text-xs text-[#2A1A26]/70">
+              {pickedProducts.length} of {minItems} pieces picked{qualifies ? ' — offer unlocked' : ''}
+            </p>
+            <div className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-[#2A1A26]/75"><span>Items</span><span>₹{rawTotal.toLocaleString('en-IN')}</span></div>
+              <div className="flex justify-between text-emerald-700"><span>Combo {comboOffer.percent}% off</span><span>{discount ? `−₹${discount.toLocaleString('en-IN')}` : '—'}</span></div>
+              <div className="flex justify-between text-[#2A1A26] pt-2 border-t border-[#4B1D3F]/15">
+                <span>Combo price</span>
+                <span className="font-serif text-2xl">₹{(rawTotal - discount).toLocaleString('en-IN')}</span>
               </div>
             </div>
-
-            {/* CTAs */}
-            <div className="space-y-2 pt-2">
-              <button
-                type="button"
-                onClick={handleAddComboToBag}
-                className={`w-full py-3 px-3 rounded font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer border ${
-                  isComboAdded 
-                    ? 'bg-emerald-700 text-[#F7F0E5] border-emerald-500' 
-                    : 'bg-[#180306] text-[#E8D2A4] border-[#FAF5EB] hover:bg-[#120205]'
-                }`}
-              >
-                {isComboAdded ? <Check className="w-4 h-4 text-emerald-300" /> : <ShoppingBag className="w-4 h-4" />}
-                <span>{isComboAdded ? 'ADDED COMBO TO BAG!' : 'ADD FESTIVE COMBO TO BAG'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleBuyComboNow}
-                className="w-full py-3 px-3 bg-[#D7B77A] text-[#E8D2A4] font-semibold text-xs uppercase tracking-wider hover:bg-[#D7B77A] transition-colors flex items-center justify-center gap-2 cursor-pointer border border-[#D7B77A]"
-              >
-                <Zap className="w-4 h-4" />
-                <span>INSTANT BUY COMBO NOW</span>
-              </button>
-            </div>
-
-            <div className="flex items-center justify-center gap-2 text-[10px] text-[#F7F0E5]/70 font-medium pt-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>100% Guaranteed Fit & 7-Day Easy Exchange</span>
-            </div>
-
-          </div>
-
+            <button
+              type="button"
+              onClick={() => addAll(false)}
+              disabled={!qualifies}
+              className="w-full py-3 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-xs font-semibold uppercase tracking-[0.18em] rounded inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Add combo to bag
+            </button>
+            <button
+              type="button"
+              onClick={() => addAll(true)}
+              disabled={!qualifies}
+              className="w-full py-3 border border-[#4B1D3F]/40 text-[#2A1A26] text-xs uppercase tracking-[0.18em] rounded hover:bg-[#F3EEF8] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Buy combo now
+            </button>
+            <p className="text-[11px] text-[#2A1A26]/65">The discount is applied to your whole bag at checkout whenever it has {minItems}+ outfits.</p>
+          </aside>
         </div>
-
       </div>
     </section>
   );

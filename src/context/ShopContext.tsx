@@ -1,110 +1,53 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  Product, 
-  CartItem, 
-  ProductSize, 
-  ProductColor, 
-  Order, 
-  ActivePage, 
+import {
+  Product,
+  CartItem,
+  ProductSize,
+  ProductColor,
+  Order,
+  ActivePage,
   ProductCategory,
-  Coupon 
+  Coupon,
+  ComboOfferConfig
 } from '../types';
 import { useProducts } from './ProductContext';
 import { useRouter } from './RouterContext';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { ADMIN_UID, COLLECTIONS, emailKey, getDocById, listDocs, listDocsWhere, saveDoc } from '../lib/dataStore';
-import { mapCouponFromDb, mapOrderFromDb } from './AdminContext';
-import { recordHeartbeat, trackFunnelEvent } from '../utils/visitorTracker';
+import { COLLECTIONS, emailKey, getDocById, listDocs, saveDoc } from '../lib/dataStore';
+import { mapCouponFromDb } from './AdminContext';
+import { couponEligibleSubtotal, couponRestrictionNotes, isCouponRestricted } from '../utils/coupons';
+import { doc as fsDoc, onSnapshot } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { ordersApi } from '../lib/api';
+import { withPageTransition } from '../utils/pageTransition';
+import { recordHeartbeat, trackFunnelEvent, trackItem } from '../utils/visitorTracker';
 import { categoryToSlug, slugToCategory } from '../utils/slugHelper';
+import { MAX_BAG_LINES, comboPiecesIn, enforceLooks, isAccessory, lookLineId, outfitQtyIn } from '../utils/looks';
+import { fromCatalogOrLive, loadCatalog, readsLive } from '../lib/catalog';
 
-export const DEFAULT_COUPONS: Coupon[] = [
-  {
-    id: 'c1',
-    code: 'AURA10',
-    discountType: 'percentage',
-    discountValue: 10,
-    minOrderValue: 0,
-    maxDiscount: 500,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 1000,
-    usageCount: 42,
-    isActive: true
-  },
-  {
-    id: 'c2',
-    code: 'FESTIVE15',
-    discountType: 'percentage',
-    discountValue: 15,
-    minOrderValue: 1200,
-    maxDiscount: 1000,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 1000,
-    usageCount: 88,
-    isActive: true
-  },
-  {
-    id: 'c3',
-    code: 'ROYAL200',
-    discountType: 'fixed',
-    discountValue: 200,
-    minOrderValue: 1500,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 500,
-    usageCount: 19,
-    isActive: true
-  },
-  {
-    id: 'c4',
-    code: 'BLISS500',
-    discountType: 'fixed',
-    discountValue: 500,
-    minOrderValue: 2999,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 500,
-    usageCount: 14,
-    isActive: true
-  },
-  {
-    id: 'c5',
-    code: 'FIRSTSUIT',
-    discountType: 'fixed',
-    discountValue: 150,
-    minOrderValue: 699,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 1000,
-    usageCount: 65,
-    isActive: true
-  },
-  {
-    id: 'c6',
-    code: 'ARTISAN12',
-    discountType: 'percentage',
-    discountValue: 12,
-    minOrderValue: 899,
-    maxDiscount: 600,
-    startDate: '2026-01-01',
-    expiryDate: '2026-12-31',
-    usageLimit: 1000,
-    usageCount: 31,
-    isActive: true
-  }
-];
+export // Must match MAX_QTY_PER_LINE in api/_lib/orders.js.
+const MAX_QTY_PER_ITEM = 10;
+const NO_COUPONS: Coupon[] = [];
+const qtyCapFor = (product: Product) => {
+  const stock = Number(product?.stockQuantity);
+  return Number.isFinite(stock) && stock > 0 ? Math.min(MAX_QTY_PER_ITEM, stock) : MAX_QTY_PER_ITEM;
+};
 
 interface ShopContextType {
+  /** Published outfits for every listing, search and recommendation (never hidden products or accessories). */
   products: Product[];
   allProducts: Product[];
+  /** Published accessories, offered only inside "Complete the look" on combo / set product pages. */
+  accessories: Product[];
   isLoading: boolean;
   getProductById: (id: string | null | undefined) => Product | undefined;
   cart: CartItem[];
   wishlist: Product[];
   activePage: ActivePage;
   setActivePage: (page: ActivePage) => void;
+  /** Updates the active page without navigating (used when the URL changed by Back/Forward). */
+  syncActivePage: (page: ActivePage) => void;
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   selectedProductId: string | null;
@@ -131,11 +74,13 @@ interface ShopContextType {
   addRecentOrder: (order: Order) => void;
   syncCustomerOrders: (identifier?: string | { email?: string; phone?: string }) => Promise<void>;
   appliedCoupon: Coupon | null;
-  applyCoupon: (code: string) => boolean;
+  applyCoupon: (code: string) => Promise<boolean>;
   removeCoupon: () => void;
   toast: { message: string; type: 'success' | 'info' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   addToCart: (product: Product, size: ProductSize, color?: ProductColor, quantity?: number, openDrawer?: boolean) => void;
+  /** "Complete the look": adds the outfit (unless it is already in the bag) and the chosen accessories, linked to it. */
+  addLookToBag: (outfit: Product, outfitSize: ProductSize, outfitColor: ProductColor | undefined, outfitQty: number, picks: Array<{ product: Product; size: ProductSize; color?: ProductColor }>) => boolean;
   buyNow: (product: Product, size?: ProductSize, color?: ProductColor, quantity?: number) => void;
   removeFromCart: (itemId: string) => void;
   updateCartQuantity: (itemId: string, quantity: number) => void;
@@ -149,6 +94,17 @@ interface ShopContextType {
   shippingFee: number;
   discountAmount: number;
   cartTotal: number;
+  /** Store-wide prepaid discount (admin setting); the server applies the same rule. */
+  prepaidDiscount: number;
+  /** Automatic multi-buy discount on the current bag (0 when the combo rule does not apply). */
+  comboDiscount: number;
+  comboOffer: ComboOfferConfig | null;
+  /** Bag pieces that count towards the combo offer's minimum: outfits only (accessories never count). */
+  comboPieces: number;
+  freeShippingThreshold: number;
+  /** Admin settings as configured (independent of the bag), for store-wide messages */
+  storeOffers: { prepaidDiscount: number; freeShippingThreshold: number; shippingCharge: number };
+  maxQtyPerItem: number;
   navigateToProduct: (productOrId: string | Product) => void;
   navigateToCategory: (category: ProductCategory | 'Sale' | 'New Arrivals' | 'Best Sellers' | 'Trending' | 'All') => void;
   trackOrderNumber: string;
@@ -166,8 +122,15 @@ interface ShopContextType {
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 
 export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { products, allProducts,
-        isLoading, getProductById } = useProducts();
+  const { products: catalogProducts, allProducts: catalogAll, isLoading, getProductById: getCatalogProduct } = useProducts();
+  // Unpublished (hidden) products stay in the admin catalogue but never reach the store.
+  // Accessories are sold only inside "Complete the look", so they are kept out of every listing,
+  // but stay available to the bag, product pages and links (published = both kinds).
+  const published = React.useMemo(() => catalogAll.filter((p) => !p.hidden), [catalogAll]);
+  const products = React.useMemo(() => catalogProducts.filter((p) => !p.hidden && !isAccessory(p)), [catalogProducts]);
+  const allProducts = React.useMemo(() => published.filter((p) => !isAccessory(p)), [published]);
+  const accessories = React.useMemo(() => published.filter(isAccessory), [published]);
+  const getProductById = (id: string | null | undefined) => { const p = getCatalogProduct(id); return p && !p.hidden ? p : undefined; };
   const { navigate } = useRouter();
   // Load Cart with fallback redundant storage layers (v1, backup, session)
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -199,6 +162,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     cartRef.current = cart;
   }, [cart]);
+  // Account whose saved cart this device mirrors, and the cart last read from / written to it
+  const cartSyncedForRef = React.useRef<string>('');
+  const cartSyncedJsonRef = React.useRef<string | null>(null);
+  // The shopper changed the bag on this device since the last save
+  const cartTouchedRef = React.useRef(false);
+  const setCartByShopper: typeof setCart = (value) => {
+    cartTouchedRef.current = true;
+    setCart(value);
+  };
 
   // Load Wishlist from localStorage
   const [wishlist, setWishlist] = useState<Product[]>(() => {
@@ -215,6 +187,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     wishlistRef.current = wishlist;
   }, [wishlist]);
+  // Account whose saved wishlist this device list mirrors, and the ids last read from / written to it.
+  // Nothing is pushed before the saved list has been read, so a stale device can't overwrite removals made elsewhere.
+  const wishlistSyncedForRef = React.useRef<string>('');
+  const wishlistSyncedIdsRef = React.useRef<string | null>(null);
+  // Hearts tapped since the last successful save (id -> product added, or null when removed).
+  // They are re-applied on top of the saved list, so a tap made while the page is still loading is never lost.
+  const wishlistPendingRef = React.useRef<Map<string, Product | null>>(new Map());
 
   // Load Orders from localStorage
   const [recentOrders, setRecentOrders] = useState<Order[]>(() => {
@@ -254,23 +233,26 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const searchParams = new URLSearchParams(window.location.search);
       const prodParam = searchParams.get('product');
       if (prodParam) return prodParam;
-      
+
       const match = window.location.pathname.match(/\/product\/([^/]+)/);
       return match ? match[1] : null;
     }
     return null;
   });
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  // Seeded from the catalogue so a product page opened by URL shows at once (accessories are not in `products`).
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(
+    () => (selectedProductId ? published.find((p) => String(p.id) === String(selectedProductId)) || null : null),
+  );
 
-  // Always keep selectedProduct in sync with the live products state
+  // Always keep selectedProduct in sync with the live catalogue (accessories included: they open from the bag)
   useEffect(() => {
-    if (selectedProductId && products.length > 0) {
-      const fresh = products.find((p) => String(p.id) === String(selectedProductId));
+    if (selectedProductId && published.length > 0) {
+      const fresh = published.find((p) => String(p.id) === String(selectedProductId));
       if (fresh) {
         setSelectedProduct(fresh);
       }
     }
-  }, [products, selectedProductId]);
+  }, [published, selectedProductId]);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState<boolean>(false);
@@ -281,29 +263,28 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
   const [trackOrderNumber, setTrackOrderNumber] = useState<string>('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [coupons, setCoupons] = useState<Coupon[]>(DEFAULT_COUPONS);
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
 
-  // Fetch Coupons from the database and merge with DEFAULT_COUPONS
+  // Coupons shown to shoppers: active ones created in the admin panel. The server re-validates at checkout.
   const fetchCoupons = async () => {
     try {
-      const data = await listDocs(COLLECTIONS.coupons);
-
-      if (data && data.length > 0) {
-        const mappedCoupons: Coupon[] = data
+      const data = (!readsLive() ? (await loadCatalog())?.coupons : null) || await listDocs(COLLECTIONS.coupons);
+      const now = Date.now();
+      setCoupons(
+        data
           .map(mapCouponFromDb)
-          .filter(coupon => coupon.isActive)
-          .sort((a, b) => String(b.id).localeCompare(String(a.id)));
-        
-        // Always preserve DEFAULT_COUPONS so users can access all 6 curated coupons!
-        const existingCodes = new Set(mappedCoupons.map(c => c.code.toUpperCase()));
-        const missingDefaults = DEFAULT_COUPONS.filter(dc => !existingCodes.has(dc.code.toUpperCase()));
-        setCoupons([...mappedCoupons, ...missingDefaults]);
-      } else {
-        setCoupons(DEFAULT_COUPONS);
-      }
+          .filter((coupon) => coupon.isActive && coupon.code)
+          .filter((coupon) => {
+            if (!coupon.expiryDate) return true;
+            const end = new Date(coupon.expiryDate);
+            end.setHours(23, 59, 59, 999);
+            return !Number.isFinite(end.getTime()) || end.getTime() >= now;
+          })
+          .filter((coupon) => !(coupon.usageLimit > 0 && coupon.usageCount >= coupon.usageLimit))
+      );
     } catch (e) {
-      console.warn('Error fetching shop coupons, falling back to defaults:', e);
-      setCoupons(DEFAULT_COUPONS);
+      console.warn('Could not load coupons:', e);
+      setCoupons([]);
     }
   };
 
@@ -341,118 +322,84 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Resolve the logged-in storefront customer's email (custom/OTP session first, then Firebase Auth customer)
   const getSessionEmail = (): string | null => {
-    const localUser = localStorage.getItem('sag_custom_user');
-    if (localUser) {
-      try {
-        const parsed = JSON.parse(localUser);
-        if (parsed.email) return parsed.email;
-      } catch {}
-    }
     const fbUser = auth.currentUser;
-    if (fbUser && fbUser.uid !== ADMIN_UID && fbUser.email) {
-      return fbUser.email;
-    }
+    if (!fbUser || !fbUser.uid.startsWith('c_')) return null;
+    try {
+      const parsed = JSON.parse(localStorage.getItem('sag_custom_user') || 'null');
+      if (parsed?.email && parsed.uid === fbUser.uid) return parsed.email;
+    } catch {}
     return null;
   };
 
-  // Push Cart to the customer's database profile
+  const cartKey = (item: CartItem) => item.id || `${item.product?.id}_${item.selectedSize}_${item.selectedColor?.name || ''}`;
+  const cartJson = (items: CartItem[]) => JSON.stringify(items.map((i) => [cartKey(i), i.quantity]).sort());
+
+  // Push Cart to the customer's database profile (only after the saved cart was read, and only when it changed)
   const pushCartToDb = async (itemsToPush: CartItem[]) => {
     try {
       const email = getSessionEmail();
-      if (email) {
-        const cleanEmail = emailKey(email);
-        await saveDoc(COLLECTIONS.profiles, cleanEmail, {
-          email: cleanEmail,
-          cart: itemsToPush,
-        });
-      }
+      if (!email) return;
+      const cleanEmail = emailKey(email);
+      if (cartSyncedForRef.current !== cleanEmail) return;
+      const json = cartJson(itemsToPush);
+      if (json === cartSyncedJsonRef.current) return;
+      await saveDoc(COLLECTIONS.profiles, cleanEmail, {
+        email: cleanEmail,
+        cart: itemsToPush,
+      });
+      cartSyncedJsonRef.current = json;
+      if (cartJson(cartRef.current) === json) cartTouchedRef.current = false;
     } catch (e) {
       console.warn('Database cart push notice:', e);
     }
   };
 
-  // Background cart merging script executed when guest authenticates into an active account
+  // Reads the account's saved cart. On a device that already mirrors the account, the saved cart wins
+  // (so items removed or bought elsewhere never come back); changes made here and not yet saved are kept.
+  // Only the first sign-in on a device combines the guest bag with the saved one.
   const mergeGuestCartOnAuth = async (targetEmail?: string) => {
     try {
       const email: string | null = targetEmail || getSessionEmail();
       if (!email) return;
-
       const cleanEmail = emailKey(email);
 
-      // Read guest cart snapshot prior to merge
-      let guestItems: CartItem[] = [];
-      try {
-        const savedGuestCart = localStorage.getItem('sag_cart_v1');
-        if (savedGuestCart) {
-          const parsed = JSON.parse(savedGuestCart);
-          if (Array.isArray(parsed)) {
-            guestItems = parsed;
-          }
-        }
-      } catch {}
-
-      if (guestItems.length === 0) {
-        guestItems = cart;
-      }
-
-      // Fetch user's active account cart from the database profile
       const profData = await getDocById(COLLECTIONS.profiles, cleanEmail);
+      const remoteCart: CartItem[] | null = profData && Array.isArray(profData.cart) ? (profData.cart as CartItem[]) : null;
+      const local = cartRef.current || [];
 
-      let remoteCart: CartItem[] = [];
-      if (profData && Array.isArray(profData.cart)) {
-        remoteCart = profData.cart as CartItem[];
+      let cartOwner: string | null = null;
+      try { cartOwner = localStorage.getItem('sag_cart_owner'); } catch {}
+      const alreadyOwned = cartOwner === cleanEmail;
+      try { localStorage.setItem('sag_cart_owner', cleanEmail); } catch {}
+
+      const locallyChanged = cartTouchedRef.current
+        || (cartSyncedForRef.current === cleanEmail && cartSyncedJsonRef.current !== null && cartJson(local) !== cartSyncedJsonRef.current);
+
+      let next: CartItem[];
+      if (!remoteCart) {
+        next = local;
+      } else if (alreadyOwned) {
+        next = locallyChanged ? local : remoteCart;
+      } else {
+        const merged = new Map<string, CartItem>();
+        remoteCart.forEach((item) => merged.set(cartKey(item), { ...item }));
+        local.forEach((item) => {
+          const key = cartKey(item);
+          const existing = merged.get(key);
+          merged.set(key, existing ? { ...existing, quantity: Math.min(10, existing.quantity + item.quantity) } : { ...item });
+        });
+        next = Array.from(merged.values());
       }
 
-      if (guestItems.length > 0) {
-        const mergedMap = new Map<string, CartItem>();
-
-        // 1. Populate remote account cart items
-        remoteCart.forEach((item) => {
-          const key = item.id || `${item.product.id}_${item.selectedSize}_${item.selectedColor?.name || ''}`;
-          mergedMap.set(key, { ...item });
-        });
-
-        let addedCount = 0;
-        let quantityUpdatesCount = 0;
-
-        // 2. Merge guest items into map
-        guestItems.forEach((guestItem) => {
-          const key = guestItem.id || `${guestItem.product.id}_${guestItem.selectedSize}_${guestItem.selectedColor?.name || ''}`;
-          if (mergedMap.has(key)) {
-            const existing = mergedMap.get(key)!;
-            mergedMap.set(key, {
-              ...existing,
-              quantity: existing.quantity + guestItem.quantity,
-            });
-            quantityUpdatesCount++;
-          } else {
-            mergedMap.set(key, { ...guestItem });
-            addedCount++;
-          }
-        });
-
-        const mergedCart = Array.from(mergedMap.values());
-
-        // 3. Update active cart state & local storage
-        setCart(mergedCart);
-        try {
-          localStorage.setItem('sag_cart_v1', JSON.stringify(mergedCart));
-          localStorage.setItem('sag_cart_backup', JSON.stringify(mergedCart));
-        } catch {}
-
-        // 4. Sync merged cart back to remote account profile
-        await pushCartToDb(mergedCart);
-
-        // 5. Silent sync complete
-        if (addedCount > 0 || quantityUpdatesCount > 0) {
-          console.log(`Cart synced: ${mergedCart.length} item(s) active.`);
-        }
-      } else if (remoteCart.length > 0) {
-        setCart(remoteCart);
-        try {
-          localStorage.setItem('sag_cart_v1', JSON.stringify(remoteCart));
-        } catch {}
-      }
+      cartSyncedForRef.current = cleanEmail;
+      cartSyncedJsonRef.current = remoteCart ? cartJson(remoteCart) : '';
+      cartRef.current = next;
+      setCart(next);
+      try {
+        localStorage.setItem('sag_cart_v1', JSON.stringify(next));
+        localStorage.setItem('sag_cart_backup', JSON.stringify(next));
+      } catch {}
+      await pushCartToDb(next);
     } catch (e) {
       console.warn('Background cart merge notice:', e);
     }
@@ -463,17 +410,26 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await mergeGuestCartOnAuth();
   };
 
-  // Push Wishlist to the customer's database profile
+  const wishlistIds = (items: Product[]) => items.map((item) => String(item?.id || '')).filter(Boolean).sort().join(',');
+
+  // Push Wishlist to the customer's database profile (only after it was read, and only when it changed)
   const pushWishlistToDb = async (itemsToPush: Product[]) => {
     try {
       const email = getSessionEmail();
-      if (email) {
-        const cleanEmail = emailKey(email);
-        await saveDoc(COLLECTIONS.profiles, cleanEmail, {
-          email: cleanEmail,
-          wishlist: itemsToPush,
-        });
-      }
+      if (!email) return;
+      const cleanEmail = emailKey(email);
+      if (wishlistSyncedForRef.current !== cleanEmail) return;
+      const ids = wishlistIds(itemsToPush);
+      if (ids === wishlistSyncedIdsRef.current) return;
+      await saveDoc(COLLECTIONS.profiles, cleanEmail, {
+        email: cleanEmail,
+        wishlist: itemsToPush,
+      });
+      wishlistSyncedIdsRef.current = ids;
+      const saved = new Set(ids.split(','));
+      wishlistPendingRef.current.forEach((product, id) => {
+        if (Boolean(product) === saved.has(id)) wishlistPendingRef.current.delete(id);
+      });
     } catch (e) {
       console.warn('Database wishlist push notice:', e);
     }
@@ -486,34 +442,38 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (email) {
         const cleanEmail = emailKey(email);
         const profData = await getDocById(COLLECTIONS.profiles, cleanEmail);
+        const remoteWishlist = profData && Array.isArray(profData.wishlist)
+          ? (profData.wishlist as Product[]).filter((item) => item && item.id)
+          : null;
+        const local = wishlistRef.current || [];
 
-        if (profData && Array.isArray(profData.wishlist)) {
-          const remoteWishlist = profData.wishlist as Product[];
-          setWishlist((prevGuestWishlist) => {
-            const map = new Map<string, Product>();
-            // First add remote wishlist items from profile
-            remoteWishlist.forEach((item) => {
-              if (item && item.id) map.set(String(item.id), item);
-            });
-            // Auto-merge guest local items so non-logged-in guest favorites are preserved & merged!
-            prevGuestWishlist.forEach((item) => {
-              if (item && item.id) map.set(String(item.id), item);
-            });
-            const mergedWishlist = Array.from(map.values());
-
-            try {
-              localStorage.setItem('sag_wishlist_v1', JSON.stringify(mergedWishlist));
-            } catch {}
-
-            pushWishlistToDb(mergedWishlist);
-            return mergedWishlist;
-          });
+        let owner: string | null = null;
+        try { owner = localStorage.getItem('sag_wishlist_owner'); } catch {}
+        const alreadyOwned = owner === cleanEmail;
+        try { localStorage.setItem('sag_wishlist_owner', cleanEmail); } catch {}
+        let base: Product[];
+        if (!remoteWishlist) {
+          base = local;
+        } else if (alreadyOwned) {
+          // This device already mirrors the account: the saved list wins, so removals on other devices stick
+          base = remoteWishlist;
         } else {
-          // If profile has no remote wishlist data yet, push the guest wishlist to profile!
-          if (wishlistRef.current && wishlistRef.current.length > 0) {
-            pushWishlistToDb(wishlistRef.current);
-          }
+          // First sign-in on this device: keep favourites saved while browsing as a guest
+          base = [...remoteWishlist, ...local];
         }
+        const map = new Map<string, Product>();
+        base.forEach((item) => map.set(String(item.id), item));
+        wishlistPendingRef.current.forEach((product, id) => (product ? map.set(id, product) : map.delete(id)));
+        const next = Array.from(map.values());
+
+        wishlistSyncedForRef.current = cleanEmail;
+        wishlistSyncedIdsRef.current = remoteWishlist ? wishlistIds(remoteWishlist) : '';
+        wishlistRef.current = next;
+        setWishlist(next);
+        try {
+          localStorage.setItem('sag_wishlist_v1', JSON.stringify(next));
+        } catch {}
+        await pushWishlistToDb(next);
       }
     } catch (e) {
       console.warn('Database wishlist pull notice:', e);
@@ -606,6 +566,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('sag_wishlist_v1', serializedWishlist);
         pushWishlistToDb(wishlistRef.current);
       } catch {}
+      // Coming back to a tab left open: pick up wishlist changes made on other devices
+      if (document.visibilityState === 'visible') pullWishlistFromDb();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -631,7 +593,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Firebase Auth customer sign-in (the admin's Firebase session is ignored)
     const unsubscribeAuth = onAuthStateChanged(auth, (fbUser) => {
-      if (fbUser && fbUser.uid !== ADMIN_UID) {
+      if (fbUser && fbUser.uid.startsWith('c_')) {
         pullCartFromDb();
         pullWishlistFromDb();
       }
@@ -703,142 +665,88 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
   };
 
-  // One-time local storage purge to clear legacy test data
-  useEffect(() => {
-    const purgeOldTestData = async () => {
+
+  const syncCustomerOrders = async (_identifier?: string | { email?: string; phone?: string }) => {
+    if (getSessionEmail()) {
       try {
-        const isPurged = localStorage.getItem('sag_v2_data_purged_final');
-        if (!isPurged) {
-          console.log('Purging legacy test data from local storage...');
-          localStorage.clear();
-          sessionStorage.clear();
-          localStorage.setItem('sag_v2_data_purged_final', 'true');
-        }
+        const result = await ordersApi<{ orders: Order[] }>('my-orders');
+        setRecentOrders(result.orders || []);
       } catch (e) {
-        console.warn('Purge test data notice:', e);
+        console.warn('Could not load your orders:', e);
       }
-    };
-    purgeOldTestData();
-  }, []);
-
-  // Retroactive Order Mapping: Query the database + Local Storage for current authenticated user's exact email/phone
-  const syncCustomerOrders = async (identifier?: string | { email?: string; phone?: string }) => {
+      return;
+    }
     try {
-      let targetEmail = '';
-      if (typeof identifier === 'string' && identifier.trim() && identifier.includes('@')) {
-        targetEmail = identifier.trim().toLowerCase();
-      } else if (identifier && typeof identifier === 'object' && identifier.email?.trim()) {
-        targetEmail = identifier.email.trim().toLowerCase();
-      }
-
-      // Check current custom logged-in user
-      if (!targetEmail) {
-        const localUserStr = localStorage.getItem('sag_custom_user');
-        if (localUserStr) {
-          try {
-            const parsed = JSON.parse(localUserStr);
-            if (parsed.email) targetEmail = parsed.email.toLowerCase().trim();
-          } catch {}
-        }
-      }
-
-      // Check Firebase Auth customer session if still empty
-      if (!targetEmail) {
-        const sessionEmail = getSessionEmail();
-        if (sessionEmail) targetEmail = emailKey(sessionEmail);
-      }
-
-      // Check last guest email fallback if user recently ordered or logged in
-      if (!targetEmail) {
-        const guestEmail = localStorage.getItem('sag_last_guest_email');
-        if (guestEmail && guestEmail.includes('@')) {
-          targetEmail = guestEmail.trim().toLowerCase();
-        }
-      }
-
-      // IF NO USER EMAIL IS FOUND AT ALL, RETURN EMPTY ORDERS
-      if (!targetEmail) {
-        setRecentOrders([]);
-        return;
-      }
-
-      // Read verified phone number saved specifically under this target user's email profile
-      let targetPhone = '';
-      const userProfStr = localStorage.getItem(`sag_user_profile_${targetEmail}`);
-      if (userProfStr) {
-        try {
-          const p = JSON.parse(userProfStr);
-          if (p.phone) targetPhone = cleanPhone(p.phone);
-        } catch {}
-      }
-
-      const matchedMap = new Map<string, Order>();
-
-      // 1. Read from LocalStorage Order backups
-      const localKeys = [
-        `sag_user_orders_${targetEmail}`,
-        'sag_orders_v1',
-        'sag_guest_orders'
-      ];
-      localKeys.forEach((key) => {
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-              parsed.forEach((o: Order) => {
-                if (o && o.orderNumber) {
-                  const oEmail = (o.customerEmail || '').toLowerCase().trim();
-                  const oPhone = cleanPhone(o.customerMobile || '');
-                  if (
-                    oEmail === targetEmail ||
-                    (targetPhone && oPhone && oPhone === targetPhone)
-                  ) {
-                    matchedMap.set(o.orderNumber, o);
-                  }
-                }
-              });
-            }
-          }
-        } catch (e) {}
-      });
-
-      // Query database orders by the customer's exact (normalized) email.
-      try {
-        const ordData = await listDocsWhere(COLLECTIONS.orders, 'customerEmail', emailKey(targetEmail));
-
-        if (ordData && ordData.length > 0) {
-          const mappedOrders = ordData.map(mapOrderFromDb);
-          mappedOrders.forEach((o) => {
-            if (o && o.orderNumber) {
-              matchedMap.set(o.orderNumber, o);
-            }
-          });
-        }
-      } catch (dbErr) {
-        console.warn('Database sync orders notice:', dbErr);
-      }
-
-      const userOrders = Array.from(matchedMap.values()).sort(
-        (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
-      );
-
-      setRecentOrders(userOrders);
-      try {
-        localStorage.setItem(`sag_user_orders_${targetEmail}`, JSON.stringify(userOrders));
-        localStorage.setItem('sag_orders_v1', JSON.stringify(userOrders));
-      } catch {}
-    } catch (e) {
-      console.warn('Sync customer orders error:', e);
+      const guest = JSON.parse(localStorage.getItem('sag_guest_orders') || '[]');
+      setRecentOrders(Array.isArray(guest) ? guest : []);
+    } catch {
+      setRecentOrders([]);
     }
   };
 
   useEffect(() => {
     syncCustomerOrders();
     const handleAuthEvent = () => syncCustomerOrders();
+    const handleLogout = () => {
+      cartRef.current = [];
+      cartSyncedForRef.current = '';
+      cartSyncedJsonRef.current = null;
+      cartTouchedRef.current = false;
+      wishlistRef.current = [];
+      wishlistSyncedForRef.current = '';
+      wishlistSyncedIdsRef.current = null;
+      wishlistPendingRef.current.clear();
+      setCart([]);
+      setWishlist([]);
+      setRecentOrders([]);
+      setAppliedCoupon(null);
+    };
     window.addEventListener('sag-auth-state-change', handleAuthEvent);
-    return () => window.removeEventListener('sag-auth-state-change', handleAuthEvent);
+    window.addEventListener('sag-customer-logout', handleLogout);
+    return () => {
+      window.removeEventListener('sag-auth-state-change', handleAuthEvent);
+      window.removeEventListener('sag-customer-logout', handleLogout);
+    };
   }, []);
+
+  // Keep bag lines in step with the live catalogue: current price, name, image and stock.
+  // Accessories added from "Complete the look" are real bag lines too, so they are looked up as well.
+  useEffect(() => {
+    if (isLoading || published.length === 0) return;
+    setCart((prev) => {
+      let changed = false;
+      const removed: string[] = [];
+      const next = prev.flatMap((item) => {
+        const live = published.find((p) => String(p.id) === String(item.product?.id));
+        if (!live) {
+          changed = true;
+          removed.push(item.product?.name || 'An item');
+          return [];
+        }
+        const stock = Math.max(0, Number(live.stockQuantity ?? 0));
+        const cap = Math.min(MAX_QTY_PER_ITEM, stock > 0 ? stock : MAX_QTY_PER_ITEM);
+        const quantity = Math.min(item.quantity, cap);
+        if (live.price !== item.product.price || live.name !== item.product.name || live.stockQuantity !== item.product.stockQuantity || live.inStock !== item.product.inStock || quantity !== item.quantity) {
+          changed = true;
+          return [{ ...item, product: live, quantity }];
+        }
+        return [item];
+      });
+      if (removed.length) setTimeout(() => showToast(`${removed.join(', ')} is no longer available and was removed from your bag.`, 'info'), 0);
+      return changed ? next : prev;
+    });
+  }, [published, isLoading]);
+
+  // Accessories stay only with their outfit: removing (or lowering) the outfit takes its accessories with it
+  useEffect(() => {
+    const { cart: fixed, removed } = enforceLooks(cart);
+    if (fixed === cart) return;
+    setCartByShopper(fixed);
+    if (removed.length) {
+      const names = [...new Set(removed)].join(', ');
+      setTimeout(() => showToast(`${names} ${removed.length === 1 ? 'was' : 'were'} removed: accessories are sold only with their outfit.`, 'info'), 0);
+    }
+  }, [cart]);
 
   // Toast Helper
   const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
@@ -850,22 +758,28 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Add to Cart with size validation & quiet sync response (openDrawer defaults to false)
   const addToCart = (
-    product: Product, 
-    size: ProductSize, 
-    color?: ProductColor, 
+    product: Product,
+    size: ProductSize,
+    color?: ProductColor,
     quantity: number = 1,
     openDrawer: boolean = false
   ) => {
+    // Bags, heels and jewellery are sold only with their outfit, from "Complete the look" (addLookToBag)
+    if (isAccessory(product)) {
+      showToast('This accessory is available only with its outfit, in Complete the look.', 'info');
+      return;
+    }
     const chosenSize = size || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'M');
     const chosenColor = color || (product.colors && product.colors.length > 0 ? product.colors[0] : { name: 'Standard', hex: '#241D1B' });
 
     const itemId = `${product.id}-${chosenSize}-${chosenColor.name.replace(/\s+/g, '-').toLowerCase()}`;
-    
-    setCart((prev) => {
+
+    const cap = qtyCapFor(product);
+    setCartByShopper((prev) => {
       const existing = prev.find((item) => item.id === itemId);
       if (existing) {
         return prev.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === itemId ? { ...item, quantity: Math.min(cap, item.quantity + quantity) } : item
         );
       }
       return [
@@ -875,7 +789,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           product,
           selectedSize: chosenSize,
           selectedColor: chosenColor,
-          quantity,
+          quantity: Math.min(cap, quantity),
         },
       ];
     });
@@ -888,6 +802,50 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     showToast(`Added "${product.name}" (${chosenSize}) to your bag! 🛍️`, 'success');
   };
 
+  // "Complete the look": the outfit (unless it is already in the bag) plus the chosen accessories, each linked to it
+  const addLookToBag = (
+    outfit: Product,
+    outfitSize: ProductSize,
+    outfitColor: ProductColor | undefined,
+    outfitQty: number,
+    picks: Array<{ product: Product; size: ProductSize; color?: ProductColor }>,
+  ) => {
+    if (isAccessory(outfit)) return false;
+    const parentId = String(outfit.id);
+    const current = cartRef.current || [];
+    const colorOf = (p: Product, c?: ProductColor) => c || (p.colors && p.colors.length > 0 ? p.colors[0] : { name: 'Standard', hex: '#241D1B' });
+    const outfitColour = colorOf(outfit, outfitColor);
+    const outfitLineId = `${outfit.id}-${outfitSize}-${outfitColour.name.replace(/\s+/g, '-').toLowerCase()}`;
+    const needsOutfit = outfitQtyIn(current, parentId) === 0;
+    const newPicks = picks.filter((pick) => isAccessory(pick.product) && !current.some((item) => item.id === lookLineId(pick.product, pick.size, colorOf(pick.product, pick.color), parentId)));
+    if (newPicks.length === 0 && !needsOutfit) return false;
+    if (current.length + newPicks.length + (needsOutfit ? 1 : 0) > MAX_BAG_LINES) {
+      showToast(`One order can hold up to ${MAX_BAG_LINES} different items. Remove a few from your bag first.`, 'error');
+      return false;
+    }
+    setCartByShopper((prev) => {
+      const next = [...prev];
+      if (outfitQtyIn(next, parentId) === 0) {
+        next.push({ id: outfitLineId, product: outfit, selectedSize: outfitSize, selectedColor: outfitColour, quantity: Math.min(qtyCapFor(outfit), Math.max(1, outfitQty)) });
+      }
+      newPicks.forEach((pick) => {
+        const colour = colorOf(pick.product, pick.color);
+        const id = lookLineId(pick.product, pick.size, colour, parentId);
+        if (!next.some((item) => item.id === id)) {
+          next.push({ id, product: pick.product, selectedSize: pick.size, selectedColor: colour, quantity: 1, lookParentId: parentId });
+        }
+      });
+      return next;
+    });
+    trackFunnelEvent('add_to_cart');
+    const count = newPicks.length;
+    showToast(needsOutfit
+      ? `Added your complete look: ${outfit.name}${count ? ` + ${count} ${count === 1 ? 'accessory' : 'accessories'}` : ''}.`
+      : `Added ${count} ${count === 1 ? 'accessory' : 'accessories'} to your ${outfit.name} look.`, 'success');
+    setIsCartDrawerOpen(true);
+    return true;
+  };
+
   // Buy Now: adds to cart and immediately routes straight to checkout
   const buyNow = (
     product: Product,
@@ -897,14 +855,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ) => {
     const selectedColor = color || (product.colors && product.colors.length > 0 ? product.colors[0] : { name: 'Standard', hex: '#241D1B' });
     const chosenSize = size || (product.sizes && product.sizes.length > 0 ? product.sizes[0] : 'M');
-    
+
     // Add product to cart
     const itemId = `${product.id}-${chosenSize}-${selectedColor.name.replace(/\s+/g, '-').toLowerCase()}`;
-    setCart((prev) => {
+    const cap = qtyCapFor(product);
+    setCartByShopper((prev) => {
       const existing = prev.find((item) => item.id === itemId);
       if (existing) {
+        // Buy now means exactly the quantity chosen on the product page, not added on top of the bag
         return prev.map((item) =>
-          item.id === itemId ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === itemId ? { ...item, product, quantity: Math.min(cap, quantity) } : item
         );
       }
       return [
@@ -914,7 +874,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
           product,
           selectedSize: chosenSize,
           selectedColor,
-          quantity,
+          quantity: Math.min(cap, quantity),
         },
       ];
     });
@@ -930,7 +890,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart((prev) => prev.filter((item) => item.id !== itemId));
+    setCartByShopper((prev) => prev.filter((item) => item.id !== itemId));
     showToast('Item removed from shopping bag.', 'info');
   };
 
@@ -939,13 +899,18 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       removeFromCart(itemId);
       return;
     }
-    setCart((prev) =>
-      prev.map((item) => (item.id === itemId ? { ...item, quantity } : item))
+    setCartByShopper((prev) =>
+      prev.map((item) => {
+        if (item.id !== itemId) return item;
+        const cap = qtyCapFor(item.product);
+        if (quantity > cap) showToast(`Only ${cap} piece${cap === 1 ? '' : 's'} available for this item.`, 'info');
+        return { ...item, quantity: Math.min(cap, quantity) };
+      })
     );
   };
 
   const updateCartItem = (itemId: string, updates: { size?: ProductSize; color?: ProductColor }) => {
-    setCart((prev) =>
+    setCartByShopper((prev) =>
       prev.map((item) => {
         if (item.id === itemId) {
           return {
@@ -961,7 +926,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const clearCart = () => {
-    setCart([]);
+    setCartByShopper([]);
     try {
       localStorage.removeItem('sag_cart_v1');
       localStorage.removeItem('sag_cart_backup');
@@ -974,12 +939,15 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Wishlist Actions
   const toggleWishlist = (product: Product) => {
+    if (isAccessory(product)) return; // accessories are only part of a complete look
     const exists = wishlist.some((item) => item.id === product.id);
+    wishlistPendingRef.current.set(String(product.id), exists ? null : product);
     if (exists) {
       setWishlist((prev) => prev.filter((item) => item.id !== product.id));
       showToast(`Removed "${product.name}" from Wishlist.`, 'info');
     } else {
       setWishlist((prev) => [...prev, product]);
+      trackItem('wishlist_add', String(product.id));
       showToast(`Added "${product.name}" to your Wishlist!`, 'success');
     }
   };
@@ -990,63 +958,41 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const moveToCartFromWishlist = (product: Product, size: ProductSize = 'M') => {
     addToCart(product, size, product.colors[0] || { name: 'Default', hex: '#241D1B' }, 1);
+    wishlistPendingRef.current.set(String(product.id), null);
     setWishlist((prev) => prev.filter((item) => item.id !== product.id));
   };
 
   // Coupon Logic
-  const applyCoupon = (code: string): boolean => {
+  const applyCoupon = async (code: string): Promise<boolean> => {
     const cleanCode = code.trim().toUpperCase();
-    
-    // Find matching coupon in our fetched list or defaults
-    let found = coupons.find(c => c.code.toUpperCase() === cleanCode);
-    if (!found) {
-      found = DEFAULT_COUPONS.find(c => c.code.toUpperCase() === cleanCode);
-    }
-
-    if (!found) {
-      showToast('Invalid coupon code. Try AURA10, FESTIVE15, ROYAL200, BLISS500, FIRSTSUIT, or ARTISAN12!', 'error');
+    if (!cleanCode) return false;
+    try {
+      const result = await ordersApi<{ coupon: Coupon }>('check-coupon', { couponCode: cleanCode, subtotal: cartSubtotal });
+      // Category / product limits and the per-customer limit come from the shop's coupon list
+      // (the server enforces them again when the order is priced).
+      const listed = coupons.find((c) => c.code.trim().toUpperCase() === String(result.coupon.code).toUpperCase());
+      const next: Coupon = {
+        ...result.coupon,
+        startDate: '',
+        expiryDate: '',
+        usageLimit: 0,
+        usageCount: 0,
+        isActive: true,
+        perUserLimit: listed?.perUserLimit || 0,
+        allowedCategories: listed?.allowedCategories || [],
+        allowedProductIds: listed?.allowedProductIds || [],
+      };
+      if (isCouponRestricted(next) && couponEligibleSubtotal(next, cart) <= 0) {
+        showToast(`${next.code}: ${couponRestrictionNotes(next)[0] || 'not valid on the items in your bag'}. Add an eligible item to use it.`, 'error');
+        return false;
+      }
+      setAppliedCoupon(next);
+      showToast(`Coupon ${result.coupon.code} applied.`, 'success');
+      return true;
+    } catch (error: any) {
+      showToast(error?.message || 'This coupon code is not valid.', 'error');
       return false;
     }
-
-    // Check if active
-    if (!found.isActive) {
-      showToast('This coupon is currently inactive.', 'error');
-      return false;
-    }
-
-    // Check Expiry
-    const now = new Date();
-    const startsAt = new Date(found.startDate);
-    if (found.startDate && Number.isFinite(startsAt.getTime()) && now < startsAt) {
-      showToast('This coupon is not active yet.', 'error');
-      return false;
-    }
-
-    const expiry = new Date(found.expiryDate);
-    // Set expiry to end of day
-    expiry.setHours(23, 59, 59, 999);
-    
-    if (now > expiry) {
-      showToast('This coupon has expired.', 'error');
-      return false;
-    }
-
-    // Check Min Order Value
-    if (cartSubtotal < found.minOrderValue) {
-      const diff = found.minOrderValue - cartSubtotal;
-      showToast(`Add ₹${diff.toLocaleString('en-IN')} more to unlock coupon ${found.code} (Min Order: ₹${found.minOrderValue.toLocaleString('en-IN')})`, 'error');
-      return false;
-    }
-
-    // Check Usage Limit
-    if (found.usageCount >= found.usageLimit) {
-      showToast('Coupon usage limit reached.', 'error');
-      return false;
-    }
-
-    setAppliedCoupon(found);
-    showToast(`🎉 Coupon ${found.code} applied successfully!`, 'success');
-    return true;
   };
 
   const removeCoupon = () => {
@@ -1055,14 +1001,17 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Navigation Helpers
-  const navigateToProduct = (productOrId: string | Product) => {
+  const navigateToProduct = (productOrId: string | Product) => withPageTransition(() => {
+    // Accessories have no page of their own; they are shown only in their outfit's "Complete the look"
+    const target = typeof productOrId === 'object' && productOrId !== null ? productOrId : published.find((p) => String(p.id) === String(productOrId));
+    if (target && isAccessory(target)) return;
     let pId: string;
     if (typeof productOrId === 'object' && productOrId !== null) {
       pId = productOrId.id;
       setSelectedProduct(productOrId);
     } else {
       pId = String(productOrId);
-      const found = products.find(p => String(p.id) === pId) || allProducts.find(p => String(p.id) === pId);
+      const found = published.find(p => String(p.id) === pId);
       if (found) {
         setSelectedProduct(found);
       }
@@ -1070,12 +1019,12 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setSelectedProductId(pId);
     setActivePage('product-detail');
     navigate(`/product/${pId}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    window.scrollTo(0, 0);
+  });
 
   const navigateToCategory = (
     category: ProductCategory | 'Sale' | 'New Arrivals' | 'Best Sellers' | 'Trending' | 'All'
-  ) => {
+  ) => withPageTransition(() => {
     setSelectedCategory(category);
     setActivePage('shop');
     if (category === 'All') {
@@ -1084,8 +1033,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const slug = categoryToSlug(category);
       navigate(`/category/${slug}`);
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    window.scrollTo(0, 0);
+  });
 
   const navigateToPage = (page: ActivePage) => {
     const paths: Partial<Record<ActivePage, string>> = {
@@ -1116,54 +1065,69 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Cart Metrics
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-  
-  // Dynamic Shipping Fee synchronized with Store Settings / AI Storefront Controller
-  const [storeShippingSettings, setStoreShippingSettings] = useState<{ shippingCharge: number; freeShippingThreshold: number }>(() => {
-    try {
-      const saved = localStorage.getItem('sag_store_settings');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          shippingCharge: Number(parsed.shippingCharge) || 0,
-          freeShippingThreshold: Number(parsed.freeShippingThreshold) || 0,
-        };
-      }
-    } catch {}
-    return { shippingCharge: 0, freeShippingThreshold: 0 };
-  });
 
+  const [storeShippingSettings, setStoreShippingSettings] = useState({ shippingCharge: 0, freeShippingThreshold: 0, prepaidDiscount: 0 });
+  const [couponsEnabled, setCouponsEnabled] = useState(true);
   useEffect(() => {
-    const syncShipping = () => {
-      try {
-        const saved = localStorage.getItem('sag_store_settings');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setStoreShippingSettings({
-            shippingCharge: Number(parsed.shippingCharge) || 0,
-            freeShippingThreshold: Number(parsed.freeShippingThreshold) || 0,
-          });
-        }
-      } catch {}
+    const apply = (value: any) => {
+      setStoreShippingSettings({
+        shippingCharge: Math.max(0, Number(value?.shippingCharge) || 0),
+        freeShippingThreshold: Math.max(0, Number(value?.freeShippingThreshold) || 0),
+        prepaidDiscount: Math.max(0, Number(value?.prepaidDiscount) || 0),
+      });
+      setCouponsEnabled(value?.couponsEnabled !== false);
     };
-    window.addEventListener('storage', syncShipping);
-    window.addEventListener('sag_settings_updated', syncShipping);
-    return () => {
-      window.removeEventListener('storage', syncShipping);
-      window.removeEventListener('sag_settings_updated', syncShipping);
-    };
+    return fromCatalogOrLive(
+      (catalog) => apply(catalog.settings.storeSettings || {}),
+      () => onSnapshot(fsDoc(db, 'storefront_settings', 'storeSettings'), (snapshot) => {
+        try {
+          apply(snapshot.exists() ? JSON.parse(snapshot.data().value_json || '{}') : {});
+        } catch {}
+      }, () => {}),
+    );
   }, []);
+
+  const [comboOffer, setComboOffer] = useState<ComboOfferConfig | null>(null);
+  useEffect(() => {
+    const apply = (value: any) => setComboOffer(value && value.enabled && Number(value.percent) > 0 ? {
+      enabled: true,
+      percent: Math.min(50, Number(value.percent) || 0),
+      minItems: Math.max(2, Number(value.minItems) || 2),
+      title: value.title || '',
+      subtitle: value.subtitle || '',
+    } : null);
+    return fromCatalogOrLive(
+      (catalog) => apply(catalog.settings.comboOffer || null),
+      () => onSnapshot(fsDoc(db, 'storefront_settings', 'comboOffer'), (snapshot) => {
+        try {
+          apply(snapshot.exists() ? JSON.parse(snapshot.data().value_json || 'null') : null);
+        } catch {
+          setComboOffer(null);
+        }
+      }, () => setComboOffer(null)),
+    );
+  }, []);
+  // Only outfit pieces unlock the combo offer (same rule as the server); the percentage comes off the whole subtotal.
+  const comboPieces = comboPiecesIn(cart);
+  const comboDiscount = comboOffer && comboPieces >= comboOffer.minItems ? Math.round((cartSubtotal * comboOffer.percent) / 100) : 0;
+  const afterComboSubtotal = cartSubtotal - comboDiscount;
 
   const freeShippingThreshold = storeShippingSettings.freeShippingThreshold;
   const standardShippingCharge = storeShippingSettings.shippingCharge;
-  const shippingFee = (freeShippingThreshold > 0 && cartSubtotal >= freeShippingThreshold) || standardShippingCharge === 0 
-    ? 0 
+  const shippingFee = (freeShippingThreshold > 0 && cartSubtotal >= freeShippingThreshold) || standardShippingCharge === 0
+    ? 0
     : standardShippingCharge;
 
   // Dynamic Discount Calculation
   let discountAmount = 0;
+  // A category / product-limited coupon applies only to its lines' share of the post-combo amount (same as the server)
+  const couponEligible = appliedCoupon ? Math.min(cartSubtotal, couponEligibleSubtotal(appliedCoupon, cart)) : 0;
+  const couponBase = appliedCoupon && couponEligible < cartSubtotal && cartSubtotal > 0
+    ? Math.round((afterComboSubtotal * couponEligible) / cartSubtotal)
+    : afterComboSubtotal;
   if (appliedCoupon) {
     if (appliedCoupon.discountType === 'percentage') {
-      discountAmount = Math.round((cartSubtotal * appliedCoupon.discountValue) / 100);
+      discountAmount = Math.round((couponBase * appliedCoupon.discountValue) / 100);
       if (appliedCoupon.maxDiscount && discountAmount > appliedCoupon.maxDiscount) {
         discountAmount = appliedCoupon.maxDiscount;
       }
@@ -1173,21 +1137,37 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const cartTotal = Math.max(0, cartSubtotal - discountAmount + (cart.length > 0 ? shippingFee : 0));
+  discountAmount = Math.min(discountAmount, couponBase, afterComboSubtotal);
+  const cartTotal = Math.max(0, afterComboSubtotal - discountAmount + (cart.length > 0 ? shippingFee : 0));
+  const prepaidDiscount = cart.length > 0 ? Math.min(storeShippingSettings.prepaidDiscount, Math.max(0, afterComboSubtotal - discountAmount - 1)) : 0;
+
+  // Drop a coupon whose minimum order is no longer met (the server would reject it anyway).
+  useEffect(() => {
+    if (appliedCoupon && (cart.length === 0 || cartSubtotal < (appliedCoupon.minOrderValue || 0))) {
+      setAppliedCoupon(null);
+      if (cart.length > 0) showToast(`Coupon ${appliedCoupon.code} removed: minimum order is ₹${appliedCoupon.minOrderValue.toLocaleString('en-IN')}.`, 'info');
+    } else if (appliedCoupon && isCouponRestricted(appliedCoupon) && couponEligible <= 0) {
+      // No eligible item left in the bag for a category / product-limited coupon
+      setAppliedCoupon(null);
+      showToast(`Coupon ${appliedCoupon.code} removed: ${(couponRestrictionNotes(appliedCoupon)[0] || 'no eligible items in your bag').replace(/^V/, 'v')}.`, 'info');
+    }
+  }, [cartSubtotal, cart.length, appliedCoupon, couponEligible]);
 
   return (
     <ShopContext.Provider
       value={{
         products,
         allProducts,
+        accessories,
         isLoading,
         getProductById,
         cart,
         wishlist,
         activePage,
-        setActivePage: (p) => {
+        syncActivePage: setActivePage,
+        setActivePage: (p) => withPageTransition(() => {
           navigateToPage(p);
-        },
+        }),
         selectedCategory,
         setSelectedCategory,
         selectedProductId,
@@ -1219,6 +1199,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast,
         showToast,
         addToCart,
+        addLookToBag,
         buyNow,
         removeFromCart,
         updateCartQuantity,
@@ -1232,6 +1213,13 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         shippingFee,
         discountAmount,
         cartTotal,
+        prepaidDiscount,
+        comboDiscount,
+        comboOffer,
+        comboPieces,
+        freeShippingThreshold,
+        storeOffers: storeShippingSettings,
+        maxQtyPerItem: MAX_QTY_PER_ITEM,
         navigateToProduct,
         navigateToCategory,
         trackOrderNumber,
@@ -1243,7 +1231,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isPincodeModalOpen,
         setIsPincodeModalOpen,
         mergeGuestCartOnAuth,
-        coupons
+        // The owner can switch coupons off (Admin → Settings → Checkout): then none are listed anywhere
+        coupons: couponsEnabled ? coupons : NO_COUPONS
       }}
     >
       {children}

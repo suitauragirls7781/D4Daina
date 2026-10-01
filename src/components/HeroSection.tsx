@@ -10,7 +10,7 @@ type LiveHeroSlide = HeroBannerConfig['slides'][number] & { rawProduct?: Product
 const HERO_CATEGORY_LINKS = ['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
 
 export const HeroSection: React.FC = () => {
-  const { navigateToCategory, navigateToProduct, products } = useShop();
+  const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
   const { heroConfig, isLoading } = useAdmin();
 
   const liveProductSlides = React.useMemo<LiveHeroSlide[]>(() => {
@@ -38,19 +38,19 @@ export const HeroSection: React.FC = () => {
           );
           if (matchedProd) {
             const livePrice = Number(matchedProd.price) || slide.price;
-            const liveOrigPrice = Number(matchedProd.originalPrice) || Math.round(livePrice * 1.85);
+            const liveOrigPrice = Math.max(livePrice, Number(matchedProd.originalPrice) || livePrice);
             const liveImg = matchedProd.images && matchedProd.images.length > 0
               ? matchedProd.images[0]
               : ((matchedProd as any).image || slide.image);
             return {
               ...slide,
               productId: matchedProd.id,
-              title: matchedProd.name || slide.title,
+              title: slide.customText ? slide.title : (matchedProd.name || slide.title),
               price: livePrice,
               originalPrice: liveOrigPrice,
               // A dedicated banner photo wins over the product's own photo
               image: slide.bannerImage || liveImg || slide.image,
-              subtitle: matchedProd.fabric || (matchedProd.description ? matchedProd.description.slice(0, 65) + '...' : slide.subtitle),
+              subtitle: slide.customText ? slide.subtitle : (matchedProd.fabric || (matchedProd.description ? matchedProd.description.slice(0, 65) + '...' : slide.subtitle)),
               rawProduct: matchedProd,
             };
           }
@@ -117,9 +117,11 @@ export const HeroSection: React.FC = () => {
 
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="grid min-h-[420px] animate-pulse grid-cols-1 bg-[#180306] lg:grid-cols-12">
-        <div className="aspect-[4/5] bg-[#D7B77A]/10 lg:col-span-7 lg:aspect-auto" />
-        <div className="hidden bg-[#D7B77A] lg:col-span-5 lg:block" />
+      <div className="bg-[#F3EEF8] px-4 py-6 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl grid gap-6 lg:grid-cols-12 animate-pulse">
+          <div className="aspect-[4/5] rounded-3xl bg-white/70 lg:col-span-7" />
+          <div className="hidden rounded-3xl bg-white/60 lg:col-span-5 lg:block" />
+        </div>
       </div>
     );
   }
@@ -127,122 +129,161 @@ export const HeroSection: React.FC = () => {
   const currentSlide = slides[currentSlideIdx] || slides[0];
   if (!currentSlide) return null;
 
-  const slidePrice = Number(currentSlide.price) || 1150;
-  const originalPrice = Number(currentSlide.originalPrice) || Math.round(slidePrice * 1.95);
-  const discountPercent = (originalPrice > 0 && !isNaN(originalPrice) && !isNaN(slidePrice))
-    ? Math.max(0, Math.round(((originalPrice - slidePrice) / originalPrice) * 100))
-    : 0;
+  const slidePrice = Number(currentSlide.price) || 0;
+  const originalPrice = Math.max(slidePrice, Number(currentSlide.originalPrice) || slidePrice);
+  const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
+
+  const count = slides.length;
+  const swipe = {
+    onTouchStart: (event: React.TouchEvent) => setTouchStart(event.touches[0].clientX),
+    onTouchEnd: (event: React.TouchEvent) => {
+      if (touchStart === null) return;
+      const delta = touchStart - event.changedTouches[0].clientX;
+      if (delta > 45) handleNext();
+      if (delta < -45) handlePrev();
+      setTouchStart(null);
+    },
+  };
+
   return (
-    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full border-y border-[#D7B77A]/35 bg-[#180306]">
+    <section id="haute-couture-hero" aria-label="Featured collection" className="relative w-full overflow-hidden bg-[#F3EEF8]">
+      {/* Soft brand backdrop (plain shapes, never over the photo) */}
+      <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#E6DDF0]" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#F7E4EA]/70" />
+
       <div
-        className="mx-auto grid max-w-[1440px] lg:grid-cols-12"
+        className="relative mx-auto max-w-7xl px-4 pt-4 pb-7 sm:px-6 sm:pt-6 lg:px-8 lg:py-12 grid lg:gap-10 lg:grid-cols-12 lg:items-center"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        <button
-          type="button"
-          onClick={() => handleSlideClick(currentSlide)}
-          onTouchStart={(event) => setTouchStart(event.touches[0].clientX)}
-          onTouchEnd={(event) => {
-            if (touchStart === null) return;
-            const delta = touchStart - event.changedTouches[0].clientX;
-            if (delta > 45) handleNext();
-            if (delta < -45) handlePrev();
-            setTouchStart(null);
-          }}
-          className="group relative block w-full cursor-pointer overflow-hidden bg-[#180306] text-left lg:col-span-7"
-          aria-label={`View ${currentSlide.title}`}
-        >
-          <div className="relative aspect-[4/5] max-h-[78vh] w-full lg:aspect-auto lg:h-full lg:min-h-[640px]">
-            {/* Blurred fill so any photo ratio fills the frame without cropping the outfit */}
-            <img
-              src={getCleanImageUrl(currentSlide.image, 400) || ELEGANT_PLACEHOLDER_SVG}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl opacity-60"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#D7B77A]/35 via-transparent to-transparent" aria-hidden="true" />
-            <img
-              src={getCleanImageUrl(currentSlide.image, 1200) || ELEGANT_PLACEHOLDER_SVG}
-              alt={currentSlide.title || 'Featured Suit Aura Girls design'}
-              className="relative h-full w-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
-              loading="eager"
-              decoding="async"
-              onError={(event) => {
-                if (!event.currentTarget.src.includes('data:image/svg+xml')) {
-                  event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
-                }
-              }}
-            />
-          </div>
-          <span className="sr-only">Open featured design</span>
-        </button>
+        {/* Photo */}
+        <div className="relative lg:col-span-7">
+          <button
+            type="button"
+            onClick={() => handleSlideClick(currentSlide)}
+            {...swipe}
+            className="group relative block w-full overflow-hidden rounded-[28px] bg-white text-left cursor-pointer shadow-[0_30px_60px_-36px_rgba(75,29,63,0.55)] ring-1 ring-[#4B1D3F]/10"
+            aria-label={`View ${currentSlide.title}`}
+          >
+            <div className="relative aspect-[4/5] w-full sm:aspect-square lg:aspect-[4/5] xl:aspect-[5/5.6]">
+              <img
+                key={currentSlide.image}
+                src={getCleanImageUrl(currentSlide.image, 1200) || ELEGANT_PLACEHOLDER_SVG}
+                alt={currentSlide.title || 'Featured Suit Aura Girls design'}
+                className="sag-kenburns h-full w-full object-cover object-top"
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+                onError={(event) => {
+                  if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
+                }}
+              />
+            </div>
+          </button>
+        </div>
 
-        <div className="flex min-h-[360px] flex-col justify-between bg-[#180306] border-t border-[#D7B77A]/15 lg:border-t-0 lg:border-l px-6 py-8 text-[#F7F0E5] sm:px-10 sm:py-11 lg:col-span-5 lg:px-12 lg:py-14">
-          <div>
-            <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#E8D2A4] sm:text-xs">
-              {currentSlide.badge || 'Jaipur artisan edit'}
-            </p>
-            <p className="mb-3 text-[10px] uppercase tracking-[0.18em] text-[#F7F0E5]/65">
-              {currentSlide.rawProduct?.category || 'Hand-finished in Jaipur'}
-            </p>
-            <h1 className="max-w-xl font-serif text-4xl font-medium leading-[1.04] sm:text-5xl lg:text-6xl">
-              {currentSlide.title}
-            </h1>
-            <p className="mt-5 max-w-md text-sm leading-relaxed text-[#F7F0E5]/80 sm:text-base">
-              {currentSlide.subtitle || 'A considered silhouette, crafted for the moments you make your own.'}
-            </p>
-
-            <div className="mt-8 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-[#D7B77A]/35 pt-5">
-              <span className="font-serif text-2xl font-semibold text-[#F7F0E5] sm:text-3xl">
-                ₹{slidePrice.toLocaleString('en-IN')}
-              </span>
-              {originalPrice > slidePrice && (
-                <span className="text-sm text-[#F7F0E5]/55 line-through">
-                  ₹{originalPrice.toLocaleString('en-IN')}
-                </span>
-              )}
-              {discountPercent > 0 && (
-                <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E8D2A4]">
-                  Save {discountPercent}%
-                </span>
+        {/* Details: compact card on phones (tucked under the photo), full panel on desktop */}
+        <div className="relative z-10 -mt-10 mx-3 sm:mx-8 lg:mx-0 lg:mt-0 lg:col-span-5">
+          <div className="rounded-3xl bg-white px-5 py-4 sm:px-7 sm:py-6 lg:bg-transparent lg:p-0 shadow-[0_18px_40px_-24px_rgba(42,26,38,0.45)] lg:shadow-none border border-[#4B1D3F]/10 lg:border-0">
+            <div className="flex items-center justify-between gap-3">
+              <p className="sag-eyebrow truncate">{currentSlide.badge || 'New season edit'}</p>
+              {count > 1 && (
+                <p className="shrink-0 text-xs tabular-nums text-[#2A1A26]/55">
+                  <span className="font-semibold text-[#4B1D3F]">{String(currentSlideIdx + 1).padStart(2, '0')}</span> / {String(count).padStart(2, '0')}
+                </p>
               )}
             </div>
 
-            <button
-              type="button"
-              id="hero-view-style-btn"
-              onClick={() => handleSlideClick(currentSlide)}
-              className="mt-7 inline-flex min-h-12 items-center justify-center gap-3 bg-[#D7B77A] px-6 text-xs font-bold uppercase tracking-[0.14em] text-[#E8D2A4] transition-colors hover:bg-[#D7B77A]"
-            >
-              Discover this design <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
+            <div key={currentSlide.id || currentSlideIdx} className="sag-slide-in">
+              <h1 className="mt-1.5 lg:mt-4 font-serif text-[24px] leading-[1.15] sm:text-4xl lg:text-5xl xl:text-[56px] lg:leading-[1.04] text-[#4B1D3F] line-clamp-2 lg:line-clamp-3">
+                {currentSlide.title}
+              </h1>
+              <p className="hidden lg:block mt-4 max-w-md text-[15px] leading-relaxed text-[#2A1A26]/70 line-clamp-2">
+                {currentSlide.subtitle || 'Considered silhouettes and hand-finished details, made for the moments you make your own.'}
+              </p>
+            </div>
 
-          <div className="mt-10 flex items-center justify-between border-t border-[#D7B77A]/35 pt-5">
-            <div className="flex items-center gap-2" aria-label={`Slide ${currentSlideIdx + 1} of ${slides.length}`}>
-              <span className="font-serif text-lg text-[#E8D2A4]">{String(currentSlideIdx + 1).padStart(2, '0')}</span>
-              <span className="text-xs text-[#F7F0E5]/45">/ {String(slides.length).padStart(2, '0')}</span>
-              <span className="ml-2 max-w-[140px] truncate text-xs text-[#F7F0E5]/75">{currentSlide.title}</span>
-            </div>
-            <div className={`flex items-center gap-2 ${slides.length > 1 ? '' : 'hidden'}`}>
+            {slidePrice > 0 && (
+              <div className="mt-2.5 lg:mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span className="text-xl lg:text-3xl font-semibold text-[#2A1A26]">₹{slidePrice.toLocaleString('en-IN')}</span>
+                {originalPrice > slidePrice && <span className="text-sm text-[#2A1A26]/55 line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
+                {discountPercent > 0 && <span className="rounded-full bg-[#F7E4EA] px-2.5 py-0.5 text-xs font-semibold text-[#8A2E55]">{discountPercent}% off</span>}
+                {storeOffers.prepaidDiscount > 0 && (
+                  <span className="hidden sm:inline-flex rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                    Extra ₹{storeOffers.prepaidDiscount} off on online payment
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="mt-4 lg:mt-8 flex gap-2.5">
               <button
                 type="button"
-                onClick={handlePrev}
-                aria-label="Previous featured design"
-                className="flex h-10 w-10 items-center justify-center border border-[#D7B77A]/50 text-[#F7F0E5] transition-colors hover:bg-[#180306]/10"
+                id="hero-view-style-btn"
+                onClick={() => handleSlideClick(currentSlide)}
+                className="sag-btn-primary flex-1 lg:flex-none inline-flex h-12 items-center justify-center gap-2 px-7 text-xs font-semibold uppercase tracking-[0.16em] cursor-pointer"
               >
-                <ChevronLeft className="h-4 w-4" />
+                Shop now <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 type="button"
-                onClick={handleNext}
-                aria-label="Next featured design"
-                className="flex h-10 w-10 items-center justify-center border border-[#D7B77A]/50 text-[#F7F0E5] transition-colors hover:bg-[#180306]/10"
+                id="hero-explore-btn"
+                onClick={() => navigateToCategory('All')}
+                className="sag-btn-outline inline-flex h-12 items-center justify-center px-5 lg:px-7 text-xs font-semibold uppercase tracking-[0.16em] cursor-pointer"
               >
-                <ChevronRight className="h-4 w-4" />
+                <span className="lg:hidden">Explore</span>
+                <span className="hidden lg:inline">Explore collection</span>
               </button>
             </div>
+
+            {count > 1 && (
+              <div className="mt-4 lg:mt-10">
+                {/* Desktop: the other designs as small photos */}
+                <div className="hidden lg:flex flex-wrap gap-3 mb-5" role="tablist" aria-label="Featured designs">
+                  {slides.map((slide, index) => (
+                    <button
+                      key={slide.id || index}
+                      type="button"
+                      role="tab"
+                      aria-selected={index === currentSlideIdx}
+                      aria-label={`Show ${slide.title}`}
+                      onClick={() => setCurrentSlideIdx(index)}
+                      className={`h-20 w-16 overflow-hidden rounded-xl bg-white transition-all cursor-pointer ${index === currentSlideIdx ? 'ring-2 ring-[#4B1D3F] ring-offset-2 ring-offset-[#F3EEF8]' : 'opacity-60 hover:opacity-100 ring-1 ring-[#4B1D3F]/10'}`}
+                    >
+                      <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-1 items-center gap-1.5" role="tablist" aria-label="Slide progress">
+                    {slides.map((slide, index) => (
+                      <button
+                        key={slide.id || index}
+                        type="button"
+                        role="tab"
+                        aria-selected={index === currentSlideIdx}
+                        aria-label={`Show ${slide.title}`}
+                        onClick={() => setCurrentSlideIdx(index)}
+                        className="relative h-1 flex-1 max-w-16 overflow-hidden rounded-full bg-[#4B1D3F]/15 cursor-pointer"
+                      >
+                        <span
+                          key={index === currentSlideIdx ? `on-${currentSlideIdx}` : 'off'}
+                          className={`absolute inset-y-0 left-0 rounded-full bg-[#4B1D3F] ${index < currentSlideIdx ? 'w-full' : index === currentSlideIdx ? (isPaused ? 'w-full' : 'sag-hero-progress') : 'w-0'}`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="ml-auto flex items-center gap-2">
+                    <button type="button" onClick={handlePrev} aria-label="Previous design" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] hover:bg-[#4B1D3F] hover:text-white transition-colors cursor-pointer">
+                      <ChevronLeft className="h-4 w-4 text-current" />
+                    </button>
+                    <button type="button" onClick={handleNext} aria-label="Next design" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] hover:bg-[#4B1D3F] hover:text-white transition-colors cursor-pointer">
+                      <ChevronRight className="h-4 w-4 text-current" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

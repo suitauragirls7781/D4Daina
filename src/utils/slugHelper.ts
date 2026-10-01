@@ -1,5 +1,6 @@
 export function categoryToSlug(category: string): string {
   if (!category || category === 'All') return 'all';
+  if (category === 'Kids & Toys') return 'kids-toys';
   return category
     .toLowerCase()
     .trim()
@@ -33,6 +34,14 @@ export function slugToCategory(slug: string): string {
     'new-arrivals': 'New Arrivals',
     'best-sellers': 'Best Sellers',
     'trending': 'Trending',
+    'kids': 'Kids',
+    'kids-toys': 'Kids & Toys',
+    'kids-and-toys': 'Kids & Toys',
+    'baby-girls': 'Baby Girls',
+    'girls': 'Baby Girls',
+    'baby-boys': 'Baby Boys',
+    'boys': 'Baby Boys',
+    'toys': 'Toys',
   };
 
   if (map[clean]) return map[clean];

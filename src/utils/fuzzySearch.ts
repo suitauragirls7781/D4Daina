@@ -61,28 +61,22 @@ function tokenFuzzyMatch(queryToken: string, targetToken: string): boolean {
   const q = queryToken.toLowerCase().trim();
   const t = targetToken.toLowerCase().trim();
 
-  // 1. Direct exact or substring match
-  if (t.includes(q) || q.includes(t)) return true;
+  // 1. The product word contains the query ("kurt" -> "kurta"); one-letter queries must match exactly.
+  if (q === t) return true;
+  if (q.length >= 4 ? t.includes(q) : q.length >= 2 && t.startsWith(q)) return true;
+  // The query contains a meaningful product word ("cottonsuit" -> "cotton").
+  if (t.length >= 4 && q.includes(t)) return true;
 
-  // 2. Prefix match (if query token is >= 3 chars)
-  if (q.length >= 3 && (t.startsWith(q) || q.startsWith(t))) return true;
-
-  // 3. Synonym dictionary lookup
+  // 2. Synonyms ("salwar" finds "suit"), compared on whole words or 3+ letter prefixes only.
+  const variantMatches = (v: string, word: string) => v === word || (word.length >= 3 && v.startsWith(word));
   for (const [canonical, synonyms] of Object.entries(ETHNIC_SYNONYMS)) {
     const allVariants = [canonical, ...synonyms];
-    const queryMatches = allVariants.some(v => v.includes(q) || q.includes(v));
-    const targetMatches = allVariants.some(v => v.includes(t) || t.includes(v));
-
-    if (queryMatches && targetMatches) {
-      return true;
-    }
+    if (allVariants.some(v => variantMatches(v, q)) && allVariants.some(v => variantMatches(v, t))) return true;
   }
 
-  // 4. Levenshtein Distance for typo tolerance
-  const maxAllowedDistance = q.length <= 4 ? 1 : q.length <= 7 ? 2 : 3;
-  const dist = levenshteinDistance(q, t);
-
-  return dist <= maxAllowedDistance;
+  // 3. Typo tolerance for longer words only ("georgete" -> "georgette").
+  if (q.length < 5 || t.length < 4 || Math.abs(q.length - t.length) > 2) return false;
+  return levenshteinDistance(q, t) <= (q.length <= 7 ? 1 : 2);
 }
 
 /**
@@ -102,14 +96,20 @@ export function fuzzyMatchProduct(product: any, searchQuery: string): boolean {
     product.subcategory || '',
     product.fabric || '',
     product.occasion || '',
+    product.fit || '',
+    product.sku || '',
+    ...(Array.isArray(product.tags) ? product.tags : []),
+    // Admin → product → SEO: extra words shoppers may search for
+    typeof product.searchKeywords === 'string' ? product.searchKeywords : '',
     product.description || '',
     ...(Array.isArray(product.colors) ? product.colors.map((c: any) => typeof c === 'string' ? c : c.name || '') : [])
   ].join(' ').toLowerCase();
 
-  // Direct substring match on entire query string
-  if (targetText.includes(rawQuery)) return true;
+  // Whole phrase at the start of a word ("floral dup" -> "floral dupatta")
+  const escaped = rawQuery.replace(/[.*+?^${}()|[\]\\]/g, (ch) => `\\${ch}`);
+  if (new RegExp(`(^|[^a-z0-9])${escaped}`).test(targetText)) return true;
 
-  const targetTokens = targetText.split(/[\s,/\-]+/).filter(Boolean);
+  const targetTokens = targetText.split(/[\s,/\-().]+/).filter((token) => token.length >= 2);
 
   // Every token in the user's search query must fuzzy-match at least one token in the product
   return queryTokens.every(qToken => {
