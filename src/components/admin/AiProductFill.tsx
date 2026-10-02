@@ -188,7 +188,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
           <p className="text-[12px] text-[#2A1A26]/55">
             Uses your free Gemini key {status.keyHint}{status.model ? ` · ${status.model}` : ''} ·{' '}
             <button type="button" onClick={() => { setEditingKey(true); setError(''); }} className="underline underline-offset-2 hover:text-[#4B1D3F] cursor-pointer">Change key</button>
-            {/* a key kept in the server settings (Vercel) cannot be removed from here */}
+            {/* a key kept as a Cloudflare Worker secret cannot be removed from here */}
             {!status.fromServer && <>{' · '}<button type="button" onClick={() => { if (window.confirm('Remove the Gemini key from the store?')) saveKey(true); }} className="underline underline-offset-2 hover:text-[#4B1D3F] cursor-pointer">Remove</button></>}
           </p>
         </div>

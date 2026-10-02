@@ -88,7 +88,7 @@ test('public settings: same settings as the catalogue, never cached', async () =
   assert.ok(![...h.edgeCache.entries.keys()].some((url) => url.endsWith('/api/admin-config')));
 });
 
-test('Worker responses carry the security headers vercel.json used to add', async () => {
+test('Worker responses carry the security headers', async () => {
   const response = await h.call('/api/admin-config');
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(response.headers.get('x-frame-options'), 'SAMEORIGIN');

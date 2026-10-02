@@ -13,6 +13,12 @@
 // longer holds it throws 'aborted' (the caller's transaction re-runs), otherwise it simply retries
 // with the fresh data, which is what makes concurrent increments both land.
 //
+// Counters are the exception. A merge-set that only puts plain values and increments on top-level fields
+// (the visitor and purchase counters) needs nothing from the stored document, so it is sent as a single
+// SQL upsert that adds inside SQLite: no read, no guard, nothing to conflict with. That is what Firestore's
+// increment is, and it keeps a paid order's commit from queueing behind visitor counting on the same
+// daily_analytics row. It still rides in the same batch, so it lands or rolls back with the rest.
+//
 // Versions. A new row gets (collection version + 1) and every later write adds 1, so a document that is
 // deleted and created again never repeats a version an older reader may still hold.
 
@@ -232,6 +238,54 @@ const dependsOnStored = (write) => {
   return Boolean(write.merge) || Array.isArray(write.mergeFields) || hasSentinel(write.data);
 };
 
+// A merge-set that can be applied without reading the document: every top-level field is a plain value
+// (string, number, boolean, null, date) or an increment. Returns its fields, or null when the write needs
+// the stored document (nested maps, arrays, other sentinels, unusual field names).
+const SIMPLE_FIELD = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const MAX_BLIND_FIELDS = 20; // keeps the statement far below D1's 100 bound parameters
+
+const blindMergeFields = (write) => {
+  if (write.type !== 'set' || write.merge !== true || Array.isArray(write.mergeFields) || !isPlainObject(write.data)) return null;
+  const entries = Object.entries(write.data).filter(([, value]) => value !== undefined);
+  if (entries.length === 0 || entries.length > MAX_BLIND_FIELDS) return null;
+  const fields = [];
+  for (const [key, value] of entries) {
+    if (!SIMPLE_FIELD.test(key)) return null;
+    if (isSentinel(value)) {
+      if (value.__op !== 'increment' || typeof value.n !== 'number' || !Number.isFinite(value.n)) return null;
+      fields.push({ key, increment: value.n });
+    } else if (value === null || isPrimitive(value)) {
+      fields.push({ key, value });
+    } else if (isTimestampLike(value)) {
+      fields.push({ key, value: isoOf(value) });
+    } else {
+      return null;
+    }
+  }
+  return fields;
+};
+
+// The upsert for such a write. A new document starts from the given values (an increment of nothing is
+// its amount); an existing one gets each field set in place, and an increment adds to the stored number
+// (or replaces a value that is not a number, as Firestore does).
+const blindMergeStatement = (d1, { collection, id }, fields, now) => {
+  const initial = Object.fromEntries(fields.map((field) => [field.key, field.increment ?? field.value]));
+  const params = [collection, id, JSON.stringify(initial), now];
+  const assignments = fields.map((field) => {
+    const path = `'$.${field.key}'`;
+    if (field.increment === undefined) {
+      params.push(JSON.stringify(field.value));
+      return `${path}, json(?${params.length})`;
+    }
+    params.push(field.increment);
+    const n = `?${params.length}`;
+    return `${path}, CASE WHEN json_type(docs.data, ${path}) IN ('integer', 'real') THEN json_extract(docs.data, ${path}) + ${n} ELSE ${n} END`;
+  });
+  return d1.prepare(`INSERT INTO docs (collection, id, data, version, created_at, updated_at)
+VALUES (?1, ?2, ?3, (SELECT COALESCE(MAX(version), 0) + 1 FROM collection_versions WHERE collection = ?1), ?4, ?4)
+ON CONFLICT (collection, id) DO UPDATE SET data = json_set(docs.data, ${assignments.join(', ')}), version = docs.version + 1, updated_at = excluded.updated_at`).bind(...params);
+};
+
 // ---------------------------------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------------------------------
@@ -448,13 +502,28 @@ export const createStore = (d1) => {
       const docPreconditions = preconditions.filter((p) => p.collectionVersion === undefined);
       const collectionPreconditions = preconditions.filter((p) => p.collectionVersion !== undefined);
 
+      // Counter writes go blind (see the top of this file), unless the caller read that document in its
+      // transaction or writes it more than once here: then it takes the guarded path like everything else.
+      const timesWritten = new Map();
+      for (const write of writes) timesWritten.set(keyOf(write.collection, write.id), (timesWritten.get(keyOf(write.collection, write.id)) || 0) + 1);
+      const guardedKeys = new Set(docPreconditions.map((p) => keyOf(p.collection, p.id)));
+      const blind = new Map(); // write -> its fields
+      for (const write of writes) {
+        const key = keyOf(write.collection, write.id);
+        const fields = timesWritten.get(key) === 1 && !guardedKeys.has(key) ? blindMergeFields(write) : null;
+        if (fields) blind.set(write, fields);
+      }
+      const guardedWrites = writes.filter((write) => !blind.has(write));
+
       const toRead = new Map();
-      for (const { collection, id } of [...docPreconditions, ...writes.filter(dependsOnStored)]) toRead.set(keyOf(collection, id), { collection, id });
+      for (const { collection, id } of [...docPreconditions, ...guardedWrites.filter(dependsOnStored)]) toRead.set(keyOf(collection, id), { collection, id });
       const watchedCollections = collectionPreconditions.map((p) => p.collection);
 
       for (let attempt = 1; attempt <= MAX_COMMIT_ATTEMPTS; attempt += 1) {
         if (attempt > 1) await pause(attempt);
-        const state = await readState([...toRead.values()], watchedCollections);
+        const state = toRead.size || watchedCollections.length
+          ? await readState([...toRead.values()], watchedCollections)
+          : { docs: new Map(), versions: new Map() };
 
         for (const p of docPreconditions) {
           const found = state.docs.get(keyOf(p.collection, p.id));
@@ -467,7 +536,7 @@ export const createStore = (d1) => {
         // Work out the final documents, write by write, so later writes see earlier ones.
         const now = new Date().toISOString();
         const final = new Map(); // key -> { collection, id, data | null }
-        for (const write of writes) {
+        for (const write of guardedWrites) {
           const key = keyOf(write.collection, write.id);
           const current = final.has(key) ? final.get(key).data : (state.docs.get(key)?.data ?? null);
           final.set(key, { collection: write.collection, id: write.id, data: applyWrite(current, write, now) });
@@ -489,7 +558,8 @@ export const createStore = (d1) => {
             ? d1.prepare(DELETE_SQL).bind(collection, id)
             : d1.prepare(UPSERT_SQL).bind(collection, id, JSON.stringify(data), now));
         }
-        for (const collection of new Set([...final.values()].map((doc) => doc.collection))) {
+        for (const [write, fields] of blind) statements.push(blindMergeStatement(d1, write, fields, now));
+        for (const collection of new Set(writes.map((write) => write.collection))) {
           statements.push(d1.prepare(BUMP_SQL).bind(collection, now));
         }
 

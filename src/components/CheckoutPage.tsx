@@ -138,6 +138,8 @@ export const CheckoutPage: React.FC = () => {
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [availablePostOffices, setAvailablePostOffices] = useState<any[]>([]);
   const [pincodeError, setPincodeError] = useState('');
+  // Shown when the PIN lookup service could not be reached (not an error: the shopper types city and state)
+  const [pincodeHint, setPincodeHint] = useState('');
 
   // Coupon Input State inside checkout
   const [couponCodeInput, setCouponCodeInput] = useState('');
@@ -354,9 +356,29 @@ export const CheckoutPage: React.FC = () => {
       const fetchPincodeDetails = async () => {
         setPincodeLoading(true);
         setPincodeError('');
+        setPincodeHint('');
         try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${address.pincode}`);
-          const data = await res.json();
+          // The lookup service being slow or down is not an invalid PIN: keep what the shopper typed,
+          // show no error, and let them fill in city and state by hand.
+          let data: any;
+          try {
+            const controller = new AbortController();
+            const timer = window.setTimeout(() => controller.abort(), 4000);
+            try {
+              const res = await fetch(`https://api.postalpincode.in/pincode/${address.pincode}`, { signal: controller.signal });
+              if (!res.ok) throw new Error('PIN lookup unavailable');
+              data = await res.json();
+            } finally {
+              window.clearTimeout(timer);
+            }
+          } catch {
+            setAvailablePostOffices([]);
+            // An earlier PIN the service called invalid emptied "area"; the street field fills both, so
+            // put it back or the shopper is asked for a street they have already typed.
+            setAddress(prev => (prev.area.trim() || !prev.street.trim() ? prev : { ...prev, area: prev.street }));
+            setPincodeHint('Could not look up this PIN. Please enter your city and state.');
+            return;
+          }
           if (data && data[0] && data[0].Status === 'Success') {
             const postOffices = data[0].PostOffice;
             if (postOffices && postOffices.length > 0) {
@@ -389,6 +411,7 @@ export const CheckoutPage: React.FC = () => {
     } else {
       setAvailablePostOffices([]);
       setPincodeError('');
+      setPincodeHint('');
     }
   }, [address.pincode]);
 
@@ -1027,6 +1050,9 @@ export const CheckoutPage: React.FC = () => {
                   {pincodeError && (
                     <p className="text-[11px] text-rose-700 font-bold mt-1">⚠️ {pincodeError}</p>
                   )}
+                  {!pincodeError && pincodeHint && (
+                    <p role="status" className="text-[12px] text-[#2A1A26]/70 mt-1">{pincodeHint}</p>
+                  )}
                 </div>
 
                 <div>
@@ -1079,6 +1105,11 @@ export const CheckoutPage: React.FC = () => {
                       className="w-full h-12 px-4 bg-white border border-[#4B1D3F]/15 rounded-xl text-[15px] text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:ring-2 focus:ring-[#4B1D3F]/15 focus:border-[#4B1D3F]/50 transition-colors"
                     >
                       <option value="" disabled>Select state</option>
+                      {/* The PIN lookup or a saved address can give a name that is not in the list
+                          ("Delhi", "Chandigarh"): show it, or the box would display the first state instead. */}
+                      {address.state && !INDIAN_STATES.includes(address.state) && (
+                        <option value={address.state}>{address.state}</option>
+                      )}
                       {INDIAN_STATES.map(s => (
                         <option key={s} value={s}>{s}</option>
                       ))}

@@ -199,7 +199,7 @@ export const AdminPaymentGateways: React.FC = () => {
             <p className="text-xs text-[#2A1A26]/60 mt-0.5">
               {!view.razorpay.configured
                 ? 'No keys yet — add them below.'
-                : `${view.razorpay.mode === 'live' ? 'Live' : 'Test'} keys in use (${view.razorpay.keyId}) · ${view.razorpay.source === 'admin' ? 'saved here' : 'from Vercel settings'}${view.razorpay.mode === 'test' ? ' · test mode is shown only to you, not to customers' : ''}.`}
+                : `${view.razorpay.mode === 'live' ? 'Live' : 'Test'} keys in use (${view.razorpay.keyId}) · ${view.razorpay.source === 'admin' ? 'saved here' : 'from the Cloudflare Worker secrets'}${view.razorpay.mode === 'test' ? ' · test mode is shown only to you, not to customers' : ''}.`}
             </p>
           </div>
           <Switch
@@ -223,7 +223,7 @@ export const AdminPaymentGateways: React.FC = () => {
             <div>
               <label className={label} htmlFor="rzp-key">Key ID</label>
               <input id="rzp-key" value={rzp.keyId} onChange={(e) => setRzp({ ...rzp, keyId: e.target.value.trim() })} autoComplete="off" className={`${input} font-mono bg-white`}
-                placeholder={view.razorpay.source === 'env' && view.razorpay.keyId ? `${view.razorpay.keyId} (from Vercel)` : 'rzp_live_… or rzp_test_…'} />
+                placeholder={view.razorpay.source === 'env' && view.razorpay.keyId ? `${view.razorpay.keyId} (from the Worker secrets)` : 'rzp_live_… or rzp_test_…'} />
             </div>
             <div>
               <label className={label} htmlFor="rzp-secret">Key Secret</label>
@@ -243,9 +243,9 @@ export const AdminPaymentGateways: React.FC = () => {
             </button>
             {view.razorpay.source === 'admin' && (
               <button type="button" disabled={saving !== ''}
-                onClick={() => { if (window.confirm('Remove the keys saved here and go back to the keys in Vercel settings?')) saveGateways('razorpay', { razorpay: { clearKeys: true } }); }}
+                onClick={() => { if (window.confirm('Remove the keys saved here and go back to the keys set as Cloudflare Worker secrets?')) saveGateways('razorpay', { razorpay: { clearKeys: true } }); }}
                 className="h-10 px-5 rounded-full border border-[#4B1D3F]/20 text-[#4B1D3F] text-[13px] font-semibold cursor-pointer hover:bg-white disabled:opacity-50">
-                Use Vercel keys instead
+                Use Worker secret keys instead
               </button>
             )}
           </div>

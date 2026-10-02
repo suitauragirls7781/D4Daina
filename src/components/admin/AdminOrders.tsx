@@ -23,6 +23,7 @@ import {
 import { Order, AdminOrderStatus } from '../../types';
 import { RETURN_STATUS_LABEL, isReturnOpen, returnRequestOf, returnStatusOf } from '../OrderProgress';
 import { PaymentBadge, orderStatusTone } from './PaymentBadge';
+import { formatOrderDate } from '../../utils/orderDate';
 
 /** Filter value for orders that have a return / exchange request (open ones first in the badge count). */
 const RETURNS_FILTER = '__returns';
@@ -234,7 +235,7 @@ export const AdminOrders: React.FC = () => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-mono text-[13px] font-semibold text-[#4B1D3F] truncate">{order.orderNumber}</p>
-                    <p className="text-[12px] text-[#2A1A26]/55">{order.date}</p>
+                    <p className="text-[12px] text-[#2A1A26]/55">{formatOrderDate(order.date)}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-base font-semibold text-[#2A1A26] tabular-nums">₹{order.finalTotal.toLocaleString('en-IN')}</p>
@@ -304,7 +305,7 @@ export const AdminOrders: React.FC = () => {
 
                       {/* 2. Date */}
                       <td className="py-4 px-3 text-[#2A1A26]/65 text-[12px] whitespace-nowrap">
-                        {order.date}
+                        {formatOrderDate(order.date)}
                       </td>
 
                       {/* 3. Customer */}

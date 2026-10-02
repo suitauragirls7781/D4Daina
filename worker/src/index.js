@@ -13,7 +13,7 @@ import * as sitemap from '../../api/sitemap.js';
 import * as razorpayWebhook from '../../api/webhooks/razorpay.js';
 
 /**
- * Worker entry. The handlers in api/** are the same files Vercel runs; this file only decides which one
+ * Worker entry. The handlers in api/** are plain Node-style (req, res) handlers; this file only decides which one
  * gets the request. Everything that is not an API path is a static file or the single-page app.
  */
 const API_MODULES = new Map([
@@ -26,12 +26,12 @@ const API_MODULES = new Map([
   ['/api/alerts', alerts],
   ['/api/sitemap', sitemap],
   ['/api/webhooks/razorpay', razorpayWebhook],
-  // vercel.json rewrote /sitemap.xml to /api/sitemap
+  // /sitemap.xml is answered by the sitemap handler
   ['/sitemap.xml', sitemap],
 ]);
 const DB_PATH = '/api/db';
 
-// vercel.json sent these with every response. public/_headers covers static files only, so responses
+// Sent with every response. public/_headers covers static files only, so responses
 // made by the Worker get them here.
 const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
@@ -50,7 +50,7 @@ const exposeEnv = (env) => {
 };
 
 /**
- * Seconds a response may be kept for every visitor, or 0. Vercel's edge did this for `s-maxage`; on Workers
+ * Seconds a response may be kept for every visitor, or 0. Nothing on Workers acts on `s-maxage` by itself, so
  * it has to be done by hand. Only plain 200 answers qualify: nothing with a cookie, and nothing that varies
  * by request header (the cache key is the URL alone, so such a response could reach the wrong visitor).
  */
@@ -104,6 +104,29 @@ const serverError = () => new Response(JSON.stringify({ error: 'Something went w
   headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store, max-age=0' },
 });
 
+/** Answers one API request. Never rejects: every failure becomes a 500 answer. */
+const answerApi = async (apiModule, path, request, env, ctx) => {
+  const startedAt = Date.now();
+  let response;
+  let cache = '';
+  try {
+    exposeEnv(env);
+    setEnv(env);
+    if (apiModule) ({ response, cache } = await serveApi(apiModule, request, ctx));
+    else response = await handleDb(request, env, ctx);
+  } catch (error) {
+    console.error(JSON.stringify({
+      level: 'error', message: 'Unhandled error in Worker', method: request.method, path, error: error?.message || String(error), stack: error?.stack,
+    }));
+    response = serverError();
+  }
+  // One line per API request. The query string is left out: it can hold tokens.
+  const line = JSON.stringify({ level: response.status >= 500 ? 'error' : 'info', message: 'api', method: request.method, path, status: response.status, ms: Date.now() - startedAt, cache });
+  if (response.status >= 500) console.error(line);
+  else console.log(line);
+  return withSecurityHeaders(response);
+};
+
 export default {
   async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
@@ -113,24 +136,12 @@ export default {
     // single-page-app fallback from wrangler.jsonc and the headers from public/_headers.
     if (!apiModule && path !== DB_PATH) return env.ASSETS.fetch(request);
 
-    const startedAt = Date.now();
-    let response;
-    let cache = '';
-    try {
-      exposeEnv(env);
-      setEnv(env);
-      if (apiModule) ({ response, cache } = await serveApi(apiModule, request, ctx));
-      else response = await handleDb(request, env, ctx);
-    } catch (error) {
-      console.error(JSON.stringify({
-        level: 'error', message: 'Unhandled error in Worker', method: request.method, path, error: error?.message || String(error), stack: error?.stack,
-      }));
-      response = serverError();
-    }
-    // One line per API request. The query string is left out: it can hold tokens.
-    const line = JSON.stringify({ level: response.status >= 500 ? 'error' : 'info', message: 'api', method: request.method, path, status: response.status, ms: Date.now() - startedAt, cache });
-    if (response.status >= 500) console.error(line);
-    else console.log(line);
-    return withSecurityHeaders(response);
+    // Workers stops a request's work when the caller goes away (a closed tab, Razorpay's 5-second webhook
+    // timeout) unless waitUntil holds it. The handlers were written for a runtime where a function always
+    // runs to its end: a payment is marked Paid first and the confirmation emails are sent after, and a
+    // retry would not send them again. So the whole request is held until it has finished.
+    const answer = answerApi(apiModule, path, request, env, ctx);
+    ctx.waitUntil(answer);
+    return answer;
   },
 };

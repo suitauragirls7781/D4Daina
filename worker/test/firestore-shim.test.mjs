@@ -346,6 +346,82 @@ test('transaction: gives up with ABORTED after its last attempt and leaves the d
   assert.equal((await db.collection('daily_analytics').doc('d').get()).exists, false);
 });
 
+// A database whose next batch() calls fail the way D1 does. `afterCommit` loses the answer of a batch
+// that did go through (the connection dropped on the way back).
+const failingD1 = (failures, { afterCommit = false } = {}) => {
+  const state = { batches: 0 };
+  setEnv({
+    DB: {
+      prepare: (sql) => d1.prepare(sql),
+      batch: async (statements) => {
+        state.batches += 1;
+        const message = failures.shift();
+        if (!message) return d1.batch(statements);
+        if (afterCommit) await d1.batch(statements);
+        throw new Error(message);
+      },
+    },
+  });
+  return state;
+};
+const UNAVAILABLE = 14;
+const RESOURCE_EXHAUSTED = 8;
+const markPaid = (ref) => db.runTransaction(async (tx) => {
+  const order = (await tx.get(ref)).data();
+  if (order.paymentStatus === 'Paid') return { changed: false };
+  tx.update(ref, { paymentStatus: 'Paid' });
+  tx.set(db.collection('daily_analytics').doc('d'), { date: 'd', purchases: FieldValue.increment(1) }, { merge: true });
+  return { changed: true };
+});
+
+test('D1 failures: a dropped call re-runs the transaction; one that did commit is not applied twice', async () => {
+  const ref = db.collection('orders').doc('SAG-1');
+  await ref.set({ paymentStatus: 'Unpaid' });
+  let state = failingD1(['D1_ERROR: Network connection lost.', 'D1_ERROR: D1 DB storage operation exceeded timeout which caused object to be reset.']);
+  assert.deepEqual(await markPaid(ref), { changed: true });
+  assert.equal(state.batches, 3);
+  assert.equal((await ref.get()).data().paymentStatus, 'Paid');
+  assert.deepEqual((await db.collection('daily_analytics').doc('d').get()).data(), { date: 'd', purchases: 1 });
+
+  // the batch went through but its answer was lost: the re-run finds the order Paid and writes nothing more
+  await ref.set({ paymentStatus: 'Unpaid' });
+  state = failingD1(['Network connection lost.'], { afterCommit: true });
+  assert.deepEqual(await markPaid(ref), { changed: false });
+  assert.equal(state.batches, 1);
+  assert.equal((await ref.get()).data().paymentStatus, 'Paid');
+  assert.equal((await db.collection('daily_analytics').doc('d').get()).data().purchases, 2);
+});
+
+test('D1 failures: the codes the handlers act on, and no blind retry outside a transaction', async () => {
+  const ref = db.collection('orders').doc('SAG-1');
+  await ref.set({ paymentStatus: 'Unpaid', n: 0 });
+
+  // refused work is not retried: the handler answers "busy" (orders) or pauses counting (tracking)
+  for (const message of ['D1_ERROR: D1 DB is overloaded. Requests queued for too long.', 'D1_ERROR: Too many API requests by single worker invocation.', 'Too many subrequests.']) {
+    const state = failingD1([message]);
+    await assert.rejects(markPaid(ref), (error) => error.code === RESOURCE_EXHAUSTED && /RESOURCE_EXHAUSTED/.test(error.message));
+    assert.equal(state.batches, 1);
+  }
+  // a reset is "unavailable" even when its text mentions a limit
+  failingD1(["D1_ERROR: D1 DB's isolate exceeded its memory limit and was reset."]);
+  await assert.rejects(ref.update({ n: 1 }), withCode(UNAVAILABLE));
+
+  // a single write is passed on at once: repeating an increment that did land would count twice
+  const state = failingD1(['D1_ERROR: Network connection lost.'], { afterCommit: true });
+  await assert.rejects(ref.update({ n: FieldValue.increment(1) }), withCode(UNAVAILABLE));
+  assert.equal(state.batches, 1);
+  assert.equal((await ref.get()).data().n, 1);
+
+  // a transaction that keeps losing the database gives up with the same code
+  failingD1(Array(5).fill('D1_ERROR: Network connection lost.'));
+  await assert.rejects(db.runTransaction(async (tx) => { tx.update(ref, { n: 9 }); }, { maxAttempts: 3 }), withCode(UNAVAILABLE));
+
+  // anything else keeps its own shape: a bug must not look like a busy database
+  failingD1(['D1_ERROR: no such table: docs']);
+  await assert.rejects(ref.update({ n: 2 }), (error) => error.code === undefined && /no such table/.test(error.message));
+  assert.equal((await ref.get()).data().paymentStatus, 'Unpaid');
+});
+
 test('transaction: the "mark paid once" flow of api/_lib/orders.js, run twice at the same time', async () => {
   await db.collection('orders').doc('SAG-1').set({ paymentStatus: 'Unpaid', status: 'Pending', couponId: 'c1', items: [{ product: { id: 'p1' }, quantity: 2 }, { product: { id: 'p2' }, quantity: 1 }], timeline: [] });
   await db.collection('products').doc('p1').set({ stockQuantity: 5, inStock: true });

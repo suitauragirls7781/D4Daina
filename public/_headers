@@ -1,4 +1,4 @@
-# Headers for static files on Cloudflare Workers Static Assets (same as "headers" in vercel.json).
+# Headers for static files on Cloudflare Workers Static Assets (the Worker itself never sees these requests).
 # Responses made by the Worker (/api/*, /sitemap.xml) get the security headers in worker/src/index.js.
 
 /*

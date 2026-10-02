@@ -2,8 +2,8 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 
 /**
- * Runs an unchanged Vercel-style Node handler `(req, res)` inside a Worker.
- * `req` and `res` behave the way Vercel's Node runtime makes them behave for the handlers in api/**:
+ * Runs an unchanged Node-style handler `(req, res)` inside a Worker.
+ * `req` and `res` behave the way the handlers in api/** expect from a Node server runtime:
  * parsed `req.query` / `req.body` / `req.cookies`, a readable stream of the exact request bytes, and the
  * usual `res.status().setHeader().end()` chain. The answer comes back as a fetch `Response`.
  */
@@ -86,9 +86,9 @@ const readBody = async (request, limit) => {
 };
 
 /**
- * What Vercel puts in `req.body`: an object for JSON and for form posts (PayU), a Buffer for
+ * What the handlers expect in `req.body`: an object for JSON and for form posts (PayU), a Buffer for
  * application/octet-stream, undefined when there is no Content-Type, and the text for anything else.
- * Broken JSON is a 400, as on Vercel.
+ * Broken JSON is a 400.
  */
 const parseBodyBytes = (raw, contentType) => {
   if (!contentType) return undefined;
@@ -137,7 +137,7 @@ const createReq = (request, raw, { rawBody }) => {
   req.connection = req.socket;
   req.httpVersion = '1.1';
 
-  // Parsed on first use, like Vercel. A handler that switched the parser off gets no body and reads the stream.
+  // Parsed on first use. A handler that switched the parser off gets no body and reads the stream.
   let parsed;
   let isParsed = Boolean(rawBody);
   Object.defineProperty(req, 'body', {

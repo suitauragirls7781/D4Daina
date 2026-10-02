@@ -1,7 +1,7 @@
 // Shared helpers for the local end-to-end checks: a guarded Chrome page, direct reads of the local D1
 // file, writes through `wrangler d1 execute --local`, and the Worker's request log.
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -194,6 +194,8 @@ export const d1Execute = (sql) => {
   const result = spawnSync(`npx wrangler d1 execute suitauragirls-db --local --persist-to ${quoted(PERSIST_DIR)} --file ${quoted(file)}`, {
     cwd: WORKER_DIR, shell: true, encoding: 'utf8',
   });
+  // The file can hold a copy of an order, so it does not stay behind.
+  rmSync(file, { force: true });
   if (result.status !== 0) throw new Error(`wrangler d1 execute failed: ${result.stderr || result.stdout}`);
 };
 

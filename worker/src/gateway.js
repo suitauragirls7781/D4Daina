@@ -28,6 +28,7 @@ const RESERVED_NAME = /^__.*__$/;
 const ID_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
 const ANONYMOUS = { admin: false, email: '', uid: '' };
+const WRITE_OPS = ['set', 'update', 'delete', 'add', 'commit'];
 
 /** An error whose code and message are safe to show to the browser. */
 class GatewayError extends Error {
@@ -83,6 +84,9 @@ const isSameOrigin = (request) => {
  * Identity from `Authorization: Bearer <token>`, same shape as getIdentity in api/_lib/http.js.
  * Admin tokens are also checked against revocation (logout / "sign out everywhere").
  * Only our own claims count: a Google credential verifies but carries neither, so it stays a plain visitor.
+ * A token that is refused (malformed, expired, revoked: tokens.js marks these with an `auth/` code) makes
+ * the caller a plain visitor. Any other failure, such as the database not answering the revocation check,
+ * is thrown: answering as "visitor" then would sign a valid admin out of the panel.
  */
 const resolveIdentity = async (request) => {
   const match = /^Bearer\s+(.+)$/i.exec(request.headers.get('authorization') || '');
@@ -95,9 +99,46 @@ const resolveIdentity = async (request) => {
       email: typeof decoded.customerEmail === 'string' ? decoded.customerEmail : '',
       uid: typeof decoded.uid === 'string' ? decoded.uid : '',
     };
-  } catch {
-    return ANONYMOUS;
+  } catch (error) {
+    if (String(error?.code).startsWith('auth/')) return ANONYMOUS;
+    throw error;
   }
+};
+
+/** How many documents an operation asks to write (0 for reads). */
+const writeCount = (op) => {
+  if (!isMap(op) || !WRITE_OPS.includes(op.op)) return 0;
+  return op.op === 'commit' && Array.isArray(op.writes) ? Math.max(op.writes.length, 1) : 1;
+};
+
+/**
+ * Takes `units` from a Cloudflare rate-limit binding (worker/wrangler.jsonc) for this key; false when the
+ * limit is reached. Where the binding is missing (tests, local runs) or fails, the answer is true: a
+ * broken limiter must never stop the store.
+ */
+const withinLimit = async (limiter, key, units = 1) => {
+  if (typeof limiter?.limit !== 'function') return true;
+  try {
+    for (let unit = 0; unit < units; unit += 1) {
+      if ((await limiter.limit({ key })).success === false) return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('[api/db] rate limiter failed:', error?.message || error);
+    return true;
+  }
+};
+
+/**
+ * Per-address limits for everyone but the admin, so one machine cannot use up the database's daily
+ * allowance, which the orders share: so many requests a minute, and so many written documents (a request
+ * that writes 20 documents counts 20 times). Answers the refusal, or null when the request may go on.
+ */
+const guestRefusal = async (request, env, ops) => {
+  const writes = ops.reduce((total, op) => total + writeCount(op), 0);
+  const address = request.headers.get('cf-connecting-ip') || 'unknown';
+  const allowed = await withinLimit(env?.DB_GUEST_REQUESTS, address) && await withinLimit(env?.DB_GUEST_WRITES, address, writes);
+  return allowed ? null : requestError(429, 'resource-exhausted', 'Too many requests. Please wait a minute and try again.');
 };
 
 // ---- request parsing (everything from the browser is untrusted) ----
@@ -305,7 +346,11 @@ const addOp = async (store, identity, op) => {
   return { id };
 };
 
-/** The browser's runTransaction: its reads come back as preconditions; a stale one answers `aborted`. */
+/**
+ * The browser's runTransaction: its reads come back as preconditions; a stale one answers `aborted`.
+ * Every precondition must be on a document the caller may read (the shim only has versions of documents
+ * it was allowed to get).
+ */
 const commitOp = async (store, identity, op) => {
   const rawWrites = op.writes ?? [];
   const rawPreconditions = op.preconditions ?? [];
@@ -320,6 +365,13 @@ const commitOp = async (store, identity, op) => {
     if (version !== null && (!Number.isInteger(version) || version < 0)) throw invalid('Invalid precondition version.');
     // version 0 is what a read of a missing document returned
     return { ...parsePath(precondition.path), version: version || null };
+  });
+  // A precondition answers "is this document still at version N?", which is a read. Firestore refuses a
+  // transaction read the rules do not allow; without the same check here, a visitor could learn which
+  // customers, orders or one-time codes exist by attaching them to a write they are allowed to make.
+  const read = await store.getMany(preconditions.map(({ collection, id }) => ({ collection, id })));
+  preconditions.forEach(({ collection, id }, index) => {
+    if (!allows(identity, collection, id, 'get', { existing: read[index] ? read[index].data : null })) throw denied();
   });
   await commitWrites(store, identity, writes, preconditions);
   return { ok: true };
@@ -366,17 +418,18 @@ const watchOp = async (store, identity, op) => {
   const docs = await store.getMany(docTargets.map(({ collection, id }) => ({ collection, id })));
   const located = new Map(docTargets.map((entry, position) => [entry.index, { ...entry, doc: docs[position] }]));
 
-  const results = [];
-  for (const [index, target] of targets.entries()) {
+  // Query targets run side by side (each is its own database round trip); Promise.all keeps the answers in
+  // the order the targets were sent, and every target still catches its own error.
+  const results = await Promise.all(targets.map(async (target, index) => {
     try {
       if (failures.has(index)) throw failures.get(index);
-      results.push(target.kind === 'doc'
+      return target.kind === 'doc'
         ? watchDocTarget(identity, target, located.get(index))
-        : await watchQueryTarget(store, identity, target));
+        : await watchQueryTarget(store, identity, target);
     } catch (error) {
-      results.push({ key: target.key, error: publicError(error, 'watch') });
+      return { key: target.key, error: publicError(error, 'watch') };
     }
-  }
+  }));
   return { targets: results };
 };
 
@@ -420,6 +473,10 @@ export const handleDb = async (request, env, ctx) => {
 
   try {
     const identity = await resolveIdentity(request);
+    if (!identity.admin) {
+      const refusal = await guestRefusal(request, env, ops);
+      if (refusal) return refusal;
+    }
     const store = createStore(getDB());
     const results = [];
     // In order, one after the other: a later operation may read what an earlier one wrote.

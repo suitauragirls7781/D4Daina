@@ -157,6 +157,33 @@ export const concurrencyScenarios = async (h) => {
     for (const order of placed) assert.equal(confirmationsFor(order.orderNumber).length, 1);
   });
 
+  test('three payments verified in the middle of a burst of 60 visitors: nobody waits for anybody', async () => {
+    await h.update('products', outfit.id, { stockQuantity: 20, inStock: true });
+    const placed = [];
+    for (let index = 0; index < 3; index += 1) placed.push(await unpaidOrder(`burst-${index}@example.test`));
+    const before = await daily();
+
+    const visits = Array.from({ length: 30 }, (_, index) => h.post('/api/track', { event: 'visit', visitorId: `vis_burst_${index}`, path: '/' }, { ip: h.nextIp() }));
+    const views = Array.from({ length: 30 }, () => h.post('/api/track', { event: 'product_view', productId: outfit.id }, { ip: h.nextIp() }));
+    const payments = placed.map((order, index) => verifyPayment(h, { ...order, paymentId: `pay_Burst_${index}` }));
+    const [paid, tracked] = await Promise.all([Promise.all(payments), Promise.all([...visits, ...views])]);
+
+    assert.deepEqual(statuses(paid), [200, 200, 200]);
+    for (const response of tracked) assert.deepEqual(response.body, { ok: true, counted: true });
+    const after = await daily();
+    assert.deepEqual(
+      [number(after.purchases) - number(before.purchases), number(after.visits) - number(before.visits), number(after.productViews) - number(before.productViews)],
+      [3, 30, 30],
+    );
+    assert.equal(await stock(), 17);
+    // The shared counter rows (daily_analytics, analytics_totals, product_daily) are written without a read
+    // or a guard, so no request is sent back to try again because of another one. What is left is the
+    // three payments racing each other for the product's stock row, which costs them a few rounds.
+    // Before, a visit in this burst needed up to 63 calls and the payments timed out.
+    assert.ok(Math.max(...tracked.map((response) => response.d1Calls)) <= 6, `tracking calls: ${tracked.map((response) => response.d1Calls)}`);
+    assert.ok(Math.max(...paid.map((response) => response.d1Calls)) <= 20, `verify calls: ${paid.map((response) => response.d1Calls)}`);
+  });
+
   // ---- limits under a race ----
 
   test('ten requests for a sign-in code for one address at once: one code is sent', async () => {

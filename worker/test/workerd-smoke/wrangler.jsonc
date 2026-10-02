@@ -1,0 +1,33 @@
+// Local-only smoke run of the real Worker (see check.mjs). Same compatibility settings and aliases as
+// worker/wrangler.jsonc. Never deployed: the database id is a placeholder and every value below is made up.
+{
+  "name": "sag-workerd-smoke",
+  "main": "entry.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "alias": {
+    "firebase-admin/app": "../../src/shims/firebase-admin-app.js",
+    "firebase-admin/firestore": "../../src/shims/firebase-admin-firestore.js",
+    "firebase-admin/auth": "../../src/shims/firebase-admin-auth.js"
+  },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "sag-smoke", "database_id": "00000000-0000-0000-0000-000000000000" }
+  ],
+  "vars": {
+    "SECURE_COOKIES": "1",
+    "TRACK_WRITE_BUDGET": "7000",
+    "AUTH_TOKEN_SECRET": "smoke-auth-token-secret",
+    "ADMIN_SESSION_SECRET": "smoke-admin-session-secret",
+    "ADMIN_INITIAL_USERNAME": "owner",
+    "ADMIN_INITIAL_PASSWORD": "Smoke-Passw0rd",
+    "ADMIN_INITIAL_PIN": "246810",
+    "RAZORPAY_KEY_ID": "rzp_live_SmokeKey00001",
+    "RAZORPAY_KEY_SECRET": "SmokeRazorpaySecret01",
+    "RAZORPAY_WEBHOOK_SECRET": "smoke-webhook-secret",
+    "BREVO_API_KEY": "smoke-brevo-key",
+    "BREVO_SENDER_EMAIL": "sender@store.example",
+    "CLOUDINARY_CLOUD_NAME": "smokecloud",
+    "CLOUDINARY_API_KEY": "123456789012345",
+    "CLOUDINARY_API_SECRET": "smoke-cloudinary-secret"
+  }
+}

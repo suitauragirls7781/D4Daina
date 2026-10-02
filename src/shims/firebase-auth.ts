@@ -286,11 +286,48 @@ export function shimOnTokenChange(watcher: (app: FirebaseApp) => void): void {
   tokenWatchers.add(watcher);
 }
 
+const ADMIN_SESSION_URL = '/api/admin-config?action=session';
+/** A renewed token that is refused again this soon is not renewed a second time: no request loops. */
+const RENEW_PAUSE_MS = 30000;
+const renewing = new Set<AuthImpl>();
+const lastRenewal = new Map<AuthImpl, number>();
+
 /**
- * The server refused this token (revoked, e.g. the admin signed out on another device). Signing out here
- * is what Firebase did when it could not refresh a session; the app then signs in again by itself.
+ * Firebase renewed a session by itself with its refresh token. The admin's equivalent is the admin cookie:
+ * while it is valid, the session endpoint hands out a fresh token. The refused token stays in place until
+ * the answer is in, so the app does not see a sign-out followed by a sign-in.
+ */
+async function renewAdminSession(auth: AuthImpl, refused: string) {
+  let next: Session | null = null;
+  try {
+    const response = await fetch(ADMIN_SESSION_URL, { credentials: 'same-origin' });
+    const body = response.ok ? await response.json() : null;
+    const session = sessionFromToken(auth, typeof body?.firebaseToken === 'string' ? body.firebaseToken : null, true);
+    if (session && session.token !== refused && decodeJwtPayload(session.token)?.admin === true) next = session;
+  } catch {
+    next = null;
+  } finally {
+    renewing.delete(auth);
+  }
+  // Unless the sign-in changed meanwhile (logout here, another tab): then that change stands.
+  if (auth.session?.token === refused) setSession(auth, next);
+}
+
+/**
+ * The server refused this token. A customer is signed out, which is what Firebase did when it could not
+ * refresh a session. An admin token is refused when it was revoked (security settings saved, logout on
+ * another device) although the admin cookie of this browser may still be good, so a new token is asked
+ * for once; the admin is signed out only when that fails.
  */
 export function shimRejectToken(app: FirebaseApp, token: string): void {
   const auth = implFor(app);
-  if (auth.session?.token === token) setSession(auth, null);
+  if (auth.session?.token !== token || renewing.has(auth)) return;
+  const renewedRecently = Date.now() - (lastRenewal.get(auth) ?? -RENEW_PAUSE_MS) < RENEW_PAUSE_MS;
+  if (decodeJwtPayload(token)?.admin !== true || renewedRecently) {
+    setSession(auth, null);
+    return;
+  }
+  renewing.add(auth);
+  lastRenewal.set(auth, Date.now());
+  void renewAdminSession(auth, token);
 }

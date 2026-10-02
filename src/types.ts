@@ -464,6 +464,7 @@ export type AdminTab =
   | 'reviews'
   | 'instagram'
   | 'payments'
+  | 'usage'
   | 'settings';
 
 /** An Instagram reel or post shown in the homepage "Follow the Aura" section. */

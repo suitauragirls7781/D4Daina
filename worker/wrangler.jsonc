@@ -17,7 +17,7 @@
   "assets": {
     "directory": "../dist-cf",
     "binding": "ASSETS",
-    // Any path that is not a file gets index.html (was the catch-all rewrite in vercel.json).
+    // Any path that is not a file gets index.html, so the single-page app handles the route.
     "not_found_handling": "single-page-application",
     // Without this, PayU's return (a browser form POST to /api/payu, i.e. a navigation) would get the app shell.
     "run_worker_first": ["/api/*", "/sitemap.xml"]
@@ -27,8 +27,24 @@
     { "binding": "DB", "database_name": "suitauragirls-db", "database_id": "bae4a715-99a3-4021-9d42-56843baed258" }
   ],
 
-  // The handlers add "Secure" to the admin cookie when VERCEL is "1".
-  "vars": { "VERCEL": "1" },
+  // Per-address limits on /api/db for everyone but the admin (src/gateway.js), so one machine cannot use up
+  // the database's daily allowance: 300 requests and 30 written documents a minute. An open page polls once
+  // a minute and a shopper saves a few documents per visit. If a limiter is missing or fails, requests pass.
+  // namespace_id only has to be unique within the Cloudflare account.
+  "ratelimits": [
+    { "name": "DB_GUEST_REQUESTS", "namespace_id": "1001", "simple": { "limit": 300, "period": 60 } },
+    { "name": "DB_GUEST_WRITES", "namespace_id": "1002", "simple": { "limit": 30, "period": 60 } }
+  ],
+
+  // The handlers add "Secure" to the admin cookie when SECURE_COOKIES is "1".
+  "vars": {
+    "SECURE_COOKIES": "1",
+    // Admin -> Usage & limits (api/_lib/usage.js): which account, database and Worker to read the usage of.
+    // These ids are not secret; the API token is the secret CLOUDFLARE_ANALYTICS_TOKEN.
+    "CLOUDFLARE_ACCOUNT_ID": "65142a242e92f18ec9db9798f3ac35b4",
+    "CLOUDFLARE_D1_ID": "bae4a715-99a3-4021-9d42-56843baed258",
+    "CLOUDFLARE_WORKER_NAME": "d4daina"
+  },
 
   "observability": { "enabled": true, "logs": { "enabled": true } }
 }

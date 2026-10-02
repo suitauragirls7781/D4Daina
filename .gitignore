@@ -7,7 +7,6 @@ coverage/
 .env*
 !.env.example
 
-.vercel
 .env*
 
 # Data exports for the migration (contain customer details: never commit)

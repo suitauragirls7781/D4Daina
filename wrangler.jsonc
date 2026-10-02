@@ -28,8 +28,18 @@
     { "binding": "DB", "database_name": "suitauragirls-db", "database_id": "bae4a715-99a3-4021-9d42-56843baed258" }
   ],
 
-  // The handlers mark cookies Secure when this is "1" (as on Vercel)
-  "vars": { "VERCEL": "1" },
+  // The handlers mark cookies Secure when this is "1"
+  "vars": {
+    "SECURE_COOKIES": "1",
+    // Admin -> Usage & limits (api/_lib/usage.js): which account, database and Worker to read the usage of.
+    // These ids are not secret; the API token is the secret CLOUDFLARE_ANALYTICS_TOKEN.
+    "CLOUDFLARE_ACCOUNT_ID": "65142a242e92f18ec9db9798f3ac35b4",
+    "CLOUDFLARE_D1_ID": "bae4a715-99a3-4021-9d42-56843baed258",
+    "CLOUDFLARE_WORKER_NAME": "d4daina",
+    // Visitor counting stops for the day at this budget (api/track.js) so orders keep their share of D1's
+    // 100,000 rows written a day. Measured on 2 Oct 2026: 8,000 budget units came to about 14,700 rows.
+    "TRACK_WRITE_BUDGET": "35000"
+  },
 
   // Secrets set on the Worker are kept when the Git build deploys
   "keep_vars": true,

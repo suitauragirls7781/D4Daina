@@ -45,7 +45,7 @@ export const readGateways = async (db, { fresh = false } = {}) => {
 export const clearGatewayCache = () => { cache = null; };
 
 /**
- * Razorpay keys in use: the ones saved in Admin → Payment Gateways, otherwise the Vercel environment variables.
+ * Razorpay keys in use: the ones saved in Admin → Payment Gateways, otherwise the secrets set on the Cloudflare Worker.
  * The mode follows the key itself (rzp_live_… / rzp_test_…).
  */
 export const razorpayCreds = (gateways) => {

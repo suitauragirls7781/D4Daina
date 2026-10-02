@@ -14,7 +14,7 @@ import {
   Image as ImageIcon,
   MessageSquare,
   Instagram,
-  Settings, CreditCard,
+  Settings, CreditCard, Gauge,
   LogOut,
   Store,
   Menu,
@@ -35,7 +35,7 @@ import {
 } from 'lucide-react';
 import { RotateCcw } from 'lucide-react';
 import { AdminTab } from '../../types';
-import { returnRows } from './AdminReturns';
+import { returnRows, waitingCancelRows } from './AdminReturns';
 import { departmentOf } from '../../utils/kids';
 import { isLowStock } from '../../utils/inventory';
 
@@ -68,20 +68,28 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // Return / exchange requests waiting for the admin's decision (orders are a live listener, so this is live)
   const rows = returnRows(orders);
   const waitingReturns = rows.filter((r) => r.state === 'requested');
+  // Cancellation requests not answered yet are shown on the same page, so they count on the same badge
+  const waitingCancels = waitingCancelRows(orders);
+  const waitingRequests = waitingReturns.length + waitingCancels.length;
 
   // Live alert: a request that arrives while the admin panel is open pops up once. Requests that were
   // already there when the panel opened are only counted on the badge, never announced again.
   const knownReturns = useRef<Set<string> | null>(null);
   useEffect(() => {
-    const keys = waitingReturns.map((r) => `${r.order.orderNumber}|${r.at}`);
+    const cancelKey = (r: { order: { orderNumber: string }; at: string }) => `cancel|${r.order.orderNumber}|${r.at}`;
+    const keys = [...waitingReturns.map((r) => `${r.order.orderNumber}|${r.at}`), ...waitingCancels.map(cancelKey)];
     if (knownReturns.current === null) {
       if (orders.length) knownReturns.current = new Set(keys);
       return;
     }
     const fresh = waitingReturns.filter((r) => !knownReturns.current!.has(`${r.order.orderNumber}|${r.at}`));
+    const freshCancels = waitingCancels.filter((r) => !knownReturns.current!.has(cancelKey(r)));
     keys.forEach((k) => knownReturns.current!.add(k));
     fresh.forEach((r) => {
       showToast(`New ${r.kind === 'exchange' ? 'exchange' : 'return'} request · ${r.order.orderNumber} · ${r.order.customerName || 'customer'}. Open Returns to approve or deny.`, 'info');
+    });
+    freshCancels.forEach((r) => {
+      showToast(`New cancellation request · ${r.order.orderNumber} · ${r.order.customerName || 'customer'}. Open Returns to cancel or keep the order.`, 'info');
     });
   }, [orders]);
 
@@ -94,7 +102,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'toys', label: 'Toys', route: '/admin/toys', icon: ToyBrick, group: 'Catalogue', badge: products.filter((p) => departmentOf(p) === 'toys').length },
     { id: 'categories', label: 'Categories', route: '/admin/categories', icon: Layers, group: 'Catalogue', badge: categories.length },
     { id: 'orders', label: 'Orders', route: '/admin/orders', icon: ShoppingBag, group: 'Sales', badge: pendingOrdersCount, alert: pendingOrdersCount > 0 },
-    { id: 'returns', label: 'Returns & Exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Sales', badge: waitingReturns.length, alert: waitingReturns.length > 0 },
+    { id: 'returns', label: 'Returns & Exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Sales', badge: waitingRequests, alert: waitingRequests > 0 },
     { id: 'customers', label: 'Customers', route: '/admin/customers', icon: Users, group: 'Sales' },
     { id: 'leads', label: 'Captured Leads', route: '/admin/leads', icon: MessageSquare, group: 'Sales' },
     { id: 'coupons', label: 'Coupons', route: '/admin/coupons', icon: Tag, group: 'Sales', badge: coupons.length },
@@ -109,6 +117,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'banners', label: 'Banners', route: '/admin/banners', icon: ImageIcon, group: 'Storefront' },
     { id: 'instagram', label: 'Instagram Reels', route: '/admin/instagram', icon: Instagram, group: 'Storefront' },
     { id: 'payments', label: 'Payment Gateways', route: '/admin/payments', icon: CreditCard, group: 'System' },
+    { id: 'usage', label: 'Usage & limits', route: '/admin/usage', icon: Gauge, group: 'System' },
     { id: 'settings', label: 'Settings', route: '/admin/settings', icon: Settings, group: 'System' },
   ];
 
@@ -264,7 +273,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             {/* Quick Notification Bell */}
             <div className="relative">
               <button
-                onClick={() => (waitingReturns.length
+                onClick={() => (waitingRequests
                   ? openAdminTab('returns')
                   : showToast(`Store Operational: ${pendingOrdersCount} pending orders, ${lowStockCount} low stock alerts.`, 'info'))}
                 className="w-10 h-10 flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors relative cursor-pointer"
@@ -272,8 +281,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 aria-label="Notifications"
               >
                 <Bell className="w-[18px] h-[18px]" />
-                {waitingReturns.length > 0 ? (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#8A2E55] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white" aria-label={`${waitingReturns.length} return requests waiting`}>{waitingReturns.length}</span>
+                {waitingRequests > 0 ? (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#8A2E55] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white" aria-label={`${waitingRequests} return or cancellation requests waiting`}>{waitingRequests}</span>
                 ) : pendingOrdersCount > 0 && (
                   <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#8A2E55] ring-2 ring-white" />
                 )}

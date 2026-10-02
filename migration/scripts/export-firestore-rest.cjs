@@ -2,7 +2,7 @@
 // Firestore REST API, signed in as the project owner with the login that firebase-tools keeps on this machine.
 //
 //   node migration/scripts/export-firestore-rest.cjs                        everything except analytics_dedup
-//   node migration/scripts/export-firestore-rest.cjs --skip none            all five collections
+//   node migration/scripts/export-firestore-rest.cjs --skip none            every server-only collection
 //   node migration/scripts/export-firestore-rest.cjs --skip rate_limits,customer_email_otps,analytics_dedup
 //
 // Writes <collection>.json (array of { id, data }, same shape as the browser export) into the newest
@@ -21,7 +21,14 @@ const PROJECT = require(path.join(ROOT, 'firebase-applet-config.json')).projectI
 const DATABASE = '(default)';
 const TOKEN_FILE = path.join(os.homedir(), '.config', 'configstore', 'firebase-tools.json');
 
-const COLLECTIONS = ['admin_credentials', 'private_settings', 'customer_email_otps', 'rate_limits', 'analytics_dedup'];
+// Every collection api/** uses that the browser export cannot read. The second line has no entry in
+// firestore.rules at all (only the server ever touched them), so the browser export does not even name them:
+// back-in-stock requests, shared wishlist links, photos attached to reviews and returns, helpful-vote
+// records, and what the price-drop alerts last saw and sent.
+const COLLECTIONS = [
+  'admin_credentials', 'private_settings', 'customer_email_otps', 'rate_limits', 'analytics_dedup',
+  'stock_alerts', 'shared_wishlists', 'review_photos', 'review_votes', 'return_photos', 'alert_state', 'alert_log',
+];
 // analytics_dedup only stops double counting of page views and can be very large, so it is left out unless asked for.
 const DEFAULT_SKIP = ['analytics_dedup'];
 const PAGE_SIZE = 300;

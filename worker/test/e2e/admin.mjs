@@ -55,12 +55,16 @@ try {
   const orders = d1Docs('orders');
   const paid = orders.filter(({ data }) => data.paymentStatus === 'paid' || data.paymentStatus === 'Paid');
   await sidebar('Orders').click();
-  const ordersText = await until(async () => {
+  // The page shows "Order Management (0)" until the orders listener has answered, so the counts are read
+  // again until they add up (or the wait runs out, and the last counts seen are reported).
+  let listed = NaN;
+  let unpaid = 0;
+  await until(async () => {
     const text = await mainText();
-    return /Order Management \(\d+\)/.test(text) ? text : '';
+    listed = Number(text.match(/Order Management \((\d+)\)/)?.[1]);
+    unpaid = Number(text.match(/unpaid checkout attempts \((\d+)\)/)?.[1] || 0);
+    return listed + unpaid === orders.length;
   });
-  const listed = Number(ordersText.match(/Order Management \((\d+)\)/)?.[1]);
-  const unpaid = Number(ordersText.match(/unpaid checkout attempts \((\d+)\)/)?.[1] || 0);
   check('orders page: listed + unpaid attempts = orders in local D1', listed + unpaid === orders.length, `${listed} + ${unpaid} of ${orders.length} (paid in D1: ${paid.length})`);
 
   // ---- d. one order's details ----

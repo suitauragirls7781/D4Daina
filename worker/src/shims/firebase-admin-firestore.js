@@ -18,7 +18,18 @@ const GRPC = {
   aborted: [10, 'ABORTED'],
 };
 const INVALID_ARGUMENT = 3;
+const RESOURCE_EXHAUSTED = 8;
 const ABORTED = 10;
+const UNAVAILABLE = 14;
+
+// What D1 says when it fails, sorted the way Firestore's codes are, because the handlers act on them:
+// 14 UNAVAILABLE = the connection or the database object was lost for a moment (a transaction runs again);
+// 8 RESOURCE_EXHAUSTED = D1 refuses work (overloaded, a plan limit): orders answer "busy", counting pauses.
+// The resets are tested first: "exceeded its memory limit and was reset" is a reset, not a plan limit.
+const D1_UNAVAILABLE = /network connection lost|\breset\b|transient issue|client disconnected/i;
+const D1_EXHAUSTED = /overloaded|too many|limit|quota/i;
+// D1 prefixes its errors (D1_ERROR, D1_EXEC_ERROR); the Workers runtime reports these two without one.
+const FROM_D1 = /\bD1_|^network connection lost|^too many (api requests|subrequests)/i;
 
 class FirestoreError extends Error {
   constructor(code, message) {
@@ -28,10 +39,20 @@ class FirestoreError extends Error {
   }
 }
 
+const d1Failure = (error) => {
+  const message = String(error?.message || '');
+  if (!(error instanceof Error) || error instanceof StoreError || !FROM_D1.test(message)) return null;
+  if (D1_UNAVAILABLE.test(message)) return new FirestoreError(UNAVAILABLE, `14 UNAVAILABLE: ${message}`);
+  if (D1_EXHAUSTED.test(message)) return new FirestoreError(RESOURCE_EXHAUSTED, `8 RESOURCE_EXHAUSTED: ${message}`);
+  return null;
+};
+
 const asFirestoreError = (error) => {
-  if (!(error instanceof StoreError) || !GRPC[error.code]) return error;
-  const [code, label] = GRPC[error.code];
-  return new FirestoreError(code, `${code} ${label}: ${error.message}`);
+  if (error instanceof StoreError && GRPC[error.code]) {
+    const [code, label] = GRPC[error.code];
+    return new FirestoreError(code, `${code} ${label}: ${error.message}`);
+  }
+  return d1Failure(error) || error;
 };
 
 const call = async (promise) => {
@@ -299,8 +320,11 @@ class Firestore {
 
   batch() { return new WriteBatch(this); }
 
-  // Runs the function again when another writer got in first (ABORTED). Any other error, including one
-  // thrown by the function itself, is passed on at once.
+  // Runs the function again when another writer got in first (ABORTED) or D1 dropped the call
+  // (UNAVAILABLE), as Firestore's SDK does. Running again after a lost call is safe even if that call did
+  // commit: the documents the function read have a new version, so it sees what was written (the order
+  // already Paid, the visit already counted) and does not write twice. Writes outside a transaction are
+  // never repeated here: an increment could count twice. Any other error is passed on at once.
   async runTransaction(updateFunction, { maxAttempts = TRANSACTION_ATTEMPTS } = {}) {
     for (let attempt = 1; ; attempt += 1) {
       const transaction = new Transaction(this);
@@ -309,7 +333,7 @@ class Firestore {
         await transaction.commit();
         return result;
       } catch (error) {
-        if (error?.code !== ABORTED || attempt >= maxAttempts) throw error;
+        if ((error?.code !== ABORTED && error?.code !== UNAVAILABLE) || attempt >= maxAttempts) throw error;
         await new Promise((done) => { setTimeout(done, retryDelayMs(attempt)); });
       }
     }

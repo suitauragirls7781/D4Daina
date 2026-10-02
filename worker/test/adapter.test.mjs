@@ -1,4 +1,4 @@
-// The Node adapter must give the unchanged api/** handlers the req / res they get on Vercel.
+// The Node adapter must give the unchanged api/** handlers the req / res they were written for.
 // Run: node --test worker/test/adapter.test.mjs
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -112,7 +112,7 @@ test('other body types: text stays a string, octet-stream a Buffer, no Content-T
   assert.deepEqual(empty.body, {});
 });
 
-test('broken JSON is answered with 400 when the handler reads req.body outside a try block (as Vercel does)', async () => {
+test('broken JSON is answered with 400 when the handler reads req.body outside a try block', async () => {
   const response = await runNodeHandler((req, res) => res.status(200).json(req.body), post('/api/orders', '{not json', { 'Content-Type': 'application/json' }));
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: 'Invalid JSON' });

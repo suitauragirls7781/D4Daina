@@ -1,4 +1,4 @@
-# Runbook: Vercel + Firebase -> Cloudflare Workers + D1
+# Runbook: Cloudflare Workers + D1 (moved from the old host and Firebase)
 
 All commands run in Git Bash from the repository root. `<cloud>` is the value of `CLOUDINARY_CLOUD_NAME` in
 `.env.migration` (public: it is part of every image URL). Secret values are never typed on a command line.
@@ -90,12 +90,10 @@ including Google sign-in.
 
 ## C. Rollback
 
-The Vercel project and Firestore are untouched by everything above, so going back is a DNS change only:
+There is no rollback to the old host any more. The old host was retired after the cut-over: its config file
+and project link were removed from the repository, and the store runs only on the Cloudflare Worker with its
+data in D1. Firestore holds the data as it was before the cut-over and gets no new orders.
 
-1. Cloudflare dashboard -> Worker -> Settings -> Domains & Routes: remove the custom domain(s).
-2. Cloudflare DNS for `suitauragirls.in`: `www` -> CNAME `cname.vercel-dns.com`, DNS only (grey cloud); apex
-   -> A `76.76.21.21`, DNS only (or the values Vercel -> Domains shows). (If the nameservers were never moved, nothing was changed and nothing is undone.)
-3. Orders and customers created on the Worker in the meantime exist only in D1. Save them before anything else:
-   `(cd worker && npx wrangler d1 export suitauragirls-db --remote --output ../migration/data/d1-after-cutover.sql)`
-   and enter those orders by hand, or switch back again once the fault is fixed.
-4. Stock changes and coupon uses made on the Worker are not in Firestore either: check stock in Admin after a rollback.
+If a deploy breaks the site, go back to the previous Worker version instead: Cloudflare dashboard ->
+Workers & Pages -> the Worker -> Deployments -> Rollback (or revert the commit and push). This does not
+change the data in D1.

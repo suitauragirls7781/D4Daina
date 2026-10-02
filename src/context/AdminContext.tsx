@@ -91,6 +91,10 @@ interface AdminContextType {
 
   // Orders
   orders: Order[];
+  /** True once the first orders snapshot has arrived (until then the list is empty because it is still loading). */
+  ordersLoaded: boolean;
+  /** Puts an order returned by /api/orders into the list straight away, without waiting for the next refresh. */
+  applyServerOrder: (row: any) => void;
   addOrder: (order: Order) => Promise<void>;
   updateOrderStatus: (
     orderNumber: string,
@@ -646,6 +650,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
   }, [categoryDocs, products]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>(() => {
     try {
       const saved = localStorage.getItem('sag_customers_local');
@@ -951,7 +956,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const unsubscribeOrders = watchCollection('orders', (rows) => {
       setOrders(rows.map(mapOrderFromDb));
-    });
+      setOrdersLoaded(true);
+    // If the list cannot be read at all, stop showing "loading" so the pages do not wait for ever
+    }, () => setOrdersLoaded(true));
     const unsubscribeCoupons = watchCollection('coupons', (rows) => {
       setCoupons(rows.map(mapCouponFromDb));
     });
@@ -1579,6 +1586,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateCategory,
         deleteCategory,
         orders,
+        ordersLoaded,
+        applyServerOrder,
         addOrder,
         updateOrderStatus,
         updateOrderPaymentStatus,

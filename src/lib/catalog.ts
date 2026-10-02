@@ -1,6 +1,6 @@
 /**
  * The shoppers' shared catalogue: products, categories, approved reviews, active coupons and the public store
- * settings in ONE request (/api/admin-config?action=catalog). Vercel's CDN keeps each copy for a few minutes and
+ * settings in ONE request (/api/admin-config?action=catalog). Cloudflare's cache keeps each copy for a few minutes and
  * hands the same answer to every visitor, so the database is read a few times an hour instead of on every visit.
  *
  * The admin panel, an admin browsing the store and local development keep reading Firestore live (changes show

@@ -44,7 +44,7 @@ export const AdminDashboardOverview: React.FC = () => {
   const {
     products = [],
     orders = [],
-    customers = [],
+    ordersLoaded,
     setAdminTab,
     updateOrderStatus,
     lowStockThreshold,
@@ -186,7 +186,8 @@ export const AdminDashboardOverview: React.FC = () => {
   const totalOrders = revenueOrders.length;
   const pendingOrders = paidOrders.filter((o) => o.status === 'Processing' || o.status === 'Packed').length;
   const returnRequests = paidOrders.filter((o) => (o.returnRequest?.status ? ['requested', 'approved', 'received'].includes(o.returnRequest.status) : o.status === 'Refund Requested')).length;
-  const totalCustomers = customers.length;
+  // Cancellation requests the owner has not answered yet (answered on the Returns page)
+  const cancelRequests = orders.filter((o) => o.cancelRequest && !o.cancelRequest.handledAt).length;
   const totalRevenue = revenueOrders.reduce((sum, ord) => sum + ord.finalTotal, 0);
   const todayRevenue = revenueOrders.filter((o) => String(o.date).startsWith(todayStr)).reduce((sum, ord) => sum + ord.finalTotal, 0);
 
@@ -218,8 +219,8 @@ export const AdminDashboardOverview: React.FC = () => {
   const salesTiles = [
     { label: 'Revenue (paid)', value: `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`, note: `Today ₹${Math.round(todayRevenue).toLocaleString('en-IN')} · ${totalOrders} orders`, icon: IndianRupee },
     { label: 'Average order value', value: `₹${totalOrders > 0 ? Math.round(totalRevenue / totalOrders).toLocaleString('en-IN') : 0}`, note: 'Paid, not cancelled', icon: TrendingUp },
-    { label: 'To pack & ship', value: String(pendingOrders), note: 'Processing or packed', icon: Truck, highlight: pendingOrders > 0 },
-    { label: 'Return requests', value: String(returnRequests), note: `${totalCustomers} registered customers`, icon: Users },
+    { label: 'To pack & ship', value: String(pendingOrders), note: 'Processing or packed', icon: Truck, highlight: ordersLoaded && pendingOrders > 0 },
+    { label: 'Returns & cancellations', value: String(returnRequests + cancelRequests), note: cancelRequests > 0 ? `${cancelRequests} cancellation ${cancelRequests === 1 ? 'request' : 'requests'} waiting` : 'Waiting or in progress', icon: Users, highlight: ordersLoaded && cancelRequests > 0 },
   ];
 
   return (
@@ -285,8 +286,8 @@ export const AdminDashboardOverview: React.FC = () => {
                 <tile.icon className="w-3.5 h-3.5 shrink-0" />
                 <span className="leading-tight">{tile.label}</span>
               </div>
-              <p className={`text-2xl font-serif font-semibold mt-2 tabular-nums leading-none ${tile.highlight ? 'text-[#8A2E55]' : 'text-[#2A1A26]'}`}>{tile.value}</p>
-              <p className="text-[12px] text-[#2A1A26]/55 mt-2 leading-snug">{tile.note}</p>
+              <p className={`text-2xl font-serif font-semibold mt-2 tabular-nums leading-none ${tile.highlight ? 'text-[#8A2E55]' : 'text-[#2A1A26]'}`}>{ordersLoaded ? tile.value : '…'}</p>
+              <p className="text-[12px] text-[#2A1A26]/55 mt-2 leading-snug">{ordersLoaded ? tile.note : 'Loading orders…'}</p>
             </div>
           ))}
         </div>

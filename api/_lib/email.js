@@ -172,7 +172,7 @@ const PAYMENT_LABELS = { razorpay: 'Online · Razorpay', payu: 'Online · PayU' 
  */
 export const sendNewOrderAlert = async (order, to) => {
   if (!to) throw new Error('NO_STORE_EMAIL');
-  const adminUrl = `${SITE_URL}/admin/orders/${encodeURIComponent(order.orderNumber)}`;
+  const adminUrl = `${SITE_URL}/drdaina/orders/${encodeURIComponent(order.orderNumber)}`;
   const city = [order.deliveryAddress?.city, order.deliveryAddress?.state].map((part) => String(part || '').trim()).filter(Boolean).join(', ');
   const method = PAYMENT_LABELS[order.paymentMethod] || 'Online';
   const count = (order.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);

@@ -31,7 +31,7 @@ BREVO_SENDER_EMAIL=
 GEMINI_API_KEY=
 
 # Optional. JSON whose "private_key" keys the ids of customer reviews (api/reviews.js). Keep the value used
-# on Vercel so customers can still edit the reviews they already wrote; without it a fixed default is used.
+# before the move to Cloudflare so customers can still edit the reviews they already wrote; without it a fixed default is used.
 FIREBASE_SERVICE_ACCOUNT=
 
 # Optional. Google sign-in client id (default: the one in src/utils/googleSignIn.ts).
@@ -39,3 +39,7 @@ GOOGLE_CLIENT_ID=
 
 # Optional. Daily cap on analytics writes (default 8000).
 TRACK_WRITE_BUDGET=
+
+# Optional. Cloudflare API token with "Account Analytics: Read": Admin -> Usage & limits shows today's real
+# usage with it. The account id, database id and Worker name are plain vars in wrangler.jsonc.
+CLOUDFLARE_ANALYTICS_TOKEN=

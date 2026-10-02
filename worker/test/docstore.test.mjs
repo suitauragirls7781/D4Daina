@@ -320,6 +320,105 @@ test('concurrent increments of one counter all land', async () => {
   assert.deepEqual(await store.getDoc('daily_analytics', 'day'), { id: 'day', data: { visits: 8 }, version: 8 });
 });
 
+// Counts the D1 round trips a store makes and what kind they were.
+const counting = (d1) => {
+  const calls = { reads: 0, batches: 0 };
+  const counted = (statement) => ({
+    statement,
+    bind: (...params) => counted(statement.bind(...params)),
+    all: () => { calls.reads += 1; return statement.all(); },
+    first: (...args) => { calls.reads += 1; return statement.first(...args); },
+  });
+  return {
+    calls,
+    d1: {
+      prepare: (sql) => counted(d1.prepare(sql)),
+      batch: (statements) => {
+        if (/^SELECT/i.test(statements[0].statement.sql)) calls.reads += 1;
+        else calls.batches += 1;
+        return d1.batch(statements.map((entry) => entry.statement));
+      },
+    },
+  };
+};
+
+test('a counter write (merge-set of plain values and increments) is one upsert: no read, no guard, same result', async () => {
+  const d1 = createD1();
+  const { d1: countedD1, calls } = counting(d1);
+  const store = createStore(countedD1);
+  const bump = (data) => store.commit([set('daily_analytics', 'day', data, { merge: true })]);
+
+  // a document that does not exist yet
+  await bump({ date: 'day', visits: { __op: 'increment', n: 1 }, skipped: undefined });
+  assert.deepEqual(await createStore(d1).getDoc('daily_analytics', 'day'), { id: 'day', data: { date: 'day', visits: 1 }, version: 1 });
+  // an existing one: other fields stay, a missing or non-numeric field becomes the amount, plain values are kept exactly
+  await createStore(d1).commit([update('daily_analytics', 'day', { text: 'x', keep: { deep: [1] } })]);
+  const at = new Date('2026-10-02T10:00:00.000Z');
+  await bump({ visits: { __op: 'increment', n: 2 }, purchases: { __op: 'increment', n: 1 }, text: { __op: 'increment', n: 0.5 }, flag: true, off: false, none: null, label: 'it\'s "quoted"', n: 1.5, at });
+  assert.deepEqual(await createStore(d1).getDoc('daily_analytics', 'day'), {
+    id: 'day',
+    data: { date: 'day', visits: 3, text: 0.5, keep: { deep: [1] }, purchases: 1, flag: true, off: false, none: null, label: 'it\'s "quoted"', n: 1.5, at: at.toISOString() },
+    version: 3,
+  });
+  assert.equal(await createStore(d1).collectionVersion('daily_analytics'), 3);
+  assert.deepEqual(calls, { reads: 0, batches: 2 });
+  // typed queries still see the incremented number as a number
+  assert.equal((await createStore(d1).query({ collection: 'daily_analytics', where: [['visits', '==', 3]] })).length, 1);
+
+  // 60 visitors at once: every one lands on the first try
+  calls.batches = 0;
+  await Promise.all(Array.from({ length: 60 }, () => bump({ date: 'day', visits: { __op: 'increment', n: 1 } })));
+  assert.equal((await createStore(d1).getDoc('daily_analytics', 'day')).data.visits, 63);
+  assert.deepEqual(calls, { reads: 0, batches: 60 });
+});
+
+test('a counter write inside a guarded commit: the order is read and guarded, the counter is not, and both land or neither', async () => {
+  const d1 = createD1();
+  const plain = createStore(d1);
+  await plain.commit([set('orders', 'o', { paymentStatus: 'Unpaid' }), set('daily_analytics', 'day', { visits: 4 })]);
+  const read = await plain.getDoc('orders', 'o');
+  const paid = [update('orders', 'o', { paymentStatus: 'Paid' }), set('daily_analytics', 'day', { date: 'day', purchases: { __op: 'increment', n: 1 } }, { merge: true })];
+  const preconditions = [{ collection: 'orders', id: 'o', version: read.version }];
+
+  // visitors keep writing the counter row between this commit's read and its batch: no conflict, no retry
+  let batches = 0;
+  const racing = createStore(withRace(d1, async () => {
+    batches += 1;
+    await plain.commit([set('daily_analytics', 'day', { visits: { __op: 'increment', n: 1 } }, { merge: true })]);
+  }));
+  await racing.commit(paid, { preconditions });
+  assert.equal(batches, 1);
+  assert.deepEqual((await plain.getDoc('daily_analytics', 'day')).data, { visits: 5, date: 'day', purchases: 1 });
+  assert.equal((await plain.getDoc('orders', 'o')).data.paymentStatus, 'Paid');
+
+  // a stale order aborts the whole commit, counter included
+  await rejectsWith(plain.commit(paid, { preconditions }), 'aborted');
+  assert.equal((await plain.getDoc('daily_analytics', 'day')).data.purchases, 1);
+  assert.equal(await count(d1, 'tx_guard'), 0);
+});
+
+test('a counter write takes the guarded path when the caller read the document, writes it twice, or it is not a plain counter', async () => {
+  const d1 = createD1();
+  const { d1: countedD1, calls } = counting(d1);
+  const store = createStore(countedD1);
+  await store.commit([set('c', 'k', { count: 1 })]);
+  const inc = { __op: 'increment', n: 1 };
+
+  // read in the caller's transaction (the per-IP limits): a competing write must abort it
+  await createStore(d1).commit([set('c', 'k', { count: 5 })]);
+  await rejectsWith(store.commit([set('c', 'k', { count: inc }, { merge: true })], { preconditions: [{ collection: 'c', id: 'k', version: 1 }] }), 'aborted');
+  assert.equal((await store.getDoc('c', 'k')).data.count, 5);
+
+  calls.reads = 0;
+  await store.commit([set('c', 'k', { count: inc }, { merge: true }), set('c', 'k', { count: inc, day: 'd' }, { merge: true })]);
+  await store.commit([set('c', 'k', { per: { ip: inc } }, { merge: true })]);
+  await store.commit([set('c', 'k', { list: { __op: 'arrayUnion', values: [1] } }, { merge: true })]);
+  await store.commit([set('c', 'k', { 'odd key': 1, count: inc }, { merge: true })]);
+  assert.equal(calls.reads, 4);
+  assert.deepEqual((await store.getDoc('c', 'k')).data, { count: 8, day: 'd', per: { ip: 1 }, list: [1], 'odd key': 1 });
+  await rejectsWith(store.commit([set('c', 'k', { count: { __op: 'increment', n: 'x' } }, { merge: true })]), 'invalid-argument');
+});
+
 test('query: filters, sorting, limit, select', async () => {
   const { store } = fresh();
   await store.commit([

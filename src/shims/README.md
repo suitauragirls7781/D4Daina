@@ -30,8 +30,12 @@ fake timers, fake `localStorage` / `document`).
   `src/utils/googleSignIn.ts` posts to `/api/customer-auth`.
 - A token the server refuses is dropped: on `unauthenticated` / HTTP 401, and when a READ is answered
   `permission-denied` for a token with the `admin` claim (the admin may read everything the app reads, so
-  this only happens after the admin signed out elsewhere or changed the security settings). The admin
-  session check in `AdminContext` then signs in again with the fresh token from `/api/admin-config`.
+  this only happens after the admin signed out elsewhere or changed the security settings).
+- A refused ADMIN token is first renewed, as Firebase renewed a session with its refresh token: one
+  `GET /api/admin-config?action=session` (the admin cookie). On 200 the token is swapped in place, so the
+  app sees no sign-out and the listeners restart with the new token. Otherwise (no valid cookie, or a
+  renewed token refused again within 30 seconds) the admin is signed out and the session check in
+  `AdminContext` takes over.
 
 **Requests**
 

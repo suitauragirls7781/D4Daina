@@ -15,13 +15,22 @@ const summarise = (calls) => {
   return [...groups.entries()].sort((a, b) => b[1] - a[1]).map(([key, count]) => `    ${String(count).padStart(3)} x ${key}`).join('\n');
 };
 
-/** Runs `visit` and returns the API calls the browser made, cross-checked with the Worker's own log. */
+/**
+ * Runs `visit` in a fresh browser profile. `visit` gets `start()`, which it calls when the counting begins,
+ * and returns when it ends. The count from the browser is cross-checked with the Worker's own log.
+ */
 const measure = async (browser, name, visit) => {
   const { context, page, watch } = await openPage(browser);
-  const logStart = workerLog().lines;
-  const calls = await visit(page, watch);
+  let firstCall = 0;
+  let firstLogLine = workerLog().lines;
+  await visit(page, () => {
+    firstCall = watch.api.length;
+    firstLogLine = workerLog().lines;
+  });
+  const calls = watch.api.slice(firstCall);
+  // The Worker writes its log line a moment after it answers.
   await sleep(1000);
-  const logged = workerLog(logStart).requests.length;
+  const logged = workerLog(firstLogLine).requests.length;
   await context.close();
   console.log(`\n${name}: ${calls.length} Worker requests${DEV_LOG ? ` (Worker log: ${logged})` : ''}`);
   console.log(summarise(calls));
@@ -32,21 +41,19 @@ const browser = await launch();
 try {
   const product = d1Docs('products').find(({ data }) => data.hidden !== true && data.category === 'Suits');
 
-  const home = await measure(browser, 'New visitor, home page (20 s on the page)', async (page, watch) => {
+  const home = await measure(browser, 'New visitor, home page (20 s on the page, scrolled to the end)', async (page) => {
     await page.goto('/', { waitUntil: 'load' });
     await sleep(3000);
     await page.mouse.wheel(0, 6000);
     await sleep(17000);
-    return watch.api.slice();
   });
 
-  const productPage = await measure(browser, 'New visitor, product page (20 s on the page)', async (page, watch) => {
+  const productPage = await measure(browser, 'New visitor, product page (20 s on the page)', async (page) => {
     await page.goto(`/product/${product.id}`, { waitUntil: 'load' });
     await sleep(20000);
-    return watch.api.slice();
   });
 
-  const idle = await measure(browser, `Admin dashboard, idle for ${IDLE_SECONDS} s (sign-in not counted)`, async (page, watch) => {
+  const idle = await measure(browser, `Admin dashboard, idle for ${IDLE_SECONDS} s (sign-in not counted)`, async (page, start) => {
     await page.goto('/drdaina', { waitUntil: 'load' });
     const inputs = page.locator('input:visible');
     await inputs.nth(0).fill(ADMIN.username);
@@ -55,12 +62,8 @@ try {
     await page.getByRole('button', { name: /unlock admin vault/i }).click();
     await page.getByText('EXECUTIVE STORE OVERVIEW').waitFor({ timeout: 20000 });
     await sleep(5000);
-    const start = watch.api.length;
+    start();
     await sleep(IDLE_SECONDS * 1000);
-    const calls = watch.api.slice(start);
-    await page.locator('aside button, nav button').filter({ hasText: /^Logout/ }).first().click();
-    await sleep(1500);
-    return calls;
   });
 
   const perHour = Math.round((idle * 3600) / IDLE_SECONDS);

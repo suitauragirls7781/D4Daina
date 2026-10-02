@@ -131,6 +131,21 @@ test('two concurrent increments of the same counter both land (and ten do too)',
   assert.equal(await store.collectionVersion('daily_analytics'), 12);
 });
 
+test('counter upsert on D1: adds inside SQLite, keeps other fields and value types, 40 at once all land', async () => {
+  await store.commit([{ type: 'set', collection: 'daily_analytics', id: 'd', data: { visits: 2, text: 'x', keep: { deep: [1] } } }]);
+  const bump = (data) => store.commit([{ type: 'set', collection: 'daily_analytics', id: 'd', data, merge: true }]);
+  await bump({ date: 'd', visits: { __op: 'increment', n: 1 }, purchases: { __op: 'increment', n: 1 }, text: { __op: 'increment', n: 2 }, flag: true, none: null, label: 'it\'s "quoted"' });
+  assert.deepEqual(await store.getDoc('daily_analytics', 'd'), {
+    id: 'd',
+    data: { visits: 3, text: 2, keep: { deep: [1] }, date: 'd', purchases: 1, flag: true, none: null, label: 'it\'s "quoted"' },
+    version: 2,
+  });
+  await Promise.all(Array.from({ length: 40 }, () => bump({ visits: { __op: 'increment', n: 1 } })));
+  assert.equal((await store.getDoc('daily_analytics', 'd')).data.visits, 43);
+  assert.equal((await store.query({ collection: 'daily_analytics', where: [['visits', '==', 43]] })).length, 1);
+  assert.equal(await store.collectionVersion('daily_analytics'), 42);
+});
+
 test('through the Firestore shim: concurrent transactions on one order mark it paid exactly once', async () => {
   const db = getFirestore();
   await db.collection('orders').doc('SAG-1').set({ paymentStatus: 'Unpaid', items: [{ product: { id: 'p1' }, quantity: 2 }] });

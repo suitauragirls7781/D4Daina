@@ -17,7 +17,7 @@ globalThis.document = Object.assign(new EventTarget(), { visibilityState: 'visib
 const base64Url = (text) => Buffer.from(text, 'utf8').toString('base64url');
 const makeToken = (payload) => `${base64Url('{"alg":"HS256","typ":"JWT"}')}.${base64Url(JSON.stringify(payload))}.c2lnbmF0dXJl`;
 const inOneDay = () => Math.floor(Date.now() / 1000) + 86400;
-const adminToken = () => makeToken({ uid: 'sag-admin', admin: true, iat: 1, exp: inOneDay() });
+const adminToken = (iat = 1) => makeToken({ uid: 'sag-admin', admin: true, iat, exp: inOneDay() });
 const customerToken = (email = 'asha@example.com') => makeToken({ uid: 'c_0123456789abcdef', customerEmail: email, iat: 1, exp: inOneDay() });
 
 // A session saved by an earlier page load, present before the shims are loaded
@@ -33,7 +33,15 @@ const { getAuth, signInWithCustomToken, signInWithCredential, GoogleAuthProvider
 let requests = [];
 /** (ops, token) => results array | { status, body } ; throwing means the network failed */
 let respond = () => [];
+/** What /api/admin-config?action=session answers: { status, body }. The default is "no admin cookie". */
+let sessionAnswer = () => ({ status: 401, body: { error: 'Admin session required.' } });
+let sessionRequests = [];
 globalThis.fetch = async (url, init) => {
+  if (url === '/api/admin-config?action=session') {
+    sessionRequests.push(init);
+    const { status, body } = sessionAnswer();
+    return { ok: status === 200, status, json: async () => body };
+  }
   const ops = JSON.parse(init.body).ops;
   const token = init.headers.Authorization ? init.headers.Authorization.replace('Bearer ', '') : null;
   requests.push({ url, ops, token, keepalive: init.keepalive });
@@ -72,7 +80,9 @@ const freshDb = () => {
 beforeEach(() => {
   mock.timers.enable({ apis: ['setTimeout', 'Date'], now: Date.now() });
   requests = [];
+  sessionRequests = [];
   respond = () => [];
+  sessionAnswer = () => ({ status: 401, body: { error: 'Admin session required.' } });
   document.visibilityState = 'visible';
 });
 afterEach(() => {
@@ -805,7 +815,7 @@ test('signing in restarts the listeners with the new token', async () => {
   stop();
 });
 
-test('an admin token the server refuses is dropped, so the app can sign in again', async () => {
+test('an admin token the server refuses is dropped when the admin cookie is no longer good either', async () => {
   const { db, auth } = freshDb();
   const revoked = adminToken();
   await signInWithCustomToken(auth, revoked);
@@ -814,9 +824,85 @@ test('an admin token the server refuses is dropped, so the app can sign in again
   await settle();
   respond = (ops) => ops.map(() => ({ error: { code: 'permission-denied', message: 'Missing or insufficient permissions.' } }));
   await rejectsAfterTick(fs.getDocs(fs.collection(db, 'orders')), { code: 'permission-denied' });
+  await settle();
+  assert.equal(sessionRequests.length, 1);
+  assert.equal(sessionRequests[0].credentials, 'same-origin');
   assert.equal(auth.currentUser, null);
   assert.deepEqual(seen, ['sag-admin', null]);
   stopAuth();
+});
+
+test('a revoked admin token is replaced through the admin cookie: no sign-out, and the listeners carry on', async () => {
+  const { db, auth } = freshDb();
+  const revoked = adminToken(1);
+  const renewed = adminToken(2);
+  await signInWithCustomToken(auth, revoked);
+  const seen = [];
+  const stopAuth = onAuthStateChanged(auth, (user) => seen.push(user?.uid ?? null));
+  const server = makeWatchServer();
+  server.put('orders/o1', { total: 1 });
+  // the server stops accepting the old token (the owner saved the security settings)
+  let revokedNow = false;
+  respond = (ops, token) => (revokedNow && token !== renewed
+    ? ops.map((op) => ({ targets: op.targets.map((target) => ({ key: target.key, error: { code: 'permission-denied', message: 'Missing or insufficient permissions.' } })) }))
+    : server.handle(ops));
+  sessionAnswer = () => ({ status: 200, body: { success: true, firebaseToken: renewed } });
+
+  const sizes = [];
+  const errors = [];
+  const stop = fs.onSnapshot(fs.collection(db, 'orders'), (snap) => sizes.push(snap.size), (error) => errors.push(error.code));
+  await advance(1);
+  assert.deepEqual(sizes, [1]);
+
+  revokedNow = true;
+  server.put('orders/o2', { total: 2 });
+  await advance(10000);
+  await advance(1);
+  assert.equal(sessionRequests.length, 1);
+  assert.equal(await auth.currentUser.getIdToken(), renewed);
+  assert.equal(stored.get(`sag_auth_token:${auth.name}`), renewed);
+  // the same admin all along: the app's auth listener heard nothing, and the new order arrived
+  assert.deepEqual(seen, ['sag-admin']);
+  assert.deepEqual(sizes, [1, 2]);
+  assert.equal(requests.at(-1).token, renewed);
+  stop();
+  stopAuth();
+});
+
+test('a renewed admin token that is refused again is not renewed in a loop', async () => {
+  const { db, auth } = freshDb();
+  await signInWithCustomToken(auth, adminToken(1));
+  let minted = 1;
+  sessionAnswer = () => { minted += 1; return { status: 200, body: { firebaseToken: adminToken(minted) } }; };
+  respond = (ops) => ops.map(() => ({ error: { code: 'permission-denied', message: 'Missing or insufficient permissions.' } }));
+  await rejectsAfterTick(fs.getDocs(fs.collection(db, 'orders')), { code: 'permission-denied' });
+  await settle();
+  assert.equal(await auth.currentUser.getIdToken(), adminToken(2));
+  await rejectsAfterTick(fs.getDocs(fs.collection(db, 'orders')), { code: 'permission-denied' });
+  await settle();
+  assert.equal(sessionRequests.length, 1);
+  assert.equal(auth.currentUser, null);
+});
+
+test('a sign-out while the renewal is on its way stands; a customer token is never renewed', async () => {
+  const { db, auth } = freshDb();
+  await signInWithCustomToken(auth, adminToken(1));
+  sessionAnswer = () => ({ status: 200, body: { firebaseToken: adminToken(2) } });
+  respond = (ops) => ops.map(() => ({ error: { code: 'permission-denied', message: 'no' } }));
+  const outcome = assert.rejects(fs.getDocs(fs.collection(db, 'orders')), { code: 'permission-denied' });
+  mock.timers.tick(1);
+  await signOut(auth);
+  await settle();
+  await outcome;
+  assert.equal(auth.currentUser, null);
+
+  const customer = freshDb();
+  await signInWithCustomToken(customer.auth, customerToken());
+  respond = () => ({ status: 401, body: { error: { code: 'unauthenticated', message: 'Session expired.' } } });
+  const before = sessionRequests.length;
+  await rejectsAfterTick(fs.getDocs(fs.collection(customer.db, 'coupons')), { code: 'unauthenticated' });
+  assert.equal(sessionRequests.length, before);
+  assert.equal(customer.auth.currentUser, null);
 });
 
 test('a customer token is kept when a read is simply not allowed, and a refused write never signs the admin out', async () => {

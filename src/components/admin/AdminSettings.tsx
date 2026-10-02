@@ -928,7 +928,7 @@ export const AdminSettings: React.FC = () => {
             <h3 className="font-serif text-2xl font-semibold text-[#4B1D3F]">Transactional email</h3>
             <p className="text-[#2A1A26]/70 mt-1 leading-relaxed">
               Login codes, order confirmations and shipped / delivered / cancelled / refund emails are sent by the server through Brevo.
-              The API key lives only in the Vercel environment variable <code className="font-mono">BREVO_API_KEY</code> and is never sent to browsers.
+              The API key lives only in the Cloudflare Worker secret <code className="font-mono">BREVO_API_KEY</code> and is never sent to browsers.
             </p>
           </div>
           <div className="space-y-2">

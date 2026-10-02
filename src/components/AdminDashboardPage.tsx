@@ -28,6 +28,7 @@ import { AdminKids } from './admin/AdminKids';
 import { AdminToys } from './admin/AdminToys';
 import { AdminDealOfTheDay } from './admin/AdminDealOfTheDay';
 import { AdminPaymentGateways } from './admin/AdminPaymentGateways';
+import { AdminUsage } from './admin/AdminUsage';
 
 export const AdminDashboardPage: React.FC = () => {
   const { isAdminLoggedIn, adminSessionChecked, adminTab, securityConfig } = useAdmin();
@@ -133,6 +134,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminToys />;
       case 'payments':
         return <AdminPaymentGateways />;
+      case 'usage':
+        return <AdminUsage />;
       case 'dealOfTheDay':
         return <AdminDealOfTheDay />;
       case 'banners':

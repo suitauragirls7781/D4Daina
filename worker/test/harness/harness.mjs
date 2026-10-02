@@ -35,7 +35,7 @@ export const TEST_ENV = Object.freeze({
   ADMIN_INITIAL_PASSWORD: 'Harness-Passw0rd',
   ADMIN_INITIAL_PIN: '246810',
   GOOGLE_CLIENT_ID: 'harness-client-id.apps.googleusercontent.com',
-  VERCEL: '1',
+  SECURE_COOKIES: '1',
 });
 
 // Settings the handlers read that must not leak in from the machine running the tests.
@@ -44,7 +44,7 @@ const CLEARED_ENV = ['FIREBASE_SERVICE_ACCOUNT', 'FIREBASE_DATABASE_ID', 'GEMINI
 // D1's free plan allows this many queries in one Worker invocation; a request that needs more fails there.
 export const D1_CALLS_PER_REQUEST = 50;
 
-// Taken before any test can mock the timers (admin.test.mjs does).
+// Taken before any test can mock the timers (admin-slow-request.test.mjs does).
 const realSetTimeout = globalThis.setTimeout;
 
 const DATA_DIR = new URL('../../../migration/data/', import.meta.url);
@@ -246,6 +246,9 @@ export const startHarness = async ({ env: extraEnv = {}, realD1 = false } = {}) 
     edgeCache,
     assetRequests,
     call,
+    /** The Worker entry and the env it is given, for a test that has to see the request's own ctx. */
+    worker,
+    workerEnv: env,
     /** POST with a JSON body. */
     post: (path, json, options = {}) => call(path, { ...options, json }),
 

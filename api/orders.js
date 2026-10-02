@@ -218,7 +218,7 @@ const notifyStoreOfCancelRequest = async (db, order) => {
   try {
     const to = await storeAlertAddress(db);
     const inr = (value) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
-    const adminUrl = `${SITE_URL}/admin/orders/${encodeURIComponent(order.orderNumber)}`;
+    const adminUrl = `${SITE_URL}/drdaina/orders/${encodeURIComponent(order.orderNumber)}`;
     const reason = order.cancelRequest?.reason || '';
     await sendEmail({
       to,
@@ -244,7 +244,7 @@ const notifyStoreOfCancelRequest = async (db, order) => {
 // request itself is never lost; the result is recorded on the request for the admin panel.
 const notifyStoreOfReturnRequest = async (db, order) => {
   try {
-    await sendReturnRequestAlert({ to: await storeAlertAddress(db), order, adminUrl: `${SITE_URL}/admin/orders/${encodeURIComponent(order.orderNumber)}` });
+    await sendReturnRequestAlert({ to: await storeAlertAddress(db), order, adminUrl: `${SITE_URL}/drdaina/orders/${encodeURIComponent(order.orderNumber)}` });
     return true;
   } catch (error) {
     if (error?.message !== 'EMAIL_NOT_CONFIGURED') console.error(`Return-request email failed for ${order.orderNumber}:`, error?.message);
@@ -692,7 +692,7 @@ const actions = {
         text: 'This is a test email from your Suit Aura Girls store. Transactional email is working.',
       });
     } catch (error) {
-      throw new UserError(error?.message === 'EMAIL_NOT_CONFIGURED' ? 'BREVO_API_KEY is not set in Vercel.' : 'Brevo rejected the email. Check the API key and verified sender.', 502);
+      throw new UserError(error?.message === 'EMAIL_NOT_CONFIGURED' ? 'BREVO_API_KEY is not set on the Cloudflare Worker.' : 'Brevo rejected the email. Check the API key and verified sender.', 502);
     }
     return { status: 200, body: { success: true } };
   },
@@ -824,6 +824,10 @@ export default async function handler(req, res) {
     const message = error?.message || 'unknown';
     console.error('Orders API error:', message);
     if (message === 'ORDERS_TIMEOUT' || error?.code === 8 || /RESOURCE_EXHAUSTED|quota/i.test(message)) {
+      // "verify" runs after the customer has paid: saying that no money was taken would be untrue there.
+      if (body.action === 'verify') {
+        return reply(res, 503, { error: 'The store is very busy and could not confirm your payment yet. If you have paid, please do not pay again: the payment will be checked and your order confirmed.' });
+      }
       return reply(res, 503, { error: 'The store is very busy right now. Please try again in a few minutes. No money has been taken.' });
     }
     if (message === 'PAYMENT_NOT_CONFIGURED') return reply(res, 503, { error: 'Online payment is not configured yet. Please contact us on WhatsApp to order.' });

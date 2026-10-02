@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { BadgeCheck, Camera, Loader2, Star, ThumbsUp, X } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { apiPost } from '../lib/api';
@@ -173,15 +173,17 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   const { features } = useDiscovery();
   const productId = String(product.id);
 
-  // Live approved reviews of this product (with helpful counts); the shared review list is the fallback
+  // Approved reviews of this product (with helpful counts), read once when the page opens; the shared
+  // review list is the fallback. No live listener: a new review waits for approval anyway, and a helpful
+  // vote shows the count the server returns.
   const [live, setLive] = useState<ReviewRow[] | null>(null);
   useEffect(() => {
+    let cancelled = false;
     setLive(null);
-    return onSnapshot(
-      query(collection(db, 'reviews'), where('productId', '==', productId), where('status', '==', 'approved')),
-      (snap) => setLive(snap.docs.map((d) => toRow(d.id, d.data(), true))),
-      () => setLive(null),
-    );
+    getDocs(query(collection(db, 'reviews'), where('productId', '==', productId), where('status', '==', 'approved')))
+      .then((snap) => { if (!cancelled) setLive(snap.docs.map((d) => toRow(d.id, d.data(), true))); })
+      .catch(() => { if (!cancelled) setLive(null); });
+    return () => { cancelled = true; };
   }, [productId]);
 
   const rows = useMemo(() => {

@@ -383,7 +383,9 @@ test('tampering: prices sent by the browser are ignored; bad quantities, sizes a
 test('address: an invalid phone, email or PIN code is refused before anything is priced or stored', async () => {
   const bad = { mobile: '12345', email: 'nope', pincode: '012345', fullName: 'A', houseFlat: '', city: '', state: '' };
   for (const [field, value] of Object.entries(bad)) {
-    const response = await createOrder(h, { email: 'address@example.test', items: [lineOf(outfit, 1)], address: { [field]: value } });
+    // Built with fromEntries: a computed key written inline here makes `tsc --noEmit` crash (a compiler bug).
+    const address = Object.fromEntries([[field, value]]);
+    const response = await createOrder(h, { email: 'address@example.test', items: [lineOf(outfit, 1)], address });
     assert.equal(response.status, 400, field);
   }
   assert.deepEqual(await h.docs('orders', [['customerMobile', '==', '12345']]), []);

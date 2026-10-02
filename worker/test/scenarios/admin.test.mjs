@@ -1,18 +1,12 @@
 // Scenario 8: the owner's admin panel API (api/admin-config.js): sign-in, the session cookie, settings,
 // payment gateway keys, upload signatures, the photo assistant, logout and "sign out everywhere".
 // Run: node --test worker/test/scenarios/admin.test.mjs
-import test, { mock } from 'node:test';
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash, createHmac } from 'node:crypto';
 import { startHarness } from '../harness/harness.mjs';
 import { adminCookieAttributes, adminCookieFrom, adminLogin, adminPut, ADMIN_COOKIE } from '../harness/admin.mjs';
 import { createOrder, lineOf, pickOutfit, sendRazorpayWebhook } from '../harness/checkout.mjs';
-
-// api/admin-config.js guards its database reads with a 2.5 s timer that it never cancels; when the timer
-// fires (even after the read succeeded) the handler treats the database as down for a minute and answers
-// from its fallbacks. That is the same on Vercel and is reported to the lead. These tests are about the
-// normal path, so setTimeout is frozen here: nothing in this file needs a timer to fire (h.sleep is real).
-mock.timers.enable({ apis: ['setTimeout'] });
 
 const h = await startHarness();
 

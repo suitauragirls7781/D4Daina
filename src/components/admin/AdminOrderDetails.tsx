@@ -9,6 +9,7 @@ import { CANCELLABLE_STATUSES, CancelRequest, RETURN_STATUS_LABEL, formatExpecte
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { findCourier, trackingLinkFor } from '../../utils/courier';
 import { formatDeliveryDate } from '../../utils/delivery';
+import { formatOrderDate } from '../../utils/orderDate';
 import { PaymentBadge, OrderStatusBadge } from './PaymentBadge';
 import { downloadInvoicePdf, invoiceDetails, shareInvoicePdf } from '../../lib/invoicePdf';
 import { WhatsAppIcon } from '../BrandIcons';
@@ -65,7 +66,7 @@ interface AdminOrderDetailsProps {
 }
 
 export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId }) => {
-  const { orders = [], updateOrderStatus, storeSettings } = useAdmin();
+  const { orders = [], ordersLoaded, updateOrderStatus, storeSettings } = useAdmin();
   const [invoiceBusy, setInvoiceBusy] = useState<'' | 'download' | 'share'>('');
   const { showToast } = useShop();
   const { navigate } = useRouter();
@@ -127,6 +128,16 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
     setTrackingUrl(requests.trackingUrl);
     setExpectedDate(requests.expectedDeliveryDate);
   }, [requests?.trackingUrl, requests?.expectedDeliveryDate]);
+
+  // The orders list is still on its way: say so instead of "Not Found"
+  if (!order && !ordersLoaded) {
+    return (
+      <div role="status" className="bg-white px-6 py-14 rounded-3xl border border-[#4B1D3F]/10 text-center space-y-3">
+        <Loader2 className="mx-auto w-6 h-6 animate-spin text-[#4B1D3F]" aria-hidden="true" />
+        <p className="text-sm text-[#2A1A26]/65">Loading order #{orderId}…</p>
+      </div>
+    );
+  }
 
   if (!order) {
     return (
@@ -344,7 +355,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               <OrderStatusBadge status={order.status} />
               <PaymentBadge order={order} />
               {order.testPayment && <span className="px-2.5 py-1 rounded-full bg-[#FBF7F3] border border-[#C5A46D]/60 text-[#2A1A26]/80 text-[11px] font-semibold">Test payment</span>}
-              <span className="text-[12px] text-[#2A1A26]/55 inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {order.date}</span>
+              <span className="text-[12px] text-[#2A1A26]/55 inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {formatOrderDate(order.date)}</span>
             </div>
           </div>
         </div>
@@ -656,7 +667,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                 Purchased Items ({(order.items || []).length})
               </span>
               <span className="text-[12px] font-sans font-medium text-[#2A1A26]/55">
-                Placement: {order.date}
+                Placement: {formatOrderDate(order.date)}
               </span>
             </h3>
 

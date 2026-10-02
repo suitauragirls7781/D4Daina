@@ -20,8 +20,8 @@ const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
 export const aiDoc = (db) => db.collection('private_settings').doc('ai_assistant');
 
 /**
- * The key saved from the admin panel, otherwise the GEMINI_API_KEY server setting on Vercel.
- * If the database cannot be read (quota, outage) the Vercel setting still works.
+ * The key saved from the admin panel, otherwise the GEMINI_API_KEY secret on the Cloudflare Worker.
+ * If the database cannot be read (quota, outage) the Worker secret still works.
  */
 export const readAi = async (db) => {
   let data = {};

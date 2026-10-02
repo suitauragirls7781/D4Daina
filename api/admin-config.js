@@ -3,6 +3,7 @@ import { createUploadSignature, destroyImage } from './_lib/cloudinary.js';
 import { createHmac, pbkdf2Sync, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { clearGatewayCache, gatewaysDoc, normalizeGateways, razorpayCreds } from './_lib/payu.js';
 import { GEMINI_MESSAGES, aiAdminView, aiDoc, describeProduct, pickModel, readAi } from './_lib/gemini.js';
+import { readUsage } from './_lib/usage.js';
 
 const hint = (value) => (value ? `••••${value.slice(-4)}` : '');
 
@@ -258,7 +259,7 @@ const getCredentials = async (client, bootstrap = false) => {
 };
 
 // Firestore can be unavailable (for example when the free daily quota is used up). The owner must never be
-// locked out of the admin panel then: sign-in falls back to the credentials kept in the Vercel environment
+// locked out of the admin panel then: sign-in falls back to the credentials kept in the Worker's secrets
 // (ADMIN_INITIAL_*), compared in constant time, with an in-memory attempt limit. Normal Firestore-backed
 // sign-in resumes on its own as soon as the database answers again.
 const FIRESTORE_WAIT_MS = 2500;
@@ -273,13 +274,16 @@ const withTimeout = (promise) => {
     promise.catch(() => {});
     return Promise.reject(firestoreTimeout());
   }
+  let timer;
   return Promise.race([
     promise,
-    new Promise((_, reject) => setTimeout(() => { firestoreDownUntil = Date.now() + 60 * 1000; reject(firestoreTimeout()); }, FIRESTORE_WAIT_MS)),
+    new Promise((_, reject) => { timer = setTimeout(() => { firestoreDownUntil = Date.now() + 60 * 1000; reject(firestoreTimeout()); }, FIRESTORE_WAIT_MS); }),
   ]).catch((error) => {
     if (error?.code === 8 || /RESOURCE_EXHAUSTED|quota/i.test(String(error?.message || ''))) firestoreDownUntil = Date.now() + 60 * 1000;
     throw error;
-  });
+  // The timer is stopped once the database has answered: left running, it would fire during a slow admin
+  // request and mark a healthy database as down, which skips the "signed out everywhere" check for a minute.
+  }).finally(() => clearTimeout(timer));
 };
 const isFirestoreDown = (error) => error?.code === 8 || error?.code === 14 || error?.code === 4 || error?.code === 'timeout'
   || /RESOURCE_EXHAUSTED|quota|FIRESTORE_TIMEOUT|UNAVAILABLE|DEADLINE_EXCEEDED/i.test(String(error?.message || ''));
@@ -323,7 +327,7 @@ const createSession = (credentials, remember = true) => {
 };
 
 const setSessionCookie = (res, token, clear = false, remember = true) => {
-  const secure = process.env.VERCEL === '1' ? '; Secure' : '';
+  const secure = process.env.SECURE_COOKIES === '1' ? '; Secure' : '';
   const maxAge = clear ? 0 : sessionSeconds(remember);
   res.setHeader('Set-Cookie', `${COOKIE_NAME}=${clear ? '' : token}; HttpOnly; SameSite=Strict; Path=/api/admin-config; Max-Age=${maxAge}${secure}`);
 };
@@ -431,6 +435,13 @@ export default async function handler(req, res) {
         return reply(res, 200, { ai: aiAdminView(await readAi(client)) });
       }
 
+      // Admin only: today's real Cloudflare usage against the free plan's daily limits, and the emails left at Brevo
+      if (action === 'usage') {
+        const auth = await authenticate(req, client);
+        if (!auth) return reply(res, 401, { error: 'Admin session required.' });
+        return reply(res, 200, await readUsage());
+      }
+
       // Admin only: the latest Razorpay payments with their status and failure reason (for checking payments)
       if (action === 'razorpay-payments') {
         const auth = await authenticate(req, client);
@@ -481,7 +492,7 @@ export default async function handler(req, res) {
         return settings;
       };
 
-      // Everything a shopper's page needs in one answer. Vercel's CDN keeps it for 10 minutes and gives the
+      // Everything a shopper's page needs in one answer. Cloudflare's cache keeps it for 10 minutes and gives the
       // same copy to every visitor, so the database is read a few times an hour instead of on every visit.
       // The admin panel (and an admin browsing the store) keeps reading Firestore live.
       if (action === 'catalog') {

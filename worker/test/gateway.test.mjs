@@ -73,9 +73,12 @@ const TOKENS = {
   'revoked-admin-token': { uid: 'sag-admin', admin: true },
 };
 
+// As tokens.js does: a refused token carries an auth/ code; anything else means the check itself failed.
+const authError = (code) => Object.assign(new Error(code), { code: `auth/${code}` });
 const verify = async (token, checkRevoked) => {
-  if (!Object.hasOwn(TOKENS, token)) throw new Error('bad token');
-  if (token === 'revoked-admin-token' && checkRevoked) throw new Error('revoked');
+  if (!Object.hasOwn(TOKENS, token)) throw authError('argument-error');
+  if (token === 'revoked-admin-token' && checkRevoked) throw authError('id-token-revoked');
+  if (token === 'admin-token' && checkRevoked && globalThis.__gatewayTest.revocationCheckFails) throw new Error('D1_ERROR: Network connection lost.');
   return TOKENS[token];
 };
 
@@ -107,12 +110,13 @@ const useStore = async () => {
 
 const ORIGIN = 'https://shop.test';
 
-const post = async (ops, { token, origin = ORIGIN, method = 'POST', rawBody } = {}) => {
+const post = async (ops, { token, origin = ORIGIN, method = 'POST', rawBody, env = {}, ip } = {}) => {
   const headers = { 'Content-Type': 'application/json' };
+  if (ip) headers['cf-connecting-ip'] = ip;
   if (origin) headers.Origin = origin;
   if (token) headers.Authorization = `Bearer ${token}`;
   const body = method === 'POST' ? rawBody ?? JSON.stringify({ ops }) : undefined;
-  const response = await handleDb(new Request(`${ORIGIN}/api/db`, { method, headers, body }), {}, {});
+  const response = await handleDb(new Request(`${ORIGIN}/api/db`, { method, headers, body }), env, {});
   return { status: response.status, headers: response.headers, body: await response.json() };
 };
 
@@ -197,6 +201,74 @@ test('identity comes from the bearer token; bad, revoked and claim-less tokens a
   assertDenied(await run(profile, 'google-token'));
   // a visitor with a bad token still gets what any visitor gets
   assert.equal((await run({ op: 'get', path: 'products/p1' }, 'forged-token')).exists, true);
+});
+
+test('identity: when the revocation check itself fails the answer is "unavailable", never a silent sign-out', async (t) => {
+  await useStore();
+  const logged = t.mock.method(console, 'error', () => {});
+  globalThis.__gatewayTest.revocationCheckFails = true;
+  const { status, body } = await post([{ op: 'get', path: 'orders/SAG-1001' }], { token: 'admin-token' });
+  assert.equal(status, 503);
+  assert.deepEqual(body, { error: { code: 'unavailable', message: 'The service is temporarily unavailable. Please try again.' } });
+  assert.equal(logged.mock.callCount(), 1);
+  // shoppers are not affected: their tokens need no database read
+  assert.equal((await run({ op: 'get', path: 'profiles/asha@example.com' }, 'asha-token')).exists, true);
+  assert.equal((await run({ op: 'get', path: 'products/p1' })).exists, true);
+});
+
+// ---- limits for everyone but the admin ----
+
+/** A stand-in for a Cloudflare rate-limit binding that allows `allowed` calls per key. */
+const limiter = (allowed) => {
+  const seen = [];
+  return { seen, limit: async ({ key }) => { seen.push(key); return { success: seen.filter((entry) => entry === key).length <= allowed }; } };
+};
+
+test('guests: every document a request writes counts against the write limit', async () => {
+  const store = await useStore();
+  const save = (id) => ({ op: 'set', path: `abandoned_checkouts/${id}`, data: { firstName: 'A' }, merge: true });
+  const read = { op: 'get', path: 'products/p1' };
+  const env = { DB_GUEST_REQUESTS: limiter(100), DB_GUEST_WRITES: limiter(5) };
+  const ip = '203.0.113.9';
+
+  // 1 + 1 + 2 (a commit counts each document) = 4 of the 5 allowed
+  const first = await post([read, save('a'), save('b'), { op: 'commit', writes: [{ op: 'set', path: 'abandoned_checkouts/c', data: {} }, { op: 'set', path: 'abandoned_checkouts/d', data: {} }] }], { env, ip });
+  assert.deepEqual([first.status, first.body.results.slice(1)], [200, [{ ok: true }, { ok: true }, { ok: true }]]);
+  assert.equal(env.DB_GUEST_WRITES.seen.length, 4);
+  // two more would be 6: the whole request is refused and nothing of it is written
+  const commits = store.commits.length;
+  assert.equal((await post([save('e'), save('f')], { env, ip, token: 'forged-token' })).status, 429);
+  assert.equal(store.commits.length, commits);
+  // reads take nothing from the write allowance
+  assert.equal((await post([read, read], { env, ip })).status, 200);
+  assert.equal(env.DB_GUEST_WRITES.seen.length, 6);
+});
+
+test('guests: requests and writes are limited per address; the admin is not; a broken limiter lets requests through', async (t) => {
+  const store = await useStore();
+  const env = { DB_GUEST_REQUESTS: limiter(3), DB_GUEST_WRITES: limiter(1) };
+  const save = [{ op: 'set', path: 'abandoned_checkouts/s1', data: { firstName: 'A' }, merge: true }];
+  const read = [{ op: 'get', path: 'products/p1' }];
+
+  assert.equal((await post(save, { env, ip: '203.0.113.5' })).status, 200);
+  const second = await post(save, { env, ip: '203.0.113.5' });
+  assert.equal(second.status, 429);
+  assert.deepEqual(second.body, { error: { code: 'resource-exhausted', message: 'Too many requests. Please wait a minute and try again.' } });
+  assert.equal(store.commits.length, 1);
+  // reads do not use up the write allowance, and another address has its own
+  assert.equal((await post(read, { env, ip: '203.0.113.5' })).status, 200);
+  assert.equal((await post(read, { env, ip: '203.0.113.5' })).status, 429);
+  assert.equal((await post(save, { env, ip: '203.0.113.6', token: 'asha-token' })).status, 200);
+  assert.deepEqual(env.DB_GUEST_WRITES.seen, ['203.0.113.5', '203.0.113.5', '203.0.113.6']);
+
+  // the admin, from the address that is over its limit
+  assert.equal((await post(read, { env, ip: '203.0.113.5', token: 'admin-token' })).status, 200);
+  assert.equal(env.DB_GUEST_REQUESTS.seen.length, 5);
+
+  const logged = t.mock.method(console, 'error', () => {});
+  const broken = { DB_GUEST_REQUESTS: { limit: async () => { throw new Error('binding down'); } }, DB_GUEST_WRITES: 'not a binding' };
+  assert.equal((await post(save, { env: broken, ip: '203.0.113.5' })).status, 200);
+  assert.equal(logged.mock.callCount(), 1);
 });
 
 // ---- get ----
@@ -523,6 +595,47 @@ test('commit: every write is checked; one forbidden write refuses the whole comm
   assert.equal(store.commits.length, 0);
 });
 
+test('commit: a precondition is a read, so it needs read permission (no probing of private documents)', async () => {
+  const store = await useStore();
+  await store.put('customer_email_otps', 'asha@example.com__login', { hash: 'x' });
+  const probe = (path, version, token) => run({
+    op: 'commit',
+    preconditions: [{ path, version }],
+    writes: [{ op: 'set', path: 'abandoned_checkouts/probe', data: { a: 1 }, merge: true }],
+  }, token);
+
+  // the same answer whether the document exists or not, and whatever version is guessed
+  const privatePaths = [
+    'customers/asha@example.com', 'customers/nobody@example.com',
+    'orders/SAG-1001', 'orders/SAG-9999',
+    'customer_email_otps/asha@example.com__login', 'customer_email_otps/nobody@example.com__login',
+    'rate_limits/admin_login:203.0.113.5', 'leads/l1', 'reviews/r2',
+  ];
+  for (const path of privatePaths) {
+    for (const version of [null, 0, 1, 2]) assertDenied(await probe(path, version));
+  }
+  for (const version of [null, 1, 2, 3]) {
+    assertDenied(await probe('admin_credentials/singleton', version));
+    assertDenied(await probe('admin_credentials/singleton', version, 'admin-token'));
+  }
+  assertDenied(await probe('customers/asha@example.com', 1, 'meera-token'));
+  // a document the caller writes but may not read gives nothing away either
+  for (const version of [null, 1]) assertDenied(await probe('abandoned_checkouts/probe', version));
+  assert.equal(store.commits.length, 0);
+  assert.equal(await store.getDoc('abandoned_checkouts', 'probe'), null);
+
+  // what the caller may read still works as a precondition: public documents, and a customer's own
+  assert.deepEqual(await probe('products/p1', 1), { ok: true });
+  assertCode(await probe('products/p1', 7), 'aborted');
+  assert.deepEqual(await probe('products/never-existed', null), { ok: true });
+  const own = await run({
+    op: 'commit',
+    preconditions: [{ path: 'profiles/asha@example.com', version: 1 }],
+    writes: [{ op: 'set', path: 'profiles/asha@example.com', data: { cart: [{ id: 'p1', quantity: 1 }] }, merge: true }],
+  }, 'asha-token');
+  assert.deepEqual(own, { ok: true });
+});
+
 // ---- watch ----
 
 test('watch: first call sends everything, later calls answer unchanged until something is written', async () => {
@@ -595,6 +708,56 @@ test('watch: each target is checked on its own; a forbidden one never answers "u
   store.ignoreFilters = true;
   const leaky = await run({ op: 'watch', targets: [targets[5]] });
   assertDenied({ error: leaky.targets[0].error });
+});
+
+test('watch: query targets run side by side, and answers keep their order and their own errors', async () => {
+  const store = await useStore();
+  // The earlier a target is in the list, the later its version read finishes: answers arrive in reverse.
+  const delays = { products: 40, leads: 25, reviews: 10 };
+  const versionRead = store.collectionVersion;
+  let running = 0;
+  let mostAtOnce = 0;
+  store.collectionVersion = async (collection) => {
+    running += 1;
+    mostAtOnce = Math.max(mostAtOnce, running);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, delays[collection] || 0));
+      if (collection === 'leads') throw new Error('D1_ERROR: Network connection lost.');
+      return await versionRead(collection);
+    } finally {
+      running -= 1;
+    }
+  };
+  const targets = [
+    { key: 'products', kind: 'query', collection: 'products', orderBy: [['price', 'asc']] },
+    { key: 'orders', kind: 'query', collection: 'orders' },
+    { key: 'settings', kind: 'doc', path: 'storefront_settings/storeSettings' },
+    { key: 'leads', kind: 'query', collection: 'leads' },
+    { key: 'bad-path', kind: 'doc', path: 'orders' },
+    { key: 'reviews', kind: 'query', collection: 'reviews', where: [['productId', '==', 'p1'], ['status', '==', 'approved']] },
+  ];
+
+  const asVisitor = await run({ op: 'watch', targets });
+  assert.deepEqual(asVisitor.targets.map((target) => target.key), targets.map((target) => target.key));
+  assert.deepEqual(asVisitor.targets[0].docs.map((doc) => doc.id), ['p2', 'p1']);
+  assertDenied({ error: asVisitor.targets[1].error });
+  assert.deepEqual(asVisitor.targets[2].data, { shippingCharge: 99 });
+  assertDenied({ error: asVisitor.targets[3].error });
+  assertCode(asVisitor.targets[4], 'invalid-argument');
+  assert.deepEqual(asVisitor.targets[5].docs.map((doc) => doc.id), ['r1']);
+  // a refused target never reaches the database: only the two allowed queries read a version
+  assert.equal(mostAtOnce, 2);
+
+  // For the admin the leads read fails in the database; only that target reports it, without details.
+  mostAtOnce = 0;
+  const asAdmin = await run({ op: 'watch', targets }, 'admin-token');
+  assert.deepEqual(asAdmin.targets.map((target) => target.key), targets.map((target) => target.key));
+  assert.deepEqual(asAdmin.targets[1].docs.map((doc) => doc.id), ['SAG-1001']);
+  assertCode(asAdmin.targets[3], 'unavailable');
+  assert.ok(!JSON.stringify(asAdmin.targets[3]).includes('D1_ERROR'));
+  assertCode(asAdmin.targets[4], 'invalid-argument');
+  assert.deepEqual(asAdmin.targets[5].docs.map((doc) => doc.id), ['r1']);
+  assert.equal(mostAtOnce, 4);
 });
 
 test('watch: target list is validated', async () => {

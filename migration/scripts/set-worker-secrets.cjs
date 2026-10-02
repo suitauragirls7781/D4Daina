@@ -18,7 +18,7 @@ const ENV_FILE = path.join(ROOT, '.env.migration');
 
 // Worker secret -> the .env.migration key it is read from: the server env names of
 // migration/map/05-integrations-and-config.md (section 1.1) plus AUTH_TOKEN_SECRET and the optional
-// GOOGLE_CLIENT_ID (build spec, section 5). FIREBASE_DATABASE_ID is gone and VERCEL is a plain var in wrangler.jsonc.
+// GOOGLE_CLIENT_ID (build spec, section 5). FIREBASE_DATABASE_ID is gone and SECURE_COOKIES is a plain var in wrangler.jsonc.
 const SECRETS = {
   // Optional: only its "private_key" is still used, to keep the ids of existing customer reviews (api/reviews.js).
   FIREBASE_SERVICE_ACCOUNT: 'FIREBASE_SERVICE_ACCOUNT',
@@ -40,6 +40,8 @@ const SECRETS = {
   BREVO_SENDER_EMAIL: 'BREVO_SENDER_EMAIL',
   GEMINI_API_KEY: 'GEMINI_API_KEY',
   TRACK_WRITE_BUDGET: 'TRACK_WRITE_BUDGET',
+  // Optional: a Cloudflare API token with "Account Analytics: Read", for Admin -> Usage & limits (api/_lib/usage.js).
+  CLOUDFLARE_ANALYTICS_TOKEN: 'CLOUDFLARE_ANALYTICS_TOKEN',
 };
 const GENERATED = ['ADMIN_SESSION_SECRET', 'AUTH_TOKEN_SECRET'];
 
@@ -84,7 +86,7 @@ const devVarsLine = (name, value) => {
 };
 
 const putSecret = (name, value) => {
-  const run = spawnSync(`npx wrangler secret put ${name}`, { cwd: WORKER, shell: true, input: value, encoding: 'utf8' });
+  const run = spawnSync(`npx wrangler secret put ${name}`, { cwd: ROOT, shell: true, input: value, encoding: 'utf8' });
   if (run.status === 0) return;
   // wrangler does not echo the value, but make sure of it before showing its message
   const message = `${run.stderr || ''}${run.stdout || ''}`.split(value).join('[value]').trim().slice(-600);
