@@ -368,6 +368,10 @@ export interface StoreSettings {
   freeShippingThreshold: number;
   /** Flat discount for prepaid orders, applied by the server at checkout. */
   prepaidDiscount?: number;
+  /** Online payment discount in percent (whole number 0–50, 0 = off), applied by the server at checkout. */
+  prepaidPercent?: number;
+  /** The percent discount is given only on products whose unit price is above this (₹; 0 = every product). */
+  prepaidMinPrice?: number;
   announcementText?: string;
   announcementActive?: boolean;
   // ---- Checkout rules (Admin → Settings → Checkout; the server enforces them again) ----

@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { BadgeCheck, Check, Edit2, EyeOff, MessageSquare, Plus, Reply, Save, Star, ThumbsUp, Trash2, X } from 'lucide-react';
+import { BadgeCheck, Check, Edit2, EyeOff, Loader2, MessageSquare, Plus, Reply, Save, Star, ThumbsUp, Trash2, Upload, X } from 'lucide-react';
 import { adminDb } from '../../lib/firebase';
 import { apiPost } from '../../lib/api';
+import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { useProducts } from '../../context/ProductContext';
@@ -33,6 +34,19 @@ const STATUS_STYLE: Record<Status, string> = {
 const card = 'bg-white rounded-3xl border border-[#4B1D3F]/10 p-5 sm:p-6';
 const input = 'w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm font-normal text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition';
 const pill = 'h-10 px-4 rounded-full text-[13px] font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50';
+
+// Same limit as the other admin photo uploads (Cloudinary refuses larger images)
+const MAX_UPLOAD_MB = 10;
+// Some phones and Windows give HEIC photos no file type, so the file name is checked as well
+const isImageFile = (file: File) => file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i.test(file.name);
+/**
+ * True for a photo uploaded from this page: it sits in the store's review folder and is not one of the
+ * customer uploads (those are named rv_… and are only ever deleted by the server, from its own records).
+ */
+const isAdminReviewUpload = (url: string) => {
+  const match = /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(?:v\d+\/)?suitauragirls\/reviews\/([^/.]+)\.[a-z0-9]+$/i.exec(url || '');
+  return match !== null && !/^rv_[a-f0-9]{24}$/.test(match[1]);
+};
 
 const todayLabel = () => new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const emptyForm = (): FormData => ({
@@ -71,6 +85,41 @@ export const AdminReviews: React.FC = () => {
   const [editor, setEditor] = useState<{ id: string | null } | null>(null);
   const [formData, setFormData] = useState<FormData>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  // Photos uploaded while the editor is open; the ones that are not saved on the review are deleted again
+  const sessionUploads = useRef<string[]>([]);
+  // Changes every time the editor opens or closes, so an upload that finishes late is not put on another review
+  const editorRun = useRef(0);
+  // True while a save is on its way: the editor stays open so the photo being saved is not deleted
+  const savingRef = useRef(false);
+  const mounted = useRef(true);
+
+  const deleteUploads = (urls: string[]) => {
+    if (urls.length) deleteImages(urls).catch((error) => console.warn('Review photo not deleted:', error?.message));
+  };
+  const closeEditor = (keep = '', afterSave = false) => {
+    if (savingRef.current && !afterSave) return;
+    editorRun.current += 1;
+    const unused = sessionUploads.current.filter((url) => url !== keep);
+    sessionUploads.current = [];
+    deleteUploads(unused);
+    setUploading(false);
+    setEditor(null);
+  };
+
+  // Leaving the Reviews page with the editor open: photos uploaded but not saved are deleted.
+  // While a save is running this is left to the save, which keeps the saved photo and deletes the rest.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (savingRef.current) return;
+      editorRun.current += 1;
+      deleteUploads(sessionUploads.current);
+      sessionUploads.current = [];
+    };
+  }, []);
 
   const statusOf = (r: Review): Status => r.status || 'approved';
   const counts = useMemo(() => {
@@ -89,7 +138,7 @@ export const AdminReviews: React.FC = () => {
 
   useEffect(() => {
     if (!editor) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setEditor(null); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeEditor(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [editor]);
@@ -126,6 +175,9 @@ export const AdminReviews: React.FC = () => {
     try {
       await deleteReview(review.id);
       showToast('Review deleted.', 'info');
+      // A photo uploaded from this page goes with the review, unless another review shows it too
+      const photo = review.imageUrl || '';
+      if (isAdminReviewUpload(photo) && !reviewsList.some((r) => r.id !== review.id && r.imageUrl === photo)) deleteUploads([photo]);
     } catch {
       showToast('Could not delete the review.', 'error');
     } finally {
@@ -139,6 +191,7 @@ export const AdminReviews: React.FC = () => {
   };
 
   const openNew = () => {
+    editorRun.current += 1;
     setFormData(emptyForm());
     setEditor({ id: null });
   };
@@ -157,11 +210,42 @@ export const AdminReviews: React.FC = () => {
       imageUrl: review.imageUrl || '',
       adminReply: review.adminReply || '',
     });
+    editorRun.current += 1;
     setEditor({ id: review.id });
+  };
+
+  // Uploads the customer's photo with the same signed admin upload the product photos use
+  const handlePhotoFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!isImageFile(file)) {
+      showToast('Only image files can be uploaded.', 'error');
+      return;
+    }
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      showToast(`Photo is larger than ${MAX_UPLOAD_MB} MB. Please choose a smaller one.`, 'error');
+      return;
+    }
+    const run = editorRun.current;
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, 'reviews');
+      // The editor was closed (or another review opened) meanwhile, so this photo is not used
+      if (run !== editorRun.current) { deleteUploads([url]); return; }
+      sessionUploads.current.push(url);
+      // No toast here: the preview and the line under the buttons say it, and a toast would hide the one after saving
+      setFormData((prev) => ({ ...prev, imageUrl: url }));
+    } catch (err: any) {
+      if (run === editorRun.current) showToast(`Upload failed: ${err?.message || 'Please try again.'}`, 'error');
+    } finally {
+      if (run === editorRun.current) setUploading(false);
+    }
   };
 
   const saveForm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (uploading) return;
     if (formData.userName.trim().length < 2 || formData.comment.trim().length < 3) {
       showToast('Customer name and review text are required.', 'error');
       return;
@@ -176,14 +260,23 @@ export const AdminReviews: React.FC = () => {
       data.date = editing.date;
     }
     setSaving(true);
+    savingRef.current = true;
     try {
       if (editor?.id) await updateReview(editor.id, data);
       else await addReview(data);
       showToast(editor?.id ? 'Review updated.' : 'Review added.', 'success');
-      setEditor(null);
+      // The photo that was on the review before goes only if it was uploaded from this page and no other review shows it
+      const previous = editing?.imageUrl || '';
+      if (previous && previous !== data.imageUrl && isAdminReviewUpload(previous) && !reviewsList.some((r) => r.id !== editing?.id && r.imageUrl === previous)) {
+        deleteUploads([previous]);
+      }
+      closeEditor(data.imageUrl, true);
     } catch (err: any) {
       showToast(err?.message || 'Could not save. Please try again.', 'error');
+      // The page was left while saving and the save failed: the uploaded photos are not used
+      if (!mounted.current) { deleteUploads(sessionUploads.current); sessionUploads.current = []; }
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -219,12 +312,12 @@ export const AdminReviews: React.FC = () => {
       </div>
 
       {editor && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2A1A26]/50 p-0 sm:p-4 sag-fade" onClick={() => setEditor(null)}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#2A1A26]/50 p-0 sm:p-4 sag-fade" onClick={() => closeEditor()}>
           <form role="dialog" aria-modal="true" aria-labelledby="review-editor-title" onSubmit={saveForm} onClick={(e) => e.stopPropagation()}
             className="bg-[#FBF7F3] w-full sm:max-w-2xl max-h-[92vh] rounded-t-3xl sm:rounded-3xl flex flex-col animate-in slide-in-from-bottom-5 fade-in">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#4B1D3F]/10">
               <h3 id="review-editor-title" className="font-serif text-xl text-[#4B1D3F]">{editor.id ? 'Edit review' : 'Add a review you received'}</h3>
-              <button type="button" onClick={() => setEditor(null)} aria-label="Close" autoFocus className="w-10 h-10 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
+              <button type="button" onClick={() => closeEditor()} disabled={saving} aria-label="Close" autoFocus className="w-10 h-10 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer disabled:opacity-50"><X className="w-5 h-5" /></button>
             </div>
             <div className="overflow-y-auto p-5 grid gap-4">
               {!editor.id && <p className="text-sm text-[#2A1A26]/70">Only add real reviews a customer sent you (for example on WhatsApp or Instagram).</p>}
@@ -279,18 +372,47 @@ export const AdminReviews: React.FC = () => {
                   </label>
                 )}
               </div>
-              <label className="grid gap-1.5 text-[12px] font-semibold text-[#2A1A26]/70">Photo URL (optional)
-                <input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://res.cloudinary.com/…" className={input} />
-              </label>
-              {formData.imageUrl && <img src={getCleanImageUrl(formData.imageUrl, 200)} alt="Photo preview" className="w-20 aspect-[4/5] rounded-xl object-cover object-top border border-[#4B1D3F]/10 bg-[#F3EEF8]" />}
+              <div className="grid gap-2 min-w-0">
+                <p className="text-[12px] font-semibold text-[#2A1A26]/70">Customer’s photo (optional)</p>
+                <div className="flex items-start gap-3 min-w-0">
+                  {formData.imageUrl && (
+                    <img src={getCleanImageUrl(formData.imageUrl, 240)} alt="Photo preview"
+                      className="shrink-0 w-24 aspect-[4/5] rounded-2xl object-cover object-top border border-[#4B1D3F]/10 bg-[#F3EEF8]" />
+                  )}
+                  <div className="min-w-0 flex-1 grid gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <input ref={fileInput} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" aria-label="Choose the customer’s photo" />
+                      <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading} aria-busy={uploading}
+                        className={`${pill} border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] hover:bg-[#F3EEF8]`}>
+                        {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                        {uploading ? 'Uploading…' : formData.imageUrl ? 'Change photo' : 'Upload photo'}
+                      </button>
+                      {formData.imageUrl && (
+                        <button type="button" onClick={() => setFormData({ ...formData, imageUrl: '' })} disabled={uploading}
+                          className={`${pill} border border-rose-200 bg-white text-rose-700 hover:bg-rose-50`}>
+                          <Trash2 className="w-3.5 h-3.5" /> Remove photo
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs font-normal text-[#2A1A26]/60 leading-relaxed" role="status">
+                      {uploading ? 'Uploading the photo, please wait…'
+                        : formData.imageUrl && sessionUploads.current.includes(formData.imageUrl) ? `Photo uploaded. Tap “${editor.id ? 'Save changes' : 'Add review'}” to publish it.`
+                        : `Only a photo this customer sent with the review. From your phone or computer, up to ${MAX_UPLOAD_MB} MB.`}
+                    </p>
+                  </div>
+                </div>
+                <label className="grid gap-1.5 text-[12px] font-semibold text-[#2A1A26]/70">Or paste a photo link
+                  <input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://res.cloudinary.com/…" disabled={uploading} className={input} />
+                </label>
+              </div>
               <label className="grid gap-1.5 text-[12px] font-semibold text-[#2A1A26]/70">Review text *
                 <textarea rows={4} value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} maxLength={2000}
                   className="w-full px-4 py-3 rounded-2xl border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] focus:ring-4 focus:ring-[#4B1D3F]/10 font-normal focus:outline-none focus:border-[#4B1D3F]/50" />
               </label>
             </div>
             <div className="px-5 py-4 border-t border-[#4B1D3F]/10 flex justify-end gap-2">
-              <button type="button" onClick={() => setEditor(null)} className={`${pill} border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]`}>Cancel</button>
-              <button type="submit" disabled={saving} className={`${pill} bg-[#4B1D3F] text-white hover:bg-[#3B1532]`}>
+              <button type="button" onClick={() => closeEditor()} disabled={saving} className={`${pill} border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]`}>Cancel</button>
+              <button type="submit" disabled={saving || uploading} className={`${pill} bg-[#4B1D3F] text-white hover:bg-[#3B1532]`}>
                 <Save className="w-4 h-4" /> {saving ? 'Saving…' : editor.id ? 'Save changes' : 'Add review'}
               </button>
             </div>

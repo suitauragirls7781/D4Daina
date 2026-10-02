@@ -49,6 +49,12 @@ const realSetTimeout = globalThis.setTimeout;
 
 const DATA_DIR = new URL('../../../migration/data/', import.meta.url);
 
+// Server-only collections that a later export added to the folder (the old store's admin login, payment keys,
+// rate limits, one-time codes and alert/vote/photo records). The scenarios start without them, as the first export
+// did: they set up their own admin login and use the harness's test payment keys.
+const SERVER_ONLY = new Set(['admin_credentials', 'private_settings', 'customer_email_otps', 'rate_limits', 'analytics_dedup',
+  'stock_alerts', 'shared_wishlists', 'review_photos', 'review_votes', 'return_photos', 'alert_state', 'alert_log']);
+
 /** The newest export, as { collection: [{ id, data }] }. Customer data: read here, never copied anywhere. */
 const readExport = () => {
   let folders = [];
@@ -62,6 +68,7 @@ const readExport = () => {
   const collections = {};
   for (const file of readdirSync(dir)) {
     if (!file.endsWith('.json') || file.startsWith('_')) continue;
+    if (SERVER_ONLY.has(file.slice(0, -'.json'.length))) continue;
     collections[file.slice(0, -'.json'.length)] = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
   }
   return collections;

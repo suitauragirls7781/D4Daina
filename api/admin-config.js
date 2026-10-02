@@ -148,6 +148,9 @@ const sanitizePublicStoreSettings = (value) => {
   safe.shippingCharge = Math.max(0, Number(settings.shippingCharge) || 0);
   safe.freeShippingThreshold = Math.max(0, Number(settings.freeShippingThreshold) || 0);
   safe.prepaidDiscount = Math.min(5000, Math.max(0, Number(settings.prepaidDiscount) || 0));
+  // Online payment discount in percent (0 = off), given only on products priced above prepaidMinPrice
+  safe.prepaidPercent = Math.min(50, Math.max(0, Math.floor(Number(settings.prepaidPercent) || 0)));
+  safe.prepaidMinPrice = Math.min(1000000, Math.max(0, Math.floor(Number(settings.prepaidMinPrice) || 0)));
   safe.announcementActive = settings.announcementActive ?? true;
   // Checkout rules (enforced again in api/_lib/orders.js) and invoice details. 0 = no limit / not shown.
   const whole = (raw, max) => Math.min(max, Math.max(0, Math.floor(Number(raw) || 0)));

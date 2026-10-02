@@ -93,7 +93,7 @@ export const watchCollection = (name: CollectionName, onChange: (rows: Row[], me
     },
   );
 
-export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals' | 'categories';
+export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals' | 'categories' | 'reviews';
 
 const adminImageRequest = async (action: 'cloudinary-sign' | 'cloudinary-delete', body: object) => {
   const response = await fetch(`/api/admin-config?action=${action}`, {

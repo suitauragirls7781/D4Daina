@@ -445,7 +445,7 @@ export const AdminSettings: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5 pl-1">Prepaid Discount (₹, 0 = off)</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5 pl-1">Online payment discount, flat (₹ per order, 0 = off)</label>
                   <input
                     type="number"
                     min={0}
@@ -454,6 +454,33 @@ export const AdminSettings: React.FC = () => {
                     className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
                   />
                   <p className="mt-1 text-[11px] text-[#2A1A26]/60">Taken off every online order at checkout. The server applies the same amount.</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5 pl-1">Online payment discount (%, 0 = off)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={50}
+                    step={1}
+                    value={storeForm.prepaidPercent ?? 0}
+                    onChange={(e) => setStoreForm({ ...storeForm, prepaidPercent: Math.min(50, Math.max(0, Math.floor(Number(e.target.value) || 0))) })}
+                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                  />
+                  <p className="mt-1 text-[11px] text-[#2A1A26]/60">Whole number from 0 to 50. Taken off at checkout, after the combo offer and coupon. It is added to the flat amount, so set the flat amount to 0 if you want only the percent.</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5 pl-1">Only on products priced above (₹)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1}
+                    value={storeForm.prepaidMinPrice ?? 0}
+                    onChange={(e) => setStoreForm({ ...storeForm, prepaidMinPrice: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                  />
+                  <p className="mt-1 text-[11px] text-[#2A1A26]/60">The percent applies only to products whose price is more than this. With 700, a ₹700 product gets no percent discount and a ₹701 product does. 0 = every product.</p>
                 </div>
               </div>
             </div>

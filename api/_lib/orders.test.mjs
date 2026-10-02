@@ -870,6 +870,114 @@ test('new statuses exist in the right order; the store new-order alert never thr
   }
 });
 
+// ---- online payment discount: flat amount and / or percent on products above the owner's minimum ----
+
+const prepaidSeed = (store, extra = {}) => ({
+  products: {
+    a: { name: 'Above', price: 1500, stockQuantity: 9, inStock: true, sizes: [] },
+    b: { name: 'Below', price: 500, stockQuantity: 9, inStock: true, sizes: [] },
+    edge: { name: 'Exactly 700', price: 700, stockQuantity: 9, inStock: true, sizes: [] },
+    over: { name: 'Just over', price: 701, stockQuantity: 9, inStock: true, sizes: [] },
+    tiny: { name: 'Tiny', price: 50, stockQuantity: 9, inStock: true, sizes: [] },
+  },
+  coupons: {
+    ten: { code: 'TEN', discountType: 'percentage', discountValue: 10, minOrderValue: 0, isActive: true },
+  },
+  storefront_settings: {
+    storeSettings: { value_json: JSON.stringify({ shippingCharge: 0, freeShippingThreshold: 0, ...store }) },
+    ...extra,
+  },
+});
+const one = (productId, quantity = 1) => ({ productId, size: '', quantity });
+
+test('prepaid percent only: 10% off a product above the minimum, nothing flat', async () => {
+  const db = createDb(prepaidSeed({ prepaidDiscount: 0, prepaidPercent: 10, prepaidMinPrice: 700 }));
+  const priced = await priceCart(db, [one('a')], '');
+  assert.equal(priced.prepaidDiscount, 150);
+  assert.equal(priced.finalTotal, 1350);
+  assert.equal(priced.discountAmount, 150);
+  // quantity counts: the minimum is checked on the unit price
+  assert.equal((await priceCart(db, [one('a', 2)], '')).prepaidDiscount, 300);
+  // minimum 0 = every product
+  const all = createDb(prepaidSeed({ prepaidPercent: 10, prepaidMinPrice: 0 }));
+  assert.equal((await priceCart(all, [one('a'), one('b')], '')).prepaidDiscount, 200);
+});
+
+test('prepaid percent: the minimum is strict and a mixed bag discounts only the products above it', async () => {
+  const db = createDb(prepaidSeed({ prepaidPercent: 10, prepaidMinPrice: 700 }));
+  // exactly ₹700 with minimum 700 gets nothing; ₹701 does
+  const edge = await priceCart(db, [one('edge')], '');
+  assert.equal(edge.prepaidDiscount, 0);
+  assert.equal(edge.finalTotal, 700);
+  assert.equal((await priceCart(db, [one('over')], '')).prepaidDiscount, 70); // round(70.1)
+  // two cheap pieces together cost more than the minimum, but each unit price is below it
+  assert.equal((await priceCart(db, [one('b', 2)], '')).prepaidDiscount, 0);
+  // mixed: only the ₹1500 product counts
+  const mixed = await priceCart(db, [one('a'), one('b'), one('edge')], '');
+  assert.equal(mixed.subtotal, 2700);
+  assert.equal(mixed.prepaidDiscount, 150);
+  assert.equal(mixed.finalTotal, 2550);
+});
+
+test('prepaid percent with a 10% coupon and with the combo offer: taken on what is left of the eligible products', async () => {
+  const db = createDb(prepaidSeed({ prepaidPercent: 10, prepaidMinPrice: 700 }));
+  // whole bag eligible: 1500 − 150 coupon = 1350, then 10% = 135
+  const single = await priceCart(db, [one('a')], 'TEN');
+  assert.equal(single.couponDiscount, 150);
+  assert.equal(single.prepaidDiscount, 135);
+  assert.equal(single.finalTotal, 1215);
+  // mixed bag: 2000 − 200 coupon = 1800; the eligible share is 1800 × 1500 / 2000 = 1350, then 10% = 135
+  const mixed = await priceCart(db, [one('a'), one('b')], 'TEN');
+  assert.equal(mixed.couponDiscount, 200);
+  assert.equal(mixed.prepaidDiscount, 135);
+  assert.equal(mixed.finalTotal, 1665);
+  assert.equal(mixed.discountAmount, 335);
+  // combo 20% on 2+ pieces: 2000 − 400 = 1600; eligible share 1200, then 10% = 120
+  const combo = createDb(prepaidSeed({ prepaidPercent: 10, prepaidMinPrice: 700 }, { comboOffer: { value_json: JSON.stringify({ enabled: true, percent: 20, minItems: 2 }) } }));
+  const withCombo = await priceCart(combo, [one('a'), one('b')], '');
+  assert.equal(withCombo.comboDiscount, 400);
+  assert.equal(withCombo.prepaidDiscount, 120);
+  assert.equal(withCombo.finalTotal, 1480);
+});
+
+test('prepaid flat and percent together are added; the flat amount still applies to a bag with no eligible product', async () => {
+  const db = createDb(prepaidSeed({ prepaidDiscount: 100, prepaidPercent: 10, prepaidMinPrice: 700 }));
+  const both = await priceCart(db, [one('a')], '');
+  assert.equal(both.prepaidDiscount, 250);
+  assert.equal(both.finalTotal, 1250);
+  const flatOnly = await priceCart(db, [one('b')], '');
+  assert.equal(flatOnly.prepaidDiscount, 100);
+  assert.equal(flatOnly.finalTotal, 400);
+  // the minimum order check sees the amount after the whole prepaid discount
+  const limited = createDb(prepaidSeed({ prepaidDiscount: 100, prepaidPercent: 10, prepaidMinPrice: 700, minOrderAmount: 1251 }));
+  await assert.rejects(priceCart(limited, [one('a')], ''), /Minimum order is ₹1,251/);
+});
+
+test('prepaid discount is capped so the order never drops below ₹1; a percent above 50 is treated as 50', async () => {
+  const flat = createDb(prepaidSeed({ prepaidDiscount: 100, prepaidPercent: 50, prepaidMinPrice: 0 }));
+  const capped = await priceCart(flat, [one('tiny')], '');
+  assert.equal(capped.prepaidDiscount, 49); // 100 + 25 would be more than the ₹50 bag
+  assert.equal(capped.finalTotal, 1);
+  const huge = createDb(prepaidSeed({ prepaidPercent: 95, prepaidMinPrice: 0 }));
+  assert.equal((await priceCart(huge, [one('a')], '')).prepaidDiscount, 750);
+  // junk values switch the percent off
+  const junk = createDb(prepaidSeed({ prepaidPercent: 'abc', prepaidMinPrice: -5 }));
+  assert.equal((await priceCart(junk, [one('a')], '')).prepaidDiscount, 0);
+});
+
+test('prepaid percent not set = the old flat behaviour, unchanged', async () => {
+  const old = createDb(prepaidSeed({ prepaidDiscount: 100 }));
+  const priced = await priceCart(old, [one('a'), one('b')], 'TEN');
+  assert.equal(priced.couponDiscount, 200);
+  assert.equal(priced.prepaidDiscount, 100);
+  assert.equal(priced.finalTotal, 1700);
+  // a minimum price on its own (percent 0) changes nothing
+  const minOnly = createDb(prepaidSeed({ prepaidDiscount: 100, prepaidPercent: 0, prepaidMinPrice: 700 }));
+  assert.equal((await priceCart(minOnly, [one('a')], '')).prepaidDiscount, 100);
+  const none = createDb(prepaidSeed({}));
+  assert.equal((await priceCart(none, [one('a')], '')).prepaidDiscount, 0);
+});
+
 let failed = 0;
 for (const { name, fn } of tests) {
   try {

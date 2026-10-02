@@ -25,6 +25,7 @@ import { recordHeartbeat, trackFunnelEvent, trackItem } from '../utils/visitorTr
 import { categoryToSlug, slugToCategory } from '../utils/slugHelper';
 import { MAX_BAG_LINES, comboPiecesIn, enforceLooks, isAccessory, lookLineId, outfitQtyIn } from '../utils/looks';
 import { fromCatalogOrLive, loadCatalog, readsLive } from '../lib/catalog';
+import { prepaidDiscountFor, prepaidRulesFrom } from '../utils/prepaid';
 
 export // Must match MAX_QTY_PER_LINE in api/_lib/orders.js.
 const MAX_QTY_PER_ITEM = 10;
@@ -103,7 +104,7 @@ interface ShopContextType {
   comboPieces: number;
   freeShippingThreshold: number;
   /** Admin settings as configured (independent of the bag), for store-wide messages */
-  storeOffers: { prepaidDiscount: number; freeShippingThreshold: number; shippingCharge: number };
+  storeOffers: { prepaidDiscount: number; prepaidPercent: number; prepaidMinPrice: number; freeShippingThreshold: number; shippingCharge: number };
   maxQtyPerItem: number;
   navigateToProduct: (productOrId: string | Product) => void;
   navigateToCategory: (category: ProductCategory | 'Sale' | 'New Arrivals' | 'Best Sellers' | 'Trending' | 'All') => void;
@@ -1066,14 +1067,14 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
-  const [storeShippingSettings, setStoreShippingSettings] = useState({ shippingCharge: 0, freeShippingThreshold: 0, prepaidDiscount: 0 });
+  const [storeShippingSettings, setStoreShippingSettings] = useState({ shippingCharge: 0, freeShippingThreshold: 0, prepaidDiscount: 0, prepaidPercent: 0, prepaidMinPrice: 0 });
   const [couponsEnabled, setCouponsEnabled] = useState(true);
   useEffect(() => {
     const apply = (value: any) => {
       setStoreShippingSettings({
         shippingCharge: Math.max(0, Number(value?.shippingCharge) || 0),
         freeShippingThreshold: Math.max(0, Number(value?.freeShippingThreshold) || 0),
-        prepaidDiscount: Math.max(0, Number(value?.prepaidDiscount) || 0),
+        ...prepaidRulesFrom(value),
       });
       setCouponsEnabled(value?.couponsEnabled !== false);
     };
@@ -1139,7 +1140,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   discountAmount = Math.min(discountAmount, couponBase, afterComboSubtotal);
   const cartTotal = Math.max(0, afterComboSubtotal - discountAmount + (cart.length > 0 ? shippingFee : 0));
-  const prepaidDiscount = cart.length > 0 ? Math.min(storeShippingSettings.prepaidDiscount, Math.max(0, afterComboSubtotal - discountAmount - 1)) : 0;
+  // Online payment discount (flat + percent on products above the owner's minimum): same formula as the server
+  const prepaidDiscount = cart.length > 0
+    ? prepaidDiscountFor(storeShippingSettings, cart.map((item) => ({ price: item.product.price, quantity: item.quantity })), Math.max(0, afterComboSubtotal - discountAmount))
+    : 0;
 
   // Drop a coupon whose minimum order is no longer met (the server would reject it anyway).
   useEffect(() => {

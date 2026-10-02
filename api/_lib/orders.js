@@ -59,6 +59,9 @@ export const readPricingRules = async (db) => {
     shippingCharge: Math.max(0, Number(store.shippingCharge) || 0),
     freeShippingThreshold: Math.max(0, Number(store.freeShippingThreshold) || 0),
     prepaidDiscount: Math.max(0, Number(store.prepaidDiscount ?? 0) || 0),
+    // Percent off for online payment (0 = off), only on products whose unit price is above prepaidMinPrice
+    prepaidPercent: Math.min(50, wholeNumber(store.prepaidPercent)),
+    prepaidMinPrice: wholeNumber(store.prepaidMinPrice),
     ...checkoutRulesFrom(store),
   };
 };
@@ -366,7 +369,15 @@ export const priceCart = async (db, rawItems, couponCode, customer = null) => {
   }
   const shippingCharge = rules.freeShippingThreshold > 0 && subtotal >= rules.freeShippingThreshold ? 0 : rules.shippingCharge;
   const afterCoupon = Math.max(0, afterCombo - couponDiscount);
-  const prepaidDiscount = Math.min(rules.prepaidDiscount, Math.max(0, afterCoupon - 1));
+  // Online payment discount: the flat amount per order plus a percentage on the products priced above the
+  // owner's minimum (strictly above). Those products carry their share of the combo / coupon reductions,
+  // like couponBase above. Same formula as prepaidDiscountFor in src/utils/prepaid.ts (browser preview).
+  const eligibleSubtotal = rules.prepaidPercent > 0
+    ? lines.reduce((sum, line) => sum + (line.product.price > rules.prepaidMinPrice ? line.product.price * line.quantity : 0), 0)
+    : 0;
+  const eligibleShare = eligibleSubtotal === subtotal ? afterCoupon : Math.round((afterCoupon * eligibleSubtotal) / subtotal);
+  const percentPart = Math.round((eligibleShare * rules.prepaidPercent) / 100);
+  const prepaidDiscount = Math.min(rules.prepaidDiscount + percentPart, Math.max(0, afterCoupon - 1));
   // The owner's minimum / maximum order value: the amount after every discount, before shipping
   checkOrderLimits(afterCoupon - prepaidDiscount, rules);
   const finalTotal = afterCoupon - prepaidDiscount + shippingCharge;

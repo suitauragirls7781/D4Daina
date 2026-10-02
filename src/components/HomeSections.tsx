@@ -4,6 +4,7 @@ import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './ProductCard';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
+import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 import { ArrowRight, CheckCircle2, Headphones, Loader2, Lock, PackageCheck, RotateCcw, Sparkles, Truck } from 'lucide-react';
 import { BABY_BOYS, BABY_GIRLS, KIDS_ALL, KIDS_TOYS, TOYS, departmentOf, isToy } from '../utils/kids';
 import { LockIcon, QualityIcon, ReturnIcon, SupportIcon, TruckIcon } from './StoreIcons';
@@ -134,6 +135,7 @@ export const KidsCorner: React.FC = () => {
 export const OfferBanner: React.FC = () => {
   const { products = [], coupons = [], storeOffers, comboOffer, freeShippingThreshold, navigateToCategory, showToast } = useShop();
   const prepaidDiscount = storeOffers?.prepaidDiscount || 0;
+  const prepaidPercentLine = prepaidPercentText(prepaidRulesFrom(storeOffers));
   const saleCount = products.filter((p) => p.inStock && (p.isSale || (p.originalPrice > p.price))).length;
   const bestCoupon = [...coupons].sort((a, b) => b.discountValue - a.discountValue)[0];
 
@@ -141,6 +143,7 @@ export const OfferBanner: React.FC = () => {
   if (comboOffer) offers.push(`${comboOffer.percent}% off when you buy ${comboOffer.minItems}+ outfits`);
   if (bestCoupon) offers.push(`Code ${bestCoupon.code}: ${bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue} off` : `${bestCoupon.discountValue}% off`}${bestCoupon.minOrderValue ? ` above ₹${bestCoupon.minOrderValue.toLocaleString('en-IN')}` : ''}`);
   if (prepaidDiscount > 0) offers.push(`₹${prepaidDiscount} off every prepaid order`);
+  if (prepaidPercentLine) offers.push(prepaidPercentLine);
   if (freeShippingThreshold > 0) offers.push(`Free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}`);
   if (offers.length === 0 && saleCount === 0) return null;
 
@@ -150,7 +153,9 @@ export const OfferBanner: React.FC = () => {
     ? `${bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off with ${bestCoupon.code}`
     : saleCount > 0
     ? 'Now on offer'
-    : `₹${prepaidDiscount} off prepaid orders`;
+    : prepaidDiscount > 0
+    ? `₹${prepaidDiscount} off prepaid orders`
+    : prepaidPercentLine || offers[0];
 
   return (
     <section id="offer-banner" className="w-full bg-white py-12 sm:py-16">

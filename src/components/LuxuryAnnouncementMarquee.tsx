@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
+import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 
 export interface MarqueeMessage {
   id: string;
@@ -21,6 +22,7 @@ export interface MarqueeMessage {
 export const LuxuryAnnouncementMarquee: React.FC = () => {
   const { activePage, selectedCategory, navigateToCategory, setActivePage, products = [], storeOffers, freeShippingThreshold, comboOffer } = useShop();
   const prepaidDiscount = storeOffers?.prepaidDiscount || 0;
+  const prepaidPercentLine = prepaidPercentText(prepaidRulesFrom(storeOffers));
   const { storeSettings } = useAdmin();
   const [isPaused, setIsPaused] = useState(false);
 
@@ -36,6 +38,7 @@ export const LuxuryAnnouncementMarquee: React.FC = () => {
     const list: MarqueeMessage[] = [];
     if (adminText) list.push({ id: 'admin', badge: 'Notice', text: adminText, actionType: 'none' });
     if (prepaidDiscount > 0) list.push({ id: 'prepaid', badge: 'Offer', text: `₹${prepaidDiscount} off every prepaid order`, actionType: 'category', targetCategory: 'All' });
+    if (prepaidPercentLine) list.push({ id: 'prepaid-percent', badge: 'Offer', text: prepaidPercentLine, actionType: 'category', targetCategory: 'All' });
     if (freeShippingThreshold > 0) list.push({ id: 'shipping', text: `Free shipping on orders above ₹${freeShippingThreshold.toLocaleString('en-IN')}`, actionType: 'category', targetCategory: 'All' });
     if (comboOffer) list.push({ id: 'combo', badge: 'Offer', text: `Buy ${comboOffer.minItems} or more outfits and save ${comboOffer.percent}%`, actionType: 'category', targetCategory: 'All' });
 
@@ -49,7 +52,7 @@ export const LuxuryAnnouncementMarquee: React.FC = () => {
     list.push({ id: 'returns', text: '7-day returns & exchanges', actionType: 'page', targetPage: 'return-policy' });
     list.push({ id: 'secure', text: 'Secure prepaid checkout · UPI, cards & net banking', actionType: 'none' });
     return list;
-  }, [adminText, prepaidDiscount, freeShippingThreshold, comboOffer, collections, activePage, selectedCategory]);
+  }, [adminText, prepaidDiscount, prepaidPercentLine, freeShippingThreshold, comboOffer, collections, activePage, selectedCategory]);
 
   const handleMessageClick = useCallback((msg: MarqueeMessage) => {
     if (msg.actionType === 'category') navigateToCategory((msg.targetCategory || 'All') as any);

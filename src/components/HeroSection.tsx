@@ -5,6 +5,7 @@ import { HeroBannerConfig, Product } from '../types';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { slugToCategory } from '../utils/slugHelper';
+import { prepaidPercentApplies } from '../utils/prepaid';
 
 type LiveHeroSlide = HeroBannerConfig['slides'][number] & { rawProduct?: Product };
 const HERO_CATEGORY_LINKS = ['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
@@ -208,7 +209,12 @@ export const HeroSection: React.FC = () => {
                 <span className="text-xl lg:text-3xl font-semibold text-[#2A1A26]">₹{slidePrice.toLocaleString('en-IN')}</span>
                 {originalPrice > slidePrice && <span className="text-sm text-[#2A1A26]/55 line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
                 {discountPercent > 0 && <span className="rounded-full bg-[#F7E4EA] px-2.5 py-0.5 text-xs font-semibold text-[#8A2E55]">{discountPercent}% off</span>}
-                {storeOffers.prepaidDiscount > 0 && (
+                {/* The percent offer is shown only when this product's price qualifies for it */}
+                {prepaidPercentApplies(storeOffers, slidePrice) ? (
+                  <span className="hidden sm:inline-flex rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
+                    Extra {storeOffers.prepaidPercent}% off with online payment
+                  </span>
+                ) : storeOffers.prepaidDiscount > 0 && (
                   <span className="hidden sm:inline-flex rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
                     Extra ₹{storeOffers.prepaidDiscount} off on online payment
                   </span>

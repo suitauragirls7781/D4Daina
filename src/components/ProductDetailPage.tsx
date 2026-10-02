@@ -8,6 +8,7 @@ import { isAccessory } from '../utils/looks';
 import { KIDS_ALL, TOYS, isKids, isToy, kindOf, sortKidsSizes } from '../utils/kids';
 import { DeliveryCheck } from './DeliveryCheck';
 import { categoryToSlug } from '../utils/slugHelper';
+import { prepaidPercentApplies } from '../utils/prepaid';
 import { trackItem } from '../utils/visitorTracker';
 import { doc as fsDocRef, getDoc as fsGetDoc } from 'firebase/firestore';
 import { apiPost } from '../lib/api';
@@ -210,6 +211,8 @@ export const ProductDetailPage: React.FC = () => {
   const oneSize = sizes.length === 1 && sizes[0] === 'Free Size';
   const sizeWord = kidsPage ? 'Age' : 'Size';
   const price = Number(product.price) || 0;
+  // The online payment percent is mentioned only when this product's price qualifies for it
+  const prepaidPercentHere = prepaidPercentApplies(storeOffers, price);
   const mrp = Math.max(price, Number(product.originalPrice) || price);
   const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
   const stock = Math.max(0, Number(product.stockQuantity ?? 0));
@@ -586,12 +589,15 @@ export const ProductDetailPage: React.FC = () => {
                 <button type="submit" className="sag-btn-primary h-11 px-5 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Notify me</button>
               </form>
             )}
-            {(bestCoupon || comboOffer || prepaidDiscount > 0) && (
+            {(bestCoupon || comboOffer || prepaidDiscount > 0 || prepaidPercentHere) && (
               <div className="mt-5 rounded-2xl border border-[#4B1D3F]/10 bg-white p-4">
                 <p className="flex items-center gap-2 text-sm font-semibold text-[#4B1D3F]"><Tag className="h-4 w-4" /> Offers for you</p>
                 <ul className="mt-3 space-y-2.5 text-sm text-[#2A1A26]/80">
                   {prepaidDiscount > 0 && (
                     <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> ₹{prepaidDiscount} off at checkout when you pay online</li>
+                  )}
+                  {prepaidPercentHere && (
+                    <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> {storeOffers.prepaidPercent}% off this style at checkout when you pay online</li>
                   )}
                   {comboOffer && !accessoryPage && (
                     <li className="flex items-start gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" /> Buy {comboOffer.minItems} or more outfits and save {comboOffer.percent}%</li>

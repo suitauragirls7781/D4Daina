@@ -2,6 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
+import { prepaidDiscountFor, prepaidPercentApplies } from '../utils/prepaid';
 import { Product } from '../types';
 import { BadgePercent, CircleAlert, CircleCheck, Loader2, MapPin, RotateCw, ShieldCheck, Truck } from 'lucide-react';
 import { fromCatalogOrLive } from '../lib/catalog';
@@ -132,11 +133,18 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
   const pieces = Math.max(1, Math.floor(Number(quantity) || 1));
   const itemTotal = price * pieces;
   const { shippingCharge, freeShippingThreshold, prepaidDiscount } = storeOffers;
+  const percentHere = prepaidPercentApplies(storeOffers, price);
   const freeAlone = shippingCharge === 0 || (freeShippingThreshold > 0 && itemTotal >= freeShippingThreshold);
   // Only when this style is not in the bag yet, so the bag total plus this item is exactly the next order.
   const inBag = cart.some((item) => String(item.product.id) === String(product.id));
   const freeWithBag = !freeAlone && !inBag && cartSubtotal > 0 && freeShippingThreshold > 0 && cartSubtotal + itemTotal >= freeShippingThreshold;
-  const prepaidOff = prepaidDiscount > 0 ? Math.min(prepaidDiscount, Math.max(0, itemTotal - 1)) : 0;
+  // This item on its own: the flat amount per order, plus the percent when its price is above the owner's minimum.
+  const prepaidOff = prepaidDiscountFor(storeOffers, [{ price, quantity: pieces }], itemTotal);
+  const prepaidLine = () => {
+    if (!percentHere) return `${inr(prepaidOff)} off on every prepaid order, applied at checkout.`;
+    if (prepaidDiscount > 0) return `${storeOffers.prepaidPercent}% off this item and ${inr(prepaidDiscount)} off the order with online payment, applied at checkout.`;
+    return `${storeOffers.prepaidPercent}% off (${inr(prepaidOff)}) with online payment, applied at checkout.`;
+  };
   const placeName = place ? [place.district, place.state].filter(Boolean).join(', ') : '';
 
   const shippingLine = () => {
@@ -213,7 +221,7 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
               {offersReady && prepaidOff > 0 && (
                 <li className="flex items-start gap-2">
                   <BadgePercent className="w-4 h-4 mt-0.5 shrink-0 text-[#4B1D3F]" aria-hidden="true" />
-                  <span>{inr(prepaidOff)} off on every prepaid order, applied at checkout.</span>
+                  <span>{prepaidLine()}</span>
                 </li>
               )}
               <li className="flex items-start gap-2">

@@ -3,6 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { KIDS_TOYS, departmentOf } from '../utils/kids';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
+import { prepaidRulesFrom } from '../utils/prepaid';
 import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPLAY } from '../utils/storeContact';
 import { ArrowUp, ChevronRight, Clock } from 'lucide-react';
 import { FacebookIcon, GmailIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
@@ -18,6 +19,7 @@ export const Footer: React.FC = () => {
   const collections = [...new Set(products.filter((p) => departmentOf(p) === 'women').map((p) => p.category))].slice(0, 4);
   const hasKidsToys = products.some((p) => departmentOf(p) !== 'women');
   const prepaidOff = Number(storeOffers?.prepaidDiscount) || 0;
+  const prepaidRules = prepaidRulesFrom(storeOffers);
   const shippingFree = (Number(storeOffers?.shippingCharge) || 0) === 0;
 
   const go = (page: ActivePage) => {
@@ -37,7 +39,10 @@ export const Footer: React.FC = () => {
     { icon: LockIcon, title: 'Secure payment', text: 'UPI & cards' },
     { icon: ReturnIcon, title: '7-day returns', text: 'Easy exchange too' },
     { icon: TruckIcon, title: shippingFree ? 'Free shipping' : 'Pan-India delivery', text: shippingFree ? 'On every order' : 'Tracked to your door' },
-    prepaidOff > 0 ? { icon: TagIcon, title: `₹${prepaidOff} off`, text: 'When you pay online' } : { icon: TagIcon, title: 'Fair prices', text: 'MRP & savings shown' },
+    // The percent offer names its price limit; with a flat amount as well, only the percent is shown here (short space)
+    prepaidRules.prepaidPercent > 0
+      ? { icon: TagIcon, title: `${prepaidRules.prepaidPercent}% off`, text: prepaidRules.prepaidMinPrice > 0 ? `Products above ₹${prepaidRules.prepaidMinPrice.toLocaleString('en-IN')}, paid online` : 'When you pay online' }
+      : prepaidOff > 0 ? { icon: TagIcon, title: `₹${prepaidOff} off`, text: 'When you pay online' } : { icon: TagIcon, title: 'Fair prices', text: 'MRP & savings shown' },
   ];
 
   const linkClass = 'group inline-flex items-center gap-1 py-1 text-[15px] text-white/75 hover:text-white transition-colors cursor-pointer text-left';

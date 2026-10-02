@@ -1,6 +1,7 @@
 import React from 'react';
 import { BadgePercent, Lock, MailCheck, PackageSearch, Truck, Zap } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 import { LockIcon, OrdersIcon, PackageIcon, TagIcon, TruckIcon } from './StoreIcons';
 import { BagIcon } from './BrandIcons';
 
@@ -8,9 +9,11 @@ import { BagIcon } from './BrandIcons';
 export const PrepaidPerks: React.FC = () => {
   const { storeOffers } = useShop();
   const { prepaidDiscount, freeShippingThreshold, shippingCharge } = storeOffers;
+  const prepaidPercentLine = prepaidPercentText(prepaidRulesFrom(storeOffers));
 
   const perks = [
     prepaidDiscount > 0 && { icon: TagIcon, text: `Extra ₹${prepaidDiscount} off on every online payment` },
+    prepaidPercentLine && { icon: TagIcon, text: prepaidPercentLine },
     shippingCharge === 0
       ? { icon: TruckIcon, text: 'Free shipping on every order' }
       : freeShippingThreshold > 0 && { icon: TruckIcon, text: `Free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}` },

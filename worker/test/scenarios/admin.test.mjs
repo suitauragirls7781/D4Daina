@@ -134,7 +134,7 @@ test('settings: saved through the admin API, cleaned on the way in, and served t
   const before = (await h.call('/api/admin-config')).body.settings;
   const sections = [{ id: 'hero', enabled: true }, { id: 'reviews', enabled: false }];
   const saved = await adminPut(h, cookie, { settings: {
-    storeSettings: { ...before.storeSettings, shippingCharge: 99, prepaidDiscount: 999999, announcementText: '  Diwali offers  ', gstin: 'not a gstin', internalRemark: 'must not be stored' },
+    storeSettings: { ...before.storeSettings, shippingCharge: 99, prepaidDiscount: 999999, prepaidPercent: 80.7, prepaidMinPrice: 700.9, announcementText: '  Diwali offers  ', gstin: 'not a gstin', internalRemark: 'must not be stored' },
     homepageSections: sections,
     comboOffer: { enabled: true, percent: 80, minItems: 1, title: 'Combo' },
   } });
@@ -142,8 +142,8 @@ test('settings: saved through the admin API, cleaned on the way in, and served t
 
   const stored = await h.setting('storeSettings');
   assert.deepEqual(
-    { shippingCharge: stored.shippingCharge, prepaidDiscount: stored.prepaidDiscount, announcementText: stored.announcementText, gstin: stored.gstin, internalRemark: stored.internalRemark },
-    { shippingCharge: 99, prepaidDiscount: 5000, announcementText: 'Diwali offers', gstin: '', internalRemark: undefined },
+    { shippingCharge: stored.shippingCharge, prepaidDiscount: stored.prepaidDiscount, prepaidPercent: stored.prepaidPercent, prepaidMinPrice: stored.prepaidMinPrice, announcementText: stored.announcementText, gstin: stored.gstin, internalRemark: stored.internalRemark },
+    { shippingCharge: 99, prepaidDiscount: 5000, prepaidPercent: 50, prepaidMinPrice: 700, announcementText: 'Diwali offers', gstin: '', internalRemark: undefined },
   );
   assert.deepEqual(await h.setting('homepageSections'), sections);
   assert.deepEqual(await h.setting('comboOffer'), { enabled: true, percent: 50, minItems: 2, title: 'Combo', subtitle: '' });
