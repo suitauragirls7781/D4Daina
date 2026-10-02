@@ -33,7 +33,7 @@ import {
   Compass,
   Shirt
 } from 'lucide-react';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, ShoppingCart } from 'lucide-react';
 import { AdminTab } from '../../types';
 import { returnRows, waitingCancelRows } from './AdminReturns';
 import { departmentOf } from '../../utils/kids';
@@ -104,6 +104,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'orders', label: 'Orders', route: '/admin/orders', icon: ShoppingBag, group: 'Sales', badge: pendingOrdersCount, alert: pendingOrdersCount > 0 },
     { id: 'returns', label: 'Returns & Exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Sales', badge: waitingRequests, alert: waitingRequests > 0 },
     { id: 'customers', label: 'Customers', route: '/admin/customers', icon: Users, group: 'Sales' },
+    { id: 'abandoned', label: 'Abandoned checkouts', route: '/admin/abandoned', icon: ShoppingCart, group: 'Sales' },
     { id: 'leads', label: 'Captured Leads', route: '/admin/leads', icon: MessageSquare, group: 'Sales' },
     { id: 'coupons', label: 'Coupons', route: '/admin/coupons', icon: Tag, group: 'Sales', badge: coupons.length },
     { id: 'dealOfTheDay', label: 'Deal of the Day', route: '/admin/deal-of-the-day', icon: Flame, group: 'Sales' },

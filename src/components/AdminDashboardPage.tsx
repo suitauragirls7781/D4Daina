@@ -14,6 +14,7 @@ import { AdminOrderDetails } from './admin/AdminOrderDetails';
 import { AdminCustomers } from './admin/AdminCustomers';
 import { AdminCoupons } from './admin/AdminCoupons';
 import { AdminLeads } from './admin/AdminLeads';
+import { AdminAbandoned } from './admin/AdminAbandoned';
 import { AdminHomepage } from './admin/AdminHomepage';
 import { AdminInstagram } from './admin/AdminInstagram';
 import { AdminHero } from './admin/AdminHero';
@@ -112,6 +113,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminReturns />;
       case 'customers':
         return <AdminCustomers />;
+      case 'abandoned':
+        return <AdminAbandoned />;
       case 'leads':
         return <AdminLeads />;
       case 'coupons':

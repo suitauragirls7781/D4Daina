@@ -461,6 +461,7 @@ export type AdminTab =
   | 'returns'
   | 'customers'
   | 'leads'
+  | 'abandoned'
   | 'coupons'
   | 'homepage'
   | 'hero'
