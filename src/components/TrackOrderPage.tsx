@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { ordersApi } from '../lib/api';
-import { AlertCircle, Loader2, Phone, Search, Share2 } from 'lucide-react';
-import { HelpIcon, OrdersIcon, PackageIcon, PinIcon, ReturnIcon } from './StoreIcons';
+import { AlertCircle, ChevronRight, Loader2, Phone, Search, Share2 } from 'lucide-react';
+import { PinIcon, ReturnIcon } from './StoreIcons';
 import { WhatsAppIcon } from './BrandIcons';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { getCleanImageUrl } from '../utils/imageHelper';
@@ -21,7 +21,6 @@ const PAYMENT_METHOD_LABEL: Record<string, string> = {
 
 /** Tracking link without the customer's email or phone (whoever opens it enters their own details). */
 const trackingLinkOf = (orderNumber: string) => `${window.location.origin}/track-order?order=${encodeURIComponent(orderNumber)}`;
-const fieldClass = 'w-full h-12 px-4 bg-[#FBF7F3] border border-[#4B1D3F]/20 focus:border-[#4B1D3F]/60 rounded-full text-sm text-[#2A1A26] focus:outline-none';
 
 /** The email saved at checkout for this browser tab's last order (see CheckoutPage), when it is that order. */
 const savedContactFor = (orderNumber: string) => {
@@ -107,115 +106,117 @@ export const TrackOrderPage: React.FC = () => {
     }
   };
 
+  const cardTitle = 'text-[17px] leading-6 font-semibold text-ink';
+  const moneyRow = 'flex justify-between gap-3';
+
   return (
-    <div className="bg-[#FBF7F3] min-h-[70vh] py-8 sm:py-14 px-4">
-      <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6">
-        <div className="text-center">
-          <span className="mx-auto mb-4 w-14 h-14 rounded-full bg-[#F3EEF8] flex items-center justify-center"><OrdersIcon className="w-7 h-7" /></span>
-          <p className="sag-eyebrow">Order status</p>
-          <h1 className="mt-2 font-serif text-4xl sm:text-5xl leading-none text-[#4B1D3F]">Track your order</h1>
-          <p className="mt-3 text-sm text-[#2A1A26]/70">Enter the order number from your confirmation email.</p>
+    <div className="bg-page min-h-[70vh] px-4 pt-5 pb-10 sm:py-12">
+      <div className="max-w-2xl mx-auto space-y-4">
+        <div>
+          <h1 className="font-display text-[28px] leading-8 text-ink">Track your order</h1>
+          <p className="mt-1.5 text-sm leading-5 text-ink-muted">Enter the order number from your confirmation email.</p>
         </div>
 
         <form
           onSubmit={(e) => { e.preventDefault(); search(orderQuery, contactQuery); }}
-          className="sag-card rounded-3xl p-4 sm:p-6 grid gap-3.5 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+          className="sag-card p-4 sm:p-5 grid gap-4 sm:grid-cols-2"
         >
-          <label className="block space-y-1">
-            <span className="text-[11px] uppercase tracking-wider text-[#2A1A26]/70 pl-1">Order number</span>
+          <div>
+            <label htmlFor="track-order-number" className="sag-label">Order number</label>
             <input
               id="track-order-number"
+              name="orderNumber"
               value={orderQuery}
               onChange={(e) => setOrderQuery(e.target.value.toUpperCase())}
               placeholder="SAG-260928-XXXXX"
               autoComplete="off"
-              className={`${fieldClass} font-mono`}
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
+              className="sag-input sag-num"
             />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-[11px] uppercase tracking-wider text-[#2A1A26]/70 pl-1">Email or mobile{user ? ' (optional)' : ''}</span>
+          </div>
+          <div>
+            <label htmlFor="track-order-contact" className="sag-label">Email or mobile{user ? ' (optional)' : ''}</label>
             <input
               id="track-order-contact"
+              name="contact"
               value={contactQuery}
               onChange={(e) => setContactQuery(e.target.value)}
               placeholder="name@example.com"
               autoComplete="email"
-              className={fieldClass}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              className="sag-input"
             />
-          </label>
-          <button
-            type="submit"
-            disabled={isSearching}
-            className="sag-btn-primary h-12 px-7 text-xs font-semibold uppercase tracking-[0.16em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-          >
-            {isSearching ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Search className="w-4 h-4 text-current" />}
-            <span>Track</span>
+            {!user && <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">The one you used when ordering.</p>}
+          </div>
+          <button type="submit" disabled={isSearching} className="sag-btn-primary w-full gap-2 sm:col-span-2">
+            {isSearching ? <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" /> : <Search className="w-[18px] h-[18px]" aria-hidden="true" />}
+            <span>{isSearching ? 'Looking up your order…' : 'Track order'}</span>
           </button>
         </form>
 
         {error && (
-          <div role="alert" className="rounded-2xl p-4 border border-rose-200 bg-rose-50 text-rose-700 text-sm flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 shrink-0" />
-            <span className="leading-relaxed">{error}</span>
+          <div role="alert" className="rounded-control border border-danger-line bg-danger-tint px-3.5 py-3 text-sm leading-5 font-medium text-danger flex items-start gap-2">
+            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />
+            <span>{error}</span>
           </div>
         )}
 
         {!order && !isSearching && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-[#4B1D3F]/10 bg-white/70 p-4 flex gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-[#F3EEF8] flex items-center justify-center"><HelpIcon className="w-5 h-5" live={false} /></span>
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold text-[#2A1A26]">Where is my order number?</p>
-                <p className="mt-0.5 text-[#2A1A26]/70 leading-relaxed">It starts with “SAG-” and is in your order confirmation email.</p>
-              </div>
+          <div className="sag-card px-4">
+            <div className="sag-row min-h-14 items-start py-3">
+              <span className="min-w-0">
+                <span className="block">Where is my order number?</span>
+                <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">It starts with “SAG-” and is in your order confirmation email.</span>
+              </span>
             </div>
-            <div className="rounded-2xl border border-[#4B1D3F]/10 bg-white/70 p-4 flex gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-[#F3EEF8] flex items-center justify-center"><OrdersIcon className="w-5 h-5" live={false} /></span>
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold text-[#2A1A26]">{user ? 'See all your orders' : 'Have an account?'}</p>
-                <p className="mt-0.5 text-[#2A1A26]/70 leading-relaxed">
-                  {user ? 'Every order you placed is in ' : 'Sign in to see every order in '}
-                  <button type="button" onClick={() => setActivePage(user ? 'account' : 'login')} className="font-semibold text-[#4B1D3F] underline underline-offset-4 decoration-[#4B1D3F]/30 hover:decoration-[#4B1D3F] cursor-pointer">My account</button>.
-                </p>
-              </div>
-            </div>
+            <button type="button" onClick={() => setActivePage(user ? 'account' : 'login')} className="sag-row min-h-14 w-full py-3 text-left cursor-pointer">
+              <span className="min-w-0 flex-1">
+                <span className="block">{user ? 'See all your orders' : 'Have an account?'}</span>
+                <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">
+                  {user ? 'Every order you placed is in My account.' : 'Sign in to see every order in My account.'}
+                </span>
+              </span>
+              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
+            </button>
           </div>
         )}
 
         {order && (
           <>
-            <section className="sag-card rounded-3xl p-5 sm:p-7 space-y-5 sag-fade" aria-labelledby="tracked-order-title">
-              <div className="flex flex-wrap items-start justify-between gap-3">
+            <section className="sag-card p-4 sm:p-5 space-y-4 sag-fade" aria-labelledby="tracked-order-title">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2A1A26]/55">Order</p>
-                  <h2 id="tracked-order-title" className="mt-0.5 text-lg sm:text-xl text-[#2A1A26] break-all">
-                    <span className="font-sans font-semibold tracking-wide">#{order.orderNumber}</span>
-                  </h2>
-                  <p className="text-xs text-[#2A1A26]/60 mt-0.5">
+                  <p className="sag-eyebrow">Order</p>
+                  <h2 id="tracked-order-title" className="text-lg leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
+                  <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
                   </p>
+                  <StatusPill order={order} className="mt-2" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <StatusPill order={order} className="text-xs px-3 py-1" />
-                  <button
-                    type="button"
-                    onClick={share}
-                    aria-label="Share tracking link"
-                    className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full border border-[#4B1D3F]/15 text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer"
-                  >
-                    <Share2 className="w-3.5 h-3.5" aria-hidden="true" /> Share
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={share}
+                  aria-label="Share tracking link"
+                  className="sag-btn-outline shrink-0 h-11 px-3.5 gap-1.5 text-sm"
+                >
+                  <Share2 className="w-4 h-4" aria-hidden="true" /> Share
+                </button>
               </div>
 
               {latest && (
-                <div className="rounded-2xl bg-[#F3EEF8] px-4 py-3.5 text-sm">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Latest update</p>
-                  <p className="mt-0.5 text-[#2A1A26]">
-                    <span className="font-semibold text-[#4B1D3F]">{latest.label}</span>
-                    <span className="text-[#2A1A26]/65"> · {formatDateTime(latest.at)}</span>
+                <div className="rounded-control border border-brand-line bg-brand-wash px-3.5 py-3 text-sm leading-5">
+                  <p className="sag-eyebrow">Latest update</p>
+                  <p className="mt-0.5 text-ink">
+                    <span className="font-semibold">{latest.label}</span>
+                    <span className="text-ink-muted"> · {formatDateTime(latest.at)}</span>
                   </p>
-                  {order.customerNote && <p className="mt-1 text-[#2A1A26]/80 break-words">{order.customerNote}</p>}
+                  {order.customerNote && <p className="mt-1 text-ink break-words">{order.customerNote}</p>}
                 </div>
               )}
 
@@ -229,104 +230,98 @@ export const TrackOrderPage: React.FC = () => {
             </section>
 
             {isOwner && canStartReturn(order) && (
-              <section className="sag-card rounded-3xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
-                <span className="w-11 h-11 shrink-0 rounded-full bg-[#F3EEF8] flex items-center justify-center">
-                  <ReturnIcon className="w-6 h-6" />
-                </span>
+              <section className="sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <span className="hidden sm:flex shrink-0 text-ink-muted"><ReturnIcon className="w-6 h-6" mono live={false} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="font-serif text-xl text-[#2A1A26]">Not the right fit?</p>
-                  <p className="text-sm text-[#2A1A26]/70">
+                  <p className="text-base leading-[22px] font-semibold text-ink">Not the right fit?</p>
+                  <p className="text-sm leading-5 text-ink-muted">
                     Ask for a return or a size exchange{formatWindowEnd(order.returnEligibility?.windowEndsAt) ? ` by ${formatWindowEnd(order.returnEligibility?.windowEndsAt)}` : ' within 7 days of delivery'}.
                   </p>
                 </div>
-                <button type="button" onClick={() => setReturnOpen(true)} className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
+                <button type="button" onClick={() => setReturnOpen(true)} className="sag-btn-outline h-11 px-4 text-sm">
                   Return / exchange
                 </button>
               </section>
             )}
 
-            <section className="sag-card rounded-3xl p-5 sm:p-7 space-y-5" aria-labelledby="tracked-items-title">
-              <h3 id="tracked-items-title" className="flex items-center gap-2.5">
-                <span className="w-9 h-9 rounded-full bg-[#F3EEF8] flex items-center justify-center"><PackageIcon className="w-5 h-5" live={false} /></span>
-                <span className="font-serif text-2xl leading-none text-[#2A1A26]">Items in this order</span>
-              </h3>
-              <ul className="divide-y divide-[#4B1D3F]/10">
+            <section className="sag-card p-4 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
+              <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
+              <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {
                   const image = item.product?.images?.[0] || (item.product as { image?: string })?.image || '';
                   const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                   return (
-                    <li key={item.id || index} className="flex items-center gap-3.5 py-3 first:pt-0 last:pb-0">
-                      <span className="w-16 aspect-[4/5] shrink-0 overflow-hidden rounded-xl bg-[#F3EEF8] border border-[#4B1D3F]/10">
+                    <li key={item.id || index} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
+                      <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-chip bg-sunken">
                         {image && <img src={getCleanImageUrl(image, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-[#2A1A26] leading-snug line-clamp-2">{item.product?.name}</p>
-                        <p className="mt-1 text-xs text-[#2A1A26]/65">{item.selectedSize && !/^free ?size$/i.test(item.selectedSize) ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {item.quantity}</p>
+                        <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{item.product?.name}</p>
+                        <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">{item.selectedSize && !/^free ?size$/i.test(item.selectedSize) ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {item.quantity}</p>
                       </div>
-                      <p className="text-sm font-semibold text-[#2A1A26] shrink-0 tabular-nums">{inr((Number(item.product?.price) || 0) * (Number(item.quantity) || 1))}</p>
+                      <p className="sag-num text-sm leading-5 font-semibold text-ink shrink-0">{inr((Number(item.product?.price) || 0) * (Number(item.quantity) || 1))}</p>
                     </li>
                   );
                 })}
               </ul>
-              <div className="rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/10 p-4 space-y-2 text-sm text-[#2A1A26]/75" aria-label="Price details">
-                {Number(order.subtotal) > 0 && <div className="flex justify-between"><span>Subtotal</span><span className="text-[#2A1A26]">{inr(order.subtotal)}</span></div>}
-                {(order.comboDiscount || 0) > 0 && <div className="flex justify-between text-emerald-800"><span>Combo discount</span><span>−{inr(order.comboDiscount || 0)}</span></div>}
-                {(order.couponDiscount || 0) > 0 && <div className="flex justify-between text-emerald-800"><span>Coupon{order.couponCode ? ` ${order.couponCode}` : ''}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
-                {(order.prepaidDiscount || 0) > 0 && <div className="flex justify-between text-emerald-800"><span>Prepaid discount</span><span>−{inr(order.prepaidDiscount || 0)}</span></div>}
+              <div className="sag-num pt-4 border-t border-line space-y-2 text-sm leading-5 text-ink-muted" aria-label="Price details">
+                {Number(order.subtotal) > 0 && <div className={moneyRow}><span>Subtotal</span><span className="text-ink">{inr(order.subtotal)}</span></div>}
+                {(order.comboDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Combo discount</span><span>−{inr(order.comboDiscount || 0)}</span></div>}
+                {(order.couponDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Coupon{order.couponCode ? ` ${order.couponCode}` : ''}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
+                {(order.prepaidDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Prepaid discount</span><span>−{inr(order.prepaidDiscount || 0)}</span></div>}
                 {!(order.comboDiscount || order.couponDiscount || order.prepaidDiscount) && (order.discountAmount || 0) > 0 && (
-                  <div className="flex justify-between text-emerald-800"><span>Discount</span><span>−{inr(order.discountAmount)}</span></div>
+                  <div className={`${moneyRow} text-sale`}><span>Discount</span><span>−{inr(order.discountAmount)}</span></div>
                 )}
-                {Number(order.subtotal) > 0 && <div className="flex justify-between"><span>Shipping</span><span className="text-[#2A1A26]">{Number(order.shippingCharge) > 0 ? inr(order.shippingCharge) : 'Free'}</span></div>}
-                <div className="flex justify-between items-baseline pt-2.5 mt-1 border-t border-[#4B1D3F]/10 text-[#2A1A26]">
-                  <span className="font-medium">{paid ? 'Total paid' : 'Order total'}</span>
-                  <span className="font-serif font-semibold text-2xl leading-none text-[#4B1D3F] tabular-nums lining-nums">{inr(order.finalTotal)}</span>
+                {Number(order.subtotal) > 0 && (
+                  <div className={moneyRow}><span>Shipping</span>{Number(order.shippingCharge) > 0 ? <span className="text-ink">{inr(order.shippingCharge)}</span> : <span className="font-semibold text-sale">Free</span>}</div>
+                )}
+                <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
+                  <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Order total'}</span>
+                  <span className="text-lg leading-[22px] font-bold">{inr(order.finalTotal)}</span>
                 </div>
-                <div className="flex justify-between gap-3 text-xs pt-1">
+                <div className={`${moneyRow} text-[13px] leading-[18px]`}>
                   <span>Payment</span>
-                  <span className="text-right text-[#2A1A26]">
+                  <span className="text-right text-ink">
                     {order.paymentMethod ? `${PAYMENT_METHOD_LABEL[order.paymentMethod] || order.paymentMethod} · ` : ''}
                     {paid ? 'Paid' : order.paymentStatus === 'Refunded' ? 'Refunded' : order.paymentStatus || 'Payment pending'}
                   </span>
                 </div>
               </div>
               {address && (address.fullName || address.city) && (
-                <div className="flex gap-3 text-sm pt-1">
-                  <span className="w-9 h-9 shrink-0 rounded-full bg-[#F3EEF8] flex items-center justify-center"><PinIcon className="w-5 h-5" live={false} /></span>
-                  <div className="min-w-0 text-[#2A1A26]/75 leading-relaxed">
-                    <p className="font-medium text-[#2A1A26]">Delivering to {address.fullName}</p>
-                    {[address.houseFlat, address.street, address.area].filter(Boolean).length > 0 && <p>{[address.houseFlat, address.street, address.area].filter(Boolean).join(', ')}</p>}
+                <div className="flex gap-3 pt-4 border-t border-line text-sm leading-5">
+                  <span className="shrink-0 flex mt-0.5 text-ink-muted"><PinIcon className="w-5 h-5" mono live={false} /></span>
+                  <div className="min-w-0 text-ink-muted">
+                    <p className="font-semibold text-ink">Delivering to {address.fullName}</p>
+                    {[address.houseFlat, address.street, address.area].filter(Boolean).length > 0 && <p className="break-words">{[address.houseFlat, address.street, address.area].filter(Boolean).join(', ')}</p>}
                     <p>{`${[address.city, address.state].filter(Boolean).join(', ')} ${address.pincode || ''}`.trim()}</p>
                   </div>
                 </div>
               )}
             </section>
 
-            <section className="rounded-3xl border border-[#4B1D3F]/12 bg-white/70 p-5 sm:p-6 space-y-4" aria-label="Help with this order">
-              <div className="flex items-center gap-3">
-                <span className="w-11 h-11 shrink-0 rounded-full bg-[#F3EEF8] flex items-center justify-center"><HelpIcon className="w-6 h-6" /></span>
-                <div className="min-w-0">
-                  <p className="font-serif text-2xl leading-tight text-[#2A1A26]">Need help with this order?</p>
-                  <p className="text-sm text-[#2A1A26]/65">Share your order number and we will take it from there.</p>
-                </div>
+            <section className="sag-card p-4 sm:p-5 space-y-3" aria-label="Help with this order">
+              <div>
+                <p className={cardTitle}>Need help with this order?</p>
+                <p className="mt-0.5 text-sm leading-5 text-ink-muted">Share your order number and we will take it from there.</p>
               </div>
-              <div className="grid gap-2.5 sm:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-3">
                 <a
                   href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with order ${order.orderNumber}.`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="sag-btn-outline h-11 px-4 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2"
+                  className="sag-btn-outline h-12 px-3 gap-2 text-sm border-control"
                 >
-                  <WhatsAppIcon className="w-4 h-4" aria-hidden="true" /> WhatsApp us
+                  <WhatsAppIcon className="w-[18px] h-[18px]" aria-hidden="true" /> Chat on WhatsApp
                 </a>
-                <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-btn-outline h-11 px-4 text-xs font-semibold tracking-[0.06em] inline-flex items-center justify-center gap-2">
-                  <Phone className="w-4 h-4 text-current" aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
+                <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-btn-outline sag-num h-12 px-3 gap-2 text-sm">
+                  <Phone className="w-4 h-4" aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
                 </a>
                 {user ? (
-                  <button type="button" onClick={() => setActivePage('account')} className="sag-btn-primary h-11 px-4 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
+                  <button type="button" onClick={() => setActivePage('account')} className="sag-btn-outline h-12 px-3 text-sm">
                     All my orders
                   </button>
                 ) : (
-                  <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-11 px-4 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
+                  <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12 px-3 text-sm">
                     Contact us
                   </button>
                 )}

@@ -15,21 +15,27 @@ type GatewayView = {
 
 type RazorpayPayment = { at: string; status: string; method: string; amount: number; orderId: string; error: string };
 
-const card = 'rounded-3xl border border-[#4B1D3F]/10 bg-white p-5 sm:p-6 space-y-4';
-const label = 'block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5 pl-1';
-const input = 'w-full h-11 rounded-full border border-[#4B1D3F]/15 px-4 text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition';
+const card = 'sag-card p-4 sm:p-6 space-y-4';
+const label = 'sag-label';
+const input = 'sag-input h-12';
+const subCard = 'rounded-xl bg-page border border-line p-4';
+const btnOutline = 'sag-btn-outline h-11 px-5 text-sm gap-2 disabled:opacity-60';
+const btnPrimary = 'sag-btn-primary h-11 px-5 text-sm gap-2';
 
-const Switch: React.FC<{ checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }> = ({ checked, onChange, label: aria, disabled }) => (
+/** On/off switch used across the settings pages: 44px tall hit area, teal when on. */
+export const Switch: React.FC<{ checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean; id?: string }> = ({ checked, onChange, label: aria, disabled, id }) => (
   <button
     type="button"
     role="switch"
+    id={id}
     aria-checked={checked}
     aria-label={aria}
     disabled={disabled}
     onClick={() => onChange(!checked)}
-    className={`relative h-7 w-12 shrink-0 rounded-full transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${checked ? 'bg-emerald-600' : 'bg-[#2A1A26]/20'}`}
+    className="relative inline-flex h-11 w-13 shrink-0 items-center cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
   >
-    <span className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+    <span className={`block h-7 w-13 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-control'}`} aria-hidden="true" />
+    <span className={`absolute left-0.75 top-1/2 -mt-2.75 h-5.5 w-5.5 rounded-full bg-white transition-transform ${checked ? 'translate-x-6' : ''}`} aria-hidden="true" />
   </button>
 );
 
@@ -39,14 +45,14 @@ const CopyField: React.FC<{ title: string; value: string }> = ({ title, value })
     <div>
       <span className={label}>{title}</span>
       <div className="flex gap-2">
-        <input readOnly value={value} className={`${input} bg-[#FBF7F3] font-mono text-xs`} />
+        <input readOnly value={value} className={`${input} min-w-0 bg-page font-mono text-[13px]`} />
         <button
           type="button"
           onClick={() => { navigator.clipboard?.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}
-          className="h-11 w-11 shrink-0 rounded-full border border-[#4B1D3F]/20 flex items-center justify-center text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer"
+          className="h-12 w-12 shrink-0 rounded-xl border-[1.5px] border-control bg-white flex items-center justify-center text-ink hover:bg-sunken cursor-pointer"
           aria-label={`Copy ${title}`}
         >
-          {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+          {copied ? <Check className="h-4 w-4 text-ok" /> : <Copy className="h-4 w-4" />}
         </button>
       </div>
     </div>
@@ -156,21 +162,26 @@ export const AdminPaymentGateways: React.FC = () => {
   if (loadError || !view) {
     return (
       <div className="space-y-5 text-sm">
-        <div className="rounded-3xl bg-[#4B1D3F] p-5 sm:p-7 text-white">
-          <h3 className="font-serif text-2xl sm:text-3xl font-semibold flex items-center gap-2.5"><CreditCard className="h-5 w-5" /> Payment gateways</h3>
-          <p className="text-sm text-white/75 mt-1.5 max-w-xl leading-relaxed">Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds.</p>
+        <div className="sag-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <span className="w-11 h-11 shrink-0 rounded-xl bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><CreditCard className="h-5 w-5" /></span>
+            <div className="min-w-0">
+              <h3 className="text-[17px] leading-6 font-semibold text-ink">Payment gateways</h3>
+              <p className="text-sm text-ink-muted mt-1 max-w-xl leading-relaxed">Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds.</p>
+            </div>
+          </div>
         </div>
         {loadError ? (
-          <div role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-700">
+          <div role="alert" className="rounded-xl bg-danger-tint border border-danger-line p-4 text-danger">
             <p className="font-semibold">{loadError}</p>
-            <p className="mt-1 text-[13px] text-rose-700/85">Checkout keeps using the gateway settings already saved; nothing has changed.</p>
-            <button type="button" onClick={loadGateways} className="mt-3 h-10 px-4 rounded-full bg-white border border-rose-200 text-sm font-semibold text-rose-700 inline-flex items-center gap-2 hover:bg-rose-100 cursor-pointer">
+            <p className="mt-1 text-[13px] text-danger">Checkout keeps using the gateway settings already saved; nothing has changed.</p>
+            <button type="button" onClick={loadGateways} className="sag-btn-outline mt-3 h-11 px-4 text-sm gap-2">
               <RefreshCw className="w-4 h-4" /> Try again
             </button>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white border border-[#4B1D3F]/10 p-5 flex items-center gap-3 text-[#2A1A26]/70" role="status" aria-busy="true">
-            <Loader2 className="w-5 h-5 animate-spin text-[#4B1D3F]" /> Loading payment settings…
+          <div className="sag-card p-5 flex items-center gap-3 text-ink-muted" role="status" aria-busy="true">
+            <Loader2 className="w-5 h-5 animate-spin text-ink" /> Loading payment settings…
           </div>
         )}
       </div>
@@ -181,12 +192,15 @@ export const AdminPaymentGateways: React.FC = () => {
 
   return (
     <div className="space-y-5 text-sm">
-      <div className="rounded-3xl bg-[#4B1D3F] p-5 sm:p-7 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h3 className="font-serif text-2xl sm:text-3xl font-semibold flex items-center gap-2.5"><CreditCard className="h-5 w-5" /> Payment gateways</h3>
-          <p className="text-sm text-white/75 mt-1.5 max-w-xl leading-relaxed">Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds, no release needed.</p>
+      <div className="sag-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="w-11 h-11 shrink-0 rounded-xl bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><CreditCard className="h-5 w-5" /></span>
+          <div className="min-w-0">
+            <h3 className="text-[17px] leading-6 font-semibold text-ink">Payment gateways</h3>
+            <p className="text-sm text-ink-muted mt-1 max-w-xl leading-relaxed">Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds, no release needed.</p>
+          </div>
         </div>
-        <span className={`self-start rounded-full px-3 py-1 text-xs font-semibold ${activeCount ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-700'}`}>
+        <span role="status" className={`self-start shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-semibold ${activeCount ? 'bg-ok-tint border-ok-line text-ok' : 'bg-danger-tint border-danger-line text-danger'}`}>
           {activeCount ? `${activeCount} gateway${activeCount > 1 ? 's' : ''} live at checkout` : 'No gateway on — customers cannot pay'}
         </span>
       </div>
@@ -195,8 +209,8 @@ export const AdminPaymentGateways: React.FC = () => {
       <div className={card}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h4 className="font-serif text-2xl font-semibold text-[#4B1D3F]">Razorpay</h4>
-            <p className="text-xs text-[#2A1A26]/60 mt-0.5">
+            <h4 className="text-[17px] leading-6 font-semibold text-ink">Razorpay</h4>
+            <p className="text-[13px] text-ink-muted mt-0.5">
               {!view.razorpay.configured
                 ? 'No keys yet — add them below.'
                 : `${view.razorpay.mode === 'live' ? 'Live' : 'Test'} keys in use (${view.razorpay.keyId}) · ${view.razorpay.source === 'admin' ? 'saved here' : 'from the Cloudflare Worker secrets'}${view.razorpay.mode === 'test' ? ' · test mode is shown only to you, not to customers' : ''}.`}
@@ -210,60 +224,60 @@ export const AdminPaymentGateways: React.FC = () => {
           />
         </div>
         <form
-          className="space-y-3 rounded-2xl bg-[#FBF7F3] p-4"
+          className={`${subCard} space-y-3`}
           onSubmit={(e) => {
             e.preventDefault();
             saveGateways('razorpay', { razorpay: { keyId: rzp.keyId, ...(rzp.keySecret ? { keySecret: rzp.keySecret } : {}), ...(rzp.webhookSecret ? { webhookSecret: rzp.webhookSecret } : {}) } });
           }}
         >
-          <p className="text-xs text-[#2A1A26]/70">
+          <p className="text-[13px] text-ink-muted">
             Razorpay Dashboard → Account &amp; Settings → API Keys. A <strong>rzp_test_</strong> key runs test mode (only you see it at checkout); a <strong>rzp_live_</strong> key takes real payments. Keys are checked with Razorpay before saving.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className={label} htmlFor="rzp-key">Key ID</label>
-              <input id="rzp-key" value={rzp.keyId} onChange={(e) => setRzp({ ...rzp, keyId: e.target.value.trim() })} autoComplete="off" className={`${input} font-mono bg-white`}
+              <input id="rzp-key" value={rzp.keyId} onChange={(e) => setRzp({ ...rzp, keyId: e.target.value.trim() })} autoComplete="off" className={`${input} font-mono`}
                 placeholder={view.razorpay.source === 'env' && view.razorpay.keyId ? `${view.razorpay.keyId} (from the Worker secrets)` : 'rzp_live_… or rzp_test_…'} />
             </div>
             <div>
               <label className={label} htmlFor="rzp-secret">Key Secret</label>
-              <input id="rzp-secret" type="password" value={rzp.keySecret} onChange={(e) => setRzp({ ...rzp, keySecret: e.target.value.trim() })} autoComplete="new-password" className={`${input} font-mono bg-white`}
+              <input id="rzp-secret" type="password" value={rzp.keySecret} onChange={(e) => setRzp({ ...rzp, keySecret: e.target.value.trim() })} autoComplete="new-password" className={`${input} font-mono`}
                 placeholder={view.razorpay.source === 'admin' && view.razorpay.secretSet ? `Saved (${view.razorpay.secretHint}) — leave empty to keep` : 'Paste the key secret'} />
             </div>
             <div className="sm:col-span-2">
               <label className={label} htmlFor="rzp-webhook">Webhook secret (optional, recommended)</label>
-              <input id="rzp-webhook" type="password" value={rzp.webhookSecret} onChange={(e) => setRzp({ ...rzp, webhookSecret: e.target.value.trim() })} autoComplete="new-password" className={`${input} font-mono bg-white`}
+              <input id="rzp-webhook" type="password" value={rzp.webhookSecret} onChange={(e) => setRzp({ ...rzp, webhookSecret: e.target.value.trim() })} autoComplete="new-password" className={`${input} font-mono`}
                 placeholder={view.razorpay.webhookSecretSet ? `Saved (${view.razorpay.webhookSecretHint}) — leave empty to keep` : 'The secret you typed when creating the webhook in Razorpay'} />
             </div>
           </div>
           <CopyField title="Razorpay webhook URL (events: payment.captured, order.paid)" value={view.urls.razorpayWebhook} />
           <div className="flex flex-wrap gap-2">
-            <button type="submit" disabled={saving !== '' || !rzp.keyId} className="h-10 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] transition-colors text-white text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50">
+            <button type="submit" disabled={saving !== '' || !rzp.keyId} className={`${btnPrimary} w-full sm:w-auto`}>
               {saving === 'razorpay' ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />} Check &amp; save keys
             </button>
             {view.razorpay.source === 'admin' && (
               <button type="button" disabled={saving !== ''}
                 onClick={() => { if (window.confirm('Remove the keys saved here and go back to the keys set as Cloudflare Worker secrets?')) saveGateways('razorpay', { razorpay: { clearKeys: true } }); }}
-                className="h-10 px-5 rounded-full border border-[#4B1D3F]/20 text-[#4B1D3F] text-[13px] font-semibold cursor-pointer hover:bg-white disabled:opacity-50">
+                className={`${btnOutline} w-full sm:w-auto`}>
                 Use Worker secret keys instead
               </button>
             )}
           </div>
-          <p className="text-[11px] text-[#2A1A26]/55 flex items-center gap-1"><ShieldCheck className="h-3 w-3" /> Secrets stay on the server only and are never shown again or sent to customers.</p>
+          <p className="text-[13px] text-ink-muted flex items-start gap-1.5"><ShieldCheck className="h-4 w-4 shrink-0 mt-0.5" /> Secrets stay on the server only and are never shown again or sent to customers.</p>
         </form>
 
         <div>
           <span className={label}>Methods shown in the Razorpay window</span>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {([['enableUpi', 'UPI (GPay, PhonePe, Paytm)'], ['enableCards', 'Debit & credit cards'], ['enableNetBanking', 'Net banking & wallets']] as const).map(([key, text]) => (
-              <label key={key} className="flex items-center gap-2 rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/[0.08] px-4 py-3 cursor-pointer hover:border-[#4B1D3F]/25 transition-colors">
-                <input type="checkbox" checked={Boolean(channels[key])} onChange={(e) => setChannels({ ...channels, [key]: e.target.checked })} className="h-4 w-4 accent-[#4B1D3F]" />
-                <span className="text-[#2A1A26]">{text}</span>
+              <label key={key} className="flex items-center gap-3 min-h-12 rounded-xl bg-white border-[1.5px] border-control px-4 py-2 cursor-pointer hover:bg-sunken transition-colors">
+                <input type="checkbox" checked={Boolean(channels[key])} onChange={(e) => setChannels({ ...channels, [key]: e.target.checked })} className="h-[22px] w-[22px] shrink-0 accent-brand" />
+                <span className="text-ink">{text}</span>
               </label>
             ))}
           </div>
-          <p className="text-xs text-[#2A1A26]/55 mt-2">If all three are off, every method is shown (so customers can always pay).</p>
-          <button type="button" onClick={saveChannels} disabled={saving !== ''} className="mt-3 h-10 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] transition-colors text-white text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+          <p className="text-[13px] text-ink-muted mt-2">If all three are off, every method is shown (so customers can always pay).</p>
+          <button type="button" onClick={saveChannels} disabled={saving !== ''} className={`${btnOutline} mt-3 w-full sm:w-auto`}>
             {saving === 'channels' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save methods
           </button>
         </div>
@@ -279,8 +293,8 @@ export const AdminPaymentGateways: React.FC = () => {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h4 className="font-serif text-2xl font-semibold text-[#4B1D3F]">PayU</h4>
-            <p className="text-xs text-[#2A1A26]/60 mt-0.5">
+            <h4 className="text-[17px] leading-6 font-semibold text-ink">PayU</h4>
+            <p className="text-[13px] text-ink-muted mt-0.5">
               {view.payu.enabled ? `On at checkout (${view.payu.mode} mode).` : 'Off — customers do not see PayU.'}
             </p>
           </div>
@@ -295,10 +309,10 @@ export const AdminPaymentGateways: React.FC = () => {
           />
         </div>
 
-        <div className="inline-flex rounded-full bg-[#F3EEF8] p-1">
+        <div className="flex sm:inline-flex gap-2" role="group" aria-label="PayU mode">
           {(['test', 'live'] as const).map((mode) => (
-            <button key={mode} type="button" onClick={() => setPayu({ ...payu, mode })}
-              className={`rounded-full px-4 py-2 text-xs font-semibold cursor-pointer ${payu.mode === mode ? 'bg-[#4B1D3F] text-white' : 'text-[#4B1D3F]'}`}>
+            <button key={mode} type="button" aria-pressed={payu.mode === mode} onClick={() => setPayu({ ...payu, mode })}
+              className="sag-chip h-11 flex-1 sm:flex-none px-4 text-sm">
               {mode === 'test' ? 'Test / sandbox' : 'Live / production'}
             </button>
           ))}
@@ -313,7 +327,7 @@ export const AdminPaymentGateways: React.FC = () => {
             <label className={label} htmlFor="payu-salt">Salt (secret)</label>
             <input id="payu-salt" type="password" value={payu.salt} onChange={(e) => setPayu({ ...payu, salt: e.target.value.trim() })} autoComplete="new-password" className={`${input} font-mono`}
               placeholder={view.payu.saltSet ? `Saved (${view.payu.saltHint}) — leave empty to keep` : 'Paste the salt (v1)'} />
-            <p className="text-[11px] text-[#2A1A26]/55 mt-1 flex items-center gap-1"><KeyRound className="h-3 w-3" /> Stored on the server only; never shown again or sent to customers.</p>
+            <p className="text-[13px] text-ink-muted mt-1.5 flex items-start gap-1.5"><KeyRound className="h-4 w-4 shrink-0 mt-0.5" /> Stored on the server only; never shown again or sent to customers.</p>
           </div>
         </div>
 
@@ -322,39 +336,39 @@ export const AdminPaymentGateways: React.FC = () => {
           <CopyField title="Failure URL (furl)" value={view.urls.failure} />
           <CopyField title="Webhook URL (PayU Dashboard → Webhooks: Successful & Failed)" value={view.urls.webhook} />
         </div>
-        <p className="text-xs text-[#2A1A26]/60 flex items-start gap-1.5">
-          <ShieldCheck className="h-4 w-4 text-emerald-700 shrink-0" />
+        <p className="text-[13px] text-ink-muted flex items-start gap-1.5">
+          <ShieldCheck className="h-4 w-4 text-ok shrink-0 mt-0.5" />
           Every PayU payment is checked with PayU's verify API (status and amount) before the order is marked paid. A repeated callback never creates a second order.
         </p>
 
-        <button type="submit" disabled={saving !== ''} className="h-11 px-6 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] transition-colors text-white text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+        <button type="submit" disabled={saving !== ''} className={`${btnPrimary} w-full sm:w-auto`}>
           {saving === 'payu' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Save PayU settings
         </button>
       </form>
 
       {/* Payment status & logs */}
       <div className={card}>
-        <h4 className="font-serif text-2xl font-semibold text-[#4B1D3F]">Payment status</h4>
+        <h4 className="text-[17px] leading-6 font-semibold text-ink">Payment status</h4>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {([['Paid', summary.Paid, 'text-emerald-700'], ['Awaiting payment', summary.Unpaid, 'text-[#9C7A45]'], ['Refunded', summary.Refunded, 'text-[#8A2E55]'], ['Cancelled', summary.Cancelled, 'text-[#2A1A26]/70']] as const).map(([name, value, tone]) => (
-            <div key={name} className="rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/[0.08] p-4">
-              <p className="text-[11px] uppercase tracking-wider text-[#2A1A26]/55">{name}</p>
-              <p className={`mt-1 font-serif text-3xl font-semibold tabular-nums ${tone}`}>{value}</p>
+          {([['Paid', summary.Paid, 'text-ok'], ['Awaiting payment', summary.Unpaid, 'text-ink-muted'], ['Refunded', summary.Refunded, 'text-sale'], ['Cancelled', summary.Cancelled, 'text-ink-muted']] as const).map(([name, value, tone]) => (
+            <div key={name} className="rounded-xl bg-page border border-line p-4">
+              <p className="text-[13px] text-ink-muted">{name}</p>
+              <p className={`mt-1 text-2xl leading-8 sag-num font-bold ${tone}`}>{value}</p>
             </div>
           ))}
         </div>
-        <p className="text-xs text-[#2A1A26]/55">From the orders loaded in this admin panel · Razorpay {summary.razorpay} · PayU {summary.payu}</p>
+        <p className="text-[13px] text-ink-muted">From the orders loaded in this admin panel · Razorpay {summary.razorpay} · PayU {summary.payu}</p>
 
         {recentPayu.length > 0 && (
           <div>
             <span className={label}>Latest PayU orders</span>
-            <div className="divide-y divide-[#4B1D3F]/10 rounded-2xl border border-[#4B1D3F]/10">
+            <div className="divide-y divide-line rounded-xl border border-line">
               {recentPayu.map((order) => (
-                <div key={order.orderNumber} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-xs">
+                <div key={order.orderNumber} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-[13px] sag-num">
                   <span className="font-mono">{order.orderNumber}</span>
                   <span>₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}</span>
-                  <span className={order.paymentStatus === 'Paid' ? 'text-emerald-700 font-semibold' : 'text-[#9C7A45]'}>{order.paymentStatus}</span>
-                  <span className="font-mono text-[#2A1A26]/60">{(order as any).paymentRef || (order as any).payuTxnId || ''}</span>
+                  <span className={order.paymentStatus === 'Paid' ? 'text-ok font-semibold' : 'text-ink-muted'}>{order.paymentStatus}</span>
+                  <span className="font-mono text-ink-muted">{(order as any).paymentRef || (order as any).payuTxnId || ''}</span>
                 </div>
               ))}
             </div>
@@ -362,41 +376,41 @@ export const AdminPaymentGateways: React.FC = () => {
         )}
 
         <div>
-          <button type="button" onClick={loadPayments} disabled={loadingPayments} className="h-10 px-5 rounded-full border border-[#4B1D3F]/20 text-[#4B1D3F] text-[13px] font-semibold inline-flex items-center gap-2 hover:bg-[#F3EEF8] cursor-pointer disabled:opacity-60">
+          <button type="button" onClick={loadPayments} disabled={loadingPayments} className={`${btnOutline} w-full sm:w-auto`}>
             {loadingPayments ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Latest Razorpay payments
           </button>
           {payments && (
             <>
             {/* Phone: stacked rows */}
-            <ul className="sm:hidden mt-3 rounded-2xl border border-[#4B1D3F]/10 divide-y divide-[#4B1D3F]/[0.08]">
-              {payments.length === 0 && <li className="px-4 py-3 text-[#2A1A26]/60">No payments yet.</li>}
+            <ul className="sm:hidden mt-3 rounded-xl border border-line divide-y divide-line">
+              {payments.length === 0 && <li className="px-4 py-3 text-ink-muted">No payments yet.</li>}
               {payments.map((p, index) => (
                 <li key={`${p.orderId}-${index}`} className="px-4 py-3 text-[13px]">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-[#2A1A26] tabular-nums">₹{p.amount.toLocaleString('en-IN')}</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${p.status === 'captured' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : p.status === 'failed' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-[#FBF7F3] border-[#C5A46D]/60 text-[#2A1A26]/80'}`}>{p.status}</span>
+                    <span className="font-semibold text-ink tabular-nums">₹{p.amount.toLocaleString('en-IN')}</span>
+                    <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${p.status === 'captured' ? 'bg-ok-tint border-ok-line text-ok' : p.status === 'failed' ? 'bg-danger-tint border-danger-line text-danger' : 'bg-page border-line text-ink-muted'}`}>{p.status}</span>
                   </div>
-                  <p className="mt-1 text-[12px] text-[#2A1A26]/60">{new Date(p.at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })} · {p.method}</p>
-                  <p className="mt-0.5 text-[12px] font-mono text-[#2A1A26]/70 break-all">{p.error || p.orderId}</p>
+                  <p className="mt-1 text-[13px] text-ink-muted">{new Date(p.at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })} · {p.method}</p>
+                  <p className="mt-0.5 text-[13px] font-mono text-ink-muted break-all">{p.error || p.orderId}</p>
                 </li>
               ))}
             </ul>
-            <div className="hidden sm:block mt-3 overflow-x-auto rounded-2xl border border-[#4B1D3F]/10">
+            <div className="hidden sm:block mt-3 overflow-x-auto rounded-xl border border-line">
               <table className="w-full text-[13px]">
-                <thead className="bg-[#FBF7F3] text-left text-[11px] uppercase tracking-[0.12em] text-[#2A1A26]/55">
+                <thead className="bg-page text-left text-[13px] text-ink-muted">
                   <tr><th className="px-4 py-3 font-semibold">Time</th><th className="px-4 py-3 font-semibold">Amount</th><th className="px-4 py-3 font-semibold">Method</th><th className="px-4 py-3 font-semibold">Status</th><th className="px-4 py-3 font-semibold">Order / reason</th></tr>
                 </thead>
-                <tbody className="divide-y divide-[#4B1D3F]/[0.08]">
-                  {payments.length === 0 && <tr><td colSpan={5} className="px-4 py-4 text-[#2A1A26]/60">No payments yet.</td></tr>}
+                <tbody className="divide-y divide-line">
+                  {payments.length === 0 && <tr><td colSpan={5} className="px-4 py-4 text-ink-muted">No payments yet.</td></tr>}
                   {payments.map((p, index) => (
-                    <tr key={`${p.orderId}-${index}`} className="hover:bg-[#FBF7F3]">
-                      <td className="px-4 py-3 whitespace-nowrap text-[#2A1A26]/75">{new Date(p.at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</td>
-                      <td className="px-4 py-3 font-semibold text-[#2A1A26] tabular-nums">₹{p.amount.toLocaleString('en-IN')}</td>
-                      <td className="px-4 py-3 text-[#2A1A26]/75">{p.method}</td>
+                    <tr key={`${p.orderId}-${index}`} className="hover:bg-page">
+                      <td className="px-4 py-3 whitespace-nowrap text-ink-muted">{new Date(p.at).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                      <td className="px-4 py-3 font-semibold text-ink tabular-nums">₹{p.amount.toLocaleString('en-IN')}</td>
+                      <td className="px-4 py-3 text-ink-muted">{p.method}</td>
                       <td className="px-4 py-3">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${p.status === 'captured' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : p.status === 'failed' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-[#FBF7F3] border-[#C5A46D]/60 text-[#2A1A26]/80'}`}>{p.status}</span>
+                        <span className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold border ${p.status === 'captured' ? 'bg-ok-tint border-ok-line text-ok' : p.status === 'failed' ? 'bg-danger-tint border-danger-line text-danger' : 'bg-page border-line text-ink-muted'}`}>{p.status}</span>
                       </td>
-                      <td className="px-4 py-3 font-mono text-[12px] text-[#2A1A26]/70">{p.error || p.orderId}</td>
+                      <td className="px-4 py-3 font-mono text-[13px] text-ink-muted">{p.error || p.orderId}</td>
                     </tr>
                   ))}
                 </tbody>

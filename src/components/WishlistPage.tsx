@@ -1,12 +1,12 @@
 import React from 'react';
 import { useShop } from '../context/ShopContext';
-import { ChevronRight, ArrowRight, X } from 'lucide-react';
+import { ChevronRight, Heart, X } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { SharedWishlistView, ShareWishlistButton, sharedWishlistId } from './SharedWishlist';
 import { defaultSizeFor, sizesOf } from '../utils/looks';
 import { Product, ProductSize } from '../types';
 import { BagIcon } from './BrandIcons';
-import { HeartIcon, PackageIcon } from './StoreIcons';
+import { PackageIcon } from './StoreIcons';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
@@ -17,8 +17,8 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
   const single = defaultSizeFor(product);
   if (!product.inStock) {
     return (
-      <p className="h-11 rounded-full bg-[#2A1A26]/[0.04] text-xs font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/55 flex items-center justify-center">
-        Out of stock
+      <p className="h-11 rounded-control bg-sunken-deep text-sm font-semibold text-ink-muted flex items-center justify-center">
+        Sold out
       </p>
     );
   }
@@ -27,28 +27,28 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
       <button
         type="button"
         onClick={() => (single ? onMove(product, single) : setChoosing(true))}
-        className="sag-btn-primary w-full h-11 px-3 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer"
+        className="sag-btn-outline w-full h-11 px-2 text-sm gap-1.5"
       >
         <BagIcon className="w-4 h-4" mono live={false} /> Move to bag
       </button>
     );
   }
   return (
-    <div className="rounded-2xl border border-[#4B1D3F]/15 bg-[#FBF7F3] p-2.5 space-y-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
-      <div className="flex items-center justify-between gap-2 pl-1">
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/70">Choose size</span>
-        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-8 h-8 rounded-full flex items-center justify-center text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+    <div className="rounded-control border border-line bg-page p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
+      <div className="flex items-center justify-between pl-1">
+        <span className="text-[13px] font-semibold text-ink">Choose a size</span>
+        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
           <X className="w-4 h-4" />
         </button>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
         {sizes.map((size) => (
           <button
             key={size}
             type="button"
             onClick={() => onMove(product, size)}
             aria-label={`Move to bag in size ${size}`}
-            className="min-w-10 h-9 px-2.5 rounded-full border border-[#4B1D3F]/20 bg-white text-xs font-semibold text-[#2A1A26] hover:bg-[#4B1D3F] hover:border-[#4B1D3F] hover:text-white transition-colors cursor-pointer"
+            className="sag-chip min-w-0 h-11 px-1 text-[13px] whitespace-nowrap overflow-hidden text-ellipsis hover:bg-ink hover:border-ink hover:text-white"
           >
             {size}
           </button>
@@ -65,11 +65,11 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
   const mrp = Math.max(product.price, Number(product.originalPrice) || product.price);
   const off = mrp > product.price ? Math.round((1 - product.price / mrp) * 100) : 0;
   return (
-    <article className="sag-card rounded-3xl overflow-hidden flex flex-col">
+    <article className="flex flex-col h-full">
       <button
         type="button"
         onClick={() => navigateToProduct(product.id)}
-        className="group block aspect-[4/5] bg-[#F3EEF8] overflow-hidden cursor-pointer"
+        className="block aspect-[4/5] w-full rounded-control bg-sunken overflow-hidden cursor-pointer"
         aria-label={`View ${product.name}`}
       >
         {image && (
@@ -77,38 +77,38 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
             src={getCleanImageUrl(image, 480)}
             alt={product.name}
             loading="lazy"
+            decoding="async"
             onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-            className={`w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.04] ${product.inStock ? '' : 'grayscale-[35%]'}`}
+            className={`w-full h-full object-cover object-top ${product.inStock ? '' : 'opacity-60 grayscale-[35%]'}`}
           />
         )}
       </button>
-      <div className="flex-1 flex flex-col p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-2 min-h-9">
+      <div className="flex-1 flex flex-col pt-1">
+        <div className="flex items-center justify-between gap-2 min-h-11">
           {!product.inStock ? (
-            <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-[#2A1A26]/[0.06] text-[11px] font-semibold uppercase tracking-[0.08em] text-[#2A1A26]/65">Sold out</span>
-          ) : off > 0 ? (
-            <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-[#F7E4EA] text-[11px] font-semibold uppercase tracking-[0.08em] text-[#8A2E55]">{off}% off</span>
+            <span className="sag-badge text-ink-muted">Sold out</span>
           ) : (
-            <span className="text-[11px] uppercase tracking-[0.16em] text-[#9C7A45] truncate">{product.category}</span>
+            <span className="min-w-0 truncate text-xs text-ink-muted">{product.category}</span>
           )}
           <button
             type="button"
             onClick={() => toggleWishlist(product)}
             aria-label={`Remove ${product.name} from wishlist`}
             title="Remove from wishlist"
-            className="-mr-1.5 w-9 h-9 shrink-0 rounded-full flex items-center justify-center bg-[#F7E4EA] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
+            className="-mr-2 w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-accent hover:bg-accent-tint transition-colors cursor-pointer"
           >
-            <HeartIcon className="w-5 h-5" live={false} />
+            <Heart className="w-[22px] h-[22px] fill-accent" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
-        <button type="button" onClick={() => navigateToProduct(product.id)} className="mt-1 text-left font-serif text-[17px] leading-snug text-[#2A1A26] line-clamp-2 min-h-[2.75em] hover:text-[#4B1D3F] cursor-pointer">
+        <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-sm leading-5 font-medium text-ink line-clamp-2 min-h-10 hover:underline underline-offset-2 cursor-pointer">
           {product.name}
         </button>
-        <p className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-base font-semibold text-[#4B1D3F] tabular-nums">{inr(product.price)}</span>
-          {off > 0 && <span className="text-xs text-[#2A1A26]/50 line-through tabular-nums">{inr(mrp)}</span>}
+        <p className="sag-num mt-auto pt-1 flex flex-wrap items-baseline gap-x-1.5">
+          <span className={`text-base leading-5 font-bold ${product.inStock ? 'text-ink' : 'text-ink-muted'}`}>{inr(product.price)}</span>
+          {off > 0 && <span className="text-[13px] text-ink-faint line-through">{inr(mrp)}</span>}
+          {off > 0 && <span className="text-[13px] font-bold text-sale whitespace-nowrap">{off}% off</span>}
         </p>
-        <div className="mt-auto pt-3">
+        <div className="pt-2">
           <MoveToBag product={product} onMove={moveToCartFromWishlist} />
         </div>
       </div>
@@ -138,37 +138,34 @@ export const WishlistPage: React.FC = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div id="wishlist-empty-state" className="py-16 sm:py-24 px-4 bg-[#FBF7F3]">
-        <div className="max-w-xl mx-auto text-center">
-          <span className="relative mx-auto w-24 h-24 rounded-full bg-[#F7E4EA] flex items-center justify-center sag-pop">
-            <span aria-hidden="true" className="absolute inset-2 rounded-full border border-dashed border-[#C5A46D]/60" />
-            <HeartIcon className="w-10 h-10" />
+      <div id="wishlist-empty-state" className="py-12 sm:py-20 px-4 bg-surface">
+        <div className="max-w-md mx-auto text-center">
+          <span className="mx-auto w-16 h-16 rounded-full bg-sunken flex items-center justify-center text-ink" aria-hidden="true">
+            <Heart className="w-7 h-7" strokeWidth={1.75} />
           </span>
-          <h1 className="mt-6 font-serif text-3xl sm:text-4xl text-[#4B1D3F]">Your wishlist is empty</h1>
-          <p className="mt-3 text-sm sm:text-base leading-relaxed text-[#2A1A26]/70 max-w-md mx-auto">Tap the heart on any style to save it here. Saved styles stay on every device you sign in to.</p>
+          <h1 className="mt-5 font-display text-[28px] leading-8 text-ink">Your wishlist is empty</h1>
+          <p className="mt-2 text-[15px] leading-[22px] text-ink-muted">Tap the heart on any style to save it here. Saved styles stay on every device you sign in to.</p>
           <button
             id="empty-wishlist-shop-btn"
             onClick={() => navigateToCategory('All')}
-            className="mt-8 sag-btn-primary h-12 px-10 text-xs font-semibold uppercase tracking-[0.16em] cursor-pointer"
+            className="mt-6 sag-btn-primary w-full sm:w-auto sm:px-12"
           >
-            Explore styles
+            Start shopping
           </button>
 
           {collections.length > 0 && (
-            <div className="mt-12 pt-8 border-t border-[#4B1D3F]/10">
-              <p className="sag-eyebrow">Browse collections</p>
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="mt-10 text-left">
+              <p className="sag-eyebrow mb-1">Browse collections</p>
+              <div>
                 {collections.map(([name, count]) => (
                   <button
                     key={name}
                     onClick={() => navigateToCategory(name as any)}
-                    className="group p-4 rounded-2xl bg-white border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] hover:bg-[#F3EEF8] text-left flex items-center justify-between gap-2 transition-colors cursor-pointer"
+                    className="sag-row w-full text-left cursor-pointer hover:bg-sunken"
                   >
-                    <span className="min-w-0">
-                      <span className="block font-serif text-lg leading-tight text-[#2A1A26] truncate">{name}</span>
-                      <span className="block mt-0.5 text-xs text-[#2A1A26]/60">{count} {count === 1 ? 'style' : 'styles'}</span>
-                    </span>
-                    <ChevronRight className="w-4 h-4 text-[#4B1D3F]/50 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                    <span className="flex-1 min-w-0 truncate">{name}</span>
+                    <span className="sag-num text-[13px] font-normal text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
+                    <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" aria-hidden="true" />
                   </button>
                 ))}
               </div>
@@ -180,52 +177,45 @@ export const WishlistPage: React.FC = () => {
   }
 
   return (
-    <div id="wishlist-page-container" className="pt-6 pb-16 sm:pt-10 sm:pb-20 bg-[#FBF7F3]">
+    <div id="wishlist-page-container" className="pt-4 pb-14 sm:pt-6 lg:pt-8 lg:pb-20 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-1.5 text-xs text-[#2A1A26]/60 mb-4 w-fit" aria-label="Breadcrumb">
-          <button onClick={() => setActivePage('home')} className="hover:text-[#4B1D3F] cursor-pointer">Home</button>
-          <ChevronRight className="w-3.5 h-3.5 text-[#9C7A45]" aria-hidden="true" />
-          <span className="text-[#4B1D3F] font-semibold" aria-current="page">My wishlist</span>
+        {/* Breadcrumbs (tablet and desktop) */}
+        <nav className="hidden sm:flex items-center gap-1.5 text-[13px] text-ink-muted mb-3 w-fit" aria-label="Breadcrumb">
+          <button onClick={() => setActivePage('home')} className="min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">Home</button>
+          <ChevronRight className="w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
+          <span className="text-ink font-medium" aria-current="page">My wishlist</span>
         </nav>
 
         {/* Title */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8 border-b border-[#4B1D3F]/10 pb-5 sm:pb-6">
-          <div>
-            <span className="sag-eyebrow block">Saved for later</span>
-            <h1 className="mt-1.5 font-serif text-4xl sm:text-5xl leading-none text-[#4B1D3F]">
-              My wishlist <span className="align-middle font-sans text-sm font-semibold text-[#2A1A26]/60">({wishlist.length} {wishlist.length === 1 ? 'style' : 'styles'})</span>
-            </h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-x-4 gap-y-1 mb-4 sm:mb-7">
+          <h1 className="font-display text-[28px] leading-8 lg:text-4xl lg:leading-[1.15] text-ink">
+            My wishlist <span className="sag-num font-sans text-sm font-normal tracking-normal text-ink-muted">({wishlist.length} {wishlist.length === 1 ? 'style' : 'styles'})</span>
+          </h1>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
             <ShareWishlistButton />
-            <button
-              onClick={() => navigateToCategory('All')}
-              className="h-10 px-2 text-sm text-[#4B1D3F] font-semibold cursor-pointer inline-flex items-center gap-1.5 group hover:underline underline-offset-4"
-            >
+            <button onClick={() => navigateToCategory('All')} className="sag-link">
               Continue shopping
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
 
         {/* Wishlist items always show the live product (current price and stock) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
           {wishlist.map((saved) => {
             const live = allProducts.find((p) => String(p.id) === String(saved.id));
             if (live) return <WishlistCard key={saved.id} product={live} />;
             return (
-              <article key={saved.id} className="sag-card rounded-3xl overflow-hidden flex flex-col">
-                <div className="aspect-[4/5] bg-[#F3EEF8] flex flex-col items-center justify-center gap-3 px-4 text-center">
-                  <span className="w-14 h-14 rounded-full bg-white flex items-center justify-center"><PackageIcon className="w-7 h-7" live={false} /></span>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/60">No longer available</p>
+              <article key={saved.id} className="flex flex-col h-full">
+                <div className="aspect-[4/5] rounded-control bg-sunken flex flex-col items-center justify-center gap-2 px-4 text-center text-ink-muted">
+                  <PackageIcon className="w-7 h-7" mono live={false} />
+                  <p className="text-[13px] font-semibold">No longer available</p>
                 </div>
-                <div className="flex-1 flex flex-col p-3 sm:p-4">
-                  <p className="mt-1 font-serif text-[17px] leading-snug text-[#2A1A26] line-clamp-2">{saved.name}</p>
-                  <p className="mt-1 text-xs leading-relaxed text-[#2A1A26]/65">This style has left our collection.</p>
-                  <div className="mt-auto pt-3">
-                    <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-11 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Remove</button>
+                <div className="flex-1 flex flex-col pt-3">
+                  <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{saved.name}</p>
+                  <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">This style has left our collection.</p>
+                  <div className="mt-auto pt-2">
+                    <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-11 text-sm">Remove</button>
                   </div>
                 </div>
               </article>

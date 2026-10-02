@@ -8,19 +8,19 @@ import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
 import { recommendedForYou, useStylePrefs } from './StyleProfile';
 
-const Rail: React.FC<{ eyebrow: string; title: string; items: Product[]; action?: React.ReactNode }> = ({ eyebrow, title, items, action }) => (
-  <section className="w-full py-10 sm:py-14">
+const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: React.ReactNode }> = ({ title, note, items, action }) => (
+  <section className="w-full py-8 lg:py-12" aria-label={title}>
     <div className="max-w-7xl mx-auto">
-      <div className="px-4 sm:px-6 lg:px-8 mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div className="px-4 sm:px-6 lg:px-8 mb-3 flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="sag-eyebrow">{eyebrow}</p>
-          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-[#4B1D3F]">{title}</h2>
+          <h2 className="font-display text-[22px] leading-7 lg:text-[28px] lg:leading-8 text-ink">{title}</h2>
+          {note && <p className="mt-0.5 text-sm leading-5 text-ink-muted">{note}</p>}
         </div>
         {action}
       </div>
-      <ul className="sag-scroll-x flex gap-3 sm:gap-5 overflow-x-auto scroll-px-4 sm:scroll-px-6 px-4 sm:px-6 lg:px-8 pb-2">
+      <ul className="sag-scroll-x flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
         {items.map((p) => (
-          <li key={p.id} className="shrink-0 w-[46vw] max-w-[240px] sm:w-[240px]"><ProductCard product={p} compact /></li>
+          <li key={p.id} className="shrink-0 w-[44vw] max-w-[220px] sm:w-[220px]"><ProductCard product={p} compact /></li>
         ))}
       </ul>
     </div>
@@ -55,25 +55,25 @@ export const PersonalRails: React.FC = () => {
   const showActivity = features.personalRails && (recent.length > 0 || picked.length > 0);
   if (!forYou.length && !showActivity) return null;
   return (
-    <div className="bg-[#FBF7F3]">
+    <div className="bg-page divide-y divide-line">
       {forYou.length > 0 && (
         <Rail
-          eyebrow="Recommended for you"
-          title="Chosen for your style"
+          title="Recommended for you"
+          note="Based on your saved style profile"
           items={forYou}
           action={(
             <button
               type="button"
               onClick={() => { navigate('/account?tab=style'); window.scrollTo(0, 0); }}
-              className="sag-btn-outline h-10 px-5 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer"
+              className="sag-link shrink-0 whitespace-nowrap"
             >
               Edit my style
             </button>
           )}
         />
       )}
-      {features.personalRails && picked.length > 0 && <Rail eyebrow="Picked for you" title="Because you viewed" items={picked} />}
-      {features.personalRails && recent.length > 0 && <Rail eyebrow="Recently viewed" title="Pick up where you left off" items={recent} />}
+      {features.personalRails && picked.length > 0 && <Rail title="Similar to what you viewed" items={picked} />}
+      {features.personalRails && recent.length > 0 && <Rail title="Recently viewed" items={recent} />}
     </div>
   );
 };

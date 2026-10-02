@@ -59,22 +59,22 @@ export const PendingPayment: React.FC<{ order: Order }> = ({ order }) => {
   };
 
   return (
-    <div className="rounded-2xl border border-[#8A2E55]/15 bg-[#F7E4EA] p-4 sm:p-5 space-y-4" role="region" aria-label="Payment pending">
-      <div className="flex items-start gap-3">
-        <span className="w-10 h-10 shrink-0 rounded-full bg-white flex items-center justify-center"><LockIcon className="w-5 h-5" live={false} /></span>
+    <div className="rounded-control border border-sale-line bg-sale-tint p-3.5 space-y-3" role="region" aria-label="Payment pending">
+      <div className="flex items-start gap-2.5">
+        <span className="shrink-0 flex mt-0.5 text-sale"><LockIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-[#8A2E55]">Payment pending · ₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}</p>
-          <p className="mt-0.5 text-sm leading-relaxed text-[#8A2E55]/90">
+          <p className="sag-num text-sm leading-5 font-semibold text-ink">Payment pending · ₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}</p>
+          <p className="mt-0.5 text-sm leading-5 text-ink">
             This order is confirmed only after the payment is verified. If money was already deducted, tap “Check payment” instead of paying again.
           </p>
         </div>
       </div>
       <div className="grid gap-2 sm:flex">
-        <button type="button" onClick={pay} disabled={Boolean(busy)} className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-          {busy === 'pay' ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockIcon className="h-4 w-4" mono live={false} />} Pay ₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}
+        <button type="button" onClick={pay} disabled={Boolean(busy)} className="sag-btn-primary sag-num h-12 px-5 gap-2">
+          {busy === 'pay' ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" /> : <LockIcon className="h-[18px] w-[18px]" mono live={false} />} Pay ₹{Number(order.finalTotal || 0).toLocaleString('en-IN')} securely
         </button>
-        <button type="button" onClick={check} disabled={Boolean(busy)} className="sag-btn-outline bg-white h-11 px-5 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-          {busy === 'check' ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Check payment
+        <button type="button" onClick={check} disabled={Boolean(busy)} className="sag-btn-outline h-12 px-5 gap-2 text-[15px]">
+          {busy === 'check' ? <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" /> : <RefreshCw className="h-[18px] w-[18px]" aria-hidden="true" />} Check payment
         </button>
       </div>
     </div>

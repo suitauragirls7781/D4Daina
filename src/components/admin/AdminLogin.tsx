@@ -42,10 +42,10 @@ export const AdminLogin: React.FC = () => {
         setActivePage('admin');
         navigate('/admin/dashboard');
       } else {
-        setErrorMessage(res.message || 'Invalid administrative credentials.');
+        setErrorMessage(res.message || 'The username, password or PIN is not right. Please check and try again.');
       }
     } catch {
-      setErrorMessage('Authentication service error.');
+      setErrorMessage('Could not sign in just now. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -56,67 +56,59 @@ export const AdminLogin: React.FC = () => {
     navigate('/');
   };
 
-  const inputClass = 'block w-full h-12 pl-11 border border-[#4B1D3F]/15 bg-[#FBF7F3] rounded-full text-[15px] text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:bg-white focus:border-[#4B1D3F]/50 focus:ring-4 focus:ring-[#4B1D3F]/10 transition';
-  const labelClass = 'block text-[12px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/70 mb-2 pl-1';
+  const inputClass = 'sag-input pl-11';
+  const iconClass = 'absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-muted';
 
   return (
-    <div id="admin-login-page" className="min-h-screen bg-[#FBF7F3] flex flex-col relative">
+    <div id="admin-login-page" className="min-h-screen bg-page flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 sm:px-8 py-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#4B1D3F] text-white flex items-center justify-center font-serif font-semibold ring-1 ring-[#C5A46D]/40">SA</div>
-          <span className="hidden sm:block font-serif text-xl font-semibold text-[#4B1D3F]">Suit Aura Girls</span>
+      <div className="bg-white border-b border-line">
+        <div className="max-w-5xl mx-auto h-14 pl-4 pr-2 sm:px-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 shrink-0 rounded-[10px] bg-brand text-white flex items-center justify-center text-sm font-bold" aria-hidden="true">SA</div>
+            <span className="text-base font-semibold text-ink truncate">Suit Aura Girls</span>
+          </div>
+          <button
+            id="admin-login-back-to-store-btn"
+            onClick={handleReturnToStorefront}
+            className="sag-link gap-1.5 px-2 shrink-0"
+          >
+            <Store className="w-4 h-4" />
+            <span>View store</span>
+          </button>
         </div>
-        <button
-          id="admin-login-back-to-store-btn"
-          onClick={handleReturnToStorefront}
-          className="inline-flex items-center gap-2 h-10 px-4 bg-white border border-[#4B1D3F]/20 rounded-full text-[13px] font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] hover:border-[#4B1D3F]/40 transition-colors cursor-pointer"
-        >
-          <Store className="w-4 h-4" />
-          <span>View Storefront</span>
-        </button>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center px-4 pb-12">
+      <div className="flex-1 flex flex-col sm:justify-center px-4 py-6 sm:py-10">
         <div className="w-full max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <p className="text-[11px] uppercase tracking-[0.28em] font-semibold text-[#9C7A45]">Admin Studio</p>
-            <h2 className="mt-3 font-serif text-4xl sm:text-5xl font-semibold tracking-tight text-[#4B1D3F] leading-[1.05]">
-              Welcome back
-            </h2>
-            <p className="mt-3 text-sm text-[#2A1A26]/60">
-              Store Operations & Catalog Control
-            </p>
-          </div>
-
-          <div className="bg-white py-8 px-6 sm:px-9 rounded-3xl border border-[#4B1D3F]/10 shadow-[0_24px_60px_-30px_rgba(42,26,38,0.35)] space-y-6">
-
-            <div className="flex items-start gap-3 pb-5 border-b border-[#4B1D3F]/10">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center">
+          <div className="sag-card p-5 sm:p-7">
+            <div className="flex items-start gap-3">
+              <span className="w-10 h-10 shrink-0 rounded-[10px] bg-brand-wash text-brand flex items-center justify-center" aria-hidden="true">
                 <ShieldCheck className="w-5 h-5" />
               </span>
-              <div>
-                <h3 className="text-base font-semibold text-[#2A1A26]">Staff Authentication</h3>
-                <p className="text-[13px] text-[#2A1A26]/60 mt-0.5 leading-relaxed">
-                  Sign in to manage catalog items, categories, order fulfillment, customers, and store configurations.
+              <div className="min-w-0">
+                <h2 className="text-[22px] leading-7 font-semibold text-ink">Admin sign in</h2>
+                <p className="mt-0.5 text-sm leading-5 text-ink-muted">
+                  For store staff. Manage products, orders, customers and store settings.
                 </p>
               </div>
             </div>
 
             {errorMessage && (
-              <div role="alert" className="px-4 py-3 rounded-2xl bg-rose-50 border border-rose-200 text-[13px] text-rose-700 font-medium">
-                {errorMessage}
+              <div role="alert" className="mt-5 px-3.5 py-3 rounded-xl bg-danger-tint border border-danger-line text-sm leading-5 text-danger font-medium flex items-start gap-2">
+                <Lock className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                <span>{errorMessage}</span>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="mt-5 space-y-4">
               <div>
-                <label htmlFor="admin-email-input" className={labelClass}>
-                  Admin Username or Email
+                <label htmlFor="admin-email-input" className="sag-label">
+                  Username or email
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#4B1D3F]/45">
-                    <Mail className="w-4 h-4" />
+                  <div className={iconClass}>
+                    <Mail className="w-[18px] h-[18px]" />
                   </div>
                   <input
                     id="admin-email-input"
@@ -126,18 +118,22 @@ export const AdminLogin: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter admin username"
                     autoComplete="username"
-                    className={`${inputClass} pr-4`}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    enterKeyHint="next"
+                    className={`${inputClass} pr-3.5`}
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="admin-password-input" className={labelClass}>
-                  Admin Password
+                <label htmlFor="admin-password-input" className="sag-label">
+                  Password
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#4B1D3F]/45">
-                    <Lock className="w-4 h-4" />
+                  <div className={iconClass}>
+                    <Lock className="w-[18px] h-[18px]" />
                   </div>
                   <input
                     id="admin-password-input"
@@ -147,32 +143,28 @@ export const AdminLogin: React.FC = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     autoComplete="current-password"
+                    enterKeyHint="next"
                     className={`${inputClass} pr-12`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-1 my-1 w-10 flex items-center justify-center rounded-full text-[#4B1D3F]/50 hover:text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer transition-colors"
+                    className="absolute inset-y-0 right-1 my-1 w-11 flex items-center justify-center rounded-[10px] text-ink-muted hover:text-ink hover:bg-sunken cursor-pointer transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="w-[18px] h-[18px]" /> : <Eye className="w-[18px] h-[18px]" />}
                   </button>
                 </div>
               </div>
 
-              {/* 6-Digit Security PIN */}
+              {/* 6-digit security PIN */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label htmlFor="admin-pin-input" className={`${labelClass} mb-0`}>
-                    6-Digit Security PIN (2FA)
-                  </label>
-                  <span className="text-[11px] font-semibold text-[#8A2E55] bg-[#F7E4EA] px-2.5 py-0.5 rounded-full">
-                    Required
-                  </span>
-                </div>
+                <label htmlFor="admin-pin-input" className="sag-label">
+                  6-digit security PIN
+                </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[#4B1D3F]/45">
-                    <KeyRound className="w-4 h-4" />
+                  <div className={iconClass}>
+                    <KeyRound className="w-[18px] h-[18px]" />
                   </div>
                   <input
                     id="admin-pin-input"
@@ -183,11 +175,13 @@ export const AdminLogin: React.FC = () => {
                     value={pin}
                     onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                     placeholder="••••••"
-                    className={`${inputClass} pr-4 tracking-[0.4em] font-mono`}
+                    aria-describedby="admin-pin-help"
+                    enterKeyHint="done"
+                    className={`${inputClass} pr-3.5 tracking-[0.4em] font-mono`}
                   />
                 </div>
-                <p className="text-[12px] text-[#2A1A26]/50 mt-2 pl-1 leading-relaxed">
-                  2-Factor PIN configured in Admin Settings. Even with the password, this PIN is required.
+                <p id="admin-pin-help" className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">
+                  Needed along with the password. You can change it in Admin Settings.
                 </p>
               </div>
 
@@ -198,16 +192,16 @@ export const AdminLogin: React.FC = () => {
                 role="switch"
                 aria-checked={remember}
                 onClick={toggleRemember}
-                className={`w-full flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors cursor-pointer ${remember ? 'border-[#4B1D3F]/30 bg-[#F3EEF8]' : 'border-[#4B1D3F]/15 bg-white'}`}
+                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-white'}`}
               >
                 <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#2A1A26]">Save login on this phone</span>
-                  <span className="block text-[12px] text-[#2A1A26]/60 leading-snug mt-0.5">
+                  <span className="block text-sm leading-5 font-semibold text-ink">Save login on this phone</span>
+                  <span className="block text-[13px] leading-[18px] text-ink-muted mt-0.5">
                     {remember ? 'You will not be asked to sign in again on this phone and browser.' : 'You will be signed out after 12 hours.'}
                   </span>
                 </span>
-                <span aria-hidden="true" className={`relative w-11 h-6 shrink-0 rounded-full transition-colors ${remember ? 'bg-[#4B1D3F]' : 'bg-[#E6DDF0]'}`}>
-                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${remember ? 'translate-x-5' : ''}`} />
+                <span aria-hidden="true" className={`relative w-12 h-7 shrink-0 rounded-full transition-colors ${remember ? 'bg-brand' : 'bg-control'}`}>
+                  <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${remember ? 'translate-x-5' : ''}`} />
                 </span>
               </button>
 
@@ -215,26 +209,25 @@ export const AdminLogin: React.FC = () => {
                 id="admin-login-submit-btn"
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 flex justify-center items-center gap-2 px-4 rounded-full text-sm font-semibold tracking-wide text-white bg-[#4B1D3F] hover:bg-[#3B1532] focus:outline-none focus:ring-4 focus:ring-[#4B1D3F]/20 transition-colors disabled:opacity-60 disabled:cursor-wait cursor-pointer"
+                className="sag-btn-primary w-full gap-2 disabled:cursor-wait"
               >
                 {loading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Verifying Credentials...</span>
+                    <Loader2 className="w-[18px] h-[18px] animate-spin" />
+                    <span>Signing in…</span>
                   </>
                 ) : (
                   <>
-                    <span>Unlock Admin Vault</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <span>Sign in<span className="sr-only"> – unlock admin vault</span></span>
+                    <ArrowRight className="w-[18px] h-[18px]" />
                   </>
                 )}
               </button>
             </form>
-
           </div>
 
-          <p className="mt-6 text-center text-[12px] text-[#2A1A26]/45 flex items-center justify-center gap-1.5">
-            <Lock className="w-3.5 h-3.5" /> Protected area for store staff only
+          <p className="mt-4 text-center text-[13px] leading-[18px] text-ink-muted flex items-center justify-center gap-1.5">
+            <Lock className="w-3.5 h-3.5" aria-hidden="true" /> This page is for store staff only
           </p>
         </div>
       </div>

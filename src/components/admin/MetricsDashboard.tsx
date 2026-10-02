@@ -39,36 +39,36 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ visitorStats
     <div className="space-y-4">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {metrics.map((metric) => (
-          <div key={metric.title} className="bg-white p-4 sm:p-5 rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]">
+          <div key={metric.title} className="bg-white p-4 sm:p-5 rounded-2xl border border-line">
             <div className="flex items-start justify-between gap-2 mb-3">
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55 leading-tight">{metric.title}</span>
-              <span className="w-9 h-9 shrink-0 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center relative">
+              <span className="text-[11px] font-semibold text-ink-muted leading-tight">{metric.title}</span>
+              <span className="w-9 h-9 shrink-0 rounded-full bg-sunken text-ink flex items-center justify-center relative">
                 <metric.icon className="w-4 h-4" />
-                {metric.live && Number(metric.value) > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-600 ring-2 ring-white" />}
+                {metric.live && Number(metric.value) > 0 && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-ok ring-2 ring-white" />}
               </span>
             </div>
-            <p className="text-2xl sm:text-[28px] font-serif font-semibold text-[#2A1A26] leading-none tabular-nums truncate">{metric.value}</p>
-            <p className="text-[12px] text-[#2A1A26]/55 mt-2 truncate">{metric.note}</p>
+            <p className="text-2xl sm:text-[28px] font-semibold text-ink leading-none tabular-nums truncate">{metric.value}</p>
+            <p className="text-[13px] text-ink-muted mt-2 truncate">{metric.note}</p>
           </div>
         ))}
       </div>
 
       <div id="admin-visitor-totals" className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {visitorCards.map((card) => (
-          <div key={card.title} className="bg-white p-4 sm:p-5 rounded-2xl border border-[#4B1D3F]/10 flex items-center gap-4">
-            <span className="w-11 h-11 shrink-0 rounded-2xl bg-[#FBF7F3] border border-[#C5A46D]/40 text-[#9C7A45] flex items-center justify-center">
+          <div key={card.title} className="bg-white p-4 sm:p-5 rounded-2xl border border-line flex items-center gap-4">
+            <span className="w-11 h-11 shrink-0 rounded-2xl bg-page border border-line text-ink-muted flex items-center justify-center">
               <card.icon className="w-5 h-5" />
             </span>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">{card.title}</p>
-              <p className="text-xl font-serif font-semibold text-[#2A1A26] tabular-nums leading-tight">{card.value}</p>
-              <p className="text-[12px] text-[#2A1A26]/55 leading-snug">{card.note}</p>
+              <p className="text-[11px] font-semibold text-ink-muted">{card.title}</p>
+              <p className="text-base font-semibold text-ink tabular-nums leading-tight">{card.value}</p>
+              <p className="text-[13px] text-ink-muted leading-snug">{card.note}</p>
             </div>
           </div>
         ))}
       </div>
       {visitorStats.countingSince && (
-        <p className="text-[12px] text-[#2A1A26]/50 leading-relaxed px-1">Every visit is counted since {new Date(visitorStats.countingSince).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}; days before that counted one visit per visitor per day. A visit = time on the site; coming back after 30 minutes counts again.</p>
+        <p className="text-[13px] text-ink-faint leading-relaxed px-1">Every visit is counted since {new Date(visitorStats.countingSince).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}; days before that counted one visit per visitor per day. A visit = time on the site; coming back after 30 minutes counts again.</p>
       )}
     </div>
   );

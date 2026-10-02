@@ -12,7 +12,7 @@ import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
 import { OrderInvoice, useDialogA11y } from './OrderInvoice';
 import { StyleProfile, primeStylePrefs } from './StyleProfile';
 import { LoginPage } from './LoginPage';
-import { CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, Star, X, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, X } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { useAdmin } from '../context/AdminContext';
@@ -48,19 +48,25 @@ const CANCEL_REASONS = [
   'Other reason',
 ];
 
-const inputClass = 'w-full h-12 px-4 bg-white border border-[#4B1D3F]/20 hover:border-[#4B1D3F]/35 focus:border-[#4B1D3F]/70 focus:ring-4 focus:ring-[#F3EEF8] rounded-full text-sm text-[#2A1A26] transition focus:outline-none disabled:opacity-60 disabled:bg-[#FBF7F3]';
-const labelClass = 'block pl-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65';
-const actionClass = 'h-11 px-3 text-xs font-semibold uppercase tracking-[0.08em] sm:tracking-[0.12em] whitespace-nowrap inline-flex items-center justify-center gap-2 cursor-pointer';
-/** Soft lavender circle that holds an icon in empty states and info rows. */
-const iconCircle = 'shrink-0 rounded-full ring-1 ring-[#4B1D3F]/8 flex items-center justify-center';
+/** Small buttons inside cards (the 52px height is for the one main action on a screen). */
+const smallBtn = 'h-11 px-4 gap-2 text-sm whitespace-nowrap';
+const sectionTitle = 'text-[20px] leading-7 font-semibold text-ink';
+const noteClass = 'text-[13px] leading-[18px] text-ink-muted';
+
+/** Phones open on the account menu; a link that names a tab (or /my-profile) opens that tab straight away. */
+const initialMobileView = (): 'menu' | 'panel' => {
+  if (typeof window === 'undefined') return 'menu';
+  const tab = new URLSearchParams(window.location.search).get('tab');
+  return (tab && TAB_KEYS.includes(tab)) || window.location.pathname === '/my-profile' ? 'panel' : 'menu';
+};
 
 /** Empty / "nothing here" card used across the tabs, so every one looks the same. */
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, text, children }) => (
-  <div className="sag-card rounded-3xl! py-12 sm:py-16 px-5 text-center">
-    <span className={`${iconCircle} w-16 h-16 mx-auto bg-[#F3EEF8]`}>{icon}</span>
-    <p className="mt-4 font-serif text-2xl text-[#2A1A26]">{title}</p>
-    <p className="mt-1.5 text-sm text-[#2A1A26]/70 max-w-sm mx-auto leading-relaxed">{text}</p>
-    {children && <div className="mt-5 flex flex-wrap justify-center gap-2">{children}</div>}
+  <div className="sag-card px-4 py-10 text-center">
+    <span className="w-14 h-14 mx-auto rounded-full bg-sunken text-ink-muted flex items-center justify-center">{icon}</span>
+    <p className="mt-4 text-[17px] leading-6 font-semibold text-ink">{title}</p>
+    <p className="mt-1 text-sm leading-5 text-ink-muted max-w-sm mx-auto">{text}</p>
+    {children && <div className="mt-5 flex flex-col sm:flex-row sm:justify-center gap-2">{children}</div>}
   </div>
 );
 
@@ -68,8 +74,8 @@ const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.R
 const SectionIntro: React.FC<{ title: string; text?: React.ReactNode; action?: React.ReactNode }> = ({ title, text, action }) => (
   <div className="flex flex-wrap items-end justify-between gap-3">
     <div className="min-w-0">
-      <h2 className="font-serif text-2xl sm:text-[28px] leading-tight text-[#4B1D3F]">{title}</h2>
-      {text && <p className="mt-1 text-sm text-[#2A1A26]/70 leading-relaxed">{text}</p>}
+      <h2 className={sectionTitle}>{title}</h2>
+      {text && <p className="mt-1 text-sm leading-5 text-ink-muted">{text}</p>}
     </div>
     {action}
   </div>
@@ -142,7 +148,7 @@ const CancelOrderDialog: React.FC<{
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
       <form
         ref={panelRef}
         role="dialog"
@@ -151,30 +157,27 @@ const CancelOrderDialog: React.FC<{
         aria-describedby="cancel-order-desc"
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#FBF7F3] w-full sm:max-w-lg max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-[var(--sag-shadow)] animate-in fade-in slide-in-from-bottom-5"
+        className="bg-white text-ink w-full sm:max-w-lg max-h-[85dvh] flex flex-col rounded-t-sheet sm:rounded-card shadow-[var(--sag-shadow-pop)] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2.5 h-1 w-10 rounded-full bg-[#4B1D3F]/15" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-[#4B1D3F]/10">
-          <div className="flex items-start gap-3 min-w-0">
-            <span className="w-11 h-11 shrink-0 rounded-full bg-[#F7E4EA] flex items-center justify-center text-[#8A2E55]"><XCircle className="w-5 h-5" aria-hidden="true" /></span>
-            <div className="min-w-0">
-              <h2 id="cancel-order-title" className="font-serif text-2xl text-[#4B1D3F] leading-tight">Cancel this order?</h2>
-              <p className="mt-0.5 text-sm text-[#2A1A26]/65 break-words">#{order.orderNumber} · {inr(order.finalTotal)} paid</p>
-            </div>
+        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-sunken-deep" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line">
+          <div className="min-w-0 pt-2">
+            <h2 id="cancel-order-title" className="text-base leading-[22px] font-semibold text-ink">Cancel this order?</h2>
+            <p className="sag-num mt-0.5 text-sm leading-5 text-ink-muted break-words">#{order.orderNumber} · {inr(order.finalTotal)} paid</p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center text-[#4B1D3F] cursor-pointer">
-            <X className="w-5 h-5" />
+          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+            <X className="w-[22px] h-[22px]" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6 py-5 space-y-5">
-          <p id="cancel-order-desc" className="text-sm text-[#2A1A26]/75 leading-relaxed">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 space-y-5">
+          <p id="cancel-order-desc" className="text-sm leading-5 text-ink-muted">
             You can ask to cancel until your order is packed. Our team reviews every request and emails you. Orders cancelled before dispatch are refunded in full to your original payment method.{' '}
-            <button type="button" onClick={onPolicy} className="underline underline-offset-2 text-[#4B1D3F] font-medium cursor-pointer">Cancellation policy</button>
+            <button type="button" onClick={onPolicy} className="font-semibold text-brand underline underline-offset-[3px] cursor-pointer">Cancellation policy</button>
           </p>
           <fieldset className="space-y-2">
-            <legend className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45] mb-2.5">Why do you want to cancel?</legend>
+            <legend className="sag-label mb-2">Why do you want to cancel?</legend>
             {CANCEL_REASONS.map((reason, index) => (
-              <label key={reason} className={`flex items-center gap-3 min-h-12 px-4 py-2.5 rounded-2xl border text-sm cursor-pointer transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#4B1D3F]/30 ${choice === reason ? 'border-[#4B1D3F] bg-white text-[#2A1A26] font-medium shadow-[var(--sag-shadow)]' : 'border-[#4B1D3F]/12 bg-white/70 text-[#2A1A26]/80 hover:bg-white hover:border-[#4B1D3F]/25'}`}>
+              <label key={reason} data-selected={choice === reason} className="sag-card flex items-center gap-3 min-h-12 px-3.5 py-2.5 text-sm leading-5 text-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
                 <input
                   type="radio"
                   name="cancel-reason"
@@ -182,32 +185,35 @@ const CancelOrderDialog: React.FC<{
                   checked={choice === reason}
                   onChange={() => { setChoice(reason); setError(''); }}
                   data-autofocus={index === 0 || undefined}
-                  className="w-4 h-4 accent-[#4B1D3F]"
+                  className="w-5 h-5 shrink-0 accent-brand focus:outline-none"
                 />
-                {reason}
+                <span className={choice === reason ? 'font-semibold' : ''}>{reason}</span>
               </label>
             ))}
           </fieldset>
-          <label className="block space-y-1.5">
-            <span className={labelClass}>{choice === 'Other reason' ? 'Tell us why *' : 'More details (optional)'}</span>
+          <div>
+            <label htmlFor="cancel-details" className="sag-label">{choice === 'Other reason' ? 'Tell us why' : 'More details (optional)'}</label>
             <textarea
+              id="cancel-details"
               rows={3}
               maxLength={250}
               value={details}
               onChange={(e) => { setDetails(e.target.value); setError(''); }}
               placeholder={choice === 'Other reason' ? 'A line or two is enough' : 'Anything our team should know'}
-              className="w-full rounded-2xl border border-[#4B1D3F]/20 bg-white px-4 py-3 text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:border-[#4B1D3F]/70 focus:ring-4 focus:ring-[#F3EEF8] resize-none"
+              className="sag-input resize-none"
             />
-            <span className="block text-right text-[11px] text-[#2A1A26]/50">{details.length}/250</span>
-          </label>
-          {error && <p role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">{error}</p>}
+            <span className={`sag-num block mt-1 text-right ${noteClass}`}>{details.length}/250</span>
+          </div>
+          {error && (
+            <p role="alert" className="rounded-control bg-danger-tint border border-danger-line px-3.5 py-3 text-sm leading-5 font-medium text-danger">{error}</p>
+          )}
         </div>
-        <div className="grid grid-cols-2 gap-2 px-5 sm:px-6 py-4 border-t border-[#4B1D3F]/10 bg-[#FBF7F3] rounded-b-none sm:rounded-b-3xl pb-[max(1rem,env(safe-area-inset-bottom))]">
-          <button type="button" onClick={close} disabled={sending} className={`sag-btn-outline ${actionClass} disabled:opacity-60`}>
+        <div className="grid grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line">
+          <button type="button" onClick={close} disabled={sending} className="sag-btn-outline h-12 px-3 text-[15px]">
             Keep order
           </button>
-          <button type="submit" disabled={sending} className={`sag-btn-primary ${actionClass} disabled:opacity-60`}>
-            {sending && <Loader2 className="w-4 h-4 animate-spin text-current" />}
+          <button type="submit" disabled={sending} className="sag-btn-primary h-12 px-3 gap-2 text-[15px]">
+            {sending && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
             {sending ? 'Sending…' : 'Send request'}
           </button>
         </div>
@@ -237,45 +243,36 @@ const CouponsPanel: React.FC<{ coupons: Coupon[]; onShop: () => void }> = ({ cou
   };
   if (coupons.length === 0) {
     return (
-      <EmptyState icon={<TagIcon className="w-8 h-8" />} title="No coupons running right now" text="When the store runs an offer, its code appears here.">
-        <button type="button" onClick={onShop} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Continue shopping</button>
+      <EmptyState icon={<TagIcon className="w-7 h-7" mono />} title="No coupons running right now" text="When the store runs an offer, its code appears here.">
+        <button type="button" onClick={onShop} className={`sag-btn-outline ${smallBtn}`}>Continue shopping</button>
       </EmptyState>
     );
   }
   return (
     <section className="space-y-4" aria-label="Available coupons">
       <SectionIntro title="Your coupons" text="Copy a code and apply it in your bag. The final discount is confirmed at checkout." />
-      <ul className="grid gap-3 sm:gap-4 sm:grid-cols-2">
+      <ul className="grid gap-3 sm:grid-cols-2">
         {coupons.map((c) => (
-          <li key={c.id} className="sag-card rounded-3xl! overflow-hidden flex flex-col">
-            <div className="flex items-stretch">
-              <div className="w-[88px] sm:w-24 shrink-0 bg-[#4B1D3F] text-white flex flex-col items-center justify-center gap-1 px-2 py-4 text-center">
-                <TagIcon className="w-6 h-6 text-white" mono />
-                <span className="font-serif text-xl leading-none">{c.discountType === 'fixed' ? inr(c.discountValue) : `${c.discountValue}%`}</span>
-                <span className="text-[11px] uppercase tracking-[0.16em] text-white/80">off</span>
+          <li key={c.id} className="rounded-card border-[1.5px] border-dashed border-sale-line bg-sale-tint p-4 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="sag-caps text-base leading-[22px] font-bold tracking-wide text-ink break-all">{c.code}</p>
+                <p className="sag-num mt-0.5 text-sm leading-5 font-semibold text-sale">{couponDiscountLabel(c)}</p>
               </div>
-              <div className="relative flex-1 min-w-0 p-4 sm:p-5 border-l-2 border-dashed border-[#4B1D3F]/15">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="inline-block rounded-lg bg-[#F3EEF8] px-2.5 py-1 font-mono font-semibold text-base tracking-[0.12em] text-[#4B1D3F] break-all">{c.code}</p>
-                    <p className="mt-1.5 text-sm font-medium text-emerald-800">{couponDiscountLabel(c)}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => copy(c.code)}
-                    aria-label={`Copy coupon code ${c.code}`}
-                    className={`shrink-0 inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-xs font-semibold cursor-pointer transition-colors ${copied === c.code ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-[#4B1D3F]/30 text-[#4B1D3F] hover:bg-[#F3EEF8]'}`}
-                  >
-                    {copied === c.code ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
-                    {copied === c.code ? 'Copied' : 'Copy'}
-                  </button>
-                </div>
-                {c.description && <p className="mt-2 text-sm text-[#2A1A26]/75 leading-relaxed">{c.description}</p>}
-              </div>
+              <button
+                type="button"
+                onClick={() => copy(c.code)}
+                aria-label={`Copy coupon code ${c.code}`}
+                className={`sag-btn-outline shrink-0 ${smallBtn}`}
+              >
+                {copied === c.code ? <CheckCircle2 className="w-4 h-4 text-ok" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
+                {copied === c.code ? 'Copied' : 'Copy'}
+              </button>
             </div>
-            <dl className="mt-auto grid grid-cols-2 gap-3 px-4 sm:px-5 py-3 bg-[#FBF7F3] border-t border-[#4B1D3F]/8 text-sm">
-              <div><dt className="uppercase tracking-[0.14em] text-[11px] font-semibold text-[#9C7A45]">Min. order</dt><dd className="text-[#2A1A26]">{c.minOrderValue > 0 ? inr(c.minOrderValue) : 'No minimum'}</dd></div>
-              <div><dt className="uppercase tracking-[0.14em] text-[11px] font-semibold text-[#9C7A45]">Valid until</dt><dd className="text-[#2A1A26]">{formatDate(c.expiryDate) || 'Until withdrawn'}</dd></div>
+            {c.description && <p className="text-sm leading-5 text-ink">{c.description}</p>}
+            <dl className="sag-num mt-auto grid grid-cols-2 gap-3 pt-3 border-t border-sale-line text-sm leading-5">
+              <div><dt className={noteClass}>Min. order</dt><dd className="text-ink">{c.minOrderValue > 0 ? inr(c.minOrderValue) : 'No minimum'}</dd></div>
+              <div><dt className={noteClass}>Valid until</dt><dd className="text-ink">{formatDate(c.expiryDate) || 'Until withdrawn'}</dd></div>
             </dl>
           </li>
         ))}
@@ -288,7 +285,6 @@ const CouponsPanel: React.FC<{ coupons: Coupon[]; onShop: () => void }> = ({ cou
 const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab) => void }> = ({ onGo, onTab }) => {
   const { storeSettings } = useAdmin();
   const email = storeSettings?.storeEmail || 'suitauragirls@gmail.com';
-  const contactClass = 'sag-card rounded-2xl! p-4 flex items-center gap-3 min-w-0 hover:bg-[#F3EEF8]! hover:border-[#4B1D3F]/20! transition-colors';
   const links: Array<{ label: string; hint: string; action: () => void }> = [
     { label: 'Where is my order?', hint: 'Track any order with its number', action: () => onGo('track-order') },
     { label: 'Returns & exchanges', hint: 'Start a return or size exchange', action: () => onTab('returns') },
@@ -298,45 +294,47 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
     { label: 'Privacy policy', hint: 'How we use and protect your details', action: () => onGo('privacy-policy') },
     { label: 'Terms & conditions', hint: 'Terms of using this store', action: () => onGo('terms-conditions') },
   ];
+  const rowText = (title: string, sub: string, breakAll = false) => (
+    <span className="min-w-0 flex-1">
+      <span className="block">{title}</span>
+      <span className={`block font-normal ${noteClass} ${breakAll ? 'break-all' : ''}`}>{sub}</span>
+    </span>
+  );
+  const chevron = <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />;
   return (
-    <section className="space-y-5" aria-label="Help Center">
+    <section className="space-y-4" aria-label="Help Center">
       <SectionIntro title="How can we help?" text="Reach our team directly, or find answers in our store policies." />
-      <div className="grid gap-3 sm:grid-cols-3">
-        <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need some help.')} target="_blank" rel="noopener noreferrer" className={contactClass}>
-          <span className={`${iconCircle} w-11 h-11 bg-[#F3EEF8]`}><WhatsAppIcon className="w-5 h-5" aria-hidden="true" /></span>
-          <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#2A1A26]">WhatsApp</span><span className="block text-[13px] text-[#2A1A26]/65">Chat with our team</span></span>
-          <ChevronRight className="w-4 h-4 shrink-0 text-[#4B1D3F]/40 sm:hidden" aria-hidden="true" />
+      <div className="sag-card px-4">
+        <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need some help.')} target="_blank" rel="noopener noreferrer" className="sag-row min-h-14">
+          <WhatsAppIcon className="w-5 h-5 shrink-0" aria-hidden="true" />
+          {rowText('Chat on WhatsApp', 'Chat with our team')}
+          {chevron}
         </a>
-        <a href={`tel:+91${SUPPORT_PHONE}`} className={contactClass}>
-          <span className={`${iconCircle} w-11 h-11 bg-[#F3EEF8]`}><SupportIcon className="w-5 h-5" /></span>
-          <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#2A1A26]">Call us</span><span className="block text-[13px] text-[#2A1A26]/65">{SUPPORT_PHONE_DISPLAY}</span></span>
-          <ChevronRight className="w-4 h-4 shrink-0 text-[#4B1D3F]/40 sm:hidden" aria-hidden="true" />
+        <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-row min-h-14">
+          <SupportIcon className="w-5 h-5 shrink-0" mono />
+          {rowText('Call us', SUPPORT_PHONE_DISPLAY)}
+          {chevron}
         </a>
-        <a href={`mailto:${email}`} className={contactClass}>
-          <span className={`${iconCircle} w-11 h-11 bg-[#F3EEF8]`}><Mail className="w-5 h-5 text-[#4B1D3F]" aria-hidden="true" /></span>
-          <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#2A1A26]">Email</span><span className="block text-[13px] text-[#2A1A26]/65 break-all">{email}</span></span>
-          <ChevronRight className="w-4 h-4 shrink-0 text-[#4B1D3F]/40 sm:hidden" aria-hidden="true" />
+        <a href={`mailto:${email}`} className="sag-row min-h-14">
+          <Mail className="w-5 h-5 shrink-0" aria-hidden="true" />
+          {rowText('Email', email, true)}
+          {chevron}
         </a>
       </div>
-      <div className="sag-card rounded-3xl! p-2 sm:p-3">
-        <p className="px-3 pt-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Common questions</p>
-        <ul className="divide-y divide-[#4B1D3F]/8">
+      <div className="sag-card px-4">
+        <p className="sag-eyebrow pt-4 pb-1">Common questions</p>
+        <ul>
           {links.map((link) => (
-            <li key={link.label}>
-              <button type="button" onClick={link.action} className="group w-full min-h-14 px-3 py-3 flex items-center justify-between gap-3 text-left rounded-2xl hover:bg-[#F3EEF8] cursor-pointer transition-colors">
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-[#2A1A26]">{link.label}</span>
-                  <span className="block text-[13px] text-[#2A1A26]/65">{link.hint}</span>
-                </span>
-                <span className="w-8 h-8 shrink-0 rounded-full bg-[#FBF7F3] group-hover:bg-white flex items-center justify-center transition-colors">
-                  <ChevronRight className="w-4 h-4 text-[#4B1D3F]/60" aria-hidden="true" />
-                </span>
+            <li key={link.label} className="border-t border-line first:border-t-0">
+              <button type="button" onClick={link.action} className="sag-row border-t-0 min-h-14 w-full text-left cursor-pointer">
+                {rowText(link.label, link.hint)}
+                {chevron}
               </button>
             </li>
           ))}
         </ul>
       </div>
-      <button type="button" onClick={() => onGo('contact')} className="sag-btn-outline w-full sm:w-auto h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
+      <button type="button" onClick={() => onGo('contact')} className={`sag-btn-outline w-full sm:w-auto ${smallBtn}`}>
         Contact us page
       </button>
     </section>
@@ -366,151 +364,139 @@ const OrderCard: React.FC<{
   const awaitingPay = order.paymentStatus === 'Unpaid' && order.status === 'Pending';
   const latest = latestUpdate(order);
   const failed = paymentFailed(order);
-  // Mobile: two buttons per row. "Return / exchange" has a row of its own; an odd last button fills its row.
-  const halfButtons: Array<{ key: string; node: (wide: boolean) => React.ReactNode }> = [
-    { key: 'track', node: (wide) => (
-      <button type="button" onClick={onTrack} className={`sag-btn-primary ${actionClass} sm:px-5 ${wide ? 'col-span-2' : ''}`}>
-        <TruckIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Track
-      </button>
-    ) },
-    ...(hasReceipt(order) ? [{ key: 'receipt', node: (wide: boolean) => (
-      <button type="button" onClick={onInvoice} className={`sag-btn-outline ${actionClass} sm:px-5 ${wide ? 'col-span-2' : ''}`}>
-        <ReceiptIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Receipt
-      </button>
-    ) }] : []),
-    ...(canCancel ? [{ key: 'cancel', node: (wide: boolean) => (
-      <button type="button" onClick={onCancel} className={`sag-btn-outline ${actionClass} sm:px-5 ${wide ? 'col-span-2' : ''}`}>
-        <XCircle className="w-4 h-4 shrink-0 text-current" /> Cancel order
-      </button>
-    ) }] : []),
-    ...(buyAgain ? [{ key: 'again', node: (wide: boolean) => (
-      <button type="button" onClick={onBuyAgain} className={`sag-btn-outline ${actionClass} sm:px-5 ${wide ? 'col-span-2' : ''}`}>
-        <BagIcon className="w-4 h-4 shrink-0" mono live={false} /> Buy again
-      </button>
-    ) }] : []),
-    { key: 'support', node: (wide) => (
-      <a
-        href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with my order #${order.orderNumber}.`)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`sag-btn-outline ${actionClass} sm:px-5 ${wide ? 'col-span-2' : ''}`}
-      >
-        <WhatsAppIcon className="w-4 h-4 shrink-0" /> Support
-      </a>
-    ) },
-  ];
+  const paymentTone = paid ? 'bg-ok-tint text-ok' : order.paymentStatus === 'Refunded' ? 'bg-sunken text-ink-muted' : 'bg-sale-tint text-sale';
+  // Two per row on a phone; a button left alone on its row stretches to fill it.
+  const action = `sag-btn-outline ${smallBtn} px-3 flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto sm:px-4`;
 
   return (
-    <article className="sag-card rounded-3xl! overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
-      <header className="px-4 sm:px-6 pt-4 sm:pt-5 pb-4 bg-[#FBF7F3]/70 border-b border-[#4B1D3F]/8 space-y-2.5">
+    <article className="sag-card overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
+      <header className="px-4 sm:px-5 pt-4 pb-3.5 border-b border-line space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Order</p>
-            <h2 id={`order-${order.orderNumber}`} className="text-[#2A1A26] break-all leading-snug">
-              <span className="font-sans font-semibold text-base tracking-wide">#{order.orderNumber}</span>
+            <h2 id={`order-${order.orderNumber}`} className="text-[15px] leading-[22px] font-semibold text-ink break-all">
+              <span className="sr-only">Order </span>#{order.orderNumber}
             </h2>
-            <p className="text-[13px] text-[#2A1A26]/65 mt-0.5">
+            <p className={noteClass}>
               Placed {formatDate(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
             </p>
           </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#2A1A26]/55">Total</p>
-            <p className="font-serif text-2xl leading-tight text-[#4B1D3F]">{inr(order.finalTotal)}</p>
-          </div>
+          <p className="sag-num shrink-0 text-right text-base leading-[22px] font-bold text-ink">
+            <span className="sr-only">Total </span>{inr(order.finalTotal)}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusPill order={order} />
-          {!awaitingPay && <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${paid ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : order.paymentStatus === 'Refunded' ? 'bg-white border border-[#4B1D3F]/20 text-[#2A1A26]/75' : 'bg-[#F7E4EA] text-[#8A2E55]'}`}>
-            <span className="sr-only">Payment: </span>{paid ? 'Paid online' : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
-          </span>}
+          {!awaitingPay && (
+            <span className={`sag-badge ${paymentTone}`}>
+              <span className="sr-only">Payment: </span>{paid ? 'Paid online' : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
+            </span>
+          )}
         </div>
         {latest && (
-          <p className="text-[13px] text-[#2A1A26]/70">
-            <span className="font-semibold text-[#9C7A45]">Latest:</span> {latest.label} · {formatDateTime(latest.at)}
+          <p className={noteClass}>
+            <span className="font-semibold">Latest:</span> {latest.label} · {formatDateTime(latest.at)}
           </p>
         )}
       </header>
 
-      <div className="p-4 sm:p-6 space-y-5">
+      <div className="p-4 sm:p-5 space-y-4">
+        <PendingPayment order={order} />
 
-      <PendingPayment order={order} />
+        {/* An order still waiting for payment shows only the pay box (no delivery steps yet) */}
+        {!awaitingPay && <OrderProgress order={order} compact />}
 
-      {/* An order still waiting for payment shows only the pay box (no delivery steps yet) */}
-      {!awaitingPay && <OrderProgress order={order} compact />}
+        <CourierCard order={order} />
 
-      <CourierCard order={order} />
+        <DeliveryAgentCard order={order} />
 
-      <DeliveryAgentCard order={order} />
+        {order.customerNote && (
+          <p className="rounded-control bg-sunken px-3.5 py-3 text-sm leading-5 text-ink">
+            <span className="font-semibold">Note from our team:</span> {order.customerNote}
+          </p>
+        )}
 
-      {order.customerNote && (
-        <p className="rounded-2xl bg-[#F3EEF8] px-4 py-3 text-sm text-[#2A1A26]/80 leading-relaxed">
-          <span className="font-semibold text-[#4B1D3F]">Note from our team:</span> {order.customerNote}
-        </p>
-      )}
-
-      <ul className="rounded-2xl border border-[#4B1D3F]/10 divide-y divide-[#4B1D3F]/8" aria-label="Items in this order">
-        {order.items.map((item) => {
-          const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
-          const unit = Number(item.product?.price) || 0;
-          return (
-            <li key={item.id} className="flex items-start gap-3 p-3">
-              <button
-                type="button"
-                onClick={() => item.product?.id && onOpenProduct(String(item.product.id))}
-                className="w-16 aspect-[4/5] shrink-0 overflow-hidden rounded-xl bg-[#F3EEF8] border border-[#4B1D3F]/10 cursor-pointer group"
-                aria-label={`View ${item.product?.name || 'product'}`}
-              >
-                {item.product?.images?.[0] && (
-                  <img src={getCleanImageUrl(item.product.images[0], 160)} alt="" className="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                )}
-              </button>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-serif text-[17px] text-[#2A1A26] leading-snug line-clamp-2">{item.product?.name}</p>
-                  <p className="text-sm font-semibold text-[#2A1A26] shrink-0 pt-0.5">{inr(unit * item.quantity)}</p>
+        <ul className="divide-y divide-line border-y border-line" aria-label="Items in this order">
+          {order.items.map((item) => {
+            const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
+            const unit = Number(item.product?.price) || 0;
+            return (
+              <li key={item.id} className="flex items-start gap-3 py-3">
+                <button
+                  type="button"
+                  onClick={() => item.product?.id && onOpenProduct(String(item.product.id))}
+                  className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-chip bg-sunken cursor-pointer"
+                  aria-label={`View ${item.product?.name || 'product'}`}
+                >
+                  {item.product?.images?.[0] && (
+                    <img src={getCleanImageUrl(item.product.images[0], 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />
+                  )}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{item.product?.name}</p>
+                    <p className="sag-num text-sm leading-5 font-semibold text-ink shrink-0">{inr(unit * item.quantity)}</p>
+                  </div>
+                  <p className={`sag-num ${noteClass}`}>
+                    {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · {item.quantity} × {inr(unit)}
+                  </p>
+                  {canRate && item.product?.id && !item.lookParentId && (
+                    <button type="button" onClick={() => onRate(String(item.product.id))} className="sag-link -mb-2">
+                      Rate this product
+                    </button>
+                  )}
                 </div>
-                <p className="mt-0.5 text-[13px] text-[#2A1A26]/65">
-                  {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · {item.quantity} × {inr(unit)}
-                </p>
-                {canRate && item.product?.id && !item.lookParentId && (
-                  <button
-                    type="button"
-                    onClick={() => onRate(String(item.product.id))}
-                    className="mt-1.5 inline-flex items-center gap-1.5 min-h-9 px-3 rounded-full bg-[#FBF7F3] border border-[#4B1D3F]/10 text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer transition-colors"
-                  >
-                    <Star className="w-3.5 h-3.5 text-[#C5A46D] fill-[#C5A46D]" aria-hidden="true" /> Rate product
-                  </button>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
 
-      {address && (address.fullName || placeLine) && (
-        <div className="flex gap-3 rounded-2xl bg-[#FBF7F3] px-4 py-3.5 text-sm">
-          <span className={`${iconCircle} w-10 h-10 bg-white`}><PinIcon className="w-5 h-5" /></span>
-          <div className="min-w-0 text-[#2A1A26]/75 leading-relaxed">
-            <p className="font-semibold text-[#2A1A26]">Delivering to {address.fullName}</p>
-            {streetLine && <p className="break-words">{streetLine}</p>}
-            {placeLine && <p>{placeLine}</p>}
-            {address.mobile && <p>Phone: {address.mobile}</p>}
+        {address && (address.fullName || placeLine) && (
+          <div className="flex gap-3 text-sm leading-5">
+            <span className="shrink-0 flex mt-0.5 text-ink-muted"><PinIcon className="w-5 h-5" mono /></span>
+            <div className="min-w-0 text-ink-muted">
+              <p className="font-semibold text-ink">Delivering to {address.fullName}</p>
+              {streetLine && <p className="break-words">{streetLine}</p>}
+              {placeLine && <p>{placeLine}</p>}
+              {address.mobile && <p>Phone: {address.mobile}</p>}
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <button type="button" onClick={onTrack} className={`${awaitingPay ? 'sag-btn-outline' : 'sag-btn-primary'} w-full h-12 gap-2`}>
+            <TruckIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Track order
+          </button>
+          <div className="flex flex-wrap gap-2">
+            {hasReceipt(order) && (
+              <button type="button" onClick={onInvoice} className={action}>
+                <ReceiptIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Receipt
+              </button>
+            )}
+            {buyAgain && (
+              <button type="button" onClick={onBuyAgain} className={action}>
+                <BagIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Buy again
+              </button>
+            )}
+            {canStartReturn(order) && (
+              <button type="button" onClick={onReturn} className={action}>
+                <ReturnIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Return / exchange
+              </button>
+            )}
+            {canCancel && (
+              <button type="button" onClick={onCancel} className={action}>
+                Cancel order
+              </button>
+            )}
+            <a
+              href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with my order #${order.orderNumber}.`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={action}
+            >
+              <WhatsAppIcon className="w-[18px] h-[18px] shrink-0" /> Help
+            </a>
           </div>
         </div>
-      )}
-
-      <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-1">
-        {halfButtons.map((button, index) => (
-          <React.Fragment key={button.key}>
-            {button.node(halfButtons.length % 2 === 1 && index === halfButtons.length - 1)}
-          </React.Fragment>
-        ))}
-        {canStartReturn(order) && (
-          <button type="button" onClick={onReturn} className={`sag-btn-outline ${actionClass} col-span-2 sm:px-5`}>
-            <ReturnIcon className="w-[18px] h-[18px] shrink-0" mono live={false} /> Return / exchange
-          </button>
-        )}
-      </div>
       </div>
     </article>
   );
@@ -596,6 +582,7 @@ export const AccountPage: React.FC = () => {
   };
 
   const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+  const [mobileView, setMobileView] = useState<'menu' | 'panel'>(initialMobileView);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderFilter, setOrderFilter] = useState<OrderFilter>('all');
   // Profile document from the read below, handed to the address book so it does not read it again
@@ -640,8 +627,8 @@ export const AccountPage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-[#FBF7F3]">
-        <Loader2 className="w-6 h-6 animate-spin text-[#9C7A45]" />
+      <div className="min-h-[60vh] flex items-center justify-center bg-page">
+        <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
       </div>
     );
   }
@@ -712,349 +699,345 @@ export const AccountPage: React.FC = () => {
     setActivePage(page);
     window.scrollTo(0, 0);
   };
+  /** Opens a tab; on a phone this also leaves the account menu and shows the tab from its top. */
   const openTab = (key: Tab) => {
     setActiveTab(key);
-    window.setTimeout(() => document.getElementById(`account-tab-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 0);
+    setMobileView('panel');
+    window.scrollTo(0, 0);
   };
-  const tiles: Array<{ key: Tab; label: string; icon: React.ElementType; note: string }> = [
-    { key: 'orders', label: 'Orders', icon: OrdersIcon, note: recentOrders.length ? `${recentOrders.length} ${recentOrders.length === 1 ? 'order' : 'orders'}` : 'Track & manage' },
-    { key: 'wishlist', label: 'Wishlist', icon: HeartIcon, note: wishlist.length ? `${wishlist.length} saved` : 'Saved styles' },
-    { key: 'coupons', label: 'Coupons', icon: TagIcon, note: coupons.length ? `${coupons.length} available` : 'Offers' },
-    { key: 'help', label: 'Help', icon: HelpIcon, note: 'Contact & FAQs' },
-  ];
-  const tileCount = (key: Tab) => (key === 'orders' ? recentOrders.length : key === 'wishlist' ? wishlist.length : key === 'coupons' ? coupons.length : 0);
+  const backToMenu = () => {
+    setMobileView('menu');
+    window.scrollTo(0, 0);
+  };
 
   const displayName = profile.fullName || user.name || user.email.split('@')[0];
-  const initial = (displayName.trim()[0] || 'S').toUpperCase();
+  const firstName = displayName.trim().split(/\s+/)[0];
+  // Real numbers only: what the account already holds
+  const tabNote: Partial<Record<Tab, string>> = {
+    orders: recentOrders.length ? `${recentOrders.length} ${recentOrders.length === 1 ? 'order' : 'orders'}` : 'Track and manage',
+    wishlist: wishlist.length ? `${wishlist.length} saved` : 'Saved styles',
+    addresses: 'For faster checkout',
+    coupons: coupons.length ? `${coupons.length} available` : 'Offers and codes',
+    profile: 'Name and contact details',
+    style: 'Colours, sizes and budget you like',
+    returns: withRequests.length ? `${withRequests.length} ${withRequests.length === 1 ? 'request' : 'requests'}` : 'Within 7 days of delivery',
+    help: 'Contact us and store policies',
+  };
+  const newestOrder = shownOrders.length
+    ? [...shownOrders].sort((a, b) => (new Date(b.date).getTime() || 0) - (new Date(a.date).getTime() || 0))[0]
+    : null;
+  const newestUpdate = newestOrder ? latestUpdate(newestOrder) : null;
+  const tabLabel = tabs.find((t) => t.key === tab)?.label || 'My account';
 
   return (
-    <div className="bg-[#FBF7F3] min-h-[70vh] pt-5 pb-10 sm:py-12 px-4">
-      <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6">
-        <div className="sag-card rounded-3xl! p-4 sm:p-6 flex items-center gap-3.5 sm:gap-5">
-          <span className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-full bg-[#4B1D3F] text-white flex items-center justify-center font-serif text-2xl sm:text-3xl ring-4 ring-[#F3EEF8]" aria-hidden="true">
-            {initial}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#9C7A45]">My account</p>
-            <h1 className="font-serif text-[26px] sm:text-4xl leading-tight text-[#2A1A26] truncate">
-              Hello, <span className="sm:hidden">{displayName.trim().split(/\s+/)[0]}</span><span className="hidden sm:inline">{displayName}</span>
-            </h1>
-            <p className="text-[13px] sm:text-sm text-[#2A1A26]/65 truncate">{user.email}</p>
+    <div className="bg-page min-h-[70vh] px-4 pt-4 pb-10 sm:px-6 lg:px-8 lg:py-10">
+      <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-8 lg:items-start">
+        <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-4 lg:sticky lg:top-20`}>
+          <div>
+            <h1 className="font-display text-[28px] leading-8 text-ink">My account</h1>
+            <p className="mt-1 text-[15px] leading-[22px] text-ink truncate">Hello, {firstName}</p>
+            <p className="text-sm leading-5 text-ink-muted truncate">{user.email}</p>
           </div>
+
+          {newestOrder && (
+            <button type="button" onClick={() => openTab('orders')} className="lg:hidden sag-card w-full p-4 text-left cursor-pointer">
+              <span className="flex items-center justify-between gap-3">
+                <span className="sag-eyebrow">Your latest order</span>
+                <StatusPill order={newestOrder} />
+              </span>
+              <span className="mt-1 flex items-center justify-between gap-3">
+                <span className="min-w-0">
+                  <span className="block text-[15px] leading-[22px] font-semibold text-ink break-all">#{newestOrder.orderNumber}</span>
+                  {newestUpdate && <span className={`block ${noteClass}`}>{newestUpdate.label} · {formatDateTime(newestUpdate.at)}</span>}
+                </span>
+                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
+              </span>
+            </button>
+          )}
+
+          <div className="sag-card overflow-hidden" role="tablist" aria-label="My account" aria-orientation="vertical">
+            {tabs.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                id={`account-tab-${key}`}
+                type="button"
+                role="tab"
+                aria-selected={tab === key}
+                aria-controls="account-panel"
+                onClick={() => openTab(key)}
+                className={`sag-row min-h-14 w-full px-4 text-left cursor-pointer hover:bg-sunken transition-colors ${tab === key ? 'lg:bg-brand-wash lg:hover:bg-brand-wash lg:text-brand' : ''}`}
+              >
+                <Icon className="w-5 h-5 shrink-0" mono live={false} />
+                <span className="min-w-0 flex-1">
+                  <span className="block">{label}</span>
+                  {tabNote[key] && <span className={`sag-num block font-normal ${noteClass}`}>{tabNote[key]}</span>}
+                </span>
+                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+
           <button
+            type="button"
             onClick={async () => {
               await logout();
               showToast('You have been signed out.', 'info');
               setActivePage('home');
             }}
-            aria-label="Sign out"
-            className="sag-btn-outline shrink-0 inline-flex items-center justify-center gap-2 w-11 h-11 sm:w-auto sm:px-5 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer"
+            className="sag-btn-outline w-full h-12 gap-2 text-[15px]"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Sign out</span>
+            <LogOut className="w-[18px] h-[18px]" aria-hidden="true" />
+            <span>Sign out</span>
           </button>
-        </div>
+        </aside>
 
-        <nav className="grid grid-cols-4 gap-2 sm:gap-3" aria-label="Account shortcuts">
-          {tiles.map(({ key, label, icon: Icon, note }) => {
-            const count = tileCount(key);
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => openTab(key)}
-                aria-current={tab === key ? 'page' : undefined}
-                className={`sag-card rounded-2xl! px-1.5 py-3 sm:p-4 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center sm:text-left transition-colors cursor-pointer ${tab === key ? 'border-[#4B1D3F]/40! bg-[#F3EEF8]/70!' : 'hover:bg-[#F3EEF8]/60!'}`}
-              >
-                <span className="relative w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full bg-[#F3EEF8] ring-1 ring-[#4B1D3F]/8 flex items-center justify-center">
-                  <Icon className="w-6 h-6" />
-                  {count > 0 && (
-                    <span className="sm:hidden absolute -top-1 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-[#4B1D3F] text-white text-[11px] font-semibold leading-5 text-center ring-2 ring-white">{count > 99 ? '99+' : count}</span>
-                  )}
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-[13px] sm:text-sm font-semibold text-[#2A1A26]">{label}</span>
-                  <span className="hidden sm:block text-[13px] text-[#2A1A26]/65 truncate">{note}</span>
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+        <div className={`${mobileView === 'menu' ? 'hidden lg:block' : ''} min-w-0`}>
+          <button type="button" onClick={backToMenu} className="lg:hidden sag-link gap-1.5 mb-1" aria-label={`Back to My account from ${tabLabel}`}>
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+            <span>My account</span>
+          </button>
 
-        <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 py-1" role="tablist" aria-label="My account">
-          {tabs.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              id={`account-tab-${key}`}
-              role="tab"
-              aria-selected={tab === key}
-              aria-controls="account-panel"
-              onClick={() => setActiveTab(key)}
-              className={`shrink-0 inline-flex items-center gap-2 h-11 pl-3 pr-4 rounded-full border text-[13px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                tab === key ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white shadow-[var(--sag-shadow)]' : 'bg-white border-[#4B1D3F]/12 text-[#2A1A26]/75 hover:bg-[#F3EEF8] hover:text-[#2A1A26]'
-              }`}
-            >
-              <Icon className="w-[18px] h-[18px]" mono={tab === key} live={false} />
-              {label}
-              {key === 'wishlist' && wishlist.length > 0 && (
-                <span className={`min-w-5 h-5 px-1.5 rounded-full text-[11px] leading-5 text-center ${tab === key ? 'bg-white/20 text-white' : 'bg-[#F3EEF8] text-[#4B1D3F]'}`}>{wishlist.length}</span>
-              )}
-            </button>
-          ))}
-        </div>
+          <div id="account-panel" role="tabpanel" aria-labelledby={`account-tab-${tab}`}>
+            {tab === 'orders' && (
+              <section className="space-y-4">
+                {ordersLoading && recentOrders.length === 0 ? (
+                  <div className="py-16 flex justify-center" role="status" aria-label="Loading your orders"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
+                ) : recentOrders.length === 0 ? (
+                  <EmptyState icon={<BagIcon className="w-7 h-7" mono />} title="No orders yet" text={<>Orders placed with <span className="break-all">{user.email}</span> appear here on every device.</>}>
+                    <button type="button" onClick={() => setActivePage('shop')} className="sag-btn-primary h-12 px-6">
+                      Start shopping
+                    </button>
+                  </EmptyState>
+                ) : (
+                  <>
+                    <SectionIntro title="My orders" text="Track deliveries, download receipts and manage returns." />
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <label htmlFor="order-search" className="sr-only">Search your orders</label>
+                        <Search className="w-[18px] h-[18px] text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                        <input
+                          id="order-search"
+                          type="search"
+                          enterKeyHint="search"
+                          value={orderSearch}
+                          onChange={(e) => setOrderSearch(e.target.value)}
+                          placeholder="Search by order number or product"
+                          className="sag-input h-12 pl-11"
+                        />
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap py-0.5" role="group" aria-label="Filter orders by status">
+                        {ORDER_FILTERS.map(({ key, label }) => {
+                          const count = key === 'all' ? shownOrders.length : filterCount(key);
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              aria-pressed={orderFilter === key}
+                              onClick={() => setOrderFilter(key)}
+                              className="sag-chip sag-num shrink-0 h-11 min-w-0 gap-1.5 text-sm whitespace-nowrap"
+                            >
+                              {label}
+                              <span className="font-normal opacity-80">{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    {filteredOrders.length === 0 ? (
+                      <EmptyState
+                        icon={<Search className="w-6 h-6" />}
+                        title="No orders match"
+                        text={<>{searchText ? `Nothing found for “${orderSearch.trim()}”` : 'No orders with this status'}{orderFilter !== 'all' ? ` under ${ORDER_FILTERS.find((f) => f.key === orderFilter)?.label}` : ''}.</>}
+                      >
+                        <button type="button" onClick={() => { setOrderSearch(''); setOrderFilter('all'); }} className={`sag-btn-primary ${smallBtn}`}>
+                          Show all orders
+                        </button>
+                        <button type="button" onClick={() => goPage('shop')} className={`sag-btn-outline ${smallBtn}`}>
+                          Continue shopping
+                        </button>
+                      </EmptyState>
+                    ) : (
+                      filteredOrders.map((order) => (
+                        <OrderCard
+                          key={order.orderNumber}
+                          order={order}
+                          onTrack={() => openTrack(order)}
+                          onInvoice={() => setInvoiceOrder(order)}
+                          onCancel={() => setCancelOrder(order)}
+                          onReturn={() => setReturnFor(order)}
+                          onOpenProduct={navigateToProduct}
+                          onRate={rateProduct}
+                          onBuyAgain={() => buyAgain(order)}
+                          cancelWindowHours={cancelWindowHours}
+                        />
+                      ))
+                    )}
+                  </>
+                )}
+              </section>
+            )}
 
-        <div id="account-panel" role="tabpanel" aria-labelledby={`account-tab-${tab}`}>
-          {tab === 'orders' && (
-            <section className="space-y-4">
-              {ordersLoading && recentOrders.length === 0 ? (
-                <div className="py-16 flex justify-center" role="status" aria-label="Loading your orders"><Loader2 className="w-6 h-6 animate-spin text-[#9C7A45]" /></div>
-              ) : recentOrders.length === 0 ? (
-                <EmptyState icon={<BagIcon className="w-8 h-8" />} title="No orders yet" text={<>Orders placed with <span className="break-all">{user.email}</span> appear here on every device.</>}>
-                  <button onClick={() => setActivePage('shop')} className="sag-btn-primary h-11 px-7 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">
-                    Start shopping
-                  </button>
-                </EmptyState>
-              ) : (
-                <>
-                  <SectionIntro title="My orders" text="Track deliveries, download receipts and manage returns." />
-                  <div className="space-y-3">
-                    <label className="relative block">
-                      <span className="sr-only">Search your orders</span>
-                      <Search className="w-4 h-4 text-[#4B1D3F]/55 absolute left-4 top-1/2 -translate-y-1/2" aria-hidden="true" />
-                      <input
-                        type="search"
-                        value={orderSearch}
-                        onChange={(e) => setOrderSearch(e.target.value)}
-                        placeholder="Search by order number or product"
-                        className="w-full h-12 pl-11 pr-4 bg-white border border-[#4B1D3F]/15 hover:border-[#4B1D3F]/30 focus:border-[#4B1D3F]/70 focus:ring-4 focus:ring-[#F3EEF8] rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/45 shadow-[var(--sag-shadow)] transition focus:outline-none"
-                      />
-                    </label>
-                    <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap py-0.5" role="group" aria-label="Filter orders by status">
-                      {ORDER_FILTERS.map(({ key, label }) => {
-                        const count = key === 'all' ? shownOrders.length : filterCount(key);
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            aria-pressed={orderFilter === key}
-                            onClick={() => setOrderFilter(key)}
-                            className={`shrink-0 inline-flex items-center gap-1.5 h-10 pl-4 pr-2 rounded-full border text-[13px] font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                              orderFilter === key ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/12 text-[#2A1A26]/80 hover:bg-[#F3EEF8]'
-                            }`}
-                          >
-                            {label}
-                            <span className={`min-w-6 h-6 px-1.5 rounded-full text-[11px] leading-6 text-center ${orderFilter === key ? 'bg-white/20 text-white' : 'bg-[#F3EEF8] text-[#4B1D3F]'}`}>{count}</span>
-                          </button>
+            {tab === 'addresses' && (
+              <AddressBook
+                profile={profileDoc}
+                onChange={(list) => {
+                  const def = list.find((a) => a.isDefault);
+                  if (def) setProfile((prev) => ({ ...prev, houseFlat: def.houseFlat, street: def.street, city: def.city, state: def.state, pincode: def.pincode }));
+                }}
+              />
+            )}
+
+            {tab === 'coupons' && <CouponsPanel coupons={coupons} onShop={() => goPage('shop')} />}
+
+            {tab === 'help' && <HelpCenter onGo={goPage} onTab={openTab} />}
+
+            {tab === 'wishlist' && (
+              <section className="space-y-4">
+                {wishlist.length === 0 ? (
+                  <EmptyState icon={<HeartIcon className="w-7 h-7" mono />} title="Your wishlist is empty" text="Tap the heart on any product to save it here.">
+                    <button type="button" onClick={() => goPage('shop')} className="sag-btn-primary h-12 px-6">Explore styles</button>
+                  </EmptyState>
+                ) : (
+                  <>
+                    <SectionIntro title="Wishlist" text={`${wishlist.length} ${wishlist.length === 1 ? 'style' : 'styles'} saved to your account.`} />
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-6">
+                      {wishlist.map((saved) => {
+                        const live = allProducts.find((p) => String(p.id) === String(saved.id));
+                        return live ? <ProductCard key={saved.id} product={live} /> : (
+                          <div key={saved.id} className="flex flex-col gap-2">
+                            <div className="aspect-[4/5] rounded-control bg-sunken flex items-center justify-center px-3 text-center">
+                              <span className="text-sm leading-5 text-ink-muted">No longer available</span>
+                            </div>
+                            <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{saved.name}</p>
+                            <button type="button" onClick={() => toggleWishlist(saved)} className={`sag-btn-outline mt-auto w-full ${smallBtn}`}>Remove</button>
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
-                  {filteredOrders.length === 0 ? (
-                    <EmptyState
-                      icon={<Search className="w-7 h-7 text-[#4B1D3F]" />}
-                      title="No orders match"
-                      text={<>{searchText ? `Nothing found for “${orderSearch.trim()}”` : 'No orders with this status'}{orderFilter !== 'all' ? ` under ${ORDER_FILTERS.find((f) => f.key === orderFilter)?.label}` : ''}.</>}
-                    >
-                      <button type="button" onClick={() => { setOrderSearch(''); setOrderFilter('all'); }} className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
-                        Show all orders
-                      </button>
-                      <button type="button" onClick={() => goPage('shop')} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
-                        Continue shopping
-                      </button>
-                    </EmptyState>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <OrderCard
-                        key={order.orderNumber}
-                        order={order}
-                        onTrack={() => openTrack(order)}
-                        onInvoice={() => setInvoiceOrder(order)}
-                        onCancel={() => setCancelOrder(order)}
-                        onReturn={() => setReturnFor(order)}
-                        onOpenProduct={navigateToProduct}
-                        onRate={rateProduct}
-                        onBuyAgain={() => buyAgain(order)}
-                        cancelWindowHours={cancelWindowHours}
-                      />
-                    ))
-                  )}
-                </>
-              )}
-            </section>
-          )}
+                  </>
+                )}
+              </section>
+            )}
 
-          {tab === 'addresses' && (
-            <AddressBook
-              profile={profileDoc}
-              onChange={(list) => {
-                const def = list.find((a) => a.isDefault);
-                if (def) setProfile((prev) => ({ ...prev, houseFlat: def.houseFlat, street: def.street, city: def.city, state: def.state, pincode: def.pincode }));
-              }}
-            />
-          )}
-
-          {tab === 'coupons' && <CouponsPanel coupons={coupons} onShop={() => goPage('shop')} />}
-
-          {tab === 'help' && <HelpCenter onGo={goPage} onTab={openTab} />}
-
-          {tab === 'wishlist' && (
-            <section className="space-y-4">
-              {wishlist.length === 0 ? (
-                <EmptyState icon={<HeartIcon className="w-8 h-8" />} title="Your wishlist is empty" text="Tap the heart on any product to save it here.">
-                  <button type="button" onClick={() => goPage('shop')} className="sag-btn-primary h-11 px-7 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Explore styles</button>
-                </EmptyState>
-              ) : (
-                <>
-                  <SectionIntro title="Wishlist" text={`${wishlist.length} ${wishlist.length === 1 ? 'style' : 'styles'} saved to your account.`} />
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                    {wishlist.map((saved) => {
-                      const live = allProducts.find((p) => String(p.id) === String(saved.id));
-                      return live ? <ProductCard key={saved.id} product={live} /> : (
-                        <div key={saved.id} className="sag-card overflow-hidden flex flex-col">
-                          <div className="aspect-[4/5] bg-[#F3EEF8] flex flex-col items-center justify-center gap-2 px-3 text-center">
-                            <span className={`${iconCircle} w-12 h-12 bg-white`}><HeartIcon className="w-6 h-6" mono /></span>
-                            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#4B1D3F]/70">No longer available</span>
-                          </div>
-                          <div className="p-3 sm:p-4 flex flex-1 flex-col justify-between gap-3">
-                            <p className="font-serif text-base leading-snug text-[#2A1A26] line-clamp-2">{saved.name}</p>
-                            <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline h-10 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Remove</button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </section>
-          )}
-
-          {tab === 'profile' && (
-            <section className="space-y-4">
-              <SectionIntro title="Profile" text="Your contact details, used to fill in checkout faster." />
-              <form onSubmit={handleSaveProfile} className="sag-card rounded-3xl! p-5 sm:p-7 space-y-6">
-                <div className="flex items-center gap-3 rounded-2xl bg-[#FBF7F3] px-4 py-3">
-                  <span className={`${iconCircle} w-10 h-10 bg-white`}><UserIcon className="w-5 h-5" /></span>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#9C7A45]">Signed in with</p>
-                    <p className="text-sm font-medium text-[#2A1A26] break-all">{user.email}</p>
-                  </div>
-                </div>
-
-                <fieldset className="grid gap-4 sm:grid-cols-2">
-                  <legend className="mb-3 font-serif text-xl text-[#4B1D3F]">Contact</legend>
-                  <label className="space-y-1.5">
-                    <span className={labelClass}>Full name</span>
-                    <input className={inputClass} disabled={!profileLoaded} autoComplete="name" value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className={labelClass}>Mobile</span>
-                    <input className={inputClass} disabled={!profileLoaded} inputMode="numeric" autoComplete="tel-national" placeholder="10-digit mobile" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
-                  </label>
-                </fieldset>
-
-                <fieldset className="grid grid-cols-2 gap-x-3 gap-y-4 sm:gap-4 pt-5 border-t border-[#4B1D3F]/8">
-                  <legend className="sr-only">Address</legend>
-                  <div className="col-span-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                    <p className="font-serif text-xl text-[#4B1D3F]">Address</p>
-                    <p className="text-[13px] text-[#2A1A26]/65">
-                      Saving more than one? Use{' '}
-                      <button type="button" onClick={() => openTab('addresses')} className="font-semibold text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Addresses</button>
+            {tab === 'profile' && (
+              <section className="space-y-4">
+                <SectionIntro title="Profile" text="Your contact details, used to fill in checkout faster." />
+                <form onSubmit={handleSaveProfile} className="space-y-4">
+                  <div className="sag-card p-4 sm:p-5 space-y-4">
+                    <h3 className="text-base leading-[22px] font-semibold text-ink">Contact</h3>
+                    <p className="rounded-control bg-sunken px-3.5 py-2.5 text-sm leading-5 text-ink-muted">
+                      Signed in with <span className="font-semibold text-ink break-all">{user.email}</span>
                     </p>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="profile-name" className="sag-label">Full name</label>
+                        <input id="profile-name" name="name" className="sag-input" disabled={!profileLoaded} autoComplete="name" autoCapitalize="words" value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} />
+                      </div>
+                      <div>
+                        <label htmlFor="profile-mobile" className="sag-label">Mobile number</label>
+                        <input id="profile-mobile" name="mobile" type="tel" className="sag-input" disabled={!profileLoaded} inputMode="numeric" autoComplete="tel-national" maxLength={10} placeholder="10-digit mobile" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
+                      </div>
+                    </div>
                   </div>
-                  <label className="space-y-1.5 col-span-2">
-                    <span className={labelClass}>House / flat, building</span>
-                    <input className={inputClass} disabled={!profileLoaded} autoComplete="address-line1" value={profile.houseFlat} onChange={(e) => setProfile({ ...profile, houseFlat: e.target.value })} />
-                  </label>
-                  <label className="space-y-1.5 col-span-2">
-                    <span className={labelClass}>Street / area</span>
-                    <input className={inputClass} disabled={!profileLoaded} autoComplete="address-line2" value={profile.street} onChange={(e) => setProfile({ ...profile, street: e.target.value })} />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className={labelClass}>PIN code</span>
-                    <input className={inputClass} disabled={!profileLoaded} inputMode="numeric" autoComplete="postal-code" placeholder="6-digit PIN" value={profile.pincode} onChange={(e) => handlePincode(e.target.value)} />
-                  </label>
-                  <label className="space-y-1.5">
-                    <span className={labelClass}>City</span>
-                    <input className={inputClass} disabled={!profileLoaded} autoComplete="address-level2" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
-                  </label>
-                  <label className="space-y-1.5 col-span-2">
-                    <span className={labelClass}>State</span>
-                    <input className={inputClass} disabled={!profileLoaded} autoComplete="address-level1" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
-                  </label>
-                </fieldset>
 
-                <div className="pt-1">
-                  <button type="submit" disabled={savingProfile || !profileLoaded} className="sag-btn-primary w-full sm:w-auto h-12 px-8 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-                    {savingProfile && <Loader2 className="w-4 h-4 animate-spin text-current" />}
+                  <fieldset className="sag-card p-4 sm:p-5 min-w-0">
+                    <legend className="sr-only">Address</legend>
+                    <div className="flex flex-wrap items-center justify-between gap-x-3">
+                      <h3 className="text-base leading-[22px] font-semibold text-ink">Address</h3>
+                      <button type="button" onClick={() => openTab('addresses')} className="sag-link">Saving more than one? Use Addresses</button>
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-4">
+                      <div className="col-span-2">
+                        <label htmlFor="profile-house" className="sag-label">House / flat, building</label>
+                        <input id="profile-house" className="sag-input" disabled={!profileLoaded} autoComplete="address-line1" value={profile.houseFlat} onChange={(e) => setProfile({ ...profile, houseFlat: e.target.value })} />
+                      </div>
+                      <div className="col-span-2">
+                        <label htmlFor="profile-street" className="sag-label">Street / area</label>
+                        <input id="profile-street" className="sag-input" disabled={!profileLoaded} autoComplete="address-line2" value={profile.street} onChange={(e) => setProfile({ ...profile, street: e.target.value })} />
+                      </div>
+                      <div>
+                        <label htmlFor="profile-pin" className="sag-label">PIN code</label>
+                        <input id="profile-pin" className="sag-input" disabled={!profileLoaded} inputMode="numeric" autoComplete="postal-code" maxLength={6} placeholder="6-digit PIN" value={profile.pincode} onChange={(e) => handlePincode(e.target.value)} />
+                      </div>
+                      <div>
+                        <label htmlFor="profile-city" className="sag-label">City</label>
+                        <input id="profile-city" className="sag-input" disabled={!profileLoaded} autoComplete="address-level2" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
+                      </div>
+                      <div className="col-span-2">
+                        <label htmlFor="profile-state" className="sag-label">State</label>
+                        <input id="profile-state" className="sag-input" disabled={!profileLoaded} autoComplete="address-level1" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  <button type="submit" disabled={savingProfile || !profileLoaded} className="sag-btn-primary w-full sm:w-auto sm:px-8 gap-2">
+                    {savingProfile && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
                     {savingProfile ? 'Saving…' : 'Save profile'}
                   </button>
+                </form>
+              </section>
+            )}
+
+            {tab === 'style' && <StyleProfile />}
+
+            {tab === 'returns' && (
+              <section className="space-y-4">
+                <SectionIntro title="Returns & exchanges" />
+                <div className="rounded-card border border-brand-line bg-brand-wash p-4 flex gap-3">
+                  <span className="shrink-0 flex mt-0.5 text-brand"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
+                  <p className="min-w-0 text-sm leading-5 text-ink">
+                    You can ask for a return or a size exchange within 7 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
+                    <button type="button" onClick={() => setActivePage('return-policy')} className="font-semibold text-brand underline underline-offset-[3px] cursor-pointer">Return policy</button>
+                  </p>
                 </div>
-              </form>
-            </section>
-          )}
 
-          {tab === 'style' && <StyleProfile />}
-
-          {tab === 'returns' && (
-            <section className="space-y-4">
-              <SectionIntro title="Returns & exchanges" />
-              <div className="flex gap-3 rounded-3xl bg-[#F3EEF8] p-4 sm:p-5">
-                <span className={`${iconCircle} w-11 h-11 bg-white`}><ReturnIcon className="w-6 h-6" /></span>
-                <p className="min-w-0 text-sm text-[#2A1A26]/80 leading-relaxed">
-                  You can ask for a return or a size exchange within 7 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
-                  <button onClick={() => setActivePage('return-policy')} className="font-semibold underline underline-offset-2 text-[#4B1D3F] cursor-pointer">Return policy</button>
-                </p>
-              </div>
-
-              {returnable.length > 0 && (
-                <div className="sag-card rounded-3xl! p-4 sm:p-6 space-y-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Ready to return or exchange</p>
-                  <ul className="divide-y divide-[#4B1D3F]/8">
-                    {returnable.map((order) => (
-                      <li key={order.orderNumber} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="min-w-0 flex items-center gap-3">
-                          <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-xl bg-[#F3EEF8] border border-[#4B1D3F]/10">
-                            {order.items[0]?.product?.images?.[0] && <img src={getCleanImageUrl(order.items[0].product.images[0], 140)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-[#2A1A26] break-all">#{order.orderNumber}</p>
-                            <p className="text-[13px] text-[#2A1A26]/65">
-                              {order.items.length} {order.items.length === 1 ? 'item' : 'items'} · {inr(order.finalTotal)}
-                            </p>
-                            {formatWindowEnd(order.returnEligibility?.windowEndsAt) && (
-                              <p className="mt-1 inline-block rounded-full bg-[#F7E4EA] px-2.5 py-0.5 text-[11px] font-semibold text-[#8A2E55]">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
-                            )}
+                {returnable.length > 0 && (
+                  <div className="sag-card px-4 sm:px-5">
+                    <p className="sag-eyebrow pt-4">Ready to return or exchange</p>
+                    <ul className="divide-y divide-line">
+                      {returnable.map((order) => (
+                        <li key={order.orderNumber} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="min-w-0 flex items-center gap-3">
+                            <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-chip bg-sunken">
+                              {order.items[0]?.product?.images?.[0] && <img src={getCleanImageUrl(order.items[0].product.images[0], 140)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-sm leading-5 font-semibold text-ink break-all">#{order.orderNumber}</p>
+                              <p className={`sag-num ${noteClass}`}>
+                                {order.items.length} {order.items.length === 1 ? 'item' : 'items'} · {inr(order.finalTotal)}
+                              </p>
+                              {formatWindowEnd(order.returnEligibility?.windowEndsAt) && (
+                                <p className="sag-badge mt-1 bg-sale-tint text-sale">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <button type="button" onClick={() => setReturnFor(order)} className={`sag-btn-primary ${actionClass} px-5 w-full sm:w-auto`}>
-                          <ReturnIcon className="w-[18px] h-[18px]" mono live={false} /> Start return / exchange
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {withRequests.map((order) => (
-                <div key={order.orderNumber} className="sag-card rounded-3xl! p-4 sm:p-6 space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Order</p>
-                      <p className="text-sm font-semibold text-[#2A1A26] break-all">#{order.orderNumber}</p>
-                    </div>
-                    <button type="button" onClick={() => openTrack(order)} className="inline-flex items-center gap-1 h-10 px-4 rounded-full border border-[#4B1D3F]/20 text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer transition-colors">
-                      View order <ChevronRight className="w-4 h-4" aria-hidden="true" />
-                    </button>
+                          <button type="button" onClick={() => setReturnFor(order)} className={`sag-btn-outline ${smallBtn} w-full sm:w-auto`}>
+                            <ReturnIcon className="w-[18px] h-[18px]" mono live={false} /> Start return / exchange
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                  <ReturnProgress order={order} />
-                </div>
-              ))}
+                )}
 
-              {returnable.length === 0 && withRequests.length === 0 && (
-                <EmptyState icon={<ReturnIcon className="w-8 h-8" />} title="Nothing to return right now" text="Delivered orders appear here for 7 days after delivery." />
-              )}
-            </section>
-          )}
+                {withRequests.map((order) => (
+                  <div key={order.orderNumber} className="sag-card p-4 sm:p-5 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="min-w-0 text-[15px] leading-[22px] font-semibold text-ink break-all"><span className="sr-only">Order </span>#{order.orderNumber}</p>
+                      <button type="button" onClick={() => openTrack(order)} className="sag-link shrink-0 gap-1">
+                        View order <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                    <ReturnProgress order={order} />
+                  </div>
+                ))}
+
+                {returnable.length === 0 && withRequests.length === 0 && (
+                  <EmptyState icon={<ReturnIcon className="w-7 h-7" mono />} title="Nothing to return right now" text="Delivered orders appear here for 7 days after delivery." />
+                )}
+              </section>
+            )}
+          </div>
         </div>
       </div>
 

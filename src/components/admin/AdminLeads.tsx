@@ -15,6 +15,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Lead } from '../../types';
+import { AdminPageHeader, tone, ui } from './kidsToysShared';
 
 export const AdminLeads: React.FC = () => {
   const { leads, updateLeadOfferStatus, deleteLead } = useAdmin();
@@ -73,45 +74,37 @@ export const AdminLeads: React.FC = () => {
   };
 
   const sourceBadge = (source: string) => (
-    <span className={`px-2.5 py-1 rounded-full text-[11px] font-semibold capitalize ${
-      source === 'newsletter' ? 'bg-[#F3EEF8] text-[#4B1D3F]' :
-      source === 'contact' ? 'bg-[#E6DDF0] text-[#4B1D3F]' :
-      'bg-[#FBF7F3] border border-[#4B1D3F]/10 text-[#2A1A26]/75'
-    }`}>
+    <span className={`shrink-0 capitalize ${ui.badge} ${source === 'direct' ? tone.muted : tone.neutral}`}>
       {source}
     </span>
   );
 
   const statusBadge = (lead: Lead) => lead.offerSent ? (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">
+    <span className={`${ui.badge} ${tone.ok}`}>
       <CheckCircle2 className="w-3.5 h-3.5" />
-      Offer Sent
+      Message sent
     </span>
   ) : (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FBF7F3] border border-[#C5A46D]/60 text-[#2A1A26]/80 text-[11px] font-semibold">
+    <span className={`${ui.badge} ${tone.warn}`}>
       <Clock className="w-3.5 h-3.5" />
-      Pending
+      Not messaged yet
     </span>
   );
 
   const actions = (lead: Lead) => (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex items-center justify-end gap-1.5">
       {lead.phone && (
         <button
           onClick={() => handleSendWhatsAppOffer(lead)}
-          className={`h-9 flex items-center gap-2 px-3.5 rounded-full text-[12px] font-semibold transition-colors cursor-pointer whitespace-nowrap ${
-            lead.offerSent
-              ? 'bg-white border border-[#4B1D3F]/20 text-[#4B1D3F] hover:bg-[#F3EEF8]'
-              : 'bg-[#4B1D3F] text-white hover:bg-[#3B1532]'
-          }`}
+          className={`${lead.offerSent ? ui.outline : ui.primary} whitespace-nowrap`}
         >
-          <MessageSquare className="w-3.5 h-3.5" />
-          <span>{lead.offerSent ? 'Resend Offer' : 'Send WhatsApp Offer'}</span>
+          <MessageSquare className="w-4 h-4" />
+          <span>{lead.offerSent ? 'Message again' : 'Message on WhatsApp'}</span>
         </button>
       )}
       <button
         onClick={() => { if (window.confirm('Delete this lead?')) deleteLead(lead.id).then(() => showToast('Lead deleted.', 'info')).catch(() => showToast('Could not delete the lead.', 'error')); }}
-        className="w-9 h-9 flex items-center justify-center text-[#2A1A26]/45 hover:text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
+        className="w-11 h-11 md:w-9 md:h-9 shrink-0 flex items-center justify-center text-danger hover:bg-danger-tint rounded-full transition-colors cursor-pointer"
         title="Delete lead"
         aria-label="Delete lead"
       >
@@ -121,94 +114,88 @@ export const AdminLeads: React.FC = () => {
   );
 
   const stats = [
-    { label: 'Total Leads', value: leads.length, icon: Users, tone: 'bg-[#F3EEF8] text-[#4B1D3F]' },
-    { label: 'Offers Sent', value: leads.filter(l => l.offerSent).length, icon: CheckCircle2, tone: 'bg-emerald-50 text-emerald-700' },
-    { label: 'Pending Conversion', value: leads.filter(l => !l.offerSent).length, icon: Zap, tone: 'bg-[#FBF7F3] border border-[#C5A46D]/40 text-[#9C7A45]' },
+    { label: 'All leads', value: leads.length },
+    { label: 'Messaged', value: leads.filter(l => l.offerSent).length },
+    { label: 'Not messaged', value: leads.filter(l => !l.offerSent).length },
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Header section */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9C7A45]">Audience</p>
-          <h2 className="mt-1 text-3xl sm:text-4xl font-serif font-semibold text-[#4B1D3F] leading-tight">Real-time Captured Leads</h2>
-          <p className="text-sm text-[#2A1A26]/60 mt-1">Manage and convert newsletter subscribers & contact inquiries.</p>
-        </div>
-        <button
-          className="self-start lg:self-auto h-10 flex items-center gap-2 px-4 bg-white border border-[#4B1D3F]/20 rounded-full text-[13px] font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
-          onClick={exportLeadsCsv}
-        >
-          <Download className="w-4 h-4" />
-          <span>Export CSV</span>
-        </button>
-      </div>
+    <div className="space-y-4">
+      <AdminPageHeader
+        eyebrow="Sales"
+        title="Leads"
+        icon={<MessageSquare />}
+        description="People who joined the newsletter or wrote through the contact form. Message them from your own WhatsApp."
+        actions={
+          <button className={`${ui.outline} flex-1 sm:flex-none`} onClick={exportLeadsCsv}>
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+        }
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+      <dl className="grid grid-cols-3 gap-2.5">
         {stats.map((stat) => (
-          <div key={stat.label} className="bg-white p-3.5 sm:p-5 rounded-2xl border border-[#4B1D3F]/10 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 ${stat.tone}`}>
-              <stat.icon className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-[#2A1A26]/55 uppercase tracking-[0.12em] leading-tight">{stat.label}</p>
-              <h3 className="text-2xl font-serif font-semibold text-[#2A1A26] tabular-nums">{stat.value}</h3>
-            </div>
+          <div key={stat.label} className="min-w-0 bg-white rounded-2xl border border-line px-3 py-2.5 sm:px-4">
+            <dt className={ui.eyebrow}>{stat.label}</dt>
+            <dd className={ui.stat}>{stat.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      {/* Filters Bar */}
-      <div className="bg-white p-3 sm:p-4 rounded-3xl border border-[#4B1D3F]/10 flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
+      {/* Search and source */}
+      <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B1D3F]/50" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ink-muted pointer-events-none" />
           <input
             type="text"
-            placeholder="Search leads by name, email or phone..."
-            className="w-full h-11 pl-11 pr-4 bg-[#FBF7F3] border border-[#4B1D3F]/15 rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#4B1D3F]/10 focus:border-[#4B1D3F]/40 transition"
+            inputMode="search"
+            aria-label="Search leads"
+            placeholder="Search by name, email or phone"
+            className={ui.search}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="relative w-full sm:w-56">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4B1D3F]/50 pointer-events-none" />
+          <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ink-muted pointer-events-none" />
           <select
-            className="w-full h-11 pl-10 pr-4 bg-white border border-[#4B1D3F]/15 rounded-full text-sm text-[#2A1A26] focus:outline-none focus:ring-4 focus:ring-[#4B1D3F]/10 focus:border-[#4B1D3F]/40 cursor-pointer"
+            aria-label="Filter by source"
+            className={`${ui.select} pl-10`}
             value={filterSource}
             onChange={(e) => setFilterSource(e.target.value as any)}
           >
-            <option value="all">All Sources</option>
+            <option value="all">All sources</option>
             <option value="newsletter">Newsletter</option>
-            <option value="contact">Contact Form</option>
+            <option value="contact">Contact form</option>
             <option value="direct">Direct</option>
           </select>
         </div>
       </div>
 
       {filteredLeads.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 py-14 px-6 text-center">
-          <span className="mx-auto w-14 h-14 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center mb-3"><MessageSquare className="w-6 h-6" /></span>
-          <p className="text-sm font-medium text-[#2A1A26]/65">No leads found matching your criteria.</p>
+        <div className={ui.empty}>
+          <MessageSquare className="mx-auto w-6 h-6 text-ink-muted mb-2" aria-hidden="true" />
+          <p className="text-sm leading-5 text-ink-muted">{leads.length === 0 ? 'No leads yet. Newsletter sign-ups and contact messages appear here.' : 'No lead matches your search.'}</p>
         </div>
       ) : (
         <>
           {/* Phone: cards */}
-          <ul className="md:hidden space-y-3">
+          <ul className="md:hidden space-y-2.5">
             {filteredLeads.map((lead) => (
-              <li key={lead.id} className="bg-white rounded-2xl border border-[#4B1D3F]/10 p-4 space-y-3">
+              <li key={lead.id} className="bg-white rounded-2xl border border-line p-3.5 space-y-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#2A1A26] truncate">{lead.name || 'Anonymous Lead'}</p>
-                    <p className="text-[12px] text-[#2A1A26]/55 flex items-center gap-1"><Clock className="w-3 h-3" /> {formatDate(lead.createdAt)}</p>
+                    <p className="text-[15px] leading-5 font-semibold text-ink truncate">{lead.name || 'No name given'}</p>
+                    <p className="text-xs leading-4 text-ink-muted">{formatDate(lead.createdAt)}</p>
                   </div>
                   {sourceBadge(lead.source)}
                 </div>
-                <div className="space-y-1 text-[13px] text-[#2A1A26]/75">
-                  <p className="flex items-center gap-2 break-all"><Mail className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />{lead.email}</p>
-                  {lead.phone && <p className="flex items-center gap-2"><Phone className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />{lead.phone}</p>}
+                <div className="space-y-1 text-sm leading-5 text-ink">
+                  <p className="flex items-center gap-2.5 break-all"><Mail className="w-4 h-4 shrink-0 text-ink-muted" />{lead.email}</p>
+                  {lead.phone && <p className="flex items-center gap-2.5"><Phone className="w-4 h-4 shrink-0 text-ink-muted" />{lead.phone}</p>}
                 </div>
-                <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#4B1D3F]/[0.08]">
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-line">
                   {statusBadge(lead)}
                   {actions(lead)}
                 </div>
@@ -217,45 +204,40 @@ export const AdminLeads: React.FC = () => {
           </ul>
 
           {/* Tablet / desktop: table */}
-          <div className="hidden md:block bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] overflow-hidden">
+          <div className={`hidden md:block ${ui.panel}`}>
             <div className="overflow-x-auto max-h-[75vh] overflow-y-auto">
-              <table className="w-full text-left">
+              <table className="w-full text-left text-[13px]">
                 <thead className="sticky top-0 z-10">
-                  <tr className="bg-[#FBF7F3] border-b border-[#4B1D3F]/10 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/55">
-                    <th className="pl-5 pr-3 py-3.5 font-semibold">Lead Info</th>
-                    <th className="px-3 py-3.5 font-semibold">Source</th>
-                    <th className="px-3 py-3.5 font-semibold">Captured At</th>
-                    <th className="px-3 py-3.5 font-semibold">Status</th>
-                    <th className="pl-3 pr-5 py-3.5 font-semibold text-right">Actions</th>
+                  <tr className={ui.thead}>
+                    <th className="pl-5 pr-3 py-2.5 font-semibold">Lead</th>
+                    <th className="px-3 py-2.5 font-semibold">Source</th>
+                    <th className="px-3 py-2.5 font-semibold">Received</th>
+                    <th className="px-3 py-2.5 font-semibold">Status</th>
+                    <th className="pl-3 pr-5 py-2.5 font-semibold text-right"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#4B1D3F]/[0.06]">
+                <tbody className="divide-y divide-line">
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="hover:bg-[#FBF7F3] transition-colors">
-                      <td className="pl-5 pr-3 py-4">
-                        <p className="text-sm font-semibold text-[#2A1A26]">{lead.name || 'Anonymous Lead'}</p>
-                        <div className="mt-1 flex flex-col gap-0.5">
-                          <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60">
-                            <Mail className="w-3.5 h-3.5 text-[#4B1D3F]/45" />
+                    <tr key={lead.id} className="hover:bg-page transition-colors">
+                      <td className="pl-5 pr-3 py-3">
+                        <p className="text-sm font-semibold text-ink">{lead.name || 'No name given'}</p>
+                        <div className="mt-0.5 flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                            <Mail className="w-3.5 h-3.5" />
                             {lead.email}
                           </div>
                           {lead.phone && (
-                            <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60">
-                              <Phone className="w-3.5 h-3.5 text-[#4B1D3F]/45" />
+                            <div className="flex items-center gap-1.5 text-xs text-ink-muted">
+                              <Phone className="w-3.5 h-3.5" />
                               {lead.phone}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-3 py-4">{sourceBadge(lead.source)}</td>
-                      <td className="px-3 py-4">
-                        <div className="flex items-center gap-1.5 text-[12px] text-[#2A1A26]/60 whitespace-nowrap">
-                          <Clock className="w-3.5 h-3.5" />
-                          {formatDate(lead.createdAt)}
-                        </div>
-                      </td>
-                      <td className="px-3 py-4">{statusBadge(lead)}</td>
-                      <td className="pl-3 pr-5 py-4 text-right">{actions(lead)}</td>
+                      <td className="px-3 py-3">{sourceBadge(lead.source)}</td>
+                      <td className="px-3 py-3 text-ink-muted whitespace-nowrap">{formatDate(lead.createdAt)}</td>
+                      <td className="px-3 py-3">{statusBadge(lead)}</td>
+                      <td className="pl-3 pr-5 py-3 text-right">{actions(lead)}</td>
                     </tr>
                   ))}
                 </tbody>

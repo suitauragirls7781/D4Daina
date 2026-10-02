@@ -158,14 +158,14 @@ export const AdminCoupons: React.FC = () => {
 
       {/* Header */}
       <AdminPageHeader
-        eyebrow="Marketing & Offers"
+        eyebrow="Offers"
         title="Coupons & promo codes"
         icon={<TagIcon live={false} />}
         description="Checkout discounts with validity dates and usage caps. The server re-checks every coupon before payment."
         actions={
           <button
             onClick={handleOpenAdd}
-            className="h-11 px-5 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-sm font-semibold transition-colors shadow-sm inline-flex items-center gap-2 cursor-pointer"
+            className="sag-btn-primary h-12 px-5 text-[15px] gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 text-current" />
             <span>Create coupon</span>
@@ -174,7 +174,7 @@ export const AdminCoupons: React.FC = () => {
       />
 
       {/* Filter Tabs */}
-      <div className="flex flex-nowrap gap-1.5 p-1.5 rounded-full bg-white border border-[#4B1D3F]/10 w-fit max-w-full overflow-x-auto sag-scroll-x">
+      <div role="group" aria-label="Filter coupons" className="flex flex-nowrap gap-1 p-1 rounded-xl bg-white border border-line w-fit max-w-full overflow-x-auto sag-scroll-x">
         {(['all', 'active', 'expired', 'disabled'] as const).map((tab) => {
           const count = coupons.filter(c => {
             const exp = checkIfExpired(c);
@@ -187,16 +187,18 @@ export const AdminCoupons: React.FC = () => {
           return (
             <button
               key={tab}
+              type="button"
+              aria-pressed={filterTab === tab}
               onClick={() => setFilterTab(tab)}
-              className={`h-9 px-4 shrink-0 whitespace-nowrap inline-flex items-center text-sm font-semibold rounded-full transition-colors cursor-pointer ${
+              className={`h-11 px-4 shrink-0 whitespace-nowrap inline-flex items-center text-sm font-semibold rounded-xl transition-colors cursor-pointer ${
                 filterTab === tab
-                  ? 'bg-[#4B1D3F] text-white'
-                  : 'text-[#4B1D3F] hover:bg-[#F3EEF8]'
+                  ? 'bg-ink text-white'
+                  : 'text-ink hover:bg-sunken'
               }`}
             >
               <span className="capitalize">{tab}</span>
-              <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-[11px] font-bold ${
-                filterTab === tab ? 'bg-white/20 text-white' : 'bg-[#F3EEF8] text-[#2A1A26]'
+              <span className={`ml-1.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold ${
+                filterTab === tab ? 'bg-white/20 text-white' : 'bg-sunken text-ink'
               }`}>
                 {count}
               </span>
@@ -207,10 +209,10 @@ export const AdminCoupons: React.FC = () => {
 
       {/* Coupons Grid */}
       {filteredCoupons.length === 0 ? (
-        <div className="px-6 py-14 text-center bg-white rounded-3xl border border-dashed border-[#4B1D3F]/20 space-y-2">
-          <span className="mx-auto mb-2 w-14 h-14 rounded-2xl bg-[#F3EEF8] flex items-center justify-center"><TagIcon className="w-7 h-7" live={false} /></span>
-          <p className="font-serif text-xl text-[#2A1A26]">No coupons found</p>
-          <p className="text-sm text-[#2A1A26]/60">There are no coupons matching the "{filterTab}" category at this moment.</p>
+        <div className="px-6 py-14 text-center bg-white rounded-2xl border border-dashed border-line space-y-2">
+          <span className="mx-auto mb-2 w-14 h-14 rounded-2xl bg-sunken flex items-center justify-center"><TagIcon className="w-7 h-7" live={false} /></span>
+          <p className="text-base font-semibold text-ink">No coupons here</p>
+          <p className="text-sm text-ink-muted">{filterTab === 'all' ? 'Use Create coupon to add the first one.' : `No ${filterTab} coupons right now.`}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
@@ -219,33 +221,31 @@ export const AdminCoupons: React.FC = () => {
             return (
               <div
                 key={coupon.id}
-                className={`bg-white rounded-3xl border p-5 shadow-[var(--sag-shadow)] transition-colors flex flex-col justify-between space-y-4 relative ${
+                className={`bg-white rounded-2xl border p-4 sm:p-5 flex flex-col justify-between space-y-4 relative ${
                   isExpired
-                    ? 'border-rose-200 opacity-80'
-                    : coupon.isActive
-                      ? 'border-[#4B1D3F]/15 hover:border-[#4B1D3F]/40'
-                      : 'border-[#4B1D3F]/15 opacity-75'
+                    ? 'border-danger-line'
+                    : 'border-line'
                 }`}
               >
                 {/* Top Row: Code & Badge */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-1">
-                    <span className={`font-mono text-lg font-bold tracking-[0.14em] px-3.5 py-1.5 border border-dashed rounded-xl inline-block ${
+                    <span className={`font-mono text-base font-bold tracking-[0.08em] px-3 py-1.5 border border-dashed rounded-[10px] inline-block break-all ${
                       isExpired
-                        ? 'text-[#2A1A26]/50 bg-[#FBF7F3] border-[#4B1D3F]/15 line-through'
-                        : 'text-[#4B1D3F] bg-[#F3EEF8] border-[#4B1D3F]/30'
+                        ? 'text-ink-faint bg-page border-line line-through'
+                        : 'text-ink bg-sale-tint border-sale-line'
                     }`}>
                       {coupon.code}
                     </span>
-                    <p className="font-serif text-lg font-semibold text-[#2A1A26]">
+                    <p className="text-base font-semibold text-sale sag-num">
                       {coupon.discountType === 'percentage'
-                        ? `${coupon.discountValue}% OFF (Max ₹${coupon.maxDiscount || 'Unlimited'})`
-                        : `Flat ₹${coupon.discountValue} OFF`}
+                        ? `${coupon.discountValue}% off${coupon.maxDiscount ? ` (up to ₹${coupon.maxDiscount})` : ''}`
+                        : `₹${coupon.discountValue} off`}
                     </p>
                   </div>
 
                   {isExpired ? (
-                    <span className="h-7 px-2.5 inline-flex items-center rounded-full text-[11px] font-semibold uppercase tracking-wide bg-rose-50 text-rose-700 border border-rose-200">
+                    <span className="h-7 px-2.5 inline-flex items-center rounded-md text-xs font-semibold bg-danger-tint text-danger border border-danger-line">
                       Expired
                     </span>
                   ) : (
@@ -255,78 +255,81 @@ export const AdminCoupons: React.FC = () => {
                           .then(() => showToast(`Coupon ${coupon.code} is now ${!coupon.isActive ? 'active' : 'disabled'}.`, 'info'))
                           .catch((err: any) => showToast(err?.message || 'Could not save. Please try again.', 'error'));
                       }}
-                      className={`h-7 px-2.5 inline-flex items-center gap-1.5 rounded-full border text-[11px] font-semibold uppercase tracking-wide transition-colors cursor-pointer ${
+                      aria-pressed={coupon.isActive}
+                      className={`h-11 px-3 shrink-0 inline-flex items-center gap-1.5 rounded-xl border text-[13px] font-semibold transition-colors cursor-pointer ${
                         coupon.isActive
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : 'bg-[#F3EEF8] text-[#4B1D3F] border-[#4B1D3F]/15'
+                          ? 'bg-ok-tint text-ok border-ok-line'
+                          : 'bg-sunken text-ink border-line'
                       }`}
                       title="Tap to switch on / off"
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${coupon.isActive ? 'bg-emerald-600' : 'bg-[#4B1D3F]/40'}`} aria-hidden="true" />
+                      <span className={`w-1.5 h-1.5 rounded-full ${coupon.isActive ? 'bg-ok' : 'bg-ink/50'}`} aria-hidden="true" />
                       {coupon.isActive ? 'Active' : 'Disabled'}
                     </button>
                   )}
                 </div>
 
                 {/* Conditions & Thresholds */}
-                <div className={`p-3.5 rounded-2xl border text-xs space-y-2 ${
+                <div className={`p-3.5 rounded-xl border text-[13px] space-y-2 sag-num ${
                   isExpired
-                    ? 'bg-rose-50 border-rose-200 text-[#2A1A26]/60'
-                    : 'bg-[#FBF7F3] border-[#4B1D3F]/10 text-[#2A1A26]/70'
+                    ? 'bg-danger-tint border-danger-line text-ink-muted'
+                    : 'bg-page border-line text-ink-muted'
                 }`}>
                   <div className="flex justify-between">
-                    <span>Min Order Value:</span>
-                    <strong className="text-[#2A1A26]">₹{coupon.minOrderValue}</strong>
+                    <span>Minimum order</span>
+                    <strong className="text-ink">₹{coupon.minOrderValue}</strong>
                   </div>
                   <div className="flex justify-between items-center gap-1">
                     <span className="flex items-center gap-1">
-                      <CalendarDays className="w-3.5 h-3.5 text-[#4B1D3F]" />
-                      Validity Window:
+                      <CalendarDays className="w-3.5 h-3.5 text-ink" />
+                      Valid
                     </span>
-                    <span className={isExpired ? 'text-rose-700 font-semibold' : ''}>
+                    <span className={isExpired ? 'text-danger font-semibold' : ''}>
                       {coupon.startDate} to {coupon.expiryDate}
                     </span>
                   </div>
                   {couponRestrictionNotes(coupon).map((note) => (
                     <div key={note} className="flex justify-between gap-2">
-                      <span>Limit:</span>
-                      <strong className="text-[#4B1D3F] text-right">{note}</strong>
+                      <span>Limit</span>
+                      <strong className="text-ink text-right">{note}</strong>
                     </div>
                   ))}
                   <div className="flex justify-between">
-                    <span>Redemptions:</span>
-                    <strong className="text-[#2A1A26]">
-                      {coupon.usageCount} / {coupon.usageLimit}
+                    <span>Used</span>
+                    <strong className="text-ink">
+                      {coupon.usageCount} of {coupon.usageLimit}
                     </strong>
                   </div>
                 </div>
 
                 {/* Progress Bar of usage */}
                 <div className="space-y-1">
-                  <div className="w-full bg-[#F3EEF8] h-1.5 rounded-full overflow-hidden">
+                  <div className="w-full bg-sunken h-1.5 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${isExpired ? 'bg-[#2A1A26]/30' : 'bg-[#4B1D3F]'}`}
+                      className={`h-full rounded-full ${isExpired ? 'bg-ink/50' : 'bg-brand'}`}
                       style={{ width: `${Math.min(100, (coupon.usageCount / coupon.usageLimit) * 100)}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-[#4B1D3F]/10 text-xs">
-                  <span className="text-[11px] text-[#2A1A26]/50">Coupon ID: {coupon.id}</span>
+                <div className="flex items-center justify-between pt-2 border-t border-line text-xs">
+                  <span className="min-w-0 truncate text-xs text-ink-faint">ID: {coupon.id}</span>
 
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEdit(coupon)}
-                      className="w-9 h-9 inline-flex items-center justify-center hover:bg-[#F3EEF8] rounded-full text-[#4B1D3F] transition-colors cursor-pointer"
-                      title="Edit Coupon"
+                      className="w-11 h-11 inline-flex items-center justify-center hover:bg-sunken rounded-full text-ink transition-colors cursor-pointer"
+                      title="Edit coupon"
+                      aria-label={`Edit coupon ${coupon.code}`}
                     >
                       <Edit3 className="w-4 h-4 text-current" />
                     </button>
                     <button
                       onClick={() => handleDelete(coupon)}
-                      className="w-9 h-9 inline-flex items-center justify-center hover:bg-rose-50 rounded-full text-rose-700 transition-colors cursor-pointer"
-                      title="Delete Coupon"
+                      className="w-11 h-11 inline-flex items-center justify-center hover:bg-danger-tint rounded-full text-danger transition-colors cursor-pointer"
+                      title="Delete coupon"
+                      aria-label={`Delete coupon ${coupon.code}`}
                     >
                       <Trash2 className="w-4 h-4 text-current" />
                     </button>
@@ -341,14 +344,14 @@ export const AdminCoupons: React.FC = () => {
 
       {/* Add / Edit Coupon Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4">
-          <div role="dialog" aria-modal="true" aria-label={editingCouponId ? 'Edit coupon' : 'Create new coupon'} className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[94dvh] sm:max-h-[90vh] overflow-y-auto p-5 sm:p-7 shadow-2xl border border-[#4B1D3F]/10 space-y-4 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center sm:p-4">
+          <div role="dialog" aria-modal="true" aria-label={editingCouponId ? 'Edit coupon' : 'Create new coupon'} className="bg-white rounded-t-[20px] sm:rounded-2xl sm:max-w-xl w-full max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
 
-            <div className="flex items-center justify-between border-b border-[#4B1D3F]/10 pb-3">
-              <h3 className="font-serif text-2xl font-semibold text-[#2A1A26]">
+            <div className="sticky top-0 z-10 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 px-5 sm:px-7 py-3 bg-white flex items-center justify-between border-b border-line">
+              <h3 className="text-[17px] leading-6 font-semibold text-ink">
                 {editingCouponId ? 'Edit coupon' : 'Create a coupon'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-10 h-10 rounded-full flex items-center justify-center text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+              <button type="button" onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
                 <X className="w-5 h-5 text-current" />
               </button>
             </div>
@@ -356,33 +359,38 @@ export const AdminCoupons: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Coupon Code *</label>
+                <label htmlFor="coupon-code" className="sag-label">Coupon code <span className="text-danger">*</span></label>
                 <input
+                  id="coupon-code"
                   type="text"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
                   required
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value })}
                   placeholder="e.g. FIRST15 or AURA20"
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 font-mono uppercase font-bold tracking-wider"
+                  className="sag-input font-mono uppercase font-bold tracking-wider"
                 />
+                <p className="mt-1.5 text-[13px] text-ink-muted">Letters and numbers, no spaces. Shoppers type this in the bag.</p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Discount Type</label>
+                  <label className="sag-label">Discount type</label>
                   <select
                     value={formData.discountType}
                     onChange={(e) => setFormData({ ...formData, discountType: e.target.value as any })}
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 cursor-pointer"
+                    className="sag-input"
                   >
                     <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Flat Amount (₹)</option>
+                    <option value="fixed">Flat amount (₹)</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">
-                    {formData.discountType === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount (₹)'}
+                  <label className="sag-label">
+                    {formData.discountType === 'percentage' ? 'Discount (%)' : 'Discount (₹)'}
                   </label>
                   <input
                     type="number"
@@ -390,73 +398,73 @@ export const AdminCoupons: React.FC = () => {
                     min={1}
                     value={formData.discountValue}
                     onChange={(e) => setFormData({ ...formData, discountValue: Number(e.target.value) })}
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 font-semibold"
+                    className="sag-input font-semibold"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Min Order Value (₹)</label>
+                  <label className="sag-label">Minimum order (₹)</label>
                   <input
                     type="number"
                     min={0}
                     value={formData.minOrderValue}
                     onChange={(e) => setFormData({ ...formData, minOrderValue: Number(e.target.value) })}
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                    className="sag-input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Max Cap Discount (₹)</label>
+                  <label className="sag-label">Most it can take off (₹)</label>
                   <input
                     type="number"
                     min={0}
                     value={formData.maxDiscount || ''}
                     onChange={(e) => setFormData({ ...formData, maxDiscount: Number(e.target.value) || undefined })}
-                    placeholder="Optional"
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                    placeholder="No cap"
+                    className="sag-input"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Start Date</label>
+                  <label className="sag-label">Starts on</label>
                   <input
                     type="date"
                     required
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                    className="sag-input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Expiry Date</label>
+                  <label className="sag-label">Ends on</label>
                   <input
                     type="date"
                     required
                     value={formData.expiryDate}
                     onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                    className="sag-input"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Total Usage Limit (Total Redemptions)</label>
+                <label className="sag-label">Total uses allowed</label>
                 <input
                   type="number"
                   min={1}
                   value={formData.usageLimit}
                   onChange={(e) => setFormData({ ...formData, usageLimit: Number(e.target.value) })}
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                  className="sag-input"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Uses per customer</label>
+                <label className="sag-label">Uses per customer</label>
                 <input
                   type="number"
                   min={0}
@@ -464,21 +472,21 @@ export const AdminCoupons: React.FC = () => {
                   value={formData.perUserLimit || ''}
                   onChange={(e) => setFormData({ ...formData, perUserLimit: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
                   placeholder="No limit"
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                  className="sag-input"
                 />
-                <p className="mt-1 text-[11px] text-[#2A1A26]/60">Counts paid orders with the same email or mobile number. Leave empty for no limit.</p>
+                <p className="mt-1.5 text-[13px] text-ink-muted">Counts paid orders with the same email or mobile number. Leave empty for no limit.</p>
               </div>
 
-              <fieldset className="rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] p-4 space-y-3">
-                <legend className="px-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70">Valid on (optional)</legend>
-                <p className="text-[11px] text-[#2A1A26]/60">Leave both empty to allow every item. When set, the discount is worked out only on matching items in the bag (an item matches if it is in a chosen category or is a chosen product).</p>
+              <fieldset className="rounded-xl border border-line bg-page p-3.5 sm:p-4 space-y-3">
+                <legend className="px-1.5 text-[13px] font-semibold text-ink">Valid on <span className="font-normal text-ink-muted">(optional)</span></legend>
+                <p className="text-[13px] text-ink-muted">Leave both empty to allow every item. When set, the discount is worked out only on matching items in the bag (an item matches if it is in a chosen category or is a chosen product).</p>
 
                 <div>
-                  <p className="text-xs font-semibold text-[#2A1A26]/80 mb-1.5">Categories</p>
+                  <p className="sag-label">Categories</p>
                   {categoryOptions.length === 0 ? (
-                    <p className="text-[11px] text-[#2A1A26]/60">No categories yet.</p>
+                    <p className="text-[13px] text-ink-muted">No categories yet.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {categoryOptions.map((category) => {
                         const selected = (formData.allowedCategories || []).includes(category);
                         return (
@@ -492,13 +500,13 @@ export const AdminCoupons: React.FC = () => {
                                 ? (formData.allowedCategories || []).filter((c) => c !== category)
                                 : [...(formData.allowedCategories || []), category],
                             })}
-                            className={`h-9 px-3.5 rounded-full border text-xs font-semibold transition-colors cursor-pointer ${
+                            className={`h-11 px-3.5 rounded-[10px] border-[1.5px] text-sm font-medium transition-colors cursor-pointer ${
                               selected
-                                ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white'
-                                : 'bg-white border-[#4B1D3F]/15 text-[#4B1D3F] hover:bg-[#F3EEF8]'
+                                ? 'bg-ink border-ink text-white'
+                                : 'bg-white border-control text-ink hover:bg-sunken'
                             }`}
                           >
-                            {selected && <CheckCircle2 className="inline w-3 h-3 mr-1 -mt-0.5 text-current" aria-hidden="true" />}
+                            {selected && <CheckCircle2 className="inline w-4 h-4 mr-1 -mt-0.5 text-current" aria-hidden="true" />}
                             {category}
                           </button>
                         );
@@ -508,21 +516,21 @@ export const AdminCoupons: React.FC = () => {
                 </div>
 
                 <div>
-                  <p className="text-xs font-semibold text-[#2A1A26]/80 mb-1.5">Products</p>
+                  <p className="sag-label">Products</p>
                   {(formData.allowedProductIds || []).length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-2">
                       {(formData.allowedProductIds || []).map((id) => {
                         const product = products.find((p) => String(p.id) === id);
                         return (
-                          <span key={id} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full bg-[#F3EEF8] border border-[#4B1D3F]/15 text-[11px] text-[#4B1D3F] font-semibold">
+                          <span key={id} className="inline-flex items-center gap-1 pl-3 rounded-[10px] bg-white border border-line text-[13px] text-ink font-semibold">
                             <span className="max-w-[180px] truncate">{product?.name || `Removed product (${id})`}</span>
                             <button
                               type="button"
                               aria-label={`Remove ${product?.name || id}`}
                               onClick={() => setFormData({ ...formData, allowedProductIds: (formData.allowedProductIds || []).filter((pid) => pid !== id) })}
-                              className="p-0.5 rounded-full hover:bg-[#E6DDF0] cursor-pointer"
+                              className="w-11 h-11 flex items-center justify-center rounded-[10px] hover:bg-sunken cursor-pointer"
                             >
-                              <X className="w-3 h-3 text-current" />
+                              <X className="w-4 h-4 text-current" />
                             </button>
                           </span>
                         );
@@ -534,7 +542,8 @@ export const AdminCoupons: React.FC = () => {
                     value={productSearch}
                     onChange={(e) => setProductSearch(e.target.value)}
                     placeholder="Search products by name or SKU"
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                    aria-label="Search products to add"
+                    className="sag-input"
                   />
                   {productSearch.trim().length >= 2 && (() => {
                     const q = productSearch.trim().toLowerCase();
@@ -543,9 +552,9 @@ export const AdminCoupons: React.FC = () => {
                       .filter((p) => p.name.toLowerCase().includes(q) || String(p.sku || '').toLowerCase().includes(q))
                       .slice(0, 8);
                     return (
-                      <ul className="mt-1.5 max-h-48 overflow-y-auto rounded-2xl border border-[#4B1D3F]/10 divide-y divide-[#4B1D3F]/10 bg-white">
+                      <ul className="mt-1.5 max-h-56 overflow-y-auto rounded-xl border border-line divide-y divide-line bg-white">
                         {matches.length === 0 ? (
-                          <li className="px-3 py-2 text-[11px] text-[#2A1A26]/60">No matching products.</li>
+                          <li className="px-3 py-3 text-[13px] text-ink-muted">No matching products.</li>
                         ) : matches.map((p) => (
                           <li key={p.id}>
                             <button
@@ -554,10 +563,10 @@ export const AdminCoupons: React.FC = () => {
                                 setFormData({ ...formData, allowedProductIds: [...(formData.allowedProductIds || []), String(p.id)] });
                                 setProductSearch('');
                               }}
-                              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-[#F3EEF8] cursor-pointer"
+                              className="w-full min-h-11 flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-sunken cursor-pointer"
                             >
-                              <span className="truncate text-[#2A1A26]">{p.name}{p.hidden ? ' (hidden)' : ''}</span>
-                              <span className="shrink-0 text-[11px] text-[#2A1A26]/60">{p.category}</span>
+                              <span className="truncate text-ink">{p.name}{p.hidden ? ' (hidden)' : ''}</span>
+                              <span className="shrink-0 text-xs text-ink-muted">{p.category}</span>
                             </button>
                           </li>
                         ))}
@@ -568,29 +577,29 @@ export const AdminCoupons: React.FC = () => {
               </fieldset>
 
               <div className="pt-2">
-                <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer text-sm font-semibold text-[#2A1A26]">
+                <label className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="peer sr-only"
                   />
-                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-                  <span className="order-first">Enable and activate this coupon immediately</span>
+                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+                  <span className="order-first">Coupon is switched on</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#4B1D3F]/10">
+              <div className="sticky bottom-0 z-10 -mx-5 sm:-mx-7 -mb-5 sm:-mb-7 px-5 sm:px-7 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white flex gap-3 border-t border-line shadow-[var(--sag-shadow-bar)]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="h-11 px-5 border border-[#4B1D3F]/20 rounded-full text-[#4B1D3F] font-semibold hover:bg-[#F3EEF8] cursor-pointer"
+                  className="sag-btn-outline h-12 flex-1 sm:flex-none sm:ml-auto sm:px-6 text-[15px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full font-semibold flex items-center gap-2 cursor-pointer"
+                  className="sag-btn-primary h-12 flex-[2] sm:flex-none sm:px-8 gap-2"
                 >
                   <Save className="w-4 h-4 text-current" /> Save coupon
                 </button>

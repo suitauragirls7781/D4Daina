@@ -2,6 +2,15 @@ import React from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useShop } from '../context/ShopContext';
 import { Star } from 'lucide-react';
+import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
+
+const Stars: React.FC<{ value: number }> = ({ value }) => (
+  <span className="flex gap-0.5" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map((i) => (
+      <Star key={i} className={`w-4 h-4 ${i <= value ? 'fill-star text-star' : 'fill-sunken-deep text-sunken-deep'}`} />
+    ))}
+  </span>
+);
 
 /** Approved customer reviews. Hidden entirely until there is at least one. */
 export const CustomerReviews: React.FC = () => {
@@ -18,30 +27,37 @@ export const CustomerReviews: React.FC = () => {
   const average = reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length;
 
   return (
-    <section id="customer-reviews-section" className="w-full bg-white py-12 sm:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center text-center mb-8 sm:mb-10">
-          <p className="sag-eyebrow">Reviews</p>
-          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-[#4B1D3F]">Loved by our customers</h2>
-          <div className="mt-3 flex items-center gap-2 text-sm text-[#2A1A26]/70">
-            <span className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-4 h-4 ${i <= Math.round(average) ? 'fill-[#C5A46D] text-[#C5A46D]' : 'text-[#C5A46D]/35'}`} />)}</span>
-            <span>{average.toFixed(1)} average</span>
-          </div>
+    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className={`${HOME_SECTION} bg-white`}>
+      <div className="max-w-7xl mx-auto">
+        <div className="px-4 sm:px-6 lg:px-8">
+          <HomeSectionHeader titleId="customer-reviews-title" title="Customer reviews" className="mb-2" />
+          {/* The average is worked out from the reviews shown below, nothing else */}
+          <p className="mb-4 lg:mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-ink">
+            <Stars value={Math.round(average)} />
+            <span className="sag-num">
+              <span className="font-semibold">{average.toFixed(1)}</span>
+              <span className="text-ink-muted"> · average of our {reviews.length === 1 ? 'latest review' : `${reviews.length} latest reviews`}</span>
+            </span>
+          </p>
         </div>
 
-        <div className="sag-scroll-x flex md:grid md:grid-cols-3 gap-4 overflow-x-auto md:overflow-visible pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="sag-scroll-x flex md:grid md:grid-cols-3 gap-3 lg:gap-5 overflow-x-auto md:overflow-visible px-4 sm:px-6 lg:px-8 pb-1">
           {reviews.map((review) => {
             const product = products.find((p) => String(p.id) === String(review.productId));
+            const rating = Number(review.rating) || 0;
             return (
-              <article key={review.id} className="sag-card p-5 sm:p-6 shrink-0 w-[82%] sm:w-[60%] md:w-auto flex flex-col">
-                <span className="flex">{[1, 2, 3, 4, 5].map((i) => <Star key={i} className={`w-4 h-4 ${i <= (Number(review.rating) || 0) ? 'fill-[#C5A46D] text-[#C5A46D]' : 'text-[#C5A46D]/35'}`} />)}</span>
-                <p className="mt-3 text-[15px] leading-relaxed text-[#2A1A26]/80 line-clamp-5">“{review.comment}”</p>
-                <div className="mt-auto pt-4">
-                  <p className="text-sm font-semibold text-[#2A1A26]">{review.userName}</p>
+              <article key={review.id} className="sag-card p-4 lg:p-5 shrink-0 w-[82%] sm:w-[48%] md:w-auto flex flex-col">
+                <div className="flex items-center gap-2">
+                  <Stars value={rating} />
+                  <span className="sr-only">Rated {rating} out of 5</span>
+                </div>
+                <p className="mt-2 text-[15px] leading-[22px] text-ink line-clamp-5">“{review.comment}”</p>
+                <div className="mt-auto pt-3">
+                  <p className="text-sm leading-5 font-semibold text-ink">{review.userName}</p>
                   {product ? (
-                    <button onClick={() => navigateToProduct(product.id)} className="text-xs text-[#4B1D3F] hover:underline cursor-pointer text-left">{product.name}</button>
+                    <button type="button" onClick={() => navigateToProduct(product.id)} className="sag-link -mt-1 text-[13px] text-left">{product.name}</button>
                   ) : review.productName ? (
-                    <p className="text-xs text-[#2A1A26]/65">{review.productName}</p>
+                    <p className="text-[13px] leading-[18px] text-ink-muted">{review.productName}</p>
                   ) : null}
                 </div>
               </article>

@@ -58,116 +58,120 @@ export const CompareTray: React.FC = () => {
   }
 
   const rows: Array<[string, (p: Product) => React.ReactNode]> = [
-    ['Price', (p) => <span className="font-semibold text-[#4B1D3F]">{inr(p.price)}</span>],
-    ['Discount', (p) => (discountOf(p) ? `${discountOf(p)}% off ${inr(Math.max(p.price, Number(p.originalPrice) || p.price))}` : '—')],
+    ['Price', (p) => <span className="sag-num font-bold text-ink">{inr(p.price)}</span>],
+    ['Discount', (p) => (discountOf(p) ? <span className="sag-num"><span className="font-bold text-sale">{discountOf(p)}% off</span> <span className="text-ink-faint line-through">{inr(Math.max(p.price, Number(p.originalPrice) || p.price))}</span></span> : '—')],
     ['Colour', (p) => (p.colors || []).map((c) => c.name).filter((n) => !['Default', 'Standard'].includes(n)).join(', ') || productColourFamilies(p).join(', ') || '—'],
     ['Fabric', (p) => p.fabric || '—'],
     ['Fit', (p) => p.fit || '—'],
     ['Occasion', (p) => p.occasion || productOccasions(p).join(', ') || '—'],
     ['Sizes', (p) => (p.sizes || []).join(', ') || '—'],
     ['Rating', (p) => { const r = ratingOf(p); return r ? `${r.avg.toFixed(1)}★ (${r.count})` : 'No reviews yet'; }],
-    ['Availability', (p) => (isAvailable(p) ? <span className="text-emerald-800">In stock</span> : <span className="text-rose-700">Sold out</span>)],
+    ['Availability', (p) => (isAvailable(p) ? <span className="font-semibold text-ok">In stock</span> : <span className="font-semibold text-ink-muted">Sold out</span>)],
   ];
+  const columns = { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` };
+  const viewButton = 'sag-btn-outline h-11 w-full px-2 text-sm';
+  const removeLink = 'min-h-11 inline-flex items-center text-[13px] text-ink-muted underline underline-offset-[3px] hover:text-ink cursor-pointer';
 
   return (
     <>
       {!open && items.length > 0 && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-20 md:bottom-6 z-40 flex items-center gap-2 rounded-full bg-white border border-[#4B1D3F]/15 shadow-[0_12px_28px_-12px_rgba(42,26,38,0.45)] pl-2 pr-2 py-1.5 sag-pop">
-          <div className="flex -space-x-2">
-            {items.map((p) => <img key={p.id} src={getCleanImageUrl(p.images?.[0] || '', 80)} alt="" className="w-8 h-8 rounded-full border-2 border-white object-cover object-top" />)}
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-[88px] md:bottom-6 z-40 flex items-center gap-1.5 max-w-[calc(100vw-2rem)] rounded-control bg-white text-ink border border-line shadow-[var(--sag-shadow-pop)] p-1.5 sag-pop">
+          <div className="flex -space-x-2 pl-1">
+            {items.map((p) => <img key={p.id} src={getCleanImageUrl(p.images?.[0] || '', 80)} alt="" className="w-8 h-10 rounded-badge border-2 border-white object-cover object-top bg-sunken" />)}
           </div>
           <button onClick={() => (items.length >= 2 ? setOpen(true) : showToast('Add one more style to compare.', 'info'))}
-            className="h-9 px-4 rounded-full bg-[#4B1D3F] text-white text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-1.5 cursor-pointer">
+            className="sag-num h-11 px-4 rounded-chip bg-ink text-white text-sm font-semibold whitespace-nowrap inline-flex items-center gap-1.5 cursor-pointer">
             <GitCompare className="w-4 h-4" /> Compare ({items.length})
           </button>
-          <button onClick={clearCompare} aria-label="Clear comparison" className="w-8 h-8 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer"><X className="w-4 h-4" /></button>
+          <button onClick={clearCompare} aria-label="Clear comparison" className="w-11 h-11 rounded-full text-ink-muted hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-[18px] h-[18px]" /></button>
         </div>
       )}
 
       {open && (
-        <div className="fixed inset-0 z-[70] bg-[#2A1A26]/50 flex items-end md:items-center justify-center sag-fade" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-[70] bg-ink/50 flex items-end md:items-center justify-center sag-fade" onClick={() => setOpen(false)}>
           <div role="dialog" aria-modal="true" aria-label="Compare styles" onClick={(e) => e.stopPropagation()}
-            className="bg-white w-full md:max-w-4xl max-h-[88vh] rounded-t-3xl md:rounded-3xl flex flex-col animate-in slide-in-from-bottom-5 fade-in">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#4B1D3F]/10">
-              <p className="font-serif text-2xl text-[#4B1D3F]">Compare styles</p>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="w-9 h-9 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
+            className="bg-white text-ink w-full md:max-w-4xl max-h-[85dvh] rounded-t-sheet md:rounded-card flex flex-col shadow-[var(--sag-shadow-bar)] animate-in slide-in-from-bottom-5 fade-in">
+            <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-1 rounded-full bg-sunken-deep" /></div>
+            <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
+              <p className="text-base leading-[22px] font-semibold text-ink">Compare styles</p>
+              <button onClick={() => setOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.75} /></button>
             </div>
-            <div className="overflow-auto">
-              {facts.length > 0 && (
-                <div className="m-4 rounded-2xl bg-[#F3EEF8] p-4">
-                  <p className="text-sm font-semibold text-[#4B1D3F] mb-1.5">Help me choose</p>
-                  <ul className="text-sm text-[#2A1A26]/80 space-y-1 list-disc pl-5">{facts.map((f) => <li key={f}>{f}</li>)}</ul>
-                </div>
-              )}
+            <div className="overflow-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
               {/* Phones: products sit side by side in narrow columns and each detail is a labelled row */}
-              <div className="md:hidden px-3 pb-4">
-                <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+              <div className="md:hidden px-4 pt-4 pb-4">
+                <div className="grid gap-2.5" style={columns}>
                   {items.map((p) => (
                     <div key={p.id} className="min-w-0">
-                      <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} className="block w-full text-left cursor-pointer">
-                        <img src={getCleanImageUrl(p.images?.[0] || '', 240)} alt="" className="w-full aspect-[4/5] rounded-xl object-cover object-top bg-[#F3EEF8]" />
+                      <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} aria-label={`View ${p.name}`} className="block w-full text-left cursor-pointer">
+                        <img src={getCleanImageUrl(p.images?.[0] || '', 240)} alt="" className="w-full aspect-[4/5] rounded-chip object-cover object-top bg-sunken" />
                       </button>
-                      <button onClick={() => toggleCompare(String(p.id))} className="mt-1 h-8 text-xs text-[#2A1A26]/65 underline cursor-pointer">Remove</button>
+                      <button onClick={() => toggleCompare(String(p.id))} aria-label={`Remove ${p.name} from comparison`} className={removeLink}>Remove</button>
                     </div>
                   ))}
                 </div>
-                <div className="sticky top-0 z-10 -mx-3 px-3 py-2 bg-white border-b border-[#4B1D3F]/10 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
-                  {items.map((p) => <p key={p.id} className="min-w-0 font-serif text-[15px] leading-snug text-[#2A1A26] line-clamp-2">{p.name}</p>)}
+                <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-white border-b border-line grid gap-2.5" style={columns}>
+                  {items.map((p) => <p key={p.id} className="min-w-0 text-sm leading-5 font-medium text-ink line-clamp-2">{p.name}</p>)}
                 </div>
                 {rows.map(([label, cell]) => (
-                  <div key={label} className="py-2.5 border-b border-[#4B1D3F]/10">
-                    <p className="text-[11px] uppercase tracking-wider text-[#2A1A26]/60 font-medium mb-1">{label}</p>
-                    <div className="grid gap-2 text-[13px] leading-snug text-[#2A1A26]" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+                  <div key={label} className="py-3 border-b border-line">
+                    <p className="text-xs leading-4 font-semibold text-ink-muted mb-1">{label}</p>
+                    <div className="grid gap-2.5 text-sm leading-5 text-ink" style={columns}>
                       {items.map((p) => <div key={p.id} className="min-w-0 break-words">{cell(p)}</div>)}
                     </div>
                   </div>
                 ))}
-                <div className="grid gap-2 pt-3" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+                <div className="grid gap-2.5 pt-4" style={columns}>
                   {items.map((p) => (
-                    <button key={p.id} onClick={() => { setOpen(false); navigateToProduct(p.id); }} className="sag-btn-primary h-10 w-full text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">View</button>
+                    <button key={p.id} onClick={() => { setOpen(false); navigateToProduct(p.id); }} aria-label={`View ${p.name}`} className={viewButton}>View</button>
                   ))}
                 </div>
               </div>
               <table className="hidden md:table w-full text-sm border-collapse">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 bg-white w-24" />
+                    <th className="sticky left-0 bg-white w-28" />
                     {items.map((p) => (
                       <th key={p.id} className="p-3 align-top text-left font-normal">
                         <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} className="block text-left cursor-pointer">
-                          <img src={getCleanImageUrl(p.images?.[0] || '', 240)} alt="" className="w-full aspect-[4/5] rounded-xl object-cover object-top bg-[#F3EEF8]" />
-                          <span className="mt-2 block font-serif text-base text-[#2A1A26] leading-snug line-clamp-2">{p.name}</span>
+                          <img src={getCleanImageUrl(p.images?.[0] || '', 240)} alt="" className="w-full aspect-[4/5] rounded-control object-cover object-top bg-sunken" />
+                          <span className="mt-2 block text-sm leading-5 font-medium text-ink line-clamp-2">{p.name}</span>
                         </button>
-                        <button onClick={() => toggleCompare(String(p.id))} className="mt-1 text-xs text-[#2A1A26]/60 underline cursor-pointer">Remove</button>
+                        <button onClick={() => toggleCompare(String(p.id))} aria-label={`Remove ${p.name} from comparison`} className={removeLink}>Remove</button>
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {rows.map(([label, cell]) => (
-                    <tr key={label} className="border-t border-[#4B1D3F]/10">
-                      <th scope="row" className="sticky left-0 bg-white p-3 text-left text-xs uppercase tracking-wider text-[#2A1A26]/60 font-medium align-top">{label}</th>
-                      {items.map((p) => <td key={p.id} className="p-3 align-top text-[#2A1A26]">{cell(p)}</td>)}
+                    <tr key={label} className="border-t border-line">
+                      <th scope="row" className="sticky left-0 bg-white p-3 text-left text-[13px] font-semibold text-ink-muted align-top">{label}</th>
+                      {items.map((p) => <td key={p.id} className="p-3 align-top text-ink">{cell(p)}</td>)}
                     </tr>
                   ))}
-                  <tr className="border-t border-[#4B1D3F]/10">
+                  <tr className="border-t border-line">
                     <td className="sticky left-0 bg-white" />
                     {items.map((p) => (
                       <td key={p.id} className="p-3">
-                        <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} className="sag-btn-primary h-10 w-full text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">View</button>
+                        <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} aria-label={`View ${p.name}`} className={viewButton}>View</button>
                       </td>
                     ))}
                   </tr>
                 </tbody>
               </table>
+              {facts.length > 0 && (
+                <div className="mx-4 mb-4 md:mt-2 rounded-card bg-page border border-line p-4">
+                  <p className="text-sm font-semibold text-ink mb-1.5">The facts, side by side</p>
+                  <ul className="text-sm leading-5 text-ink-muted space-y-1 list-disc pl-5">{facts.map((f) => <li key={f}>{f}</li>)}</ul>
+                </div>
+              )}
               {history.length > 0 && (
-                <div className="m-4">
-                  <p className="text-sm font-medium text-[#2A1A26] mb-2 flex items-center gap-1.5"><History className="w-4 h-4" /> Recently compared</p>
+                <div className="mx-4 mb-4">
+                  <p className="text-sm font-semibold text-ink mb-2 flex items-center gap-1.5"><History className="w-4 h-4" /> Recently compared</p>
                   <div className="flex flex-wrap gap-2">
                     {history.map((set) => (
                       <button key={set.map((p) => p.id).join('|')} onClick={() => setCompare(set.map((p) => String(p.id)))}
-                        className="h-9 px-3 rounded-full border border-[#4B1D3F]/15 text-xs text-[#2A1A26] hover:bg-[#F3EEF8] cursor-pointer line-clamp-1 max-w-full">
-                        {set.map((p) => p.name.split(' ').slice(0, 2).join(' ')).join(' vs ')}
+                        className="sag-chip h-11 min-w-0 max-w-full px-3.5 text-sm">
+                        <span className="truncate">{set.map((p) => p.name.split(' ').slice(0, 2).join(' ')).join(' vs ')}</span>
                       </button>
                     ))}
                   </div>

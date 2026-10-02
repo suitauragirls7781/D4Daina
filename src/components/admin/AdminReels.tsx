@@ -101,19 +101,19 @@ const warmUp = (reel: AuraReel) => {
   img.src = reelPosterSrc(reel, 400);
 };
 
-const card = 'bg-white rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] p-4 sm:p-6';
-const input = 'w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10';
-const fileInput = 'block w-full text-sm text-[#2A1A26]/70 file:mr-3 file:h-10 file:px-4 file:rounded-full file:border-0 file:bg-[#F3EEF8] file:text-[#4B1D3F] file:text-sm file:font-medium file:cursor-pointer';
-const iconBtn = 'w-10 h-10 rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed';
+const card = 'bg-white rounded-2xl border border-line p-4 sm:p-6';
+const input = 'sag-input h-12';
+const fileInput = 'block w-full text-sm text-ink-muted file:mr-3 file:h-11 file:px-4 file:rounded-xl file:border-0 file:bg-sunken file:text-ink file:text-sm file:font-medium file:cursor-pointer';
+const iconBtn = 'w-11 h-11 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed';
 
 const ProgressBar: React.FC<{ label: string; fraction: number; onCancel?: () => void }> = ({ label, fraction, onCancel }) => (
   <div className="space-y-1.5">
-    <div className="flex items-center justify-between text-xs text-[#2A1A26]/70">
+    <div className="flex items-center justify-between text-[13px] text-ink-muted">
       <span>{label}… {Math.round(fraction * 100)}%</span>
-      {onCancel && <button type="button" onClick={onCancel} className="min-h-10 px-2 text-rose-700 font-medium hover:underline cursor-pointer">Cancel upload</button>}
+      {onCancel && <button type="button" onClick={onCancel} className="min-h-11 px-2 text-danger font-medium hover:underline cursor-pointer">Cancel upload</button>}
     </div>
-    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(fraction * 100)} className="h-2 rounded-full bg-[#F3EEF8] overflow-hidden">
-      <div className="h-full bg-[#4B1D3F] transition-[width] duration-200" style={{ width: `${Math.round(fraction * 100)}%` }} />
+    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(fraction * 100)} className="h-2 rounded-full bg-sunken overflow-hidden">
+      <div className="h-full bg-brand transition-[width] duration-200" style={{ width: `${Math.round(fraction * 100)}%` }} />
     </div>
   </div>
 );
@@ -134,31 +134,31 @@ const ProductPicker: React.FC<{ products: Product[]; byId: Map<string, Product>;
   return (
     <div className="space-y-2">
       {selected ? (
-        <div className="flex items-center gap-2 rounded-xl border border-[#4B1D3F]/15 bg-[#F3EEF8]/50 p-2">
+        <div className="flex items-center gap-2 rounded-xl border border-line bg-sunken p-2">
           <img src={getCleanImageUrl(selected.images?.[0] || selected.image, 120)} alt="" className="w-9 h-11 rounded-md object-cover object-top bg-white" />
           <span className="flex-1 min-w-0 text-sm">
-            <span className="block font-medium text-[#2A1A26] line-clamp-1">{selected.name}</span>
-            <span className="block text-xs text-[#2A1A26]/60">{inr(selected.price)}{selected.hidden ? ' · Hidden on store' : isAvailable(selected) ? '' : ' · Sold out'}</span>
+            <span className="block font-medium text-ink line-clamp-1">{selected.name}</span>
+            <span className="block text-[13px] text-ink-muted">{inr(selected.price)}{selected.hidden ? ' · Hidden on store' : isAvailable(selected) ? '' : ' · Sold out'}</span>
           </span>
           <button type="button" onClick={() => onChange('')} aria-label="Remove linked product" className={iconBtn}><X className="w-4 h-4 text-current" /></button>
         </div>
       ) : (
-        <p className="text-xs text-[#2A1A26]/60">{value ? 'The linked product no longer exists. Pick another or leave empty.' : 'No product linked — the reel plays without shop buttons.'}</p>
+        <p className="text-[13px] text-ink-muted">{value ? 'The linked product no longer exists. Pick another or leave empty.' : 'No product linked — the reel plays without shop buttons.'}</p>
       )}
       <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products by name or SKU" aria-label="Search products" className={input} />
       <ul className="max-h-52 overflow-y-auto grid gap-1">
-        {results.length === 0 && <li className="text-xs text-[#2A1A26]/60 p-1.5">No products match.</li>}
+        {results.length === 0 && <li className="text-[13px] text-ink-muted p-1.5">No products match.</li>}
         {results.map((p) => {
           const on = String(p.id) === value;
           return (
             <li key={p.id}>
               <button type="button" onClick={() => onChange(on ? '' : String(p.id))} aria-pressed={on}
-                className={`w-full flex items-center gap-2 text-left text-sm p-1.5 rounded-lg cursor-pointer ${on ? 'bg-[#F3EEF8]' : 'hover:bg-[#F3EEF8]/60'}`}>
-                <img src={getCleanImageUrl(p.images?.[0] || p.image, 80)} alt="" loading="lazy" className="w-7 h-9 rounded object-cover object-top bg-[#F3EEF8]" />
+                className={`w-full flex items-center gap-2 text-left text-sm p-1.5 rounded-lg cursor-pointer ${on ? 'bg-sunken' : 'hover:bg-sunken'}`}>
+                <img src={getCleanImageUrl(p.images?.[0] || p.image, 80)} alt="" loading="lazy" className="w-7 h-9 rounded object-cover object-top bg-sunken" />
                 <span className="flex-1 min-w-0 line-clamp-1">{p.name}</span>
-                {!isAvailable(p) && <span className="text-[11px] text-rose-700">Sold out</span>}
-                <span className="text-xs text-[#2A1A26]/60">{inr(p.price)}</span>
-                {on && <Check className="w-4 h-4 text-[#4B1D3F]" />}
+                {!isAvailable(p) && <span className="text-[13px] text-danger">Sold out</span>}
+                <span className="text-[13px] text-ink-muted">{inr(p.price)}</span>
+                {on && <Check className="w-4 h-4 text-ink" />}
               </button>
             </li>
           );
@@ -406,17 +406,17 @@ export const AdminReels: React.FC = () => {
     if (oldPoster) removeAssets([oldPoster], next);
   };
 
-  if (!loaded) return <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#4B1D3F]" /></div>;
+  if (!loaded) return <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink" /></div>;
 
   const liveCount = list.filter((r) => r.enabled).length;
   const uploading = Boolean(progress);
 
   const productStatus = (reel: AuraReel) => {
-    if (!reel.productId) return <span className="text-[#2A1A26]/55">No product linked</span>;
+    if (!reel.productId) return <span className="text-ink-muted">No product linked</span>;
     const p = productById.get(reel.productId);
-    if (!p) return <span className="text-rose-700">Linked product was deleted — plays without shop buttons</span>;
-    if (p.hidden) return <span className="text-rose-700">{p.name} is hidden — plays without shop buttons</span>;
-    return <span className="text-[#2A1A26]/70">{p.name} · {inr(p.price)}{isAvailable(p) ? '' : <span className="text-rose-700"> · Sold out</span>}</span>;
+    if (!p) return <span className="text-danger">Linked product was deleted — plays without shop buttons</span>;
+    if (p.hidden) return <span className="text-danger">{p.name} is hidden — plays without shop buttons</span>;
+    return <span className="text-ink-muted">{p.name} · {inr(p.price)}{isAvailable(p) ? '' : <span className="text-danger"> · Sold out</span>}</span>;
   };
 
   return (
@@ -427,73 +427,73 @@ export const AdminReels: React.FC = () => {
         icon={<Clapperboard className="text-current" />}
         description="Vertical videos on the homepage. Link a reel to a product so shoppers can buy straight from it. Changes save and go live immediately."
         actions={
-          <span className="h-10 px-4 rounded-full bg-[#F3EEF8] text-sm text-[#4B1D3F] inline-flex items-center gap-1.5">
+          <span className="h-11 px-4 rounded-xl bg-sunken text-sm text-ink inline-flex items-center gap-1.5">
             <span className="font-semibold">{list.length}</span> of {MAX_REELS} reels · <span className="font-semibold">{liveCount}</span> switched on
           </span>
         }
       />
 
       {!features.reels && (
-        <div className="rounded-2xl border border-[#C5A46D]/40 bg-[#FBF7F3] p-4 text-sm text-[#2A1A26] flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-2xl border border-line bg-page p-4 text-sm text-ink flex flex-wrap items-center justify-between gap-3">
           <span>Aura Reels are switched off in the Discovery settings, so the store is not showing them.</span>
-          <button type="button" onClick={() => openAdminTab('discovery')} className="h-10 px-4 rounded-full border border-[#C5A46D]/50 bg-white text-sm font-medium cursor-pointer hover:bg-[#F3EEF8]">Open Discovery settings</button>
+          <button type="button" onClick={() => openAdminTab('discovery')} className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm font-medium cursor-pointer hover:bg-sunken">Open Discovery settings</button>
         </div>
       )}
-      {loadError && <p role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">Could not load reels: {loadError}</p>}
+      {loadError && <p role="alert" className="rounded-2xl border border-danger-line bg-danger-tint p-4 text-sm text-danger">Could not load reels: {loadError}</p>}
 
       <section className={card} aria-labelledby="add-reel-title">
-        <h3 id="add-reel-title" className="font-semibold text-[#2A1A26] mb-1">Add a reel</h3>
-        <p className="text-xs text-[#2A1A26]/60 mb-4">MP4, MOV or WebM, up to 40 MB (the largest video Cloudinary can make a phone-friendly copy of). Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy.</p>
+        <h3 id="add-reel-title" className="font-semibold text-ink mb-1">Add a reel</h3>
+        <p className="text-[13px] text-ink-muted mb-4">MP4, MOV or WebM, up to 40 MB (the largest video Cloudinary can make a phone-friendly copy of). Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy.</p>
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-4">
-            <label className="block text-xs text-[#2A1A26]/70 space-y-1.5">
+            <label className="block text-[13px] text-ink-muted space-y-1.5">
               <span className="block">Video</span>
               <input key={`video-${formKey}`} type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={uploading}
                 onChange={(e) => { setVideoFile(e.target.files?.[0] || null); setUploadError(''); setUploadNote(''); }} className={fileInput} />
             </label>
             {videoFile && (
               <div className="flex gap-3 items-start">
-                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-xl bg-[#2A1A26] object-contain" />}
-                <p className={`text-xs ${videoProblem(videoFile) ? 'text-rose-700' : 'text-[#2A1A26]/65'}`}>{videoFile.name} · {mb(videoFile.size)}{videoProblem(videoFile) ? ` — ${videoProblem(videoFile)}` : ''}</p>
+                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-xl bg-ink object-contain" />}
+                <p className={`text-[13px] ${videoProblem(videoFile) ? 'text-danger' : 'text-ink-muted'}`}>{videoFile.name} · {mb(videoFile.size)}{videoProblem(videoFile) ? ` — ${videoProblem(videoFile)}` : ''}</p>
               </div>
             )}
-            <label className="block text-xs text-[#2A1A26]/70 space-y-1.5">
+            <label className="block text-[13px] text-ink-muted space-y-1.5">
               <span className="block">Thumbnail (optional)</span>
               <input key={`poster-${formKey}`} type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading}
                 onChange={(e) => setPosterFile(e.target.files?.[0] || null)} className={fileInput} />
-              <span className="block text-[11px] text-[#2A1A26]/55">Without one, the first frame of the video is used.</span>
+              <span className="block text-[13px] text-ink-muted">Without one, the first frame of the video is used.</span>
             </label>
           </div>
           <div className="space-y-4">
-            <label className="block text-xs text-[#2A1A26]/70 space-y-1.5">
+            <label className="block text-[13px] text-ink-muted space-y-1.5">
               <span className="flex justify-between"><span>Caption (optional)</span><span>{caption.length}/{MAX_CAPTION}</span></span>
               <textarea value={caption} maxLength={MAX_CAPTION} rows={3} disabled={uploading} onChange={(e) => setCaption(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl border border-[#4B1D3F]/15 text-sm focus:outline-none focus:border-[#4B1D3F]/50 resize-none" />
+                className="w-full px-3 py-2 rounded-2xl border border-line text-sm focus:outline-none focus:border-control resize-none" />
             </label>
-            <div className="text-xs text-[#2A1A26]/70 space-y-1.5">
+            <div className="text-[13px] text-ink-muted space-y-1.5">
               <span className="block">Linked product (optional)</span>
               <ProductPicker products={visibleProducts} byId={productById} value={productId} onChange={setProductId} />
             </div>
-            <label className="min-h-10 flex items-center gap-2 text-sm text-[#2A1A26] cursor-pointer">
-              <input type="checkbox" checked={showNow} onChange={(e) => setShowNow(e.target.checked)} disabled={uploading} className="accent-[#4B1D3F] w-4 h-4" />
+            <label className="min-h-11 flex items-center gap-2 text-sm text-ink cursor-pointer">
+              <input type="checkbox" checked={showNow} onChange={(e) => setShowNow(e.target.checked)} disabled={uploading} className="accent-brand w-4 h-4" />
               Show on the store right away
             </label>
           </div>
         </div>
 
         <div className="mt-5 space-y-3">
-          {uploadError && <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">{uploadError}</p>}
-          {uploadNote && <p className="rounded-xl border border-[#C5A46D]/40 bg-[#FBF7F3] px-3 py-2 text-sm text-[#2A1A26]">{uploadNote}</p>}
+          {uploadError && <p role="alert" className="rounded-xl border border-danger-line bg-danger-tint px-3 py-2 text-sm text-danger">{uploadError}</p>}
+          {uploadNote && <p className="rounded-xl border border-line bg-page px-3 py-2 text-sm text-ink">{uploadNote}</p>}
           {unsaved && (
-            <div role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700 flex flex-wrap items-center gap-2">
+            <div role="alert" className="rounded-xl border border-danger-line bg-danger-tint px-3 py-2 text-sm text-danger flex flex-wrap items-center gap-2">
               <span className="flex-1">The video uploaded, but the reel list could not be saved.</span>
-              <button type="button" onClick={retryUnsaved} disabled={saving} className="h-10 px-4 rounded-full bg-[#4B1D3F] text-white text-sm cursor-pointer disabled:opacity-60">Try saving again</button>
-              <button type="button" onClick={discardUnsaved} disabled={saving} className="h-10 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm cursor-pointer">Discard upload</button>
+              <button type="button" onClick={retryUnsaved} disabled={saving} className="sag-btn-primary h-11 px-4 text-sm">Try saving again</button>
+              <button type="button" onClick={discardUnsaved} disabled={saving} className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm cursor-pointer">Discard upload</button>
             </div>
           )}
           {progress && <ProgressBar label={progress.label} fraction={progress.fraction} onCancel={progress.label === 'Saving' ? undefined : () => xhrRef.current?.abort()} />}
           <button type="button" onClick={upload} disabled={uploading || saving || !videoFile || Boolean(unsaved)}
-            className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed">
+            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
             {uploading ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Upload className="w-4 h-4 text-current" />} Upload reel
           </button>
         </div>
@@ -501,83 +501,83 @@ export const AdminReels: React.FC = () => {
 
       <section className={card} aria-labelledby="reel-list-title">
         <div className="flex items-center justify-between mb-3">
-          <h3 id="reel-list-title" className="font-semibold text-[#2A1A26]">Your reels</h3>
-          {saving && <span className="text-xs text-[#2A1A26]/60 inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin text-current" /> Saving…</span>}
+          <h3 id="reel-list-title" className="font-semibold text-ink">Your reels</h3>
+          {saving && <span className="text-[13px] text-ink-muted inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin text-current" /> Saving…</span>}
         </div>
         {list.length === 0 ? (
-          <p className="text-sm text-[#2A1A26]/60">No reels yet. Upload your first one above — the homepage section appears once at least one reel is switched on.</p>
+          <p className="text-sm text-ink-muted">No reels yet. Upload your first one above — the homepage section appears once at least one reel is switched on.</p>
         ) : (
           <ul className="space-y-2">
             {list.map((reel, i) => {
               const open = editingId === reel.id;
               return (
-                <li key={`${reel.id}-${i}`} className="rounded-xl border border-[#4B1D3F]/10">
+                <li key={`${reel.id}-${i}`} className="rounded-xl border border-line">
                   <div className="flex gap-3 p-3">
                     <img src={reelPosterSrc(reel, 160)} alt="" loading="lazy"
                       onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-                      className="w-14 aspect-[9/16] shrink-0 rounded-lg object-cover object-top bg-[#F3EEF8]" />
+                      className="w-14 aspect-[9/16] shrink-0 rounded-lg object-cover object-top bg-sunken" />
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="flex items-center gap-2">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${reel.enabled ? 'bg-emerald-50 text-emerald-800' : 'bg-[#F3EEF8] text-[#2A1A26]/70'}`}>{reel.enabled ? 'On' : 'Off'}</span>
-                        <span className="text-xs text-[#2A1A26]/50">#{i + 1}</span>
+                        <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${reel.enabled ? 'bg-ok-tint text-ok' : 'bg-sunken text-ink-muted'}`}>{reel.enabled ? 'On' : 'Off'}</span>
+                        <span className="text-[13px] text-ink-faint">#{i + 1}</span>
                       </p>
-                      <p className="text-sm text-[#2A1A26] line-clamp-2">{reel.caption || <span className="text-[#2A1A26]/50">No caption</span>}</p>
-                      <p className="text-xs line-clamp-1">{productStatus(reel)}</p>
+                      <p className="text-sm text-ink line-clamp-2">{reel.caption || <span className="text-ink-faint">No caption</span>}</p>
+                      <p className="text-[13px] line-clamp-1">{productStatus(reel)}</p>
                       <div className="flex flex-wrap items-center gap-1 pt-1">
-                        <label className="min-h-10 flex items-center gap-2 text-sm text-[#2A1A26] mr-2 cursor-pointer">
-                          <input type="checkbox" checked={reel.enabled} disabled={saving} onChange={() => toggle(i)} className="accent-[#4B1D3F] w-4 h-4" />
+                        <label className="min-h-11 flex items-center gap-2 text-sm text-ink mr-2 cursor-pointer">
+                          <input type="checkbox" checked={reel.enabled} disabled={saving} onChange={() => toggle(i)} className="accent-brand w-4 h-4" />
                           Show on store
                         </label>
                         <button type="button" onClick={() => move(i, -1)} disabled={saving || i === 0} aria-label="Move up" className={iconBtn}><ArrowUp className="w-4 h-4 text-current" /></button>
                         <button type="button" onClick={() => move(i, 1)} disabled={saving || i === list.length - 1} aria-label="Move down" className={iconBtn}><ArrowDown className="w-4 h-4 text-current" /></button>
                         <button type="button" onClick={() => (open ? closeEditor(false) : openEditor(reel))} disabled={saving} aria-expanded={open} aria-label="Edit reel" className={iconBtn}><Pencil className="w-4 h-4 text-current" /></button>
-                        <button type="button" onClick={() => remove(i)} disabled={saving} aria-label="Delete reel" className={`${iconBtn} text-rose-700 hover:bg-rose-50`}><Trash2 className="w-4 h-4 text-current" /></button>
+                        <button type="button" onClick={() => remove(i)} disabled={saving} aria-label="Delete reel" className={`${iconBtn} text-danger hover:bg-danger-tint`}><Trash2 className="w-4 h-4 text-current" /></button>
                       </div>
                     </div>
                   </div>
 
                   {open && (
-                    <div className="border-t border-[#4B1D3F]/10 p-3 grid gap-4 md:grid-cols-[auto_1fr]">
+                    <div className="border-t border-line p-3 grid gap-4 md:grid-cols-[auto_1fr]">
                       <div className="space-y-2">
                         <video src={reelVideoSrc(reel.videoUrl)} poster={reelPosterSrc({ videoUrl: reel.videoUrl, posterUrl: draft.posterUrl }, 480)} controls playsInline preload="metadata"
                           onError={(e) => { if (e.currentTarget.src !== reel.videoUrl) e.currentTarget.src = reel.videoUrl; }}
-                          className="w-40 aspect-[9/16] rounded-xl bg-[#2A1A26] object-contain" />
-                        <p className="text-[11px] text-[#2A1A26]/55 w-40">Poster shown before the video plays.</p>
+                          className="w-40 aspect-[9/16] rounded-xl bg-ink object-contain" />
+                        <p className="text-[13px] text-ink-muted w-40">Poster shown before the video plays.</p>
                       </div>
                       <div className="space-y-4">
-                        <label className="block text-xs text-[#2A1A26]/70 space-y-1.5">
+                        <label className="block text-[13px] text-ink-muted space-y-1.5">
                           <span className="flex justify-between"><span>Caption</span><span>{draft.caption.length}/{MAX_CAPTION}</span></span>
                           <textarea value={draft.caption} maxLength={MAX_CAPTION} rows={3} onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-2xl border border-[#4B1D3F]/15 text-sm focus:outline-none focus:border-[#4B1D3F]/50 resize-none" />
+                            className="w-full px-3 py-2 rounded-2xl border border-line text-sm focus:outline-none focus:border-control resize-none" />
                         </label>
-                        <div className="text-xs text-[#2A1A26]/70 space-y-1.5">
+                        <div className="text-[13px] text-ink-muted space-y-1.5">
                           <span className="block">Thumbnail</span>
                           {posterProgress !== null ? (
                             <ProgressBar label="Uploading thumbnail" fraction={posterProgress} onCancel={() => posterXhrRef.current?.abort()} />
                           ) : (
                             <div className="flex flex-wrap items-center gap-2">
-                              <label className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] cursor-pointer focus-within:ring-2 focus-within:ring-[#4B1D3F]/30">
+                              <label className="h-11 px-4 rounded-xl border-[1.5px] border-control text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken cursor-pointer focus-within:ring-2 focus-within:ring-brand">
                                 <Upload className="w-4 h-4 text-current" /> Upload new thumbnail
                                 <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { replacePoster(e.target.files?.[0]); e.target.value = ''; }} />
                               </label>
                               {draft.posterUrl && (
-                                <button type="button" onClick={() => setDraft((d) => ({ ...d, posterUrl: '' }))} className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 text-sm text-[#2A1A26] hover:bg-[#F3EEF8] cursor-pointer">
+                                <button type="button" onClick={() => setDraft((d) => ({ ...d, posterUrl: '' }))} className="h-11 px-4 rounded-xl border-[1.5px] border-control text-sm text-ink hover:bg-sunken cursor-pointer">
                                   Use the first frame instead
                                 </button>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="text-xs text-[#2A1A26]/70 space-y-1.5">
+                        <div className="text-[13px] text-ink-muted space-y-1.5">
                           <span className="block">Linked product</span>
                           <ProductPicker products={visibleProducts} byId={productById} value={draft.productId} onChange={(id) => setDraft((d) => ({ ...d, productId: id }))} />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => saveEdit(reel)} disabled={saving || posterProgress !== null}
-                            className="h-10 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 cursor-pointer">
+                            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60">
                             {saving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Check className="w-4 h-4 text-current" />} Save reel
                           </button>
-                          <button type="button" onClick={() => closeEditor(false)} className="h-10 px-5 rounded-full border border-[#4B1D3F]/20 text-sm text-[#2A1A26] hover:bg-[#F3EEF8] cursor-pointer">Cancel</button>
+                          <button type="button" onClick={() => closeEditor(false)} className="h-11 px-5 rounded-xl border-[1.5px] border-control text-sm text-ink hover:bg-sunken cursor-pointer">Cancel</button>
                         </div>
                       </div>
                     </div>

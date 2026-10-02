@@ -134,7 +134,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
   const handleLogout = () => {
     logoutAdmin();
-    showToast('Signed out securely from Suit Aura Girls Vault.', 'info');
+    showToast('Signed out of the admin panel.', 'info');
     setActivePage('home');
     navigate('/');
   };
@@ -151,29 +151,46 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         ? (activeAdminTab === 'products' || currentPath.startsWith('/admin/products')) && currentPath !== '/admin/products/new'
         : activeAdminTab === id || (id === 'orders' && currentPath.startsWith('/admin/orders'));
 
+  // The phone menu closes with Escape and does not let the page scroll behind it
+  useEffect(() => {
+    if (!mobileSidebarOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMobileSidebarOpen(false); };
+    document.addEventListener('keydown', onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [mobileSidebarOpen]);
+
   const badgeClass = (active: boolean, alert?: boolean) =>
     active
-      ? 'bg-white/20 text-white'
+      ? 'bg-brand text-white'
       : alert
-        ? 'bg-[#F7E4EA] text-[#8A2E55]'
-        : 'bg-[#F3EEF8] text-[#4B1D3F]/80';
+        ? 'bg-sale-tint text-sale'
+        : 'bg-sunken text-ink-muted';
 
-  const Monogram: React.FC<{ size?: string }> = ({ size = 'w-10 h-10 text-base' }) => (
-    <div className={`${size} shrink-0 rounded-2xl bg-[#4B1D3F] text-white flex items-center justify-center font-serif font-semibold tracking-wide shadow-[0_6px_16px_-8px_rgba(75,29,63,0.7)] ring-1 ring-[#C5A46D]/40`}>
+  // The jobs done many times a day, one tap away on a phone (the full menu is behind the menu button)
+  const quickIds: Array<AdminTab | 'add-product'> = ['dashboard', 'orders', 'returns', 'products', 'add-product', 'customers'];
+  const quickItems = quickIds.map((id) => navItems.find((item) => item.id === id)!).filter(Boolean);
+
+  const Monogram: React.FC<{ size?: string }> = ({ size = 'w-9 h-9 text-sm' }) => (
+    <div className={`${size} shrink-0 rounded-[10px] bg-brand text-white flex items-center justify-center font-bold`} aria-hidden="true">
       SA
     </div>
   );
 
   const renderNav = (collapsed: boolean, withIds: boolean) => (
-    <nav className="space-y-5" aria-label="Admin sections">
+    <nav className="space-y-4" aria-label="Admin sections">
       {NAV_GROUPS.map((group) => {
         const items = navItems.filter((item) => item.group === group);
         return (
-          <div key={group} className="space-y-1">
+          <div key={group} className="space-y-0.5">
             {collapsed ? (
-              <div className="mx-auto my-2 h-px w-6 bg-[#4B1D3F]/10 first:hidden" />
+              <div className="mx-auto my-2 h-px w-6 bg-line first:hidden" />
             ) : (
-              <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">
+              <div className="px-3 pb-1 text-xs leading-4 font-semibold text-ink-muted">
                 {group}
               </div>
             )}
@@ -185,25 +202,26 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   key={item.id}
                   id={withIds ? `admin-nav-${item.id}` : undefined}
                   onClick={() => handleNavClick(item.id)}
-                  className={`relative w-full flex items-center ${collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-full text-[13px] font-semibold transition-colors group cursor-pointer ${
+                  className={`relative w-full flex items-center ${collapsed ? 'justify-center h-11' : `justify-between px-3 ${withIds ? 'h-10' : 'h-12'}`} rounded-[10px] text-sm transition-colors cursor-pointer ${
                     isActive
-                      ? 'bg-[#4B1D3F] text-white shadow-[0_6px_16px_-10px_rgba(75,29,63,0.8)]'
-                      : 'text-[#2A1A26]/75 hover:bg-[#F3EEF8] hover:text-[#4B1D3F]'
+                      ? 'bg-brand-wash text-brand font-bold'
+                      : 'text-ink font-medium hover:bg-sunken'
                   }`}
                   title={collapsed ? item.label : undefined}
+                  aria-label={collapsed ? item.label : undefined}
                   aria-current={isActive ? 'page' : undefined}
                 >
-                  <span className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-[#4B1D3F]/55 group-hover:text-[#4B1D3F]'}`} />
+                  <span className="flex items-center gap-3 min-w-0">
+                    <Icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-brand' : 'text-ink-muted'}`} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
                   {!collapsed && item.badge !== undefined && (
-                    <span className={`ml-2 min-w-[1.5rem] px-2 py-0.5 rounded-full text-[11px] font-bold text-center tabular-nums ${badgeClass(isActive, item.alert)}`}>
+                    <span className={`ml-2 min-w-[1.5rem] h-[22px] px-1.5 rounded-md text-[11px] font-bold inline-flex items-center justify-center tabular-nums ${badgeClass(isActive, item.alert)}`}>
                       {item.badge}
                     </span>
                   )}
                   {collapsed && item.alert && (
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#8A2E55] ring-2 ring-white" />
+                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-sale ring-2 ring-white" />
                   )}
                 </button>
               );
@@ -215,132 +233,143 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div id="admin-layout" className="min-h-screen bg-[#FBF7F3] flex flex-col font-sans text-[#2A1A26]">
+    <div id="admin-layout" className="min-h-screen bg-page flex flex-col font-sans text-ink">
 
-      {/* Top Admin Header Bar */}
-      <header className="bg-white/90 backdrop-blur-md border-b border-[#4B1D3F]/10 sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+      {/* Top bar: menu, where you are, and the two things checked most (store, alerts) */}
+      <header className="bg-white border-b border-line sticky top-0 z-30">
+        <div className="max-w-[1400px] mx-auto pl-1.5 pr-2 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
 
-          {/* Mobile menu trigger + Logo */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
+              className="lg:hidden w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors cursor-pointer"
               aria-label="Toggle mobile admin sidebar"
+              aria-expanded={mobileSidebarOpen}
             >
-              {mobileSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileSidebarOpen ? <X className="w-[22px] h-[22px]" /> : <Menu className="w-[22px] h-[22px]" />}
             </button>
 
             <div
-              className="flex items-center gap-3 cursor-pointer min-w-0"
+              className="flex items-center gap-2.5 cursor-pointer min-w-0"
               onClick={() => openAdminTab('dashboard')}
             >
-              <Monogram />
+              <span className="hidden sm:block"><Monogram /></span>
               <div className="min-w-0">
-                <h1 className="font-serif font-semibold text-lg sm:text-xl text-[#4B1D3F] tracking-wide leading-none truncate">
-                  Suit Aura Girls
-                </h1>
-                <span className="block mt-1 text-[11px] uppercase font-semibold tracking-[0.2em] text-[#9C7A45]">
-                  Admin Studio
-                </span>
+                <h1 className="text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h1>
+                <span className="block text-[11px] leading-4 font-semibold uppercase tracking-[0.06em] text-ink-muted truncate">Admin Studio</span>
               </div>
             </div>
 
-            {/* Desktop toggle collapse sidebar button */}
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="hidden lg:flex w-9 h-9 items-center justify-center rounded-full text-[#4B1D3F]/60 hover:text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors ml-2 cursor-pointer"
+              className="hidden lg:flex w-10 h-10 items-center justify-center rounded-full text-ink-muted hover:text-ink hover:bg-sunken transition-colors ml-1 cursor-pointer"
               title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
-              {isSidebarCollapsed ? <PanelLeft className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+              {isSidebarCollapsed ? <PanelLeft className="w-[18px] h-[18px]" /> : <PanelLeftClose className="w-[18px] h-[18px]" />}
             </button>
           </div>
 
-          {/* Quick Actions & Profile */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
-            {/* View Live Storefront Button */}
             <button
               id="admin-view-storefront-btn"
               onClick={handleViewStorefront}
-              className="h-10 px-3 sm:px-4 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] border border-[#4B1D3F]/20 hover:border-[#4B1D3F]/40 rounded-full text-[13px] font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-              title="Return to customer-facing shop"
+              className="w-11 sm:w-auto h-11 sm:h-10 sm:px-3.5 rounded-full sm:rounded-[10px] sm:border-[1.5px] sm:border-control bg-white hover:bg-sunken text-ink text-sm font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              title="Open the store your customers see"
+              aria-label="View store"
             >
-              <Store className="w-4 h-4" />
-              <span className="hidden sm:inline">View Storefront</span>
-              <ExternalLink className="w-3.5 h-3.5 hidden sm:inline opacity-60" />
+              <Store className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">View store</span>
+              <ExternalLink className="w-3.5 h-3.5 hidden sm:inline text-ink-muted" />
             </button>
 
-            {/* Quick Notification Bell */}
-            <div className="relative">
-              <button
-                onClick={() => (waitingRequests
-                  ? openAdminTab('returns')
-                  : showToast(`Store Operational: ${pendingOrdersCount} pending orders, ${lowStockCount} low stock alerts.`, 'info'))}
-                className="w-10 h-10 flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors relative cursor-pointer"
-                title="Notifications"
-                aria-label="Notifications"
-              >
-                <Bell className="w-[18px] h-[18px]" />
-                {waitingRequests > 0 ? (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#8A2E55] text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white" aria-label={`${waitingRequests} return or cancellation requests waiting`}>{waitingRequests}</span>
-                ) : pendingOrdersCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#8A2E55] ring-2 ring-white" />
-                )}
-              </button>
-            </div>
+            <button
+              onClick={() => (waitingRequests
+                ? openAdminTab('returns')
+                : showToast(`${pendingOrdersCount} ${pendingOrdersCount === 1 ? 'order' : 'orders'} to pack and ship · ${lowStockCount} ${lowStockCount === 1 ? 'product' : 'products'} low on stock.`, 'info'))}
+              className="w-11 h-11 flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors relative cursor-pointer"
+              title="Notifications"
+              aria-label="Notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {waitingRequests > 0 ? (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white" aria-label={`${waitingRequests} return or cancellation requests waiting`}>{waitingRequests}</span>
+              ) : pendingOrdersCount > 0 && (
+                <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-accent ring-2 ring-white" />
+              )}
+            </button>
 
-            {/* Admin Profile Pill */}
-            <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-[#4B1D3F]/10">
-              <div className="w-9 h-9 rounded-full bg-[#F3EEF8] text-[#4B1D3F] ring-1 ring-[#4B1D3F]/15 flex items-center justify-center text-sm font-bold font-serif">
+            <div className="hidden md:flex items-center gap-2.5 pl-3 ml-1 border-l border-line">
+              <div className="w-9 h-9 rounded-full bg-sunken text-ink flex items-center justify-center text-sm font-bold" aria-hidden="true">
                 {adminEmail ? adminEmail[0].toUpperCase() : 'A'}
               </div>
-              <div className="hidden md:block text-left">
-                <p className="text-[13px] font-semibold text-[#2A1A26] leading-none">
-                  Admin User
-                </p>
-                <p className="mt-1 text-[11px] text-[#2A1A26]/55 leading-tight max-w-[180px] truncate">
-                  {adminEmail || 'admin@suitauragirls.com'}
-                </p>
+              <div className="text-left">
+                <p className="text-[13px] font-semibold text-ink leading-4">Signed in</p>
+                <p className="text-xs text-ink-muted leading-4 max-w-[180px] truncate">{adminEmail || 'Store admin'}</p>
               </div>
             </div>
 
           </div>
 
         </div>
+
+        {/* Phone and tablet: the everyday pages, one tap away */}
+        <div className="lg:hidden border-t border-line">
+          <div className="sag-scroll-x flex gap-1 overflow-x-auto px-2" role="navigation" aria-label="Quick admin pages">
+            {quickItems.map((item) => {
+              const isActive = isItemActive(item.id);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleNavClick(item.id)}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative shrink-0 h-11 px-3 inline-flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors ${isActive ? 'text-brand font-bold' : 'text-ink-muted font-medium hover:text-ink'}`}
+                >
+                  {item.id === 'returns' ? 'Returns' : item.label}
+                  {item.alert && item.badge !== undefined && (
+                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold inline-flex items-center justify-center tabular-nums">{item.badge}</span>
+                  )}
+                  {isActive && <span className="absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-brand" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </header>
 
-      {/* Main Workspace Body */}
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 w-full flex-1 flex gap-6 lg:gap-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 w-full flex-1 flex gap-6 lg:gap-8">
 
-        {/* Desktop Sticky Sidebar */}
-        <aside className={`hidden lg:block shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
-          <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 p-3 shadow-[var(--sag-shadow)] sticky top-[5.5rem] max-h-[calc(100vh-7rem)] overflow-y-auto space-y-5">
+        {/* Desktop sidebar */}
+        <aside className={`hidden lg:block shrink-0 transition-[width] duration-200 ${isSidebarCollapsed ? 'w-[68px]' : 'w-60'}`}>
+          <div className="bg-white rounded-2xl border border-line p-2.5 sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] overflow-y-auto space-y-4">
 
             {renderNav(isSidebarCollapsed, true)}
 
-            {/* System Status Summary & Logout */}
-            <div className="pt-4 border-t border-[#4B1D3F]/10 space-y-2">
+            <div className="pt-3 border-t border-line space-y-2">
+              {/* Real counts from the live order and product lists */}
               {!isSidebarCollapsed && (
-                <div className="p-3.5 bg-[#F3EEF8] rounded-2xl">
-                  <div className="flex items-center gap-2 text-[13px] font-semibold text-[#4B1D3F]">
-                    <ShieldCheck className="w-4 h-4 text-emerald-700" />
-                    <span>Store Operational</span>
+                <dl className="px-3 py-2.5 bg-page rounded-[10px] space-y-1 text-[13px] leading-[18px]">
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-ink-muted">To pack and ship</dt>
+                    <dd className={`font-bold tabular-nums ${pendingOrdersCount > 0 ? 'text-sale' : 'text-ink'}`}>{pendingOrdersCount}</dd>
                   </div>
-                  <p className="text-[11px] text-[#2A1A26]/60 mt-1 leading-relaxed">
-                    100% Prepaid Only • Secure Card & UPI
-                  </p>
-                </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <dt className="text-ink-muted">Low on stock</dt>
+                    <dd className={`font-bold tabular-nums ${lowStockCount > 0 ? 'text-sale' : 'text-ink'}`}>{lowStockCount}</dd>
+                  </div>
+                </dl>
               )}
 
-              {/* Logout Button */}
               <button
                 id="admin-sidebar-logout-btn"
                 onClick={handleLogout}
-                className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-2.5 px-3 py-2'} text-[13px] font-semibold text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer`}
-                title="Sign Out"
+                className={`w-full h-10 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3 px-3'} text-sm font-semibold text-danger hover:bg-danger-tint rounded-[10px] transition-colors cursor-pointer`}
+                title="Logout"
+                aria-label="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-[18px] h-[18px]" />
                 {!isSidebarCollapsed && <span>Logout</span>}
               </button>
             </div>
@@ -348,41 +377,41 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
         </aside>
 
-        {/* Mobile Slide-over Sidebar Drawer */}
+        {/* Phone menu */}
         {mobileSidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden bg-[#2A1A26]/40 backdrop-blur-sm flex animate-in fade-in">
-            <div className="w-[84vw] max-w-xs bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-left">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-[#4B1D3F]/10">
-                <div className="flex items-center gap-3">
-                  <Monogram size="w-9 h-9 text-sm" />
-                  <div>
-                    <h3 className="font-serif font-semibold text-lg leading-none text-[#4B1D3F]">Suit Aura Girls</h3>
-                    <p className="mt-1 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#9C7A45]">Admin Studio</p>
+          <div className="fixed inset-0 z-50 lg:hidden bg-ink/50 flex animate-in fade-in" role="dialog" aria-modal="true" aria-label="Admin menu">
+            <div className="w-[86vw] max-w-xs bg-white h-full flex flex-col overflow-hidden animate-in slide-in-from-left">
+              <div className="flex items-center justify-between pl-4 pr-1.5 h-14 border-b border-line shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Monogram />
+                  <div className="min-w-0">
+                    <h3 className="text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h3>
+                    <p className="text-xs leading-4 text-ink-muted truncate">{adminEmail || 'Admin'}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setMobileSidebarOpen(false)}
-                  className="w-10 h-10 flex items-center justify-center rounded-full text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
+                  className="w-11 h-11 shrink-0 flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors cursor-pointer"
                   aria-label="Close menu"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-[22px] h-[22px]" />
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-3 py-4">
+              <div className="flex-1 overflow-y-auto overscroll-contain px-2.5 py-3">
                 {renderNav(false, false)}
               </div>
 
-              <div className="p-4 border-t border-[#4B1D3F]/10 space-y-2 bg-[#FBF7F3]">
+              <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line flex gap-2 shrink-0">
                 <button
                   onClick={handleViewStorefront}
-                  className="w-full h-11 px-3 bg-white text-[#4B1D3F] border border-[#4B1D3F]/20 rounded-full text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer hover:bg-[#F3EEF8] transition-colors"
+                  className="flex-1 h-12 px-3 bg-white text-ink border-[1.5px] border-control rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer hover:bg-sunken transition-colors"
                 >
-                  <Store className="w-4 h-4" /> View Storefront
+                  <Store className="w-4 h-4" /> View store
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="w-full h-11 px-3 text-rose-700 hover:bg-rose-50 rounded-full text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                  className="flex-1 h-12 px-3 text-danger border-[1.5px] border-danger-line bg-danger-tint rounded-xl text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors"
                 >
                   <LogOut className="w-4 h-4" /> Logout
                 </button>
@@ -392,8 +421,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </div>
         )}
 
-        {/* Content Area */}
-        <main className="flex-1 min-w-0 space-y-6">
+        <main className="flex-1 min-w-0 space-y-5">
           {children}
         </main>
 

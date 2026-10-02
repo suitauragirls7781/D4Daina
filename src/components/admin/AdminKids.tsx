@@ -20,8 +20,8 @@ const ALL = 'all';
 const isKidsCategory = (value: string): value is KidsCategory => (KIDS_CATEGORIES as readonly string[]).includes(value);
 
 const QUICK_ADD: Array<{ category: KidsCategory; hint: string; tone: string }> = [
-  { category: BABY_GIRLS, hint: 'Frocks, ethnic sets, tops… ages 1-2 Y to 14-15 Y', tone: 'bg-[#F7E4EA] border-[#8A2E55]/15 hover:border-[#8A2E55]/45 text-[#8A2E55]' },
-  { category: BABY_BOYS, hint: 'Shirts, kurta sets, T-shirts… ages 1-2 Y to 14-15 Y', tone: 'bg-[#F3EEF8] border-[#4B1D3F]/15 hover:border-[#4B1D3F]/45 text-[#4B1D3F]' },
+  { category: BABY_GIRLS, hint: 'Frocks, ethnic sets, tops… ages 1-2 Y to 14-15 Y', tone: 'bg-white border-line hover:bg-sunken text-ink' },
+  { category: BABY_BOYS, hint: 'Shirts, kurta sets, T-shirts… ages 1-2 Y to 14-15 Y', tone: 'bg-white border-line hover:bg-sunken text-ink' },
 ];
 
 /** "1-2 Y, 3-4 Y" or "8 ages · 1-2 to 14-15 Y". */
@@ -34,7 +34,7 @@ const agesSummary = (sizes: string[]) => {
 };
 
 const CategoryBadge: React.FC<{ category: string }> = ({ category }) => (
-  <span className={`inline-block px-1.5 rounded font-semibold ${category === BABY_GIRLS ? 'bg-[#F7E4EA] text-[#8A2E55]' : category === BABY_BOYS ? 'bg-[#F3EEF8] text-[#4B1D3F]' : 'bg-[#2A1A26]/5 text-[#2A1A26]/70'}`}>
+  <span className={`sag-badge ${isKidsCategory(category) ? '' : 'bg-sale-tint text-sale'}`}>
     {isKidsCategory(category) ? category : 'Girls or boys? Edit to choose'}
   </span>
 );
@@ -197,10 +197,10 @@ export const AdminKids: React.FC = () => {
         {QUICK_ADD.map(({ category, hint, tone }) => (
           <button key={category} type="button" onClick={() => setDraft(emptyDraft(category))}
             className={`min-w-0 text-left rounded-2xl border p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 transition-colors cursor-pointer ${tone}`}>
-            <span className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center shrink-0" aria-hidden="true"><Plus className="w-5 h-5 text-current" /></span>
+            <span className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shrink-0" aria-hidden="true"><Plus className="w-5 h-5 text-current" /></span>
             <span className="min-w-0">
-              <span className="block font-serif text-lg sm:text-xl font-semibold leading-tight">Add {category} wear</span>
-              <span className="hidden sm:block mt-0.5 text-xs text-[#2A1A26]/65">{hint}</span>
+              <span className="block text-base font-semibold leading-tight">Add {category} wear</span>
+              <span className="hidden sm:block mt-0.5 text-[13px] text-ink-muted">{hint}</span>
             </span>
           </button>
         ))}
@@ -210,7 +210,7 @@ export const AdminKids: React.FC = () => {
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="kids-list-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 id="kids-list-title" className="font-semibold text-[#2A1A26]">Kids wear ({count(kids.length)})</h3>
+          <h3 id="kids-list-title" className="text-[17px] leading-6 font-semibold text-ink">Kids wear ({count(kids.length)})</h3>
           <FilterChips label="Show kids wear for" value={filter} onChange={changeFilter} options={[
             { value: ALL, label: 'All', count: kids.length },
             { value: BABY_GIRLS, label: BABY_GIRLS, count: girls.length },
@@ -220,40 +220,40 @@ export const AdminKids: React.FC = () => {
 
         {kids.length > 0 && (
           <div className="relative mt-3">
-            <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+            <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
             <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setLimit(LIST_STEP); }}
               placeholder="Search by name, type, colour or SKU" aria-label="Search kids wear" className={ui.search} />
           </div>
         )}
 
         {countsLoading ? (
-          <p className="mt-4 text-sm text-[#2A1A26]/65 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
+          <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : kids.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-[#F3EEF8] p-4 text-sm text-[#2A1A26]/75">
-            No kids wear yet. Use <span className="font-semibold text-[#4B1D3F]">Add Baby Girls wear</span> or <span className="font-semibold text-[#4B1D3F]">Add Baby Boys wear</span> above to add the first item.
+          <div className="mt-4 rounded-xl bg-page border border-line p-4 text-sm text-ink-muted">
+            No kids wear yet. Use <span className="font-semibold text-ink">Add Baby Girls wear</span> or <span className="font-semibold text-ink">Add Baby Boys wear</span> above to add the first item.
           </div>
         ) : results.length === 0 ? (
-          <p className="mt-4 text-sm text-[#2A1A26]/65">{query.trim() ? `Nothing matches "${query.trim()}".` : `No ${filter} items yet.`}</p>
+          <p className="mt-4 text-sm text-ink-muted">{query.trim() ? `Nothing matches "${query.trim()}".` : `No ${filter} items yet.`}</p>
         ) : (
-          <ul className="mt-3 divide-y divide-[#4B1D3F]/10">
+          <ul className="mt-3 divide-y divide-line">
             {results.slice(0, limit).map((p) => (
               <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <Thumb p={p} />
                 <div className="min-w-0 flex-1 basis-48">
-                  <p className="text-sm font-medium text-[#2A1A26] line-clamp-2 sm:line-clamp-1">{p.name}</p>
-                  <p className="mt-0.5 text-xs text-[#2A1A26]/65 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <p className="text-sm font-semibold text-ink line-clamp-2 sm:line-clamp-1">{p.name}</p>
+                  <p className="mt-0.5 text-[13px] text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <CategoryBadge category={p.category} />
-                    {kindOf(p) && <span className="font-semibold text-[#9C7A45]">{kindOf(p)}</span>}
+                    {kindOf(p) && <span className="font-semibold text-ink-muted">{kindOf(p)}</span>}
                     <span>{agesSummary(p.sizes || [])}</span>
                   </p>
-                  <p className="mt-0.5 text-xs text-[#2A1A26]/65"><Price p={p} /> · <Status p={p} /></p>
+                  <p className="mt-0.5 text-[13px] text-ink-muted"><Price p={p} /> · <Status p={p} /></p>
                 </div>
                 <div className="flex items-center gap-1 ml-auto">
                   <PublishButton p={p} busy={busyId === p.id} onToggle={() => togglePublished(p)} />
-                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-[#F3EEF8] text-[#4B1D3F]`}>
+                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-sunken text-ink`}>
                     <Pencil className="w-4 h-4 text-current" />
                   </button>
-                  <button type="button" onClick={() => remove(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${ui.iconBtn} hover:bg-rose-50 text-rose-700`}>
+                  <button type="button" onClick={() => remove(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${ui.iconBtn} hover:bg-danger-tint text-danger`}>
                     {busyId === p.id ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Trash2 className="w-4 h-4 text-current" />}
                   </button>
                 </div>
@@ -263,7 +263,7 @@ export const AdminKids: React.FC = () => {
         )}
         {results.length > limit && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-[#2A1A26]/60">Showing {limit} of {results.length}.</p>
+            <p className="text-[13px] text-ink-muted">Showing {limit} of {results.length}.</p>
             <button type="button" onClick={() => setLimit((n) => n + LIST_STEP)} className={ui.outline}>Show more</button>
           </div>
         )}
@@ -298,7 +298,7 @@ interface KidsFormProps {
   showToast: ShowToast;
 }
 
-const shortcut = 'h-8 px-3 rounded-full border border-[#4B1D3F]/20 bg-white text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer';
+const shortcut = 'h-11 px-3 rounded-[10px] border border-control bg-white text-[13px] font-semibold text-ink hover:bg-sunken cursor-pointer';
 
 /** Add / edit one kids wear item, saved through the same product functions as the rest of the catalogue. */
 const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProducts, onClose, onSaved, addProduct, updateProduct, ensureCategory, showToast }) => {
@@ -460,7 +460,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 const on = d.category === c;
                 return (
                   <button key={c} id={c === BABY_GIRLS ? 'kid-for-girls' : 'kid-for-boys'} type="button" aria-pressed={on} onClick={() => set({ category: c })}
-                    className={`h-11 rounded-full border text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${on ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/15 text-[#2A1A26] hover:bg-[#F3EEF8]'}`}>
+                    className={`h-11 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${on ? 'bg-ink border-ink text-white' : 'bg-white border-line text-ink hover:bg-sunken'}`}>
                     {on && <Check className="w-4 h-4 text-current" aria-hidden="true" />}{c}
                   </button>
                 );
@@ -492,7 +492,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
           </div>
 
           <div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div>
                 <label htmlFor="kid-price" className={ui.label}>Price (₹) *</label>
                 <input id="kid-price" required type="number" inputMode="numeric" min={1} step={1} value={d.price} onChange={(e) => set({ price: e.target.value })} className={ui.field} />
@@ -501,18 +501,18 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 <label htmlFor="kid-mrp" className={ui.label}>MRP (₹)</label>
                 <input id="kid-mrp" type="number" inputMode="numeric" min={1} step={1} value={d.mrp} onChange={(e) => set({ mrp: e.target.value })} placeholder="Optional" className={ui.field} />
               </div>
-              <div>
+              <div className="col-span-2 sm:col-span-1">
                 <label htmlFor="kid-stock" className={ui.label}>Stock *</label>
                 <input id="kid-stock" required type="number" inputMode="numeric" min={0} step={1} value={d.stock} onChange={(e) => set({ stock: e.target.value })} placeholder="e.g. 10" className={ui.field} />
               </div>
             </div>
             <PriceHint price={d.price} mrp={d.mrp} />
-            <p className="mt-1 text-[11px] text-[#2A1A26]/60">Stock is the total number of pieces you have, all age sizes together.</p>
+            <p className="mt-1 text-[13px] text-ink-muted">Stock is the total number of pieces you have, all age sizes together.</p>
           </div>
 
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-              <p id="kid-sizes-label" className="text-xs font-semibold text-[#2A1A26]/80">Age sizes * <span className={ui.optional}>(tick the ones you have)</span></p>
+              <p id="kid-sizes-label" className="text-[13px] font-semibold text-ink">Age sizes * <span className={ui.optional}>(tick the ones you have)</span></p>
               <div className="flex flex-wrap gap-1.5">
                 <button type="button" onClick={() => set({ sizes: [...KIDS_SIZE_PAIRS] })} title="Tick 1-2, 3-4, 5-6, 7-8, 9-10, 11-12, 13-14 and 14-15 Y" className={shortcut}>
                   1-2, 3-4, 5-6…
@@ -521,7 +521,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 {d.sizes.length > 0 && <button type="button" onClick={() => set({ sizes: [] })} className={shortcut}>Clear</button>}
               </div>
             </div>
-            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8A2E55]/30 focus:ring-offset-4 focus:ring-offset-[#FBF7F3]">
+            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-4 focus:ring-offset-page">
               {sizeOrder.map((s) => {
                 const on = d.sizes.includes(s);
                 return (
@@ -531,7 +531,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 );
               })}
             </div>
-            <p className="mt-1.5 text-[11px] text-[#2A1A26]/60">
+            <p className="mt-1.5 text-[13px] text-ink-muted">
               {d.sizes.length > 0 ? `${d.sizes.length} ticked. ` : ''}Shoppers choose their child's age size on the product page.
             </p>
           </div>

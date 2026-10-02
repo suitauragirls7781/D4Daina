@@ -55,25 +55,25 @@ const sizeSummary = (p: Product) => {
 };
 
 const Thumb: React.FC<{ p: Product }> = ({ p }) => (
-  <img src={getCleanImageUrl(p.images?.find(Boolean) || p.image, 120)} alt="" loading="lazy" className="shrink-0 w-10 aspect-[4/5] rounded-lg object-cover object-top bg-[#F3EEF8]" />
+  <img src={getCleanImageUrl(p.images?.find(Boolean) || p.image, 120)} alt="" loading="lazy" className="shrink-0 w-10 aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
 );
 const Status: React.FC<{ p: Product }> = ({ p }) => (
-  <span className={p.hidden ? 'text-[#8A2E55]' : !isAvailable(p) ? 'text-rose-700' : 'text-[#2A1A26]/60'}>
+  <span className={p.hidden ? 'text-sale' : !isAvailable(p) ? 'text-danger' : 'text-ink-muted'}>
     {p.hidden ? 'Hidden' : !isAvailable(p) ? 'Sold out' : `${Number(p.stockQuantity ?? 0)} in stock`}
   </span>
 );
 const Price: React.FC<{ p: Product }> = ({ p }) => (
   <>
     {inr(p.price)}
-    {mrpOf(p) > p.price && <span className="ml-1 line-through text-[#2A1A26]/45">{inr(mrpOf(p))}</span>}
+    {mrpOf(p) > p.price && <span className="ml-1 line-through text-ink-faint">{inr(mrpOf(p))}</span>}
   </>
 );
 /** One honest count from the live catalogue. */
 const Stat: React.FC<{ label: string; value: React.ReactNode; note: string }> = ({ label, value, note }) => (
-  <div className="min-w-0 rounded-2xl bg-white border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] px-3 py-3 sm:px-4">
-    <dt className="text-[11px] font-bold uppercase tracking-wider text-[#9C7A45] break-words">{label}</dt>
-    <dd className="font-serif text-2xl leading-tight text-[#4B1D3F]">{value}</dd>
-    <dd className="text-xs text-[#2A1A26]/60 break-words">{note}</dd>
+  <div className="min-w-0 rounded-2xl bg-white border border-line px-3 py-3 sm:px-4">
+    <dt className="text-[11px] font-bold text-ink-muted break-words">{label}</dt>
+    <dd className="text-lg leading-tight text-ink">{value}</dd>
+    <dd className="text-[13px] text-ink-muted break-words">{note}</dd>
   </div>
 );
 
@@ -100,7 +100,7 @@ interface Draft {
 /** Heels start with shoe sizes; every other kind starts as one size. */
 const sizeModeFor = (type: string): Draft['sizeMode'] => (SIZED_ACCESSORY_TYPES.includes(type) ? 'sizes' : 'one');
 const emptyDraft = (type: string): Draft => ({
-  type, customType: '', name: '', price: '', mrp: '', stock: '1', images: [], colourName: '', colourHex: '#4B1D3F', description: '', published: true,
+  type, customType: '', name: '', price: '', mrp: '', stock: '1', images: [], colourName: '', colourHex: '#1B1A17', description: '', published: true,
   sizeMode: sizeModeFor(type), sizes: [], sizesTouched: false,
 });
 const draftFrom = (p: Product): Draft => {
@@ -118,7 +118,7 @@ const draftFrom = (p: Product): Draft => {
     stock: String(Math.max(0, Number(p.stockQuantity ?? 0))),
     images: (p.images || []).filter(Boolean),
     colourName: colour?.name || '',
-    colourHex: colour?.hex || '#4B1D3F',
+    colourHex: colour?.hex || '#1B1A17',
     description: p.description || '',
     published: !p.hidden,
     sizeMode: sizes.length ? 'sizes' : 'one',
@@ -348,17 +348,17 @@ export const AdminLooks: React.FC = () => {
     }
   };
 
-  if (!loaded) return <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#4B1D3F]" /></div>;
+  if (!loaded) return <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink" /></div>;
 
-  const card = 'bg-white rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] p-4 sm:p-5';
-  const input = 'w-full h-11 pl-10 pr-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10';
-  const iconBtn = 'w-9 h-9 shrink-0 rounded-full flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
-  const field = 'h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10';
+  const card = 'bg-white rounded-2xl border border-line p-4 sm:p-5';
+  const input = 'sag-input h-12 pl-10 pr-4';
+  const iconBtn = 'w-11 h-11 shrink-0 rounded-full flex items-center justify-center cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors';
+  const field = 'sag-input h-12';
   // Counts wait for the catalogue instead of showing a misleading 0
   const countsLoading = isLoading && allProducts.length === 0;
   const count = (n: number) => (countsLoading ? '…' : n);
   const saveButton = (
-    <button onClick={save} disabled={saving || !dirty || loadError} className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+    <button onClick={save} disabled={saving || !dirty || loadError} className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
       {saving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />} Save changes
     </button>
   );
@@ -371,24 +371,24 @@ export const AdminLooks: React.FC = () => {
         icon={<Layers className="text-current" />}
         description={<>Accessories (bag, heels, jewellery, earrings, watch...) are shown only on combo product pages, inside "Complete the look". Customers can buy them only together with that outfit — never on their own, and never from the shop, search or home page.</>}
         actions={<>
-          {dirty && <span className="h-8 px-3 rounded-full bg-[#F7E4EA] text-xs font-semibold text-[#8A2E55] inline-flex items-center">Unsaved changes</span>}
+          {dirty && <span className="h-8 px-3 rounded-md bg-sale-tint text-xs font-semibold text-sale inline-flex items-center">Unsaved changes</span>}
           {saveButton}
         </>}
       />
-      <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-sm text-[#2A1A26]/80">
+      <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-sm text-ink-muted">
         {['Add accessories', 'Mark your combo products', 'Choose accessories for a combo (optional), then save'].map((step, i) => (
-          <li key={step} className="flex items-center gap-3 rounded-2xl bg-[#F3EEF8] px-4 py-3">
-            <span className="w-7 h-7 rounded-full bg-white border border-[#4B1D3F]/15 text-[#4B1D3F] font-serif text-base font-semibold flex items-center justify-center shrink-0">{i + 1}</span>
+          <li key={step} className="flex items-center gap-3 rounded-2xl bg-sunken px-4 py-3">
+            <span className="w-7 h-7 rounded-full bg-white border border-line text-ink text-base font-semibold flex items-center justify-center shrink-0">{i + 1}</span>
             <span className="min-w-0">{step}</span>
           </li>
         ))}
       </ol>
 
       {loadError && (
-        <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">The saved choices could not be loaded, so saving is turned off to avoid overwriting them. Please refresh the page.</p>
+        <p className="rounded-xl border border-danger-line bg-danger-tint p-3 text-sm text-danger">The saved choices could not be loaded, so saving is turned off to avoid overwriting them. Please refresh the page.</p>
       )}
       {!featureOn && (
-        <p className="rounded-xl bg-[#F3EEF8] p-3 text-sm text-[#4B1D3F]">Complete the Look is switched off in the Discovery settings, so shoppers will not see it until it is turned on there.</p>
+        <p className="rounded-xl bg-sunken p-3 text-sm text-ink">Complete the Look is switched off in the Discovery settings, so shoppers will not see it until it is turned on there.</p>
       )}
 
       <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Complete the Look in numbers">
@@ -400,12 +400,12 @@ export const AdminLooks: React.FC = () => {
       <div className="grid gap-6 xl:grid-cols-2 items-start">
         {/* Accessories */}
         <section className={`${card} min-w-0`} aria-labelledby="ctl-acc-title">
-          <h3 id="ctl-acc-title" className="font-semibold text-[#2A1A26]">Accessories ({accessories.length})</h3>
-          <p className="text-xs text-[#2A1A26]/60 mt-0.5">Real products with their own price, stock and photos. Sold out or hidden ones are not shown to shoppers.</p>
+          <h3 id="ctl-acc-title" className="font-semibold text-ink">Accessories ({accessories.length})</h3>
+          <p className="text-[13px] text-ink-muted mt-0.5">Real products with their own price, stock and photos. Sold out or hidden ones are not shown to shoppers.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {QUICK_ADD.map(({ type, label }) => (
               <button key={type} type="button" onClick={() => setDraft(emptyDraft(type))}
-                className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-sm font-medium text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] transition-colors cursor-pointer">
+                className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm font-medium text-ink inline-flex items-center gap-1.5 hover:bg-sunken transition-colors cursor-pointer">
                 <Plus className="w-4 h-4 text-current" /> {label}
               </button>
             ))}
@@ -413,38 +413,38 @@ export const AdminLooks: React.FC = () => {
 
           {accessories.length > 6 && (
             <div className="relative mt-4">
-              <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+              <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input value={accQuery} onChange={(e) => setAccQuery(e.target.value)} placeholder="Search accessories" aria-label="Search accessories" className={input} />
             </div>
           )}
 
           {!catalogueReady && isLoading ? (
-            <p className="mt-4 text-sm text-[#2A1A26]/65 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
+            <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
           ) : accessories.length === 0 ? (
-            <div className="mt-4 rounded-xl bg-[#F3EEF8] p-4 text-sm text-[#2A1A26]/75">
+            <div className="mt-4 rounded-xl bg-sunken p-4 text-sm text-ink-muted">
               No accessories yet. Use the buttons above to add a bag, heels, jewellery, earrings or a watch.
             </div>
           ) : accResults.length === 0 ? (
-            <p className="mt-4 text-sm text-[#2A1A26]/65">No accessories match.</p>
+            <p className="mt-4 text-sm text-ink-muted">No accessories match.</p>
           ) : (
-            <ul className="mt-4 divide-y divide-[#4B1D3F]/10">
+            <ul className="mt-4 divide-y divide-line">
               {accResults.slice(0, LIST_LIMIT).map((p) => (
                 <li key={p.id} className="py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
                   <Thumb p={p} />
                   <div className="min-w-0 flex-1 basis-40">
-                    <p className="text-sm font-medium text-[#2A1A26] line-clamp-1">{p.name}</p>
-                    <p className="text-xs text-[#2A1A26]/60">
-                      <span className="font-semibold text-[#9C7A45]">{accessoryTypeOf(p)}</span> · <Price p={p} />{sizeSummary(p) && <> · {sizeSummary(p)}</>} · <Status p={p} />
+                    <p className="text-sm font-medium text-ink line-clamp-1">{p.name}</p>
+                    <p className="text-[13px] text-ink-muted">
+                      <span className="font-semibold text-ink-muted">{accessoryTypeOf(p)}</span> · <Price p={p} />{sizeSummary(p) && <> · {sizeSummary(p)}</>} · <Status p={p} />
                     </p>
                   </div>
                   <div className="flex items-center gap-1 ml-auto">
                     <button type="button" onClick={() => togglePublished(p)} disabled={busyId === p.id} aria-pressed={!p.hidden}
                       title={p.hidden ? 'Hidden: tap to show it in Complete the look' : 'Published: tap to hide it'}
-                      className={`h-8 px-3 rounded-full text-[11px] font-bold uppercase tracking-wide cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-[#2A1A26]/5 text-[#2A1A26]/70' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+                      className={`h-11 px-3 rounded-xl text-sm font-bold cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-sunken text-ink-muted' : 'bg-ok-tint text-ok border border-ok-line'}`}>
                       {p.hidden ? 'Hidden' : 'Published'}
                     </button>
-                    <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${iconBtn} hover:bg-[#F3EEF8] text-[#4B1D3F]`}><Pencil className="w-4 h-4 text-current" /></button>
-                    <button type="button" onClick={() => removeAccessory(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${iconBtn} hover:bg-rose-50 text-rose-700`}>
+                    <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${iconBtn} hover:bg-sunken text-ink`}><Pencil className="w-4 h-4 text-current" /></button>
+                    <button type="button" onClick={() => removeAccessory(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${iconBtn} hover:bg-danger-tint text-danger`}>
                       {busyId === p.id ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Trash2 className="w-4 h-4 text-current" />}
                     </button>
                   </div>
@@ -452,41 +452,41 @@ export const AdminLooks: React.FC = () => {
               ))}
             </ul>
           )}
-          {accResults.length > LIST_LIMIT && <p className="mt-2 text-xs text-[#2A1A26]/60">Showing {LIST_LIMIT} of {accResults.length}. Search to narrow the list.</p>}
+          {accResults.length > LIST_LIMIT && <p className="mt-2 text-[13px] text-ink-muted">Showing {LIST_LIMIT} of {accResults.length}. Search to narrow the list.</p>}
         </section>
 
         {/* Combo / set products */}
         <section className={`${card} min-w-0`} aria-labelledby="ctl-combo-title">
-          <h3 id="ctl-combo-title" className="font-semibold text-[#2A1A26]">Combo / set products ({combos.length})</h3>
-          <p className="text-xs text-[#2A1A26]/60 mt-0.5">
+          <h3 id="ctl-combo-title" className="font-semibold text-ink">Combo / set products ({combos.length})</h3>
+          <p className="text-[13px] text-ink-muted mt-0.5">
             Complete the look shows on these product pages. Choose accessories for a product, or leave it on all accessories (in-stock ones, up to {MAX_SHOWN_ACCESSORIES}).
           </p>
 
           {/* Make a product a combo: its set / combo type is saved on the product */}
-          <div role="group" className="mt-4 rounded-xl border border-[#4B1D3F]/15 bg-[#F3EEF8]/60 p-3 sm:p-4" aria-labelledby="ctl-make-title">
-            <p id="ctl-make-title" className="text-sm font-semibold text-[#2A1A26]">Make a product a combo</p>
-            <p className="text-xs text-[#2A1A26]/65 mt-0.5">Find the outfit, choose its set type, then tap Make combo.</p>
+          <div role="group" className="mt-4 rounded-xl border border-line bg-sunken p-3 sm:p-4" aria-labelledby="ctl-make-title">
+            <p id="ctl-make-title" className="text-sm font-semibold text-ink">Make a product a combo</p>
+            <p className="text-[13px] text-ink-muted mt-0.5">Find the outfit, choose its set type, then tap Make combo.</p>
             {comboPick ? (
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white border border-[#4B1D3F]/10 p-2">
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white border border-line p-2">
                 <Thumb p={comboPick} />
                 <div className="min-w-0 flex-1 basis-40">
-                  <p className="text-sm font-medium text-[#2A1A26] line-clamp-1">{comboPick.name}</p>
-                  <p className="text-xs text-[#2A1A26]/60">{comboPick.category} · <Price p={comboPick} /> · <Status p={comboPick} /></p>
+                  <p className="text-sm font-medium text-ink line-clamp-1">{comboPick.name}</p>
+                  <p className="text-[13px] text-ink-muted">{comboPick.category} · <Price p={comboPick} /> · <Status p={comboPick} /></p>
                 </div>
                 <button type="button" onClick={clearComboPick} disabled={making}
-                  className="ml-auto h-9 px-3 rounded-full text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer disabled:opacity-50">
+                  className="ml-auto h-11 px-3 rounded-xl text-sm font-semibold text-ink hover:bg-sunken cursor-pointer disabled:opacity-50">
                   Change
                 </button>
               </div>
             ) : (
               <>
                 <div className="relative mt-3">
-                  <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+                  <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
                   <input ref={comboSearchRef} value={comboQuery} onChange={(e) => setComboQuery(e.target.value)}
                     placeholder="Search products by name or SKU" aria-label="Search products to make a combo" className={`${input} bg-white`} />
                 </div>
                 {comboQuery.trim() && (outfitResults.length === 0 ? (
-                  <p className="mt-2 text-sm text-[#2A1A26]/65">
+                  <p className="mt-2 text-sm text-ink-muted">
                     No product matches{outfits.length === 0 && !countsLoading ? ' (every product is already a combo)' : ''}. Accessories, kids wear, toys and products that are already combos are not listed.
                   </p>
                 ) : (
@@ -496,8 +496,8 @@ export const AdminLooks: React.FC = () => {
                         <button type="button" onClick={() => chooseForCombo(p)} className="w-full flex items-center gap-3 p-1.5 rounded-lg text-left hover:bg-white cursor-pointer">
                           <Thumb p={p} />
                           <span className="min-w-0 flex-1">
-                            <span className="block text-sm text-[#2A1A26] line-clamp-1">{p.name}</span>
-                            <span className="block text-xs text-[#2A1A26]/60">{p.category} · <Price p={p} /> · <Status p={p} /></span>
+                            <span className="block text-sm text-ink line-clamp-1">{p.name}</span>
+                            <span className="block text-[13px] text-ink-muted">{p.category} · <Price p={p} /> · <Status p={p} /></span>
                           </span>
                         </button>
                       </li>
@@ -505,7 +505,7 @@ export const AdminLooks: React.FC = () => {
                   </ul>
                 ))}
                 {comboQuery.trim() && outfitResults.length > PICK_LIMIT && (
-                  <p className="mt-1 text-xs text-[#2A1A26]/60">Showing {PICK_LIMIT} of {outfitResults.length}. Keep typing to narrow the list.</p>
+                  <p className="mt-1 text-[13px] text-ink-muted">Showing {PICK_LIMIT} of {outfitResults.length}. Keep typing to narrow the list.</p>
                 )}
               </>
             )}
@@ -530,18 +530,18 @@ export const AdminLooks: React.FC = () => {
                   aria-label="Your own set / combo type" className={`${field} flex-1 basis-40 min-w-0`} />
               )}
               <button type="button" onClick={makeCombo} disabled={!comboPick || !comboType.trim() || making}
-                className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+                className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 {making ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Plus className="w-4 h-4 text-current" />} Make combo
               </button>
             </div>
           </div>
 
           {combos.length === 0 ? (
-            <div className="mt-4 rounded-xl bg-[#F3EEF8] p-4 text-sm text-[#4B1D3F]">
+            <div className="mt-4 rounded-xl bg-sunken p-4 text-sm text-ink">
               No combo products yet. Use <span className="font-semibold">Make a product a combo</span> above to mark an outfit with its set type.
             </div>
           ) : (
-            <ul className="mt-3 divide-y divide-[#4B1D3F]/10">
+            <ul className="mt-3 divide-y divide-line">
               {combos.map((p) => {
                 const key = String(p.id);
                 const picks = form[key] || [];
@@ -549,24 +549,24 @@ export const AdminLooks: React.FC = () => {
                 const deletedPicks = catalogueReady ? picks.filter((id) => !isAccessory(byId.get(id))).length : 0;
                 const open = editing === key;
                 return (
-                  <li key={key} className={`py-3 ${open ? 'bg-[#F3EEF8]/50 -mx-2 px-2 rounded-xl' : ''}`}>
+                  <li key={key} className={`py-3 ${open ? 'bg-sunken -mx-2 px-2 rounded-xl' : ''}`}>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <Thumb p={p} />
                       <div className="min-w-0 flex-1 basis-40">
-                        <p className="text-sm font-medium text-[#2A1A26] line-clamp-1">{p.name}</p>
-                        <p className="text-xs text-[#2A1A26]/60">
-                          <span className="inline-block px-1.5 rounded bg-[#F7E4EA] text-[#8A2E55] font-semibold">{setTypeOf(p)}</span>{' '}
+                        <p className="text-sm font-medium text-ink line-clamp-1">{p.name}</p>
+                        <p className="text-[13px] text-ink-muted">
+                          <span className="inline-block px-1.5 rounded bg-sale-tint text-sale font-semibold">{setTypeOf(p)}</span>{' '}
                           {p.hidden ? 'Product hidden — not on the store'
                             : `${picks.length ? `${picks.length} chosen` : 'All accessories'} · ${showing} showing now`}
                         </p>
                       </div>
                       <div className="ml-auto flex items-center gap-1">
                         <button type="button" onClick={() => removeCombo(p)} disabled={busyId === p.id} aria-label={`Remove combo: ${p.name}`}
-                          className="h-9 px-3 rounded-full text-xs font-semibold text-rose-700 hover:bg-rose-50 inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="h-11 px-3 rounded-xl text-sm font-semibold text-danger hover:bg-danger-tint inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                           {busyId === p.id && <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />} Remove combo
                         </button>
                         <button type="button" onClick={() => { setEditing(open ? null : key); setPickQuery(''); }} aria-expanded={open}
-                          className="h-9 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+                          className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm font-semibold text-ink hover:bg-sunken cursor-pointer">
                           {open ? 'Done' : 'Choose accessories'}
                         </button>
                       </div>
@@ -574,22 +574,22 @@ export const AdminLooks: React.FC = () => {
 
                     {open && (
                       <div className="mt-3">
-                        <p className="text-xs text-[#2A1A26]/65">
+                        <p className="text-[13px] text-ink-muted">
                           Tick up to {MAX_LOOK_ITEMS} accessories for this product. With none ticked, all published in-stock accessories show.
                         </p>
-                        {deletedPicks > 0 && <p className="mt-1 text-xs text-[#8A2E55]">{deletedPicks} chosen {deletedPicks === 1 ? 'accessory was' : 'accessories were'} deleted and will be removed when you save.</p>}
+                        {deletedPicks > 0 && <p className="mt-1 text-[13px] text-sale">{deletedPicks} chosen {deletedPicks === 1 ? 'accessory was' : 'accessories were'} deleted and will be removed when you save.</p>}
                         {picks.length > 0 && (
-                          <button type="button" onClick={() => setPicks(key, [])} className="mt-2 h-9 px-4 rounded-full bg-white border border-[#4B1D3F]/20 text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+                          <button type="button" onClick={() => setPicks(key, [])} className="mt-2 h-11 px-4 rounded-xl bg-white border-[1.5px] border-control text-sm font-semibold text-ink hover:bg-sunken cursor-pointer">
                             Show all accessories instead
                           </button>
                         )}
                         {accessories.length === 0 ? (
-                          <p className="mt-3 text-sm text-[#2A1A26]/65">Add accessories first (left).</p>
+                          <p className="mt-3 text-sm text-ink-muted">Add accessories first (left).</p>
                         ) : (
                           <>
                             {accessories.length > 6 && (
                               <div className="relative mt-3">
-                                <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+                                <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
                                 <input value={pickQuery} onChange={(e) => setPickQuery(e.target.value)} placeholder="Search accessories" aria-label="Search accessories to choose" className={`${input} bg-white`} />
                               </div>
                             )}
@@ -601,18 +601,18 @@ export const AdminLooks: React.FC = () => {
                                 return (
                                   <li key={id}>
                                     <label className={`flex items-center gap-3 p-1.5 rounded-lg ${full ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white cursor-pointer'}`}>
-                                      <input type="checkbox" checked={on} disabled={full} onChange={() => togglePick(key, id)} className="w-4 h-4 accent-[#4B1D3F] shrink-0" />
+                                      <input type="checkbox" checked={on} disabled={full} onChange={() => togglePick(key, id)} className="w-4 h-4 accent-brand shrink-0" />
                                       <Thumb p={a} />
                                       <span className="min-w-0 flex-1">
-                                        <span className="block text-sm text-[#2A1A26] line-clamp-1">{a.name}</span>
-                                        <span className="block text-xs text-[#2A1A26]/60">{accessoryTypeOf(a)} · <Price p={a} /> · <Status p={a} /></span>
+                                        <span className="block text-sm text-ink line-clamp-1">{a.name}</span>
+                                        <span className="block text-[13px] text-ink-muted">{accessoryTypeOf(a)} · <Price p={a} /> · <Status p={a} /></span>
                                       </span>
                                     </label>
                                   </li>
                                 );
                               })}
                             </ul>
-                            {pickable.length === 0 && <p className="mt-2 text-sm text-[#2A1A26]/65">No accessories match.</p>}
+                            {pickable.length === 0 && <p className="mt-2 text-sm text-ink-muted">No accessories match.</p>}
                           </>
                         )}
                       </div>
@@ -624,15 +624,15 @@ export const AdminLooks: React.FC = () => {
           )}
 
           {setLike.length > 0 && (
-            <div className="mt-4 rounded-xl border border-[#4B1D3F]/10 p-3">
-              <p className="text-xs font-semibold text-[#2A1A26]">These look like sets but have no set / combo type yet</p>
+            <div className="mt-4 rounded-xl border border-line p-3">
+              <p className="text-xs font-semibold text-ink">These look like sets but have no set / combo type yet</p>
               <ul className="mt-2 grid gap-1">
                 {setLike.map((p) => (
                   <li key={p.id} className="flex items-center gap-3">
                     <Thumb p={p} />
-                    <span className="min-w-0 flex-1 text-sm text-[#2A1A26] line-clamp-1">{p.name}</span>
+                    <span className="min-w-0 flex-1 text-sm text-ink line-clamp-1">{p.name}</span>
                     <button type="button" onClick={() => chooseForCombo(p)} disabled={comboPickId === String(p.id)} aria-label={comboPickId === String(p.id) ? `${p.name} is selected above` : `Select ${p.name} to make it a combo`}
-                      className="h-9 px-3 rounded-full text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer disabled:opacity-60 disabled:cursor-default">
+                      className="h-11 px-3 rounded-xl text-sm font-semibold text-ink hover:bg-sunken cursor-pointer disabled:opacity-60 disabled:cursor-default">
                       {comboPickId === String(p.id) ? 'Selected' : 'Select'}
                     </button>
                   </li>
@@ -769,7 +769,7 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
     const others = (existing?.colors || []).filter(isRealColour);
     const firstReal = others.shift();
     const colour: ProductColor[] = d.colourName.trim()
-      ? [{ ...(firstReal || {}), name: d.colourName.trim().slice(0, 40), hex: /^#[0-9a-f]{6}$/i.test(d.colourHex) ? d.colourHex.toUpperCase() : '#4B1D3F' }]
+      ? [{ ...(firstReal || {}), name: d.colourName.trim().slice(0, 40), hex: /^#[0-9a-f]{6}$/i.test(d.colourHex) ? d.colourHex.toUpperCase() : '#1B1A17' }]
       : [];
     // Sold as Free Size, or in the ticked sizes (in the order they are offered); the server accepts only these
     const sizes: ProductSize[] = d.sizeMode === 'sizes' ? sizeChoices.filter((s) => d.sizes.includes(s)) : [ACCESSORY_SIZE];
@@ -837,16 +837,16 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
     }
   };
 
-  const label = 'block text-xs font-semibold text-[#2A1A26]/80 mb-1';
-  const field = 'w-full h-11 px-3.5 rounded-xl border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50';
+  const label = 'sag-label';
+  const field = 'w-full h-11 px-3.5 rounded-xl border border-line bg-white text-sm text-ink focus:outline-none focus:border-control';
 
   return (
-    <div className="fixed inset-0 z-[80] bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4" onClick={cancel}>
+    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4" onClick={cancel}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="acc-form-title" onClick={(e) => e.stopPropagation()}
-        className="bg-[#FBF7F3] w-full sm:max-w-lg max-h-[92dvh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[#4B1D3F]/10 bg-white">
-          <p id="acc-form-title" className="font-serif text-xl text-[#4B1D3F]">{isEdit ? 'Edit accessory' : `Add ${kindLabel}`}</p>
-          <button type="button" onClick={cancel} aria-label="Close" className="w-10 h-10 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer"><X className="w-5 h-5 text-current" /></button>
+        className="bg-page w-full sm:max-w-lg max-h-[92dvh] rounded-t-[20px] sm:rounded-2xl flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line bg-white">
+          <p id="acc-form-title" className="text-base text-ink">{isEdit ? 'Edit accessory' : `Add ${kindLabel}`}</p>
+          <button type="button" onClick={cancel} aria-label="Close" className="w-11 h-11 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-5 h-5 text-current" /></button>
         </div>
 
         <form id="acc-form" onSubmit={submit} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
@@ -891,7 +891,7 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
             <div role="group" aria-labelledby="acc-sizes-label" className="grid grid-cols-2 gap-2">
               {([['one', 'One size'], ['sizes', 'Shoe sizes']] as const).map(([mode, text]) => (
                 <button key={mode} type="button" aria-pressed={d.sizeMode === mode} onClick={() => set({ sizeMode: mode, sizesTouched: true })}
-                  className={`h-10 rounded-full border text-sm font-medium transition-colors cursor-pointer ${d.sizeMode === mode ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/15 text-[#2A1A26] hover:bg-[#F3EEF8]'}`}>
+                  className={`h-11 rounded-xl border-[1.5px] text-sm font-medium transition-colors cursor-pointer ${d.sizeMode === mode ? 'bg-ink border-ink text-white' : 'bg-white border-control text-ink hover:bg-sunken'}`}>
                   {text}
                 </button>
               ))}
@@ -902,32 +902,32 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
                   const on = d.sizes.includes(s);
                   return (
                     <button key={s} type="button" aria-pressed={on} onClick={() => toggleSize(s)}
-                      className={`min-w-16 h-10 px-3 rounded-full border text-sm inline-flex items-center justify-center gap-1 transition-colors cursor-pointer ${on ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/20 text-[#2A1A26] hover:border-[#4B1D3F]'}`}>
+                      className={`min-w-16 h-11 px-3 rounded-xl border text-sm inline-flex items-center justify-center gap-1 transition-colors cursor-pointer ${on ? 'bg-ink border-ink text-white' : 'bg-white border-line text-ink hover:border-ink'}`}>
                       {on && <Check className="w-3.5 h-3.5 text-current" aria-hidden="true" />}{s}
                     </button>
                   );
                 })}
               </div>
             )}
-            <p className="mt-1.5 text-[11px] text-[#2A1A26]/60">
+            <p className="mt-1.5 text-[13px] text-ink-muted">
               {d.sizeMode === 'sizes' ? "Tick the sizes you have. Shoppers choose their size on the accessory's page." : 'Sold as Free Size (bags, jewellery, watches...).'}
             </p>
           </div>
 
           <div>
-            <p className={label}>Photos * <span className="font-normal text-[#2A1A26]/55">(first photo is the cover)</span></p>
+            <p className={label}>Photos * <span className="font-normal text-ink-muted">(first photo is the cover)</span></p>
             <div className="flex flex-wrap gap-2">
               {d.images.map((url, i) => (
                 <div key={url} className="w-20">
-                  <img src={getCleanImageUrl(url, 200)} alt={`Photo ${i + 1}`} className="w-20 aspect-[4/5] rounded-xl object-cover object-top bg-[#F3EEF8]" />
+                  <img src={getCleanImageUrl(url, 200)} alt={`Photo ${i + 1}`} className="w-20 aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
                   <div className="mt-1 flex items-center justify-between">
-                    {i === 0 ? <span className="text-[11px] font-semibold text-[#9C7A45]">Cover</span>
-                      : <button type="button" onClick={() => makeCover(url)} className="text-[11px] text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Cover</button>}
-                    <button type="button" onClick={() => removeImage(url)} aria-label={`Remove photo ${i + 1}`} className="w-8 h-8 rounded-full hover:bg-rose-50 text-rose-700 flex items-center justify-center cursor-pointer"><X className="w-3.5 h-3.5 text-current" /></button>
+                    {i === 0 ? <span className="text-[11px] font-semibold text-ink-muted">Cover</span>
+                      : <button type="button" onClick={() => makeCover(url)} className="text-[13px] text-ink underline underline-offset-2 cursor-pointer">Cover</button>}
+                    <button type="button" onClick={() => removeImage(url)} aria-label={`Remove photo ${i + 1}`} className="w-11 h-11 rounded-full hover:bg-danger-tint text-danger flex items-center justify-center cursor-pointer"><X className="w-3.5 h-3.5 text-current" /></button>
                   </div>
                 </div>
               ))}
-              <label className={`w-20 aspect-[4/5] rounded-xl border-2 border-dashed border-[#4B1D3F]/25 bg-white flex flex-col items-center justify-center gap-1 text-[11px] text-[#4B1D3F] ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-[#F3EEF8]'}`}>
+              <label className={`w-20 aspect-[4/5] rounded-xl border-2 border-dashed border-control bg-white flex flex-col items-center justify-center gap-1 text-[11px] text-ink ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-sunken'}`}>
                 {uploading ? <Loader2 className="w-5 h-5 animate-spin text-current" /> : <ImagePlus className="w-5 h-5 text-current" />}
                 {uploading ? 'Uploading' : 'Add photo'}
                 <input type="file" accept="image/*" multiple disabled={uploading} onChange={upload} className="sr-only" />
@@ -936,10 +936,10 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
           </div>
 
           <div>
-            <label htmlFor="acc-colour" className={label}>Colour <span className="font-normal text-[#2A1A26]/55">(optional)</span></label>
+            <label htmlFor="acc-colour" className={label}>Colour <span className="font-normal text-ink-muted">(optional)</span></label>
             <div className="flex items-center gap-2">
-              <label className="relative w-11 h-11 shrink-0 rounded-full border border-[#4B1D3F]/15 overflow-hidden cursor-pointer" title="Pick the colour">
-                <input type="color" value={/^#[0-9a-f]{6}$/i.test(d.colourHex) ? d.colourHex : '#4B1D3F'} onChange={(e) => set({ colourHex: e.target.value })} aria-label="Colour swatch" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <label className="relative w-11 h-11 shrink-0 rounded-full border border-line overflow-hidden cursor-pointer" title="Pick the colour">
+                <input type="color" value={/^#[0-9a-f]{6}$/i.test(d.colourHex) ? d.colourHex : '#1B1A17'} onChange={(e) => set({ colourHex: e.target.value })} aria-label="Colour swatch" className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                 <span className="block w-full h-full" style={{ backgroundColor: d.colourHex }} />
               </label>
               <input id="acc-colour" value={d.colourName} maxLength={40} onChange={(e) => set({ colourName: e.target.value })} placeholder="e.g. Gold" className={field} />
@@ -947,22 +947,22 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
           </div>
 
           <div>
-            <label htmlFor="acc-desc" className={label}>Short description <span className="font-normal text-[#2A1A26]/55">(optional)</span></label>
+            <label htmlFor="acc-desc" className={label}>Short description <span className="font-normal text-ink-muted">(optional)</span></label>
             <textarea id="acc-desc" rows={3} maxLength={400} value={d.description} onChange={(e) => set({ description: e.target.value })}
               placeholder="Material, size, what it pairs with"
-              className="w-full px-3.5 py-2.5 rounded-2xl border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50" />
+              className="w-full px-3.5 py-2.5 rounded-2xl border border-line bg-white text-sm text-ink focus:outline-none focus:border-control" />
           </div>
 
-          <label className="flex items-center gap-2.5 text-sm text-[#2A1A26] cursor-pointer">
-            <input type="checkbox" checked={d.published} onChange={(e) => set({ published: e.target.checked })} className="w-4 h-4 accent-[#4B1D3F]" />
+          <label className="flex items-center gap-2.5 text-sm text-ink cursor-pointer">
+            <input type="checkbox" checked={d.published} onChange={(e) => set({ published: e.target.checked })} className="w-4 h-4 accent-brand" />
             Published (shown in Complete the look when in stock)
           </label>
         </form>
 
-        <div className="flex items-center justify-end gap-3 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-[#4B1D3F]/10 bg-white">
-          <button type="button" onClick={cancel} disabled={saving || uploading} className="h-11 px-5 rounded-full border border-[#4B1D3F]/20 text-sm font-medium text-[#4B1D3F] hover:bg-[#F3EEF8] disabled:opacity-50 cursor-pointer">Cancel</button>
+        <div className="flex items-center justify-end gap-3 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line bg-white">
+          <button type="button" onClick={cancel} disabled={saving || uploading} className="h-11 px-5 rounded-xl border-[1.5px] border-control text-sm font-medium text-ink hover:bg-sunken disabled:opacity-50 cursor-pointer">Cancel</button>
           <button type="submit" form="acc-form" disabled={saving || uploading}
-            className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer">
+            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
             {saving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />} {isEdit ? 'Save' : 'Add accessory'}
           </button>
         </div>

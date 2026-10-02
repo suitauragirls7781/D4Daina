@@ -43,9 +43,9 @@ export const FindThisLookButton: React.FC<{ variant?: 'pill' | 'chip' | 'icon'; 
   if (!features.visualSearch) return null;
 
   const styles = {
-    pill: 'h-10 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8]',
-    chip: 'h-10 px-4 rounded-full bg-[#F3EEF8] text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#E6DDF0]',
-    icon: 'w-10 h-10 rounded-full flex items-center justify-center text-[#4B1D3F] hover:bg-[#F3EEF8]',
+    pill: 'h-10 px-4 rounded-full border border-line bg-white text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken',
+    chip: 'h-10 px-4 rounded-full bg-sunken text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken-deep',
+    icon: 'w-10 h-10 rounded-full flex items-center justify-center text-ink hover:bg-sunken',
   };
   const close = () => {
     setOpen(false);
@@ -243,7 +243,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[70] bg-[#2A1A26]/50 flex items-end md:items-center justify-center sag-fade"
+      className="fixed inset-0 z-[70] bg-ink/50 flex items-end md:items-center justify-center sag-fade"
       onClick={onClose}
       onDragEnter={onDragEnter}
       onDragOver={(e) => e.preventDefault()}
@@ -258,17 +258,17 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
         aria-describedby={descId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#FBF7F3] w-full md:max-w-4xl max-h-[92dvh] rounded-t-3xl md:rounded-3xl flex flex-col outline-none animate-in slide-in-from-bottom-5 fade-in"
+        className="bg-page w-full md:max-w-4xl max-h-[92dvh] rounded-t-3xl md:rounded-3xl flex flex-col outline-none animate-in slide-in-from-bottom-5 fade-in"
       >
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[#4B1D3F]/10">
-          <h2 id={titleId} className="font-serif text-2xl text-[#4B1D3F] flex items-center gap-2"><Camera className="w-5 h-5" /> Find this look</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line">
+          <h2 id={titleId} className="font-serif text-2xl text-ink flex items-center gap-2"><Camera className="w-5 h-5" /> Find this look</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="overflow-y-auto overscroll-contain px-4 sm:px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          <p id={descId} className="text-sm text-[#2A1A26]/75">
+          <p id={descId} className="text-sm text-ink-muted">
             We match the colours in your photo with real styles in our store. It’s colour matching, not AI, so the print and cut may differ.
-            {' '}<span className="text-[#2A1A26]">Your photo stays on this device — it is never uploaded.</span>
+            {' '}<span className="text-ink">Your photo stays on this device — it is never uploaded.</span>
           </p>
 
           <input ref={galleryRef} type="file" accept="image/*" aria-label="Choose a photo" className="hidden" tabIndex={-1}
@@ -277,10 +277,10 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
             onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ''; }} />
 
           {!hasPhoto && (
-            <div className={`mt-4 rounded-2xl border border-dashed px-4 py-6 sm:py-8 text-center transition-colors ${dragging ? 'border-[#4B1D3F] bg-[#F3EEF8]' : 'border-[#4B1D3F]/25 bg-white'}`}>
-              <ImagePlus className="w-8 h-8 mx-auto text-[#4B1D3F]" aria-hidden="true" />
-              <p className="mt-3 font-serif text-xl text-[#2A1A26]">Add a photo of a look you love</p>
-              <p className="mt-1 text-sm text-[#2A1A26]/70">A screenshot, a saved picture or a photo you take now.</p>
+            <div className={`mt-4 rounded-2xl border border-dashed px-4 py-6 sm:py-8 text-center transition-colors ${dragging ? 'border-ink bg-sunken' : 'border-control bg-white'}`}>
+              <ImagePlus className="w-8 h-8 mx-auto text-ink" aria-hidden="true" />
+              <p className="mt-3 font-serif text-xl text-ink">Add a photo of a look you love</p>
+              <p className="mt-1 text-sm text-ink-muted">A screenshot, a saved picture or a photo you take now.</p>
               <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
                 <button type="button" data-autofocus onClick={() => galleryRef.current?.click()}
                   className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer">
@@ -291,16 +291,16 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
                   <Camera className="w-4 h-4" /> Take a photo
                 </button>
               </div>
-              <p className="hidden md:block mt-3 text-sm text-[#2A1A26]/65">or drag a photo here, or paste one with Ctrl+V</p>
-              <p className="mt-2 text-xs text-[#2A1A26]/60">JPG, PNG or WebP · up to 15 MB</p>
+              <p className="hidden md:block mt-3 text-sm text-ink-muted">or drag a photo here, or paste one with Ctrl+V</p>
+              <p className="mt-2 text-xs text-ink-muted">JPG, PNG or WebP · up to 15 MB</p>
             </div>
           )}
 
           {hasPhoto && (
-            <div className={`mt-4 flex gap-4 items-start rounded-2xl p-3 transition-colors ${dragging ? 'bg-[#F3EEF8]' : 'bg-white border border-[#4B1D3F]/10'}`}>
+            <div className={`mt-4 flex gap-4 items-start rounded-2xl p-3 transition-colors ${dragging ? 'bg-sunken' : 'bg-white border border-line'}`}>
               {preview && (
                 <img src={preview} alt="Your photo" onError={() => setPreview('')}
-                  className="w-20 sm:w-28 aspect-[4/5] object-cover rounded-xl bg-[#F3EEF8] shrink-0" />
+                  className="w-20 sm:w-28 aspect-[4/5] object-cover rounded-xl bg-sunken shrink-0" />
               )}
               <div className="min-w-0 flex-1">
                 <p className="sag-eyebrow">Colours in your photo</p>
@@ -308,25 +308,25 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
                   <>
                     <div role="group" aria-label="Match these colours" className="mt-2 flex flex-wrap gap-2">
                       <button type="button" aria-pressed={focus === null} onClick={() => { setFocus(null); setShown(PAGE); }}
-                        className={`h-10 px-3.5 rounded-full text-sm cursor-pointer transition-colors ${focus === null ? 'bg-[#4B1D3F] text-white' : 'border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]'}`}>
+                        className={`h-10 px-3.5 rounded-full text-sm cursor-pointer transition-colors ${focus === null ? 'bg-brand text-white' : 'border border-line bg-white text-ink hover:bg-sunken'}`}>
                         All colours
                       </button>
                       {palette.map((c, i) => (
                         <button key={`${c.hex}-${i}`} type="button" aria-pressed={focus === i} onClick={() => { setFocus(focus === i ? null : i); setShown(PAGE); }}
                           title={`${colourLabel(c)} (${c.hex})`}
-                          className={`h-10 pl-2 pr-3.5 rounded-full text-sm inline-flex items-center gap-2 cursor-pointer transition-colors ${focus === i ? 'bg-[#4B1D3F] text-white' : 'border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]'}`}>
-                          <span className="w-6 h-6 rounded-full border border-[#2A1A26]/15" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+                          className={`h-10 pl-2 pr-3.5 rounded-full text-sm inline-flex items-center gap-2 cursor-pointer transition-colors ${focus === i ? 'bg-brand text-white' : 'border border-line bg-white text-ink hover:bg-sunken'}`}>
+                          <span className="w-6 h-6 rounded-full border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
                           {colourLabel(c)}
                         </button>
                       ))}
                     </div>
-                    <p className="mt-2 text-sm text-[#2A1A26]/65">Tap a colour to match only that one.</p>
+                    <p className="mt-2 text-sm text-ink-muted">Tap a colour to match only that one.</p>
                   </>
                 ) : (
-                  <p className="mt-2 text-sm text-[#2A1A26]/65">{phase === 'reading' ? 'Reading the colours…' : 'No colours yet.'}</p>
+                  <p className="mt-2 text-sm text-ink-muted">{phase === 'reading' ? 'Reading the colours…' : 'No colours yet.'}</p>
                 )}
                 <button type="button" onClick={() => galleryRef.current?.click()} disabled={phase === 'reading'}
-                  className="mt-3 h-10 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] disabled:opacity-60 cursor-pointer">
+                  className="mt-3 h-10 px-4 rounded-full border border-line bg-white text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken disabled:opacity-60 cursor-pointer">
                   <RefreshCw className="w-4 h-4" /> Use another photo
                 </button>
               </div>
@@ -335,18 +335,18 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
 
           <div className="mt-4">
             {busy && (
-              <div className="rounded-2xl bg-[#F3EEF8] p-4">
-                <p className="text-sm text-[#4B1D3F] flex items-center gap-2">
+              <div className="rounded-2xl bg-sunken p-4">
+                <p className="text-sm text-ink flex items-center gap-2">
                   <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden="true" />
                   <span role="status">
                     {phase === 'reading' ? 'Reading the colours in your photo…' : phase === 'waiting' ? 'Loading our styles…' : 'Comparing with our styles…'}
                   </span>
-                  {phase === 'matching' && progress.total > 0 && <span aria-hidden="true" className="text-[#4B1D3F]/70">{progress.done} of {progress.total} photos</span>}
+                  {phase === 'matching' && progress.total > 0 && <span aria-hidden="true" className="text-ink-muted">{progress.done} of {progress.total} photos</span>}
                 </p>
                 {phase === 'matching' && progress.total > 0 && (
                   <div className="mt-3 h-1.5 rounded-full bg-white overflow-hidden" role="progressbar" aria-label="Comparing with our styles"
                     aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-                    <div className="h-full bg-[#4B1D3F] transition-[width] duration-200" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-brand transition-[width] duration-200" style={{ width: `${pct}%` }} />
                   </div>
                 )}
               </div>
@@ -360,7 +360,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
                 </button>
               </div>
             )}
-            <p aria-live="polite" className="text-[15px] font-medium text-[#2A1A26] empty:hidden">{summary}</p>
+            <p aria-live="polite" className="text-[15px] font-medium text-ink empty:hidden">{summary}</p>
           </div>
 
           {phase === 'done' && inStock.length > 0 && (
@@ -389,7 +389,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
           )}
 
           {phase === 'done' && ranked.length > 0 && (
-            <p className="mt-6 text-sm text-[#2A1A26]/60">
+            <p className="mt-6 text-sm text-ink-muted">
               Colours look different in different light and on different screens, so please check the product photos before you buy.
             </p>
           )}
@@ -428,10 +428,10 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
   };
 
   return (
-    <article className="bg-white rounded-2xl border border-[#4B1D3F]/10 p-3 flex flex-col gap-3">
+    <article className="bg-white rounded-2xl border border-line p-3 flex flex-col gap-3">
       <div className="flex gap-3">
         <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => onView(p)}
-          className="shrink-0 w-24 sm:w-28 self-start rounded-xl overflow-hidden bg-[#F3EEF8] cursor-pointer group">
+          className="shrink-0 w-24 sm:w-28 self-start rounded-xl overflow-hidden bg-sunken cursor-pointer group">
           <img src={getCleanImageUrl(image, 280)} alt="" loading="lazy" decoding="async"
             onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
             className={`w-full aspect-[4/5] object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] ${available ? '' : 'opacity-70'}`} />
@@ -439,28 +439,28 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
 
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           <span className={`self-start px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.06em] uppercase ${
-            match.close ? 'bg-[#F3EEF8] text-[#4B1D3F]' : 'bg-[#2A1A26]/5 text-[#2A1A26]/70'}`}>
+            match.close ? 'bg-sunken text-ink' : 'bg-sunken text-ink-muted'}`}>
             {BASIS_LABEL[match.basis] || (match.close ? 'Close colour match' : 'Nearest tone')}
           </span>
-          <h3 className="font-serif text-base sm:text-[17px] leading-snug text-[#2A1A26] line-clamp-2">
-            <button type="button" onClick={() => onView(p)} className="text-left hover:text-[#4B1D3F] focus-visible:underline cursor-pointer">{p.name}</button>
+          <h3 className="font-serif text-base sm:text-[17px] leading-snug text-ink line-clamp-2">
+            <button type="button" onClick={() => onView(p)} className="text-left hover:text-ink focus-visible:underline cursor-pointer">{p.name}</button>
           </h3>
           <p className="flex items-baseline gap-2 flex-wrap">
-            <span className="text-[15px] font-semibold text-[#4B1D3F]">{inr(price)}</span>
-            {mrp > price && <span className="text-xs text-[#2A1A26]/65 line-through">{inr(mrp)}</span>}
+            <span className="text-[15px] font-semibold text-ink">{inr(price)}</span>
+            {mrp > price && <span className="text-xs text-ink-muted line-through">{inr(mrp)}</span>}
           </p>
           {colours.length > 0 && (
-            <p className="text-sm text-[#2A1A26]/70 break-words">
-              <span className="text-[#2A1A26]/55">Colours: </span>
+            <p className="text-sm text-ink-muted break-words">
+              <span className="text-ink-muted">Colours: </span>
               {colours.map((c, i) => (
                 <React.Fragment key={`${c.name}-${i}`}>
                   {i > 0 && ', '}
-                  {c === matched ? <strong className="font-semibold text-[#2A1A26]">{c.name.trim()}<span className="sr-only"> (closest to your photo)</span></strong> : c.name.trim()}
+                  {c === matched ? <strong className="font-semibold text-ink">{c.name.trim()}<span className="sr-only"> (closest to your photo)</span></strong> : c.name.trim()}
                 </React.Fragment>
               ))}
             </p>
           )}
-          {sizes.length > 0 && <p className="text-sm text-[#2A1A26]/70"><span className="text-[#2A1A26]/55">Sizes: </span>{sizes.join(', ')}</p>}
+          {sizes.length > 0 && <p className="text-sm text-ink-muted"><span className="text-ink-muted">Sizes: </span>{sizes.join(', ')}</p>}
           <p className={`text-sm ${available ? 'text-emerald-800' : 'text-rose-700'}`}>
             {!available ? 'Sold out' : stock <= 5 ? `Only ${stock} left` : 'In stock'}
           </p>
@@ -469,16 +469,16 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
 
       {picking ? (
         <div role="group" aria-label={`Choose a size for ${p.name}`}>
-          <p className="text-xs text-[#2A1A26]/65 mb-1.5">Choose a size</p>
+          <p className="text-xs text-ink-muted mb-1.5">Choose a size</p>
           <div className="flex flex-wrap gap-1.5">
             {sizes.map((size) => (
               <button key={size} type="button" onClick={() => add(size)}
-                className="min-w-[40px] h-10 px-2.5 rounded-full border border-[#4B1D3F]/25 text-sm text-[#2A1A26] hover:border-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+                className="min-w-[40px] h-10 px-2.5 rounded-full border border-control text-sm text-ink hover:border-ink hover:bg-sunken cursor-pointer">
                 {size}
               </button>
             ))}
             <button type="button" onClick={() => setPicking(false)} aria-label="Cancel size choice"
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[#2A1A26]/65 hover:bg-[#F3EEF8] cursor-pointer">
+              className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
               <X className="w-4 h-4" />
             </button>
           </div>

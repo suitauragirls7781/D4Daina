@@ -11,6 +11,7 @@ import { findCourier, trackingLinkFor } from '../../utils/courier';
 import { formatDeliveryDate } from '../../utils/delivery';
 import { formatOrderDate } from '../../utils/orderDate';
 import { PaymentBadge, OrderStatusBadge } from './PaymentBadge';
+import { tone, ui } from './kidsToysShared';
 import { downloadInvoicePdf, invoiceDetails, shareInvoicePdf } from '../../lib/invoicePdf';
 import { WhatsAppIcon } from '../BrandIcons';
 import {
@@ -132,26 +133,26 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
   // The orders list is still on its way: say so instead of "Not Found"
   if (!order && !ordersLoaded) {
     return (
-      <div role="status" className="bg-white px-6 py-14 rounded-3xl border border-[#4B1D3F]/10 text-center space-y-3">
-        <Loader2 className="mx-auto w-6 h-6 animate-spin text-[#4B1D3F]" aria-hidden="true" />
-        <p className="text-sm text-[#2A1A26]/65">Loading order #{orderId}…</p>
+      <div role="status" className={`${ui.empty} space-y-3`}>
+        <Loader2 className="mx-auto w-6 h-6 animate-spin text-ink" aria-hidden="true" />
+        <p className="text-sm text-ink-muted">Loading order #{orderId}…</p>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="bg-white px-6 py-14 rounded-3xl border border-[#4B1D3F]/10 text-center space-y-4">
-        <span className="mx-auto w-14 h-14 rounded-full bg-[#F7E4EA] text-[#8A2E55] flex items-center justify-center"><AlertCircle className="w-6 h-6" /></span>
-        <h3 className="font-serif text-2xl font-semibold text-[#4B1D3F]">Order #{orderId} Not Found</h3>
-        <p className="text-sm text-[#2A1A26]/60 max-w-md mx-auto">
-          The requested customer order does not exist or may have been deleted.
+      <div className={`${ui.empty} space-y-3`}>
+        <AlertCircle className="mx-auto w-6 h-6 text-sale" aria-hidden="true" />
+        <h3 className={`${ui.h2} break-all`}>Order #{orderId} not found</h3>
+        <p className="text-sm leading-5 text-ink-muted max-w-md mx-auto">
+          This order does not exist, or it may have been deleted.
         </p>
         <button
           onClick={() => navigate('/admin/orders')}
-          className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold rounded-full cursor-pointer transition-colors"
+          className={ui.primary}
         >
-          Return to Orders List
+          Back to orders
         </button>
       </div>
     );
@@ -328,53 +329,53 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
   })();
 
   return (
-    <div id="admin-order-details-page" className="space-y-6 pb-12">
+    <div id="admin-order-details-page" className="space-y-4 sm:space-y-5 pb-10">
 
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-        <div className="flex items-start gap-3 min-w-0">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-4 border-b border-line">
+        <div className="flex items-start gap-2 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/admin/orders')}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full transition-colors cursor-pointer border border-[#4B1D3F]/15"
+            className="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center hover:bg-sunken text-ink rounded-full transition-colors cursor-pointer"
             title="Back to Orders"
             aria-label="Back to Orders"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45] min-w-0">
+            <div className={`flex items-center gap-1.5 ${ui.eyebrow} min-w-0`}>
               <span>Orders</span>
-              <span className="text-[#2A1A26]/30">/</span>
+              <span aria-hidden="true">/</span>
               <span className="truncate">{order.orderNumber}</span>
             </div>
-            <h2 className="mt-0.5 font-serif text-2xl sm:text-4xl font-semibold text-[#4B1D3F] leading-tight break-all sm:break-normal">
+            <h2 className={`mt-0.5 ${ui.h1} break-all sm:break-normal`}>
               Order #{order.orderNumber}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <OrderStatusBadge status={order.status} />
               <PaymentBadge order={order} />
-              {order.testPayment && <span className="px-2.5 py-1 rounded-full bg-[#FBF7F3] border border-[#C5A46D]/60 text-[#2A1A26]/80 text-[11px] font-semibold">Test payment</span>}
-              <span className="text-[12px] text-[#2A1A26]/55 inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {formatOrderDate(order.date)}</span>
+              {order.testPayment && <span className={`${ui.badge} ${tone.muted}`}>Test payment</span>}
+              <span className="text-[13px] leading-[18px] text-ink-muted inline-flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {formatOrderDate(order.date)}</span>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleDownloadInvoice}
             disabled={Boolean(invoiceBusy)}
-            className="h-10 px-4 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-[13px] font-semibold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+            className={ui.outline}
           >
             {invoiceBusy === 'download' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Printer className="w-4 h-4" />}
-            <span>Download invoice</span>
+            <span>Invoice PDF</span>
           </button>
           <button
             type="button"
             onClick={handleShareInvoice}
             disabled={Boolean(invoiceBusy)}
-            className="h-10 px-4 bg-white border border-[#4B1D3F]/20 hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-[13px] font-semibold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+            className={ui.outline}
             title="Share the PDF to WhatsApp, email and more (phones)"
           >
             {invoiceBusy === 'share' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
@@ -385,7 +386,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               href={customerWhatsApp}
               target="_blank"
               rel="noopener noreferrer"
-              className="h-10 px-4 bg-white border border-[#4B1D3F]/20 hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-[13px] font-semibold flex items-center gap-2 transition-colors"
+              className={`${ui.outline} col-span-2`}
               title="Open WhatsApp chat with the customer (attach the downloaded PDF)"
             >
               <WhatsAppIcon className="w-4 h-4" live={false} />
@@ -395,20 +396,20 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
           <button
             type="button"
             onClick={() => navigate('/admin/orders')}
-            className="h-10 px-4 bg-[#F3EEF8] hover:bg-[#E6DDF0] text-[#4B1D3F] rounded-full text-[13px] font-semibold transition-colors cursor-pointer"
+            className="hidden lg:inline-flex sag-link px-2"
           >
-            Back to Orders
+            Back to orders
           </button>
         </div>
       </div>
 
       {/* Customer cancellation request */}
       {cancelRequest && (
-        <div role="status" className={`p-5 sm:p-6 rounded-3xl border space-y-3 ${cancelRequestOpen ? 'bg-rose-50 border-rose-200' : 'bg-[#FBF7F3] border-[#4B1D3F]/15'}`}>
+        <div role="status" className={`p-3.5 sm:p-5 rounded-2xl border space-y-3 ${cancelRequestOpen ? 'bg-sale-tint border-sale-line' : 'bg-white border-line'}`}>
           <div className="flex items-start gap-3">
-            <XCircle className={`w-5 h-5 shrink-0 mt-0.5 ${cancelRequestOpen ? 'text-rose-700' : 'text-[#2A1A26]/70'}`} />
-            <div className="min-w-0 text-sm text-[#2A1A26]/90 space-y-1">
-              <p className={`font-semibold ${cancelRequestOpen ? 'text-rose-700' : 'text-[#2A1A26]'}`}>
+            <XCircle className={`w-5 h-5 shrink-0 mt-0.5 ${cancelRequestOpen ? 'text-sale' : 'text-ink-muted'}`} />
+            <div className="min-w-0 text-sm leading-5 text-ink space-y-1.5">
+              <p className="text-[15px] font-semibold text-ink">
                 {cancelRequestOpen
                   ? 'The customer asked to cancel this order'
                   : cancelRequestStale
@@ -418,26 +419,26 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                       : 'Cancellation request closed — order cancelled'}
               </p>
               <p className="break-words">
-                <span className="text-[#2A1A26]/70">Requested {formatWhen(cancelRequest.at)}{cancelRequest.handledAt ? ` · closed ${formatWhen(cancelRequest.handledAt)}` : ''}.</span>{' '}
+                <span className="text-ink-muted">Requested {formatWhen(cancelRequest.at)}{cancelRequest.handledAt ? ` · closed ${formatWhen(cancelRequest.handledAt)}` : ''}.</span>{' '}
                 <strong>Reason:</strong> {cancelRequest.reason}
               </p>
               {cancelRequestOpen && (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   Cancelling returns the stock automatically and emails the customer (if the email box below is ticked). Refund ₹{order.finalTotal.toLocaleString('en-IN')} from your Razorpay dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the status to Refunded. Keeping the order, or saving it as Packed, Shipped or Delivered, closes the request and emails the customer that it is going ahead.
                 </p>
               )}
               {cancelRequestPending && cancelRequest.storeNotified === false && (
-                <p className="text-xs text-rose-700">
+                <p className="text-[13px] leading-[18px] font-medium text-danger">
                   The email alert for this request could not be sent to the store email (email not set up, or it failed). Check the orders list for new requests.
                 </p>
               )}
               {cancelRequestStale && (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   Close the request so the customer no longer sees it as under review{orderStopped ? '.' : '; they are emailed that the order is going ahead.'}
                 </p>
               )}
               {cancelRequest.handledAt && cancelRequest.outcome === 'kept' && (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   {!keptEmail
                     ? 'The customer was not emailed about this (the email box was unticked). Tell them on WhatsApp if needed.'
                     : keptEmail.ok
@@ -446,17 +447,17 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                 </p>
               )}
               {!cancelRequestOpen && order.status === 'Cancelled' && order.paymentStatus === 'Paid' && (
-                <p className="text-xs text-[#2A1A26]/80">Payment is still marked Paid. After refunding in Razorpay, set the status to Refunded.</p>
+                <p className="text-[13px] leading-[18px] text-ink-muted">Payment is still marked Paid. After refunding in Razorpay, set the status to Refunded.</p>
               )}
             </div>
           </div>
           {cancelRequestOpen && (
-            <div className="flex flex-wrap gap-2 sm:pl-8">
+            <div className="flex flex-wrap gap-2 sm:pl-8 [&>*]:flex-1 sm:[&>*]:flex-none">
               <button
                 type="button"
                 onClick={handleCancelNow}
                 disabled={isSaving}
-                className="px-4 py-2.5 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60"
+                className={ui.danger}
               >
                 Cancel order now
               </button>
@@ -464,19 +465,19 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                 type="button"
                 onClick={handleKeepOrder}
                 disabled={isSaving}
-                className="px-4 py-2.5 border border-[#4B1D3F]/20 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60"
+                className={ui.outline}
               >
                 Keep order (close request)
               </button>
             </div>
           )}
           {cancelRequestStale && (
-            <div className="flex flex-wrap gap-2 sm:pl-8">
+            <div className="flex flex-wrap gap-2 sm:pl-8 [&>*]:flex-1 sm:[&>*]:flex-none">
               <button
                 type="button"
                 onClick={handleKeepOrder}
                 disabled={isSaving}
-                className="px-4 py-2.5 border border-[#4B1D3F]/20 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60"
+                className={ui.outline}
               >
                 Close request
               </button>
@@ -487,61 +488,61 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
       {/* Customer return / exchange request */}
       {returnRequest && returnState && (
-        <div role="status" className={`p-5 sm:p-6 rounded-3xl border space-y-4 ${returnOpen ? 'bg-[#C5A46D]/10 border-[#C5A46D]/45' : 'bg-[#FBF7F3] border-[#4B1D3F]/15'}`}>
+        <div role="status" className={`p-3.5 sm:p-5 rounded-2xl border space-y-4 ${returnOpen ? 'bg-sale-tint border-sale-line' : 'bg-white border-line'}`}>
           <div className="flex items-start gap-3">
-            <RotateCcw className="w-5 h-5 shrink-0 mt-0.5 text-[#7A5B2E]" />
-            <div className="min-w-0 text-sm text-[#2A1A26]/90 space-y-1">
-              <p className="font-semibold text-[#2A1A26]">
+            <RotateCcw className={`w-5 h-5 shrink-0 mt-0.5 ${returnOpen ? 'text-sale' : 'text-ink-muted'}`} />
+            <div className="min-w-0 text-sm leading-5 text-ink space-y-1.5">
+              <p className="text-[15px] font-semibold text-ink">
                 {returnKind === 'exchange' ? 'Exchange' : 'Return'} request · {RETURN_STATUS_LABEL[returnState]}
               </p>
-              <p className="text-[#2A1A26]/70">
+              <p className="text-ink-muted">
                 {formatWhen(returnRequest.at) ? `Requested ${formatWhen(returnRequest.at)}` : 'Request date not recorded'}{returnRequest.updatedAt && returnRequest.updatedAt !== returnRequest.at && formatWhen(returnRequest.updatedAt) ? ` · updated ${formatWhen(returnRequest.updatedAt)}` : ''}
               </p>
               {returnRequest.legacy || !returnRequest.status ? (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   Older request (saved before item-level returns): it covers the whole order{returnRequest.at ? '' : ' and was saved only as the status "Refund Requested"'}. Approving it moves the order back to Delivered and tracks the {returnKind} here. If this order was never delivered, reject the request and set the right status below.
                 </p>
               ) : null}
               {returnRequest.storeNotified === false && returnOpen && (
-                <p className="text-xs text-rose-700">The email alert for this request could not be sent to the store email. Check the orders list for new requests.</p>
+                <p className="text-[13px] leading-[18px] font-medium text-danger">The email alert for this request could not be sent to the store email. Check the orders list for new requests.</p>
               )}
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 sm:pl-8">
             <div className="space-y-2">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">Items</p>
+              <p className={ui.eyebrow}>Items</p>
               {returnItems.map((item) => (
-                <div key={item.line} className="flex items-center gap-3 p-2 rounded-2xl bg-white border border-[#4B1D3F]/10">
+                <div key={item.line} className="flex items-center gap-3 p-2 rounded-xl bg-white border border-line">
                   {item.image ? (
-                    <img src={getCleanImageUrl(item.image, 120)} alt="" className="w-10 h-12 object-cover object-top rounded-xl border border-[#4B1D3F]/10" />
+                    <img src={getCleanImageUrl(item.image, 120)} alt="" className="w-10 aspect-[4/5] shrink-0 object-cover object-top rounded-lg bg-sunken" />
                   ) : (
-                    <span className="w-10 h-12 rounded-xl bg-[#F3EEF8]" />
+                    <span className="w-10 aspect-[4/5] shrink-0 rounded-lg bg-sunken" />
                   )}
-                  <div className="min-w-0 text-xs">
-                    <p className="font-semibold text-[#2A1A26] truncate">{item.name}</p>
-                    <p className="text-[#2A1A26]/70">
+                  <div className="min-w-0 text-[13px] leading-[18px]">
+                    <p className="font-semibold text-ink truncate">{item.name}</p>
+                    <p className="text-ink-muted">
                       Size {item.size || '—'}
-                      {returnKind === 'exchange' && <> → <strong className="text-[#2A1A26]">{item.exchangeSize || 'see note'}</strong></>}
+                      {returnKind === 'exchange' && <> → <strong className="text-ink">{item.exchangeSize || 'see note'}</strong></>}
                       {' '}· Qty {item.qty}
                     </p>
-                    {item.clearance && <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold">Clearance · exchange only</span>}
+                    {item.clearance && <span className={`mt-0.5 ${ui.badge} ${tone.danger}`}>Clearance · exchange only</span>}
                   </div>
                 </div>
               ))}
             </div>
             <div className="space-y-2 text-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">Reason</p>
-              <p className="font-semibold text-[#2A1A26]">{returnRequest.status ? returnRequest.reason : 'Other'}</p>
+              <p className={ui.eyebrow}>Reason</p>
+              <p className="font-semibold text-ink">{returnRequest.status ? returnRequest.reason : 'Other'}</p>
               {(returnRequest.details || (!returnRequest.status && returnRequest.reason)) && (
-                <p className="text-[#2A1A26]/80 whitespace-pre-line break-words">{returnRequest.details || returnRequest.reason}</p>
+                <p className="text-ink-muted whitespace-pre-line break-words">{returnRequest.details || returnRequest.reason}</p>
               )}
               {(returnRequest.photos || []).length > 0 && (
                 <div className="pt-1">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55 mb-1.5">Customer photos (tap to enlarge)</p>
+                  <p className={`${ui.eyebrow} mb-1.5`}>Customer photos (tap to enlarge)</p>
                   <div className="flex flex-wrap gap-2">
                     {(returnRequest.photos || []).map((url, index) => (
-                      <button key={url} type="button" onClick={() => setPhotoOpen(url)} className="w-16 h-20 rounded-xl overflow-hidden border border-[#4B1D3F]/15 bg-white cursor-pointer" aria-label={`Open photo ${index + 1}`}>
+                      <button key={url} type="button" onClick={() => setPhotoOpen(url)} className="w-16 aspect-[4/5] rounded-[10px] overflow-hidden bg-sunken cursor-pointer" aria-label={`Open photo ${index + 1}`}>
                         <img src={getCleanImageUrl(url, 200)} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
@@ -549,16 +550,16 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                 </div>
               )}
               {returnRequest.adminNote && (
-                <p className="text-xs text-[#2A1A26]/80 break-words"><strong>Note shown to the customer ({RETURN_STATUS_LABEL[returnState].toLowerCase()} step):</strong> {returnRequest.adminNote}</p>
+                <p className="text-[13px] leading-[18px] text-ink-muted break-words"><strong>Note shown to the customer ({RETURN_STATUS_LABEL[returnState].toLowerCase()} step):</strong> {returnRequest.adminNote}</p>
               )}
             </div>
           </div>
 
           {(returnRequest.history || []).length > 0 && (
             <div className="sm:pl-8 space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">History (each step's note)</p>
+              <p className={ui.eyebrow}>History (each step's note)</p>
               {(returnRequest.history || []).slice().reverse().map((entry, index) => (
-                <p key={index} className="text-[11px] text-[#2A1A26]/80 break-words">
+                <p key={index} className="text-[13px] leading-[18px] text-ink-muted break-words">
                   <strong>{RETURN_STATUS_LABEL[entry.status as keyof typeof RETURN_STATUS_LABEL] || entry.status}</strong> · {formatWhen(entry.at) || 'date not recorded'}{entry.note ? ` — ${entry.note}` : ''}
                 </p>
               ))}
@@ -567,34 +568,34 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
           {pastReturns.length > 0 && (
             <div className="sm:pl-8 space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">Earlier requests on this order</p>
+              <p className={ui.eyebrow}>Earlier requests on this order</p>
               {pastReturns.map((past, index) => {
                 const pastState = past.status as keyof typeof RETURN_STATUS_LABEL;
                 const pieces = (past.items || []).map((item) => `${item.name || 'Item'} (${item.size || 'one size'}${item.exchangeSize ? ` → ${item.exchangeSize}` : ''}) × ${item.qty}`).join(', ');
                 return (
-                  <p key={`${past.at}-${index}`} className="text-[11px] text-[#2A1A26]/80 break-words">
+                  <p key={`${past.at}-${index}`} className="text-[13px] leading-[18px] text-ink-muted break-words">
                     <strong>{past.type === 'exchange' ? 'Exchange' : 'Return'} · {RETURN_STATUS_LABEL[pastState] || past.status}</strong> · requested {formatWhen(past.at) || '—'}{past.updatedAt ? ` · closed ${formatWhen(past.updatedAt)}` : ''}
                     {pieces ? ` · ${pieces}` : ''}{past.adminNote ? ` — ${past.adminNote}` : ''}
                   </p>
                 );
               })}
-              <p className="text-[11px] text-[#2A1A26]/60">Pieces already refunded or exchanged cannot be asked for again.</p>
+              <p className="text-[13px] leading-[18px] text-ink-muted">Pieces already refunded or exchanged cannot be asked for again.</p>
             </div>
           )}
 
           {returnOpen && (
             <div className="sm:pl-8 space-y-3">
               {returnKind === 'return' ? (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   Refund the payment in Razorpay{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then mark refunded. Items value ₹{returnValue.toLocaleString('en-IN')} at the prices paid, before order discounts and shipping. Stock is not changed automatically; add a piece back in Products if it can be sold again.
                 </p>
               ) : (
-                <p className="text-xs text-[#2A1A26]/80">
+                <p className="text-[13px] leading-[18px] text-ink-muted">
                   Arrange the replacement (check the new size is in stock), then mark exchanged. Stock is not changed automatically.
                 </p>
               )}
               <label className="block">
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
+                <span className={ui.label}>
                   Note to the customer for this step {returnState === 'requested' ? '(required: next steps to approve, or the reason to reject)' : '(optional; required to reject)'}
                 </span>
                 <textarea
@@ -603,15 +604,15 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                   value={returnNote}
                   onChange={(e) => setReturnNote(e.target.value)}
                   placeholder={returnState === 'requested' ? 'e.g. Please pack the piece with its tags; we will share the courier details on WhatsApp.' : 'e.g. Refund sent to your UPI on 30 Sept.'}
-                  className="w-full px-4 py-3 border border-[#4B1D3F]/15 bg-white rounded-2xl text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                  className={ui.textarea}
                 />
-                <span className="block mt-1 text-[11px] text-[#2A1A26]/60">Each step has its own note; an earlier step's note is not repeated to the customer.</span>
+                <span className="block mt-1.5 text-[13px] leading-[18px] text-ink-muted">Each step has its own note; an earlier step's note is not repeated to the customer.</span>
               </label>
-              <label className="flex items-center gap-2 text-xs text-[#2A1A26]/80 cursor-pointer">
-                <input type="checkbox" checked={returnNotify} onChange={(e) => setReturnNotify(e.target.checked)} className="w-4 h-4 accent-[#4B1D3F]" />
+              <label className="min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer">
+                <input type="checkbox" checked={returnNotify} onChange={(e) => setReturnNotify(e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand" />
                 Email the customer about this step
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none">
                 {returnButtons.map((action) => {
                   const label = { approve: 'Approve', reject: 'Reject', receive: 'Mark received', refund: 'Mark refunded', exchange: 'Mark exchanged' }[action];
                   if ((action === 'refund' && returnKind !== 'return') || (action === 'exchange' && returnKind !== 'exchange')) return null;
@@ -622,11 +623,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                       type="button"
                       onClick={() => handleReturnAction(action)}
                       disabled={Boolean(returnBusy)}
-                      className={primary
-                        ? 'px-4 py-2.5 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60'
-                        : action === 'reject'
-                          ? 'px-4 py-2.5 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60'
-                          : 'px-4 py-2.5 border border-[#4B1D3F]/20 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] text-[13px] font-semibold rounded-full transition cursor-pointer disabled:opacity-60'}
+                      className={primary ? ui.primary : action === 'reject' ? ui.danger : ui.outline}
                     >
                       {returnBusy === action ? 'Saving…' : label}
                     </button>
@@ -639,14 +636,14 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
       )}
 
       {photoOpen && (
-        <div className="fixed inset-0 z-[90] bg-black/80 flex items-center justify-center p-4" onClick={() => setPhotoOpen('')} role="dialog" aria-modal="true" aria-label="Customer photo">
+        <div className="fixed inset-0 z-[90] bg-dark/95 flex items-center justify-center p-4" onClick={() => setPhotoOpen('')} role="dialog" aria-modal="true" aria-label="Customer photo">
           <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
-            <img src={getCleanImageUrl(photoOpen, 1600)} alt="Customer photo" className="max-h-[80vh] w-auto mx-auto rounded-2xl bg-white" />
+            <img src={getCleanImageUrl(photoOpen, 1600)} alt="Customer photo" className="max-h-[78dvh] w-auto mx-auto rounded-xl bg-white" />
             <div className="mt-3 flex justify-center gap-2">
-              <a href={photoOpen} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-white text-[#2A1A26] text-[13px] font-semibold rounded-full inline-flex items-center gap-1.5">
+              <a href={photoOpen} target="_blank" rel="noopener noreferrer" className="h-11 px-4 bg-white text-ink text-sm font-semibold rounded-xl inline-flex items-center gap-1.5">
                 <ExternalLink className="w-3.5 h-3.5" /> Open original
               </a>
-              <button type="button" onClick={() => setPhotoOpen('')} className="px-4 py-2 bg-white text-[#2A1A26] text-[13px] font-semibold rounded-full inline-flex items-center gap-1.5 cursor-pointer">
+              <button type="button" onClick={() => setPhotoOpen('')} className="h-11 px-4 bg-white text-ink text-sm font-semibold rounded-xl inline-flex items-center gap-1.5 cursor-pointer">
                 <X className="w-3.5 h-3.5" /> Close
               </button>
             </div>
@@ -654,24 +651,19 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
 
         {/* Left 2 Columns: Order Items & Customer Address */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-5">
 
           {/* Items Table Card */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-4">
-            <h3 className="font-serif text-xl font-semibold text-[#4B1D3F] flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#4B1D3F]/10">
-              <span className="flex items-center gap-2 text-[#4B1D3F]">
-                <ShoppingBag className="w-4 h-4 text-[#4B1D3F]" />
-                Purchased Items ({(order.items || []).length})
-              </span>
-              <span className="text-[12px] font-sans font-medium text-[#2A1A26]/55">
-                Placement: {formatOrderDate(order.date)}
-              </span>
+          <div className={`${ui.card} space-y-4`}>
+            <h3 className={`${ui.h2} flex items-center gap-2 pb-3 border-b border-line`}>
+              <ShoppingBag className="w-[18px] h-[18px] text-ink-muted" />
+              Items ({(order.items || []).length})
             </h3>
 
-            <div className="divide-y divide-[#4B1D3F]/[0.08]">
+            <div className="divide-y divide-line">
               {(order.items || []).map((item, idx) => {
                 const selectedColorName = item.selectedColor?.name;
                 const selectedColorHex = item.selectedColor?.hex;
@@ -688,45 +680,46 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                   : '';
 
                 return (
-                  <div key={idx} className="py-3.5 flex items-start sm:items-center gap-3 sm:gap-4">
+                  <div key={idx} className="py-3 first:pt-0 flex items-start gap-3">
                     <img
                       src={itemImg}
                       alt={item.product?.name || 'Item'}
-                      className="w-14 h-[70px] sm:w-16 sm:h-20 shrink-0 object-cover object-top rounded-xl border border-[#4B1D3F]/10 bg-[#FBF7F3]"
+                      loading="lazy"
+                      className="w-14 sm:w-16 aspect-[4/5] shrink-0 object-cover object-top rounded-[10px] bg-sunken"
                     />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#2A1A26] truncate">
+                    <p className="text-sm leading-5 font-semibold text-ink line-clamp-2">
                       {item.product.name}
                     </p>
-                    <p className="text-xs text-[#2A1A26]/60 mt-0.5">
-                      Category: {item.product.category} • SKU: {item.product.sku || item.product.id}
+                    <p className="text-xs leading-4 text-ink-muted mt-0.5 break-words">
+                      {item.product.category} · SKU {item.product.sku || item.product.id}
                     </p>
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-[#2A1A26]/80">
-                      <span className="bg-[#FBF7F3] border border-[#4B1D3F]/10 px-2.5 py-0.5 rounded-full font-semibold text-[#4B1D3F]">
-                        Size: {item.selectedSize}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-[13px] leading-[18px] text-ink-muted">
+                      <span className={`${ui.badge} ${tone.neutral}`}>
+                        Size {item.selectedSize}
                       </span>
                       <span className="flex items-center gap-1">
                         <span
-                           className="w-2.5 h-2.5 rounded-full border border-black/20"
+                           className="w-3 h-3 rounded-full border border-control"
                           style={{ backgroundColor: item.selectedColor.hex }}
                         />
                         <span>{item.selectedColor.name}</span>
                       </span>
-                      <span className="text-[#2A1A26]/60 font-medium">
-                        Qty: {item.quantity}
+                      <span className="text-ink font-semibold">
+                        Qty {item.quantity}
                       </span>
                     </div>
                     {lookParent && (
-                      <p className="mt-1.5 text-[11px] font-semibold text-[#2A1A26]/80 break-words">
-                        Complete the look · with <span className="text-[#4B1D3F]">{lookParent}</span>
+                      <p className="mt-1.5 text-xs leading-4 font-semibold text-ink-muted break-words">
+                        Complete the look · with <span className="text-ink">{lookParent}</span>
                       </p>
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-[#4B1D3F]">
+                    <p className="text-sm font-bold text-ink tabular-nums">
                       ₹{(item.product.price * item.quantity).toLocaleString('en-IN')}
                     </p>
-                    <p className="text-[11px] text-[#2A1A26]/45">
+                    <p className="text-xs text-ink-muted tabular-nums">
                       ₹{item.product.price.toLocaleString('en-IN')} each
                     </p>
                   </div>
@@ -736,82 +729,83 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
             </div>
 
             {/* Financial Summary */}
-            <div className="pt-4 border-t border-[#4B1D3F]/10 space-y-2 text-xs text-[#2A1A26]/70 font-medium">
+            <div className="pt-3 border-t border-line space-y-1.5 text-sm leading-5 text-ink-muted tabular-nums">
               <div className="flex justify-between">
-                <span>Subtotal Items:</span>
-                <span className="font-semibold text-[#2A1A26]">₹{order.subtotal.toLocaleString('en-IN')}</span>
+                <span>Subtotal</span>
+                <span className="font-semibold text-ink">₹{order.subtotal.toLocaleString('en-IN')}</span>
               </div>
               {(order.comboDiscount || 0) > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Combo discount:</span>
+                <div className="flex justify-between text-sale font-semibold">
+                  <span>Combo discount</span>
                   <span>- ₹{(order.comboDiscount || 0).toLocaleString('en-IN')}</span>
                 </div>
               )}
               {(order.couponDiscount || 0) > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Coupon ({order.couponCode}):</span>
+                <div className="flex justify-between text-sale font-semibold">
+                  <span>Coupon ({order.couponCode})</span>
                   <span>- ₹{(order.couponDiscount || 0).toLocaleString('en-IN')}</span>
                 </div>
               )}
               {(order.prepaidDiscount || 0) > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Prepaid discount:</span>
+                <div className="flex justify-between text-sale font-semibold">
+                  <span>Online payment discount</span>
                   <span>- ₹{(order.prepaidDiscount || 0).toLocaleString('en-IN')}</span>
                 </div>
               )}
               {!order.couponDiscount && !order.prepaidDiscount && !order.comboDiscount && order.discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-semibold">
-                  <span>Discount ({order.couponCode || 'applied'}):</span>
+                <div className="flex justify-between text-sale font-semibold">
+                  <span>Discount ({order.couponCode || 'applied'})</span>
                   <span>- ₹{order.discountAmount.toLocaleString('en-IN')}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span>Shipping Fee:</span>
-                <span className="font-semibold text-[#2A1A26]">
+                <span>Shipping</span>
+                <span className="font-semibold text-ink">
                   {order.shippingCharge === 0 ? 'Free' : `₹${order.shippingCharge}`}
                 </span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-[#4B1D3F]/10 text-sm font-semibold text-[#2A1A26]">
-                <span>{paid ? 'Total paid:' : 'Order total:'}</span>
-                <span className="text-base text-[#4B1D3F]">₹{order.finalTotal.toLocaleString('en-IN')}</span>
+              <div className="flex justify-between items-baseline pt-2 border-t border-line text-[15px] font-semibold text-ink">
+                <span>{paid ? 'Total paid' : 'Order total'}</span>
+                <span className="text-lg font-bold text-ink">₹{order.finalTotal.toLocaleString('en-IN')}</span>
               </div>
             </div>
           </div>
 
           {/* Customer & Shipping Address Card */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-4">
-            <h3 className="font-serif text-xl font-semibold text-[#4B1D3F] flex items-center gap-2.5 pb-3 border-b border-[#4B1D3F]/10">
-              <MapPin className="w-4 h-4 text-[#4B1D3F]" />
-              Shipping Destination & Customer Contact
+          <div className={`${ui.card} space-y-4`}>
+            <h3 className={`${ui.h2} flex items-center gap-2 pb-3 border-b border-line`}>
+              <MapPin className="w-[18px] h-[18px] text-ink-muted" />
+              Customer and delivery address
             </h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-[#2A1A26]/80">
-              <div className="space-y-1.5 p-3.5 bg-[#FBF7F3] rounded-2xl border border-[#4B1D3F]/10">
-                <p className="font-semibold text-[#2A1A26] text-sm flex items-center gap-1.5">
-                  <User className="w-4 h-4 text-[#4B1D3F]" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm leading-5 text-ink-muted">
+              <div className="space-y-1 p-3 bg-page rounded-xl min-w-0">
+                <p className={ui.eyebrow}>Customer</p>
+                <p className="font-semibold text-ink flex items-center gap-2">
+                  <User className="w-4 h-4 shrink-0 text-ink-muted" />
                   {order.customerName}
                 </p>
-                <p className="flex items-center gap-2 text-[#2A1A26]/70">
-                  <Mail className="w-3.5 h-3.5 text-[#2A1A26]/45" />
+                <p className="flex items-center gap-2 text-ink break-all">
+                  <Mail className="w-4 h-4 shrink-0 text-ink-muted" />
                   {order.customerEmail}
                 </p>
-                <p className="flex items-center gap-2 text-[#2A1A26]/70">
-                  <Phone className="w-3.5 h-3.5 text-[#2A1A26]/45" />
+                <p className="flex items-center gap-2 text-ink">
+                  <Phone className="w-4 h-4 shrink-0 text-ink-muted" />
                   +91 {order.customerMobile}
                 </p>
               </div>
 
-              <div className="space-y-1 p-3.5 bg-[#FBF7F3] rounded-2xl border border-[#4B1D3F]/10">
-                <p className="font-semibold text-[#2A1A26] uppercase text-[11px] tracking-wider text-[#2A1A26]/60">
-                  Delivery Address
+              <div className="space-y-1 p-3 bg-page rounded-xl min-w-0">
+                <p className={ui.eyebrow}>
+                  Delivery address
                 </p>
-                <p className="font-medium text-[#2A1A26]">
+                <p className="font-semibold text-ink break-words">
                   {order.deliveryAddress.houseFlat}, {order.deliveryAddress.street}
                 </p>
-                <p className="text-[#2A1A26]/70">
+                <p className="text-ink-muted">
                   {order.deliveryAddress.area}, {order.deliveryAddress.city} - {order.deliveryAddress.pincode}
                 </p>
-                <p className="text-[#2A1A26]/70">
+                <p className="text-ink-muted">
                   {order.deliveryAddress.state}, India
                 </p>
               </div>
@@ -821,23 +815,24 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
         </div>
 
         {/* Right 1 Column: Status Workflow & Payment Details */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-5">
 
           {/* Fulfillment Status Card */}
-          <form onSubmit={handleSave} className="bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-4">
-            <h3 className="font-serif text-xl font-semibold text-[#4B1D3F] flex items-center gap-2.5 pb-3 border-b border-[#4B1D3F]/10">
-              <Truck className="w-4 h-4 text-[#4B1D3F]" />
-              Fulfillment Workflow
+          <form onSubmit={handleSave} className={`${ui.card} space-y-4`}>
+            <h3 className={`${ui.h2} flex items-center gap-2 pb-3 border-b border-line`}>
+              <Truck className="w-[18px] h-[18px] text-ink-muted" />
+              Status and tracking
             </h3>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Current Order Status
+              <label htmlFor="admin-order-status" className={ui.label}>
+                Order status
               </label>
               <select
+                id="admin-order-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as AdminOrderStatus)}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition font-semibold cursor-pointer"
+                className={`${ui.select} pl-3.5 font-semibold`}
               >
                 {ORDER_STATUSES.map((st) => (
                   <option key={st} value={st}>{st}</option>
@@ -846,60 +841,63 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Courier Partner
+              <label htmlFor="admin-order-courier" className={ui.label}>
+                Courier partner
               </label>
               <input
+                id="admin-order-courier"
                 type="text"
                 value={courierPartner}
                 onChange={(e) => setCourierPartner(e.target.value)}
                 placeholder="e.g. BlueDart, Delhivery, DTDC"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                className={ui.field}
               />
             </div>
 
             {status === 'Out for Delivery' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-[#F3EEF8] p-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-page p-3">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">Delivery executive name</label>
-                  <input type="text" value={agentName} onChange={(e) => setAgentName(e.target.value)} maxLength={80} placeholder="Optional"
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition" />
+                  <label htmlFor="admin-order-agent-name" className={ui.label}>Delivery executive name</label>
+                  <input id="admin-order-agent-name" type="text" value={agentName} onChange={(e) => setAgentName(e.target.value)} maxLength={80} placeholder="Optional"
+                    className={ui.field} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">Delivery executive phone</label>
-                  <input type="tel" inputMode="tel" value={agentPhone} onChange={(e) => setAgentPhone(e.target.value)} maxLength={15} placeholder="Optional"
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition" />
+                  <label htmlFor="admin-order-agent-phone" className={ui.label}>Delivery executive phone</label>
+                  <input id="admin-order-agent-phone" type="tel" inputMode="tel" value={agentPhone} onChange={(e) => setAgentPhone(e.target.value)} maxLength={15} placeholder="Optional"
+                    className={ui.field} />
                 </div>
-                <p className="sm:col-span-2 text-[11px] text-[#2A1A26]/70">Shown to the customer only while the order is out for delivery.</p>
+                <p className="sm:col-span-2 text-[13px] leading-[18px] text-ink-muted">Shown to the customer only while the order is out for delivery.</p>
               </div>
             )}
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Courier AWB / Tracking #
+              <label htmlFor="admin-order-awb" className={ui.label}>
+                Courier AWB / tracking number
               </label>
               <input
+                id="admin-order-awb"
                 type="text"
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder="e.g. BLUEDART-882910"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition font-mono"
+                className={`${ui.field} font-mono`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Tracking link (optional)
+              <label htmlFor="admin-order-tracking-url" className={ui.label}>
+                Tracking link <span className={ui.optional}>(optional)</span>
               </label>
               <input
+                id="admin-order-tracking-url"
                 type="url"
                 inputMode="url"
                 value={trackingUrl}
                 onChange={(e) => setTrackingUrl(e.target.value)}
                 placeholder="https://… (only if the courier gave you a link)"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                className={ui.field}
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">
+              <p className={ui.hint}>
                 {trackingUrl.trim()
                   ? 'Customers get this link on the tracking page.'
                   : courierLink
@@ -911,67 +909,70 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Expected delivery date (optional)
+              <label htmlFor="admin-order-expected" className={ui.label}>
+                Expected delivery date <span className={ui.optional}>(optional)</span>
               </label>
               <input
+                id="admin-order-expected"
                 type="date"
                 value={expectedDate}
                 onChange={(e) => setExpectedDate(e.target.value)}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                className={ui.field}
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">Shown to the customer as "Expected by …" only when you set it. Leave empty if unsure.</p>
+              <p className={ui.hint}>Shown to the customer as "Expected by …" only when you set it. Leave empty if unsure.</p>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Message to customer (shown on tracking & email)
+              <label htmlFor="admin-order-customer-note" className={ui.label}>
+                Message to customer <span className={ui.optional}>(shown on tracking and in the email)</span>
               </label>
               <textarea
+                id="admin-order-customer-note"
                 rows={2}
                 value={customerNote}
                 onChange={(e) => setCustomerNote(e.target.value)}
                 placeholder="Optional, e.g. Your order will ship on Monday."
-                className="w-full px-4 py-3 border border-[#4B1D3F]/15 bg-white rounded-2xl text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                className={ui.textarea}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 mb-1.5">
-                Internal notes (admin only)
+              <label htmlFor="admin-order-notes" className={ui.label}>
+                Internal notes <span className={ui.optional}>(admin only)</span>
               </label>
               <textarea
+                id="admin-order-notes"
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Only visible to admins"
-                className="w-full px-4 py-3 border border-[#4B1D3F]/15 bg-white rounded-2xl text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/35 focus:outline-none focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+                className={ui.textarea}
               />
             </div>
 
-            <label className="flex items-center gap-2 text-xs text-[#2A1A26]/80 cursor-pointer">
-              <input type="checkbox" checked={notifyCustomer} onChange={(e) => setNotifyCustomer(e.target.checked)} className="w-4 h-4 accent-[#4B1D3F]" />
+            <label className="min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer">
+              <input type="checkbox" checked={notifyCustomer} onChange={(e) => setNotifyCustomer(e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand" />
               Email the customer when the status changes
             </label>
 
             <button
               type="submit"
               disabled={isSaving}
-              className="w-full h-12 text-sm bg-[#4B1D3F] hover:bg-[#3B1532] text-white font-semibold rounded-full transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              className="sag-btn-primary w-full gap-2"
             >
-              <Save className="w-4 h-4 text-white" />
+              <Save className="w-[18px] h-[18px]" />
               <span>{isSaving ? 'Saving…' : 'Save order'}</span>
             </button>
             {lastEmail && (
-              <p className="text-[11px] text-[#2A1A26]/60">
+              <p className="text-[13px] leading-[18px] text-ink-muted">
                 Last email: {lastEmail.kind} · {new Date(lastEmail.at).toLocaleString('en-IN')} · {lastEmail.ok ? 'sent' : 'failed'}
               </p>
             )}
             {(order.timeline || []).length > 0 && (
-              <div className="pt-3 border-t border-[#4B1D3F]/10 space-y-1.5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/55">History</p>
+              <div className="pt-3 border-t border-line space-y-1.5">
+                <p className={ui.eyebrow}>History</p>
                 {(order.timeline || []).slice().reverse().map((entry, index) => (
-                  <p key={index} className="text-[11px] text-[#2A1A26]/80">
+                  <p key={index} className="text-[13px] leading-[18px] text-ink-muted">
                     <strong>{entry.status}</strong> · {new Date(entry.at).toLocaleString('en-IN')}{entry.note ? ` — ${entry.note}` : ''}
                   </p>
                 ))}
@@ -980,51 +981,51 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
           </form>
 
           {/* Payment Card */}
-          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-3">
-            <h3 className="font-serif text-xl font-semibold text-[#4B1D3F] flex items-center gap-2.5 pb-3 border-b border-[#4B1D3F]/10">
-              <CreditCard className="w-4 h-4 text-[#4B1D3F]" />
+          <div className={`${ui.card} space-y-3`}>
+            <h3 className={`${ui.h2} flex items-center gap-2 pb-3 border-b border-line`}>
+              <CreditCard className="w-[18px] h-[18px] text-ink-muted" />
               Payment
             </h3>
 
-            <div className="space-y-2 text-xs text-[#2A1A26]/80">
+            <div className="space-y-2 text-sm leading-5 text-ink-muted">
               <div className="flex flex-wrap items-center gap-2">
                 <PaymentBadge order={order} />
-                {paid && <span className="text-[11px] text-[#2A1A26]/70 inline-flex items-center gap-1"><ShieldCheck className="w-3.5 h-3.5" /> verified with the gateway</span>}
-                {order.testPayment && <span className="px-2 py-0.5 rounded-full bg-[#C5A46D]/10 border border-[#C5A46D]/45 text-[#2A1A26] text-[11px] font-semibold">Test payment (no real money)</span>}
+                {paid && <span className="text-[13px] leading-[18px] text-ok font-medium inline-flex items-center gap-1"><ShieldCheck className="w-4 h-4" /> Verified with the gateway</span>}
+                {order.testPayment && <span className={`${ui.badge} ${tone.warn}`}>Test payment (no real money)</span>}
               </div>
-              <p className="text-[11px] text-[#2A1A26]/60">Payment status is separate from the order status above.</p>
+              <p className="text-[13px] leading-[18px] text-ink-muted">Payment status is separate from the order status above.</p>
               {(order.stockShortfall || []).length > 0 && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700">
+                <div role="alert" className={ui.alert}>
                   Stock was short when this order was paid: {(order.stockShortfall || []).map((s) => `${s.name || s.productId} (wanted ${s.requested}, had ${s.available})`).join(', ')}
                 </div>
               )}
               {order.giftNote && (
-                <div className="p-3 bg-[#FBF7F3] border border-[#4B1D3F]/15 rounded-2xl"><strong>Gift note:</strong> {order.giftNote}</div>
+                <div className="p-3 bg-page rounded-xl text-ink break-words"><strong>Gift note:</strong> {order.giftNote}</div>
               )}
 
               <div className="pt-2 space-y-1.5">
                 <div className="flex justify-between">
-                  <span className="text-[#2A1A26]/60">Method:</span>
-                  <span className="font-semibold uppercase">{order.paymentMethod}</span>
+                  <span className="text-ink-muted">Method</span>
+                  <span className="font-semibold text-ink capitalize">{order.paymentMethod}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-ink-muted shrink-0">Gateway ref</span>
+                  <span className="font-mono text-xs font-semibold text-ink break-all text-right">{order.paymentRef || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#2A1A26]/60">Gateway Ref:</span>
-                  <span className="font-mono text-[11px] font-semibold text-[#2A1A26]/90 break-all">{order.paymentRef || '—'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#2A1A26]/60">Expected delivery:</span>
-                  <span className="font-semibold text-[#2A1A26]/90">{formatExpectedDate(liveExpected) || 'Not set'}</span>
+                  <span className="text-ink-muted">Expected delivery</span>
+                  <span className="font-semibold text-ink">{formatExpectedDate(liveExpected) || 'Not set'}</span>
                 </div>
                 {!liveExpected && formatDeliveryDate(requests?.estimatedDeliveryDate) && (
                   <div className="flex justify-between">
-                    <span className="text-[#2A1A26]/60">Estimate at checkout:</span>
-                    <span className="text-[#2A1A26]/90">{formatDeliveryDate(requests?.estimatedDeliveryDate)}</span>
+                    <span className="text-ink-muted">Estimate at checkout</span>
+                    <span className="text-ink">{formatDeliveryDate(requests?.estimatedDeliveryDate)}</span>
                   </div>
                 )}
                 {liveTrackingUrl && (
                   <div className="flex justify-between gap-3">
-                    <span className="text-[#2A1A26]/60 shrink-0">Tracking link:</span>
-                    <a href={liveTrackingUrl} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#2A1A26]/90 underline break-all text-right">Open</a>
+                    <span className="text-ink-muted shrink-0">Tracking link</span>
+                    <a href={liveTrackingUrl} target="_blank" rel="noopener noreferrer" className={ui.link}>Open</a>
                   </div>
                 )}
               </div>

@@ -33,34 +33,34 @@ export const SortableHomepageSection: React.FC<SortableSectionProps> = ({
       ref={setNodeRef}
       style={style}
       className={`p-3 sm:p-3.5 rounded-2xl border transition-colors duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-        isDragging ? 'shadow-[0_12px_32px_-12px_rgba(42,26,38,0.35)]' : ''
+        isDragging ? 'shadow-[0_12px_32px_-12px_rgba(27,26,23,0.35)]' : ''
       } ${
         isEnabled
-          ? 'bg-white border-[#4B1D3F]/10 hover:border-[#4B1D3F]/25'
-          : 'bg-[#FBF7F3] border-dashed border-[#4B1D3F]/20'
+          ? 'bg-white border-line hover:border-control'
+          : 'bg-page border-dashed border-line'
       }`}
     >
       <div className="flex items-center gap-2 min-w-0">
-        <div {...attributes} {...listeners} title="Drag to reorder" className="w-9 h-11 shrink-0 rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing text-[#4B1D3F]/50 hover:text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors touch-none">
+        <div {...attributes} {...listeners} title="Drag to reorder" className="w-9 h-11 shrink-0 rounded-xl flex items-center justify-center cursor-grab active:cursor-grabbing text-ink-faint hover:text-ink hover:bg-sunken transition-colors touch-none">
           <GripVertical className="w-5 h-5 text-current" />
         </div>
 
         <div className="flex items-center gap-3 min-w-0">
           <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-semibold text-sm shrink-0 ${
-            isEnabled ? 'bg-[#4B1D3F] text-white' : 'bg-[#E6DDF0] text-[#2A1A26]/60'
+            isEnabled ? 'bg-brand text-white' : 'bg-sunken-deep text-ink-muted'
           }`}>
             {index + 1}
           </div>
 
           <div className={`w-10 h-10 rounded-xl hidden min-[420px]:flex items-center justify-center shrink-0 ${
-            isEnabled ? 'bg-[#F3EEF8]' : 'bg-white border border-[#4B1D3F]/10 opacity-70'
+            isEnabled ? 'bg-sunken' : 'bg-white border border-line opacity-70'
           }`}>
             {getSectionIcon(sec.key)}
           </div>
 
           <div className="min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <h4 className={`text-sm font-semibold truncate ${isEnabled ? 'text-[#2A1A26]' : 'text-[#2A1A26]/55'}`}>
+              <h4 className={`text-sm font-semibold truncate ${isEnabled ? 'text-ink' : 'text-ink-muted'}`}>
                 {sec.title}
               </h4>
               {isEnabled ? (
@@ -68,12 +68,12 @@ export const SortableHomepageSection: React.FC<SortableSectionProps> = ({
                   Active
                 </span>
               ) : (
-                <span className="shrink-0 text-[11px] font-semibold text-[#8A2E55] bg-[#F7E4EA] px-2 py-0.5 rounded-full">
+                <span className="shrink-0 text-[11px] font-semibold text-sale bg-sale-tint px-2 py-0.5 rounded-full">
                   Hidden
                 </span>
               )}
             </div>
-            <p className="text-xs text-[#2A1A26]/60 mt-0.5 line-clamp-2 sm:line-clamp-1">
+            <p className="text-xs text-ink-muted mt-0.5 line-clamp-2 sm:line-clamp-1">
               {getSectionDescription(sec.key)}
             </p>
           </div>
@@ -85,7 +85,7 @@ export const SortableHomepageSection: React.FC<SortableSectionProps> = ({
           <button
             type="button"
             onClick={() => setAdminTab(shortcut.tab)}
-            className="h-9 px-3.5 whitespace-nowrap bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-xs font-semibold transition-colors flex items-center gap-1 border border-[#4B1D3F]/20 cursor-pointer"
+            className="h-9 px-3.5 whitespace-nowrap bg-white hover:bg-sunken text-ink rounded-full text-xs font-semibold transition-colors flex items-center gap-1 border border-line cursor-pointer"
           >
             <span>{shortcut.label}</span>
             <ChevronRight className="w-3 h-3 text-current" />
@@ -100,11 +100,11 @@ export const SortableHomepageSection: React.FC<SortableSectionProps> = ({
           }}
           aria-pressed={isEnabled}
           title={isEnabled ? 'Visible: tap to hide' : 'Hidden: tap to show'}
-          className="h-9 pl-3 pr-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer border border-[#4B1D3F]/15 bg-white hover:bg-[#F3EEF8] text-[#2A1A26]/80"
+          className="h-9 pl-3 pr-1.5 rounded-full text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer border border-line bg-white hover:bg-sunken text-ink-muted"
         >
-          {isEnabled ? <Eye className="w-3.5 h-3.5 text-[#4B1D3F]" /> : <EyeOff className="w-3.5 h-3.5 text-[#2A1A26]/50" />}
+          {isEnabled ? <Eye className="w-3.5 h-3.5 text-ink" /> : <EyeOff className="w-3.5 h-3.5 text-ink-faint" />}
           <span className="w-12 text-left">{isEnabled ? 'Visible' : 'Hidden'}</span>
-          <span className={`relative w-9 h-5 rounded-full transition-colors ${isEnabled ? 'bg-[#4B1D3F]' : 'bg-[#E6DDF0]'}`} aria-hidden="true">
+          <span className={`relative w-9 h-5 rounded-full transition-colors ${isEnabled ? 'bg-brand' : 'bg-sunken-deep'}`} aria-hidden="true">
             <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${isEnabled ? 'translate-x-4' : ''}`} />
           </span>
         </button>

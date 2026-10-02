@@ -2,9 +2,8 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
-import { prepaidDiscountFor, prepaidPercentApplies } from '../utils/prepaid';
 import { Product } from '../types';
-import { BadgePercent, CircleAlert, CircleCheck, Loader2, MapPin, RotateCw, ShieldCheck, Truck } from 'lucide-react';
+import { CircleAlert, CircleCheck, Loader2, RotateCw } from 'lucide-react';
 import { fromCatalogOrLive } from '../lib/catalog';
 import { useAdmin } from '../context/AdminContext';
 import { deliveryEstimateText } from '../utils/delivery';
@@ -53,20 +52,21 @@ const inr = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 
 interface DeliveryCheckProps {
   product: Product;
-  /** Pieces chosen on the product page; the shipping and prepaid preview use it. */
+  /** Pieces chosen on the product page; the shipping preview uses it. */
   quantity?: number;
-  /** Extra classes for the outer card (e.g. spacing). */
+  /** Extra classes for the outer form (spacing, a divider). */
   className?: string;
 }
 
 /**
- * PIN code check for the product page. It only says what is actually known: that the PIN code
- * exists (and where), the store's shipping rule for this item and the prepaid offer. A delivery date
- * is shown only when the owner has set delivery days (Admin → Settings → Checkout), labelled
- * "Estimated delivery". Every amount is a preview; the server recalculates the order before payment.
+ * PIN code check for the product page: one row (PIN field and a Check button) and a one-line answer.
+ * It only says what is actually known: that the PIN code exists (and where) and the store's shipping
+ * rule for this item. A delivery date is shown only when the owner has set delivery days
+ * (Admin → Settings → Checkout), labelled as an estimate. Every amount is a preview; the server
+ * recalculates the order before payment.
  */
 export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity = 1, className = '' }) => {
-  const { storeOffers, cart = [], cartSubtotal = 0, setActivePage } = useShop();
+  const { storeOffers, cart = [], cartSubtotal = 0 } = useShop();
   const { storeSettings } = useAdmin();
   const estimateText = deliveryEstimateText(storeSettings);
   const inputId = useId();
@@ -132,110 +132,81 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
   const price = Math.max(0, Number(product.price) || 0);
   const pieces = Math.max(1, Math.floor(Number(quantity) || 1));
   const itemTotal = price * pieces;
-  const { shippingCharge, freeShippingThreshold, prepaidDiscount } = storeOffers;
-  const percentHere = prepaidPercentApplies(storeOffers, price);
+  const { shippingCharge, freeShippingThreshold } = storeOffers;
   const freeAlone = shippingCharge === 0 || (freeShippingThreshold > 0 && itemTotal >= freeShippingThreshold);
   // Only when this style is not in the bag yet, so the bag total plus this item is exactly the next order.
   const inBag = cart.some((item) => String(item.product.id) === String(product.id));
   const freeWithBag = !freeAlone && !inBag && cartSubtotal > 0 && freeShippingThreshold > 0 && cartSubtotal + itemTotal >= freeShippingThreshold;
-  // This item on its own: the flat amount per order, plus the percent when its price is above the owner's minimum.
-  const prepaidOff = prepaidDiscountFor(storeOffers, [{ price, quantity: pieces }], itemTotal);
-  const prepaidLine = () => {
-    if (!percentHere) return `${inr(prepaidOff)} off on every prepaid order, applied at checkout.`;
-    if (prepaidDiscount > 0) return `${storeOffers.prepaidPercent}% off this item and ${inr(prepaidDiscount)} off the order with online payment, applied at checkout.`;
-    return `${storeOffers.prepaidPercent}% off (${inr(prepaidOff)}) with online payment, applied at checkout.`;
-  };
   const placeName = place ? [place.district, place.state].filter(Boolean).join(', ') : '';
 
   const shippingLine = () => {
     if (!offersReady) return 'Shipping charges, if any, are shown at checkout before you pay.';
-    if (freeAlone) return shippingCharge === 0 ? 'Free shipping' : `Free shipping (orders above ${inr(freeShippingThreshold)} ship free)`;
-    if (freeWithBag) return `Free shipping with the items already in your bag (orders above ${inr(freeShippingThreshold)})`;
-    if (freeShippingThreshold <= 0) return `Shipping ${inr(shippingCharge)} per order`;
-    return `Shipping ${inr(shippingCharge)} for this item on its own · free on orders above ${inr(freeShippingThreshold)}`;
+    if (freeAlone) return shippingCharge === 0 ? 'Free shipping.' : `Free shipping (orders above ${inr(freeShippingThreshold)} ship free).`;
+    if (freeWithBag) return `Free shipping with the items already in your bag (orders above ${inr(freeShippingThreshold)}).`;
+    if (freeShippingThreshold <= 0) return `Shipping ${inr(shippingCharge)} per order.`;
+    return `Shipping ${inr(shippingCharge)} for this item on its own, free on orders above ${inr(freeShippingThreshold)}.`;
   };
+
+  const failed = status === 'invalid' || status === 'not-found';
 
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); check(pincode); }}
-      className={`rounded-2xl border border-[#4B1D3F]/10 bg-white p-4 ${className}`}
+      className={className}
       aria-busy={status === 'loading'}
       noValidate
     >
-      <label htmlFor={inputId} className="text-sm text-[#2A1A26] flex items-center gap-2">
-        <MapPin className="w-4 h-4 text-[#9C7A45]" aria-hidden="true" /> Check delivery
-      </label>
-      <div className="mt-2.5 flex gap-2">
+      <label htmlFor={inputId} className="sag-label">Check delivery to your PIN code</label>
+      <div className="flex gap-2">
         <input
           id={inputId}
           inputMode="numeric"
           autoComplete="postal-code"
+          enterKeyHint="done"
           maxLength={6}
           value={pincode}
           onChange={(e) => onChange(e.target.value)}
-          placeholder="Enter PIN code"
+          placeholder="6-digit PIN code"
           aria-describedby={status === 'idle' ? undefined : resultId}
-          aria-invalid={status === 'invalid' || status === 'not-found'}
-          className="flex-1 min-w-0 h-11 rounded-full border border-[#4B1D3F]/15 px-4 text-sm focus:outline-none focus:border-[#4B1D3F]/50"
+          aria-invalid={failed}
+          className="sag-input sag-num flex-1 min-w-0 h-12"
         />
-        <button
-          type="submit"
-          disabled={status === 'loading'}
-          className="h-11 min-w-[84px] px-5 rounded-full bg-[#F3EEF8] text-[#4B1D3F] text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center hover:bg-[#E6DDF0] cursor-pointer disabled:opacity-60 disabled:cursor-wait"
-        >
+        <button type="submit" disabled={status === 'loading'} className="sag-btn-outline shrink-0 h-12 min-w-[84px] px-4 text-sm cursor-pointer disabled:cursor-wait">
           {status === 'loading' ? <><Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /><span className="sr-only">Checking</span></> : 'Check'}
         </button>
       </div>
-      {estimateText && (
-        <p className="mt-2.5 flex items-start gap-2 text-sm text-[#2A1A26]/80">
-          <Truck className="w-4 h-4 mt-0.5 shrink-0 text-[#4B1D3F]" aria-hidden="true" />
-          <span>{estimateText} <span className="text-[#2A1A26]/60">(if ordered today)</span></span>
-        </p>
-      )}
 
-      <div id={resultId} aria-live="polite">
-        {status === 'invalid' && <p className="sag-fade mt-2.5 text-sm text-rose-700">Enter a valid 6-digit PIN code.</p>}
-        {status === 'not-found' && <p className="sag-fade mt-2.5 text-sm text-rose-700">We could not find this PIN code. Please check it.</p>}
+      <div id={resultId} aria-live="polite" className="sag-num text-[13px] leading-[18px]">
+        {status === 'invalid' && (
+          <p className="mt-2 flex items-start gap-1.5 font-medium text-danger"><CircleAlert className="w-4 h-4 shrink-0" aria-hidden="true" /> Enter a valid 6-digit PIN code.</p>
+        )}
+        {status === 'not-found' && (
+          <p className="mt-2 flex items-start gap-1.5 font-medium text-danger"><CircleAlert className="w-4 h-4 shrink-0" aria-hidden="true" /> We could not find this PIN code. Please check it.</p>
+        )}
         {status === 'error' && (
-          <div className="sag-fade mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p className="flex items-start gap-2 text-sm text-rose-700">
-              <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" /> Could not check this PIN code right now.
+          <div className="mt-2">
+            <p className="flex items-start gap-1.5 font-medium text-danger">
+              <CircleAlert className="w-4 h-4 shrink-0" aria-hidden="true" /> Could not check this PIN code right now.
             </p>
-            <button type="button" onClick={() => check(pincode)} className="h-10 px-3 -mx-3 inline-flex items-center gap-1.5 rounded-full text-sm text-[#4B1D3F] underline underline-offset-2 hover:bg-[#F3EEF8] cursor-pointer">
-              <RotateCw className="w-4 h-4" aria-hidden="true" /> Retry
-            </button>
-            <p className="w-full text-sm text-[#2A1A26]/70">You can still place your order. We ship across India.</p>
+            <p className="flex flex-wrap items-center gap-x-3 text-ink-muted">
+              <span>You can still place your order. We ship across India.</span>
+              <button type="button" onClick={() => check(pincode)} className="sag-link gap-1.5">
+                <RotateCw className="w-4 h-4" aria-hidden="true" /> Retry
+              </button>
+            </p>
           </div>
         )}
         {status === 'ok' && (
-          <div className="sag-fade mt-3">
-            <p className="flex items-start gap-2 text-sm text-emerald-800">
-              <CircleCheck className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-              <span>We ship to {placeName ? <>{placeName} ({pincode})</> : pincode}.</span>
-            </p>
-            <ul className="mt-2.5 space-y-2 text-sm text-[#2A1A26]/80">
-              <li className="flex items-start gap-2">
-                <Truck className="w-4 h-4 mt-0.5 shrink-0 text-[#4B1D3F]" aria-hidden="true" />
-                <span>{shippingLine()}</span>
-              </li>
-              {offersReady && prepaidOff > 0 && (
-                <li className="flex items-start gap-2">
-                  <BadgePercent className="w-4 h-4 mt-0.5 shrink-0 text-[#4B1D3F]" aria-hidden="true" />
-                  <span>{prepaidLine()}</span>
-                </li>
-              )}
-              <li className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-[#4B1D3F]" aria-hidden="true" />
-                <span>Pay securely online with UPI, cards or net banking.</span>
-              </li>
-            </ul>
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
-              <p className="text-xs text-[#2A1A26]/65">We email you as soon as your order ships. Final amounts are confirmed at checkout.</p>
-              <button type="button" onClick={() => setActivePage('shipping-policy')} className="h-10 inline-flex items-center text-sm text-[#4B1D3F] underline underline-offset-2 cursor-pointer">
-                Shipping policy
-              </button>
-            </div>
-          </div>
+          <p className="mt-2 flex items-start gap-1.5 text-ink">
+            <CircleCheck className="w-4 h-4 shrink-0 text-ok" aria-hidden="true" />
+            <span>
+              <span className="font-semibold text-ok">We ship to {placeName ? <>{placeName} ({pincode})</> : pincode}.</span>{' '}
+              {shippingLine()}
+            </span>
+          </p>
+        )}
+        {estimateText && status !== 'error' && (
+          <p className="mt-1 text-ink-muted">{estimateText} (if ordered today)</p>
         )}
       </div>
     </form>

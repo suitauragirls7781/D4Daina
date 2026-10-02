@@ -31,8 +31,8 @@ const ms = (value: number | null) => (value === null ? 'not available' : `${valu
 const tone = (percent: number) => (percent >= 90
   ? { bar: 'bg-rose-700', text: 'text-rose-700', word: 'Almost at the limit' }
   : percent >= 70
-    ? { bar: 'bg-[#C5A46D]', text: 'text-[#9C7A45]', word: 'Getting close' }
-    : { bar: 'bg-[#4B1D3F]', text: 'text-[#4B1D3F]', word: '' });
+    ? { bar: 'bg-line', text: 'text-ink-muted', word: 'Getting close' }
+    : { bar: 'bg-brand', text: 'text-ink', word: '' });
 
 const UsageBar: React.FC<{ title: string; used: number; limit: number; detail: string; note?: string }> = ({ title, used, limit, detail, note }) => {
   const percent = limit > 0 ? (used / limit) * 100 : 0;
@@ -40,11 +40,11 @@ const UsageBar: React.FC<{ title: string; used: number; limit: number; detail: s
   return (
     <div className="sag-card p-4 sm:p-5">
       <div className="flex items-baseline justify-between gap-3">
-        <h4 className="text-sm font-semibold text-[#2A1A26]">{title}</h4>
+        <h4 className="text-sm font-semibold text-ink">{title}</h4>
         <span className={`shrink-0 text-sm font-semibold tabular-nums ${colours.text}`}>{percentText(percent)}%</span>
       </div>
       <div
-        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[#F3EEF8]"
+        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-sunken"
         role="progressbar"
         aria-label={title}
         aria-valuemin={0}
@@ -54,17 +54,17 @@ const UsageBar: React.FC<{ title: string; used: number; limit: number; detail: s
       >
         <div className={`h-full rounded-full transition-[width] duration-300 ${colours.bar}`} style={{ width: `${Math.min(100, percent)}%` }} />
       </div>
-      <p className="mt-2.5 text-sm text-[#2A1A26]/75 tabular-nums">{detail}</p>
+      <p className="mt-2.5 text-sm text-ink-muted tabular-nums">{detail}</p>
       {colours.word && <p className={`mt-1 text-sm font-semibold ${colours.text}`}>{colours.word}</p>}
-      {note && <p className="mt-1 text-sm text-[#2A1A26]/55">{note}</p>}
+      {note && <p className="mt-1 text-sm text-ink-muted">{note}</p>}
     </div>
   );
 };
 
 const Unavailable: React.FC<{ title: string }> = ({ title }) => (
   <div className="sag-card p-4 sm:p-5">
-    <h4 className="text-sm font-semibold text-[#2A1A26]">{title}</h4>
-    <p className="mt-2 text-sm text-[#2A1A26]/60">Not available right now.</p>
+    <h4 className="text-sm font-semibold text-ink">{title}</h4>
+    <p className="mt-2 text-sm text-ink-muted">Not available right now.</p>
   </div>
 );
 
@@ -132,7 +132,7 @@ export const AdminUsage: React.FC = () => {
 
   return (
     <div className="space-y-5 text-sm">
-      <div className="rounded-3xl bg-[#4B1D3F] p-5 sm:p-7 text-white">
+      <div className="rounded-3xl bg-brand p-5 sm:p-7 text-white">
         <h3 className="font-serif text-2xl sm:text-3xl font-semibold flex items-center gap-2.5"><Gauge className="h-5 w-5 shrink-0" /> Usage &amp; limits</h3>
         <p className="text-sm text-white/75 mt-1.5 max-w-xl leading-relaxed">
           What the store has used of Cloudflare's free daily limits, {since}. These are Cloudflare's own numbers; they run a minute or two behind real time.
@@ -150,20 +150,20 @@ export const AdminUsage: React.FC = () => {
       )}
 
       {!view && !loadError && (
-        <div className="sag-card p-5 flex items-center gap-3 text-[#2A1A26]/70" role="status" aria-busy="true">
-          <Loader2 className="w-5 h-5 animate-spin text-[#4B1D3F]" /> Loading today's usage…
+        <div className="sag-card p-5 flex items-center gap-3 text-ink-muted" role="status" aria-busy="true">
+          <Loader2 className="w-5 h-5 animate-spin text-ink" /> Loading today's usage…
         </div>
       )}
 
       {view && !view.configured && (
         <div className="sag-card p-5 sm:p-6">
           <p className="sag-eyebrow font-semibold">Not connected yet</p>
-          <h4 className="mt-2 font-serif text-2xl font-semibold text-[#4B1D3F]">Connect Cloudflare usage</h4>
-          <p className="mt-2 text-sm text-[#2A1A26]/75 leading-relaxed">
+          <h4 className="mt-2 font-serif text-2xl font-semibold text-ink">Connect Cloudflare usage</h4>
+          <p className="mt-2 text-sm text-ink-muted leading-relaxed">
             In the Cloudflare dashboard create an API token with the permission <strong>Account Analytics: Read</strong>, then add it to the Worker as the secret{' '}
-            <code className="font-mono text-[13px] break-all text-[#4B1D3F]">CLOUDFLARE_ANALYTICS_TOKEN</code>. Until then no numbers are shown here.
+            <code className="font-mono text-[13px] break-all text-ink">CLOUDFLARE_ANALYTICS_TOKEN</code>. Until then no numbers are shown here.
           </p>
-          {view.error && <p className="mt-2 text-sm text-[#2A1A26]/55 break-words">{view.error}</p>}
+          {view.error && <p className="mt-2 text-sm text-ink-muted break-words">{view.error}</p>}
           <div className="mt-4">{refreshButton}</div>
         </div>
       )}
@@ -224,8 +224,8 @@ export const AdminUsage: React.FC = () => {
               />
             ) : (
               <div className="sag-card p-4 sm:p-5">
-                <h4 className="text-sm font-semibold text-[#2A1A26]">Emails (Brevo)</h4>
-                <p className="mt-2 text-sm text-[#2A1A26]/75 tabular-nums">{num(view.email.left)} email credits left</p>
+                <h4 className="text-sm font-semibold text-ink">Emails (Brevo)</h4>
+                <p className="mt-2 text-sm text-ink-muted tabular-nums">{num(view.email.left)} email credits left</p>
               </div>
             ))}
           </div>
@@ -234,27 +234,27 @@ export const AdminUsage: React.FC = () => {
             <p className="sag-eyebrow font-semibold">More from {since}</p>
             <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <dt className="text-[12px] text-[#2A1A26]/55">Requests that ended in an error</dt>
-                <dd className={`text-sm font-semibold tabular-nums ${view.workers && view.workers.errors > 0 ? 'text-rose-700' : 'text-[#2A1A26]'}`}>{view.workers ? num(view.workers.errors) : 'not available'}</dd>
+                <dt className="text-[12px] text-ink-muted">Requests that ended in an error</dt>
+                <dd className={`text-sm font-semibold tabular-nums ${view.workers && view.workers.errors > 0 ? 'text-rose-700' : 'text-ink'}`}>{view.workers ? num(view.workers.errors) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-[#2A1A26]/55">Calls the store made to other services</dt>
-                <dd className="text-sm font-semibold tabular-nums text-[#2A1A26]">{view.workers ? num(view.workers.subrequests) : 'not available'}</dd>
+                <dt className="text-[12px] text-ink-muted">Calls the store made to other services</dt>
+                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? num(view.workers.subrequests) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-[#2A1A26]/55">CPU time per request, typical (p50)</dt>
-                <dd className="text-sm font-semibold tabular-nums text-[#2A1A26]">{view.workers ? ms(view.workers.cpuP50Ms) : 'not available'}</dd>
+                <dt className="text-[12px] text-ink-muted">CPU time per request, typical (p50)</dt>
+                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? ms(view.workers.cpuP50Ms) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-[#2A1A26]/55">CPU time per request, slowest 1% (p99)</dt>
-                <dd className="text-sm font-semibold tabular-nums text-[#2A1A26]">{view.workers ? ms(view.workers.cpuP99Ms) : 'not available'}</dd>
+                <dt className="text-[12px] text-ink-muted">CPU time per request, slowest 1% (p99)</dt>
+                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? ms(view.workers.cpuP99Ms) : 'not available'}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-sm text-[#2A1A26]/60 leading-relaxed">The free plan allows about 10 ms of CPU time per request.</p>
+            <p className="mt-3 text-sm text-ink-muted leading-relaxed">The free plan allows about 10 ms of CPU time per request.</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-[#2A1A26]/65">
+            <p className="text-sm text-ink-muted">
               {resetTime && <>The limits reset at {resetTime}. </>}
               Updated {clock(view.fetchedAt, true)}; refreshes every minute while this page is open.
             </p>

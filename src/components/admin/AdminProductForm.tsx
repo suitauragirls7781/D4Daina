@@ -487,43 +487,43 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   if (editingAccessory && existingProduct) {
     return (
       <div id="admin-product-form-page" className="space-y-6 pb-12">
-        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]">
+        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
           <button
             type="button"
             onClick={() => navigate('/admin/products')}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-[#F3EEF8] hover:bg-[#E6DDF0] text-[#4B1D3F] rounded-full transition-colors cursor-pointer"
+            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
             title="Back to Products"
             aria-label="Back to Products"
           >
             <ArrowLeft className="w-5 h-5 text-current" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#9C7A45]">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
               <span>Catalog</span>
               <span>/</span>
               <span>Accessory</span>
             </div>
-            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-[#2A1A26] break-words">{existingProduct.name}</h2>
+            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">{existingProduct.name}</h2>
           </div>
         </div>
 
-        <div id="admin-accessory-notice" role="status" className="rounded-3xl border border-[#4B1D3F]/10 bg-[#F3EEF8] p-5 sm:p-7 space-y-4">
-          <p className="font-serif text-xl font-semibold text-[#4B1D3F]">This is a Complete the Look accessory — edit it in Complete the Look</p>
-          <p className="text-sm text-[#2A1A26]/75">
+        <div id="admin-accessory-notice" role="status" className="rounded-3xl border border-line bg-sunken p-5 sm:p-7 space-y-4">
+          <p className="font-serif text-xl font-semibold text-ink">This is a Complete the Look accessory — edit it in Complete the Look</p>
+          <p className="text-sm text-ink-muted">
             Accessories are shown only on combo product pages, inside "Complete the look", and customers buy them only together with that outfit.
           </p>
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={() => openAdminTab('looks')}
-              className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold transition cursor-pointer"
+              className="h-11 px-5 rounded-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold transition cursor-pointer"
             >
               Open Complete the Look
             </button>
             <button
               type="button"
               onClick={() => navigate('/admin/products')}
-              className="h-11 px-5 rounded-full border border-[#4B1D3F]/25 bg-white text-sm font-semibold text-[#4B1D3F] hover:bg-[#E6DDF0] transition cursor-pointer"
+              className="h-11 px-5 rounded-full border border-control bg-white text-sm font-semibold text-ink hover:bg-sunken-deep transition cursor-pointer"
             >
               Back to Products
             </button>
@@ -539,31 +539,31 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     const sectionName = isToyItem ? 'Toys' : 'Kids Wear';
     return (
       <div id="admin-product-form-page" className="space-y-6 pb-12">
-        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]">
+        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
           <button
             type="button"
             onClick={() => navigate('/admin/products')}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-[#F3EEF8] hover:bg-[#E6DDF0] text-[#4B1D3F] rounded-full transition-colors cursor-pointer"
+            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
             title="Back to Products"
             aria-label="Back to Products"
           >
             <ArrowLeft className="w-5 h-5 text-current" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-[#9C7A45]">
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
               <span>Catalog</span>
               <span>/</span>
               <span>{isToyItem ? 'Toy' : 'Kids wear'}</span>
             </div>
-            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-[#2A1A26] break-words">{existingProduct.name}</h2>
+            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">{existingProduct.name}</h2>
           </div>
         </div>
 
-        <div id="admin-kids-toys-notice" role="status" className="rounded-3xl border border-[#4B1D3F]/10 bg-[#F3EEF8] p-5 sm:p-7 space-y-4">
-          <p className="font-serif text-xl font-semibold text-[#4B1D3F]">
+        <div id="admin-kids-toys-notice" role="status" className="rounded-3xl border border-line bg-sunken p-5 sm:p-7 space-y-4">
+          <p className="font-serif text-xl font-semibold text-ink">
             {isToyItem ? 'This is a toy — edit it in Toys' : 'This is kids wear — edit it in Kids Wear'}
           </p>
-          <p className="text-sm text-[#2A1A26]/75">
+          <p className="text-sm text-ink-muted">
             {isToyItem
               ? 'Toys have their own section, with the kind of toy and a suitable age, and are sold as one piece. This women\'s product form is not used for them.'
               : 'Kids wear has its own section for Baby Girls and Baby Boys, with sizes by age (1-2 Y to 14-15 Y). This women\'s product form is not used for it.'}
@@ -572,14 +572,14 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             <button
               type="button"
               onClick={() => openAdminTab(isToyItem ? 'toys' : 'kids')}
-              className="h-11 px-5 rounded-full bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-sm font-semibold transition cursor-pointer"
+              className="h-11 px-5 rounded-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold transition cursor-pointer"
             >
               Open {sectionName}
             </button>
             <button
               type="button"
               onClick={() => navigate('/admin/products')}
-              className="h-11 px-5 rounded-full border border-[#4B1D3F]/25 bg-white text-sm font-semibold text-[#4B1D3F] hover:bg-[#E6DDF0] transition cursor-pointer"
+              className="h-11 px-5 rounded-full border border-control bg-white text-sm font-semibold text-ink hover:bg-sunken-deep transition cursor-pointer"
             >
               Back to Products
             </button>
@@ -593,28 +593,28 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     <div id="admin-product-form-page" className="space-y-6 pb-12">
 
       {/* Top Header & Breadcrumb */}
-      <div className="relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]">
-        <span className="pointer-events-none absolute -right-10 -top-12 w-40 h-40 rounded-full bg-[#F3EEF8]" aria-hidden="true" />
+      <div className="relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
+        <span className="pointer-events-none absolute -right-10 -top-12 w-40 h-40 rounded-full bg-sunken" aria-hidden="true" />
         <div className="relative flex items-start gap-3.5 min-w-0">
           <button
             type="button"
             onClick={handleCancel}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-[#F3EEF8] hover:bg-[#E6DDF0] text-[#4B1D3F] rounded-full transition-colors cursor-pointer"
+            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
             title="Back to Products"
             aria-label="Back to Products"
           >
             <ArrowLeft className="w-5 h-5 text-current" />
           </button>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9C7A45]">
+            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-muted">
               <span>Catalog</span>
               <span aria-hidden="true">/</span>
               <span>{isEditMode ? 'Edit product' : 'New product'}</span>
             </div>
-            <h2 className="mt-0.5 font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-[#2A1A26] break-words">
+            <h2 className="mt-0.5 font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">
               {isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
             </h2>
-            <p className="mt-1 text-sm text-[#2A1A26]/65">{isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}</p>
+            <p className="mt-1 text-sm text-ink-muted">{isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}</p>
           </div>
         </div>
 
@@ -623,7 +623,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             type="button"
             disabled={isSaving}
             onClick={handleCancel}
-            className="h-11 px-5 border border-[#4B1D3F]/20 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            className="h-11 px-5 border border-line bg-white hover:bg-sunken text-ink rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
           >
             Cancel
           </button>
@@ -631,7 +631,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             type="submit"
             form="product-edit-form"
             disabled={isSaving}
-            className="h-11 px-5 bg-[#4B1D3F] hover:bg-[#3B1532] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+            className="h-11 px-5 bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
           >
             {isSaving ? (
               <RefreshCw className="w-4 h-4 animate-spin text-current" />
@@ -658,16 +658,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         />
 
         {/* Section 1: Basic Information */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-[#2A1A26] pb-3 border-b border-[#4B1D3F]/10 flex items-center gap-3">
-            <Package className="w-9 h-9 p-2 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] shrink-0" aria-hidden="true" />
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
+          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
+            <Package className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
             Basic Product Information
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
-                Product Name <span className="text-[#8A2E55]">*</span>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
+                Product Name <span className="text-sale">*</span>
               </label>
               <input
                 type="text"
@@ -675,18 +675,18 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Gulab Handblock Pure Cotton Anarkali Set"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26] font-medium"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-medium"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
-                Category <span className="text-[#8A2E55]">*</span>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
+                Category <span className="text-sale">*</span>
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26] cursor-pointer"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink cursor-pointer"
               >
                 {categoryOptions.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -695,7 +695,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Subcategory / Collection Tag
               </label>
               <input
@@ -703,12 +703,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}
                 placeholder="e.g. Cambric Cotton Suit Sets"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="apf-set-type" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label htmlFor="apf-set-type" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Set / combo type
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -724,7 +724,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                       setSetType(e.target.value);
                     }
                   }}
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26] cursor-pointer"
+                  className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink cursor-pointer"
                 >
                   <option value="">Not a set</option>
                   {SET_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -738,21 +738,21 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                     onChange={(e) => setSetType(e.target.value)}
                     placeholder="e.g. Kurti + palazzo + dupatta"
                     aria-label="Your own set / combo type"
-                    className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                    className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
                   />
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-[#2A1A26]/60">
+              <p className="mt-1.5 text-[11px] text-ink-muted">
                 "Complete the look" (bags, heels, jewellery... from Complete the Look in the menu) shows only on the pages of products with a set / combo type.
               </p>
               {!setType.trim() && !customSetType && nameHint.looksLikeSet && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-[#F3EEF8] px-3 py-2.5 text-xs text-[#4B1D3F]">
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-sunken px-3 py-2.5 text-xs text-ink">
                   <span>This name looks like a set. Choose its set / combo type so accessories show on its page.</span>
                   {nameHint.suggestion && (
                     <button
                       type="button"
                       onClick={() => setSetType(nameHint.suggestion)}
-                      className="h-8 px-3 rounded-full bg-[#4B1D3F] text-white font-bold hover:bg-[#3B1532] transition cursor-pointer"
+                      className="h-8 px-3 rounded-full bg-brand text-white font-bold hover:bg-brand-dark transition cursor-pointer"
                     >
                       Mark as "{nameHint.suggestion}"
                     </button>
@@ -762,7 +762,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 SKU (Stock Keeping Unit)
               </label>
               <input
@@ -770,12 +770,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 placeholder="e.g. SAG-COT-9901"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26] font-mono text-xs"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-mono text-xs"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Inventory Stock Quantity
               </label>
               <input
@@ -788,12 +788,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                   if (val === 0) setInStock(false);
                   else setInStock(true);
                 }}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Low-stock alert at (pieces)
               </label>
               <input
@@ -803,13 +803,13 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={lowStockOverride}
                 onChange={(e) => setLowStockOverride(e.target.value)}
                 placeholder="Store default"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">Optional. Leave empty to use the store setting in Products.</p>
+              <p className="mt-1 text-[11px] text-ink-muted">Optional. Leave empty to use the store setting in Products.</p>
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Product Description
               </label>
               <textarea
@@ -817,23 +817,23 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Write full product craftsmanship, silhouette, and drape details..."
-                className="w-full px-4 py-3 border border-[#4B1D3F]/15 rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full px-4 py-3 border border-line rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
           </div>
         </div>
 
         {/* Section 2: Pricing & Discount */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-[#2A1A26] pb-3 border-b border-[#4B1D3F]/10 flex items-center gap-3">
-            <DollarSign className="w-9 h-9 p-2 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] shrink-0" aria-hidden="true" />
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
+          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
+            <DollarSign className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
             Pricing & Currency (₹ INR)
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
-                Selling Price (₹) <span className="text-[#8A2E55]">*</span>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
+                Selling Price (₹) <span className="text-sale">*</span>
               </label>
               <input
                 type="number"
@@ -841,12 +841,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 required
                 value={price}
                 onChange={(e) => handlePriceChange(Number(e.target.value))}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26] font-bold"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-bold"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 MRP / Original Price (₹)
               </label>
               <input
@@ -854,12 +854,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 min="1"
                 value={originalPrice}
                 onChange={(e) => handleOriginalPriceChange(Number(e.target.value))}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Discount Calculated (%)
               </label>
               <div className="relative">
@@ -869,53 +869,53 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                   max="100"
                   value={discount}
                   onChange={(e) => setDiscount(Number(e.target.value))}
-                  className="w-full h-11 pl-4 pr-16 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-[#F3EEF8] text-[#2A1A26] font-semibold focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                  className="w-full h-11 pl-4 pr-16 border border-line rounded-full text-base sm:text-sm bg-sunken text-ink font-semibold focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
                 />
-                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-2.5 rounded-full bg-[#F7E4EA] inline-flex items-center text-[11px] font-bold text-[#8A2E55]">% OFF</span>
+                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-2.5 rounded-full bg-sale-tint inline-flex items-center text-[11px] font-bold text-sale">% OFF</span>
               </div>
             </div>
 
             {/* Colors Selection */}
-            <div className="pt-6 border-t border-[#4B1D3F]/10 sm:col-span-3">
+            <div className="pt-6 border-t border-line sm:col-span-3">
               <div className="flex justify-between items-center mb-3">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70">
-                  Available Colors & Sync Image <span className="text-[#8A2E55]">*</span>
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                  Available Colors & Sync Image <span className="text-sale">*</span>
                 </label>
                 <button
                   type="button"
                   onClick={addColor}
-                  className="h-9 px-4 text-sm bg-white border border-[#4B1D3F]/20 text-[#4B1D3F] rounded-full hover:bg-[#F3EEF8] font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  className="h-9 px-4 text-sm bg-white border border-line text-ink rounded-full hover:bg-sunken font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
                 >
                   + Add colour
                 </button>
               </div>
 
               {colourSuggestion && (
-                <div className="mb-4 flex flex-wrap items-center gap-3 p-3 bg-[#F3EEF8] border border-[#4B1D3F]/10 rounded-2xl">
+                <div className="mb-4 flex flex-wrap items-center gap-3 p-3 bg-sunken border border-line rounded-2xl">
                   <span
-                    className="w-9 h-9 rounded-full border-2 border-white shadow-md ring-1 ring-[#4B1D3F]/20 shrink-0"
+                    className="w-9 h-9 rounded-full border-2 border-white shadow-md ring-1 ring-line shrink-0"
                     style={{ backgroundColor: colourSuggestion.hex }}
                     aria-hidden="true"
                   />
                   {colourSuggestion.imageUrl && (
-                    <img src={colourSuggestion.imageUrl} alt="" className="w-7 h-9 rounded-md object-cover object-top border border-[#4B1D3F]/15" referrerPolicy="no-referrer" />
+                    <img src={colourSuggestion.imageUrl} alt="" className="w-7 h-9 rounded-md object-cover object-top border border-line" referrerPolicy="no-referrer" />
                   )}
                   <div className="min-w-0 grow">
-                    <span className="block text-[11px] uppercase font-bold tracking-wider text-[#2A1A26]/60">Detected colour</span>
-                    <span className="text-sm font-semibold text-[#2A1A26]">{colourSuggestion.name}</span>
-                    <span className="ml-2 text-xs font-mono text-[#2A1A26]/60">{colourSuggestion.hex}</span>
+                    <span className="block text-[11px] uppercase font-bold tracking-wider text-ink-muted">Detected colour</span>
+                    <span className="text-sm font-semibold text-ink">{colourSuggestion.name}</span>
+                    <span className="ml-2 text-xs font-mono text-ink-muted">{colourSuggestion.hex}</span>
                   </div>
                   <button
                     type="button"
                     onClick={addSuggestedColour}
-                    className="h-9 px-4 text-sm bg-[#4B1D3F] text-white rounded-full hover:bg-[#3B1532] font-semibold transition-colors cursor-pointer"
+                    className="h-9 px-4 text-sm bg-brand text-white rounded-full hover:bg-brand-dark font-semibold transition-colors cursor-pointer"
                   >
                     Add
                   </button>
                   <button
                     type="button"
                     onClick={() => setColourSuggestion(null)}
-                    className="w-9 h-9 flex items-center justify-center text-[#4B1D3F] hover:bg-white rounded-full transition-colors cursor-pointer"
+                    className="w-9 h-9 flex items-center justify-center text-ink hover:bg-white rounded-full transition-colors cursor-pointer"
                     title="Dismiss"
                     aria-label="Dismiss detected colour"
                   >
@@ -928,7 +928,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 {colors.map((color, idx) => {
                   const previewHex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`;
                   return (
-                    <div key={idx} className="p-4 bg-[#FBF7F3] border border-[#4B1D3F]/10 rounded-2xl space-y-3 relative">
+                    <div key={idx} className="p-4 bg-page border border-line rounded-2xl space-y-3 relative">
                       <button
                         type="button"
                         onClick={() => removeColor(idx)}
@@ -942,7 +942,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                         {/* Preview and Name */}
                         <div className="md:col-span-6 flex items-center gap-3">
                           <label
-                            className="relative w-10 h-10 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer overflow-hidden transition-all duration-200 hover:scale-105 ring-1 ring-[#4B1D3F]/20"
+                            className="relative w-10 h-10 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer overflow-hidden transition-all duration-200 hover:scale-105 ring-1 ring-line"
                             title="Click to open color picker"
                           >
                             <input
@@ -957,22 +957,22 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                             />
                           </label>
                           <div className="flex-grow space-y-1">
-                            <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#2A1A26]/60 block">Color Name</span>
+                            <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">Color Name</span>
                             <input
                               type="text"
                               placeholder="e.g. Royal Blue"
                               value={color.name}
                               onChange={(e) => updateColor(idx, 'name', e.target.value)}
-                              className="w-full h-10 px-4 text-base sm:text-sm bg-white border border-[#4B1D3F]/15 rounded-full focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                              className="w-full h-10 px-4 text-base sm:text-sm bg-white border border-line rounded-full focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
                             />
                           </div>
                         </div>
 
                         {/* Hex Code Input */}
                         <div className="md:col-span-6 space-y-1">
-                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#2A1A26]/60 block">Hex Color Code</span>
+                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">Hex Color Code</span>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#2A1A26]/50 text-sm font-mono">#</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint text-sm font-mono">#</span>
                             <input
                               type="text"
                               placeholder="58152D"
@@ -982,16 +982,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                                 const finalHex = typedVal.startsWith('#') ? typedVal : `#${typedVal}`;
                                 updateColor(idx, 'hex', finalHex);
                               }}
-                              className="w-full h-10 pl-8 pr-4 text-base sm:text-sm bg-white border border-[#4B1D3F]/15 rounded-full font-mono focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                              className="w-full h-10 pl-8 pr-4 text-base sm:text-sm bg-white border border-line rounded-full font-mono focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Sync Product Image */}
-                      <div className="pt-2 border-t border-[#4B1D3F]/10">
+                      <div className="pt-2 border-t border-line">
                         <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-[#2A1A26]/60 block">
+                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">
                             Tap an uploaded image to sync with this color:
                           </span>
                           {color.imageUrl && (
@@ -999,7 +999,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                               type="button"
                               onClick={() => detectColourForRow(idx)}
                               disabled={detectingIdx !== null}
-                              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-[#2A1A26]/80 bg-white border border-[#4B1D3F]/15 rounded-full hover:border-[#4B1D3F] transition disabled:opacity-50 disabled:cursor-wait"
+                              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-ink-muted bg-white border border-line rounded-full hover:border-ink transition disabled:opacity-50 disabled:cursor-wait"
                               title="Read this colour from the synced photo"
                             >
                               {detectingIdx === idx ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-current" /> : <Sparkles className="w-3.5 h-3.5 text-current" />}
@@ -1022,20 +1022,20 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                               }}
                               className={`relative w-12 h-15 rounded-lg overflow-hidden border-2 transition cursor-pointer ${
                                 color.imageUrl === imgUrl
-                                  ? 'border-[#4B1D3F] ring-2 ring-[#4B1D3F]/10 shadow-sm scale-105 opacity-100'
-                                  : 'border-transparent hover:border-[#4B1D3F]/20 opacity-60 hover:opacity-100'
+                                  ? 'border-ink ring-2 ring-line shadow-sm scale-105 opacity-100'
+                                  : 'border-transparent hover:border-line opacity-60 hover:opacity-100'
                               }`}
                             >
                               <img src={imgUrl} className="w-full h-full object-cover object-top" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
                               {color.imageUrl === imgUrl && (
-                                <div className="absolute inset-0 bg-[#4B1D3F]/10 flex items-center justify-center">
-                                  <span className="text-[11px] font-bold text-white bg-[#4B1D3F] px-1 py-0.5 rounded shadow-sm">Sync</span>
+                                <div className="absolute inset-0 bg-sunken flex items-center justify-center">
+                                  <span className="text-[11px] font-bold text-white bg-brand px-1 py-0.5 rounded shadow-sm">Sync</span>
                                 </div>
                               )}
                             </button>
                           ))}
                           {images.length === 0 && (
-                            <span className="text-xs text-[#2A1A26]/50 italic">Please upload product images below first.</span>
+                            <span className="text-xs text-ink-faint italic">Please upload product images below first.</span>
                           )}
                         </div>
                       </div>
@@ -1048,21 +1048,21 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         </div>
 
         {/* Section 3: Product Imagery */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-[#2A1A26] pb-3 border-b border-[#4B1D3F]/10 flex items-center gap-3">
-            <ImageIcon className="w-9 h-9 p-2 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] shrink-0" aria-hidden="true" />
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
+          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
+            <ImageIcon className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
             Product Gallery
           </h3>
 
           <div className="space-y-6">
             {/* Upload Area */}
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-[#4B1D3F]/20 rounded-3xl bg-[#FBF7F3] hover:border-[#4B1D3F]/45 hover:bg-[#F3EEF8] transition-colors cursor-pointer group">
+            <div className="flex flex-col items-center justify-center border-2 border-dashed border-line rounded-3xl bg-page hover:border-control hover:bg-sunken transition-colors cursor-pointer group">
               <label className="w-full flex flex-col items-center gap-2.5 px-6 py-10 cursor-pointer text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] flex items-center justify-center text-[#4B1D3F] group-hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-2xl bg-white border border-line shadow-[var(--sag-shadow)] flex items-center justify-center text-ink group-hover:scale-105 transition-transform">
                   <ImageIcon className="w-6 h-6 text-current" />
                 </div>
-                <span className="font-serif text-lg font-semibold text-[#2A1A26]">Upload product photos</span>
-                <span className="text-xs text-[#2A1A26]/60">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
+                <span className="font-serif text-lg font-semibold text-ink">Upload product photos</span>
+                <span className="text-xs text-ink-muted">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -1077,16 +1077,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
               {images.map((imgUrl, idx) => (
                 <div key={idx} className="min-w-0">
-                  <div className="rounded-2xl overflow-hidden border border-[#4B1D3F]/10 aspect-[4/5] bg-[#F3EEF8]">
+                  <div className="rounded-2xl overflow-hidden border border-line aspect-[4/5] bg-sunken">
                   {imgUrl && imgUrl.trim() !== "" ? (
                     <img src={imgUrl} alt={`Product preview ${idx + 1}`} className="w-full h-full object-cover object-top" />
                   ) : (
-                    <div className="w-full h-full bg-[#F3EEF8]" />
+                    <div className="w-full h-full bg-sunken" />
                   )}
                   </div>
                   <div className="mt-1.5 flex items-center justify-between gap-2">
                   {/* Image Badge */}
-                  <span className={`h-6 px-2.5 rounded-full inline-flex items-center text-[11px] font-semibold ${idx === 0 ? 'bg-[#4B1D3F] text-white' : 'bg-[#F3EEF8] text-[#4B1D3F]'}`}>
+                  <span className={`h-6 px-2.5 rounded-full inline-flex items-center text-[11px] font-semibold ${idx === 0 ? 'bg-brand text-white' : 'bg-sunken text-ink'}`}>
                     {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
                   </span>
 
@@ -1112,22 +1112,22 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         </div>
 
         {/* Section 4: Sizes, Colors & Fabric Specs */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-6">
-          <h3 className="font-serif text-xl font-semibold text-[#2A1A26] pb-3 border-b border-[#4B1D3F]/10 flex items-center gap-3">
-            <Layers className="w-9 h-9 p-2 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] shrink-0" aria-hidden="true" />
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-6">
+          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
+            <Layers className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
             Sizes, Colors & Fabric Specifications
           </h3>
 
           {/* Sizes Selection */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70">
-                Available Sizes <span className="text-[#8A2E55]">*</span>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                Available Sizes <span className="text-sale">*</span>
               </label>
               <button
                 type="button"
                 onClick={() => setSelectedSizes(sortSizes([...RANGE_SIZES, ...selectedSizes.filter((s) => s === 'XS')]))}
-                className="h-8 px-3 text-xs font-semibold text-[#4B1D3F] border border-[#4B1D3F]/20 bg-white rounded-full hover:bg-[#F3EEF8] transition-colors cursor-pointer"
+                className="h-8 px-3 text-xs font-semibold text-ink border border-line bg-white rounded-full hover:bg-sunken transition-colors cursor-pointer"
               >
                 Select S – 5XL
               </button>
@@ -1142,8 +1142,8 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                     onClick={() => toggleSize(sz)}
                     className={`h-10 min-w-12 px-4 rounded-full text-sm font-semibold border transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-[#4B1D3F] text-white border-[#4B1D3F] shadow-[var(--sag-shadow)]'
-                        : 'bg-white text-[#2A1A26]/80 border-[#4B1D3F]/15 hover:border-[#4B1D3F]/40'
+                        ? 'bg-brand text-white border-ink shadow-[var(--sag-shadow)]'
+                        : 'bg-white text-ink-muted border-line hover:border-control'
                     }`}
                   >
                     {sz} {isSelected && '✓'}
@@ -1151,7 +1151,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 );
               })}
             </div>
-            <p className="mt-2 text-[11px] text-[#2A1A26]/60">
+            <p className="mt-2 text-[11px] text-ink-muted">
               Choosing Free Size replaces the other sizes.
             </p>
           </div>
@@ -1159,9 +1159,9 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
 
 
           {/* Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-[#4B1D3F]/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-line">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Fabric Material
               </label>
               <input
@@ -1169,12 +1169,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={fabric}
                 onChange={(e) => setFabric(e.target.value)}
                 placeholder="e.g. 100% Pure Cambric Cotton with Chiffon Dupatta"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Fit & Silhouette
               </label>
               <input
@@ -1182,12 +1182,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={fit}
                 onChange={(e) => setFit(e.target.value)}
                 placeholder="e.g. Regular Straight Cut Anarkali"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Occasion
               </label>
               <input
@@ -1195,12 +1195,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={occasion}
                 onChange={(e) => setOccasion(e.target.value)}
                 placeholder="e.g. Festive, Wedding, Office, Daily Wear"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
                 Wash & Care Instructions
               </label>
               <input
@@ -1208,160 +1208,160 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 value={washCare}
                 onChange={(e) => setWashCare(e.target.value)}
                 placeholder="e.g. Gentle Hand Wash / Dry Clean for First Wash"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
             </div>
           </div>
         </div>
 
         {/* Section 5: Storefront Badges & Visibility */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-4">
-          <h3 className="font-serif text-xl font-semibold text-[#2A1A26] pb-3 border-b border-[#4B1D3F]/10 flex items-center gap-3">
-            <Sparkles className="w-9 h-9 p-2 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] shrink-0" aria-hidden="true" />
+        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-4">
+          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
+            <Sparkles className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
             Merchandising Badges & Visibility
           </h3>
 
           <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-3">
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isFeatured}
                 onChange={(e) => setIsFeatured(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-[#2A1A26]">Featured Product</span>
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="order-first text-sm font-semibold text-ink">Featured Product</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isNewArrival}
                 onChange={(e) => setIsNewArrival(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-[#2A1A26]">New Arrival</span>
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="order-first text-sm font-semibold text-ink">New Arrival</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isBestSeller}
                 onChange={(e) => setIsBestSeller(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-[#2A1A26]">Best Seller</span>
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="order-first text-sm font-semibold text-ink">Best Seller</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isSale}
                 onChange={(e) => setIsSale(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
               <span className="order-first text-sm font-semibold text-rose-700">Sale Item</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isTrending}
                 onChange={(e) => setIsTrending(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-[#2A1A26]">Trending Now</span>
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="order-first text-sm font-semibold text-ink">Trending Now</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={isFestive}
                 onChange={(e) => setIsFestive(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-[#2A1A26]">Festive Edit</span>
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="order-first text-sm font-semibold text-ink">Festive Edit</span>
             </label>
 
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer hover:bg-[#F3EEF8] transition-colors has-[:checked]:border-[#4B1D3F]/25 has-[:checked]:bg-[#F3EEF8]">
+            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
               <input
                 type="checkbox"
                 checked={published}
                 onChange={(e) => setPublished(e.target.checked)}
                 className="peer sr-only"
               />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
               <span className="order-first text-sm font-semibold text-emerald-800">Published on store</span>
             </label>
           </div>
         </div>
 
         {/* Section 6: SEO (optional, collapsible) */}
-        <details className="group bg-white p-5 sm:p-7 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]" open={Boolean(seoTitle || seoDescription || searchKeywords)}>
-          <summary className="cursor-pointer list-none flex items-center justify-between gap-2 font-serif text-xl font-semibold text-[#2A1A26]">
+        <details className="group bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)]" open={Boolean(seoTitle || seoDescription || searchKeywords)}>
+          <summary className="cursor-pointer list-none flex items-center justify-between gap-2 font-serif text-xl font-semibold text-ink">
             <span>SEO &amp; search (optional)</span>
-            <span className="h-8 px-3.5 rounded-full border border-[#4B1D3F]/20 inline-flex items-center text-xs font-sans font-semibold text-[#4B1D3F] group-open:hidden">Show</span>
-            <span className="h-8 px-3.5 rounded-full border border-[#4B1D3F]/20 items-center text-xs font-sans font-semibold text-[#4B1D3F] hidden group-open:inline-flex">Hide</span>
+            <span className="h-8 px-3.5 rounded-full border border-line inline-flex items-center text-xs font-sans font-semibold text-ink group-open:hidden">Show</span>
+            <span className="h-8 px-3.5 rounded-full border border-line items-center text-xs font-sans font-semibold text-ink hidden group-open:inline-flex">Hide</span>
           </summary>
           <div className="mt-4 grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">Page title</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Page title</label>
               <input
                 type="text"
                 maxLength={120}
                 value={seoTitle}
                 onChange={(e) => setSeoTitle(e.target.value)}
                 placeholder={name ? `${name} | Suit Aura Girls` : 'Used as the browser / Google title'}
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
+              <p className="mt-1 text-[11px] text-ink-muted">{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">Meta description</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Meta description</label>
               <textarea
                 rows={2}
                 maxLength={320}
                 value={seoDescription}
                 onChange={(e) => setSeoDescription(e.target.value)}
                 placeholder="Short summary shown under the title in search results"
-                className="w-full px-4 py-3 border border-[#4B1D3F]/15 rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full px-4 py-3 border border-line rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
+              <p className="mt-1 text-[11px] text-ink-muted">{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1">Search keywords</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Search keywords</label>
               <input
                 type="text"
                 maxLength={300}
                 value={searchKeywords}
                 onChange={(e) => setSearchKeywords(e.target.value)}
                 placeholder="e.g. chikankari, lucknowi, office wear"
-                className="w-full h-11 px-4 border border-[#4B1D3F]/15 rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 text-[#2A1A26]"
+                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
               />
-              <p className="mt-1 text-[11px] text-[#2A1A26]/60">Comma separated. Shoppers searching these words on the store will find this product.</p>
+              <p className="mt-1 text-[11px] text-ink-muted">Comma separated. Shoppers searching these words on the store will find this product.</p>
             </div>
           </div>
         </details>
 
         {/* Bottom Save/Cancel Actions */}
-        <div className="sticky bottom-3 z-20 flex items-center justify-end gap-2.5 p-2 sm:p-2.5 rounded-full bg-white/95 border border-[#4B1D3F]/10 shadow-[0_8px_30px_-12px_rgba(42,26,38,0.25)]">
+        <div className="sticky bottom-3 z-20 flex items-center justify-end gap-2.5 p-2 sm:p-2.5 rounded-full bg-white/95 border border-line shadow-[0_8px_30px_-12px_rgba(27,26,23,0.25)]">
           <button
             type="button"
             disabled={isSaving}
             onClick={handleCancel}
-            className="h-11 px-5 border border-[#4B1D3F]/20 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            className="h-11 px-5 border border-line bg-white hover:bg-sunken text-ink rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+            className="h-11 px-6 bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
           >
             {isSaving ? (
               <RefreshCw className="w-4 h-4 animate-spin text-current" />

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Briefcase, Check, ChevronDown, Loader2, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Briefcase, Check, ChevronDown, Loader2, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
 import { HomeIcon, PinIcon } from './StoreIcons';
 import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
@@ -23,15 +23,15 @@ import {
   syncAddressBook,
 } from '../lib/addressBook';
 
-const fieldClass = 'w-full h-12 px-4 bg-white border rounded-full text-sm text-[#2A1A26] transition focus:outline-none focus:ring-4 focus:ring-[#F3EEF8] placeholder:text-[#2A1A26]/40';
-const labelClass = 'block text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/65 pl-1';
-const actionClass = 'inline-flex items-center justify-center gap-1.5 min-h-10 px-3 rounded-full text-[13px] font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer disabled:opacity-50';
+const errorText = 'mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger';
+const helpText = 'mt-1.5 block text-[13px] leading-[18px] text-ink-muted';
+const groupTitle = 'sm:col-span-2 text-base leading-[22px] font-semibold text-ink';
 
-/** Home / Work / Other mark; `mono` draws it in the text colour (for plum chips). */
-const TypeIcon: React.FC<{ type: AddressType; className: string; mono?: boolean }> = ({ type, className, mono = false }) => {
-  if (type === 'Work') return <Briefcase className={`${className} ${mono ? 'text-current' : 'text-[#4B1D3F]'}`} aria-hidden="true" />;
+/** Home / Work / Other mark, drawn in the colour of the text around it. */
+const TypeIcon: React.FC<{ type: AddressType; className: string; mono?: boolean }> = ({ type, className }) => {
+  if (type === 'Work') return <Briefcase className={className} aria-hidden="true" />;
   const Icon = type === 'Other' ? PinIcon : HomeIcon;
-  return <Icon className={className} mono={mono} live={false} />;
+  return <Icon className={className} mono live={false} />;
 };
 
 type OptionalText ='altMobile' | 'landmark' | 'tehsil' | 'district';
@@ -181,152 +181,161 @@ const AddressSheet: React.FC<{
     }
   };
 
-  const input = (name: keyof Draft, label: string, props: React.InputHTMLAttributes<HTMLInputElement> & { required?: boolean } = {}, span = '') => {
+  const input = (name: keyof Draft, label: string, props: React.InputHTMLAttributes<HTMLInputElement> & { required?: boolean; optional?: boolean } = {}, span = '') => {
     const error = errors[name];
-    const { required, ...rest } = props;
+    const { required, optional, ...rest } = props;
+    const id = `adr-${name}`;
     return (
-      <label className={`block space-y-1.5 ${span}`}>
-        <span className={labelClass}>{label}{required ? ' *' : ''}</span>
+      <div className={span}>
+        <label htmlFor={id} className="sag-label">{label}{optional ? <span className="font-normal text-ink-muted"> (optional)</span> : null}</label>
         <input
+          id={id}
           name={name}
           value={String(draft[name] ?? '')}
           onChange={(e) => set(name, e.target.value as never)}
+          aria-required={required || undefined}
           aria-invalid={Boolean(error) || undefined}
           aria-describedby={error ? `adr-err-${name}` : undefined}
-          className={`${fieldClass} ${error ? 'border-rose-300 focus:border-rose-400' : 'border-[#4B1D3F]/20 focus:border-[#4B1D3F]/60'}`}
+          enterKeyHint="next"
+          className="sag-input"
           {...rest}
         />
-        {error && <span id={`adr-err-${name}`} className="block text-xs text-rose-700 pl-1">{error}</span>}
-      </label>
+        {error && <p id={`adr-err-${name}`} role="alert" className={errorText}><AlertCircle className="w-4 h-4 mt-px shrink-0" aria-hidden="true" />{error}</p>}
+      </div>
     );
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="address-sheet-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#FBF7F3] w-full sm:max-w-xl max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-3xl shadow-[var(--sag-shadow)] animate-in fade-in slide-in-from-bottom-5"
+        className="bg-white text-ink w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-sheet sm:rounded-card shadow-[var(--sag-shadow-pop)] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2.5 h-1 w-10 rounded-full bg-[#4B1D3F]/15" aria-hidden="true" />
-        <div className="px-5 sm:px-6 pt-3 sm:pt-5 pb-4 border-b border-[#4B1D3F]/10 space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              {step === 'details' && (
-                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-10 h-10 -ml-2 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center text-[#4B1D3F] cursor-pointer">
-                  <ArrowLeft className="w-5 h-5" />
+        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-sunken-deep" aria-hidden="true" />
+        <div className="px-2 sm:px-4 pt-2 sm:pt-4 pb-3 border-b border-line">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 min-w-0">
+              {step === 'details' ? (
+                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+                  <ArrowLeft className="w-[22px] h-[22px]" />
                 </button>
-              )}
+              ) : <span className="w-2 shrink-0" aria-hidden="true" />}
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45]">Step {step === 'location' ? '1' : '2'} of 2</p>
-                <h2 id="address-sheet-title" className="font-serif text-2xl text-[#4B1D3F] leading-tight">
+                <h2 id="address-sheet-title" className="text-base leading-[22px] font-semibold text-ink">
                   {step === 'location' ? 'Find your location' : initial ? 'Edit address' : 'Address details'}
                 </h2>
+                <p className="text-[13px] leading-[18px] text-ink-muted">Step {step === 'location' ? '1' : '2'} of 2</p>
               </div>
             </div>
-            <button type="button" onClick={close} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center text-[#4B1D3F] cursor-pointer">
-              <X className="w-5 h-5" />
+            <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+              <X className="w-[22px] h-[22px]" />
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-1.5" aria-hidden="true">
-            <span className="h-1 rounded-full bg-[#4B1D3F]" />
-            <span className={`h-1 rounded-full transition-colors ${step === 'details' ? 'bg-[#4B1D3F]' : 'bg-[#E6DDF0]'}`} />
+          <div className="mt-2 mx-2 grid grid-cols-2 gap-1" aria-hidden="true">
+            <span className={`h-[3px] rounded-full ${step === 'details' ? 'bg-ink' : 'bg-brand'}`} />
+            <span className={`h-[3px] rounded-full ${step === 'details' ? 'bg-brand' : 'bg-line'}`} />
           </div>
         </div>
 
         {step === 'location' ? (
-          <div className="px-5 sm:px-6 py-5 overflow-y-auto overscroll-contain">
+          <div className="px-4 sm:px-6 py-4 overflow-y-auto overscroll-contain">
             <MapPinPicker onConfirm={confirmPlace} onManual={() => setStep('details')} />
           </div>
         ) : (
           <form onSubmit={submit} noValidate className="flex-1 min-h-0 flex flex-col">
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-6 py-5 grid gap-4 sm:grid-cols-2 content-start">
-            <p className="sm:col-span-2 font-serif text-lg text-[#4B1D3F] -mb-1">Contact details</p>
-            {input('fullName', 'Full name', { required: true, autoComplete: 'name', maxLength: 80 }, 'sm:col-span-2')}
-            {input('mobile', 'Mobile number', { required: true, type: 'tel', inputMode: 'numeric', autoComplete: 'tel-national', maxLength: 10, placeholder: '10-digit mobile', onChange: (e) => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10)) })}
-            {input('altMobile', 'Alternate mobile', { type: 'tel', inputMode: 'numeric', maxLength: 10, placeholder: 'Optional', onChange: (e) => set('altMobile', e.target.value.replace(/\D/g, '').slice(0, 10)) })}
-            <p className="sm:col-span-2 font-serif text-lg text-[#4B1D3F] -mb-1 pt-3 mt-1 border-t border-[#4B1D3F]/8">Address</p>
-            {input('houseFlat', 'Flat / house / building', { required: true, autoComplete: 'address-line1', maxLength: 200 }, 'sm:col-span-2')}
-            {input('area', 'Area / sector / locality', { autoComplete: 'address-line2', maxLength: 120, placeholder: 'Optional' })}
-            {input('street', 'Street / road', { maxLength: 200, placeholder: 'Optional' })}
-            {input('landmark', 'Landmark', { maxLength: 120, placeholder: 'Optional, e.g. City Hospital' }, 'sm:col-span-2')}
-            <label className="block space-y-1.5">
-              <span className={labelClass}>PIN code *</span>
-              <span className="relative block">
-                <input
-                  name="pincode"
-                  value={draft.pincode}
-                  onChange={(e) => onPincode(e.target.value)}
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="postal-code"
-                  placeholder="6-digit PIN"
-                  aria-invalid={Boolean(errors.pincode) || undefined}
-                  aria-describedby={errors.pincode ? 'adr-err-pincode' : pinNote ? 'adr-note-pincode' : undefined}
-                  className={`${fieldClass} ${errors.pincode ? 'border-rose-300 focus:border-rose-400' : 'border-[#4B1D3F]/20 focus:border-[#4B1D3F]/60'}`}
-                />
-                {pinLoading && <Loader2 className="w-4 h-4 animate-spin text-[#4B1D3F] absolute right-4 top-1/2 -translate-y-1/2" aria-label="Checking PIN code" />}
-              </span>
-              {errors.pincode
-                ? <span id="adr-err-pincode" className="block text-xs text-rose-700 pl-1">{errors.pincode}</span>
-                : pinNote && <span id="adr-note-pincode" className="block text-xs text-[#2A1A26]/60 pl-1">{pinNote}</span>}
-            </label>
-            {input('city', 'Village / town / city', { required: true, autoComplete: 'address-level2', maxLength: 80 })}
-            {input('tehsil', 'Tehsil', { maxLength: 80, placeholder: 'Optional' })}
-            {input('district', 'District', { maxLength: 80, placeholder: 'Optional' })}
-            <label className="block space-y-1.5 sm:col-span-2">
-              <span className={labelClass}>State *</span>
-              <span className="relative block">
-              <select
-                name="state"
-                value={matchState(draft.state)}
-                onChange={(e) => set('state', e.target.value)}
-                autoComplete="address-level1"
-                aria-invalid={Boolean(errors.state) || undefined}
-                aria-describedby={errors.state ? 'adr-err-state' : undefined}
-                className={`${fieldClass} appearance-none cursor-pointer ${errors.state ? 'border-rose-300 focus:border-rose-400' : 'border-[#4B1D3F]/20 focus:border-[#4B1D3F]/60'}`}
-              >
-                <option value="">Select state</option>
-                {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-[#4B1D3F]/60 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
-              </span>
-              {errors.state && <span id="adr-err-state" className="block text-xs text-rose-700 pl-1">{errors.state}</span>}
-            </label>
-
-            <fieldset className="sm:col-span-2 space-y-1.5">
-              <legend className={labelClass}>Address type</legend>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {(['Home', 'Work', 'Other'] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    aria-pressed={draft.type === t}
-                    onClick={() => set('type', t)}
-                    className={`inline-flex items-center gap-2 h-11 pl-4 pr-5 rounded-full border text-sm font-medium cursor-pointer transition-colors ${draft.type === t ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/20 text-[#2A1A26]/80 hover:bg-[#F3EEF8]'}`}
-                  >
-                    <TypeIcon type={t} className="w-[18px] h-[18px]" mono={draft.type === t} /> {t}
-                  </button>
-                ))}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 grid gap-4 sm:grid-cols-2 content-start">
+              <p className={groupTitle}>Contact</p>
+              {input('fullName', 'Full name', { required: true, autoComplete: 'name', autoCapitalize: 'words', maxLength: 80 }, 'sm:col-span-2')}
+              {input('mobile', 'Mobile number', { required: true, type: 'tel', inputMode: 'numeric', autoComplete: 'tel-national', maxLength: 10, placeholder: '10-digit mobile', onChange: (e) => set('mobile', e.target.value.replace(/\D/g, '').slice(0, 10)) })}
+              {input('altMobile', 'Alternate mobile', { optional: true, type: 'tel', inputMode: 'numeric', maxLength: 10, onChange: (e) => set('altMobile', e.target.value.replace(/\D/g, '').slice(0, 10)) })}
+              <p className={`${groupTitle} pt-4 border-t border-line`}>Address</p>
+              {input('houseFlat', 'Flat / house / building', { required: true, autoComplete: 'address-line1', maxLength: 200 }, 'sm:col-span-2')}
+              {input('area', 'Area / sector / locality', { optional: true, autoComplete: 'address-line2', maxLength: 120 })}
+              {input('street', 'Street / road', { optional: true, maxLength: 200 })}
+              {input('landmark', 'Landmark', { optional: true, maxLength: 120, placeholder: 'e.g. City Hospital' }, 'sm:col-span-2')}
+              <div>
+                <label htmlFor="adr-pincode" className="sag-label">PIN code</label>
+                <span className="relative block">
+                  <input
+                    id="adr-pincode"
+                    name="pincode"
+                    value={draft.pincode}
+                    onChange={(e) => onPincode(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoComplete="postal-code"
+                    enterKeyHint="next"
+                    placeholder="6-digit PIN"
+                    aria-required="true"
+                    aria-invalid={Boolean(errors.pincode) || undefined}
+                    aria-describedby={errors.pincode ? 'adr-err-pincode' : pinNote ? 'adr-note-pincode' : undefined}
+                    className="sag-input sag-num pr-11"
+                  />
+                  {pinLoading && <Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2" aria-label="Checking PIN code" />}
+                </span>
+                {errors.pincode
+                  ? <p id="adr-err-pincode" role="alert" className={errorText}><AlertCircle className="w-4 h-4 mt-px shrink-0" aria-hidden="true" />{errors.pincode}</p>
+                  : pinNote && <span id="adr-note-pincode" className={helpText}>{pinNote}</span>}
               </div>
-            </fieldset>
+              {input('city', 'Village / town / city', { required: true, autoComplete: 'address-level2', maxLength: 80 })}
+              {input('tehsil', 'Tehsil', { optional: true, maxLength: 80 })}
+              {input('district', 'District', { optional: true, maxLength: 80 })}
+              <div className="sm:col-span-2">
+                <label htmlFor="adr-state" className="sag-label">State</label>
+                <span className="relative block">
+                  <select
+                    id="adr-state"
+                    name="state"
+                    value={matchState(draft.state)}
+                    onChange={(e) => set('state', e.target.value)}
+                    autoComplete="address-level1"
+                    aria-required="true"
+                    aria-invalid={Boolean(errors.state) || undefined}
+                    aria-describedby={errors.state ? 'adr-err-state' : undefined}
+                    className="sag-input appearance-none pr-10 cursor-pointer"
+                  >
+                    <option value="">Select state</option>
+                    {INDIAN_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <ChevronDown className="w-[18px] h-[18px] text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                </span>
+                {errors.state && <p id="adr-err-state" role="alert" className={errorText}><AlertCircle className="w-4 h-4 mt-px shrink-0" aria-hidden="true" />{errors.state}</p>}
+              </div>
 
-            <label className="sm:col-span-2 flex items-center gap-3 min-h-12 px-4 py-2.5 rounded-2xl border border-[#4B1D3F]/12 bg-white text-sm text-[#2A1A26]/85 cursor-pointer has-[:disabled]:opacity-70 has-[:disabled]:cursor-default">
-              <input type="checkbox" checked={draft.isDefault} disabled={firstAddress || Boolean(initial?.isDefault)} onChange={(e) => set('isDefault', e.target.checked)} className="w-5 h-5 shrink-0 accent-[#4B1D3F]" />
-              <span className="min-w-0">
-                <span className="block font-medium text-[#2A1A26]">Make this my default address</span>
-                <span className="block text-[13px] text-[#2A1A26]/60">Used first at checkout</span>
-              </span>
-            </label>
-          </div>
+              <fieldset className="sm:col-span-2">
+                <legend className="sag-label">Address type</legend>
+                <div className="flex flex-wrap gap-2">
+                  {(['Home', 'Work', 'Other'] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      aria-pressed={draft.type === t}
+                      onClick={() => set('type', t)}
+                      className="sag-chip h-11 gap-2 text-sm"
+                    >
+                      <TypeIcon type={t} className="w-[18px] h-[18px]" /> {t}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
 
-            <div className="grid grid-cols-2 gap-2 px-5 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:pb-5 border-t border-[#4B1D3F]/10 bg-[#FBF7F3] sm:rounded-b-3xl">
-              <button type="button" onClick={close} disabled={saving} className="sag-btn-outline h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer disabled:opacity-60">Cancel</button>
-              <button type="submit" disabled={saving} className="sag-btn-primary h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-                {saving && <Loader2 className="w-4 h-4 animate-spin text-current" />}
+              <label className="sm:col-span-2 flex items-center gap-3 min-h-11 text-sm leading-5 text-ink cursor-pointer has-[:disabled]:cursor-default">
+                <input type="checkbox" checked={draft.isDefault} disabled={firstAddress || Boolean(initial?.isDefault)} onChange={(e) => set('isDefault', e.target.checked)} className="w-[22px] h-[22px] shrink-0 rounded-badge accent-brand" />
+                <span className="min-w-0">
+                  <span className="block font-semibold">Make this my default address</span>
+                  <span className="block text-[13px] leading-[18px] text-ink-muted">Used first at checkout</span>
+                </span>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-[auto_1fr] sm:grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line">
+              <button type="button" onClick={close} disabled={saving} className="sag-btn-outline h-12 px-5 text-[15px]">Cancel</button>
+              <button type="submit" disabled={saving} className="sag-btn-primary h-12 px-4 gap-2 text-[15px]">
+                {saving && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
                 {saving ? 'Saving…' : 'Save address'}
               </button>
             </div>
@@ -389,70 +398,79 @@ export const AddressBook: React.FC<{
     }
   };
 
+  const linkBtn = 'sag-link gap-1.5 px-2 disabled:opacity-50';
+
   return (
     <section className="space-y-4" aria-label="Saved addresses">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-serif text-2xl sm:text-[28px] leading-tight text-[#4B1D3F]">Saved addresses</h2>
-          <p className="mt-1 text-sm text-[#2A1A26]/70">Your default address fills in checkout automatically.</p>
+          <h2 className="text-[20px] leading-7 font-semibold text-ink">Saved addresses</h2>
+          <p className="mt-1 text-sm leading-5 text-ink-muted">Your default address fills in checkout automatically.</p>
         </div>
-        <button type="button" onClick={() => setSheet({ editing: null })} className="sag-btn-primary w-full sm:w-auto h-11 px-5 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer">
-          <Plus className="w-4 h-4 text-current" /> Add new address
-        </button>
+        {addresses.length > 0 && (
+          <button type="button" onClick={() => setSheet({ editing: null })} className="sag-btn-outline w-full sm:w-auto h-11 px-4 gap-2 text-sm">
+            <Plus className="w-4 h-4" aria-hidden="true" /> Add new address
+          </button>
+        )}
       </div>
 
       {loading && addresses.length === 0 ? (
-        <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#9C7A45]" /></div>
+        <div className="py-12 flex justify-center" role="status" aria-label="Loading your addresses"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
       ) : addresses.length === 0 ? (
-        <div className="sag-card py-12 px-5 text-center">
-          <span className="w-16 h-16 mx-auto rounded-full bg-[#F3EEF8] ring-1 ring-[#4B1D3F]/8 flex items-center justify-center"><PinIcon className="w-8 h-8" /></span>
-          <p className="mt-4 font-serif text-2xl text-[#2A1A26]">No saved addresses yet</p>
-          <p className="mt-1.5 text-sm text-[#2A1A26]/70">Add your home or work address to check out faster.</p>
-          <button type="button" onClick={() => setSheet({ editing: null })} className="mt-5 sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Add address</button>
+        <div className="sag-card px-4 py-10 text-center">
+          <span className="w-14 h-14 mx-auto rounded-full bg-sunken text-ink-muted flex items-center justify-center"><PinIcon className="w-7 h-7" mono /></span>
+          <p className="mt-4 text-[17px] leading-6 font-semibold text-ink">No saved addresses yet</p>
+          <p className="mt-1 text-sm leading-5 text-ink-muted">Add your home or work address to check out faster.</p>
+          <button type="button" onClick={() => setSheet({ editing: null })} className={`${onSelect ? 'sag-btn-outline' : 'sag-btn-primary'} mt-5 h-12 px-6 gap-2`}>
+            <Plus className="w-[18px] h-[18px]" aria-hidden="true" /> Add address
+          </button>
         </div>
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {addresses.map((a) => {
             const selected = Boolean(onSelect) && selectedId === a.id;
             return (
-              <li key={a.id} className={`sag-card p-4 sm:p-5 flex flex-col gap-3 ${selected ? 'ring-2 ring-[#4B1D3F]' : ''}`}>
+              <li key={a.id} data-selected={selected} className="sag-card p-4 flex flex-col gap-2.5">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3EEF8] pl-2 pr-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#4B1D3F]">
-                    <TypeIcon type={a.type} className="w-4 h-4" /> {a.type}
+                  <span className="sag-badge gap-1.5 bg-sunken text-ink">
+                    <TypeIcon type={a.type} className="w-3.5 h-3.5" /> {a.type}
                   </span>
                   {a.isDefault && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-emerald-800">
-                      <Check className="w-3 h-3" aria-hidden="true" /> Default
+                    <span className="sag-badge gap-1 bg-ok-tint text-ok">
+                      <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" /> Default
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-[#2A1A26]/75 leading-relaxed min-w-0">
-                  <p className="font-semibold text-base text-[#2A1A26]">{a.fullName}</p>
+                <div className="text-sm leading-5 text-ink-muted min-w-0">
+                  <p className="text-[15px] leading-[22px] font-semibold text-ink">{a.fullName}</p>
                   <p className="break-words">{formatAddressLine(a)}</p>
-                  <p className="mt-1 text-[13px] text-[#2A1A26]/65">Mobile {a.mobile}{a.altMobile ? ` · Alt ${a.altMobile}` : ''}</p>
+                  <p className="sag-num mt-1 text-[13px] leading-[18px]">Mobile {a.mobile}{a.altMobile ? ` · Alt ${a.altMobile}` : ''}</p>
                 </div>
                 {confirmDelete === a.id ? (
-                  <div className="rounded-2xl bg-rose-50 border border-rose-200 p-3 space-y-2" role="alert">
-                    <p className="text-sm text-rose-700">Delete this address?</p>
+                  <div className="mt-auto rounded-control bg-danger-tint border border-danger-line p-3 space-y-2" role="alert">
+                    <p className="text-sm leading-5 font-medium text-danger">Delete this address?</p>
                     <div className="flex gap-2">
-                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-10 px-4 rounded-full bg-rose-700 text-white text-xs font-semibold uppercase tracking-[0.1em] inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
-                        {busy === a.id && <Loader2 className="w-4 h-4 animate-spin text-current" />} Delete
+                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-11 px-4 rounded-control bg-danger text-white text-sm font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+                        {busy === a.id && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />} Delete
                       </button>
-                      <button type="button" onClick={() => setConfirmDelete('')} className="h-10 px-4 rounded-full border border-rose-200 bg-white text-rose-700 text-xs font-semibold uppercase tracking-[0.1em] cursor-pointer">Keep</button>
+                      <button type="button" onClick={() => setConfirmDelete('')} className="sag-btn-outline h-11 px-4 text-sm">Keep</button>
                     </div>
                   </div>
                 ) : (
-                  <div className="mt-auto flex flex-wrap items-center gap-1 -mx-2 pt-2 border-t border-[#4B1D3F]/8">
+                  <div className="mt-auto pt-1 border-t border-line">
+                    <div className="flex flex-wrap items-center gap-x-1 -mx-2">
+                      <button type="button" onClick={() => setSheet({ editing: a })} className={linkBtn}><Pencil className="w-4 h-4" aria-hidden="true" /> Edit</button>
+                      <button type="button" onClick={() => setConfirmDelete(a.id)} className={linkBtn}><Trash2 className="w-4 h-4" aria-hidden="true" /> Delete</button>
+                      {!a.isDefault && (
+                        <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => setDefaultAddress(a.id), 'Default address updated.')} className={linkBtn}>
+                          {busy === a.id ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <Star className="w-4 h-4" aria-hidden="true" />} Set default
+                        </button>
+                      )}
+                    </div>
                     {onSelect && (
-                      <button type="button" onClick={() => onSelect(a)} aria-pressed={selected} className={`${selected ? 'sag-btn-primary' : 'sag-btn-outline'} h-10 px-4 mr-1 ml-2 text-xs font-semibold uppercase tracking-[0.1em] cursor-pointer`}>
-                        {selected ? 'Selected' : 'Deliver here'}
-                      </button>
-                    )}
-                    <button type="button" onClick={() => setSheet({ editing: a })} className={actionClass}><Pencil className="w-4 h-4" /> Edit</button>
-                    <button type="button" onClick={() => setConfirmDelete(a.id)} className={actionClass}><Trash2 className="w-4 h-4" /> Delete</button>
-                    {!a.isDefault && (
-                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => setDefaultAddress(a.id), 'Default address updated.')} className={actionClass}>
-                        {busy === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4" />} Set default
+                      <button type="button" onClick={() => onSelect(a)} aria-pressed={selected} className="sag-btn-outline w-full h-11 mt-1 gap-2 text-sm">
+                        {selected && <Check className="w-4 h-4" strokeWidth={2.5} aria-hidden="true" />}
+                        {selected ? 'Selected' : 'Use this address'}
                       </button>
                     )}
                   </div>

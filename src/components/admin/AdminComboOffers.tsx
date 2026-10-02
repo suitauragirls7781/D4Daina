@@ -50,57 +50,57 @@ export const AdminComboOffers: React.FC = () => {
     }
   };
 
-  const inputClass = 'w-full h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10';
+  const inputClass = 'sag-input';
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        eyebrow="Promotions"
+        eyebrow="Offers"
         title="Combo offer"
         icon={<Gift className="text-current" />}
         description="A percentage off the whole bag when a customer buys enough outfits. It is applied automatically in the bag and re-checked by the server at checkout. Accessories from Complete the look don't count towards the minimum; the % comes off the whole bag."
       />
 
-      <form onSubmit={save} className="bg-white rounded-3xl p-5 sm:p-7 border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-5">
-        <div className="flex items-center gap-3 pb-4 border-b border-[#4B1D3F]/10">
-          <span className="w-9 h-9 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center shrink-0"><Gift className="w-[18px] h-[18px] text-current" /></span>
-          <h3 className="font-serif font-semibold text-xl text-[#2A1A26]">Offer rules</h3>
-          {!loaded && <Loader2 className="w-4 h-4 animate-spin text-[#9C7A45]" />}
+      <form onSubmit={save} className="sag-card p-4 sm:p-6 space-y-4">
+        <div className="flex items-center gap-3 pb-4 border-b border-line">
+          <span className="w-9 h-9 rounded-xl bg-sunken text-ink flex items-center justify-center shrink-0"><Gift className="w-[18px] h-[18px] text-current" /></span>
+          <h3 className="text-[17px] leading-6 font-semibold text-ink">Offer rules</h3>
+          {!loaded && <Loader2 className="w-4 h-4 animate-spin text-ink-muted" />}
         </div>
 
-        <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] text-sm font-semibold text-[#2A1A26] cursor-pointer">
+        <label className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white text-sm font-semibold text-ink cursor-pointer has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
           <input type="checkbox" checked={form.enabled} onChange={(e) => setForm({ ...form, enabled: e.target.checked })} className="peer sr-only" />
-          <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+          <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
           <span className="order-first">Offer is live on the store</span>
         </label>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#2A1A26]/70 uppercase tracking-[0.12em] block">Discount (%)</span>
-            <input type="number" min={1} max={50} value={form.percent} onChange={(e) => setForm({ ...form, percent: Number(e.target.value) })} className={inputClass} />
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          <label>
+            <span className="sag-label">Discount (%)</span>
+            <input type="number" inputMode="numeric" min={1} max={50} value={form.percent} onChange={(e) => setForm({ ...form, percent: Number(e.target.value) })} className={inputClass} />
           </label>
-          <label className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#2A1A26]/70 uppercase tracking-[0.12em] block">Minimum pieces in bag</span>
-            <input type="number" min={2} max={10} value={form.minItems} onChange={(e) => setForm({ ...form, minItems: Number(e.target.value) })} className={inputClass} />
+          <label>
+            <span className="sag-label">Minimum pieces in bag</span>
+            <input type="number" inputMode="numeric" min={2} max={10} value={form.minItems} onChange={(e) => setForm({ ...form, minItems: Number(e.target.value) })} className={inputClass} />
           </label>
-          <label className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#2A1A26]/70 uppercase tracking-[0.12em] block">Section label</span>
+          <label className="col-span-2 md:col-span-1">
+            <span className="sag-label">Section label</span>
             <input type="text" maxLength={80} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} />
           </label>
-          <label className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-[#2A1A26]/70 uppercase tracking-[0.12em] block">Description (optional)</span>
+          <label className="col-span-2 md:col-span-1">
+            <span className="sag-label">Description (optional)</span>
             <input type="text" maxLength={200} value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} className={inputClass} />
           </label>
         </div>
 
-        <p className="rounded-2xl bg-[#F3EEF8] px-4 py-3 text-sm text-[#4B1D3F]">
+        <p className="rounded-xl bg-sale-tint border-l-4 border-sale-line px-4 py-3 text-sm text-ink sag-num">
           Example: with {form.percent}% and {form.minItems} pieces, two ₹1,499 suits cost ₹{Math.round(2998 * (1 - form.percent / 100)).toLocaleString('en-IN')} before any coupon.
         </p>
 
         <button
           type="submit"
           disabled={saving || !loaded}
-          className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] text-white font-semibold text-sm rounded-full flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 transition-colors"
+          className="sag-btn-primary w-full sm:w-auto px-8 gap-2"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Save className="w-4 h-4 text-white" />}
           <span>{saving ? 'Saving…' : 'Save combo offer'}</span>

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ShoppingBag, Sparkles } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { Product, ProductColor, ProductSize } from '../types';
 import { useDiscovery } from '../utils/discovery';
@@ -120,113 +120,107 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
     : 'Add complete look to bag';
 
   return (
-    <section id="complete-the-look" aria-labelledby="ctl-title" className="mt-14 sm:mt-20 rounded-3xl bg-[#F3EEF8] border border-[#4B1D3F]/10 px-4 py-6 sm:px-8 sm:py-9">
-      <div className="max-w-3xl">
-        <p className="sag-eyebrow inline-flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-[#9C7A45]" /> Complete the look</p>
-        <h2 id="ctl-title" className="mt-2 font-serif text-3xl sm:text-4xl text-[#4B1D3F] leading-tight">Make it the full {setLabel(setType)} look</h2>
-        <p className="mt-2 text-sm sm:text-base text-[#2A1A26]/75">
-          Add the matching {kindsLabel(items)} to this outfit. These pieces come only with this outfit and can't be bought on their own.
-        </p>
-      </div>
+    <section id="complete-the-look" aria-labelledby="ctl-title" className="mt-8 lg:mt-12">
+      <h2 id="ctl-title" className="text-[17px] leading-6 font-semibold text-ink">Complete the look</h2>
+      <p className="mt-1 max-w-2xl text-sm leading-5 text-ink-muted">
+        Add the matching {kindsLabel(items)} to make it the full {setLabel(setType)} look. These pieces come only with this outfit and can't be bought on their own.
+      </p>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)] items-start">
-        {/* The outfit is always part of the look */}
-        <div className="rounded-2xl bg-white border border-[#4B1D3F]/10 p-3 flex lg:flex-col gap-3">
-          <img src={getCleanImageUrl(firstImage(product), 480)} alt="" loading="lazy"
-            className="w-24 sm:w-28 lg:w-full shrink-0 aspect-[4/5] rounded-xl object-cover object-top bg-[#F3EEF8]" />
-          <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9C7A45]">Your outfit</p>
-            <p className="mt-0.5 font-serif text-lg text-[#2A1A26] leading-snug line-clamp-2">{product.name}</p>
-            <p className="mt-1 text-sm font-semibold text-[#4B1D3F]">{inr(product.price)}</p>
-            <p className="mt-1.5 text-xs text-[#2A1A26]/70">
-              {outfitInBag ? (
-                <span className="inline-flex items-center gap-1 text-emerald-800"><Check className="w-3.5 h-3.5" /> In your bag</span>
-              ) : outfitSize ? (
-                <>Size {outfitSize}{outfitPieces > 1 ? ` · ${outfitPieces} pieces` : ''}</>
-              ) : (
-                <button type="button" onClick={onNeedSize} className="underline underline-offset-2 text-[#4B1D3F] cursor-pointer">Choose your size above</button>
-              )}
-            </p>
-          </div>
+      {/* The outfit is always part of the look */}
+      <div className="mt-4 flex items-center gap-3">
+        <img src={getCleanImageUrl(firstImage(product), 240)} alt="" loading="lazy"
+          className="w-14 shrink-0 aspect-[4/5] rounded-chip object-cover object-top bg-sunken" />
+        <div className="min-w-0 flex-1">
+          <p className="sag-eyebrow">Your outfit</p>
+          <p className="text-sm leading-5 font-medium text-ink line-clamp-1">{product.name}</p>
+          <p className="sag-num text-[13px] leading-[18px] text-ink-muted">
+            <span className="font-semibold text-ink">{inr(product.price)}</span>
+            {' · '}
+            {outfitInBag ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-ok"><Check className="w-3.5 h-3.5" aria-hidden="true" /> In your bag</span>
+            ) : outfitSize ? (
+              <>Size {outfitSize}{outfitPieces > 1 ? ` · ${outfitPieces} pieces` : ''}</>
+            ) : (
+              <button type="button" onClick={onNeedSize} className="sag-link text-[13px]">Choose your size above</button>
+            )}
+          </p>
         </div>
-
-        {/* Matching accessories: tap to add them to the look */}
-        <ul aria-label="Matching accessories" className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-          {items.map((p) => {
-            const added = inLook(p);
-            const picked = Boolean(picks[p.id]) && !added;
-            const mrp = mrpOf(p);
-            const sizes = sizesOf(p);
-            const colours = coloursOf(p);
-            return (
-              <li key={p.id} className={`rounded-2xl bg-white p-2.5 flex flex-col border transition-colors ${picked ? 'border-[#4B1D3F] ring-1 ring-[#4B1D3F]' : 'border-[#4B1D3F]/10'}`}>
-                <button type="button" onClick={() => toggle(p)} disabled={added} aria-pressed={picked}
-                  aria-label={added ? `${p.name} is in your bag with this outfit` : `${picked ? 'Remove' : 'Add'} ${p.name} ${picked ? 'from' : 'to'} this look`}
-                  className="group block w-full text-left cursor-pointer disabled:cursor-default">
-                  <span className="block overflow-hidden rounded-xl bg-[#F3EEF8]">
-                    <img src={getCleanImageUrl(firstImage(p), 360)} alt="" loading="lazy"
-                      className="w-full aspect-[4/5] object-cover object-top transition-transform duration-500 group-hover:scale-[1.03]" />
-                  </span>
-                  <span className="mt-2 flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9C7A45] truncate">{accessoryTypeOf(p)}</span>
-                    <span aria-hidden="true" className={`w-5 h-5 shrink-0 rounded-full border flex items-center justify-center transition-colors ${picked || added ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/30'}`}>
-                      {(picked || added) && <Check className="w-3 h-3" strokeWidth={3} />}
-                    </span>
-                  </span>
-                  <span className="mt-0.5 block text-sm text-[#2A1A26] leading-snug line-clamp-2">{p.name}</span>
-                  <span className="mt-1 block text-sm">
-                    <span className="font-semibold text-[#4B1D3F]">{inr(p.price)}</span>
-                    {mrp > p.price && <span className="ml-1.5 text-xs text-[#2A1A26]/50 line-through">{inr(mrp)}</span>}
-                  </span>
-                </button>
-
-                {!added && sizes.length > 1 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} size`}>
-                    {sizes.map((sz) => (
-                      <button key={sz} type="button" onClick={() => choose(p, { size: sz })} aria-pressed={picks[p.id]?.size === sz}
-                        className={`h-8 min-w-[44px] px-2 rounded-full border text-xs cursor-pointer transition-colors ${picks[p.id]?.size === sz ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/20 text-[#2A1A26] hover:border-[#4B1D3F]/50'}`}>
-                        {sz}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {!added && colours.length > 1 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} colour`}>
-                    {colours.map((c) => (
-                      <button key={c.name} type="button" onClick={() => choose(p, { colour: c.name })} aria-pressed={picks[p.id]?.colour === c.name}
-                        className={`h-8 px-2.5 rounded-full border text-xs inline-flex items-center gap-1.5 cursor-pointer ${picks[p.id]?.colour === c.name ? 'border-[#4B1D3F] bg-[#F3EEF8] text-[#4B1D3F]' : 'bg-white border-[#4B1D3F]/20 text-[#2A1A26]'}`}>
-                        <span className="w-3 h-3 rounded-full border border-black/10" style={{ background: c.hex || '#ccc' }} /> {c.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <p className={`mt-auto pt-2 text-xs ${added ? 'text-emerald-800' : picked ? 'text-[#4B1D3F] font-medium' : 'text-[#2A1A26]/60'}`}>
-                  {added ? 'In your bag with this outfit' : picked ? (needsSizeChoice(p) && !picks[p.id]?.size ? 'Choose a size' : 'Added to your look') : 'Tap to add'}
-                </p>
-              </li>
-            );
-          })}
-        </ul>
       </div>
+
+      {/* Matching accessories: tap to add them to the look */}
+      <ul aria-label="Matching accessories" className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 gap-y-5">
+        {items.map((p) => {
+          const added = inLook(p);
+          const picked = Boolean(picks[p.id]) && !added;
+          const mrp = mrpOf(p);
+          const sizes = sizesOf(p);
+          const colours = coloursOf(p);
+          return (
+            <li key={p.id} className="flex flex-col min-w-0">
+              <button type="button" onClick={() => toggle(p)} disabled={added} aria-pressed={picked}
+                aria-label={added ? `${p.name} is in your bag with this outfit` : `${picked ? 'Remove' : 'Add'} ${p.name} ${picked ? 'from' : 'to'} this look`}
+                className="block w-full text-left cursor-pointer disabled:cursor-default active:[transform:none]!">
+                <span className="block overflow-hidden rounded-control bg-sunken">
+                  <img src={getCleanImageUrl(firstImage(p), 360)} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover object-top" />
+                </span>
+                <span className="mt-2 flex items-center justify-between gap-2">
+                  <span className="text-xs leading-4 font-semibold text-ink-muted truncate">{accessoryTypeOf(p)}</span>
+                  <span aria-hidden="true" className={`w-6 h-6 shrink-0 rounded-[6px] border-[1.5px] flex items-center justify-center ${picked || added ? 'bg-ink border-ink text-white' : 'bg-white border-control'}`}>
+                    {(picked || added) && <Check className="w-4 h-4" strokeWidth={3} />}
+                  </span>
+                </span>
+                <span className="mt-0.5 block text-sm leading-5 font-medium text-ink line-clamp-2">{p.name}</span>
+                <span className="sag-num mt-0.5 flex items-baseline gap-1.5">
+                  <span className="text-base leading-5 font-bold text-ink">{inr(p.price)}</span>
+                  {mrp > p.price && <span className="text-[13px] text-ink-faint line-through">{inr(mrp)}</span>}
+                </span>
+              </button>
+
+              {!added && sizes.length > 1 && (
+                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} size`}>
+                  {sizes.map((sz) => (
+                    <button key={sz} type="button" onClick={() => choose(p, { size: sz })} aria-pressed={picks[p.id]?.size === sz}
+                      className="sag-chip h-11 min-w-11 px-2.5 text-sm">
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {!added && colours.length > 1 && (
+                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} colour`}>
+                  {colours.map((c) => (
+                    <button key={c.name} type="button" onClick={() => choose(p, { colour: c.name })} aria-pressed={picks[p.id]?.colour === c.name}
+                      className="sag-chip h-11 min-w-11 px-2.5 text-[13px] gap-1.5">
+                      <span className="w-3.5 h-3.5 shrink-0 rounded-full border border-line" style={{ background: c.hex || '#ccc' }} /> {c.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <p className={`mt-auto pt-2 text-[13px] leading-[18px] ${added ? 'text-ok font-semibold' : picked ? 'text-ink font-semibold' : 'text-ink-muted'}`}>
+                {added ? 'In your bag with this outfit' : picked ? (needsSizeChoice(p) && !picks[p.id]?.size ? 'Choose a size' : 'Added to your look') : 'Tap to add'}
+              </p>
+            </li>
+          );
+        })}
+      </ul>
 
       {/* Summary and the one button that adds the look */}
-      <div className="mt-6 rounded-2xl bg-white border border-[#4B1D3F]/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3" aria-live="polite">
-        <div className="min-w-0 flex-1 text-sm text-[#2A1A26]">
+      <div className="mt-5 sag-card p-4 flex flex-col sm:flex-row sm:items-center gap-3" aria-live="polite">
+        <div className="sag-num min-w-0 flex-1 text-sm leading-5 text-ink">
           {count > 0 ? (
             <p>
               {outfitInBag ? '' : <>Outfit {inr(outfitTotal)} + </>}
               {count} {count === 1 ? 'piece' : 'pieces'} {inr(accessoriesTotal)}
-              {' = '}<span className="font-semibold text-[#4B1D3F]">{inr(outfitTotal + accessoriesTotal)}</span>
-              <span className="text-[#2A1A26]/60"> (preview)</span>
+              {' = '}<span className="font-bold text-ink">{inr(outfitTotal + accessoriesTotal)}</span>
+              <span className="text-ink-muted"> (preview)</span>
             </p>
           ) : (
             <p>Tap the pieces you want in your look.</p>
           )}
-          <p className="text-xs text-[#2A1A26]/60">Final price is confirmed at checkout.</p>
+          <p className="text-[13px] leading-[18px] text-ink-muted">Final price is confirmed at checkout.</p>
         </div>
-        <button type="button" onClick={addLook} disabled={count === 0}
-          className="sag-btn-primary shrink-0 h-12 px-6 text-xs font-semibold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="button" onClick={addLook} disabled={count === 0} className="sag-btn-outline shrink-0 h-12 px-5 text-[15px] gap-2">
           <BagIcon mono className="w-[18px] h-[18px]" /> {count === 0 ? 'Choose pieces' : cta}
         </button>
       </div>

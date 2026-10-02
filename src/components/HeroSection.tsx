@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin, generateHeroSlidesFromProducts } from '../context/AdminContext';
 import { HeroBannerConfig, Product } from '../types';
-import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { slugToCategory } from '../utils/slugHelper';
 import { prepaidPercentApplies } from '../utils/prepaid';
@@ -76,16 +76,38 @@ export const HeroSection: React.FC = () => {
 
   const slides = liveProductSlides;
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
-  const [touchStart, setTouchStart] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  // Once the shopper swipes or taps a control, the slides stop changing by themselves
+  const [userTookOver, setUserTookOver] = useState(false);
+  const stripRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef(0);
+  const ignoreScrollUntil = useRef(0);
+  const idxRef = useRef(0);
+  idxRef.current = currentSlideIdx;
+
+  /** Shows slide `index`: the photo strip scrolls to it and the text follows. */
+  const goTo = useCallback((index: number) => {
+    const total = slides.length || 1;
+    const target = ((index % total) + total) % total;
+    setCurrentSlideIdx(target);
+    const strip = stripRef.current;
+    const slide = strip?.children[target] as HTMLElement | undefined;
+    if (!strip || !slide) return;
+    const reduced = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+    // While the strip glides to its new place, its scroll events must not pick a slide on the way
+    ignoreScrollUntil.current = Date.now() + 700;
+    strip.scrollTo({ left: slide.offsetLeft - (strip.children[0] as HTMLElement).offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
+  }, [slides.length]);
 
   useEffect(() => {
-    if (!slides || slides.length <= 1 || isPaused) return;
+    if (!slides || slides.length <= 1 || isPaused || userTookOver) return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
     const timer = setInterval(() => {
-      setCurrentSlideIdx((prev) => (prev + 1) % slides.length);
+      if (document.hidden) return;
+      goTo(idxRef.current + 1);
     }, 6000);
     return () => clearInterval(timer);
-  }, [slides, isPaused]);
+  }, [slides, isPaused, userTookOver, goTo]);
 
   useEffect(() => {
     if (currentSlideIdx >= slides.length) {
@@ -93,12 +115,28 @@ export const HeroSection: React.FC = () => {
     }
   }, [slides.length, currentSlideIdx]);
 
-  const handlePrev = () => {
-    setCurrentSlideIdx((prev) => (prev - 1 + (slides?.length || 1)) % (slides?.length || 1));
-  };
+  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
 
-  const handleNext = () => {
-    setCurrentSlideIdx((prev) => (prev + 1) % (slides?.length || 1));
+  const takeOver = () => setUserTookOver(true);
+  const handlePrev = () => { takeOver(); goTo(idxRef.current - 1); };
+  const handleNext = () => { takeOver(); goTo(idxRef.current + 1); };
+
+  // A swipe on the strip: the slide nearest the left edge becomes the current one
+  const onStripScroll = () => {
+    if (Date.now() < ignoreScrollUntil.current) return;
+    cancelAnimationFrame(frameRef.current);
+    frameRef.current = requestAnimationFrame(() => {
+      const strip = stripRef.current;
+      if (!strip || strip.children.length === 0) return;
+      const origin = (strip.children[0] as HTMLElement).offsetLeft;
+      let nearest = 0;
+      let best = Infinity;
+      Array.from(strip.children).forEach((child, index) => {
+        const distance = Math.abs((child as HTMLElement).offsetLeft - origin - strip.scrollLeft);
+        if (distance < best) { best = distance; nearest = index; }
+      });
+      if (nearest !== idxRef.current) setCurrentSlideIdx(nearest);
+    });
   };
 
   const handleSlideClick = (slide: LiveHeroSlide) => {
@@ -116,12 +154,21 @@ export const HeroSection: React.FC = () => {
     }
   };
 
+  // On a phone the next photo peeks in from the right, so the strip reads as swipeable
+  const slideWidth = 'shrink-0 w-[84%] sm:w-[56%] lg:w-full';
+
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="bg-[#F3EEF8] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl grid gap-6 lg:grid-cols-12 animate-pulse">
-          <div className="aspect-[4/5] rounded-3xl bg-white/70 lg:col-span-7" />
-          <div className="hidden rounded-3xl bg-white/60 lg:col-span-5 lg:block" />
+      <div className="bg-white pt-2 pb-6 lg:py-10" aria-hidden="true">
+        <div className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
+          <div className="px-4 sm:px-6 lg:px-0 lg:col-span-5">
+            <div className={`${slideWidth} aspect-[4/5] rounded-control bg-sunken-deep`} />
+          </div>
+          <div className="px-4 sm:px-6 lg:px-0 mt-8 lg:mt-0 lg:col-span-7 space-y-3">
+            <div className="h-8 w-3/4 rounded-badge bg-sunken-deep" />
+            <div className="h-6 w-1/3 rounded-badge bg-sunken-deep" />
+            <div className="h-[52px] w-full max-w-md rounded-control bg-sunken-deep" />
+          </div>
         </div>
       </div>
     );
@@ -133,164 +180,141 @@ export const HeroSection: React.FC = () => {
   const slidePrice = Number(currentSlide.price) || 0;
   const originalPrice = Math.max(slidePrice, Number(currentSlide.originalPrice) || slidePrice);
   const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
-
   const count = slides.length;
-  const swipe = {
-    onTouchStart: (event: React.TouchEvent) => setTouchStart(event.touches[0].clientX),
-    onTouchEnd: (event: React.TouchEvent) => {
-      if (touchStart === null) return;
-      const delta = touchStart - event.changedTouches[0].clientX;
-      if (delta > 45) handleNext();
-      if (delta < -45) handlePrev();
-      setTouchStart(null);
-    },
-  };
+  // The percent offer is shown only when this product's price qualifies for it
+  const onlineOffer = slidePrice <= 0
+    ? ''
+    : prepaidPercentApplies(storeOffers, slidePrice)
+    ? `Extra ${storeOffers.prepaidPercent}% off with online payment`
+    : storeOffers.prepaidDiscount > 0
+    ? `Extra ₹${storeOffers.prepaidDiscount} off on online payment`
+    : '';
+  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-control bg-white text-ink hover:bg-sunken transition-colors cursor-pointer';
 
   return (
-    <section id="haute-couture-hero" aria-label="Featured collection" className="relative w-full overflow-hidden bg-[#F3EEF8]">
-      {/* Soft brand backdrop (plain shapes, never over the photo) */}
-      <div aria-hidden="true" className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#E6DDF0]" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-[#F7E4EA]/70" />
-
+    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full bg-white pt-2 pb-6 lg:py-10">
       <div
-        className="relative mx-auto max-w-7xl px-4 pt-4 pb-7 sm:px-6 sm:pt-6 lg:px-8 lg:py-12 grid lg:gap-10 lg:grid-cols-12 lg:items-center"
+        className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {/* Photo */}
-        <div className="relative lg:col-span-7">
-          <button
-            type="button"
-            onClick={() => handleSlideClick(currentSlide)}
-            {...swipe}
-            className="group relative block w-full overflow-hidden rounded-[28px] bg-white text-left cursor-pointer shadow-[0_30px_60px_-36px_rgba(75,29,63,0.55)] ring-1 ring-[#4B1D3F]/10"
-            aria-label={`View ${currentSlide.title}`}
+        {/* Photos: a swipeable strip. Nothing is ever drawn on a photo. */}
+        <div className="min-w-0 lg:col-span-5">
+          <div
+            ref={stripRef}
+            onScroll={onStripScroll}
+            onTouchStart={takeOver}
+            className="sag-scroll-x flex gap-2 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-0 lg:scroll-px-0"
           >
-            <div className="relative aspect-[4/5] w-full sm:aspect-square lg:aspect-[4/5] xl:aspect-[5/5.6]">
-              <img
-                key={currentSlide.image}
-                src={getCleanImageUrl(currentSlide.image, 1200) || ELEGANT_PLACEHOLDER_SVG}
-                alt={currentSlide.title || 'Featured Suit Aura Girls design'}
-                className="sag-kenburns h-full w-full object-cover object-top"
-                loading="eager"
-                fetchPriority="high"
-                decoding="async"
-                onError={(event) => {
-                  if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
-                }}
-              />
-            </div>
-          </button>
-        </div>
+            {slides.map((slide, index) => (
+              <button
+                key={slide.id || index}
+                type="button"
+                onClick={() => handleSlideClick(slide)}
+                className={`${slideWidth} block overflow-hidden rounded-control bg-sunken text-left cursor-pointer`}
+                aria-label={`View ${slide.title}`}
+              >
+                <span className="block aspect-[4/5] w-full">
+                  <img
+                    src={getCleanImageUrl(slide.image, index === 0 ? 1000 : 800) || ELEGANT_PLACEHOLDER_SVG}
+                    alt={slide.title || 'Featured Suit Aura Girls design'}
+                    className="h-full w-full object-cover object-top"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                    decoding="async"
+                    onError={(event) => {
+                      if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
+                    }}
+                  />
+                </span>
+              </button>
+            ))}
+          </div>
 
-        {/* Details: compact card on phones (tucked under the photo), full panel on desktop */}
-        <div className="relative z-10 -mt-10 mx-3 sm:mx-8 lg:mx-0 lg:mt-0 lg:col-span-5">
-          <div className="rounded-3xl bg-white px-5 py-4 sm:px-7 sm:py-6 lg:bg-transparent lg:p-0 shadow-[0_18px_40px_-24px_rgba(42,26,38,0.45)] lg:shadow-none border border-[#4B1D3F]/10 lg:border-0">
-            <div className="flex items-center justify-between gap-3">
-              <p className="sag-eyebrow truncate">{currentSlide.badge || 'New season edit'}</p>
-              {count > 1 && (
-                <p className="shrink-0 text-xs tabular-nums text-[#2A1A26]/55">
-                  <span className="font-semibold text-[#4B1D3F]">{String(currentSlideIdx + 1).padStart(2, '0')}</span> / {String(count).padStart(2, '0')}
-                </p>
-              )}
-            </div>
-
-            <div key={currentSlide.id || currentSlideIdx} className="sag-slide-in">
-              <h1 className="mt-1.5 lg:mt-4 font-serif text-[24px] leading-[1.15] sm:text-4xl lg:text-5xl xl:text-[56px] lg:leading-[1.04] text-[#4B1D3F] line-clamp-2 lg:line-clamp-3">
-                {currentSlide.title}
-              </h1>
-              <p className="hidden lg:block mt-4 max-w-md text-[15px] leading-relaxed text-[#2A1A26]/70 line-clamp-2">
-                {currentSlide.subtitle || 'Considered silhouettes and hand-finished details, made for the moments you make your own.'}
+          {/* Segment indicator under the photo: swipe on phones, arrows and thumbnails on desktop */}
+          {count > 1 && (
+            <div className="mt-2 flex items-center gap-3 px-4 sm:px-6 lg:px-0 h-5">
+              <div className="flex flex-1 items-center gap-1" aria-hidden="true">
+                {slides.map((slide, index) => (
+                  <span key={slide.id || index} className={`h-[3px] flex-1 max-w-10 rounded-full ${index === currentSlideIdx ? 'bg-ink' : 'bg-line'}`} />
+                ))}
+              </div>
+              <p className="sag-num shrink-0 text-xs leading-4 text-ink-muted">
+                <span className="sr-only">Design </span>{currentSlideIdx + 1} / {count}
               </p>
             </div>
+          )}
+        </div>
 
-            {slidePrice > 0 && (
-              <div className="mt-2.5 lg:mt-6 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span className="text-xl lg:text-3xl font-semibold text-[#2A1A26]">₹{slidePrice.toLocaleString('en-IN')}</span>
-                {originalPrice > slidePrice && <span className="text-sm text-[#2A1A26]/55 line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
-                {discountPercent > 0 && <span className="rounded-full bg-[#F7E4EA] px-2.5 py-0.5 text-xs font-semibold text-[#8A2E55]">{discountPercent}% off</span>}
-                {/* The percent offer is shown only when this product's price qualifies for it */}
-                {prepaidPercentApplies(storeOffers, slidePrice) ? (
-                  <span className="hidden sm:inline-flex rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                    Extra {storeOffers.prepaidPercent}% off with online payment
-                  </span>
-                ) : storeOffers.prepaidDiscount > 0 && (
-                  <span className="hidden sm:inline-flex rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                    Extra ₹{storeOffers.prepaidDiscount} off on online payment
-                  </span>
-                )}
-              </div>
-            )}
+        {/* Details sit below the photo on phones and beside it on desktop */}
+        <div className="min-w-0 px-4 sm:px-6 lg:px-0 mt-3 lg:mt-0 lg:col-span-7">
+          {currentSlide.badge && <p className="sag-eyebrow hidden sm:block mb-2 truncate">{currentSlide.badge}</p>}
 
-            <div className="mt-4 lg:mt-8 flex gap-2.5">
-              <button
-                type="button"
-                id="hero-view-style-btn"
-                onClick={() => handleSlideClick(currentSlide)}
-                className="sag-btn-primary flex-1 lg:flex-none inline-flex h-12 items-center justify-center gap-2 px-7 text-xs font-semibold uppercase tracking-[0.16em] cursor-pointer"
-              >
-                Shop now <ArrowRight className="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                id="hero-explore-btn"
-                onClick={() => navigateToCategory('All')}
-                className="sag-btn-outline inline-flex h-12 items-center justify-center px-5 lg:px-7 text-xs font-semibold uppercase tracking-[0.16em] cursor-pointer"
-              >
-                <span className="lg:hidden">Explore</span>
-                <span className="hidden lg:inline">Explore collection</span>
-              </button>
+          {/* Two lines are reserved on phones so a change of slide never moves the buttons */}
+          <h1 className="font-display text-[28px] leading-8 sm:text-4xl sm:leading-[1.12] lg:text-5xl lg:leading-[1.08] text-ink line-clamp-2 min-h-16 sm:min-h-0">
+            {currentSlide.title}
+          </h1>
+          {currentSlide.subtitle && (
+            <p className="mt-1 lg:mt-3 max-w-xl text-sm leading-5 lg:text-[15px] lg:leading-[22px] text-ink-muted line-clamp-1 lg:line-clamp-2">
+              {currentSlide.subtitle}
+            </p>
+          )}
+
+          {slidePrice > 0 && (
+            <div className="sag-num mt-2 lg:mt-5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <span className="text-xl leading-6 lg:text-[28px] lg:leading-8 font-bold text-ink">₹{slidePrice.toLocaleString('en-IN')}</span>
+              {originalPrice > slidePrice && <span className="text-sm lg:text-[15px] text-ink-faint line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
+              {discountPercent > 0 && <span className="text-sm lg:text-[15px] font-bold text-sale">{discountPercent}% off</span>}
             </div>
+          )}
+          {onlineOffer && <p className="mt-1 text-[13px] leading-[18px] font-semibold text-sale">{onlineOffer}</p>}
 
-            {count > 1 && (
-              <div className="mt-4 lg:mt-10">
-                {/* Desktop: the other designs as small photos */}
-                <div className="hidden lg:flex flex-wrap gap-3 mb-5" role="tablist" aria-label="Featured designs">
-                  {slides.map((slide, index) => (
-                    <button
-                      key={slide.id || index}
-                      type="button"
-                      role="tab"
-                      aria-selected={index === currentSlideIdx}
-                      aria-label={`Show ${slide.title}`}
-                      onClick={() => setCurrentSlideIdx(index)}
-                      className={`h-20 w-16 overflow-hidden rounded-xl bg-white transition-all cursor-pointer ${index === currentSlideIdx ? 'ring-2 ring-[#4B1D3F] ring-offset-2 ring-offset-[#F3EEF8]' : 'opacity-60 hover:opacity-100 ring-1 ring-[#4B1D3F]/10'}`}
-                    >
-                      <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" />
-                    </button>
-                  ))}
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-1 items-center gap-1.5" role="tablist" aria-label="Slide progress">
-                    {slides.map((slide, index) => (
-                      <button
-                        key={slide.id || index}
-                        type="button"
-                        role="tab"
-                        aria-selected={index === currentSlideIdx}
-                        aria-label={`Show ${slide.title}`}
-                        onClick={() => setCurrentSlideIdx(index)}
-                        className="relative h-1 flex-1 max-w-16 overflow-hidden rounded-full bg-[#4B1D3F]/15 cursor-pointer"
-                      >
-                        <span
-                          key={index === currentSlideIdx ? `on-${currentSlideIdx}` : 'off'}
-                          className={`absolute inset-y-0 left-0 rounded-full bg-[#4B1D3F] ${index < currentSlideIdx ? 'w-full' : index === currentSlideIdx ? (isPaused ? 'w-full' : 'sag-hero-progress') : 'w-0'}`}
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  <div className="ml-auto flex items-center gap-2">
-                    <button type="button" onClick={handlePrev} aria-label="Previous design" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] hover:bg-[#4B1D3F] hover:text-white transition-colors cursor-pointer">
-                      <ChevronLeft className="h-4 w-4 text-current" />
-                    </button>
-                    <button type="button" onClick={handleNext} aria-label="Next design" className="flex h-10 w-10 items-center justify-center rounded-full border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] hover:bg-[#4B1D3F] hover:text-white transition-colors cursor-pointer">
-                      <ChevronRight className="h-4 w-4 text-current" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="mt-4 lg:mt-7 flex gap-2.5 sm:max-w-md">
+            <button
+              type="button"
+              id="hero-view-style-btn"
+              onClick={() => handleSlideClick(currentSlide)}
+              className="sag-btn-primary flex-1 px-3"
+            >
+              Shop now
+            </button>
+            <button
+              type="button"
+              id="hero-explore-btn"
+              onClick={() => navigateToCategory('All')}
+              className="sag-btn-outline flex-1 px-3 text-[15px] whitespace-nowrap"
+            >
+              Explore collection
+            </button>
           </div>
+
+          {count > 1 && (
+            <div className="hidden lg:flex items-center gap-4 mt-10">
+              <div className="flex flex-wrap gap-3" role="tablist" aria-label="Featured designs">
+                {slides.map((slide, index) => (
+                  <button
+                    key={slide.id || index}
+                    type="button"
+                    role="tab"
+                    aria-selected={index === currentSlideIdx}
+                    aria-label={`Show ${slide.title}`}
+                    onClick={() => { takeOver(); goTo(index); }}
+                    className={`h-20 w-16 overflow-hidden rounded-chip bg-sunken cursor-pointer border-2 ${index === currentSlideIdx ? 'border-ink' : 'border-transparent hover:border-control'}`}
+                  >
+                    <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" decoding="async" />
+                  </button>
+                ))}
+              </div>
+              <div className="ml-auto flex items-center gap-2">
+                <button type="button" onClick={handlePrev} aria-label="Previous design" className={arrow}>
+                  <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+                <button type="button" onClick={handleNext} aria-label="Next design" className={arrow}>
+                  <ChevronRight className="h-5 w-5" strokeWidth={1.75} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

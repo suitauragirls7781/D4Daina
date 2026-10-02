@@ -163,13 +163,13 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
 
 const chip = (on: boolean) =>
   `min-h-11 px-4 rounded-full border text-sm font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
-    on ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-white border-[#4B1D3F]/15 text-[#2A1A26]/85 hover:bg-[#F3EEF8] hover:border-[#4B1D3F]/30'
+    on ? 'bg-brand border-ink text-white' : 'bg-white border-line text-ink hover:bg-sunken hover:border-control'
   }`;
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
   <fieldset className="space-y-2.5">
-    <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#4B1D3F]">{legend}</legend>
-    {hint && <p className="text-sm text-[#2A1A26]/60 -mt-1">{hint}</p>}
+    <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">{legend}</legend>
+    {hint && <p className="text-sm text-ink-muted -mt-1">{hint}</p>}
     <div className="flex flex-wrap gap-2">
       {options.map(({ value, label }) => {
         const on = selected.includes(value);
@@ -184,7 +184,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'h-12 w-full rounded-full border border-[#4B1D3F]/20 bg-white px-4 text-sm text-[#2A1A26] transition focus:outline-none focus:border-[#4B1D3F]/70 focus:ring-4 focus:ring-[#F3EEF8]';
+const inputClass = 'h-12 w-full rounded-full border border-line bg-white px-4 text-sm text-ink transition focus:outline-none focus:border-ink focus:ring-2 focus:ring-brand';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -277,7 +277,7 @@ export const StyleProfile: React.FC = () => {
   if (failed) {
     return (
       <div className="sag-card p-6 text-center space-y-3" role="alert">
-        <p className="text-sm text-[#2A1A26]/75">We could not load your style profile. Check your connection and try again.</p>
+        <p className="text-sm text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
         <button type="button" onClick={retry} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Try again</button>
       </div>
     );
@@ -286,7 +286,7 @@ export const StyleProfile: React.FC = () => {
   if (!ready) {
     return (
       <div className="py-16 flex justify-center" role="status" aria-label="Loading your style profile">
-        <Loader2 className="w-6 h-6 animate-spin text-[#4B1D3F]" />
+        <Loader2 className="w-6 h-6 animate-spin text-ink" />
       </div>
     );
   }
@@ -295,12 +295,12 @@ export const StyleProfile: React.FC = () => {
 
   return (
     <section className="space-y-5" aria-labelledby="style-profile-title">
-      <form onSubmit={handleSave} className="sag-card rounded-3xl! p-5 sm:p-7 space-y-7">
-        <div className="flex gap-3.5 rounded-2xl bg-[#F3EEF8]/70 p-4">
-          <span className="w-12 h-12 shrink-0 rounded-full bg-white ring-1 ring-[#4B1D3F]/8 flex items-center justify-center"><StyleIcon className="w-6 h-6" /></span>
+      <form onSubmit={handleSave} className="sag-card p-5 sm:p-7 space-y-7">
+        <div className="flex gap-3.5 rounded-2xl bg-sunken p-4">
+          <span className="w-12 h-12 shrink-0 rounded-full bg-white ring-1 ring-line flex items-center justify-center"><StyleIcon className="w-6 h-6" /></span>
           <div className="min-w-0">
-            <h2 id="style-profile-title" className="font-serif text-2xl leading-tight text-[#4B1D3F]">Your style profile</h2>
-            <p className="mt-1 text-sm text-[#2A1A26]/70 leading-relaxed">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
+            <h2 id="style-profile-title" className="font-serif text-2xl leading-tight text-ink">Your style profile</h2>
+            <p className="mt-1 text-sm text-ink-muted leading-relaxed">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
           </div>
         </div>
 
@@ -318,19 +318,19 @@ export const StyleProfile: React.FC = () => {
           onToggle={toggle('sizes')}
         />
         <fieldset className="space-y-2.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#4B1D3F]">Budget per outfit</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">Budget per outfit</legend>
           {priceRange && (
-            <p className="text-sm text-[#2A1A26]/60 -mt-1">
+            <p className="text-sm text-ink-muted -mt-1">
               In-stock styles right now range from ₹{priceRange.min.toLocaleString('en-IN')} to ₹{priceRange.max.toLocaleString('en-IN')}.
             </p>
           )}
           <div className="grid grid-cols-2 gap-3 max-w-md">
             <label className="space-y-1">
-              <span className="block pl-1 text-[13px] font-medium text-[#2A1A26]/75">Minimum (₹)</span>
+              <span className="block pl-1 text-[13px] font-medium text-ink-muted">Minimum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={minText} onChange={(e) => { setError(''); setMinText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
             <label className="space-y-1">
-              <span className="block pl-1 text-[13px] font-medium text-[#2A1A26]/75">Maximum (₹)</span>
+              <span className="block pl-1 text-[13px] font-medium text-ink-muted">Maximum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={maxText} onChange={(e) => { setError(''); setMaxText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
           </div>
@@ -352,7 +352,7 @@ export const StyleProfile: React.FC = () => {
 
         {error && <p role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">{error}</p>}
 
-        <p className="rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/8 px-4 py-3 text-sm text-[#2A1A26]/80" aria-live="polite">
+        <p className="rounded-2xl bg-page border border-line px-4 py-3 text-sm text-ink-muted" aria-live="polite">
           {!anySelected
             ? 'Nothing selected yet. Saving with nothing selected removes your style profile.'
             : matches.length === 0
@@ -373,7 +373,7 @@ export const StyleProfile: React.FC = () => {
 
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-serif text-2xl text-[#4B1D3F]">Matching styles</h3>
+          <h3 className="font-serif text-2xl text-ink">Matching styles</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>

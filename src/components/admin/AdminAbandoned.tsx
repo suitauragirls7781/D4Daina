@@ -4,7 +4,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { COLLECTIONS, listDocs, patchDoc } from '../../lib/dataStore';
 import { formatOrderDate } from '../../utils/orderDate';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader, tone, ui } from './kidsToysShared';
 
 /** A shopper who typed their details at checkout and left without paying (saved by CheckoutPage). */
 interface Checkout {
@@ -125,88 +125,90 @@ export const AdminAbandoned: React.FC = () => {
   };
 
   const tabs: [Tab, string][] = [['todo', 'To contact'], ['contacted', 'Contacted'], ['ordered', 'Ordered'], ['all', 'All']];
-  const pill = 'h-10 px-4 rounded-full text-sm font-semibold inline-flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60';
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <AdminPageHeader
         eyebrow="Sales"
-        title={<>Abandoned checkouts {rows && <span className="text-[#2A1A26]/45 font-normal">({rows.length})</span>}</>}
+        title={<>Abandoned checkouts {rows && <span className="text-ink-muted font-normal tabular-nums">({rows.length})</span>}</>}
         icon={<ShoppingCart className="text-current" />}
         description="Shoppers who typed their details at checkout but did not pay. Message them on WhatsApp from your own number."
         actions={
-          <button type="button" onClick={load} disabled={loading} className={`${pill} border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]`}>
+          <button type="button" onClick={load} disabled={loading} className={ui.outline}>
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </button>
         }
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="sag-scroll-x flex gap-2 min-w-0">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+        <div className="sag-scroll-x flex gap-2 min-w-0 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
           {tabs.map(([id, label]) => (
-            <button key={id} type="button" onClick={() => setTab(id)}
-              className={`${pill} shrink-0 ${tab === id ? 'bg-[#4B1D3F] text-white' : 'bg-white border border-[#4B1D3F]/15 text-[#2A1A26]/75 hover:bg-[#F3EEF8]'}`}>
-              {label} ({groups[id].length})
+            <button key={id} type="button" onClick={() => setTab(id)} aria-pressed={tab === id}
+              className={`${ui.chip(tab === id)} shrink-0 whitespace-nowrap`}>
+              {label} <span className={`tabular-nums font-normal ${tab === id ? 'text-on-dark-muted' : 'text-ink-muted'}`}>{groups[id].length}</span>
             </button>
           ))}
         </div>
         <label className="relative sm:ml-auto sm:w-72 min-w-0">
-          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#2A1A26]/45" />
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, phone or product"
-            className="w-full h-11 pl-10 pr-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]" />
+          <span className="sr-only">Search checkouts</span>
+          <Search className="w-[18px] h-[18px] absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} inputMode="search" placeholder="Search name, phone or product"
+            className={ui.search} />
         </label>
       </div>
 
       {error && (
-        <div role="alert" className="p-4 rounded-2xl border border-rose-200 bg-rose-50 text-sm text-rose-700">{error}</div>
+        <div role="alert" className={ui.alert}>{error}</div>
       )}
-      {!rows && !error && <p className="text-sm text-[#2A1A26]/65">Loading checkouts…</p>}
+      {!rows && !error && <p role="status" className="text-sm leading-5 text-ink-muted">Loading checkouts…</p>}
       {rows && visible.length === 0 && (
-        <div className="sag-card p-8 text-center text-sm text-[#2A1A26]/65">
+        <div className={`${ui.empty} text-sm leading-5 text-ink-muted`}>
           {tab === 'todo' ? 'Nobody is waiting for a message.' : 'Nothing here.'}
         </div>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-2.5 lg:grid-cols-2">
         {visible.map((row) => {
           const ordered = hasPaidOrder(row);
           return (
-            <article key={row.id} className="sag-card p-4 sm:p-5 min-w-0 space-y-3">
+            <article key={row.id} className="bg-white rounded-2xl border border-line p-3.5 sm:p-4 min-w-0 space-y-2.5">
               <div className="flex items-start gap-3 min-w-0">
                 {row.items[0]?.image && (
-                  <img src={row.items[0].image} alt="" loading="lazy" className="w-14 aspect-[4/5] rounded-xl object-cover object-top shrink-0 bg-[#F3EEF8]" />
+                  <img src={row.items[0].image} alt="" loading="lazy" className="w-14 aspect-[4/5] rounded-[10px] object-cover object-top shrink-0 bg-sunken" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-[#2A1A26] truncate">{row.name || 'No name typed'}</p>
-                  <p className="text-sm text-[#2A1A26]/70 truncate">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[15px] leading-5 font-semibold text-ink truncate">{row.name || 'No name typed'}</p>
+                    {ordered && <span className={`shrink-0 ${ui.badge} ${tone.ok}`}>Has a paid order</span>}
+                    {!ordered && row.contactedAt && <span className={`shrink-0 ${ui.badge} ${tone.neutral}`}>Contacted</span>}
+                  </div>
+                  <p className="text-sm leading-5 text-ink-muted line-clamp-2">
                     {row.items.length === 0 ? 'Empty bag' : row.items.map((item) => `${item.name}${item.size ? ` (${item.size})` : ''}${item.quantity > 1 ? ` × ${item.quantity}` : ''}`).join(', ')}
                   </p>
-                  <p className="mt-1 text-sm text-[#2A1A26]">
-                    <strong>₹{row.total.toLocaleString('en-IN')}</strong>
-                    <span className="text-[#2A1A26]/60"> · {formatOrderDate(row.updatedAt) || 'time not saved'}</span>
+                  <p className="mt-0.5 text-sm leading-5 text-ink">
+                    <strong className="font-bold tabular-nums">₹{row.total.toLocaleString('en-IN')}</strong>
+                    <span className="text-ink-muted"> · {formatOrderDate(row.updatedAt) || 'time not saved'}</span>
                   </p>
                 </div>
-                {ordered && <span className="shrink-0 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold">Has a paid order</span>}
-                {!ordered && row.contactedAt && <span className="shrink-0 px-2.5 py-1 rounded-full bg-[#F3EEF8] text-[#4B1D3F] text-[11px] font-semibold">Contacted</span>}
               </div>
 
-              <dl className="grid gap-1 text-sm text-[#2A1A26]/75 min-w-0">
-                <div className="flex gap-2 min-w-0"><dt className="shrink-0 text-[#2A1A26]/55">Phone</dt><dd className="truncate">{row.phone.length === 10 ? `+91 ${row.phone}` : 'not typed'}</dd></div>
-                {row.email && <div className="flex gap-2 min-w-0"><dt className="shrink-0 text-[#2A1A26]/55">Email</dt><dd className="truncate">{row.email}</dd></div>}
-                {row.place && <div className="flex gap-2 min-w-0"><dt className="shrink-0 text-[#2A1A26]/55">Place</dt><dd className="truncate">{row.place}</dd></div>}
-                {row.source && <div className="flex gap-2 min-w-0"><dt className="shrink-0 text-[#2A1A26]/55">Came from</dt><dd className="truncate">{row.source}</dd></div>}
+              <dl className="grid gap-0.5 text-[13px] leading-[18px] min-w-0 pt-2.5 border-t border-line">
+                <div className="flex gap-2 min-w-0"><dt className="shrink-0 w-[4.5rem] text-ink-muted">Phone</dt><dd className="truncate text-ink">{row.phone.length === 10 ? `+91 ${row.phone}` : 'not typed'}</dd></div>
+                {row.email && <div className="flex gap-2 min-w-0"><dt className="shrink-0 w-[4.5rem] text-ink-muted">Email</dt><dd className="truncate text-ink">{row.email}</dd></div>}
+                {row.place && <div className="flex gap-2 min-w-0"><dt className="shrink-0 w-[4.5rem] text-ink-muted">Place</dt><dd className="truncate text-ink">{row.place}</dd></div>}
+                {row.source && <div className="flex gap-2 min-w-0"><dt className="shrink-0 w-[4.5rem] text-ink-muted">Came from</dt><dd className="truncate text-ink">{row.source}</dd></div>}
               </dl>
 
               {row.phone.length === 10 && (
-                <div className="flex flex-wrap gap-2">
-                  <a href={whatsappLink(row)} target="_blank" rel="noopener noreferrer" className={`${pill} bg-[#4B1D3F] text-white hover:bg-[#3B1532]`}>
-                    <MessageCircle className="w-4 h-4" /> WhatsApp
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                  <a href={whatsappLink(row)} target="_blank" rel="noopener noreferrer" className={`${ui.primary} col-span-2`}>
+                    <MessageCircle className="w-4 h-4" /> Message on WhatsApp
                   </a>
-                  <a href={`tel:+91${row.phone}`} className={`${pill} border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]`}>
+                  <a href={`tel:+91${row.phone}`} className={ui.outline}>
                     <Phone className="w-4 h-4" /> Call
                   </a>
-                  <button type="button" onClick={() => setContacted(row, !row.contactedAt)} className={`${pill} border border-[#4B1D3F]/15 bg-white text-[#2A1A26] hover:bg-[#F3EEF8]`}>
-                    <Check className="w-4 h-4" /> {row.contactedAt ? 'Mark not contacted' : 'Mark contacted'}
+                  <button type="button" onClick={() => setContacted(row, !row.contactedAt)} className={ui.outline}>
+                    <Check className="w-4 h-4" /> {row.contactedAt ? 'Not contacted' : 'Mark contacted'}
                   </button>
                 </div>
               )}

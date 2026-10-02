@@ -4,6 +4,7 @@ import { adminDb as db } from '../../lib/firebase';
 import { useAdmin } from '../../context/AdminContext';
 import { useRouter } from '../../context/RouterContext';
 import { Download, Loader2, Mail, Phone, RefreshCw, Search, Users } from 'lucide-react';
+import { AdminPageHeader, tone, ui } from './kidsToysShared';
 
 type CustomerRow = {
   email: string;
@@ -113,148 +114,154 @@ export const AdminCustomers: React.FC = () => {
   const buyerCount = rows.filter((r) => r.orders > 0).length;
   const initial = (row: CustomerRow) => (row.name || row.email || '?').trim().charAt(0).toUpperCase();
   const accountBadge = (row: CustomerRow) => (
-    <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${row.hasAccount ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-[#FBF7F3] border-[#4B1D3F]/10 text-[#2A1A26]/70'}`}>
+    <span className={`shrink-0 ${ui.badge} ${row.hasAccount ? tone.ok : tone.muted}`}>
       {row.hasAccount ? 'Account' : 'Guest'}
     </span>
   );
+  const avatar = 'shrink-0 rounded-full bg-sunken text-ink text-sm font-bold flex items-center justify-center';
 
   return (
-    <div id="admin-customers-page" className="space-y-5">
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#9C7A45]">Customers</p>
-          <h2 className="mt-1 font-serif text-3xl sm:text-4xl font-semibold text-[#4B1D3F] leading-tight">Customers <span className="text-[#2A1A26]/35 font-sans text-xl align-middle tabular-nums">({rows.length})</span></h2>
-          <p className="mt-1 text-sm text-[#2A1A26]/60">Accounts created by email sign-in, plus guests who have paid for an order.</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={load} className="h-10 px-4 bg-white border border-[#4B1D3F]/20 hover:bg-[#F3EEF8] rounded-full text-[13px] font-semibold text-[#4B1D3F] inline-flex items-center gap-2 cursor-pointer transition-colors">
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
-          </button>
-          <button onClick={exportCsv} disabled={!filtered.length} className="h-10 px-4 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 transition-colors">
-            <Download className="w-4 h-4 text-white" /> Export CSV
-          </button>
-        </div>
-      </div>
+    <div id="admin-customers-page" className="space-y-4">
+      <AdminPageHeader
+        eyebrow="Sales"
+        title={<>Customers <span className="text-ink-muted font-normal tabular-nums">({rows.length})</span></>}
+        icon={<Users />}
+        description="Accounts created by email sign-in, plus guests who have paid for an order."
+        actions={
+          <>
+            <button onClick={load} className={`${ui.outline} flex-1 sm:flex-none`}>
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            </button>
+            <button onClick={exportCsv} disabled={!filtered.length} className={`${ui.primary} flex-1 sm:flex-none`}>
+              <Download className="w-4 h-4" /> Export CSV
+            </button>
+          </>
+        }
+      />
 
-      <div className="grid grid-cols-3 gap-3">
+      <dl className="grid grid-cols-3 gap-2.5">
         {[
           { label: 'All customers', value: rows.length },
           { label: 'With account', value: accountCount },
           { label: 'Have paid', value: buyerCount },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white rounded-2xl border border-[#4B1D3F]/10 px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#2A1A26]/55 leading-tight">{stat.label}</p>
-            <p className="font-serif text-2xl font-semibold text-[#2A1A26] tabular-nums">{stat.value}</p>
+          <div key={stat.label} className="min-w-0 bg-white rounded-2xl border border-line px-3 py-2.5 sm:px-4">
+            <dt className={ui.eyebrow}>{stat.label}</dt>
+            <dd className={ui.stat}>{stat.value}</dd>
           </div>
         ))}
-      </div>
+      </dl>
 
-      <div className="bg-white p-3 sm:p-4 rounded-3xl border border-[#4B1D3F]/10 relative">
-        <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-7 sm:left-8 top-1/2 -translate-y-1/2" />
+      <div className="relative">
+        <Search className="w-[18px] h-[18px] text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          inputMode="search"
+          aria-label="Search customers"
           placeholder="Search by name, email or phone"
-          className="w-full h-11 pl-11 pr-4 border border-[#4B1D3F]/15 bg-[#FBF7F3] rounded-full text-sm text-[#2A1A26] placeholder:text-[#2A1A26]/40 focus:outline-none focus:bg-white focus:border-[#4B1D3F]/40 focus:ring-4 focus:ring-[#4B1D3F]/10 transition"
+          className={ui.search}
         />
       </div>
 
-      {error && <div role="alert" className="px-4 py-3 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm">{error}</div>}
+      {error && <div role="alert" className={ui.alert}>{error}</div>}
 
       {loading && rows.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 p-4 space-y-3" aria-label="Loading customers">
+        <div className={`${ui.card} space-y-4`} role="status" aria-label="Loading customers">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#F3EEF8] animate-pulse" />
+              <div className="w-10 h-10 rounded-full bg-sunken-deep" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 w-1/3 rounded-full bg-[#F3EEF8] animate-pulse" />
-                <div className="h-3 w-1/2 rounded-full bg-[#F3EEF8]/70 animate-pulse" />
+                <div className="h-3 w-1/3 rounded bg-sunken-deep" />
+                <div className="h-3 w-1/2 rounded bg-sunken-deep" />
               </div>
             </div>
           ))}
           <Loader2 className="sr-only" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 py-14 px-6 text-center space-y-2">
-          <span className="mx-auto w-14 h-14 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center mb-2"><Users className="w-6 h-6" /></span>
-          <p className="text-sm text-[#2A1A26]/65 max-w-sm mx-auto">{rows.length === 0 ? 'No customers yet. They appear here after signing in or paying for an order.' : 'No customer matches your search.'}</p>
+        <div className={ui.empty}>
+          <Users className="mx-auto w-6 h-6 text-ink-muted mb-2" aria-hidden="true" />
+          <p className="text-sm leading-5 text-ink-muted max-w-sm mx-auto">{rows.length === 0 ? 'No customers yet. They appear here after signing in or paying for an order.' : 'No customer matches your search.'}</p>
         </div>
       ) : (
         <>
           {/* Phone: cards */}
-          <ul className="md:hidden space-y-3">
+          <ul className="md:hidden space-y-2.5">
             {filtered.map((row) => (
-              <li key={row.email} className="bg-white rounded-2xl border border-[#4B1D3F]/10 p-4">
-                <div className="flex items-start gap-3">
-                  <span className="w-10 h-10 shrink-0 rounded-full bg-[#F3EEF8] text-[#4B1D3F] font-serif font-semibold flex items-center justify-center">{initial(row)}</span>
+              <li key={row.email} className="bg-white rounded-2xl border border-line p-3.5">
+                <div className="flex items-center gap-3">
+                  <span className={`w-10 h-10 ${avatar}`} aria-hidden="true">{initial(row)}</span>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-[#2A1A26] truncate">{row.name || '—'}</p>
+                      <p className="text-[15px] leading-5 font-semibold text-ink truncate">{row.name || '—'}</p>
                       {accountBadge(row)}
                     </div>
-                    <p className="text-[12px] text-[#2A1A26]/55">Joined {formatDate(row.createdAt)}</p>
+                    <p className="text-xs leading-4 text-ink-muted">Joined {formatDate(row.createdAt)}</p>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1 text-[13px]">
-                  <a href={`mailto:${row.email}`} className="flex items-center gap-2 text-[#2A1A26]/80 break-all"><Mail className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />{row.email}</a>
-                  {row.phone && <a href={`tel:+91${row.phone}`} className="flex items-center gap-2 text-[#2A1A26]/80"><Phone className="w-3.5 h-3.5 shrink-0 text-[#4B1D3F]/50" />+91 {row.phone}</a>}
+                <div className="mt-1.5 text-sm leading-5">
+                  <a href={`mailto:${row.email}`} className="min-h-11 flex items-center gap-2.5 text-ink break-all"><Mail className="w-4 h-4 shrink-0 text-ink-muted" />{row.email}</a>
+                  {row.phone && <a href={`tel:+91${row.phone}`} className="min-h-11 flex items-center gap-2.5 text-ink border-t border-line"><Phone className="w-4 h-4 shrink-0 text-ink-muted" />+91 {row.phone}</a>}
                 </div>
-                <div className="mt-3 pt-3 border-t border-[#4B1D3F]/[0.08] grid grid-cols-3 gap-2 text-[12px]">
-                  <div><p className="text-[#2A1A26]/55">Paid orders</p><p className="font-semibold text-[#2A1A26] tabular-nums">{row.orders}</p></div>
-                  <div><p className="text-[#2A1A26]/55">Spent</p><p className="font-semibold text-[#2A1A26] tabular-nums">₹{Math.round(row.spent).toLocaleString('en-IN')}</p></div>
+                <dl className="pt-2.5 border-t border-line grid grid-cols-3 gap-2 text-[13px] leading-[18px]">
+                  <div><dt className="text-ink-muted">Paid orders</dt><dd className="font-bold text-ink tabular-nums">{row.orders}</dd></div>
+                  <div><dt className="text-ink-muted">Spent</dt><dd className="font-bold text-ink tabular-nums">₹{Math.round(row.spent).toLocaleString('en-IN')}</dd></div>
                   <div className="min-w-0">
-                    <p className="text-[#2A1A26]/55">Last order</p>
-                    {row.lastOrderNumber ? (
-                      <button onClick={() => openAdminOrderDetails(row.lastOrderNumber)} className="font-mono font-semibold text-[#4B1D3F] underline underline-offset-2 cursor-pointer truncate max-w-full block">
-                        {row.lastOrderNumber}
-                      </button>
-                    ) : <p className="text-[#2A1A26]/60">—</p>}
+                    <dt className="text-ink-muted">Last order</dt>
+                    <dd>
+                      {row.lastOrderNumber ? (
+                        <button onClick={() => openAdminOrderDetails(row.lastOrderNumber)} className={`${ui.link} font-mono truncate max-w-full block py-0.5 -my-0.5`}>
+                          {row.lastOrderNumber}
+                        </button>
+                      ) : <span className="text-ink-muted">—</span>}
+                    </dd>
                   </div>
-                </div>
+                </dl>
               </li>
             ))}
           </ul>
 
           {/* Tablet / desktop: table */}
-          <div className="hidden md:block bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] overflow-hidden">
+          <div className={`hidden md:block ${ui.panel}`}>
             <div className="overflow-x-auto max-h-[75vh] overflow-y-auto">
               <table className="w-full text-left text-[13px]">
-                <thead className="sticky top-0 z-10 bg-[#FBF7F3] text-[11px] uppercase tracking-[0.12em] text-[#2A1A26]/55">
-                  <tr className="border-b border-[#4B1D3F]/10">
-                    <th className="py-3.5 pl-5 pr-3 font-semibold">Customer</th>
-                    <th className="py-3.5 px-3 font-semibold">Contact</th>
-                    <th className="py-3.5 px-3 font-semibold">Account</th>
-                    <th className="py-3.5 px-3 text-right font-semibold">Paid orders</th>
-                    <th className="py-3.5 px-3 text-right font-semibold">Spent</th>
-                    <th className="py-3.5 pl-3 pr-5 font-semibold">Last order</th>
+                <thead className={`sticky top-0 z-10 ${ui.thead}`}>
+                  <tr className="border-b border-line">
+                    <th className="py-2.5 pl-5 pr-3 font-semibold">Customer</th>
+                    <th className="py-2.5 px-3 font-semibold">Contact</th>
+                    <th className="py-2.5 px-3 font-semibold">Account</th>
+                    <th className="py-2.5 px-3 text-right font-semibold">Paid orders</th>
+                    <th className="py-2.5 px-3 text-right font-semibold">Spent</th>
+                    <th className="py-2.5 pl-3 pr-5 font-semibold">Last order</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#4B1D3F]/[0.06]">
+                <tbody className="divide-y divide-line">
                   {filtered.map((row) => (
-                    <tr key={row.email} className="hover:bg-[#FBF7F3] transition-colors">
-                      <td className="py-3.5 pl-5 pr-3">
+                    <tr key={row.email} className="hover:bg-page transition-colors">
+                      <td className="py-3 pl-5 pr-3">
                         <div className="flex items-center gap-3">
-                          <span className="w-9 h-9 shrink-0 rounded-full bg-[#F3EEF8] text-[#4B1D3F] font-serif font-semibold flex items-center justify-center">{initial(row)}</span>
+                          <span className={`w-9 h-9 ${avatar}`} aria-hidden="true">{initial(row)}</span>
                           <div className="min-w-0">
-                            <p className="font-semibold text-[#2A1A26] truncate">{row.name || '—'}</p>
-                            <p className="text-[12px] text-[#2A1A26]/55">Joined {formatDate(row.createdAt)}</p>
+                            <p className="font-semibold text-ink truncate">{row.name || '—'}</p>
+                            <p className="text-xs text-ink-muted">Joined {formatDate(row.createdAt)}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-3 space-y-0.5">
-                        <a href={`mailto:${row.email}`} className="flex items-center gap-1.5 text-[#2A1A26]/80 hover:text-[#4B1D3F] hover:underline"><Mail className="w-3.5 h-3.5 text-[#4B1D3F]/45" />{row.email}</a>
-                        {row.phone && <a href={`tel:+91${row.phone}`} className="flex items-center gap-1.5 text-[#2A1A26]/80 hover:text-[#4B1D3F] hover:underline"><Phone className="w-3.5 h-3.5 text-[#4B1D3F]/45" />+91 {row.phone}</a>}
+                      <td className="py-3 px-3 space-y-0.5">
+                        <a href={`mailto:${row.email}`} className="flex items-center gap-1.5 text-ink hover:text-brand hover:underline"><Mail className="w-3.5 h-3.5 text-ink-muted" />{row.email}</a>
+                        {row.phone && <a href={`tel:+91${row.phone}`} className="flex items-center gap-1.5 text-ink hover:text-brand hover:underline"><Phone className="w-3.5 h-3.5 text-ink-muted" />+91 {row.phone}</a>}
                       </td>
-                      <td className="py-3.5 px-3">{accountBadge(row)}</td>
-                      <td className="py-3.5 px-3 text-right font-semibold text-[#2A1A26] tabular-nums">{row.orders}</td>
-                      <td className="py-3.5 px-3 text-right font-semibold text-[#2A1A26] tabular-nums">₹{Math.round(row.spent).toLocaleString('en-IN')}</td>
-                      <td className="py-3.5 pl-3 pr-5">
+                      <td className="py-3 px-3">{accountBadge(row)}</td>
+                      <td className="py-3 px-3 text-right font-semibold text-ink tabular-nums">{row.orders}</td>
+                      <td className="py-3 px-3 text-right font-bold text-ink tabular-nums">₹{Math.round(row.spent).toLocaleString('en-IN')}</td>
+                      <td className="py-3 pl-3 pr-5">
                         {row.lastOrderNumber ? (
-                          <button onClick={() => openAdminOrderDetails(row.lastOrderNumber)} className="font-mono font-semibold text-[#4B1D3F] hover:underline underline-offset-2 cursor-pointer">
+                          <button onClick={() => openAdminOrderDetails(row.lastOrderNumber)} className={`${ui.link} font-mono`}>
                             {row.lastOrderNumber}
                           </button>
                         ) : '—'}
-                        <p className="text-[12px] text-[#2A1A26]/55">{formatDate(row.lastOrder)}</p>
+                        <p className="text-xs text-ink-muted">{formatDate(row.lastOrder)}</p>
                       </td>
                     </tr>
                   ))}

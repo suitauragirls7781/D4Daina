@@ -1,10 +1,10 @@
 import React from 'react';
 
 /**
- * Suit Aura Girls icon set: duotone marks in the brand palette (plum outline, lavender / blush fills,
- * champagne-gold accents). `mono` draws the same shape in the text colour (for plum buttons or inactive tabs).
- * `strokeWidth` is accepted so an icon can stand in for a lucide icon; it is ignored.
- * `live` plays the icon's own gentle motion (defined in index.css, off for reduced-motion users).
+ * Suit Aura Girls icon set: one outline in the colour of the text around it (currentColor), so an icon is
+ * ink in a list, teal on the active tab and white on a teal button without any extra work.
+ * `mono` (the default look for inactive things) is the bare outline; without it the main shape gets a faint
+ * tint of the same colour. Icons never move: `live` and `strokeWidth` are accepted for older call sites and ignored.
  */
 type Fill = 'lav' | 'blush' | 'gold' | 'plum' | 'none' | 'white';
 type Part =
@@ -14,22 +14,18 @@ type Part =
 
 export type StoreIconProps = { className?: string; mono?: boolean; strokeWidth?: number; live?: boolean };
 
-const COLOURS: Record<Fill, string> = { lav: '#E6DDF0', blush: '#F7E4EA', gold: '#C5A46D', plum: '#4B1D3F', none: 'none', white: '#FFFFFF' };
-const PLUM = '#4B1D3F';
-
-const make = (name: string, parts: Part[], motion = '') => {
-  const Icon: React.FC<StoreIconProps> = ({ className = 'w-5 h-5', mono = false, live = true }) => (
-    <svg viewBox="0 0 24 24" className={`${className} sag-ic ${live ? `sag-live ${motion}` : ''}`} role="img" aria-hidden="true" focusable="false" fill="none" strokeLinecap="round" strokeLinejoin="round">
+const make = (name: string, parts: Part[], _motion = '') => {
+  const Icon: React.FC<StoreIconProps> = ({ className = 'w-5 h-5', mono = false }) => (
+    <svg viewBox="0 0 24 24" className={`${className} sag-ic`} role="img" aria-hidden="true" focusable="false" fill="none" strokeLinecap="round" strokeLinejoin="round">
       {parts.map((part, index) => {
         const fillKey = part.fill || 'none';
-        const fill = mono
-          ? (fillKey === 'none' ? 'none' : fillKey === 'white' ? 'none' : fillKey === 'gold' || fillKey === 'plum' ? 'currentColor' : 'currentColor')
-          : COLOURS[fillKey];
-        const fillOpacity = mono && (fillKey === 'lav' || fillKey === 'blush') ? 0.16 : undefined;
-        const stroke = part.stroke === false ? 'none' : mono ? 'currentColor' : PLUM;
-        // Gold accents softly shimmer when the icon is live; some parts carry their own motion
-        const className = [part.cls, fillKey === 'gold' ? 'sag-p-gold' : ''].filter(Boolean).join(' ') || undefined;
-        const common = { fill, fillOpacity, stroke, strokeWidth: part.width ?? 1.7, className };
+        const soft = fillKey === 'lav' || fillKey === 'blush';
+        const outlined = part.stroke !== false;
+        // Soft areas: a faint tint (or nothing when mono). Accent parts: solid only when they have no outline of their own.
+        const fill = fillKey === 'none' || fillKey === 'white' ? 'none' : soft ? (mono ? 'none' : 'currentColor') : outlined ? 'none' : 'currentColor';
+        const fillOpacity = soft && !mono ? 0.14 : undefined;
+        const stroke = outlined ? 'currentColor' : 'none';
+        const common = { fill, fillOpacity, stroke, strokeWidth: part.width ?? 1.75 };
         if ('circle' in part) return <circle key={index} cx={part.circle[0]} cy={part.circle[1]} r={part.circle[2]} {...common} />;
         if ('rect' in part) return <rect key={index} x={part.rect[0]} y={part.rect[1]} width={part.rect[2]} height={part.rect[3]} rx={part.rect[4]} {...common} />;
         return <path key={index} d={part.d} {...common} />;

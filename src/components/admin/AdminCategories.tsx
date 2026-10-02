@@ -155,14 +155,14 @@ export const AdminCategories: React.FC = () => {
 
       {/* Header */}
       <AdminPageHeader
-        eyebrow="Taxonomy & Navigation"
-        title={<>Categories <span className="text-[#2A1A26]/45 font-normal">({categories.length})</span></>}
+        eyebrow="Catalogue"
+        title={<>Categories <span className="text-ink-faint font-normal">({categories.length})</span></>}
         icon={<Layers className="text-current" />}
         description="The category tiles and menu links shoppers browse by. The store shows only categories that have products."
         actions={
           <button
             onClick={handleOpenAdd}
-            className="h-11 px-5 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-sm font-semibold transition-colors shadow-sm inline-flex items-center gap-2 cursor-pointer"
+            className="sag-btn-primary h-12 px-5 text-[15px] gap-2 w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 text-current" />
             <span>Add category</span>
@@ -170,10 +170,10 @@ export const AdminCategories: React.FC = () => {
         }
       />
       {categories.length === 0 && (
-        <div className="px-6 py-14 text-center bg-white rounded-3xl border border-dashed border-[#4B1D3F]/20">
-          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center"><Layers className="w-6 h-6 text-current" /></span>
-          <p className="font-serif text-xl text-[#2A1A26]">No categories yet</p>
-          <p className="mt-1 text-sm text-[#2A1A26]/60">Use Add category to create the first one.</p>
+        <div className="px-6 py-14 text-center bg-white rounded-2xl border border-dashed border-line">
+          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-sunken text-ink flex items-center justify-center"><Layers className="w-6 h-6 text-current" /></span>
+          <p className="text-base font-semibold text-ink">No categories yet</p>
+          <p className="mt-1 text-sm text-ink-muted">Use Add category to create the first one.</p>
         </div>
       )}
 
@@ -184,52 +184,53 @@ export const AdminCategories: React.FC = () => {
           return (
             <div
               key={cat.id}
-              className="min-w-0 bg-white rounded-3xl border border-[#4B1D3F]/10 overflow-hidden shadow-[var(--sag-shadow)] hover:border-[#4B1D3F]/25 transition-colors flex flex-col group"
+              className="min-w-0 bg-white rounded-2xl border border-line overflow-hidden flex flex-col"
             >
               {/* Category Image Banner */}
-              <div className="aspect-[4/5] overflow-hidden bg-[#F3EEF8] flex items-center justify-center">
+              <div className="m-2.5 mb-0 aspect-[4/5] overflow-hidden rounded-xl bg-sunken flex items-center justify-center">
                 <img
                   src={cat.image}
                   alt={cat.title}
-                  className={`w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500 ${!cat.image ? 'hidden' : ''}`}
+                  loading="lazy"
+                  className={`w-full h-full object-cover object-top ${!cat.image ? 'hidden' : ''}`}
                 />
-                {!cat.image && <ImageIcon className="w-7 h-7 text-[#4B1D3F]/35" aria-hidden="true" />}
+                {!cat.image && <ImageIcon className="w-7 h-7 text-ink-faint" aria-hidden="true" />}
               </div>
               <div className="px-3.5 sm:px-4 pt-3.5">
-                <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px] font-semibold uppercase tracking-wide ${
-                  cat.isActive ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-[#F3EEF8] text-[#4B1D3F] border-[#4B1D3F]/15'
+                <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-md border text-xs font-semibold ${
+                  cat.isActive ? 'bg-ok-tint text-ok border-ok-line' : 'bg-sunken text-ink border-line'
                 }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-emerald-600' : 'bg-[#4B1D3F]/40'}`} aria-hidden="true" />
+                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-ok' : 'bg-ink/50'}`} aria-hidden="true" />
                   {cat.isActive ? 'Active' : 'Disabled'}
                 </span>
-                <h4 className="mt-2 font-serif text-lg sm:text-xl font-semibold leading-snug text-[#2A1A26] break-words">
+                <h4 className="mt-2 text-base font-semibold leading-snug text-ink break-words">
                   {cat.title}
                 </h4>
                 {cat.tagline && (
-                  <p className="text-xs text-[#2A1A26]/60 line-clamp-2">
+                  <p className="mt-0.5 text-[13px] text-ink-muted line-clamp-2">
                     {cat.tagline}
                   </p>
                 )}
               </div>
 
               {/* Body stats & controls */}
-              <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-3 text-xs">
-                <div className="flex flex-wrap items-center justify-between gap-1 text-[#2A1A26]/65">
+              <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-3 text-[13px]">
+                <div className="flex flex-wrap items-center justify-between gap-1 text-ink-muted">
                   <span>Products</span>
-                  <span className="font-semibold text-[#4B1D3F]">
-                    {liveCount} live
+                  <span className="font-semibold text-ink sag-num">
+                    {liveCount} in this category
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-[#4B1D3F]/10">
+                <div className="flex flex-wrap items-center justify-between gap-1 pt-2 border-t border-line">
                   <button
                     onClick={() => {
                       updateCategory(cat.id, { isActive: !cat.isActive })
                         .then(() => showToast(`Category "${cat.title}" ${!cat.isActive ? 'enabled' : 'hidden'}.`, 'info'))
                         .catch((err: any) => showToast(err?.message || 'Could not save. Please try again.', 'error'));
                     }}
-                    className={`h-8 px-3 text-xs font-semibold rounded-full border transition-colors cursor-pointer ${
-                      cat.isActive ? 'text-[#4B1D3F] border-[#4B1D3F]/20 hover:bg-[#F3EEF8]' : 'text-emerald-800 border-emerald-200 hover:bg-emerald-50'
+                    className={`h-11 px-3.5 text-sm font-semibold rounded-xl border transition-colors cursor-pointer ${
+                      cat.isActive ? 'text-ink border-line hover:bg-sunken' : 'text-ok border-ok-line hover:bg-ok-tint'
                     }`}
                   >
                     {cat.isActive ? 'Disable' : 'Enable'}
@@ -238,15 +239,17 @@ export const AdminCategories: React.FC = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenEdit(cat)}
-                      className="w-8 h-8 inline-flex items-center justify-center hover:bg-[#F3EEF8] rounded-full text-[#4B1D3F] transition-colors cursor-pointer"
-                      title="Edit Category"
+                      className="w-11 h-11 inline-flex items-center justify-center hover:bg-sunken rounded-full text-ink transition-colors cursor-pointer"
+                      title="Edit category"
+                      aria-label={`Edit ${cat.title}`}
                     >
                       <Edit3 className="w-4 h-4 text-current" />
                     </button>
                     <button
                       onClick={() => handleDelete(cat)}
-                      className="w-8 h-8 inline-flex items-center justify-center hover:bg-rose-50 rounded-full text-rose-700 transition-colors cursor-pointer"
-                      title="Delete Category"
+                      className="w-11 h-11 inline-flex items-center justify-center hover:bg-danger-tint rounded-full text-danger transition-colors cursor-pointer"
+                      title="Delete category"
+                      aria-label={`Delete ${cat.title}`}
                     >
                       <Trash2 className="w-4 h-4 text-current" />
                     </button>
@@ -260,37 +263,39 @@ export const AdminCategories: React.FC = () => {
 
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4">
-          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[94dvh] overflow-y-auto p-5 sm:p-7 shadow-2xl border border-[#4B1D3F]/10 space-y-4">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center sm:p-4">
+          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-white rounded-t-[20px] sm:rounded-2xl sm:max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
 
-            <div className="flex items-center justify-between border-b border-[#4B1D3F]/10 pb-3">
-              <h3 className="font-serif text-2xl font-semibold text-[#2A1A26]">
+            <div className="sticky top-0 z-10 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 px-5 sm:px-7 py-3 bg-white flex items-center justify-between border-b border-line">
+              <h3 className="text-[17px] leading-6 font-semibold text-ink">
                 {editingCatId ? 'Edit category' : 'Add a category'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-10 h-10 rounded-full flex items-center justify-center text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+              <button type="button" onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
                 <X className="w-5 h-5 text-current" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Category Title *</label>
+                <label htmlFor="cat-title" className="sag-label">Name shown on the store <span className="text-danger">*</span></label>
                 <input
+                  id="cat-title"
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Festive Wear"
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                  className="sag-input"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Category Slug / Enum Name *</label>
+                <label htmlFor="cat-name" className="sag-label">Products it shows <span className="text-danger">*</span></label>
                 <select
+                  id="cat-name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value as ProductCategory })}
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10 cursor-pointer"
+                  className="sag-input"
                 >
                   <option value="Suits">Suits</option>
                   <option value="Kurtis">Kurtis</option>
@@ -304,26 +309,28 @@ export const AdminCategories: React.FC = () => {
                   <option value="Baby Boys">Baby Boys (Kids)</option>
                   <option value="Toys">Toys</option>
                 </select>
+                <p className="mt-1.5 text-[13px] text-ink-muted">Products saved with this category appear under it.</p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Category Photo</label>
-                <div className="flex items-center gap-3">
-                  <div className="w-20 aspect-[4/5] shrink-0 rounded-2xl overflow-hidden border border-[#4B1D3F]/15 bg-[#F3EEF8] flex items-center justify-center">
+                <p className="sag-label">Category photo <span className="font-normal text-ink-muted">(optional)</span></p>
+                <div className="flex items-start gap-3">
+                  {/* The whole photo is shown, uncropped, so you can check what was uploaded */}
+                  <div className="w-28 aspect-[4/5] shrink-0 rounded-xl overflow-hidden border border-line bg-sunken flex items-center justify-center">
                     {formData.image ? (
-                      <img src={formData.image} alt="Category preview" className="w-full h-full object-cover object-top" />
+                      <img src={formData.image} alt="Category photo preview" className="w-full h-full object-contain" />
                     ) : (
-                      <ImageIcon className="w-5 h-5 text-[#2A1A26]/50" />
+                      <ImageIcon className="w-5 h-5 text-ink-faint" />
                     )}
                   </div>
-                  <div className="flex-1 space-y-2">
-                    <label className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-sm font-semibold text-[#4B1D3F] ${isUploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-[#F3EEF8]'}`}>
+                  <div className="min-w-0 flex-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <label className={`sag-btn-outline h-11 px-4 text-sm gap-1.5 ${isUploading ? 'opacity-60 cursor-wait' : ''}`}>
                       <ImageIcon className="w-4 h-4 text-current" />
                       {isUploading ? 'Uploading…' : formData.image ? 'Change photo' : 'Upload photo'}
                       <input type="file" accept="image/*" className="sr-only" disabled={isUploading} onChange={handleImageFile} />
                     </label>
                     {formData.image && (
-                      <button type="button" onClick={() => setFormData({ ...formData, image: '' })} className="ml-2 h-10 px-3 rounded-full text-sm font-semibold text-rose-700 hover:bg-rose-50 cursor-pointer">
+                      <button type="button" onClick={() => setFormData({ ...formData, image: '' })} className="sag-link text-danger hover:text-danger">
                         Remove
                       </button>
                     )}
@@ -332,49 +339,51 @@ export const AdminCategories: React.FC = () => {
                       value={formData.image}
                       onChange={(e) => setFormData({ ...formData, image: e.target.value.trim() })}
                       placeholder="…or paste an image link"
-                      className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                      aria-label="Category photo link"
+                      className="sag-input basis-full"
                     />
-                    <p className="text-[11px] text-[#2A1A26]/60">Without a photo, the store uses the first product photo of this category.</p>
+                    <p className="basis-full text-[13px] text-ink-muted">Without a photo, the store uses the first product photo of this category.</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2A1A26]/70 mb-1.5">Tagline / Short Summary</label>
+                <label htmlFor="cat-tagline" className="sag-label">Short line under the name <span className="font-normal text-ink-muted">(optional)</span></label>
                 <input
+                  id="cat-tagline"
                   type="text"
                   value={formData.tagline}
                   onChange={(e) => setFormData({ ...formData, tagline: e.target.value })}
                   placeholder="e.g. Royal zari, banarasi weaves & lehengas"
-                  className="w-full h-11 px-4 border border-[#4B1D3F]/15 bg-white rounded-full text-base sm:text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-2 focus:ring-[#4B1D3F]/10"
+                  className="sag-input"
                 />
               </div>
 
               <div className="pt-1">
-                <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-[#4B1D3F]/10 bg-[#FBF7F3] cursor-pointer text-sm font-semibold text-[#2A1A26]">
+                <label className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="peer sr-only"
                   />
-                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-[#E6DDF0] peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-2 peer-focus-visible:ring-[#4B1D3F]/30 transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-                  <span className="order-first">Category visible in store navigation</span>
+                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+                  <span className="order-first">Show this category on the store</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#4B1D3F]/10">
+              <div className="sticky bottom-0 z-10 -mx-5 sm:-mx-7 -mb-5 sm:-mb-7 px-5 sm:px-7 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white flex gap-3 border-t border-line shadow-[var(--sag-shadow-bar)]">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="h-11 px-5 border border-[#4B1D3F]/20 rounded-full text-[#4B1D3F] font-semibold hover:bg-[#F3EEF8] cursor-pointer"
+                  className="sag-btn-outline h-12 flex-1 sm:flex-none sm:ml-auto sm:px-6 text-[15px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isUploading || isSaving}
-                  className="h-11 px-6 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full font-semibold flex items-center gap-2 disabled:opacity-60 cursor-pointer"
+                  className="sag-btn-primary h-12 flex-[2] sm:flex-none sm:px-8 gap-2"
                 >
                   <Save className="w-4 h-4 text-current" /> {isSaving ? 'Saving…' : 'Save category'}
                 </button>

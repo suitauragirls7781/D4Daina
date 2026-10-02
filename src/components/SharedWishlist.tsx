@@ -30,30 +30,35 @@ export const SharedWishlistView: React.FC<{ id: string }> = ({ id }) => {
   };
 
   return (
-    <div className="py-10 sm:py-16 bg-[#FBF7F3]">
+    <div className="pt-6 pb-14 sm:pt-8 lg:pb-20 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p className="sag-eyebrow">Shared with you</p>
-        <h1 className="mt-2 font-serif text-3xl sm:text-4xl text-[#4B1D3F]">A wishlist from a friend</h1>
+        <h1 className="mt-1 font-display text-[28px] leading-8 lg:text-4xl lg:leading-[1.15] text-ink">A wishlist from a friend</h1>
         {error ? (
-          <div className="mt-8 sag-card p-6 text-center">
-            <p className="text-[#2A1A26]">{error}</p>
-            <div className="mt-4 flex justify-center gap-3">
-              <button onClick={load} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Try again</button>
-              <button onClick={() => navigateToCategory('All')} className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Shop all styles</button>
+          <div role="alert" className="mt-6 sag-card p-5 text-center">
+            <p className="text-[15px] leading-[22px] text-ink">{error}</p>
+            <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2.5">
+              <button onClick={() => navigateToCategory('All')} className="sag-btn-primary h-12 px-6 text-[15px]">Shop all styles</button>
+              <button onClick={load} className="sag-btn-outline h-12 px-6 text-[15px]">Try again</button>
             </div>
           </div>
         ) : ids === null ? (
-          <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#4B1D3F]" /></div>
+          <div className="py-20 flex justify-center" role="status" aria-label="Loading wishlist"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
         ) : (
           <>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              <p className="text-sm text-[#2A1A26]/70">{items.length} {items.length === 1 ? 'style' : 'styles'}</p>
-              {items.length > 0 && <button onClick={saveAll} className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] cursor-pointer"><Heart className="w-4 h-4" /> Save all to my wishlist</button>}
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <p className="sag-num text-sm text-ink-muted">{items.length} {items.length === 1 ? 'style' : 'styles'}</p>
+              {items.length > 0 && <button onClick={saveAll} className="sag-btn-outline h-11 px-4 text-sm gap-1.5"><Heart className="w-4 h-4" /> Save all to my wishlist</button>}
             </div>
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
               {items.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
-            {items.length === 0 && <p className="mt-6 text-sm text-[#2A1A26]/70">These styles are no longer available.</p>}
+            {items.length === 0 && (
+              <div className="mt-6 sag-card p-5 text-center">
+                <p className="text-[15px] leading-[22px] text-ink">These styles are no longer available.</p>
+                <button onClick={() => navigateToCategory('All')} className="mt-4 sag-btn-primary h-12 px-6 text-[15px] w-full sm:w-auto">Shop all styles</button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -87,7 +92,7 @@ export const ShareWishlistButton: React.FC = () => {
   };
 
   return (
-    <button onClick={share} disabled={busy} className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] disabled:opacity-60 cursor-pointer">
+    <button onClick={share} disabled={busy} className="sag-link gap-1.5 disabled:opacity-60">
       {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />} Share wishlist
     </button>
   );

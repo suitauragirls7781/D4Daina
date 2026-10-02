@@ -132,7 +132,8 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
     ['Payment reference', order.paymentRef || ''],
   ].filter(([, value]) => Boolean(value)) as Array<[string, string]>;
 
-  const cell = 'py-2.5 align-top border-b border-[#4B1D3F]/10';
+  const cell = 'py-2.5 align-top border-b border-line';
+  const boxTitle = 'mb-1.5 text-xs leading-4 font-semibold text-ink-muted';
 
   // "Download invoice": a real PDF file (the same document the store sends from the admin panel)
   const [downloading, setDownloading] = React.useState(false);
@@ -150,7 +151,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
   };
 
   return createPortal(
-    <div className="sag-invoice-root fixed inset-0 z-[80] bg-[#2A1A26]/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={onClose}>
+    <div className="sag-invoice-root fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={onClose}>
       <style>{PRINT_CSS}</style>
       <div
         ref={panelRef}
@@ -159,81 +160,81 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
         aria-labelledby="sag-invoice-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="sag-invoice-panel bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-[var(--sag-shadow)] focus:outline-none animate-in fade-in slide-in-from-bottom-5"
+        className="sag-invoice-panel bg-white text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-sheet sm:rounded-card shadow-[var(--sag-shadow-pop)] focus:outline-none animate-in fade-in slide-in-from-bottom-5"
       >
-        <div className="sag-no-print sticky top-0 z-10 flex items-center justify-between gap-2 sm:gap-3 px-4 sm:px-6 py-3 bg-white border-b border-[#4B1D3F]/10 rounded-t-3xl">
+        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-white border-b border-line">
           <button
             type="button"
             onClick={() => window.print()}
-            className="sag-btn-primary h-10 px-4 sm:px-5 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-2 cursor-pointer"
+            className="sag-btn-primary h-11 px-4 gap-2 text-sm"
           >
-            <Printer className="w-4 h-4 text-current" /> Print<span className="hidden sm:inline"> / Save as PDF</span>
+            <Printer className="w-4 h-4" aria-hidden="true" /> Print<span className="hidden sm:inline"> / Save as PDF</span>
           </button>
           <button
             type="button"
             onClick={downloadPdf}
             aria-label={`Download ${invoiceNumber ? 'invoice' : 'receipt'} as PDF`}
-            className="sag-btn-outline h-10 px-4 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-2 cursor-pointer"
+            className="sag-btn-outline h-11 px-4 gap-2 text-sm"
           >
-            <Download className="w-4 h-4 text-current" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
+            <Download className="w-4 h-4" aria-hidden="true" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
           </button>
           <span className="flex-1" aria-hidden="true" />
-          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-10 h-10 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center text-[#4B1D3F] cursor-pointer">
-            <X className="w-5 h-5" />
+          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+            <X className="w-[22px] h-[22px]" />
           </button>
         </div>
 
-        <article className="sag-invoice-body p-5 sm:p-8 text-[#2A1A26] space-y-6">
-          <header className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-[#4B1D3F]/15">
-            <div className="min-w-0 text-sm text-[#2A1A26]/75 leading-relaxed">
-              <p className="font-serif text-2xl text-[#4B1D3F] leading-tight">{storeName}</p>
+        <article className="sag-invoice-body sag-num p-4 sm:p-8 text-ink space-y-6">
+          <header className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-line">
+            <div className="min-w-0 text-sm leading-5 text-ink-muted">
+              <p className="text-lg leading-6 font-semibold text-ink">{storeName}</p>
               <p className="mt-1">{storeAddress}</p>
               <p>Phone: {storePhone}</p>
               {storeEmail && <p className="break-all">Email: {storeEmail}</p>}
-              {legalName && legalName !== storeName && <p className="text-[#2A1A26]">{legalName}</p>}
+              {legalName && legalName !== storeName && <p className="text-ink">{legalName}</p>}
               {invoiceAddress && invoiceAddress !== storeAddress && <p>Registered address: {invoiceAddress}</p>}
               {gstin && <p>GSTIN: {gstin}</p>}
             </div>
             <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2">
-              <h2 id="sag-invoice-title" className="font-serif text-[32px] leading-none text-[#2A1A26]">{title}</h2>
-              <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] ${paid ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : refunded ? 'bg-[#F3EEF8] border border-[#4B1D3F]/15 text-[#4B1D3F]' : 'bg-[#F7E4EA] text-[#8A2E55]'}`}>{paymentStatus}</span>
+              <h2 id="sag-invoice-title" className="font-display text-[28px] leading-8 text-ink">{title}</h2>
+              <span className={`sag-badge ${paid ? 'bg-ok-tint text-ok' : refunded ? 'bg-sunken text-ink' : 'bg-sale-tint text-sale'}`}>{paymentStatus}</span>
             </div>
           </header>
 
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm rounded-2xl bg-[#FBF7F3] p-4 sm:p-5 print:bg-transparent print:p-0">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 rounded-control bg-page p-4 print:bg-transparent print:p-0">
             {meta.map(([label, value]) => (
               <div key={label} className="flex justify-between sm:block gap-3">
-                <dt className="text-[#2A1A26]/60 shrink-0">{label}</dt>
-                <dd className="text-[#2A1A26] font-medium text-right sm:text-left break-all min-w-0">{value}</dd>
+                <dt className="text-ink-muted shrink-0">{label}</dt>
+                <dd className="text-ink font-medium text-right sm:text-left break-all min-w-0">{value}</dd>
               </div>
             ))}
           </dl>
 
-          <div className="grid sm:grid-cols-2 gap-4 text-sm leading-relaxed">
-            <section className="rounded-2xl border border-[#4B1D3F]/12 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45] mb-1.5">Billed to</p>
-              <p className="font-medium">{order.customerName || address.fullName}</p>
-              {order.customerEmail && <p className="text-[#2A1A26]/75 break-all">{order.customerEmail}</p>}
-              {phone && <p className="text-[#2A1A26]/75">{phone}</p>}
-              {shipLines.map((line) => <p key={`bill-${line}`} className="text-[#2A1A26]/75">{line}</p>)}
+          <div className="grid sm:grid-cols-2 gap-3 text-sm leading-5">
+            <section className="rounded-control border border-line p-4">
+              <p className={boxTitle}>Billed to</p>
+              <p className="font-semibold">{order.customerName || address.fullName}</p>
+              {order.customerEmail && <p className="text-ink-muted break-all">{order.customerEmail}</p>}
+              {phone && <p className="text-ink-muted">{phone}</p>}
+              {shipLines.map((line) => <p key={`bill-${line}`} className="text-ink-muted">{line}</p>)}
             </section>
-            <section className="rounded-2xl border border-[#4B1D3F]/12 p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9C7A45] mb-1.5">Shipped to</p>
-              <p className="font-medium">{address.fullName || order.customerName}</p>
-              {shipLines.map((line) => <p key={line} className="text-[#2A1A26]/75">{line}</p>)}
+            <section className="rounded-control border border-line p-4">
+              <p className={boxTitle}>Shipped to</p>
+              <p className="font-semibold">{address.fullName || order.customerName}</p>
+              {shipLines.map((line) => <p key={line} className="text-ink-muted">{line}</p>)}
             </section>
           </div>
 
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-sm leading-5 border-collapse">
             <caption className="sr-only">Items in order {order.orderNumber}</caption>
             <thead>
-              <tr className="text-[11px] uppercase tracking-[0.12em] text-[#2A1A26]/60 text-left border-b border-[#4B1D3F]/15">
-                <th scope="col" className="pb-2 font-medium">Item</th>
-                <th scope="col" className="pb-2 font-medium text-right px-2 hidden sm:table-cell print:table-cell">MRP</th>
-                <th scope="col" className="pb-2 font-medium text-right px-2">Price</th>
-                <th scope="col" className="pb-2 font-medium text-right px-2 hidden sm:table-cell print:table-cell">Discount</th>
-                <th scope="col" className="pb-2 font-medium text-center px-2">Qty</th>
-                <th scope="col" className="pb-2 font-medium text-right">Amount</th>
+              <tr className="text-xs leading-4 text-ink-muted text-left border-b border-control">
+                <th scope="col" className="pb-2 font-semibold">Item</th>
+                <th scope="col" className="pb-2 font-semibold text-right px-2 hidden sm:table-cell print:table-cell">MRP</th>
+                <th scope="col" className="pb-2 font-semibold text-right px-2">Price</th>
+                <th scope="col" className="pb-2 font-semibold text-right px-2 hidden sm:table-cell print:table-cell">Discount</th>
+                <th scope="col" className="pb-2 font-semibold text-center px-2">Qty</th>
+                <th scope="col" className="pb-2 font-semibold text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -245,38 +246,38 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
                 return (
                   <tr key={item.id}>
                     <td className={`${cell} pr-2`}>
-                      <p className="text-[#2A1A26] leading-snug">{item.product?.name}</p>
-                      <p className="text-[13px] text-[#2A1A26]/60">{[item.selectedSize ? `Size ${item.selectedSize}` : '', colour].filter(Boolean).join(' · ')}</p>
-                      {mrp > unit && <p className="text-[13px] text-[#2A1A26]/60 sm:hidden print:hidden">MRP {inr(mrp)} · you save {inr(lineOff)}</p>}
+                      <p className="text-ink">{item.product?.name}</p>
+                      <p className="text-[13px] leading-[18px] text-ink-muted">{[item.selectedSize ? `Size ${item.selectedSize}` : '', colour].filter(Boolean).join(' · ')}</p>
+                      {mrp > unit && <p className="text-[13px] leading-[18px] text-ink-muted sm:hidden print:hidden">MRP {inr(mrp)} · you save {inr(lineOff)}</p>}
                     </td>
-                    <td className={`${cell} text-right px-2 whitespace-nowrap hidden sm:table-cell print:table-cell text-[#2A1A26]/60`}>{inr(mrp)}</td>
+                    <td className={`${cell} text-right px-2 whitespace-nowrap hidden sm:table-cell print:table-cell text-ink-muted`}>{inr(mrp)}</td>
                     <td className={`${cell} text-right px-2 whitespace-nowrap`}>{inr(unit)}</td>
-                    <td className={`${cell} text-right px-2 whitespace-nowrap hidden sm:table-cell print:table-cell text-emerald-800`}>{lineOff > 0 ? `−${inr(lineOff)}` : '—'}</td>
+                    <td className={`${cell} text-right px-2 whitespace-nowrap hidden sm:table-cell print:table-cell text-sale`}>{lineOff > 0 ? `−${inr(lineOff)}` : '—'}</td>
                     <td className={`${cell} text-center px-2`}>{item.quantity}</td>
-                    <td className={`${cell} text-right whitespace-nowrap`}>{inr(unit * item.quantity)}</td>
+                    <td className={`${cell} text-right whitespace-nowrap font-medium`}>{inr(unit * item.quantity)}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
 
-          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm rounded-2xl border border-[#4B1D3F]/10 p-4 print:border-0 print:p-0">
+          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 rounded-control border border-line p-4 print:border-0 print:p-0">
             {totals.map(([label, value, kind]) => (
-              <div key={label} className={`flex justify-between gap-4 ${kind === 'discount' ? 'text-emerald-800' : 'text-[#2A1A26]/75'}`}>
+              <div key={label} className={`flex justify-between gap-4 ${kind === 'discount' ? 'text-sale' : 'text-ink-muted'}`}>
                 <span>{label}</span>
                 <span className="whitespace-nowrap">{value}</span>
               </div>
             ))}
-            <div className="flex justify-between gap-4 pt-2 mt-1 border-t border-[#4B1D3F]/15 text-[#2A1A26]">
-              <span className="font-medium">{paid || refunded ? 'Total paid' : 'Order total'}</span>
-              <span className="font-semibold text-lg text-[#4B1D3F] whitespace-nowrap">{inr(order.finalTotal)}</span>
+            <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink">
+              <span className="font-semibold">{paid || refunded ? 'Total paid' : 'Order total'}</span>
+              <span className="font-bold text-lg leading-[22px] whitespace-nowrap">{inr(order.finalTotal)}</span>
             </div>
-            {refunded && <p className="text-[13px] text-[#2A1A26]/65">This order has been refunded to the original payment method.</p>}
-            {mrpSavings > 0 && <p className="text-[13px] text-emerald-800">You saved {inr(mrpSavings)} on MRP.</p>}
+            {refunded && <p className="text-[13px] leading-[18px] text-ink-muted">This order has been refunded to the original payment method.</p>}
+            {mrpSavings > 0 && <p className="text-[13px] leading-[18px] font-semibold text-sale">You saved {inr(mrpSavings)} on MRP.</p>}
           </div>
 
-          <footer className="pt-5 border-t border-[#4B1D3F]/10 text-[13px] text-[#2A1A26]/65 leading-relaxed space-y-1">
-            {invoiceNote && <p className="mb-2 text-[#2A1A26]/75 whitespace-pre-line">{invoiceNote}</p>}
+          <footer className="pt-5 border-t border-line text-[13px] leading-[18px] text-ink-muted space-y-1">
+            {invoiceNote && <p className="mb-2 whitespace-pre-line">{invoiceNote}</p>}
             <p>Thank you for shopping with {storeName}. This {invoiceNumber ? 'invoice' : 'receipt'} is generated from your order record; all amounts are in Indian Rupees.</p>
             <p>For help with this order, contact us on {storePhone}{storeEmail ? ` or ${storeEmail}` : ''} and quote #{order.orderNumber}.</p>
           </footer>

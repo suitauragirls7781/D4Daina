@@ -30,7 +30,7 @@ export const VoiceSearchButton: React.FC<{ onResult: (text: string) => void; cla
 
   return (
     <button type="button" onClick={start} aria-label={listening ? 'Stop voice search' : 'Search by voice'} aria-pressed={listening}
-      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-[#4B1D3F] text-white animate-pulse' : 'text-[#4B1D3F] hover:bg-[#F3EEF8]'} ${className}`}>
+      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-brand text-white animate-pulse' : 'text-ink hover:bg-sunken'} ${className}`}>
       <Mic className="w-4 h-4" />
     </button>
   );

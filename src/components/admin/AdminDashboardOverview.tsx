@@ -39,6 +39,8 @@ import { isLowStock } from '../../utils/inventory';
 import { AdminInsights } from './AdminInsights';
 import { AdminOrderStatus } from '../../types';
 import { OrderStatusBadge } from './PaymentBadge';
+import { RotateCcw } from 'lucide-react';
+import { tone, ui } from './kidsToysShared';
 
 export const AdminDashboardOverview: React.FC = () => {
   const {
@@ -207,127 +209,104 @@ export const AdminDashboardOverview: React.FC = () => {
     .sort((a, b) => b.units - a.units)
     .slice(0, 5);
 
-  const card = 'bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]';
-  const sectionTitle = 'font-serif text-2xl font-semibold text-[#4B1D3F] leading-tight';
-  const sectionNote = 'text-[13px] text-[#2A1A26]/55 mt-0.5';
-  const linkBtn = 'h-9 px-3.5 rounded-full text-[13px] font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] flex items-center gap-1 cursor-pointer transition-colors shrink-0';
+  const card = ui.panel;
+  const sectionTitle = ui.h2;
+  const sectionNote = 'text-[13px] leading-[18px] text-ink-muted mt-0.5';
+  const linkBtn = 'sag-link shrink-0 gap-0.5';
   const greeting = (() => {
     const h = new Date().getHours();
     return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   })();
+  const todayLabel = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  const salesTiles = [
+  const salesTiles: Array<{ label: string; value: string; note: string; icon: React.FC<{ className?: string }>; highlight?: boolean; open?: () => void }> = [
+    { label: 'To pack & ship', value: String(pendingOrders), note: 'Processing or packed', icon: Truck, highlight: ordersLoaded && pendingOrders > 0, open: () => openAdminTab('orders') },
+    { label: 'Returns & cancellations', value: String(returnRequests + cancelRequests), note: cancelRequests > 0 ? `${cancelRequests} cancellation ${cancelRequests === 1 ? 'request' : 'requests'} waiting` : 'Waiting or in progress', icon: RotateCcw, highlight: ordersLoaded && cancelRequests > 0, open: () => openAdminTab('returns') },
     { label: 'Revenue (paid)', value: `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`, note: `Today ₹${Math.round(todayRevenue).toLocaleString('en-IN')} · ${totalOrders} orders`, icon: IndianRupee },
     { label: 'Average order value', value: `₹${totalOrders > 0 ? Math.round(totalRevenue / totalOrders).toLocaleString('en-IN') : 0}`, note: 'Paid, not cancelled', icon: TrendingUp },
-    { label: 'To pack & ship', value: String(pendingOrders), note: 'Processing or packed', icon: Truck, highlight: ordersLoaded && pendingOrders > 0 },
-    { label: 'Returns & cancellations', value: String(returnRequests + cancelRequests), note: cancelRequests > 0 ? `${cancelRequests} cancellation ${cancelRequests === 1 ? 'request' : 'requests'} waiting` : 'Waiting or in progress', icon: Users, highlight: ordersLoaded && cancelRequests > 0 },
   ];
 
   return (
-    <div id="admin-dashboard-overview" className="space-y-6 sm:space-y-8">
+    <div id="admin-dashboard-overview" className="space-y-5 sm:space-y-6">
 
-      {/* Welcome Banner */}
-      <div className="bg-[#4B1D3F] rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden">
-        <div className="absolute inset-y-0 right-0 w-1/2 hidden md:block pointer-events-none opacity-[0.08]" aria-hidden="true">
-          <div className="absolute -right-16 -top-16 w-80 h-80 rounded-full border-[28px] border-white" />
-          <div className="absolute right-24 bottom-[-6rem] w-56 h-56 rounded-full border-[18px] border-white" />
+      {/* Greeting and the two everyday actions */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-4 border-b border-line">
+        <div className="min-w-0">
+          <p className={ui.eyebrow}>Executive store overview · {todayLabel}</p>
+          <h2 className={`mt-0.5 ${ui.h1}`}>{greeting}</h2>
+          <p className="mt-1 text-sm leading-5 text-ink-muted max-w-xl">
+            Orders to send, requests waiting for you, and how the store is doing. Sales count only orders with a verified payment.
+          </p>
         </div>
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-5">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#C5A46D]">
-              <Sparkles className="w-3.5 h-3.5" />
-              Executive Store Overview
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-tight leading-tight">
-              {greeting}, welcome back
-            </h2>
-            <p className="text-sm text-white/75 max-w-xl leading-relaxed">
-              Live metrics across product inventory, prepaid order fulfillment, customers, and revenues.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={openAdminProductNew}
-              className="h-11 px-5 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] rounded-full text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Add Product
-            </button>
-            <button
-              onClick={() => openAdminTab('orders')}
-              className="h-11 px-5 bg-transparent hover:bg-white/10 border border-white/35 text-white rounded-full text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
-            >
-              <ShoppingBag className="w-4 h-4" /> View Orders
-            </button>
-          </div>
+        <div className="grid grid-cols-2 md:flex items-center gap-2 shrink-0">
+          <button onClick={openAdminProductNew} className={ui.outline}>
+            <Plus className="w-4 h-4" /> Add product
+          </button>
+          <button onClick={() => openAdminTab('orders')} className={ui.primary}>
+            <ShoppingBag className="w-4 h-4" /> View orders
+          </button>
         </div>
       </div>
 
-      {/* Key Metric Cards */}
-      <MetricsDashboard visitorStats={visitorStats} />
-
-      {/* Sales Overview Section */}
-      <section className={`${card} p-5 sm:p-6 space-y-5`}>
-        <div className="flex items-start gap-3">
-          <span className="w-10 h-10 shrink-0 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center">
-            <BarChart3 className="w-5 h-5" />
-          </span>
-          <div>
-            <h3 className={sectionTitle}>Sales &amp; Financial Overview</h3>
-            <p className={sectionNote}>From orders with verified payments only (unpaid checkout attempts are excluded)</p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {salesTiles.map((tile) => (
-            <div key={tile.label} className={`p-4 rounded-2xl border ${tile.highlight ? 'bg-[#F7E4EA]/60 border-[#8A2E55]/15' : 'bg-[#FBF7F3] border-[#4B1D3F]/[0.08]'}`}>
-              <div className="flex items-start gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#2A1A26]/55">
-                <tile.icon className="w-3.5 h-3.5 shrink-0" />
-                <span className="leading-tight">{tile.label}</span>
-              </div>
-              <p className={`text-2xl font-serif font-semibold mt-2 tabular-nums leading-none ${tile.highlight ? 'text-[#8A2E55]' : 'text-[#2A1A26]'}`}>{ordersLoaded ? tile.value : '…'}</p>
-              <p className="text-[12px] text-[#2A1A26]/55 mt-2 leading-snug">{ordersLoaded ? tile.note : 'Loading orders…'}</p>
-            </div>
-          ))}
-        </div>
+      {/* What needs doing, then the money */}
+      <section aria-label="Orders and sales" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {salesTiles.map((tile) => {
+          const body = (
+            <>
+              <span className={`text-xs leading-4 font-semibold flex items-start gap-1.5 ${tile.highlight ? 'text-sale' : 'text-ink-muted'}`}>
+                <tile.icon className="w-4 h-4 shrink-0" />
+                <span className="min-w-0">{tile.label}</span>
+              </span>
+              <span className={`block mt-1.5 text-2xl leading-8 font-bold tabular-nums truncate ${tile.highlight ? 'text-sale' : 'text-ink'}`}>{ordersLoaded ? tile.value : '…'}</span>
+              <span className="block text-xs leading-4 text-ink-muted">{ordersLoaded ? tile.note : 'Loading orders…'}</span>
+              {tile.open && <span className="mt-1.5 inline-flex items-center gap-0.5 text-[13px] leading-[18px] font-semibold text-brand">Open <ChevronRight className="w-3.5 h-3.5" /></span>}
+            </>
+          );
+          const shell = `min-w-0 p-3.5 sm:p-4 rounded-2xl border text-left ${tile.highlight ? 'bg-sale-tint border-sale-line' : 'bg-white border-line'}`;
+          return tile.open
+            ? <button key={tile.label} type="button" onClick={tile.open} className={`${shell} cursor-pointer hover:border-control transition-colors`}>{body}</button>
+            : <div key={tile.label} className={shell}>{body}</div>;
+        })}
       </section>
 
-      {/* Grid: Recent Orders & Top Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Visitors and conversion */}
+      <MetricsDashboard visitorStats={visitorStats} />
 
-        {/* Recent Orders (7 cols) */}
-        <section className={`lg:col-span-7 ${card} overflow-hidden`}>
-          <div className="flex items-center justify-between gap-3 p-5 sm:p-6 pb-4">
+      {/* Recent orders and top products */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <section className={`lg:col-span-7 ${card}`}>
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-3 pb-2">
             <div className="min-w-0">
-              <h3 className={sectionTitle}>Recent Orders</h3>
-              <p className={sectionNote}>Live order stream with real-time status management</p>
+              <h3 className={sectionTitle}>Recent orders</h3>
+              <p className={sectionNote}>The five newest paid orders</p>
             </div>
             <button onClick={() => openAdminTab('orders')} className={linkBtn}>
-              <span>View All</span>
+              <span>View all</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
           {paidOrders.length === 0 ? (
-            <div className="mx-5 sm:mx-6 mb-6 py-10 rounded-2xl bg-[#FBF7F3] border border-dashed border-[#4B1D3F]/15 text-center">
-              <span className="mx-auto w-12 h-12 rounded-full bg-white border border-[#4B1D3F]/10 text-[#4B1D3F] flex items-center justify-center mb-3"><ShoppingBag className="w-5 h-5" /></span>
-              <p className="text-sm font-semibold text-[#2A1A26]">No paid orders yet.</p>
-              <p className="text-[13px] text-[#2A1A26]/55 mt-1">Paid orders will appear here the moment they arrive.</p>
+            <div className="mx-4 sm:mx-5 mb-5 py-8 px-4 rounded-xl bg-page text-center">
+              <ShoppingBag className="mx-auto w-6 h-6 text-ink-muted mb-2" aria-hidden="true" />
+              <p className="text-sm font-semibold text-ink">No paid orders yet</p>
+              <p className="text-[13px] leading-[18px] text-ink-muted mt-0.5">Paid orders appear here the moment they arrive.</p>
             </div>
           ) : (
             <>
-              {/* Phone: cards */}
-              <ul className="sm:hidden divide-y divide-[#4B1D3F]/[0.08] border-t border-[#4B1D3F]/[0.08]">
+              {/* Phone: rows */}
+              <ul className="sm:hidden divide-y divide-line border-t border-line">
                 {paidOrders.slice(0, 5).map((order) => (
                   <li key={order.orderNumber}>
-                    <button onClick={() => openAdminOrderDetails(order.orderNumber)} className="w-full text-left px-5 py-3.5 flex items-center justify-between gap-3 hover:bg-[#FBF7F3] cursor-pointer">
+                    <button onClick={() => openAdminOrderDetails(order.orderNumber)} className="w-full min-h-[60px] text-left px-4 py-2.5 flex items-center justify-between gap-3 hover:bg-page cursor-pointer">
                       <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-[#2A1A26] truncate">{order.customerName}</span>
-                        <span className="block text-[12px] text-[#2A1A26]/55 font-mono truncate">{order.orderNumber}{order.deliveryAddress?.city ? ` · ${order.deliveryAddress.city}` : ''}</span>
+                        <span className="block text-sm leading-5 font-semibold text-ink truncate">{order.customerName}</span>
+                        <span className="block text-xs leading-4 text-ink-muted font-mono truncate">{order.orderNumber}{order.deliveryAddress?.city ? ` · ${order.deliveryAddress.city}` : ''}</span>
                       </span>
                       <span className="flex flex-col items-end gap-1 shrink-0">
-                        <span className="text-sm font-semibold text-[#2A1A26] tabular-nums">₹{order.finalTotal.toLocaleString('en-IN')}</span>
+                        <span className="text-sm font-bold text-ink tabular-nums">₹{order.finalTotal.toLocaleString('en-IN')}</span>
                         <OrderStatusBadge status={order.status} />
                       </span>
                     </button>
@@ -336,42 +315,42 @@ export const AdminDashboardOverview: React.FC = () => {
               </ul>
 
               {/* Tablet / desktop: table */}
-              <div className="hidden sm:block overflow-x-auto">
+              <div className="hidden sm:block overflow-x-auto border-t border-line">
                 <table className="w-full text-left text-[13px] border-collapse">
                   <thead>
-                    <tr className="bg-[#FBF7F3] border-y border-[#4B1D3F]/[0.08] text-[11px] text-[#2A1A26]/55 font-semibold uppercase tracking-[0.12em]">
-                      <th className="py-3 pl-6 pr-3 font-semibold">Order #</th>
-                      <th className="py-3 px-3 font-semibold">Customer</th>
-                      <th className="py-3 px-3 font-semibold">Amount</th>
-                      <th className="py-3 px-3 font-semibold">Status</th>
-                      <th className="py-3 pl-3 pr-6 text-right font-semibold">Details</th>
+                    <tr className={ui.thead}>
+                      <th className="py-2.5 pl-5 pr-3 font-semibold">Order</th>
+                      <th className="py-2.5 px-3 font-semibold">Customer</th>
+                      <th className="py-2.5 px-3 font-semibold">Amount</th>
+                      <th className="py-2.5 px-3 font-semibold">Status</th>
+                      <th className="py-2.5 pl-3 pr-5 text-right font-semibold"><span className="sr-only">Details</span></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#4B1D3F]/[0.06]">
+                  <tbody className="divide-y divide-line">
                     {paidOrders.slice(0, 5).map((order) => (
-                      <tr key={order.orderNumber} className="hover:bg-[#FBF7F3] transition-colors">
-                        <td className="py-3.5 pl-6 pr-3 font-mono font-semibold text-[#4B1D3F] whitespace-nowrap">
+                      <tr key={order.orderNumber} className="hover:bg-page transition-colors">
+                        <td className="py-3 pl-5 pr-3 font-mono whitespace-nowrap">
                           <button
                             onClick={() => openAdminOrderDetails(order.orderNumber)}
-                            className="hover:underline underline-offset-2 cursor-pointer text-left"
+                            className={`${ui.link} text-left`}
                           >
                             {order.orderNumber}
                           </button>
                         </td>
-                        <td className="py-3.5 px-3">
-                          <p className="font-semibold text-[#2A1A26]">{order.customerName}</p>
-                          <p className="text-[12px] text-[#2A1A26]/55">{order.deliveryAddress?.city}</p>
+                        <td className="py-3 px-3">
+                          <p className="font-semibold text-ink">{order.customerName}</p>
+                          <p className="text-xs text-ink-muted">{order.deliveryAddress?.city}</p>
                         </td>
-                        <td className="py-3.5 px-3 font-semibold text-[#2A1A26] tabular-nums">
+                        <td className="py-3 px-3 font-bold text-ink tabular-nums">
                           ₹{order.finalTotal.toLocaleString('en-IN')}
                         </td>
-                        <td className="py-3.5 px-3">
+                        <td className="py-3 px-3">
                           <OrderStatusBadge status={order.status} />
                         </td>
-                        <td className="py-3.5 pl-3 pr-6 text-right">
+                        <td className="py-3 pl-3 pr-5 text-right">
                           <button
                             onClick={() => openAdminOrderDetails(order.orderNumber)}
-                            className="h-8 px-3.5 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] border border-[#4B1D3F]/20 rounded-full text-[12px] font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                            className={ui.small}
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>View</span>
@@ -386,58 +365,58 @@ export const AdminDashboardOverview: React.FC = () => {
           )}
         </section>
 
-        {/* Top Products (5 cols) */}
-        <section className={`lg:col-span-5 ${card} p-5 sm:p-6 space-y-3`}>
-          <div className="flex items-center justify-between gap-3">
+        <section className={`lg:col-span-5 ${card}`}>
+          <div className="flex items-center justify-between gap-3 px-4 sm:px-5 pt-3 pb-2">
             <div className="min-w-0">
-              <h3 className={sectionTitle}>Top Products</h3>
+              <h3 className={sectionTitle}>Top products</h3>
               <p className={sectionNote}>Units sold in paid orders</p>
             </div>
             <button onClick={() => openAdminTab('products')} className={linkBtn}>
-              <span>Catalog</span>
+              <span>All products</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="divide-y divide-[#4B1D3F]/[0.08]">
+          <div className="divide-y divide-line border-t border-line">
             {topProducts.length === 0 && (
-              <div className="py-8 text-center">
-                <span className="mx-auto w-12 h-12 rounded-full bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center mb-3"><Star className="w-5 h-5" /></span>
-                <p className="text-[13px] text-[#2A1A26]/60">Best sellers appear here after the first paid orders.</p>
+              <div className="py-8 px-4 text-center">
+                <Star className="mx-auto w-6 h-6 text-ink-muted mb-2" aria-hidden="true" />
+                <p className="text-[13px] leading-[18px] text-ink-muted">Best sellers appear here after the first paid orders.</p>
               </div>
             )}
             {topProducts.map(({ product: prod, units }, idx) => (
-              <div key={prod.id} className="py-3 flex items-center justify-between gap-3 group">
+              <div key={prod.id} className="pl-4 sm:pl-5 pr-2 sm:pr-3 py-2.5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-[12px] font-semibold ${idx === 0 ? 'bg-[#4B1D3F] text-white' : 'bg-[#F3EEF8] text-[#4B1D3F]'}`}>
+                  <span className="w-5 shrink-0 text-center text-[13px] font-bold text-ink-muted tabular-nums">
                     {idx + 1}
                   </span>
                   {prod.images[0] && prod.images[0].trim() !== "" && (
                     <img
                       src={prod.images[0]}
-                      alt={prod.name}
-                      className="w-10 h-[50px] object-cover object-top rounded-xl border border-[#4B1D3F]/10 bg-[#FBF7F3]"
+                      alt=""
+                      loading="lazy"
+                      className="w-10 aspect-[4/5] shrink-0 object-cover object-top rounded-lg bg-sunken"
                     />
                   )}
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-[#2A1A26] truncate">
+                    <p className="text-sm leading-5 font-semibold text-ink truncate">
                       {prod.name}
                     </p>
-                    <p className="text-[12px] text-[#2A1A26]/55 truncate">
-                      {prod.category} • <span className="text-[#4B1D3F] font-semibold">₹{prod.price.toLocaleString('en-IN')}</span>
+                    <p className="text-xs leading-4 text-ink-muted truncate">
+                      {prod.category} · <span className="text-ink font-semibold tabular-nums">₹{prod.price.toLocaleString('en-IN')}</span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[12px] font-semibold text-[#4B1D3F] bg-[#F3EEF8] px-2.5 py-1 rounded-full tabular-nums">{units} sold</span>
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <span className={`${ui.badge} ${tone.neutral} tabular-nums`}>{units} sold</span>
                   <button
                     onClick={() => openAdminProductEdit(prod.id)}
-                    className="w-8 h-8 flex items-center justify-center hover:bg-[#F3EEF8] text-[#4B1D3F]/60 hover:text-[#4B1D3F] rounded-full transition-colors cursor-pointer"
-                    title="Edit Product"
+                    className="w-11 h-11 flex items-center justify-center hover:bg-sunken text-ink-muted hover:text-ink rounded-full transition-colors cursor-pointer"
+                    title="Edit product"
                     aria-label={`Edit ${prod.name}`}
                   >
-                    <Edit3 className="w-3.5 h-3.5" />
+                    <Edit3 className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -449,62 +428,61 @@ export const AdminDashboardOverview: React.FC = () => {
 
       <AdminInsights />
 
-      {/* Low Stock Products Warning Section */}
-      <section className={`${card} p-5 sm:p-6 space-y-4`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <span className="w-10 h-10 shrink-0 rounded-full bg-[#F7E4EA] text-[#8A2E55] flex items-center justify-center">
-              <AlertTriangle className="w-5 h-5" />
-            </span>
-            <div>
-              <h3 className={sectionTitle}>
-                Low Stock Products <span className="text-[#2A1A26]/40 font-sans text-base align-middle">({lowStockProducts.length})</span>
-              </h3>
-              <p className={sectionNote}>Sold out or at / below the low-stock level ({lowStockThreshold} pieces unless set on the product)</p>
-            </div>
+      {/* Low stock */}
+      <section className={`${ui.card} space-y-3`}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className={`${sectionTitle} flex items-center gap-2`}>
+              <AlertTriangle className="w-[18px] h-[18px] shrink-0 text-sale" aria-hidden="true" />
+              <span>Low stock <span className="text-ink-muted font-normal tabular-nums">({lowStockProducts.length})</span></span>
+            </h3>
+            <p className={sectionNote}>Sold out, or at or below the low-stock level ({lowStockThreshold} pieces unless set on the product)</p>
           </div>
-          <button onClick={() => openAdminTab('products')} className={`${linkBtn} self-start sm:self-auto border border-[#4B1D3F]/20`}>
-            <span>Manage Inventory</span>
+          <button onClick={() => openAdminTab('products')} className={linkBtn}>
+            <span>Products</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
         {lowStockProducts.length === 0 ? (
-          <div className="px-4 py-3.5 bg-emerald-50 rounded-2xl text-emerald-800 text-[13px] flex items-center gap-2.5 border border-emerald-200">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-700" />
-            <span>All catalog items have healthy inventory levels above threshold.</span>
+          <div className="px-3.5 py-3 bg-ok-tint rounded-xl text-ok text-sm leading-5 font-medium flex items-center gap-2.5 border border-ok-line">
+            <CheckCircle2 className="w-[18px] h-[18px] shrink-0" />
+            <span>Every product is above its low-stock level.</span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {lowStockProducts.map((prod) => (
-              <div key={prod.id} className="p-3 bg-[#FBF7F3] rounded-2xl border border-[#4B1D3F]/[0.08] flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  {prod.images[0] && prod.images[0].trim() !== "" && (
-                    <img
-                      src={prod.images[0]}
-                      alt={prod.name}
-                      className="w-10 h-[50px] object-cover object-top rounded-xl border border-[#4B1D3F]/10"
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-[#2A1A26] truncate">{prod.name}</p>
-                    <p className="text-[12px] text-[#2A1A26]/55 truncate">{prod.category} • SKU: {prod.sku || prod.id}</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {lowStockProducts.map((prod) => {
+              const left = prod.inStock && Number(prod.stockQuantity ?? 0) > 0;
+              return (
+                <div key={prod.id} className="pl-2.5 pr-1 py-1.5 bg-page rounded-xl flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    {prod.images[0] && prod.images[0].trim() !== "" && (
+                      <img
+                        src={prod.images[0]}
+                        alt=""
+                        loading="lazy"
+                        className="w-10 aspect-[4/5] shrink-0 object-cover object-top rounded-lg bg-sunken"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm leading-5 font-semibold text-ink truncate">{prod.name}</p>
+                      <p className="text-xs leading-4 text-ink-muted truncate">{prod.category} · SKU {prod.sku || prod.id}</p>
+                      <span className={`mt-1 ${ui.badge} ${left ? tone.warn : tone.danger} tabular-nums`}>
+                        {left ? `${prod.stockQuantity} left` : 'Out of stock'}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${prod.inStock && Number(prod.stockQuantity ?? 0) > 0 ? 'bg-[#F7E4EA] text-[#8A2E55]' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}>
-                    {prod.inStock && Number(prod.stockQuantity ?? 0) > 0 ? `${prod.stockQuantity} left` : 'Out of stock'}
-                  </span>
                   <button
                     onClick={() => openAdminProductEdit(prod.id)}
-                    className="text-[12px] text-[#4B1D3F] font-semibold hover:underline underline-offset-2 cursor-pointer"
+                    className="sag-link shrink-0 px-2"
+                    aria-label={`Restock ${prod.name}`}
                   >
                     Restock
                   </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

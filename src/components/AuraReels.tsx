@@ -123,8 +123,8 @@ export const AuraReelsSection: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8 mb-7 sm:mb-10">
           <p className="sag-eyebrow">Aura Reels</p>
-          <h2 id="aura-reels-title" className="mt-2 font-serif text-3xl sm:text-4xl text-[#4B1D3F]">See the styles move</h2>
-          <p className="mt-2 text-sm sm:text-[15px] text-[#2A1A26]/65 max-w-lg">
+          <h2 id="aura-reels-title" className="mt-2 font-serif text-3xl sm:text-4xl text-ink">See the styles move</h2>
+          <p className="mt-2 text-sm sm:text-[15px] text-ink-muted max-w-lg">
             Tap a reel to watch{anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}
           </p>
         </div>
@@ -137,9 +137,9 @@ export const AuraReelsSection: React.FC = () => {
                   type="button"
                   onClick={(e) => open(i, e.currentTarget)}
                   aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
-                  className="group block w-full text-left cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4B1D3F]"
+                  className="group block w-full text-left cursor-pointer rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 >
-                  <span className="block aspect-[9/16] rounded-2xl overflow-hidden bg-[#F3EEF8] border border-[#4B1D3F]/10">
+                  <span className="block aspect-[9/16] rounded-2xl overflow-hidden bg-sunken border border-line">
                     <img
                       src={reelPosterSrc(reel, 400)}
                       alt=""
@@ -149,12 +149,12 @@ export const AuraReelsSection: React.FC = () => {
                       className="h-full w-full object-cover object-top transition-transform duration-500 motion-safe:group-hover:scale-[1.03]"
                     />
                   </span>
-                  <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#4B1D3F]">
+                  <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink">
                     <Play className="w-3.5 h-3.5 fill-current" aria-hidden="true" /> Watch
                   </span>
-                  {reel.caption && <span className="mt-1 block text-sm text-[#2A1A26]/80 line-clamp-2">{reel.caption}</span>}
+                  {reel.caption && <span className="mt-1 block text-sm text-ink-muted line-clamp-2">{reel.caption}</span>}
                   {product && (
-                    <span className="mt-1 block text-xs text-[#2A1A26]/60 line-clamp-1">
+                    <span className="mt-1 block text-xs text-ink-muted line-clamp-1">
                       {product.name} · {inr(Number(product.price) || 0)}
                     </span>
                   )}
@@ -282,10 +282,10 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
     if (video) video.muted = next;
   };
 
-  const iconButton = 'w-11 h-11 rounded-full bg-[#2A1A26]/60 hover:bg-[#2A1A26]/80 text-white flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  const iconButton = 'w-11 h-11 rounded-full bg-ink/50 hover:bg-ink/50 text-white flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
 
   return (
-    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Aura Reels" className="fixed inset-0 z-[1000] bg-[#2A1A26] sag-fade">
+    <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Aura Reels" className="fixed inset-0 z-[1000] bg-ink sag-fade">
       <div
         ref={scrollerRef}
         onScroll={onScrollFallback}
@@ -314,7 +314,7 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
           <button type="button" onClick={toggleMute} aria-label={muted ? 'Turn sound on' : 'Turn sound off'} className={iconButton}>
             {muted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
           </button>
-          <span className="rounded-full bg-[#2A1A26]/60 px-3 py-1 text-xs text-white/90">
+          <span className="rounded-full bg-ink/50 px-3 py-1 text-xs text-white/90">
             {active + 1} / {reels.length}
           </span>
         </div>
@@ -460,7 +460,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
   const showSpinner = isActive && wantPlay && !failed && (!playing || buffering);
   const showPlayButton = isActive && !wantPlay && !failed;
   const fav = product ? isInWishlist(product.id) : false;
-  const roundButton = 'w-11 h-11 shrink-0 rounded-full border border-[#4B1D3F]/20 bg-white text-[#4B1D3F] flex items-center justify-center hover:bg-[#F3EEF8] transition-colors cursor-pointer';
+  const roundButton = 'w-11 h-11 shrink-0 rounded-full border border-line bg-white text-ink flex items-center justify-center hover:bg-sunken transition-colors cursor-pointer';
 
   return (
     <section
@@ -506,20 +506,20 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
           )}
           {showPlayButton && (
             <span className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-              <span className="w-16 h-16 rounded-full bg-[#2A1A26]/60 text-white flex items-center justify-center">
+              <span className="w-16 h-16 rounded-full bg-ink/50 text-white flex items-center justify-center">
                 <Play className="w-7 h-7 text-white fill-current translate-x-0.5" />
               </span>
             </span>
           )}
           {failed && (
-            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-2xl bg-[#2A1A26]/80 px-4 py-3 text-sm text-white text-center">
+            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-2xl bg-ink/50 px-4 py-3 text-sm text-white text-center">
               This video can’t play right now. Please try again later.
             </span>
           )}
         </button>
 
-        <div className="shrink-0 bg-[#FBF7F3] rounded-t-3xl px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
-          {reel.caption && <p className="text-sm text-[#2A1A26]/80 line-clamp-3">{reel.caption}</p>}
+        <div className="shrink-0 bg-page rounded-t-3xl px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
+          {reel.caption && <p className="text-sm text-ink-muted line-clamp-3">{reel.caption}</p>}
 
           {product && facts ? (
             <>
@@ -529,20 +529,20 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                   alt=""
                   loading="lazy"
                   onError={onPosterError}
-                  className="w-12 h-[60px] shrink-0 rounded-lg object-cover object-top bg-[#F3EEF8]"
+                  className="w-12 h-[60px] shrink-0 rounded-lg object-cover object-top bg-sunken"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="font-serif text-lg leading-tight text-[#4B1D3F] line-clamp-1">{product.name}</p>
+                  <p className="font-serif text-lg leading-tight text-ink line-clamp-1">{product.name}</p>
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm">
-                    <span className="font-semibold text-[#2A1A26]">{inr(facts.price)}</span>
-                    {facts.mrp > facts.price && <span className="text-xs text-[#2A1A26]/55 line-through">{inr(facts.mrp)}</span>}
-                    {facts.discount > 0 && <span className="rounded-full bg-[#F7E4EA] px-2 py-0.5 text-[11px] font-semibold text-[#8A2E55]">{facts.discount}% off</span>}
+                    <span className="font-semibold text-ink">{inr(facts.price)}</span>
+                    {facts.mrp > facts.price && <span className="text-xs text-ink-muted line-through">{inr(facts.mrp)}</span>}
+                    {facts.discount > 0 && <span className="rounded-full bg-sale-tint px-2 py-0.5 text-[11px] font-semibold text-sale">{facts.discount}% off</span>}
                   </p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-[#2A1A26]/65">
+                  <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-muted">
                     {facts.colours.length > 0 && (
                       <span className="inline-flex items-center gap-1">
                         {facts.colours.slice(0, 4).map((c) => (
-                          <span key={c.name} aria-hidden="true" title={c.name} className="w-3.5 h-3.5 rounded-full border border-[#2A1A26]/15" style={{ background: c.hex || '#E6DDF0' }} />
+                          <span key={c.name} aria-hidden="true" title={c.name} className="w-3.5 h-3.5 rounded-full border border-line" style={{ background: c.hex || '#DEDBD3' }} />
                         ))}
                         <span className="ml-0.5">
                           {facts.colours.slice(0, 2).map((c) => c.name).join(', ')}{facts.colours.length > 2 ? ` +${facts.colours.length - 2}` : ''}
@@ -556,10 +556,10 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
               </div>
 
               {pickerOpen && (
-                <div id={`reel-options-${index}`} className="rounded-2xl border border-[#4B1D3F]/15 bg-white p-3 space-y-3 sag-pop">
+                <div id={`reel-options-${index}`} className="rounded-2xl border border-line bg-white p-3 space-y-3 sag-pop">
                   {facts.colours.length > 1 && (
                     <fieldset>
-                      <legend className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/60">Colour: {colour?.name}</legend>
+                      <legend className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Colour: {colour?.name}</legend>
                       <div className="flex flex-wrap gap-2">
                         {facts.colours.map((c) => (
                           <button
@@ -568,9 +568,9 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                             tabIndex={tab}
                             onClick={() => setColour(c)}
                             aria-pressed={colour?.name === c.name}
-                            className={`h-10 px-3 rounded-full border text-sm inline-flex items-center gap-2 cursor-pointer ${colour?.name === c.name ? 'border-[#4B1D3F] bg-[#F3EEF8] text-[#4B1D3F]' : 'border-[#4B1D3F]/20 text-[#2A1A26]'}`}
+                            className={`h-10 px-3 rounded-full border text-sm inline-flex items-center gap-2 cursor-pointer ${colour?.name === c.name ? 'border-ink bg-sunken text-ink' : 'border-line text-ink'}`}
                           >
-                            <span className="w-4 h-4 rounded-full border border-[#2A1A26]/15" style={{ background: c.hex || '#E6DDF0' }} aria-hidden="true" />
+                            <span className="w-4 h-4 rounded-full border border-line" style={{ background: c.hex || '#DEDBD3' }} aria-hidden="true" />
                             {c.name}
                           </button>
                         ))}
@@ -578,7 +578,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                     </fieldset>
                   )}
                   <fieldset>
-                    <legend className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/60">Tap a size to add</legend>
+                    <legend className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Tap a size to add</legend>
                     <div className="flex flex-wrap gap-2">
                       {sizeOptions.map((s) => (
                         <button
@@ -586,7 +586,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                           type="button"
                           tabIndex={tab}
                           onClick={() => add(s)}
-                          className="h-10 min-w-10 px-3 rounded-full border border-[#4B1D3F]/25 text-sm text-[#2A1A26] hover:bg-[#4B1D3F] hover:text-white hover:border-[#4B1D3F] transition-colors cursor-pointer"
+                          className="h-10 min-w-10 px-3 rounded-full border border-control text-sm text-ink hover:bg-brand-dark hover:text-white hover:border-ink transition-colors cursor-pointer"
                         >
                           {s}
                         </button>
@@ -599,7 +599,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
               {justAdded && (
                 <p role="status" className="flex items-center gap-2 text-sm text-emerald-800">
                   <Check className="w-4 h-4 text-emerald-800" aria-hidden="true" /> Added to your bag.
-                  <button type="button" tabIndex={tab} onClick={() => onClose(() => setIsCartDrawerOpen(true))} className="min-h-10 px-1 font-semibold text-[#4B1D3F] underline underline-offset-2 cursor-pointer">
+                  <button type="button" tabIndex={tab} onClick={() => onClose(() => setIsCartDrawerOpen(true))} className="min-h-10 px-1 font-semibold text-ink underline underline-offset-2 cursor-pointer">
                     View bag
                   </button>
                 </p>
@@ -628,7 +628,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                   aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'}
                   className={roundButton}
                 >
-                  <Heart className={`w-5 h-5 ${fav ? 'fill-[#8A2E55] text-[#8A2E55]' : ''}`} />
+                  <Heart className={`w-5 h-5 ${fav ? 'fill-accent text-accent' : ''}`} />
                 </button>
                 <button type="button" tabIndex={tab} onClick={share} aria-label="Share this style" className={roundButton}>
                   <Share2 className="w-5 h-5" />

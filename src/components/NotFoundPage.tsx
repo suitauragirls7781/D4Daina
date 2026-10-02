@@ -20,44 +20,43 @@ export const NotFoundPage: React.FC = () => {
   ];
 
   return (
-    <div id="not-found-page" className="px-4 sm:px-6 py-14 sm:py-20">
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="relative mx-auto w-24 h-24 rounded-full bg-[#F3EEF8] border border-[#4B1D3F]/10 flex items-center justify-center">
-          <SearchIcon className="w-11 h-11" />
-        </div>
-        <p className="sag-eyebrow mt-7">Error 404</p>
-        <h1 className="font-serif text-[36px] leading-[1.08] sm:text-5xl text-[#4B1D3F] mt-3">This page does not exist</h1>
-        <p className="mt-4 text-[15px] leading-7 text-[#2A1A26]/70 max-w-md mx-auto">The link may be old or mistyped. Try the shop or go back to the homepage.</p>
-        <div className="mt-7 flex flex-col min-[420px]:flex-row justify-center gap-2.5">
-          <button onClick={() => navigateToCategory('All')} className="sag-btn-primary h-12 px-7 text-sm font-semibold cursor-pointer">Shop all styles</button>
-          <button onClick={() => setActivePage('home')} className="sag-btn-outline h-12 px-7 text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer">
-            <HomeIcon className="w-[18px] h-[18px]" /> Homepage
-          </button>
+    <div id="not-found-page" className="bg-page px-4 sm:px-6 py-8 lg:py-16">
+      <div className="max-w-xl mx-auto">
+        <div className="sag-card p-5 sm:p-8">
+          <p className="sag-eyebrow">Error 404</p>
+          <h1 className="font-display text-[28px] leading-8 lg:text-[40px] lg:leading-[46px] text-ink mt-1">This page does not exist</h1>
+          <p className="mt-2 text-[15px] leading-[22px] text-ink-muted">The link may be old or mistyped. Try the shop or go back to the homepage.</p>
+          <div className="mt-5 flex flex-col min-[420px]:flex-row gap-2.5">
+            <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-primary min-[420px]:flex-1">Shop all styles</button>
+            <button type="button" onClick={() => setActivePage('home')} className="sag-btn-outline gap-2 min-[420px]:flex-1">
+              <HomeIcon mono className="w-[18px] h-[18px]" /> Homepage
+            </button>
+          </div>
         </div>
 
         {collections.length > 0 && (
-          <div className="mt-12">
-            <p className="sag-eyebrow">Popular collections</p>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <section className="mt-8" aria-labelledby="not-found-collections">
+            <h2 id="not-found-collections" className="text-[17px] leading-6 font-semibold text-ink">Popular collections</h2>
+            <div className="mt-3 flex flex-wrap gap-2">
               {collections.map((name) => (
-                <button key={name} onClick={() => navigateToCategory(name as any)}
-                  className="h-10 px-4 rounded-full bg-white border border-[#4B1D3F]/12 text-sm text-[#2A1A26]/80 hover:border-[#4B1D3F]/35 hover:text-[#4B1D3F] transition-colors cursor-pointer">
+                <button key={name} type="button" onClick={() => navigateToCategory(name as any)}
+                  className="inline-flex items-center h-11 px-3.5 rounded-chip bg-surface border-[1.5px] border-control text-sm font-medium text-ink hover:bg-sunken transition-colors cursor-pointer">
                   {name}
                 </button>
               ))}
             </div>
-          </div>
+          </section>
         )}
 
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-left">
+        <nav className="mt-8 sag-card px-4 sm:px-6" aria-label="Help">
           {help.map(({ icon: Icon, label, action }) => (
-            <button key={label} onClick={action} className="sag-card rounded-2xl flex items-center gap-3 px-4 py-3.5 text-[15px] text-[#2A1A26] hover:border-[#4B1D3F]/30 transition-colors cursor-pointer">
-              <span className="w-10 h-10 rounded-full bg-[#F3EEF8] flex items-center justify-center shrink-0"><Icon className="w-[22px] h-[22px]" /></span>
-              <span className="flex-1 text-left">{label}</span>
-              <ChevronRight className="w-4 h-4 text-[#4B1D3F]/40" />
+            <button key={label} type="button" onClick={action} className="sag-row w-full text-left cursor-pointer">
+              <span className="shrink-0 flex"><Icon mono className="w-5 h-5" /></span>
+              <span className="flex-1 min-w-0">{label}</span>
+              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
             </button>
           ))}
-        </div>
+        </nav>
       </div>
     </div>
   );

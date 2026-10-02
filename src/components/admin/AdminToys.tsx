@@ -187,12 +187,12 @@ export const AdminToys: React.FC = () => {
       </dl>
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="toys-add-title">
-        <h3 id="toys-add-title" className="font-semibold text-[#2A1A26]">Add a toy</h3>
-        <p className="text-xs text-[#2A1A26]/60 mt-0.5">Pick the kind; you can change it in the form. Other kinds (educational, remote control, outdoor, musical…) are in the form too.</p>
+        <h3 id="toys-add-title" className="font-semibold text-ink">Add a toy</h3>
+        <p className="text-xs text-ink-muted mt-0.5">Pick the kind; you can change it in the form. Other kinds (educational, remote control, outdoor, musical…) are in the form too.</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {QUICK_ADD.map(({ type, label, icon: Icon }) => (
             <button key={type} type="button" onClick={() => setDraft(emptyDraft(type))}
-              className="h-11 px-4 rounded-full border border-[#4B1D3F]/20 bg-white text-sm font-medium text-[#4B1D3F] inline-flex items-center gap-2 hover:bg-[#F3EEF8] transition-colors cursor-pointer">
+              className="h-11 px-4 rounded-full border border-line bg-white text-sm font-medium text-ink inline-flex items-center gap-2 hover:bg-sunken transition-colors cursor-pointer">
               <Icon className="w-4 h-4 text-current" aria-hidden="true" /> {label}
             </button>
           ))}
@@ -202,7 +202,7 @@ export const AdminToys: React.FC = () => {
       <CategoryStatus names={[TOYS]} cats={cats} showToast={showToast} onOpenCategories={() => openAdminTab('categories')} />
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="toys-list-title">
-        <h3 id="toys-list-title" className="font-semibold text-[#2A1A26]">Toys ({count(toys.length)})</h3>
+        <h3 id="toys-list-title" className="font-semibold text-ink">Toys ({count(toys.length)})</h3>
         {kinds.length > 0 && (
           <div className="mt-3">
             <FilterChips label="Show toys of kind" value={activeFilter} onChange={(v) => { setFilter(v); setLimit(LIST_STEP); }} options={[
@@ -214,36 +214,36 @@ export const AdminToys: React.FC = () => {
 
         {toys.length > 0 && (
           <div className="relative mt-3">
-            <Search className="w-4 h-4 text-[#4B1D3F]/50 absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
+            <Search className="w-4 h-4 text-ink-faint absolute left-3 top-1/2 -translate-y-1/2" aria-hidden="true" />
             <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setLimit(LIST_STEP); }}
               placeholder="Search by name, kind, age or SKU" aria-label="Search toys" className={ui.search} />
           </div>
         )}
 
         {countsLoading ? (
-          <p className="mt-4 text-sm text-[#2A1A26]/65 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
+          <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : toys.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-[#F3EEF8] p-4 text-sm text-[#2A1A26]/75">
+          <div className="mt-4 rounded-xl bg-sunken p-4 text-sm text-ink-muted">
             No toys yet. Use the buttons above to add a car, bike, doll, soft toy, puzzle or any other toy.
           </div>
         ) : results.length === 0 ? (
-          <p className="mt-4 text-sm text-[#2A1A26]/65">{query.trim() ? `Nothing matches "${query.trim()}".` : 'No toys of this kind.'}</p>
+          <p className="mt-4 text-sm text-ink-muted">{query.trim() ? `Nothing matches "${query.trim()}".` : 'No toys of this kind.'}</p>
         ) : (
-          <ul className="mt-3 divide-y divide-[#4B1D3F]/10">
+          <ul className="mt-3 divide-y divide-line">
             {results.slice(0, limit).map((p) => (
               <li key={p.id} className="py-3 flex flex-wrap items-center gap-x-3 gap-y-2">
                 <Thumb p={p} />
                 <div className="min-w-0 flex-1 basis-48">
-                  <p className="text-sm font-medium text-[#2A1A26] line-clamp-2 sm:line-clamp-1">{p.name}</p>
-                  <p className="mt-0.5 text-xs text-[#2A1A26]/65 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className="font-semibold text-[#9C7A45]">{toyKind(p)}</span>
+                  <p className="text-sm font-medium text-ink line-clamp-2 sm:line-clamp-1">{p.name}</p>
+                  <p className="mt-0.5 text-xs text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span className="font-semibold text-ink-muted">{toyKind(p)}</span>
                     <span>{p.ageRange ? `For ${p.ageRange}` : 'Age not set'}</span>
                   </p>
-                  <p className="mt-0.5 text-xs text-[#2A1A26]/65"><Price p={p} /> · <Status p={p} /></p>
+                  <p className="mt-0.5 text-xs text-ink-muted"><Price p={p} /> · <Status p={p} /></p>
                 </div>
                 <div className="flex items-center gap-1 ml-auto">
                   <PublishButton p={p} busy={busyId === p.id} onToggle={() => togglePublished(p)} />
-                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-[#F3EEF8] text-[#4B1D3F]`}>
+                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-sunken text-ink`}>
                     <Pencil className="w-4 h-4 text-current" />
                   </button>
                   <button type="button" onClick={() => remove(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${ui.iconBtn} hover:bg-rose-50 text-rose-700`}>
@@ -256,7 +256,7 @@ export const AdminToys: React.FC = () => {
         )}
         {results.length > limit && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-[#2A1A26]/60">Showing {limit} of {results.length}.</p>
+            <p className="text-xs text-ink-muted">Showing {limit} of {results.length}.</p>
             <button type="button" onClick={() => setLimit((n) => n + LIST_STEP)} className={ui.outline}>Show more</button>
           </div>
         )}
@@ -473,7 +473,7 @@ const ToyForm: React.FC<ToyFormProps> = ({ draft: initial, existing, allProducts
               <option value="">Not specified</option>
               {ageOptions.map((a) => <option key={a} value={a}>{a}</option>)}
             </select>
-            <p className="mt-1.5 text-[11px] text-[#2A1A26]/60">Shown on the toy's page as "Suitable for". Use the age printed on the box or given by your supplier.</p>
+            <p className="mt-1.5 text-[11px] text-ink-muted">Shown on the toy's page as "Suitable for". Use the age printed on the box or given by your supplier.</p>
           </div>
 
           <div>
@@ -492,7 +492,7 @@ const ToyForm: React.FC<ToyFormProps> = ({ draft: initial, existing, allProducts
               </div>
             </div>
             <PriceHint price={d.price} mrp={d.mrp} />
-            <p className="mt-1 text-[11px] text-[#2A1A26]/60">Sold as one piece (no sizes). Stock is how many you have.</p>
+            <p className="mt-1 text-[11px] text-ink-muted">Sold as one piece (no sizes). Stock is how many you have.</p>
           </div>
 
           <PhotoField id="toy-photos" images={d.images} uploading={photos.uploading} onFiles={upload} onRemove={removeImage} onCover={makeCover}

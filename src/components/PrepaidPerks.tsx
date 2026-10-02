@@ -1,46 +1,37 @@
 import React from 'react';
-import { BadgePercent, Lock, MailCheck, PackageSearch, Truck, Zap } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 import { LockIcon, OrdersIcon, PackageIcon, TagIcon, TruckIcon } from './StoreIcons';
 import { BagIcon } from './BrandIcons';
 
-/** Moving strip of reasons to pay online. Built only from the store's real settings. */
+/** Still strip of reasons to pay online (swipe sideways on phones). Built only from the store's real settings. */
 export const PrepaidPerks: React.FC = () => {
   const { storeOffers } = useShop();
   const { prepaidDiscount, freeShippingThreshold, shippingCharge } = storeOffers;
   const prepaidPercentLine = prepaidPercentText(prepaidRulesFrom(storeOffers));
 
   const perks = [
-    prepaidDiscount > 0 && { icon: TagIcon, text: `Extra ₹${prepaidDiscount} off on every online payment` },
-    prepaidPercentLine && { icon: TagIcon, text: prepaidPercentLine },
+    prepaidDiscount > 0 && { icon: TagIcon, text: `Extra ₹${prepaidDiscount} off on every online payment`, sale: true },
+    prepaidPercentLine && { icon: TagIcon, text: prepaidPercentLine, sale: true },
     shippingCharge === 0
-      ? { icon: TruckIcon, text: 'Free shipping on every order' }
-      : freeShippingThreshold > 0 && { icon: TruckIcon, text: `Free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}` },
+      ? { icon: TruckIcon, text: 'Free shipping on every order', sale: true }
+      : freeShippingThreshold > 0 && { icon: TruckIcon, text: `Free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}`, sale: true },
     { icon: BagIcon, text: 'Pay in seconds with UPI, cards or net banking' },
-    { icon: LockIcon, text: '100% secure online checkout' },
-    { icon: OrdersIcon, text: 'Instant order confirmation on email' },
+    { icon: LockIcon, text: 'Secure online checkout' },
+    { icon: OrdersIcon, text: 'Order confirmation on email' },
     { icon: PackageIcon, text: 'Track your order anytime' },
-  ].filter(Boolean) as Array<{ icon: React.FC<{ className?: string; mono?: boolean }>; text: string }>;
-
-  const row = (hidden: boolean) => (
-    <ul className="flex shrink-0 items-center" aria-hidden={hidden || undefined}>
-      {perks.map(({ icon: Icon, text }) => (
-        <li key={text} className="flex items-center gap-2 px-6 text-[13px] sm:text-sm whitespace-nowrap">
-          <Icon className="w-[18px] h-[18px] text-[#E6DDF0]" mono />
-          <span>{text}</span>
-          <span className="ml-6 w-1 h-1 rounded-full bg-[#C5A46D]" aria-hidden="true" />
-        </li>
-      ))}
-    </ul>
-  );
+  ].filter(Boolean) as Array<{ icon: React.FC<{ className?: string; mono?: boolean }>; text: string; sale?: boolean }>;
 
   return (
-    <section aria-label="Why pay online" className="sag-perks w-full overflow-hidden bg-[#4B1D3F] text-white py-3">
-      <div className="sag-perks-track flex w-max">
-        {row(false)}
-        {row(true)}
-      </div>
+    <section aria-label="Why pay online" className="w-full bg-surface border-y border-line">
+      <ul className="sag-scroll-x sag-num max-w-7xl mx-auto flex items-center gap-6 overflow-x-auto px-4 sm:px-6 lg:px-8 min-h-11">
+        {perks.map(({ icon: Icon, text, sale }) => (
+          <li key={text} className={`flex shrink-0 items-center gap-2 text-[13px] leading-[18px] font-semibold whitespace-nowrap ${sale ? 'text-sale' : 'text-ink'}`}>
+            <Icon className="w-[18px] h-[18px]" mono />
+            <span>{text}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 };

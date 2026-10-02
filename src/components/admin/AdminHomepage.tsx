@@ -44,39 +44,39 @@ export const AdminHomepage: React.FC = () => {
   const getSectionIcon = (key: string) => {
     switch (key) {
       case 'hero':
-        return <Sparkles className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Sparkles className="w-4 h-4 text-ink" />;
       case 'comboOffers':
       case 'dealOfTheDay':
-        return <Gift className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Gift className="w-4 h-4 text-ink" />;
       case 'categoryGrid':
-        return <LayoutGrid className="w-4 h-4 text-[#4B1D3F]" />;
+        return <LayoutGrid className="w-4 h-4 text-ink" />;
       case 'brandHeader':
-        return <Sparkles className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Sparkles className="w-4 h-4 text-ink" />;
       case 'artisanalPromises':
-        return <ShieldCheck className="w-4 h-4 text-[#4B1D3F]" />;
+        return <ShieldCheck className="w-4 h-4 text-ink" />;
       case 'specialOffer':
-        return <Flame className="w-4 h-4 text-[#9C7A45]" />;
+        return <Flame className="w-4 h-4 text-ink-muted" />;
       case 'auraReels':
-        return <Clapperboard className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Clapperboard className="w-4 h-4 text-ink" />;
       case 'kidsCorner':
-        return <Baby className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Baby className="w-4 h-4 text-ink" />;
       case 'instagram':
       case 'newsletter':
-        return <Star className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Star className="w-4 h-4 text-ink" />;
       case 'newArrivals':
-        return <Sparkles className="w-4 h-4 text-[#8A2E55]" />;
+        return <Sparkles className="w-4 h-4 text-sale" />;
       case 'bestSellers':
-        return <Award className="w-4 h-4 text-[#4B1D3F]" />;
+        return <Award className="w-4 h-4 text-ink" />;
       case 'trending':
-        return <TrendingUp className="w-4 h-4 text-[#4B1D3F]" />;
+        return <TrendingUp className="w-4 h-4 text-ink" />;
       case 'festive':
-        return <Gift className="w-4 h-4 text-[#9C7A45]" />;
+        return <Gift className="w-4 h-4 text-ink-muted" />;
       case 'whyShop':
-        return <ShieldCheck className="w-4 h-4 text-[#4B1D3F]" />;
+        return <ShieldCheck className="w-4 h-4 text-ink" />;
       case 'reviews':
-        return <Star className="w-4 h-4 text-[#9C7A45] fill-[#C5A46D]" />;
+        return <Star className="w-4 h-4 text-ink-muted fill-star" />;
       default:
-        return <Layers className="w-4 h-4 text-[#2A1A26]/60" />;
+        return <Layers className="w-4 h-4 text-ink-muted" />;
     }
   };
 
@@ -195,7 +195,7 @@ export const AdminHomepage: React.FC = () => {
             type="button"
             onClick={handleResetDefaults}
             disabled={isResetting}
-            className="h-11 px-4 bg-white hover:bg-[#F3EEF8] text-[#4B1D3F] border border-[#4B1D3F]/20 rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
+            className="h-11 px-4 bg-white hover:bg-sunken text-ink border border-line rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
             title="Reset to default order"
           >
             <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
@@ -205,7 +205,7 @@ export const AdminHomepage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActivePage('home')}
-            className="h-11 px-5 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 shadow-sm cursor-pointer"
+            className="h-11 px-5 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 shadow-sm cursor-pointer"
           >
             <ExternalLink className="w-4 h-4 text-current" />
             <span>Preview live store</span>
@@ -215,19 +215,19 @@ export const AdminHomepage: React.FC = () => {
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#9C7A45]">Total Sections</span>
-            <div className="font-serif text-2xl sm:text-3xl leading-tight text-[#4B1D3F]">{homepageSections.length}</div>
+            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Total Sections</span>
+            <div className="font-serif text-2xl sm:text-3xl leading-tight text-ink">{homepageSections.length}</div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#F3EEF8] text-[#2A1A26] flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-sunken text-ink flex items-center justify-center shrink-0">
             <Layers className="w-4 h-4 text-current" />
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#9C7A45]">Active (Visible on Home)</span>
+            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Active (Visible on Home)</span>
             <div className="font-serif text-2xl sm:text-3xl leading-tight text-emerald-700">{homepageSections.filter(s => s.enabled !== false).length}</div>
           </div>
           <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
@@ -235,27 +235,27 @@ export const AdminHomepage: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-[#9C7A45]">Hidden Sections</span>
-            <div className="font-serif text-2xl sm:text-3xl leading-tight text-[#2A1A26]/50">{homepageSections.filter(s => s.enabled === false).length}</div>
+            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Hidden Sections</span>
+            <div className="font-serif text-2xl sm:text-3xl leading-tight text-ink-faint">{homepageSections.filter(s => s.enabled === false).length}</div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-[#F3EEF8] text-[#2A1A26]/60 flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-sunken text-ink-muted flex items-center justify-center shrink-0">
             <EyeOff className="w-4 h-4 text-current" />
           </div>
         </div>
       </div>
 
       {/* Main Section Order Cards */}
-      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#4B1D3F]/10 pb-4">
+      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
           <div className="flex items-start gap-3">
-            <span className="w-9 h-9 rounded-xl bg-[#F3EEF8] text-[#4B1D3F] flex items-center justify-center shrink-0"><Sliders className="w-4 h-4 text-current" /></span>
+            <span className="w-9 h-9 rounded-xl bg-sunken text-ink flex items-center justify-center shrink-0"><Sliders className="w-4 h-4 text-current" /></span>
             <div>
-            <h3 className="font-serif text-xl font-semibold text-[#2A1A26]">
+            <h3 className="font-serif text-xl font-semibold text-ink">
               Section order
             </h3>
-            <p className="text-xs text-[#2A1A26]/60 mt-0.5">
+            <p className="text-xs text-ink-muted mt-0.5">
               Drag the handle to move a section. Top to bottom order matches exactly how visitors see the homepage.
             </p>
             </div>
@@ -290,11 +290,11 @@ export const AdminHomepage: React.FC = () => {
         </div>
 
         {/* Live sync helper box */}
-        <div className="p-4 bg-[#F3EEF8] rounded-2xl border border-[#4B1D3F]/10 text-xs text-[#2A1A26]/80 flex items-start gap-3 mt-4">
-          <Sparkles className="w-4 h-4 text-[#4B1D3F] shrink-0 mt-0.5" />
+        <div className="p-4 bg-sunken rounded-2xl border border-line text-xs text-ink-muted flex items-start gap-3 mt-4">
+          <Sparkles className="w-4 h-4 text-ink shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold text-[#2A1A26]">Homepage Preview Controls:</span>
-            <p className="text-[#2A1A26]/70 text-[11px]">
+            <span className="font-bold text-ink">Homepage Preview Controls:</span>
+            <p className="text-ink-muted text-[11px]">
               Changes apply immediately in this browser and are stored locally. Shared publishing across devices requires secure server-side configuration.
             </p>
           </div>

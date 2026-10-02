@@ -22,16 +22,16 @@ const LABEL: Record<PaymentState, string> = {
 };
 
 const TONE: Record<PaymentState, { badge: string; dot: string }> = {
-  Paid: { badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-600' },
-  Refunded: { badge: 'bg-[#F3EEF8] text-[#4B1D3F] border-[#4B1D3F]/15', dot: 'bg-[#4B1D3F]/50' },
-  Failed: { badge: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-600' },
-  Pending: { badge: 'bg-[#FBF7F3] text-[#2A1A26]/80 border-[#C5A46D]/50', dot: 'bg-[#C5A46D]' },
+  Paid: { badge: 'bg-ok-tint text-ok border-ok-line', dot: 'bg-ok' },
+  Refunded: { badge: 'bg-sunken text-ink border-line', dot: 'bg-ink/50' },
+  Failed: { badge: 'bg-danger-tint text-danger border-danger-line', dot: 'bg-danger' },
+  Pending: { badge: 'bg-page text-ink-muted border-line', dot: 'bg-line' },
 };
 
 export const PaymentBadge: React.FC<{ order: Order; className?: string }> = ({ order, className = '' }) => {
   const state = paymentStateOf(order);
   return (
-    <span className={`px-2.5 py-1 border rounded-full font-semibold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap ${TONE[state].badge} ${className}`}>
+    <span className={`px-2.5 py-1 border rounded-md font-semibold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap ${TONE[state].badge} ${className}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${TONE[state].dot}`} aria-hidden="true" />
       <span className="sr-only">Payment: </span>{LABEL[state]}
     </span>
@@ -42,33 +42,33 @@ export const PaymentBadge: React.FC<{ order: Order; className?: string }> = ({ o
 export const orderStatusTone = (status: string): { badge: string; dot: string } => {
   switch (status) {
     case 'Delivered':
-      return { badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-600' };
+      return { badge: 'bg-ok-tint text-ok border-ok-line', dot: 'bg-ok' };
     case 'Shipped':
     case 'In Transit':
     case 'Out for Delivery':
-      return { badge: 'bg-[#F3EEF8] text-[#4B1D3F] border-[#4B1D3F]/20', dot: 'bg-[#4B1D3F]' };
+      return { badge: 'bg-sunken text-ink border-line', dot: 'bg-brand' };
     case 'Packed':
-      return { badge: 'bg-[#E6DDF0] text-[#4B1D3F] border-[#4B1D3F]/20', dot: 'bg-[#4B1D3F]/60' };
+      return { badge: 'bg-sunken-deep text-ink border-line', dot: 'bg-ink/50' };
     case 'Processing':
     case 'Paid':
-      return { badge: 'bg-[#FBF7F3] text-[#2A1A26] border-[#C5A46D]/60', dot: 'bg-[#C5A46D]' };
+      return { badge: 'bg-page text-ink border-line', dot: 'bg-line' };
     case 'Pending':
-      return { badge: 'bg-white text-[#2A1A26]/70 border-[#4B1D3F]/15', dot: 'bg-[#2A1A26]/35' };
+      return { badge: 'bg-white text-ink-muted border-line', dot: 'bg-ink/50' };
     case 'Refund Requested':
     case 'Returned':
-      return { badge: 'bg-[#F7E4EA] text-[#8A2E55] border-[#8A2E55]/20', dot: 'bg-[#8A2E55]' };
+      return { badge: 'bg-sale-tint text-sale border-sale-line', dot: 'bg-sale' };
     case 'Cancelled':
     case 'Refunded':
-      return { badge: 'bg-rose-50 text-rose-700 border-rose-200', dot: 'bg-rose-600' };
+      return { badge: 'bg-danger-tint text-danger border-danger-line', dot: 'bg-danger' };
     default:
-      return { badge: 'bg-white text-[#2A1A26]/70 border-[#4B1D3F]/15', dot: 'bg-[#2A1A26]/35' };
+      return { badge: 'bg-white text-ink-muted border-line', dot: 'bg-ink/50' };
   }
 };
 
 export const OrderStatusBadge: React.FC<{ status: string; className?: string }> = ({ status, className = '' }) => {
   const tone = orderStatusTone(status);
   return (
-    <span className={`px-2.5 py-1 border rounded-full font-semibold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap ${tone.badge} ${className}`}>
+    <span className={`px-2.5 py-1 border rounded-md font-semibold text-[11px] inline-flex items-center gap-1.5 whitespace-nowrap ${tone.badge} ${className}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} aria-hidden="true" />
       {status}
     </span>

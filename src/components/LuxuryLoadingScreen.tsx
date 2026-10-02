@@ -17,7 +17,7 @@ export const LuxuryLoadingScreen: React.FC = () => (
     role="status"
     aria-live="polite"
     aria-label="Loading Suit Aura Girls"
-    className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-[#FBF7F3] px-6 select-none"
+    className="fixed inset-0 z-[99999] flex flex-col items-center justify-center bg-page px-6 select-none"
   >
     <style>{LOADER_CSS}</style>
     <div className="flex flex-col items-center">
@@ -28,10 +28,10 @@ export const LuxuryLoadingScreen: React.FC = () => (
         height={240}
         className="sag-loader-logo w-56 sm:w-72 h-auto"
       />
-      <div className="relative mt-6 h-[3px] w-44 overflow-hidden rounded-full bg-[#E6DDF0]" aria-hidden="true">
-        <span className="sag-loader-bar absolute inset-y-0 left-0 w-1/3 rounded-full bg-[#4B1D3F]" />
+      <div className="relative mt-6 h-[3px] w-44 overflow-hidden rounded-full bg-sunken-deep" aria-hidden="true">
+        <span className="sag-loader-bar absolute inset-y-0 left-0 w-1/3 rounded-full bg-brand" />
       </div>
-      <p className="sag-loader-copy mt-6 font-serif text-xl sm:text-2xl italic text-[#4B1D3F]/80">Elegance That Feels Like You</p>
+      <p className="sag-loader-copy mt-6 font-serif text-xl sm:text-2xl italic text-ink-muted">Elegance That Feels Like You</p>
     </div>
   </div>
 );

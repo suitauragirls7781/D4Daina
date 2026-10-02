@@ -26,8 +26,8 @@ const formatLeft = (ms: number) => {
   return `${d > 0 ? `${d}d ` : ''}${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
 };
 
-const card = 'bg-white rounded-3xl p-5 sm:p-6 border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)]';
-const label = 'text-xs font-semibold text-[#2A1A26]/70 uppercase tracking-wider block';
+const card = 'sag-card p-4 sm:p-6';
+const label = 'sag-label';
 
 const Toggle: React.FC<{ checked: boolean; onChange: (value: boolean) => void; label: string }> = ({ checked, onChange, label: aria }) => (
   <button
@@ -36,9 +36,11 @@ const Toggle: React.FC<{ checked: boolean; onChange: (value: boolean) => void; l
     aria-checked={checked}
     aria-label={aria}
     onClick={() => onChange(!checked)}
-    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors cursor-pointer ${checked ? 'bg-[#4B1D3F]' : 'bg-[#2A1A26]/20'}`}
+    className={`relative h-11 w-11 shrink-0 cursor-pointer flex items-center`}
   >
-    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`} />
+    <span className={`relative block h-6 w-11 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-sunken-deep'}`}>
+      <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : ''}`} />
+    </span>
   </button>
 );
 
@@ -177,23 +179,23 @@ export const AdminDealOfTheDay: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <AdminPageHeader
-        eyebrow="Homepage spotlight"
+        eyebrow="Offers"
         title="Deal of the Day"
         icon={<Flame className="text-current" />}
         description="Pick a product, add a photo and control the countdown timer shown on the homepage."
         actions={
-        <div className="rounded-2xl bg-[#4B1D3F] text-white px-4 py-3 text-sm w-full sm:w-auto sm:min-w-[240px]">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#C5A46D]">Timer on the site</p>
+        <div role="status" className="rounded-xl bg-brand-wash border border-brand-line text-ink px-4 py-3 text-sm w-full sm:w-auto sm:min-w-[240px]">
+          <p className="text-xs font-semibold text-ink-muted">Timer on the site</p>
           {!dealOfTheDay?.enabled ? (
             <p className="mt-0.5 font-semibold">Deal is hidden</p>
           ) : !liveTimerOn ? (
             <p className="mt-0.5 font-semibold">No timer (deal shown without countdown)</p>
           ) : liveLeft > 0 ? (
-            <p className="mt-0.5 font-semibold tabular-nums">Ends in {formatLeft(liveLeft)}</p>
+            <p className="mt-0.5 font-semibold sag-num">Ends in {formatLeft(liveLeft)}</p>
           ) : (
-            <p className="mt-0.5 font-semibold text-[#F7E4EA]">Ended{dealOfTheDay?.hideWhenEnded === true ? ' — deal hidden from homepage' : ' — deal shown without timer'}</p>
+            <p className="mt-0.5 font-semibold text-sale">Ended{dealOfTheDay?.hideWhenEnded === true ? ' — deal hidden from homepage' : ' — deal shown without timer'}</p>
           )}
-          {liveTimerOn && <p className="text-xs text-white/70">{new Date(liveEndMs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>}
+          {liveTimerOn && <p className="text-[13px] text-ink-muted">{new Date(liveEndMs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>}
         </div>
         }
       />
@@ -201,11 +203,11 @@ export const AdminDealOfTheDay: React.FC = () => {
       {/* Show / hide */}
       <div className={`${card} flex items-center justify-between gap-4`}>
         <div>
-          <p className="text-sm font-semibold text-[#2A1A26] flex items-center gap-2">
+          <p className="text-sm font-semibold text-ink flex items-center gap-2">
             Show Deal of the Day on homepage
-            {enabled && <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">Live</span>}
+            {enabled && <span className="sag-badge bg-ok-tint text-ok">Live</span>}
           </p>
-          <p className="text-xs text-[#2A1A26]/60 mt-0.5">Appears right below the hero banner.</p>
+          <p className="text-[13px] text-ink-muted mt-0.5">Turn this off to take the deal off the homepage.</p>
         </div>
         <Toggle
           checked={enabled}
@@ -222,21 +224,22 @@ export const AdminDealOfTheDay: React.FC = () => {
       <div className={`${card} space-y-5`}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-serif text-lg font-bold text-[#4B1D3F] flex items-center gap-2"><Clock className="h-5 w-5 text-current" /> Countdown timer</h2>
-            <p className="text-xs text-[#2A1A26]/60 mt-0.5">Customers see a live countdown. It never restarts by itself; only you can start it again.</p>
+            <h2 className="text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Clock className="h-5 w-5 text-current" /> Countdown timer</h2>
+            <p className="text-[13px] text-ink-muted mt-0.5">Customers see a live countdown. It never restarts by itself; only you can start it again.</p>
           </div>
           <Toggle checked={showTimer} onChange={setShowTimer} label="Show countdown timer" />
         </div>
 
         {showTimer && (
           <>
-            <div className="inline-flex rounded-full bg-[#F3EEF8] p-1">
+            <div role="group" aria-label="How the timer ends" className="flex sm:inline-flex rounded-xl bg-sunken p-1">
               {([['duration', 'Run for hours'], ['exact', 'End at date & time']] as const).map(([mode, text]) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setTimerMode(mode)}
-                  className={`rounded-full px-4 py-2 text-xs font-semibold transition-colors cursor-pointer ${timerMode === mode ? 'bg-[#4B1D3F] text-white' : 'text-[#4B1D3F]'}`}
+                  aria-pressed={timerMode === mode}
+                  className={`flex-1 sm:flex-none h-11 rounded-[10px] px-4 text-sm font-semibold transition-colors cursor-pointer ${timerMode === mode ? 'bg-ink text-white' : 'text-ink'}`}
                 >
                   {text}
                 </button>
@@ -244,13 +247,14 @@ export const AdminDealOfTheDay: React.FC = () => {
             </div>
 
             {timerMode === 'duration' ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
                 {DURATION_PRESETS.map((h) => (
                   <button
                     key={h}
                     type="button"
                     onClick={() => setDurationHours(h)}
-                    className={`h-10 min-w-[64px] rounded-full border px-4 text-sm transition-colors cursor-pointer ${durationHours === h ? 'border-[#4B1D3F] bg-[#4B1D3F] text-white font-semibold' : 'border-[#4B1D3F]/20 text-[#2A1A26] hover:border-[#4B1D3F]'}`}
+                    aria-pressed={durationHours === h}
+                    className="sag-chip h-11 min-w-[64px]"
                   >
                     {h < 24 ? `${h} hr` : `${h / 24} day${h > 24 ? 's' : ''}`}
                   </button>
@@ -265,30 +269,30 @@ export const AdminDealOfTheDay: React.FC = () => {
                   value={exactEnd}
                   min={toLocalInput(new Date(Date.now() + 5 * 60000).toISOString())}
                   onChange={(e) => setExactEnd(e.target.value)}
-                  className="mt-1.5 w-full rounded-full border border-[#4B1D3F]/20 px-3.5 py-2.5 text-sm text-[#2A1A26] outline-none focus:border-[#4B1D3F]"
+                  className="sag-input"
                 />
               </div>
             )}
 
-            <label className="flex items-start gap-3 rounded-xl bg-[#FBF7F3] p-3.5 cursor-pointer">
-              <input type="checkbox" checked={hideWhenEnded} onChange={(e) => setHideWhenEnded(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#4B1D3F]" />
-              <span className="text-sm text-[#2A1A26]">
+            <label className="flex items-start gap-3 min-h-11 rounded-xl border border-line bg-white p-3.5 cursor-pointer">
+              <input type="checkbox" checked={hideWhenEnded} onChange={(e) => setHideWhenEnded(e.target.checked)} className="mt-0.5 h-[22px] w-[22px] shrink-0 accent-brand" />
+              <span className="text-sm text-ink">
                 Hide the deal when the timer ends
-                <span className="block text-xs text-[#2A1A26]/60">Off: the deal stays on the homepage without the countdown.</span>
+                <span className="block text-[13px] text-ink-muted">Off: the deal stays on the homepage without the countdown.</span>
               </span>
             </label>
 
-            <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={handleRestartTimer} className="h-11 rounded-full bg-[#4B1D3F] px-5 text-xs font-semibold uppercase tracking-wider text-white hover:bg-[#3B1532] inline-flex items-center gap-2 cursor-pointer">
+            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap gap-2">
+              <button type="button" onClick={handleRestartTimer} className="sag-btn-outline h-12 px-5 text-sm gap-2">
                 <RefreshCw className="h-4 w-4 text-current" /> {liveTimerOn && liveLeft > 0 ? 'Restart timer now' : 'Start timer now'}
               </button>
               {liveTimerOn && (
-                <button type="button" onClick={handleStopTimer} className="h-11 rounded-full border border-[#4B1D3F]/20 px-5 text-xs font-semibold uppercase tracking-wider text-[#4B1D3F] hover:bg-[#F3EEF8] inline-flex items-center gap-2 cursor-pointer">
+                <button type="button" onClick={handleStopTimer} className="sag-btn-outline h-12 px-5 text-sm gap-2">
                   <TimerOff className="h-4 w-4 text-current" /> Turn timer off
                 </button>
               )}
             </div>
-            <p className="text-xs text-[#2A1A26]/55 flex items-center gap-1.5">
+            <p className="text-[13px] text-ink-muted flex items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5 text-current" />
               {timerMode === 'duration'
                 ? `Will end on ${new Date(now + durationHours * 3600000).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} if started now.`
@@ -302,47 +306,49 @@ export const AdminDealOfTheDay: React.FC = () => {
       <div className={`${card} space-y-4`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="font-serif text-lg font-bold text-[#4B1D3F] flex items-center gap-2"><Zap className="h-5 w-5 text-current" /> Choose the deal product</h2>
-            <p className="text-xs text-[#2A1A26]/60">One click makes it live{showTimer && !timerRunning ? ' and starts the timer' : ''}.</p>
+            <h2 className="text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Zap className="h-5 w-5 text-current" /> Choose the deal product</h2>
+            <p className="text-[13px] text-ink-muted">One click makes it live{showTimer && !timerRunning ? ' and starts the timer' : ''}.</p>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:w-52">
-              <Search className="w-3.5 h-3.5 text-[#2A1A26]/40 absolute left-3 top-3" />
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-[minmax(0,1fr)_auto] gap-2 w-full sm:w-auto">
+            <div className="relative min-w-0 sm:w-56">
+              <Search className="w-4 h-4 text-ink-faint absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full pl-8 pr-3 py-2 rounded-full border border-[#4B1D3F]/15 text-sm outline-none focus:border-[#4B1D3F]"
+                placeholder="Search products"
+                aria-label="Search products"
+                className="sag-input pl-10"
               />
             </div>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-3 py-2 rounded-full border border-[#4B1D3F]/15 text-sm outline-none focus:border-[#4B1D3F] bg-white"
+              aria-label="Filter by category"
+              className="sag-input min-[420px]:w-auto"
             >
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-[420px] overflow-y-auto p-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto overscroll-contain p-0.5">
           {filteredProducts.map((prod) => {
             const isActive = productId === prod.id && enabled;
             return (
-              <div key={prod.id} className={`p-3 rounded-xl border flex flex-col justify-between transition-all ${isActive ? 'border-[#4B1D3F] bg-[#F3EEF8] ring-1 ring-[#4B1D3F]' : 'border-[#4B1D3F]/10 bg-white hover:border-[#4B1D3F]/30'}`}>
+              <div key={prod.id} className={`p-3 rounded-xl border-2 flex flex-col justify-between ${isActive ? 'border-brand bg-brand-wash' : 'border-line bg-white'}`}>
                 <div className="flex items-center gap-3">
-                  <img src={getCleanImageUrl(prod.images?.[0] || prod.image, 160)} alt={prod.name} className="w-14 h-[70px] object-cover object-top rounded-lg shrink-0 bg-[#F3EEF8]" />
+                  <img src={getCleanImageUrl(prod.images?.[0] || prod.image, 160)} alt={prod.name} loading="lazy" className="w-14 aspect-[4/5] object-cover object-top rounded-[10px] shrink-0 bg-sunken" />
                   <div className="min-w-0">
-                    <span className="text-[11px] text-[#9C7A45] uppercase tracking-wider block truncate">{prod.category}</span>
-                    <h4 className="text-sm font-semibold text-[#2A1A26] line-clamp-2 leading-tight">{prod.name}</h4>
-                    <p className="text-sm text-[#2A1A26]/70">₹{prod.price.toLocaleString('en-IN')}</p>
+                    <span className="block truncate text-xs text-ink-muted">{prod.category}</span>
+                    <h4 className="text-sm font-semibold text-ink line-clamp-2 leading-tight">{prod.name}</h4>
+                    <p className="text-sm font-semibold text-ink sag-num">₹{prod.price.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => handleOneClickSelect(prod)}
-                  className={`mt-3 w-full h-9 text-xs font-semibold uppercase tracking-wider rounded-full transition-colors cursor-pointer ${isActive ? 'bg-emerald-600 text-white' : 'bg-[#4B1D3F] text-white hover:bg-[#3B1532]'}`}
+                  className={`mt-3 w-full h-11 text-sm font-semibold rounded-xl border-[1.5px] transition-colors cursor-pointer ${isActive ? 'bg-ok-tint border-ok-line text-ok' : 'bg-white border-ink text-ink hover:bg-sunken'}`}
                 >
                   {isActive ? 'Current deal' : 'Set as deal'}
                 </button>
@@ -354,33 +360,31 @@ export const AdminDealOfTheDay: React.FC = () => {
 
       {/* Photo & text */}
       <form onSubmit={handleSaveForm} className={`${card} space-y-5`}>
-        <h2 className="font-serif text-lg font-bold text-[#4B1D3F]">Photo & text</h2>
+        <h2 className="text-[17px] leading-6 font-semibold text-ink">Photo and text</h2>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
           <div className="md:col-span-4">
-            <div className="relative w-full max-w-[220px] mx-auto aspect-[4/5] rounded-2xl overflow-hidden border border-[#4B1D3F]/10 bg-[#F3EEF8]">
+            <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-xl overflow-hidden border border-line bg-sunken">
               {previewImage ? (
-                <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-cover object-top" />
+                <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-contain" />
               ) : (
-                <div className="w-full h-full grid place-items-center text-[#2A1A26]/40"><ImageIcon className="w-8 h-8 text-current" /></div>
-              )}
-              {isUploading && (
-                <div className="absolute inset-0 bg-[#2A1A26]/60 flex items-center justify-center gap-2 text-white text-xs font-semibold">
-                  <Loader2 className="w-5 h-5 animate-spin text-current" /> Uploading...
-                </div>
+                <div className="w-full h-full grid place-items-center text-ink-faint"><ImageIcon className="w-8 h-8 text-current" /></div>
               )}
             </div>
+            <p className="mt-2 min-h-5 text-center text-[13px] text-ink-muted" role="status">
+              {isUploading ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-4 h-4 animate-spin text-current" /> Uploading…</span> : previewImage ? 'The full photo, uncropped.' : 'No photo yet.'}
+            </p>
           </div>
           <div className="md:col-span-8 space-y-4">
             <div>
               <span className={label}>Deal photo</span>
-              <p className="text-xs text-[#2A1A26]/60 mt-1">Optional. Used only on the homepage deal; the product page keeps its own photos.</p>
+              <p className="text-[13px] text-ink-muted">Optional. Used only on the homepage deal; the product page keeps its own photos.</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <label className="h-10 px-4 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full text-xs font-semibold flex items-center gap-2 cursor-pointer">
+                <label className={`sag-btn-outline h-11 px-4 text-sm gap-2 ${isUploading ? 'opacity-60 cursor-wait' : ''}`}>
                   <Upload className="w-4 h-4 text-current" /> {bannerImage ? 'Replace photo' : 'Upload photo'}
-                  <input type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} disabled={isUploading} />
+                  <input type="file" accept="image/*" className="sr-only" onChange={handleBannerUpload} disabled={isUploading} />
                 </label>
                 {bannerImage && (
-                  <button type="button" onClick={() => setBannerImage('')} className="h-10 px-4 rounded-full border border-[#4B1D3F]/20 text-xs font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer">
+                  <button type="button" onClick={() => setBannerImage('')} className="sag-link">
                     Use product photo instead
                   </button>
                 )}
@@ -389,29 +393,29 @@ export const AdminDealOfTheDay: React.FC = () => {
             <div>
               <label className={label} htmlFor="deal-label">Small label above the name</label>
               <input id="deal-label" type="text" value={badgeText} onChange={(e) => setBadgeText(e.target.value)} placeholder="Deal of the day"
-                className="mt-1.5 w-full rounded-full border border-[#4B1D3F]/20 px-3.5 py-2.5 text-sm outline-none focus:border-[#4B1D3F]" />
+                className="sag-input" />
             </div>
             <div>
               <label className={label} htmlFor="deal-subtitle">Short line (optional)</label>
               <input id="deal-subtitle" type="text" value={customSubtitle} onChange={(e) => setCustomSubtitle(e.target.value)} placeholder="Leave empty to use the product description"
-                className="mt-1.5 w-full rounded-full border border-[#4B1D3F]/20 px-3.5 py-2.5 text-sm outline-none focus:border-[#4B1D3F]" />
+                className="sag-input" />
             </div>
           </div>
         </div>
         {activeProduct && (
-          <p className="text-xs text-[#2A1A26]/60">
-            Price customers pay: <span className="font-semibold text-[#2A1A26]">₹{activeProduct.price.toLocaleString('en-IN')}</span> (the product's own price — change it from Products → Edit).
+          <p className="text-[13px] text-ink-muted">
+            Price customers pay: <span className="font-semibold text-ink">₹{activeProduct.price.toLocaleString('en-IN')}</span> (the product's own price — change it from Products → Edit).
           </p>
         )}
         <button type="submit" disabled={isSaving}
-          className="h-12 px-8 bg-[#4B1D3F] hover:bg-[#3B1532] text-white text-xs font-semibold uppercase tracking-wider rounded-full inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+          className="sag-btn-primary w-full sm:w-auto px-8 gap-2">
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
           {isSaving ? 'Saving...' : showTimer && !timerRunning ? 'Save deal & start timer' : 'Save deal'}
         </button>
       </form>
 
       {activeProduct && (
-        <p className="text-xs text-[#2A1A26]/55 flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-current" /> Open the homepage to see the deal exactly as customers see it.</p>
+        <p className="text-[13px] text-ink-muted flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-current" /> Open the homepage to see the deal exactly as customers see it.</p>
       )}
     </div>
   );

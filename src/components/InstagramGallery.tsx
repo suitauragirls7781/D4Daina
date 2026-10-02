@@ -1,8 +1,8 @@
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
 import { InstagramIcon } from './BrandIcons';
 import { useAdmin } from '../context/AdminContext';
 import { instagramEmbedUrl, instagramProfile } from '../utils/instagram';
+import { HOME_SECTION } from './HomeSections';
 
 // Reels are managed from Admin → Instagram Reels and synced through the storefront settings.
 export const InstagramGallery: React.FC = () => {
@@ -14,62 +14,47 @@ export const InstagramGallery: React.FC = () => {
       href={profile.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#4B1D3F] text-[#2A1A26] text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] hover:bg-[#4B1D3F] active:scale-95 transition"
+      className="sag-btn-outline h-12 gap-2 px-5 text-[15px] max-w-full"
     >
-      <InstagramIcon className="w-4 h-4" />
-      Follow {profile.handle}
-      <ArrowUpRight className="w-3.5 h-3.5" />
+      <InstagramIcon className="w-[18px] h-[18px] shrink-0" />
+      <span className="truncate">Follow {profile.handle}</span>
     </a>
   );
 
   return (
-    <section id="instagram-gallery-section" className="py-14 sm:py-20 bg-[#FBF7F3] overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 mb-8 sm:mb-12">
-          <div className="max-w-xl">
-            <a
-              href={profile.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mb-3 text-[11px] font-bold uppercase tracking-[0.25em] text-[#7E5F33] hover:text-[#4B1D3F] transition"
-            >
-              <span className="grid place-items-center w-7 h-7 rounded-full bg-gradient-to-tr from-[#F9CE34] via-[#EE2A7B] to-[#6228D7]">
-                <InstagramIcon className="w-3.5 h-3.5" />
-              </span>
-              {profile.handle}
-            </a>
-            <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#2A1A26] tracking-tight leading-[1.05]">
-              Follow the Aura
-            </h2>
-            <p className="text-sm text-[#2A1A26]/70 mt-3 leading-relaxed">
-              Fresh looks, styling reels and behind-the-scenes from our atelier. Tag{' '}
-              <span className="font-semibold text-[#2A1A26]">#SuitAuraGirls</span> to be featured.
+    <section id="instagram-gallery-section" aria-labelledby="instagram-gallery-title" className={`${HOME_SECTION} bg-page`}>
+      <div className="max-w-7xl mx-auto">
+        <div className="px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-4 lg:mb-6">
+          <div className="min-w-0 max-w-xl">
+            <h2 id="instagram-gallery-title" className="font-display text-[22px] leading-7 lg:text-[28px] lg:leading-8 text-ink">On Instagram</h2>
+            <p className="mt-1 text-sm leading-5 text-ink-muted">
+              New looks and styling reels from{' '}
+              <a href={profile.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand underline underline-offset-[3px]">{profile.handle}</a>.
+              Tag <span className="font-semibold text-ink">#SuitAuraGirls</span> to be featured.
             </p>
           </div>
-          {instagramReels.length > 0 && <div className="hidden md:block">{followButton}</div>}
+          {instagramReels.length > 0 && <div className="hidden md:block shrink-0">{followButton}</div>}
         </div>
 
         {instagramReels.length === 0 ? (
-          <div className="relative rounded-md overflow-hidden border border-[#4B1D3F]/25 bg-white px-6 py-12 sm:py-16 text-center">
-            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-gradient-to-tr from-[#F9CE34]/20 via-[#EE2A7B]/15 to-[#6228D7]/15 blur-2xl" aria-hidden="true" />
-            <div className="relative max-w-md mx-auto space-y-5">
-              <span className="mx-auto grid place-items-center w-16 h-16 rounded-md bg-gradient-to-tr from-[#F9CE34] via-[#EE2A7B] to-[#6228D7] shadow-lg">
-                <InstagramIcon className="w-8 h-8" />
+          <div className="px-4 sm:px-6 lg:px-8">
+            <div className="sag-card px-5 py-8 text-center">
+              <span className="mx-auto grid place-items-center w-12 h-12 rounded-control bg-sunken">
+                <InstagramIcon className="w-6 h-6" />
               </span>
-              <p className="font-serif text-2xl text-[#2A1A26]">New reels are on their way</p>
-              <p className="text-sm text-[#2A1A26]/70">Catch our latest drops and styling videos first on Instagram.</p>
+              <p className="mt-3 text-base leading-[22px] font-semibold text-ink">New reels are on their way</p>
+              <p className="mt-1 mb-4 text-sm leading-5 text-ink-muted">See our latest styles and styling videos on Instagram.</p>
               {followButton}
             </div>
           </div>
         ) : (
           <>
             {/* Swipe row on mobile, grid from large screens */}
-            <div className="-mx-4 px-4 sm:mx-0 sm:px-0 flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible snap-x snap-mandatory scroll-px-4 sm:scroll-px-0 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="sag-scroll-x flex lg:grid lg:grid-cols-4 gap-3 lg:gap-5 overflow-x-auto lg:overflow-visible px-4 sm:px-6 lg:px-8 pb-1">
               {instagramReels.map((reel, index) => (
                 <figure
                   key={reel.url}
-                  className="snap-start shrink-0 w-[78vw] max-w-[320px] lg:w-auto lg:max-w-none rounded-md overflow-hidden bg-white border border-[#4B1D3F]/20 shadow-[0_8px_30px_-12px_rgba(61,15,31,0.25)]"
+                  className="shrink-0 w-[78%] max-w-[320px] lg:w-auto lg:max-w-none rounded-card overflow-hidden bg-white border border-line"
                 >
                   <iframe
                     src={instagramEmbedUrl(reel)}
@@ -80,14 +65,14 @@ export const InstagramGallery: React.FC = () => {
                     allow="encrypted-media; picture-in-picture; clipboard-write"
                   />
                   {reel.caption && (
-                    <figcaption className="px-4 py-3 text-xs text-[#2A1A26]/80 border-t border-[#4B1D3F]/15 truncate">
+                    <figcaption className="px-4 py-3 text-[13px] leading-[18px] text-ink-muted border-t border-line truncate">
                       {reel.caption}
                     </figcaption>
                   )}
                 </figure>
               ))}
             </div>
-            <div className="mt-8 flex justify-center md:hidden">{followButton}</div>
+            <div className="mt-5 px-4 flex justify-center md:hidden">{followButton}</div>
           </>
         )}
       </div>

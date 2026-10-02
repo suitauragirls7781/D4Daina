@@ -43,8 +43,8 @@ export const AdminDashboardPage: React.FC = () => {
   if (isSecretVaultPath && !isAdminLoggedIn) {
     if (!adminSessionChecked) {
       return (
-        <div className="min-h-screen bg-[#FBF7F3] flex items-center justify-center" role="status" aria-label="Loading">
-          <span className="w-8 h-8 rounded-full border-2 border-[#4B1D3F]/15 border-t-[#4B1D3F] animate-spin" />
+        <div className="min-h-screen bg-page flex items-center justify-center" role="status" aria-label="Loading">
+          <span className="w-8 h-8 rounded-full border-2 border-line border-t-ink animate-spin" />
         </div>
       );
     }
@@ -61,8 +61,8 @@ export const AdminDashboardPage: React.FC = () => {
   if (!isAdminLoggedIn && !adminSessionChecked) {
     // Still checking the session (a signed-in owner reloading an admin page): a plain loader, no branding
     return (
-      <div className="min-h-screen bg-[#FBF7F3] flex items-center justify-center" role="status" aria-label="Loading">
-        <span className="w-8 h-8 rounded-full border-2 border-[#4B1D3F]/15 border-t-[#4B1D3F] animate-spin" />
+      <div className="min-h-screen bg-page flex items-center justify-center" role="status" aria-label="Loading">
+        <span className="w-8 h-8 rounded-full border-2 border-line border-t-ink animate-spin" />
       </div>
     );
   }
@@ -71,12 +71,12 @@ export const AdminDashboardPage: React.FC = () => {
   }
   if (!isAdminLoggedIn) {
     return (
-      <div id="admin-404-guard" className="min-h-screen bg-[#FBF7F3] flex flex-col items-center justify-center px-6 text-center">
+      <div id="admin-404-guard" className="min-h-screen bg-page flex flex-col items-center justify-center px-6 text-center">
         <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" className="h-14 w-auto mb-8" />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#9C7A45]">Error 404</p>
-        <p className="mt-2 font-serif text-7xl sm:text-8xl font-semibold leading-none text-[#4B1D3F]">404</p>
-        <h1 className="mt-4 font-serif text-2xl sm:text-3xl text-[#2A1A26]">This page could not be found</h1>
-        <p className="mt-2 max-w-sm text-sm text-[#2A1A26]/65 leading-relaxed">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-ink-muted">Error 404</p>
+        <p className="mt-2 font-serif text-7xl sm:text-8xl font-semibold leading-none text-ink">404</p>
+        <h1 className="mt-4 font-serif text-2xl sm:text-3xl text-ink">This page could not be found</h1>
+        <p className="mt-2 max-w-sm text-sm text-ink-muted leading-relaxed">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
         <a href="/" className="mt-8 sag-btn-primary h-12 px-8 inline-flex items-center text-sm font-semibold tracking-wide">Back to the store</a>
       </div>
     );

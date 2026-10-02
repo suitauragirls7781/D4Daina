@@ -800,7 +800,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     trackFunnelEvent('add_to_cart');
-    showToast(`Added "${product.name}" (${chosenSize}) to your bag! 🛍️`, 'success');
+    showToast(/free/i.test(String(chosenSize)) ? 'Added to bag' : `Added to bag · Size ${chosenSize}`, 'success');
   };
 
   // "Complete the look": the outfit (unless it is already in the bag) plus the chosen accessories, each linked to it

@@ -3,22 +3,9 @@ import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { apiPost } from '../lib/api';
 import { GOOGLE_LOGIN_ENABLED, exchangeGoogleCredential, getGoogleId } from '../utils/googleSignIn';
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Loader2, Mail, Pencil, Phone, RefreshCw } from 'lucide-react';
-import { HeartIcon, LockIcon, OrdersIcon, ReturnIcon, UserIcon } from './StoreIcons';
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Lock, RefreshCw } from 'lucide-react';
 
 type AuthMode = 'login' | 'signup';
-
-const inputClass = 'w-full h-12 pl-11 pr-4 text-sm bg-white border border-[#4B1D3F]/20 hover:border-[#4B1D3F]/35 focus:border-[#4B1D3F]/70 focus:ring-4 focus:ring-[#F3EEF8] rounded-full text-[#2A1A26] placeholder:text-[#2A1A26]/40 transition focus:outline-none';
-const labelClass = 'block pl-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#2A1A26]/70';
-const iconInInput = 'w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#9C7A45] pointer-events-none';
-const primaryButton = 'w-full h-12 bg-[#4B1D3F] hover:bg-[#3B1532] text-white rounded-full font-semibold uppercase tracking-[0.16em] text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed';
-
-/** What an account gives the customer (all real features of this store). */
-const PERKS: Array<{ icon: React.ElementType; label: string }> = [
-  { icon: OrdersIcon, label: 'Track every order' },
-  { icon: HeartIcon, label: 'Wishlist on all devices' },
-  { icon: ReturnIcon, label: 'Easy returns & exchanges' },
-];
 
 interface VerifyResponse {
   email: string;
@@ -167,7 +154,7 @@ export const LoginPage: React.FC = () => {
         if (cancelled || !el) return;
         el.innerHTML = '';
         g.renderButton(el, {
-          type: 'standard', theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center',
+          type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular', text: 'continue_with', logo_alignment: 'center',
           width: Math.min(400, Math.max(220, el.clientWidth || 320)),
         });
       })
@@ -200,55 +187,46 @@ export const LoginPage: React.FC = () => {
 
   if (user) {
     return (
-      <div className="min-h-[70vh] bg-[#FBF7F3] px-4 py-16 flex items-center justify-center">
-        <div className="max-w-sm w-full text-center rounded-3xl border border-[#4B1D3F]/10 bg-white shadow-[var(--sag-shadow)] p-8 space-y-4">
-          <span className="w-16 h-16 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8 text-emerald-700" />
-          </span>
-          <h1 className="font-serif text-3xl text-[#2A1A26]">You are signed in</h1>
-          <p className="text-sm text-[#2A1A26]/70 break-all">{user.email}</p>
-          <button onClick={() => setActivePage('account')} className={primaryButton}>Go to my account</button>
+      <div className="min-h-[70vh] bg-page px-4 py-12 flex items-start sm:items-center justify-center">
+        <div className="sag-card w-full max-w-sm p-6 text-center">
+          <CheckCircle2 className="w-10 h-10 mx-auto text-ok" aria-hidden="true" />
+          <h1 className="mt-3 font-display text-[28px] leading-8 text-ink">You are signed in</h1>
+          <p className="mt-1 text-sm leading-5 text-ink-muted break-all">{user.email}</p>
+          <button type="button" onClick={() => setActivePage('account')} className="sag-btn-primary w-full mt-5">Go to my account</button>
         </div>
       </div>
     );
   }
 
+  const title = otpStep ? 'Check your email' : mode === 'login' ? 'Sign in' : 'Create your account';
+  const changeEmail = () => { setOtpStep(false); setError(null); };
+
   return (
-    <div className="min-h-screen bg-[#FBF7F3] pt-5 pb-12 sm:py-12 px-4 flex items-start sm:items-center justify-center">
-      <div className="max-w-md w-full space-y-4 sm:space-y-5">
-        <button
-          onClick={() => setActivePage('home')}
-          className="inline-flex items-center gap-2 h-10 pl-2 pr-4 -ml-2 rounded-full text-xs font-semibold uppercase tracking-[0.16em] text-[#4B1D3F] hover:bg-[#F3EEF8] transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-[80vh] bg-page px-4 pt-2 pb-12 sm:py-12 flex items-start justify-center">
+      <div className="w-full max-w-[440px]">
+        <button type="button" onClick={() => setActivePage('home')} className="sag-link gap-1.5">
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           <span>Back to shop</span>
         </button>
 
-        <div className="bg-white rounded-3xl border border-[#4B1D3F]/10 shadow-[var(--sag-shadow)] overflow-hidden">
-          <div className="px-6 pt-8 pb-6 text-center bg-[#F3EEF8]/60 border-b border-[#4B1D3F]/8">
-            <span className="w-14 h-14 mx-auto rounded-full bg-white ring-1 ring-[#4B1D3F]/10 shadow-[var(--sag-shadow)] flex items-center justify-center">
-              {otpStep ? <LockIcon className="w-7 h-7" /> : <UserIcon className="w-7 h-7" />}
-            </span>
-            <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#9C7A45]">Suit Aura Girls</p>
-            <h1 className="font-serif text-[32px] leading-tight text-[#2A1A26] mt-1">
-              {otpStep ? 'Check your email' : mode === 'login' ? 'Welcome back' : 'Create your account'}
-            </h1>
-            <p className="text-sm text-[#2A1A26]/70 mt-1.5 max-w-xs mx-auto leading-relaxed">
-              {otpStep ? 'Enter the 6-digit code to continue.' : 'No password needed. We email you a one-time code.'}
-            </p>
-          </div>
+        <div className="sag-card mt-1 p-4 sm:p-6">
+          <h1 className="font-display text-[28px] leading-8 text-ink">{title}</h1>
+          <p className="mt-1.5 text-sm leading-5 text-ink-muted">
+            {otpStep ? 'Enter the 6-digit code we emailed you.' : 'No password needed. We email you a one-time code.'}
+          </p>
 
-          <div className="p-5 sm:p-8 space-y-5">
+          <div className="mt-5 space-y-5">
             {!otpStep && (
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-full bg-[#F3EEF8]" role="tablist" aria-label="Sign in or create an account">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-control bg-sunken" role="tablist" aria-label="Sign in or create an account">
                 {(['login', 'signup'] as AuthMode[]).map((tab) => (
                   <button
                     key={tab}
+                    type="button"
                     role="tab"
                     aria-selected={mode === tab}
                     onClick={() => switchMode(tab)}
-                    className={`h-10 rounded-full text-[13px] font-semibold transition-colors cursor-pointer ${
-                      mode === tab ? 'bg-white text-[#4B1D3F] shadow-[var(--sag-shadow)]' : 'text-[#2A1A26]/65 hover:text-[#2A1A26]'
+                    className={`h-11 rounded-[8px] text-sm font-semibold transition-colors cursor-pointer ${
+                      mode === tab ? 'bg-white text-ink' : 'text-ink-muted hover:text-ink'
                     }`}
                   >
                     {tab === 'login' ? 'Sign in' : 'New account'}
@@ -258,8 +236,8 @@ export const LoginPage: React.FC = () => {
             )}
 
             {error && (
-              <div role="alert" className="flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+              <div role="alert" className="flex items-start gap-2 rounded-control border border-danger-line bg-danger-tint px-3.5 py-3 text-sm leading-5 font-medium text-danger">
+                <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
@@ -268,9 +246,11 @@ export const LoginPage: React.FC = () => {
               <>
                 <div className="relative flex justify-center min-h-[44px]">
                   <div id="auth-google" ref={googleButtonRef} className={`w-full flex justify-center ${googleLoading ? 'opacity-40 pointer-events-none' : ''}`} />
-                  {googleLoading && <Loader2 className="absolute top-3 w-5 h-5 animate-spin text-[#4B1D3F]" />}
+                  {googleLoading && <Loader2 className="absolute top-3 w-5 h-5 animate-spin text-ink" aria-label="Signing in with Google" />}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#2A1A26]/55"><span className="h-px flex-1 bg-[#4B1D3F]/10" />or use email<span className="h-px flex-1 bg-[#4B1D3F]/10" /></div>
+                <div className="flex items-center gap-3 text-[13px] leading-[18px] text-ink-muted">
+                  <span className="h-px flex-1 bg-line" />or use your email<span className="h-px flex-1 bg-line" />
+                </div>
               </>
             )}
 
@@ -278,53 +258,43 @@ export const LoginPage: React.FC = () => {
               <form onSubmit={handleRequestCode} className="space-y-4" noValidate>
                 {mode === 'signup' && (
                   <>
-                    <label className="block space-y-1.5">
-                      <span className={labelClass}>Full name</span>
-                      <span className="relative block">
-                        <UserIcon className={iconInInput} mono />
-                        <input id="signup-name" type="text" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" className={inputClass} />
-                      </span>
-                    </label>
-                    <label className="block space-y-1.5">
-                      <span className={labelClass}>Mobile number</span>
-                      <span className="relative block">
-                        <Phone className={iconInInput} />
-                        <input id="signup-phone" type="tel" inputMode="numeric" autoComplete="tel-national" value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className={inputClass} />
-                      </span>
-                    </label>
+                    <div>
+                      <label htmlFor="signup-name" className="sag-label">Full name</label>
+                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" className="sag-input" />
+                    </div>
+                    <div>
+                      <label htmlFor="signup-phone" className="sag-label">Mobile number</label>
+                      <div className="flex h-[52px] rounded-control border-[1.5px] border-control bg-white overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
+                        <span className="flex items-center px-3.5 bg-sunken border-r border-line text-base text-ink-muted" aria-hidden="true">+91</span>
+                        <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-white text-base text-ink placeholder:text-ink-faint focus:outline-none" />
+                      </div>
+                    </div>
                   </>
                 )}
-                <label className="block space-y-1.5">
-                  <span className={labelClass}>Email address</span>
-                  <span className="relative block">
-                    <Mail className={iconInInput} />
-                    <input id="auth-email" type="email" autoComplete="email" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" className={inputClass} />
-                  </span>
-                </label>
-                <button id="auth-send-code" type="submit" disabled={loading} className={primaryButton}>
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                <div>
+                  <label htmlFor="auth-email" className="sag-label">Email</label>
+                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" className="sag-input" />
+                </div>
+                <button id="auth-send-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
+                  {loading && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
                   <span>{loading ? 'Sending code…' : 'Email me a code'}</span>
-                  {!loading && <ArrowRight className="w-4 h-4" />}
                 </button>
-                <p className="text-[13px] text-[#2A1A26]/65 text-center">
+                <p className="text-[13px] leading-[18px] text-ink-muted text-center">
                   {mode === 'login' ? 'New here? A code also creates your account.' : 'Already have an account? Use the Sign in tab.'}
                 </p>
               </form>
             ) : (
               <form onSubmit={handleVerify} className="space-y-5">
-                <div className="flex items-center gap-3 rounded-2xl bg-[#FBF7F3] border border-[#4B1D3F]/8 px-4 py-3">
-                  <span className="w-9 h-9 shrink-0 rounded-full bg-white ring-1 ring-[#4B1D3F]/10 flex items-center justify-center"><Mail className="w-4 h-4 text-[#4B1D3F]" aria-hidden="true" /></span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#9C7A45]">Code sent to</p>
-                    <p className="text-sm font-semibold text-[#2A1A26] break-all">{email}</p>
+                <div className="flex items-center justify-between gap-3 rounded-control bg-sunken px-3.5 py-2">
+                  <div className="min-w-0">
+                    <p className="text-[13px] leading-[18px] text-ink-muted">Code sent to</p>
+                    <p className="text-sm leading-5 font-semibold text-ink break-all">{email}</p>
                   </div>
-                  <button type="button" onClick={() => { setOtpStep(false); setError(null); }} aria-label="Change email" className="w-9 h-9 shrink-0 rounded-full hover:bg-[#F3EEF8] flex items-center justify-center text-[#4B1D3F] cursor-pointer">
-                    <Pencil className="w-4 h-4" />
-                  </button>
+                  <button type="button" onClick={changeEmail} aria-label="Change email" className="sag-link shrink-0">Change</button>
                 </div>
                 <fieldset>
-                  <legend className="sr-only">6-digit code</legend>
-                  <div className="grid grid-cols-6 gap-2 sm:gap-2.5 max-w-[340px] mx-auto">
+                  <legend className="sag-label">6-digit code</legend>
+                  <div className="grid grid-cols-6 gap-2 max-w-[328px]">
                     {otpCode.map((digit, idx) => (
                       <input
                         key={idx}
@@ -340,27 +310,24 @@ export const LoginPage: React.FC = () => {
                         onKeyDown={(e) => {
                           if (e.key === 'Backspace' && !digit && idx > 0) document.getElementById(`otp-input-${idx - 1}`)?.focus();
                         }}
-                        className={`w-full min-w-0 h-14 text-center font-sans font-semibold text-xl text-[#2A1A26] rounded-2xl border transition focus:outline-none focus:border-[#4B1D3F] focus:ring-4 focus:ring-[#F3EEF8] ${
-                          digit ? 'bg-white border-[#4B1D3F]/45' : 'bg-[#FBF7F3] border-[#4B1D3F]/20'
+                        className={`sag-num w-full min-w-0 h-14 px-0 text-center text-[22px] leading-7 font-semibold text-ink bg-white rounded-chip border-[1.5px] transition-colors focus:border-brand ${
+                          digit ? 'border-ink' : 'border-control'
                         }`}
                       />
                     ))}
                   </div>
                 </fieldset>
-                <p className="text-[13px] text-[#2A1A26]/65 text-center">The code expires in 10 minutes. Check spam if it has not arrived.</p>
-                <button id="auth-verify-code" type="submit" disabled={loading} className={primaryButton}>
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LockIcon className="w-4 h-4" mono />}
+                <p className="text-[13px] leading-[18px] text-ink-muted">The code expires in 10 minutes. Check spam if it has not arrived.</p>
+                <button id="auth-verify-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
+                  {loading ? <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" /> : <Lock className="w-[18px] h-[18px]" aria-hidden="true" />}
                   <span>{loading ? 'Verifying…' : mode === 'signup' ? 'Verify & create account' : 'Verify & sign in'}</span>
                 </button>
-                <div className="flex items-center justify-between gap-3 text-[13px]">
-                  <button type="button" onClick={() => { setOtpStep(false); setError(null); }} className="min-h-10 text-[#2A1A26]/70 hover:text-[#2A1A26] underline underline-offset-2 cursor-pointer">
-                    Change email
-                  </button>
+                <div className="flex justify-center">
                   {resendCooldown > 0 ? (
-                    <span className="inline-flex items-center h-9 px-3 rounded-full bg-[#F3EEF8] text-[#2A1A26]/70 tabular-nums">Resend in {resendCooldown}s</span>
+                    <span className="sag-num inline-flex items-center min-h-11 text-sm text-ink-muted">Resend in {resendCooldown}s</span>
                   ) : (
-                    <button type="button" disabled={loading} onClick={handleResend} className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full font-semibold text-[#4B1D3F] hover:bg-[#F3EEF8] cursor-pointer disabled:opacity-60">
-                      <RefreshCw className="w-3.5 h-3.5" />
+                    <button type="button" disabled={loading} onClick={handleResend} className="sag-link gap-1.5 disabled:opacity-60">
+                      <RefreshCw className="w-4 h-4" aria-hidden="true" />
                       Resend code
                     </button>
                   )}
@@ -370,14 +337,9 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {!otpStep && (
-            <ul className="grid grid-cols-3 border-t border-[#4B1D3F]/8 bg-[#FBF7F3]/70" aria-label="With an account you can">
-              {PERKS.map(({ icon: Icon, label }) => (
-                <li key={label} className="flex flex-col items-center gap-1.5 px-2 py-4 text-center">
-                  <Icon className="w-6 h-6" live={false} />
-                  <span className="text-[11px] leading-tight font-medium text-[#2A1A26]/70">{label}</span>
-                </li>
-              ))}
-            </ul>
+            <p className="mt-5 pt-4 border-t border-line text-[13px] leading-[18px] text-ink-muted text-center">
+              Track orders, request returns and save addresses.
+            </p>
           )}
         </div>
       </div>

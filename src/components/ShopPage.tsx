@@ -15,7 +15,7 @@ import { BuildYourLookButton } from './BuildYourLook';
 import { useDiscovery, occasionProducts } from '../utils/discovery';
 import { KIDS_ALL, KIDS_CATEGORIES, KIDS_SIZES, KIDS_TOYS, TOYS, departmentOf, isKids, isKidsToysListing, kindOf } from '../utils/kids';
 import { categoryToSlug } from '../utils/slugHelper';
-import { ArrowUpDown, ChevronDown, ChevronRight, Shuffle, SlidersHorizontal, Sparkles, X } from 'lucide-react';
+import { ArrowUpDown, Check, ChevronDown, ChevronRight, Shuffle, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { SearchIcon } from './StoreIcons';
 
 type SortKey = 'featured' | 'newest' | 'price-low' | 'price-high' | 'discount' | 'top-rated';
@@ -107,6 +107,7 @@ export const ShopPage: React.FC = () => {
   const [minRating, setMinRating] = useState(0);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
   const [visible, setVisible] = useState(PAGE);
   // Typed min/max prices apply on blur or Enter, so a half-typed number never empties the list.
   const [minDraft, setMinDraft] = useState('');
@@ -115,6 +116,7 @@ export const ShopPage: React.FC = () => {
   useEffect(() => { setMaxDraft(maxPrice === null ? '' : String(maxPrice)); }, [maxPrice]);
 
   const filtersButtonRef = useRef<HTMLButtonElement>(null);
+  const sortButtonRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const drawerCloseRef = useRef<HTMLButtonElement>(null);
   const chipsRef = useRef<HTMLDivElement>(null);
@@ -341,14 +343,15 @@ export const ShopPage: React.FC = () => {
     row.scrollTo({ left: Math.max(0, target), behavior: 'auto' });
   }, [category, categoryPills.length]);
 
-  // Mobile filter sheet: focus moves in and stays inside, Escape closes, focus returns to the Filters button.
+  // Mobile filter and sort sheets: focus moves in and stays inside, Escape closes, focus returns to the button that opened it.
   useEffect(() => {
-    if (!filtersOpen) return;
+    if (!filtersOpen && !sortOpen) return;
+    const closeSheet = () => { setFiltersOpen(false); setSortOpen(false); };
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     drawerCloseRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setFiltersOpen(false); return; }
+      if (e.key === 'Escape') { closeSheet(); return; }
       if (e.key !== 'Tab' || !drawerRef.current) return;
       const focusable = [...drawerRef.current.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
         .filter((el) => el.offsetParent !== null);
@@ -360,18 +363,18 @@ export const ShopPage: React.FC = () => {
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
     document.addEventListener('keydown', onKey);
-    // The sheet is mobile-only; close it if the window grows to the desktop layout.
+    // The sheets are mobile-only; close them if the window grows to the desktop layout.
     const desktop = window.matchMedia('(min-width: 1024px)');
-    const onDesktop = () => { if (desktop.matches) setFiltersOpen(false); };
+    const onDesktop = () => { if (desktop.matches) closeSheet(); };
     desktop.addEventListener?.('change', onDesktop);
-    const trigger = filtersButtonRef.current;
+    const trigger = filtersOpen ? filtersButtonRef.current : sortButtonRef.current;
     return () => {
       document.removeEventListener('keydown', onKey);
       desktop.removeEventListener?.('change', onDesktop);
       document.body.style.overflow = previousOverflow;
       trigger?.focus();
     };
-  }, [filtersOpen]);
+  }, [filtersOpen, sortOpen]);
 
   // Title, description, canonical and robots for this listing, built only from the live catalogue.
   const seo = useMemo(() => {
@@ -444,33 +447,33 @@ export const ShopPage: React.FC = () => {
     setHead('meta[property="og:url"]', 'content', `${SITE}/`);
   }, []);
 
-  const chip = (active: boolean) => `inline-flex items-center gap-1.5 px-4 py-1.5 min-h-10 leading-snug rounded-full border text-sm transition-colors cursor-pointer ${active ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white shadow-[0_6px_14px_-10px_rgba(75,29,63,0.8)]' : 'bg-white border-[#4B1D3F]/15 text-[#2A1A26] hover:border-[#4B1D3F]/40 hover:bg-[#F3EEF8]'}`;
-  const kindChip = (active: boolean) => `inline-flex items-center gap-1 px-3.5 min-h-9 rounded-full border text-sm transition-colors cursor-pointer ${active ? 'bg-[#4B1D3F] border-[#4B1D3F] text-white' : 'bg-[#F3EEF8] border-transparent text-[#4B1D3F] hover:bg-[#E6DDF0]'}`;
+  // Filter / category chip: white with a control border, ink-filled when selected
+  const chip = (active: boolean) => `sag-chip h-11 min-w-0 gap-1.5 px-3.5 text-sm ${active ? 'is-selected' : ''}`;
   // float + w-full keeps the legend inside the fieldset's padding (a plain legend sits on the top edge)
-  const legend = 'float-left w-full text-[11px] font-semibold uppercase tracking-[0.2em] text-[#2A1A26]/70 mb-3';
+  const legend = 'float-left w-full mb-3 text-[13px] leading-[18px] font-semibold text-ink';
   // Real colour swatches, taken from the products' own colour data
   const colourHex = useMemo(() => {
     const map = new Map<string, string>();
     inCategory.forEach((p) => (p.colors || []).forEach((c) => { if (c?.name && c.hex && !map.has(c.name.trim())) map.set(c.name.trim(), c.hex); }));
     return map;
   }, [inCategory]);
-  const thumb = 'absolute inset-0 w-full h-10 appearance-none bg-transparent pointer-events-none focus:outline-none '
-    + '[&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-[#4B1D3F] [&::-webkit-slider-thumb]:cursor-pointer focus-visible:[&::-webkit-slider-thumb]:ring-4 focus-visible:[&::-webkit-slider-thumb]:ring-[#4B1D3F]/20 '
-    + '[&::-moz-range-track]:bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-[#4B1D3F] [&::-moz-range-thumb]:cursor-pointer focus-visible:[&::-moz-range-thumb]:ring-4 focus-visible:[&::-moz-range-thumb]:ring-[#4B1D3F]/20';
+  const thumb = 'absolute inset-0 w-full h-11 appearance-none bg-transparent pointer-events-none focus:outline-none '
+    + '[&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-ink [&::-webkit-slider-thumb]:cursor-pointer focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ink '
+    + '[&::-moz-range-track]:bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-ink [&::-moz-range-thumb]:cursor-pointer focus-visible:[&::-moz-range-thumb]:ring-2 focus-visible:[&::-moz-range-thumb]:ring-ink';
   // When both handles meet, the one that can still move is kept on top.
   const minOnTop = lo >= hi - PRICE_STEP && lo > (lowBound + highBound) / 2;
 
   const filterGroup = (title: string, values: string[], selected: string[], onToggle: (v: string) => void, format?: (v: string) => string, swatch = false) => values.length === 0 ? null : (
-    <fieldset key={title} className="py-5 border-b border-[#4B1D3F]/10">
+    <fieldset key={title} className="py-5 border-b border-line">
       <legend className={legend}>
         {title}
-        {selected.length > 0 && <span className="ml-2 normal-case tracking-normal font-medium text-[#4B1D3F]">· {selected.length} selected</span>}
+        {selected.length > 0 && <span className="ml-2 font-normal text-ink-muted">{selected.length} selected</span>}
       </legend>
       <div className="clear-both flex flex-wrap gap-2">
         {values.map((v) => (
           <button key={v} type="button" onClick={() => onToggle(v)} aria-pressed={selected.includes(v)} className={chip(selected.includes(v))}>
             {swatch && colourHex.get(v) && (
-              <span className="w-4 h-4 shrink-0 rounded-full border border-[#2A1A26]/15 ring-2 ring-white" style={{ backgroundColor: colourHex.get(v) }} aria-hidden="true" />
+              <span className="w-4 h-4 shrink-0 rounded-full border border-line ring-2 ring-white" style={{ backgroundColor: colourHex.get(v) }} aria-hidden="true" />
             )}
             {format ? format(v) : v}
           </button>
@@ -487,14 +490,14 @@ export const ShopPage: React.FC = () => {
       {filterGroup('Fit', options.fits, fits, (v) => toggle(setFits, v))}
       {filterGroup('Occasion', options.occasions, occasions, (v) => toggle(setOccasions, v))}
       {options.priceMax > options.priceMin && (
-        <fieldset className="py-5 border-b border-[#4B1D3F]/10">
+        <fieldset className="py-5 border-b border-line">
           <legend className={legend}>Price</legend>
-          <p className="clear-both text-[15px] font-semibold text-[#4B1D3F] tabular-nums">{inr(minPrice ?? lowBound)} – {inr(maxPrice ?? highBound)}</p>
-          <div className="relative mt-1 h-10">
-            <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-[#E6DDF0]" aria-hidden="true" />
+          <p className="clear-both sag-num text-[15px] font-semibold text-ink">{inr(minPrice ?? lowBound)} – {inr(maxPrice ?? highBound)}</p>
+          <div className="relative mt-1 h-11">
+            <div className="absolute inset-x-3.5 top-1/2 -translate-y-1/2 h-1 rounded-full bg-sunken-deep" aria-hidden="true" />
             <div
-              className="absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-[#4B1D3F]"
-              style={{ left: `calc(${pct(lo)} * (100% - 24px) + 12px)`, right: `calc(${1 - pct(hi)} * (100% - 24px) + 12px)` }}
+              className="absolute top-1/2 -translate-y-1/2 h-1 rounded-full bg-ink"
+              style={{ left: `calc(${pct(lo)} * (100% - 28px) + 14px)`, right: `calc(${1 - pct(hi)} * (100% - 28px) + 14px)` }}
               aria-hidden="true"
             />
             <input
@@ -522,7 +525,7 @@ export const ShopPage: React.FC = () => {
           </div>
           <div className="mt-2 grid grid-cols-2 gap-3">
             {(['min', 'max'] as const).map((which) => (
-              <label key={which} className="block text-xs text-[#2A1A26]/70">
+              <label key={which} className="block text-[13px] leading-[18px] font-semibold text-ink">
                 {which === 'min' ? 'Min price (₹)' : 'Max price (₹)'}
                 <input
                   type="number"
@@ -534,7 +537,7 @@ export const ShopPage: React.FC = () => {
                   onChange={(e) => (which === 'min' ? setMinDraft : setMaxDraft)(e.target.value)}
                   onBlur={(e) => commitPrice(which, e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitPrice(which, e.currentTarget.value); } }}
-                  className="mt-1 w-full h-10 rounded-full border border-[#4B1D3F]/15 bg-white px-4 text-sm text-[#2A1A26] focus:outline-none focus:border-[#4B1D3F]/50"
+                  className="sag-input mt-1.5 h-12 font-normal"
                 />
               </label>
             ))}
@@ -542,19 +545,19 @@ export const ShopPage: React.FC = () => {
         </fieldset>
       )}
       {options.hasDiscounts && (
-        <fieldset className="py-5 border-b border-[#4B1D3F]/10">
+        <fieldset className="py-5 border-b border-line">
           <legend className={legend}>Discount</legend>
           <div className="clear-both flex flex-wrap gap-2">
             {[0, 10, 20, 30, 40].map((d) => (
               <button key={d} type="button" onClick={() => setMinDiscount(d)} aria-pressed={minDiscount === d} className={chip(minDiscount === d)}>
-                {d === 0 ? 'Any' : `${d}%+`}
+                {d === 0 ? 'Any' : `${d}% or more`}
               </button>
             ))}
           </div>
         </fieldset>
       )}
       {options.hasRatings && (
-        <fieldset className="py-5 border-b border-[#4B1D3F]/10">
+        <fieldset className="py-5 border-b border-line">
           <legend className={legend}>Customer rating</legend>
           <div className="clear-both flex flex-wrap gap-2">
             {[0, 4, 3].map((r) => (
@@ -566,13 +569,13 @@ export const ShopPage: React.FC = () => {
         </fieldset>
       )}
       {options.hasSoldOut && (
-        <label className="flex items-center justify-between gap-3 py-5 text-sm text-[#2A1A26] cursor-pointer">
+        <label className="flex items-center justify-between gap-3 min-h-[52px] py-4 text-sm text-ink cursor-pointer">
           <span>
-            <span className="block font-medium">In stock only</span>
-            <span className="block text-xs text-[#2A1A26]/60">Hide sold-out styles</span>
+            <span className="block font-semibold">In stock only</span>
+            <span className="block text-[13px] text-ink-muted">Hide sold-out styles</span>
           </span>
           <input type="checkbox" role="switch" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="peer sr-only" />
-          <span aria-hidden="true" className="relative w-11 h-6 shrink-0 rounded-full bg-[#E6DDF0] transition-colors peer-checked:bg-[#4B1D3F] peer-focus-visible:ring-4 peer-focus-visible:ring-[#4B1D3F]/20 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-5 after:h-5 after:rounded-full after:bg-white after:shadow after:transition-transform peer-checked:after:translate-x-5" />
+          <span aria-hidden="true" className="relative w-12 h-7 shrink-0 rounded-full bg-control transition-colors peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-6 after:h-6 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" />
         </label>
       )}
     </div>
@@ -581,9 +584,12 @@ export const ShopPage: React.FC = () => {
   const heading = activeOccasion ? activeOccasion.name : query.trim() ? `Results for “${query.trim()}”` : category === 'All' ? 'Shop all' : category === 'Sale' ? 'Offers' : category;
   const homeListing = kidsPage ? KIDS_TOYS : 'All';
   const narrowed = activeCount > 0 || Boolean(query.trim()) || Boolean(activeOccasion);
-  const eyebrow = query.trim() ? 'Search' : activeOccasion ? 'Curated edit' : kidsPage ? 'For the little ones' : category === 'All' ? 'The collection' : category === 'Sale' ? 'Live offers' : 'Collection';
   const countLabel = isLoading ? 'Loading styles…' : `${results.length} ${results.length === 1 ? 'style' : 'styles'}`;
-  const tool = 'shrink-0 whitespace-nowrap h-10 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm text-[#4B1D3F] inline-flex items-center gap-1.5 hover:bg-[#F3EEF8] transition-colors cursor-pointer';
+  const sortLabel = SORTS.find((s) => s.key === activeSort)?.label || 'Featured';
+  const sortChoices = SORTS.filter((s) => s.key !== 'top-rated' || hasRatings);
+  const tool = 'shrink-0 whitespace-nowrap h-11 px-3.5 rounded-chip border-[1.5px] border-control bg-white text-sm font-medium text-ink inline-flex items-center gap-1.5 hover:bg-sunken transition-colors cursor-pointer';
+  const barButton = 'flex-1 min-w-0 h-11 px-3 rounded-control border-[1.5px] border-ink bg-white text-sm font-semibold text-ink inline-flex items-center justify-center gap-2 hover:bg-sunken transition-colors cursor-pointer';
+  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9';
   // Collections that really have products, offered when a listing comes up empty
   const suggestions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -592,42 +598,50 @@ export const ShopPage: React.FC = () => {
   }, [products, category, kidsPage]);
   const openCollection = (c: string) => { clearFilters(); setQuery(''); setOccasionId(''); navigateToCategory(c as any); };
 
+  // Empty listing: the first way out is the primary button, the rest are secondary
+  const emptyActions: Array<{ label: string; run: () => void }> = [
+    ...(activeCount > 0 ? [{ label: 'Clear filters', run: clearFilters }] : []),
+    ...(query.trim() ? [{ label: 'Clear search', run: () => setQuery('') }] : []),
+    ...(category !== 'All' || activeOccasion ? [{ label: kidsPage ? 'See all kids & toys' : 'Shop all styles', run: () => openCollection(homeListing) }] : []),
+  ];
+
   return (
-    <div id="shop-catalog-page" className="bg-[#FBF7F3] pt-5 pb-10 sm:pt-8 sm:pb-14">
+    <div id="shop-catalog-page" className="bg-surface pt-4 pb-12 sm:pt-6 lg:pt-8 lg:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-[13px] text-[#2A1A26]/60 mb-4 min-w-0">
-          <button onClick={() => setActivePage('home')} className="shrink-0 hover:text-[#4B1D3F] cursor-pointer">Home</button>
-          <ChevronRight className="w-3.5 h-3.5 shrink-0 text-[#2A1A26]/40" aria-hidden="true" />
+        <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-[13px] text-ink-muted mb-3 min-w-0">
+          <button onClick={() => setActivePage('home')} className="shrink-0 min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">Home</button>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
           {category !== homeListing && (
             <>
-              <button onClick={() => openCollection(homeListing)} className="shrink-0 hover:text-[#4B1D3F] cursor-pointer">{kidsPage ? KIDS_TOYS : 'Shop'}</button>
-              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-[#2A1A26]/40" aria-hidden="true" />
+              <button onClick={() => openCollection(homeListing)} className="shrink-0 min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">{kidsPage ? KIDS_TOYS : 'Shop'}</button>
+              <ChevronRight className="w-3.5 h-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
             </>
           )}
-          <span className="truncate text-[#2A1A26] font-medium" aria-current="page">{category === 'All' ? 'Shop' : category === 'Sale' ? 'Offers' : category}</span>
+          <span className="truncate text-ink font-medium" aria-current="page">{category === 'All' ? 'Shop' : category === 'Sale' ? 'Offers' : category}</span>
         </nav>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between lg:gap-8">
           <div className="min-w-0">
-            <p className="sag-eyebrow mb-1.5">{eyebrow}</p>
-            <h1 className="font-serif text-[32px] leading-[1.1] sm:text-[42px] text-[#4B1D3F] break-words">{heading}</h1>
-            <p className="mt-1.5 text-sm text-[#2A1A26]/65" aria-live="polite">{countLabel}</p>
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+              <h1 className="font-display text-[28px] leading-8 lg:text-4xl lg:leading-[1.15] text-ink break-words min-w-0">{heading}</h1>
+              <p className="sag-num text-sm text-ink-muted" aria-live="polite">{countLabel}</p>
+            </div>
             {activeOccasion && (
-              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#2A1A26]/70">
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
                 {activeOccasion.description && <span className="max-w-xl">{activeOccasion.description}</span>}
-                <button onClick={leaveOccasion} aria-label={`Leave the ${activeOccasion.name} collection`} className="h-10 px-4 inline-flex items-center gap-1.5 rounded-full bg-[#F3EEF8] text-sm text-[#4B1D3F] hover:bg-[#E6DDF0] cursor-pointer">{activeOccasion.name} <X className="w-4 h-4" /></button>
+                <button onClick={leaveOccasion} aria-label={`Leave the ${activeOccasion.name} collection`} className="h-11 px-3.5 inline-flex items-center gap-1.5 rounded-chip bg-sunken text-sm font-medium text-ink hover:bg-sunken-deep cursor-pointer">{activeOccasion.name} <X className="w-4 h-4" /></button>
               </div>
             )}
             {smartOn && smart.understood.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5" aria-label="Search understood as">
-                <span className="inline-flex items-center gap-1 text-xs text-[#2A1A26]/60 mr-0.5"><Sparkles className="w-3.5 h-3.5 text-[#9C7A45]" /> Showing</span>
-                {smart.understood.map((u) => <span key={u} className="h-7 px-3 inline-flex items-center rounded-full bg-[#F3EEF8] text-xs font-medium text-[#4B1D3F]">{u}</span>)}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label="Search understood as">
+                <span className="inline-flex items-center gap-1 text-[13px] text-ink-muted mr-0.5"><Sparkles className="w-3.5 h-3.5" /> Showing</span>
+                {smart.understood.map((u) => <span key={u} className="sag-badge">{u}</span>)}
               </div>
             )}
           </div>
           <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end min-w-0">
             <div className="relative w-full sm:w-80">
-              <SearchIcon className="w-[18px] h-[18px] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" live={false} />
+              <SearchIcon className="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink-muted" mono live={false} />
               <input
                 type="search"
                 value={query}
@@ -635,15 +649,15 @@ export const ShopPage: React.FC = () => {
                 placeholder={kidsPage ? 'Try “frock” or “car”' : 'Try “pink suit under 999”'}
                 aria-label="Search products"
                 enterKeyHint="search"
-                className="w-full h-11 pl-11 pr-20 rounded-full border border-[#4B1D3F]/15 bg-white text-[15px] text-[#2A1A26] placeholder:text-[#2A1A26]/45 shadow-[0_6px_16px_-14px_rgba(42,26,38,0.5)] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-4 focus:ring-[#4B1D3F]/10 [&::-webkit-search-cancel-button]:appearance-none"
+                className="sag-input h-12 pl-11 pr-24 [&::-webkit-search-cancel-button]:appearance-none"
               />
-              <span className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center">
+              <span className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 {query && (
-                  <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#F3EEF8] cursor-pointer">
-                    <X className="w-4 h-4 text-[#2A1A26]/70" />
+                  <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
+                    <X className="w-[18px] h-[18px]" />
                   </button>
                 )}
-                <VoiceSearchButton onResult={setQuery} />
+                <VoiceSearchButton onResult={setQuery} className="mr-1" />
               </span>
             </div>
             <div className="sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto sm:overflow-visible empty:hidden">
@@ -659,7 +673,7 @@ export const ShopPage: React.FC = () => {
           </div>
         </div>
 
-        <div ref={pillsRef} className="sag-scroll-x mt-6 -mx-4 px-4 scroll-px-4 flex gap-2 overflow-x-auto pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible" role="tablist" aria-label="Categories">
+        <div ref={pillsRef} className="sag-scroll-x mt-4 lg:mt-6 -mx-4 px-4 scroll-px-4 flex gap-2 overflow-x-auto pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible" role="tablist" aria-label="Categories">
           {categoryPills.map((c) => {
             const active = categoryToSlug(c) === categoryToSlug(category);
             return (
@@ -671,113 +685,129 @@ export const ShopPage: React.FC = () => {
         </div>
 
         {kinds.length > 0 && (
-          <div className="sag-scroll-x mt-2.5 -mx-4 px-4 scroll-px-4 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Type">
-            <button onClick={() => setKind('')} aria-pressed={kind === ''} className={`shrink-0 whitespace-nowrap ${kindChip(kind === '')}`}>All types</button>
+          <div className="sag-scroll-x mt-2 -mx-4 px-4 scroll-px-4 flex gap-2 overflow-x-auto pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible" role="group" aria-label="Type">
+            <button onClick={() => setKind('')} aria-pressed={kind === ''} className={`shrink-0 whitespace-nowrap ${chip(kind === '')} ${kind === '' ? '' : 'border-transparent bg-sunken'}`}>All types</button>
             {kinds.map(([k, n]) => (
-              <button key={k} onClick={() => setKind(kind === k ? '' : k)} aria-pressed={kind === k} className={`shrink-0 whitespace-nowrap ${kindChip(kind === k)}`}>
-                {k} <span className="opacity-70 tabular-nums">({n})</span>
+              <button key={k} onClick={() => setKind(kind === k ? '' : k)} aria-pressed={kind === k} className={`shrink-0 whitespace-nowrap ${chip(kind === k)} ${kind === k ? '' : 'border-transparent bg-sunken'}`}>
+                {k} <span className="sag-num font-normal opacity-80">({n})</span>
               </button>
             ))}
           </div>
         )}
 
-        <div className="mt-6 grid gap-8 lg:grid-cols-12">
-          <aside className="hidden lg:block lg:col-span-3" aria-label="Filters">
-            <div className="sag-card rounded-3xl p-5 lg:sticky lg:top-36 max-h-[calc(100vh-7rem)] overflow-y-auto overscroll-contain">
-              <div className="flex items-center justify-between pb-1 border-b border-[#4B1D3F]/10">
-                <p className="font-serif text-2xl text-[#2A1A26] inline-flex items-center gap-2">
+        {/* Phones and tablets: Filter and Sort stay in reach under the header while the grid scrolls */}
+        <div className="lg:hidden sticky top-[52px] z-30 mt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 py-1.5 bg-surface border-y border-line flex items-center gap-2">
+          <button
+            ref={filtersButtonRef}
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={filtersOpen}
+            className={barButton}
+          >
+            <SlidersHorizontal className="w-[18px] h-[18px] shrink-0" /> Filter
+            {activeCount > 0 && <span className="sag-num min-w-5 h-5 px-1.5 rounded-full bg-ink text-white text-[11px] font-bold inline-flex items-center justify-center" aria-label={`${activeCount} selected`}>{activeCount}</span>}
+          </button>
+          <button
+            ref={sortButtonRef}
+            type="button"
+            onClick={() => setSortOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={sortOpen}
+            aria-label={`Sort: ${sortLabel}`}
+            className={barButton}
+          >
+            <ArrowUpDown className="w-[18px] h-[18px] shrink-0" />
+            <span className="truncate">{activeSort === 'featured' ? 'Sort' : sortLabel}</span>
+          </button>
+        </div>
+
+        <div className="mt-4 lg:mt-8 grid gap-8 lg:grid-cols-[264px_minmax(0,1fr)]">
+          <aside className="hidden lg:block" aria-label="Filters">
+            <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain pr-3">
+              <div className="flex items-center justify-between min-h-11 border-b border-line">
+                <p className="text-[17px] leading-6 font-semibold text-ink inline-flex items-center gap-2">
                   Filters
-                  {activeCount > 0 && <span className="min-w-6 h-6 px-1.5 rounded-full bg-[#4B1D3F] text-white text-xs font-semibold font-sans inline-flex items-center justify-center">{activeCount}</span>}
+                  {activeCount > 0 && <span className="sag-num min-w-5 h-5 px-1.5 rounded-full bg-ink text-white text-[11px] font-bold inline-flex items-center justify-center">{activeCount}</span>}
                 </p>
-                {activeCount > 0 && <button onClick={clearFilters} className="h-10 px-2 text-sm text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Clear all</button>}
+                {activeCount > 0 && <button onClick={clearFilters} className="sag-link">Clear all</button>}
               </div>
               {filterPanel}
             </div>
           </aside>
 
-          <div className="lg:col-span-9 min-w-0">
-            <div className="mb-4 flex items-center gap-2.5">
-              <button
-                ref={filtersButtonRef}
-                onClick={() => setFiltersOpen(true)}
-                aria-haspopup="dialog"
-                aria-expanded={filtersOpen}
-                className="lg:hidden flex-1 min-w-0 h-11 px-4 rounded-full border border-[#4B1D3F]/15 bg-white text-sm font-medium text-[#4B1D3F] inline-flex items-center justify-center gap-2 cursor-pointer hover:bg-[#F3EEF8] transition-colors"
-              >
-                <SlidersHorizontal className="w-4 h-4" /> Filters
-                {activeCount > 0 && <span className="min-w-5 h-5 px-1.5 rounded-full bg-[#4B1D3F] text-white text-[11px] font-semibold inline-flex items-center justify-center" aria-label={`${activeCount} selected`}>{activeCount}</span>}
-              </button>
-              <p className="hidden lg:block flex-1 text-sm text-[#2A1A26]/65">
-                {isLoading ? '' : results.length > 0 ? <>Showing <span className="font-semibold text-[#2A1A26]">{Math.min(visible, results.length)}</span> of {results.length} {results.length === 1 ? 'style' : 'styles'}</> : ''}
+          <div className="min-w-0">
+            <div className="hidden lg:flex mb-5 items-center gap-3">
+              <p className="sag-num flex-1 text-sm text-ink-muted">
+                {isLoading ? '' : results.length > 0 ? <>Showing <span className="font-semibold text-ink">{Math.min(visible, results.length)}</span> of {results.length} {results.length === 1 ? 'style' : 'styles'}</> : ''}
               </p>
-              <div className="relative flex-1 min-w-0 lg:flex-none lg:w-64">
-                <ArrowUpDown className="w-4 h-4 text-[#4B1D3F] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
-                <select value={activeSort} onChange={(e) => setSort(e.target.value as SortKey)} aria-label="Sort products"
-                  className="w-full h-11 pl-10 pr-9 appearance-none truncate rounded-full border border-[#4B1D3F]/15 bg-white text-sm font-medium text-[#4B1D3F] focus:outline-none focus:border-[#4B1D3F]/50 focus:ring-4 focus:ring-[#4B1D3F]/10 cursor-pointer hover:bg-[#F3EEF8] transition-colors">
-                  {SORTS.filter((s) => s.key !== 'top-rated' || hasRatings).map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
+              <label htmlFor="shop-sort" className="text-sm text-ink-muted">Sort by</label>
+              <div className="relative w-56">
+                <select id="shop-sort" value={activeSort} onChange={(e) => setSort(e.target.value as SortKey)}
+                  className="sag-input h-11 pl-3.5 pr-9 appearance-none truncate text-sm font-semibold cursor-pointer">
+                  {sortChoices.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>
-                <ChevronDown className="w-4 h-4 text-[#4B1D3F]/70 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                <ChevronDown className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               </div>
             </div>
 
             {activeCount > 0 && (
-              <div ref={chipsRef} role="group" aria-label="Selected filters" className="mb-5 flex flex-wrap items-center gap-2">
+              <div ref={chipsRef} role="group" aria-label="Selected filters" className="mb-4 flex flex-wrap items-center gap-2">
                 {activeChips.map((c, i) => (
                   <button
                     key={c.key}
                     type="button"
                     onClick={() => removeChip(i)}
                     aria-label={`Remove filter: ${c.label}`}
-                    className="h-9 max-w-full pl-3.5 pr-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#F3EEF8] border border-[#4B1D3F]/10 text-sm text-[#4B1D3F] hover:bg-[#E6DDF0] transition-colors cursor-pointer"
+                    className="h-11 max-w-full pl-3 pr-2 inline-flex items-center gap-1 rounded-chip bg-sunken text-sm font-medium text-ink hover:bg-sunken-deep transition-colors cursor-pointer"
                   >
                     <span className="truncate">{c.label}</span>
-                    <X className="w-4 h-4 shrink-0" aria-hidden="true" />
+                    <X className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
                   </button>
                 ))}
-                <button type="button" onClick={clearFilters} className="h-9 px-2 text-sm font-medium text-[#4B1D3F] underline underline-offset-2 cursor-pointer">Clear all</button>
+                <button type="button" onClick={clearFilters} className="sag-link px-1">Clear all</button>
               </div>
             )}
 
             {isLoading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6" aria-hidden="true">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="rounded-2xl border border-[#4B1D3F]/10 bg-white overflow-hidden">
-                    <div className="aspect-[4/5] bg-[#F3EEF8] animate-pulse" />
-                    <div className="p-3 sm:p-4 space-y-2.5">
-                      <div className="h-5 w-16 rounded-full bg-[#F3EEF8] animate-pulse" />
-                      <div className="h-4 w-11/12 rounded-full bg-[#F3EEF8] animate-pulse" />
-                      <div className="h-4 w-2/3 rounded-full bg-[#F3EEF8] animate-pulse" />
-                      <div className="h-10 w-full rounded-full bg-[#F3EEF8] animate-pulse" />
+              <div className={grid} aria-hidden="true">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className={i >= 6 ? 'hidden xl:block' : ''}>
+                    <div className="aspect-[4/5] rounded-control bg-sunken-deep" />
+                    <div className="pt-3 space-y-2">
+                      <div className="h-4 w-11/12 rounded-badge bg-sunken-deep" />
+                      <div className="h-4 w-1/2 rounded-badge bg-sunken-deep" />
+                      <div className="h-11 w-full rounded-control bg-sunken" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : results.length === 0 ? (
               <>
-                <div className="sag-card rounded-3xl px-5 py-10 sm:p-12 text-center">
-                  <span className="mx-auto w-16 h-16 rounded-full bg-[#F3EEF8] flex items-center justify-center" aria-hidden="true">
-                    <SearchIcon className="w-7 h-7" live={false} />
+                <div className="rounded-card border border-line px-5 py-10 sm:p-12 text-center">
+                  <span className="mx-auto w-14 h-14 rounded-full bg-sunken flex items-center justify-center text-ink" aria-hidden="true">
+                    <SearchIcon className="w-6 h-6" mono live={false} />
                   </span>
-                  <p className="mt-5 font-serif text-2xl sm:text-3xl text-[#2A1A26] break-words">
+                  <p className="mt-4 text-[17px] leading-6 font-semibold text-ink break-words">
                     {query.trim() ? `No styles match “${query.trim()}”` : narrowed ? 'No styles match these filters' : 'No styles here yet'}
                   </p>
-                  <p className="mt-2 text-sm text-[#2A1A26]/70 max-w-md mx-auto">
+                  <p className="mt-1.5 text-sm leading-5 text-ink-muted max-w-md mx-auto">
                     {query.trim() ? 'Check the spelling, try a simpler word like “suit” or “kurti”, or browse a collection below.' : narrowed ? 'Try another colour, size or price range, or remove a filter.' : 'New styles are added often. Browse another collection meanwhile.'}
                   </p>
-                  <div className="mt-6 flex flex-wrap justify-center gap-3">
-                    {activeCount > 0 && <button onClick={clearFilters} className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Clear filters</button>}
-                    {query.trim() && <button onClick={() => setQuery('')} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Clear search</button>}
-                    {(category !== 'All' || activeOccasion) && (
-                      <button onClick={() => openCollection(homeListing)} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">{kidsPage ? 'See all kids & toys' : 'Shop all styles'}</button>
-                    )}
-                  </div>
+                  {emptyActions.length > 0 && (
+                    <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap sm:justify-center gap-2.5">
+                      {emptyActions.map((a, i) => (
+                        <button key={a.label} type="button" onClick={a.run} className={`${i === 0 ? 'sag-btn-primary' : 'sag-btn-outline'} h-12 px-6 text-[15px]`}>{a.label}</button>
+                      ))}
+                    </div>
+                  )}
                   {suggestions.length > 0 && (
-                    <div className="mt-8 pt-6 border-t border-[#4B1D3F]/10">
-                      <p className="sag-eyebrow mb-3">Popular collections</p>
+                    <div className="mt-8 pt-6 border-t border-line">
+                      <p className="sag-eyebrow mb-3">Collections with styles in them</p>
                       <div className="flex flex-wrap justify-center gap-2">
                         {suggestions.map(([c, n]) => (
-                          <button key={c} type="button" onClick={() => openCollection(c)} className="h-10 px-4 rounded-full bg-[#F3EEF8] text-sm text-[#4B1D3F] hover:bg-[#E6DDF0] transition-colors inline-flex items-center gap-1.5 cursor-pointer">
-                            {c} <span className="text-xs text-[#4B1D3F]/60 tabular-nums">{n}</span>
+                          <button key={c} type="button" onClick={() => openCollection(c)} className="sag-chip h-11 min-w-0 gap-1.5 px-3.5 text-sm">
+                            {c} <span className="sag-num text-[13px] font-normal text-ink-muted">{n}</span>
                           </button>
                         ))}
                       </div>
@@ -786,29 +816,28 @@ export const ShopPage: React.FC = () => {
                 </div>
                 {products.some(isAvailable) && (
                   <div className="mt-10">
-                    <p className="sag-eyebrow">Handpicked for you</p>
-                    <h2 className="mt-1 mb-4 font-serif text-2xl sm:text-3xl text-[#2A1A26]">You might like</h2>
-                    <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                      {products.filter(isAvailable).slice(0, 6).map((p, i) => <div key={p.id} className={i >= 4 ? 'hidden lg:block' : ''}><ProductCard product={p} /></div>)}
+                    <h2 className="mb-4 font-display text-[22px] leading-7 text-ink">More styles in stock</h2>
+                    <div className={grid}>
+                      {products.filter(isAvailable).slice(0, 8).map((p, i) => <div key={p.id} className={i >= 6 ? 'hidden xl:block' : i >= 4 ? 'hidden md:block' : ''}><ProductCard product={p} /></div>)}
                     </div>
                   </div>
                 )}
               </>
             ) : (
               <>
-                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                <div className={grid}>
                   {results.slice(0, visible).map((p) => <ProductCard key={p.id} product={p} />)}
                 </div>
                 {results.length > visible ? (
-                  <div className="mt-12 flex flex-col items-center gap-3">
-                    <p className="text-sm text-[#2A1A26]/70">Showing <span className="font-semibold text-[#2A1A26]">{visible}</span> of {results.length} styles</p>
-                    <div className="w-48 h-1 rounded-full bg-[#E6DDF0] overflow-hidden" aria-hidden="true">
-                      <div className="h-full rounded-full bg-[#4B1D3F]" style={{ width: `${Math.round((visible / results.length) * 100)}%` }} />
+                  <div className="mt-10 flex flex-col items-center gap-3">
+                    <p className="sag-num text-sm text-ink-muted">Showing <span className="font-semibold text-ink">{visible}</span> of {results.length} styles</p>
+                    <div className="w-40 h-1 rounded-full bg-sunken-deep overflow-hidden" aria-hidden="true">
+                      <div className="h-full rounded-full bg-ink" style={{ width: `${Math.round((visible / results.length) * 100)}%` }} />
                     </div>
-                    <button onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline mt-1 h-12 px-10 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Load more styles</button>
+                    <button onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline mt-1 w-full sm:w-auto sm:px-12">Load more styles</button>
                   </div>
                 ) : results.length > PAGE && (
-                  <p className="mt-12 text-center text-sm text-[#2A1A26]/60">You have seen all {results.length} styles</p>
+                  <p className="sag-num mt-10 text-center text-sm text-ink-muted">You have seen all {results.length} styles</p>
                 )}
               </>
             )}
@@ -816,33 +845,74 @@ export const ShopPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Portalled to <body>: the page-enter animation on <main> would otherwise pin this fixed sheet to <main>, not the screen. */}
+      {/* Portalled to <body>: the page-enter animation on <main> would otherwise pin this fixed sheet to <main>, not the screen.
+          A closed sheet is not rendered. */}
       {filtersOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[70]">
-          <div className="absolute inset-0 bg-[#2A1A26]/40 sag-fade" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-ink/50 sag-fade" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="shop-filters-title"
-            className="absolute inset-x-0 bottom-0 max-h-[88vh] rounded-t-3xl bg-[#FBF7F3] flex flex-col shadow-[0_-18px_40px_-24px_rgba(42,26,38,0.5)] animate-in slide-in-from-bottom-5 fade-in"
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] rounded-t-sheet bg-surface text-ink flex flex-col shadow-[var(--sag-shadow-bar)] animate-in slide-in-from-bottom-5 fade-in"
           >
-            <div className="shrink-0 pt-2.5 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-[#2A1A26]/15" /></div>
-            <div className="flex items-center justify-between px-5 h-14 border-b border-[#4B1D3F]/10 shrink-0">
-              <h2 id="shop-filters-title" className="font-serif text-2xl text-[#2A1A26] inline-flex items-center gap-2">
-                Filters
-                {activeCount > 0 && <span className="min-w-6 h-6 px-1.5 rounded-full bg-[#4B1D3F] text-white text-xs font-semibold font-sans inline-flex items-center justify-center">{activeCount}</span>}
+            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-1 rounded-full bg-sunken-deep" /></div>
+            <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
+              <h2 id="shop-filters-title" className="text-base leading-[22px] font-semibold text-ink inline-flex items-center gap-2">
+                Filter
+                {activeCount > 0 && <span className="text-sm font-normal text-ink-muted">{activeCount} selected</span>}
               </h2>
-              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="w-10 h-10 -mr-2 rounded-full flex items-center justify-center hover:bg-[#F3EEF8] cursor-pointer">
-                <X className="w-5 h-5 text-[#4B1D3F]" />
+              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
+                <X className="w-[22px] h-[22px]" strokeWidth={1.75} />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5">{filterPanel}</div>
-            <div className="shrink-0 flex gap-3 px-5 pt-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] border-t border-[#4B1D3F]/10 bg-white">
-              <button type="button" onClick={clearFilters} disabled={activeCount === 0} className="sag-btn-outline flex-1 h-12 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">Clear all</button>
-              <button type="button" onClick={() => setFiltersOpen(false)} className="sag-btn-primary flex-[1.4] h-12 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">
+            <div className="flex-1 overflow-y-auto overscroll-contain px-4">{filterPanel}</div>
+            <div className="sag-bar shrink-0 flex gap-2.5">
+              <button type="button" onClick={clearFilters} disabled={activeCount === 0} className="sag-btn-outline flex-1 px-3">Clear all</button>
+              <button type="button" onClick={() => setFiltersOpen(false)} className="sag-btn-primary sag-num flex-[1.5] px-3">
                 Show {results.length} {results.length === 1 ? 'style' : 'styles'}
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
+
+      {sortOpen && createPortal(
+        <div className="lg:hidden fixed inset-0 z-[70]">
+          <div className="absolute inset-0 bg-ink/50 sag-fade" onClick={() => setSortOpen(false)} aria-hidden="true" />
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="shop-sort-title"
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] rounded-t-sheet bg-surface text-ink flex flex-col shadow-[var(--sag-shadow-bar)] animate-in slide-in-from-bottom-5 fade-in"
+          >
+            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-1 rounded-full bg-sunken-deep" /></div>
+            <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
+              <h2 id="shop-sort-title" className="text-base leading-[22px] font-semibold text-ink">Sort by</h2>
+              <button ref={drawerCloseRef} type="button" onClick={() => setSortOpen(false)} aria-label="Close sort options" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
+                <X className="w-[22px] h-[22px]" strokeWidth={1.75} />
+              </button>
+            </div>
+            <div role="radiogroup" aria-labelledby="shop-sort-title" className="overflow-y-auto overscroll-contain px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+              {sortChoices.map((s) => {
+                const on = s.key === activeSort;
+                return (
+                  <button
+                    key={s.key}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    onClick={() => { setSort(s.key); setSortOpen(false); }}
+                    className={`sag-row w-full text-left cursor-pointer ${on ? '' : 'font-normal'}`}
+                  >
+                    <span className="flex-1">{s.label}</span>
+                    {on && <Check className="w-5 h-5 shrink-0 text-ink" aria-hidden="true" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>,

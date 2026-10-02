@@ -41,20 +41,18 @@ export class ErrorBoundary extends Component<Props, State> {
   public override render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4 sm:px-6 py-16" role="alert">
-        <div className="max-w-md w-full text-center sag-card rounded-3xl px-6 py-9 sm:p-10">
-          <span className="mx-auto w-16 h-16 rounded-full bg-[#F3EEF8] flex items-center justify-center">
-            <HelpIcon className="w-8 h-8" />
-          </span>
-          <h1 className="font-serif text-[32px] leading-tight text-[#4B1D3F] mt-5">Something went wrong</h1>
-          <p className="text-[15px] leading-7 text-[#2A1A26]/70 mt-2">This page could not be shown. Your bag and account are safe.</p>
-          <div className="flex flex-col min-[420px]:flex-row gap-2.5 justify-center mt-6">
-            <button onClick={this.retry} className="sag-btn-primary h-12 px-7 text-sm font-semibold cursor-pointer">Try again</button>
-            <a href="/" className="sag-btn-outline h-12 px-7 inline-flex items-center justify-center text-sm font-semibold">Homepage</a>
+      <div className="min-h-[60vh] bg-page flex items-center justify-center px-4 sm:px-6 py-10 lg:py-16" role="alert">
+        <div className="max-w-md w-full sag-card p-5 sm:p-8">
+          <span className="flex text-ink-muted"><HelpIcon mono className="w-7 h-7" /></span>
+          <h1 className="font-display text-[28px] leading-8 text-ink mt-3">Something went wrong</h1>
+          <p className="text-[15px] leading-[22px] text-ink-muted mt-2">This page could not be shown. Your bag and account are safe.</p>
+          <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-5">
+            <button type="button" onClick={this.retry} className="sag-btn-primary min-[420px]:flex-1">Try again</button>
+            <a href="/" className="sag-btn-outline min-[420px]:flex-1">Homepage</a>
           </div>
           <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls! A page on your website is not opening for me.')} target="_blank" rel="noopener noreferrer"
-            className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-[#4B1D3F] hover:underline underline-offset-4">
-            <WhatsAppIcon className="w-4 h-4" /> Tell us on WhatsApp
+            className="sag-link mt-3 gap-2">
+            <WhatsAppIcon className="w-[18px] h-[18px]" /> Tell us on WhatsApp
           </a>
         </div>
       </div>

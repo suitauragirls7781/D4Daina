@@ -66,7 +66,7 @@ const NotFoundPage = lazy(() => import('./components/NotFoundPage').then((m) => 
 
 const PageFallback: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-label="Loading">
-    <span className="w-8 h-8 rounded-full border-2 border-[#4B1D3F]/15 border-t-[#4B1D3F] animate-spin" />
+    <span className="w-8 h-8 rounded-full border-2 border-line border-t-ink animate-spin" />
   </div>
 );
 
@@ -170,7 +170,7 @@ const MainContent: React.FC = () => {
   // render the dedicated, isolated Admin back-office interface without customer storefront wrapper
   if (isAdminRoute || activePage === 'admin') {
     return (
-      <div id="admin-root-container" className="min-h-screen bg-[#FDF8F9] text-[#211C1A]">
+      <div id="admin-root-container" className="min-h-screen bg-page text-ink">
         <Suspense fallback={<PageFallback />}>
           <AdminDashboardPage />
         </Suspense>
@@ -181,8 +181,8 @@ const MainContent: React.FC = () => {
 
   // Customer-facing Storefront
   return (
-    <div id="app-main-content" className="min-h-screen flex flex-col bg-[#FBF7F3] text-[#2A1A26] w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10001] focus:rounded-full focus:bg-[#4B1D3F] focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
+    <div id="app-main-content" className="min-h-screen flex flex-col bg-page text-ink w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10001] focus:rounded-full focus:bg-brand focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
       <Header />
       <MobileMenuDrawer />
 
