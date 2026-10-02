@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => {
   const shim = (name: string) => path.resolve(__dirname, 'src/shims', name);
   return {
     plugins: [react(), tailwindcss()],
+    // Cloudflare's Git build has no build variables set, so Google sign-in is on there unless switched off
+    define: cloudflare ? { 'import.meta.env.VITE_GOOGLE_LOGIN': JSON.stringify(process.env.VITE_GOOGLE_LOGIN ?? '1') } : {},
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
