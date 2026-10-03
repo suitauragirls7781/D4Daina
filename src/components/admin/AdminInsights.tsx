@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { adminDb as db } from '../../lib/firebase';
 import { useProducts } from '../../context/ProductContext';
-import { useAdmin } from '../../context/AdminContext';
-import { isLowStock } from '../../utils/inventory';
-import { Eye, Heart, Search, AlertTriangle } from 'lucide-react';
+import { Eye, Heart, Search } from 'lucide-react';
 import { ui } from './kidsToysShared';
 
 const lastDays = (n: number) => Array.from({ length: n }, (_, i) => new Date(Date.now() - i * 86400000).toISOString().slice(0, 10));
@@ -12,7 +10,6 @@ const lastDays = (n: number) => Array.from({ length: n }, (_, i) => new Date(Dat
 /** Shopper insights from real, server-counted data (last 7 days). */
 export const AdminInsights: React.FC = () => {
   const { allProducts = [] } = useProducts();
-  const { lowStockThreshold } = useAdmin();
   const [terms, setTerms] = useState<Array<{ term: string; count: number }>>([]);
   const [stats, setStats] = useState<Record<string, { views: number; wishlists: number }>>({});
   const [loaded, setLoaded] = useState(false);
@@ -41,7 +38,6 @@ export const AdminInsights: React.FC = () => {
   const name = (id: string) => allProducts.find((p) => String(p.id) === id)?.name || 'Removed product';
   const topViewed = useMemo(() => Object.entries(stats).filter(([, s]) => s.views).sort((a, b) => b[1].views - a[1].views).slice(0, 5), [stats]);
   const topSaved = useMemo(() => Object.entries(stats).filter(([, s]) => s.wishlists).sort((a, b) => b[1].wishlists - a[1].wishlists).slice(0, 5), [stats]);
-  const lowStock = allProducts.filter((p) => !p.hidden && isLowStock(p, lowStockThreshold)).sort((a, b) => Number(a.stockQuantity ?? 0) - Number(b.stockQuantity ?? 0)).slice(0, 6);
 
   const box = 'min-w-0 bg-white rounded-2xl border border-line p-4';
   const head = `${ui.eyebrow} flex items-center gap-2 mb-2`;
@@ -60,7 +56,8 @@ export const AdminInsights: React.FC = () => {
         <h3 className={ui.h2}>Shopper insights</h3>
         <span className="text-[13px] leading-[18px] text-ink-muted">Last 7 days · one count per visitor per day</span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Low stock is shown once, in the dashboard's own Low stock section (with Restock links) */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className={box}>
           <p className={head}><Search className="w-4 h-4" aria-hidden="true" /> Top searches</p>
           {terms.length ? <ol className={list}>{terms.map((t) => <li key={t.term} className={row}><span className="min-w-0 truncate">{t.term}</span><span className={count}>{t.count}</span></li>)}</ol> : empty}
@@ -72,10 +69,6 @@ export const AdminInsights: React.FC = () => {
         <div className={box}>
           <p className={head}><Heart className="w-4 h-4" aria-hidden="true" /> Most wishlisted</p>
           {topSaved.length ? <ol className={list}>{topSaved.map(([id, s]) => <li key={id} className={row}><span className="min-w-0 truncate">{name(id)}</span><span className={count}>{s.wishlists}</span></li>)}</ol> : empty}
-        </div>
-        <div className={box}>
-          <p className={head}><AlertTriangle className="w-4 h-4 text-sale" aria-hidden="true" /> Low stock</p>
-          {lowStock.length ? <ol className={list}>{lowStock.map((p) => <li key={p.id} className={row}><span className="min-w-0 truncate">{p.name}</span><span className={`tabular-nums font-bold ${Number(p.stockQuantity ?? 0) === 0 ? 'text-danger' : 'text-sale'}`}>{Number(p.stockQuantity ?? 0) === 0 ? 'Sold out' : `${Number(p.stockQuantity ?? 0)} left`}</span></li>)}</ol> : <p className="text-sm leading-5 text-ink-muted">All products are above their low-stock level ({lowStockThreshold} pieces by default).</p>}
         </div>
       </div>
     </section>

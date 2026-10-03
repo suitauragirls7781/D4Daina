@@ -385,6 +385,7 @@ export const AdminHero: React.FC = () => {
                         <input
                           type="text"
                           placeholder="Or paste banner image URL..."
+                          aria-label="Banner image URL"
                           value={slide.bannerImage || ''}
                           onChange={(e) => updateSlide(slide.id, { bannerImage: e.target.value.trim() || undefined })}
                           className="sag-input h-12"
@@ -418,10 +419,11 @@ export const AdminHero: React.FC = () => {
                       
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-title`}>
                             Slide title
                           </label>
                           <input
+                            id={`hero-slide-${index}-title`}
                             type="text"
                             placeholder="e.g. Festive Cambric Silk Suit Set"
                             value={slide.title || ''}
@@ -431,10 +433,11 @@ export const AdminHero: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-badge`}>
                             Badge
                           </label>
                           <input
+                            id={`hero-slide-${index}-badge`}
                             type="text"
                             placeholder="e.g. New arrival"
                             value={slide.badge || ''}
@@ -445,10 +448,11 @@ export const AdminHero: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="sag-label">
+                        <label className="sag-label" htmlFor={`hero-slide-${index}-subtitle`}>
                           Subtitle / fabric story
                         </label>
                         <input
+                          id={`hero-slide-${index}-subtitle`}
                           type="text"
                           placeholder="e.g. Pure breathable cotton cambric with gota patti borders"
                           value={slide.subtitle || ''}
@@ -460,10 +464,11 @@ export const AdminHero: React.FC = () => {
                       {/* Pricing Row */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-page rounded-2xl border border-line">
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-price`}>
                             Offer price (₹)
                           </label>
                           <input
+                            id={`hero-slide-${index}-price`}
                             type="number"
                             placeholder="1299"
                             value={slide.price || ''}
@@ -473,10 +478,11 @@ export const AdminHero: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-mrp`}>
                             Original MRP (₹, shown struck through)
                           </label>
                           <input
+                            id={`hero-slide-${index}-mrp`}
                             type="number"
                             placeholder="2499"
                             value={slide.originalPrice || ''}
@@ -489,10 +495,11 @@ export const AdminHero: React.FC = () => {
                       {/* Link & Action Button */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-link`}>
                             Link (product ID or category)
                           </label>
                           <input
+                            id={`hero-slide-${index}-link`}
                             type="text"
                             placeholder="e.g. Suits or product UUID"
                             value={slide.link || ''}
@@ -502,10 +509,11 @@ export const AdminHero: React.FC = () => {
                         </div>
 
                         <div>
-                          <label className="sag-label">
+                          <label className="sag-label" htmlFor={`hero-slide-${index}-button`}>
                             Button text
                           </label>
                           <input
+                            id={`hero-slide-${index}-button`}
                             type="text"
                             placeholder="BUY NOW"
                             value={slide.linkText || 'BUY NOW'}
@@ -583,6 +591,7 @@ export const AdminHero: React.FC = () => {
                 <input
                   type="text"
                   placeholder="Search products by title or category..."
+                  aria-label="Search products"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
                   className="sag-input h-12 pl-10 pr-4 bg-page focus:bg-white"

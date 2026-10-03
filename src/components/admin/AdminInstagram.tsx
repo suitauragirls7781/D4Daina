@@ -97,6 +97,7 @@ export const AdminInstagram: React.FC = () => {
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="https://www.instagram.com/reel/…"
+            aria-label="Instagram reel link"
             className="sag-input h-12 md:flex-1 min-w-0"
             required
           />
@@ -105,6 +106,7 @@ export const AdminInstagram: React.FC = () => {
             value={captionInput}
             onChange={(e) => setCaptionInput(e.target.value)}
             placeholder="Short caption (optional)"
+            aria-label="Reel caption (optional)"
             maxLength={120}
             className="sag-input h-12 md:w-64"
           />
@@ -147,6 +149,7 @@ export const AdminInstagram: React.FC = () => {
                   value={reel.caption || ''}
                   onChange={(e) => setDraft(draft.map((r) => (r.url === reel.url ? { ...r, caption: e.target.value } : r)))}
                   placeholder="Caption (optional)"
+                  aria-label={`Caption for reel ${index + 1} (optional)`}
                   maxLength={120}
                   className="sag-input h-12"
                 />

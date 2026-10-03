@@ -59,6 +59,8 @@ export const ui = {
   eyebrow: 'text-xs leading-4 font-semibold text-ink-muted',
   /** Page and section titles. The admin uses Inter only. */
   h1: 'font-display text-[22px] leading-7 sm:text-2xl sm:leading-8 text-ink',
+  /** Same size as h1 for a title that is really an order number or product name: those stay Inter (src/index.css). */
+  h1Name: 'font-sans text-[22px] leading-7 sm:text-2xl sm:leading-8 font-semibold text-ink',
   h2: 'text-[17px] leading-6 font-semibold text-ink',
   /** Big number in a stat tile. */
   stat: 'text-2xl leading-8 font-bold text-ink sag-num',

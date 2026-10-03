@@ -373,7 +373,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-8 lg:mt-12 scroll-mt-20 lg:scroll-mt-36 lg:border-t lg:border-line lg:pt-8">
       <div className="flex items-center justify-between gap-4 min-h-11">
-        <h2 id="pdp-reviews-title" className="text-[17px] leading-6 font-semibold text-ink">Customer reviews</h2>
+        <h2 id="pdp-reviews-title" className="text-xl leading-7 font-semibold text-ink">Customer reviews</h2>
         {(summary.count > 0 || formOpen) && (
           <button type="button" onClick={openForm} aria-expanded={formOpen} aria-controls="pdp-review-form" className="sag-link shrink-0">
             {formOpen ? 'Close' : 'Write a review'}

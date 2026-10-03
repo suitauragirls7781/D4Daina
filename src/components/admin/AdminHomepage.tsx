@@ -292,12 +292,10 @@ export const AdminHomepage: React.FC = () => {
         {/* Live sync helper box */}
         <div className="px-3.5 py-3 bg-page rounded-xl border border-line text-[13px] leading-[18px] text-ink-muted flex items-start gap-2.5">
           <Sparkles className="w-4 h-4 text-ink shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-semibold text-ink">Homepage Preview Controls:</span>
-            <p className="text-ink-muted">
-              Changes apply immediately in this browser and are stored locally. Shared publishing across devices requires secure server-side configuration.
-            </p>
-          </div>
+          {/* Saved to storefront_settings/homepageSections; shoppers get it in the shared catalogue (5-minute cache, src/lib/catalog.ts) */}
+          <p className="text-ink-muted">
+            Changes are saved for every shopper. The store shows them within about 5 minutes.
+          </p>
         </div>
 
       </div>

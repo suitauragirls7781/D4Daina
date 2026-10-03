@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAdmin } from '../../context/AdminContext';
-import { Activity, Percent, IndianRupee, ShoppingCart, Users, Repeat, CalendarDays } from 'lucide-react';
+import { Activity, Percent, Users, Repeat, CalendarDays } from 'lucide-react';
 import { VisitorAnalytics } from '../../utils/visitorTracker';
 
 interface MetricsDashboardProps {
@@ -12,20 +12,16 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ visitorStats
 
   // Only orders whose payment the server verified count as sales.
   const paidOrders = orders.filter((o) => o.paymentStatus === 'Paid' && o.status !== 'Cancelled' && o.status !== 'Refunded');
-  const totalRevenue = paidOrders.reduce((sum, ord) => sum + ord.finalTotal, 0);
-  const totalOrders = paidOrders.length;
-  const aov = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
   const todayStr = new Date().toISOString().slice(0, 10);
   const todayOrders = paidOrders.filter((o) => String(o.date).startsWith(todayStr)).length;
   const conversionRate = visitorStats.todayUniqueVisitors > 0
     ? ((todayOrders / visitorStats.todayUniqueVisitors) * 100).toFixed(1)
     : '0.0';
 
+  // Revenue and average order value are shown once, in the "Orders and sales" tiles above
   const metrics = [
     { title: 'Live Traffic', value: visitorStats.liveActiveCount, icon: Activity, note: 'Active in the last 3 minutes', live: true },
     { title: 'Conversion %', value: `${conversionRate}%`, icon: Percent, note: `${todayOrders} paid today`, live: false },
-    { title: 'Revenue', value: `₹${totalRevenue.toLocaleString('en-IN')}`, icon: IndianRupee, note: `${totalOrders} paid orders`, live: false },
-    { title: 'Avg Order Value', value: `₹${aov.toLocaleString('en-IN')}`, icon: ShoppingCart, note: 'Paid, not cancelled', live: false },
   ];
 
   const n = (v?: number) => (v === undefined ? '…' : v.toLocaleString('en-IN'));
@@ -37,7 +33,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ visitorStats
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {metrics.map((metric) => (
           <div key={metric.title} className="bg-white p-4 sm:p-5 rounded-2xl border border-line">
             <div className="flex items-start justify-between gap-2 mb-3">

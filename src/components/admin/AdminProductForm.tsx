@@ -27,7 +27,8 @@ import { SectionTitle, tone, ui } from './kidsToysShared';
 const SWITCH_TRACK = "relative shrink-0 w-12 h-7 rounded-full bg-control peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5";
 
 /** Page header with a back button, in the same layout as the order details page. */
-const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; description?: React.ReactNode; onBack: () => void; actions?: React.ReactNode }> = ({ crumb, title, description, onBack, actions }) => (
+// isName: the title is the product's own name, so it stays Inter (font-sans) instead of the display face
+const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; isName?: boolean; description?: React.ReactNode; onBack: () => void; actions?: React.ReactNode }> = ({ crumb, title, isName = false, description, onBack, actions }) => (
   <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-4 border-b border-line">
     <div className="flex items-start gap-2 min-w-0">
       <button
@@ -45,7 +46,7 @@ const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; description?
           <span aria-hidden="true">/</span>
           <span className="truncate">{crumb}</span>
         </div>
-        <h2 className={`mt-0.5 ${ui.h1} break-words`}>{title}</h2>
+        <h2 className={`mt-0.5 ${isName ? ui.h1Name : ui.h1} break-words`}>{title}</h2>
         {description && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-2xl">{description}</p>}
       </div>
     </div>
@@ -517,7 +518,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   if (editingAccessory && existingProduct) {
     return (
       <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
-        <FormHeader crumb="Accessory" title={existingProduct.name} onBack={() => navigate('/admin/products')} />
+        <FormHeader crumb="Accessory" title={existingProduct.name} isName onBack={() => navigate('/admin/products')} />
 
         <div id="admin-accessory-notice" role="status" className={`${ui.card} space-y-3`}>
           <p className={ui.h2}>This is a Complete the Look accessory — edit it in Complete the Look</p>
@@ -543,7 +544,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     const sectionName = isToyItem ? 'Toys' : 'Kids Wear';
     return (
       <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
-        <FormHeader crumb={isToyItem ? 'Toy' : 'Kids wear'} title={existingProduct.name} onBack={() => navigate('/admin/products')} />
+        <FormHeader crumb={isToyItem ? 'Toy' : 'Kids wear'} title={existingProduct.name} isName onBack={() => navigate('/admin/products')} />
 
         <div id="admin-kids-toys-notice" role="status" className={`${ui.card} space-y-3`}>
           <p className={ui.h2}>
@@ -577,6 +578,9 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     { id: 'apf-flag-published', label: 'Published on store', checked: published, onChange: setPublished },
   ];
 
+  // One label for the one save action, in the header and in the bottom bar
+  const saveLabel = isSaving ? 'Saving…' : (isEditMode ? 'Save changes' : 'Add product');
+
   return (
     <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
 
@@ -584,6 +588,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
       <FormHeader
         crumb={isEditMode ? 'Edit product' : 'New product'}
         title={isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
+        isName={isEditMode && Boolean(existingProduct?.name)}
         description={isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}
         onBack={handleCancel}
         actions={
@@ -593,7 +598,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </button>
             <button type="submit" form="product-edit-form" disabled={isSaving} className={ui.primary}>
               {isSaving ? <RefreshCw className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
-              <span>{isSaving ? 'Saving...' : 'Save product'}</span>
+              <span>{saveLabel}</span>
             </button>
           </>
         }
@@ -1214,7 +1219,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             ) : (
               <Save className="w-4 h-4 text-current" />
             )}
-            <span>{isSaving ? 'Saving changes...' : (isEditMode ? 'Update product' : 'Publish product')}</span>
+            <span>{saveLabel}</span>
           </button>
         </div>
 

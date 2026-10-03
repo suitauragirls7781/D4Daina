@@ -164,7 +164,8 @@ export const AdminUsage: React.FC = () => {
             In the Cloudflare dashboard create an API token with the permission <strong className="font-semibold text-ink">Account Analytics: Read</strong>, then add it to the Worker as the secret{' '}
             <code className="font-mono text-[13px] break-all text-ink">CLOUDFLARE_ANALYTICS_TOKEN</code>. Until then no numbers are shown here.
           </p>
-          {view.error && <p className="mt-2 text-sm leading-5 text-ink-muted break-words">{view.error}</p>}
+          {/* The server's "token missing" message repeats the paragraph above; only show other reasons (e.g. no account ID) */}
+          {view.error && !view.error.includes('CLOUDFLARE_ANALYTICS_TOKEN') && <p className="mt-2 text-sm leading-5 text-ink-muted break-words">{view.error}</p>}
           <div className="mt-4">{refreshButton}</div>
         </div>
       )}

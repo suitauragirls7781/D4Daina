@@ -404,8 +404,9 @@ export const AddressBook: React.FC<{
     <section className="space-y-4" aria-label="Saved addresses">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[20px] leading-7 text-ink">Saved addresses</h2>
-          <p className="mt-1 text-sm leading-5 text-ink-muted">Your default address fills in checkout automatically.</p>
+          {/* As a picker (checkout) the card around it already carries the heading, so only one title shows */}
+          {!onSelect && <h2 className="text-[20px] leading-7 text-ink">Saved addresses</h2>}
+          <p className={`${onSelect ? '' : 'mt-1 '}text-sm leading-5 text-ink-muted`}>Your default address fills in checkout automatically.</p>
         </div>
         {addresses.length > 0 && (
           <button type="button" onClick={() => setSheet({ editing: null })} className="sag-btn-outline w-full sm:w-auto h-11 px-4 gap-2 text-sm">

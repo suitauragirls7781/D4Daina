@@ -250,8 +250,9 @@ export const HeroSection: React.FC = () => {
         <div className="min-w-0 px-4 sm:px-6 lg:px-0 mt-3 lg:mt-0 lg:col-span-7">
           {eyebrow && <p className="sag-eyebrow hidden sm:block mb-2 truncate">{eyebrow}</p>}
 
-          {/* Two lines are reserved on phones so a change of slide never moves the buttons */}
-          <h1 className="font-display text-[28px] leading-8 sm:text-4xl sm:leading-[1.12] lg:text-5xl lg:leading-[1.08] text-ink line-clamp-2 min-h-16 sm:min-h-0">
+          {/* Two lines are reserved on phones so a change of slide never moves the buttons. The slide title is a full
+              product name, so the size is a step smaller than a page title: a usual name fits in the two lines whole. */}
+          <h1 className="font-display text-2xl leading-[30px] sm:text-[32px] sm:leading-[1.15] lg:text-[40px] lg:leading-[1.12] text-ink line-clamp-2 min-h-[60px] sm:min-h-0">
             {currentSlide.title}
           </h1>
           {currentSlide.subtitle && (

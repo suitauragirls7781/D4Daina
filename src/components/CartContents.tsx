@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { AlertCircle, ChevronDown, Loader2, Minus, Plus, X } from 'lucide-react';
@@ -19,27 +19,20 @@ export const useBagTotal = () => {
 
 /**
  * Display only: applies a coupon through the shop's own applyCoupon() and keeps the reason it was refused,
- * so the bag, the offers sheet and checkout can show it next to the coupon field (the toast still appears).
- * The reason is the exact text applyCoupon() puts in its error toast; nothing is validated here.
+ * so the bag, the offers sheet and checkout show it once, next to the coupon field (no error toast as well).
+ * The reason is the exact text applyCoupon() gives; nothing is validated here.
  */
 export const useCouponApply = () => {
-  const { applyCoupon, appliedCoupon, toast } = useShop();
+  const { applyCoupon, appliedCoupon } = useShop();
   const [applying, setApplying] = useState('');
   const [error, setError] = useState('');
   const [failedCode, setFailedCode] = useState('');
-  const awaitingReason = useRef(false);
-
-  useEffect(() => {
-    if (!awaitingReason.current || toast?.type !== 'error') return;
-    awaitingReason.current = false;
-    setError(toast.message);
-  }, [toast]);
 
   useEffect(() => {
     if (appliedCoupon) { setError(''); setFailedCode(''); }
   }, [appliedCoupon]);
 
-  const clearError = () => { awaitingReason.current = false; setError(''); setFailedCode(''); };
+  const clearError = () => { setError(''); setFailedCode(''); };
 
   const apply = async (value: string): Promise<boolean> => {
     const code = value.trim().toUpperCase();
@@ -47,14 +40,12 @@ export const useCouponApply = () => {
     setApplying(code);
     setError('');
     setFailedCode('');
-    awaitingReason.current = true;
-    const ok = await applyCoupon(code);
+    let reason = '';
+    const ok = await applyCoupon(code, (message) => { reason = message; });
     setApplying('');
-    if (ok) {
-      awaitingReason.current = false;
-    } else {
+    if (!ok) {
       setFailedCode(code);
-      setError((current) => current || 'This coupon could not be applied.');
+      setError(reason || 'This coupon could not be applied.');
     }
     return ok;
   };
@@ -120,7 +111,7 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
   // Saves the style to the wishlist and takes this line out of the bag (look accessories stay with their outfit)
   const moveToWishlist = (itemId: string, product: (typeof cart)[number]['product']) => {
     removeFromCart(itemId);
-    if (isInWishlist(product.id)) showToast(`"${product.name}" moved to your wishlist.`, 'success');
+    if (isInWishlist(product.id)) showToast(`Moved to wishlist\n${product.name}`, 'success');
     else toggleWishlist(product);
   };
   return (

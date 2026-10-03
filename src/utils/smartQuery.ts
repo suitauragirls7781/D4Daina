@@ -183,6 +183,17 @@ export const matchesSmartQuery = (p: Product, sq: SmartQuery) => {
 };
 
 /**
+ * The search test the listing page applies to ?q= (ShopPage): an understood request
+ * ("red lehenga under 1500") uses the smart filters, anything else the fuzzy text match.
+ * The header suggestions use it too, so both show the same styles for the same words.
+ */
+export const searchQueryMatcher = (raw: string): ((p: Product) => boolean) => {
+  if (!raw.trim()) return () => true;
+  const sq = parseSmartQuery(raw);
+  return hasStructure(sq) ? (p) => matchesSmartQuery(p, sq) : (p) => fuzzyMatchProduct(p, raw);
+};
+
+/**
  * Best real matches for a request. When nothing matches exactly, the closest alternatives are
  * returned with `exact: false` (the price/size limits are kept; colour/occasion/type are relaxed).
  */

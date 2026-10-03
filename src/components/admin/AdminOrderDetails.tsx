@@ -349,7 +349,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               <span aria-hidden="true">/</span>
               <span className="truncate">{order.orderNumber}</span>
             </div>
-            <h2 className={`mt-0.5 ${ui.h1} break-all sm:break-normal`}>
+            <h2 className={`mt-0.5 ${ui.h1Name} break-all sm:break-normal`}>
               Order #{order.orderNumber}
             </h2>
             <div className="mt-2 flex flex-wrap items-center gap-2">

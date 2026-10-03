@@ -121,7 +121,7 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
 
   return (
     <section id="complete-the-look" aria-labelledby="ctl-title" className="mt-8 lg:mt-12">
-      <h2 id="ctl-title" className="text-[17px] leading-6 font-semibold text-ink">Complete the look</h2>
+      <h2 id="ctl-title" className="text-xl leading-7 font-semibold text-ink">Complete the look</h2>
       <p className="mt-1 max-w-2xl text-sm leading-5 text-ink-muted">
         Add the matching {kindsLabel(items)} to make it the full {setLabel(setType)} look. These pieces come only with this outfit and can't be bought on their own.
       </p>

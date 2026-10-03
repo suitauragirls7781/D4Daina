@@ -26,7 +26,7 @@ const readTimeLeft = (endTime?: string, durationHours?: number): TimeLeft | null
 
 export const DealOfTheDaySection: React.FC = () => {
   const { dealOfTheDay } = useAdmin();
-  const { products = [], navigateToProduct, toggleWishlist, isInWishlist, addToCart, buyNow, showToast } = useShop();
+  const { products = [], navigateToProduct, toggleWishlist, isInWishlist, addToCart, buyNow } = useShop();
 
   const targetProductId = dealOfTheDay?.productId || (products[0]?.id || '');
   const product = products.find((p) => p.id === targetProductId) || products[0];
@@ -78,8 +78,7 @@ export const DealOfTheDaySection: React.FC = () => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addToCart(product, selectedSize);
-    setIsAddedToBag(true);
-    showToast(`Added ${product.name} to bag`, 'success');
+    setIsAddedToBag(true); // addToCart() shows the "Added to bag" toast itself
     setTimeout(() => setIsAddedToBag(false), 2000);
   };
 

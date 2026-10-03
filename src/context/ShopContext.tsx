@@ -75,7 +75,8 @@ interface ShopContextType {
   addRecentOrder: (order: Order) => void;
   syncCustomerOrders: (identifier?: string | { email?: string; phone?: string }) => Promise<void>;
   appliedCoupon: Coupon | null;
-  applyCoupon: (code: string) => Promise<boolean>;
+  /** onRefused: the caller shows the refusal reason next to its coupon field instead of an error toast. */
+  applyCoupon: (code: string, onRefused?: (reason: string) => void) => Promise<boolean>;
   removeCoupon: () => void;
   toast: { message: string; type: 'success' | 'info' | 'error' } | null;
   showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
@@ -800,7 +801,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     trackFunnelEvent('add_to_cart');
-    showToast(/free/i.test(String(chosenSize)) ? 'Added to bag' : `Added to bag · Size ${chosenSize}`, 'success');
+    // First line says what happened, the second names the piece (the toast truncates it)
+    showToast(`${/free/i.test(String(chosenSize)) ? 'Added to bag' : `Added to bag · Size ${chosenSize}`}\n${product.name}`, 'success');
   };
 
   // "Complete the look": the outfit (unless it is already in the bag) plus the chosen accessories, each linked to it
@@ -945,11 +947,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     wishlistPendingRef.current.set(String(product.id), exists ? null : product);
     if (exists) {
       setWishlist((prev) => prev.filter((item) => item.id !== product.id));
-      showToast(`Removed from wishlist: ${product.name}`, 'info');
+      showToast(`Removed from wishlist\n${product.name}`, 'info');
     } else {
       setWishlist((prev) => [...prev, product]);
       trackItem('wishlist_add', String(product.id));
-      showToast(`Saved to wishlist: ${product.name}`, 'success');
+      showToast(`Saved to wishlist\n${product.name}`, 'success');
     }
   };
 
@@ -964,7 +966,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   // Coupon Logic
-  const applyCoupon = async (code: string): Promise<boolean> => {
+  const applyCoupon = async (code: string, onRefused?: (reason: string) => void): Promise<boolean> => {
+    // A refusal is shown once: next to the coupon field when the caller asks for the reason, otherwise as a toast.
+    const refuse = (reason: string) => { if (onRefused) onRefused(reason); else showToast(reason, 'error'); };
     const cleanCode = code.trim().toUpperCase();
     if (!cleanCode) return false;
     try {
@@ -984,14 +988,14 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         allowedProductIds: listed?.allowedProductIds || [],
       };
       if (isCouponRestricted(next) && couponEligibleSubtotal(next, cart) <= 0) {
-        showToast(`${next.code}: ${couponRestrictionNotes(next)[0] || 'not valid on the items in your bag'}. Add an eligible item to use it.`, 'error');
+        refuse(`${next.code}: ${couponRestrictionNotes(next)[0] || 'not valid on the items in your bag'}. Add an eligible item to use it.`);
         return false;
       }
       setAppliedCoupon(next);
       showToast(`Coupon ${result.coupon.code} applied.`, 'success');
       return true;
     } catch (error: any) {
-      showToast(error?.message || 'This coupon code is not valid.', 'error');
+      refuse(error?.message || 'This coupon code is not valid.');
       return false;
     }
   };

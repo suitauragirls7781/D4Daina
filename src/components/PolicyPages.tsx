@@ -188,7 +188,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
             {sections.map((s, i) => (
               <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className={`py-5 sm:py-6 scroll-mt-20 ${i > 0 ? 'border-t border-line' : ''}`}>
                 <h2 id={`${s.id}-title`} className="text-[17px] leading-6 lg:text-[20px] lg:leading-7 font-semibold text-ink">
-                  <span className="text-ink-muted font-normal mr-2 sag-num">{i + 1}.</span>{s.title}
+                  <span className="text-ink-muted font-medium mr-2 sag-num">{i + 1}.</span>{s.title}
                 </h2>
                 <div className="mt-3 space-y-4">{s.body}</div>
               </section>

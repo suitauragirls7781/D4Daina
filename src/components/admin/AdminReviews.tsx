@@ -34,7 +34,8 @@ const STATUS_STYLE: Record<Status, string> = {
 
 const card = 'sag-card p-4 sm:p-5';
 const fieldLabel = 'grid gap-1.5 text-[13px] leading-[18px] font-semibold text-ink';
-const input = 'sag-input';
+// Fields sit inside the semibold label wrapper: keep the typed text and placeholders at normal weight
+const input = 'sag-input font-normal';
 const pill = 'h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50';
 
 // Same limit as the other admin photo uploads (Cloudinary refuses larger images)
@@ -410,7 +411,7 @@ export const AdminReviews: React.FC = () => {
               </div>
               <label className={fieldLabel}>Review text *
                 <textarea rows={4} value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} maxLength={2000}
-                  className="sag-input" />
+                  className={input} />
               </label>
             </div>
             <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line bg-white shadow-[var(--sag-shadow-bar)] flex sm:justify-end gap-3">

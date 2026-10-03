@@ -37,13 +37,13 @@ Base: **Bharosa** (trust-first structure, three checkout states kept, e2e-safe).
 | Size not chosen | Bottom sheet with explicit confirm button (no auto-proceed, to avoid wrong-size orders). `onAdd` / `onBuy` take an optional size argument. | Rani + Peacock |
 | Selected size chip | Ink fill, white text. Teal is reserved for "move forward". | Rani / Peacock |
 | Per-size "unavailable" chip | Not built. No real per-size stock data exists. | Peacock |
-| Fonts | Inter (text, all numbers) + DM Serif Display (page titles and home headlines only). | Peacock / Bharosa |
+| Fonts | Inter (text, all numbers) + Playfair Display 500/600 (page titles, section titles, hero headline). Replaced DM Serif Display, which has one weight; see 1.2. | Peacock / Bharosa |
 | Product title | Inter 18/24 600, not serif, to keep the first screen short. | Rani / Bharosa |
 | `font-serif` sweep | `--font-serif` is re-pointed to Inter in `@theme`, so the 252 existing `font-serif` usages become Inter with no edits. Titles that should be serif get `font-display` by hand. | Rani (method) |
 | Product cards | No border, no box; photo radius 12 on a white band. | Peacock |
 | Cards elsewhere | White cards on paper for bag, checkout, account. | Bharosa |
 | Trust block | One reusable `Assurance` component (four true facts), full version on the product page, one-line version above buy, checkout and pay buttons. | Bharosa |
-| Toasts | Top-anchored under the header so they never cover a buy or pay bar. | Bharosa |
+| Toasts | Top-anchored under the header so they never cover a buy or pay bar. On the product page (photos right under the header) they sit at the bottom instead: above the buy bar on phones, in the right column on desktop. | Bharosa |
 | Wishlist icon in phone header | Removed on phones (it is in the bottom nav and on the product title row). Stays on desktop. | Peacock / Bharosa |
 | Bottom nav on the bag page | Hidden, so only one fixed bar shows. | All three |
 | Product page header | Keeps the menu icon. A visitor from an ad has no history to go back to. | Lead |
@@ -105,31 +105,34 @@ Colour rules:
 
 ### 1.2 Fonts
 
-Replace the single Google Fonts link in `index.html` (line 136) with:
-`https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap`
-Keep the existing preconnect. No other family is loaded.
+Two families, one Google Fonts link in `index.html`:
+`https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap`
+Keep the existing preconnect. No other family is loaded. (The first draft of this spec named DM Serif Display; it was replaced by Playfair Display, which has real 500 and 600 weights. The reasons are in the comment above `--font-display` in `src/index.css`.)
 
 ```css
 @theme {
-  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Inter', system-ui, sans-serif;            /* existing font-serif classes become Inter */
-  --font-display: 'DM Serif Display', Georgia, serif;      /* new font-display utility */
+  --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Inter', 'Inter Fallback', system-ui, sans-serif;   /* alias of Inter; no component uses it */
+  --font-display: 'Playfair Display', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 }
 ```
 
-- Delete the `h1..h6, .font-serif { font-family: 'Cormorant Garamond' !important }` rule. Headings default to Inter 600.
-- `font-display` is applied by hand to: page titles ("Your bag", "Checkout", "My account", "Sign in"), the home hero headline, home section titles. Never on prices, product names, forms or buttons (DM Serif Display has one weight).
+- `h1`, `h2` and `.font-display` use Playfair Display at 500 by default, with `font-synthesis: none` and lining figures. `h3`-`h6` are Inter 600.
+- Only Playfair 500 and 600 are loaded. Anything in the display face uses `font-medium` (500) or `font-semibold` (600), never `font-normal`, `font-bold` or italic; a muted aside inside an h1/h2 (an item count, "2 selected") carries `font-sans`.
+- Display face on: page titles ("Your bag", "Checkout", "My account", "Sign in"), the home hero headline, home section titles, product-page section titles, checkout card titles, sheet and dialog titles. Never on prices, product names in cards, forms or buttons; an h1/h2 that is really a product name or order number carries `font-sans`.
 - Every price and total: `font-variant-numeric: tabular-nums lining-nums` (helper class `sag-num`).
-- Add a metric-matched fallback `@font-face` (`size-adjust` over Arial for Inter, over Georgia for DM Serif Display) so the swap causes no layout shift.
+- Metric-matched fallback `@font-face`s (`Inter Fallback` over Arial, `Playfair Fallback` over Georgia) so the swap causes no layout shift.
 
 ### 1.3 Type scale (390px phone; size / line-height, weight)
 
 | Role | Family | Spec |
 |---|---|---|
-| Display h1 (page title, hero) | DM Serif Display | 28/32, 400, tracking -0.01em |
-| Display h2 (home section title) | DM Serif Display | 22/28, 400 |
+| Display h1 (page title) | Playfair Display | 28/32, 500 (40/46 on desktop) |
+| Home hero headline (a full product name) | Playfair Display | 24/30, 500, max 2 lines (32 on tablet, 40 on desktop) |
+| Display h2 (home section title) | Playfair Display | 22/28, 500 (28/32 on desktop) |
 | Product title (h1 on product page) | Inter | 18/24, 600, max 2 lines |
-| Functional h2 (Delivery address, Price details, Reviews) | Inter | 17/24, 600 |
+| Section h2 on the product page and checkout (Customer reviews, Product details, Similar styles, Contact, Delivery address, Payment method) | Playfair Display | 20/28, 600 |
+| Small card, sheet and dialog titles | Playfair Display | 16-18, 600 |
 | h3 (card or group title, accordion row) | Inter | 16/22, 600 |
 | Card product name | Inter | 14/20, 500, clamp 2 lines |
 | Price, product page | Inter | 28/32, 700, tabular |
@@ -235,6 +238,9 @@ Same five tabs and ids (`mobile-app-bottom-navbar`, `mobile-nav-home|categories|
 
 ### Toasts
 Top-anchored, 8px under the header, white card, radius 12, 4px left rule (ok, danger or ink), 18px icon plus 14/20 text, two lines max, `--sag-shadow-pop`, existing timing, `role="status"`, one at a time.
+- Product page: the photos start right under the header, so the toast is bottom-anchored there: 8px above the phone buy bar, bottom-centre on tablet, bottom-right (360px, inside the right-hand column) on desktop. It never covers a product photo.
+- Outcome first: "Added to bag · Size M", "Saved to wishlist", "Removed from wishlist", "Moved to wishlist" on the first line (600), the product name on a second line in ink-muted, truncated.
+- A refused coupon is shown once, inline under the coupon field, with no error toast.
 
 ### Icons and motion
 - lucide outline at 20 or 24px, stroke 1.75. The `svg.lucide:not([class*="text-"])` rule changes from plum to `currentColor`.
@@ -389,7 +395,7 @@ Taps from product page to the payment sheet: pick size, Buy now, Deliver here, C
 ## 5. Rest of the site
 
 **Home** (`HomePage.tsx`, `HeroSection.tsx`, `HomeSections.tsx`, `ShopByCategory.tsx`). Same section order and admin controls from `storefront_settings/homepageSections`. White background with alternate sections on page grey.
-- Hero: one photo with nothing over it; below it the headline (`font-display` 28/32), one sentence, "Shop now" primary and "Explore collection" secondary. Slides change by swipe with segment indicators below. No Ken Burns, no autoplay progress bar.
+- Hero: one photo with nothing over it; below it the headline (`font-display` 24/30, two lines max), one sentence, "Shop now" primary and "Explore collection" secondary. Slides change by swipe with segment indicators below. No Ken Burns, no autoplay progress bar.
 - Assurance band directly under the hero (the four facts in a 2x2 brand-wash grid, tappable).
 - Categories: 4/5 photo tiles 104px wide in a scroller, name and real design count beneath; only categories that have products. Category buttons keep their text (the test clicks a visible button "Kids & Toys").
 - Featured collection: 2-column grid. New arrivals: horizontal scroller.

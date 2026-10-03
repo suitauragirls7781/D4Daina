@@ -8,7 +8,7 @@ import { withPageTransition } from '../utils/pageTransition';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { fuzzyMatchProduct } from '../utils/fuzzySearch';
+import { isAvailable, searchQueryMatcher } from '../utils/smartQuery';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { ChevronDown, ChevronRight, Clock, Menu, Trash2, X } from 'lucide-react';
 import { BagIcon } from './BrandIcons';
@@ -50,8 +50,6 @@ export const Header: React.FC = () => {
   });
   const searchInputRef = useRef<HTMLInputElement>(null);
   const collectionsRef = useRef<HTMLDivElement>(null);
-
-  const activeProducts = useMemo(() => products.filter((p) => p.inStock), [products]);
 
   // Collections = women's categories that actually have products (kids wear and toys have their own page).
   const collections = useMemo(() => {
@@ -103,7 +101,12 @@ export const Header: React.FC = () => {
   };
 
   const searchTrimmed = searchInput.trim();
-  const matches = searchTrimmed.length >= 2 ? activeProducts.filter((p) => fuzzyMatchProduct(p, searchTrimmed)) : [];
+  // Same matching and pool as the results page (/shop?q=): every published style, sold-out ones last.
+  const matches = useMemo(() => {
+    if (searchTrimmed.length < 2) return [];
+    const found = products.filter(searchQueryMatcher(searchTrimmed));
+    return [...found.filter(isAvailable), ...found.filter((p) => !isAvailable(p))];
+  }, [products, searchTrimmed]);
   const results = matches.slice(0, 6);
 
   const navItems: Array<{ label: string; action: () => void; active: boolean }> = [

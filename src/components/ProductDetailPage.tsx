@@ -511,7 +511,7 @@ export const ProductDetailPage: React.FC = () => {
 
   const rail = (title: string, items: Product[]) => (
     <section className="mt-8 lg:mt-12">
-      <h2 className="text-[17px] leading-6 font-semibold text-ink">{title}</h2>
+      <h2 className="text-xl leading-7 font-semibold text-ink">{title}</h2>
       <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
         {items.map((p) => (
           <div key={p.id} className="w-[44%] sm:w-52 shrink-0 lg:w-auto min-w-0"><ProductCard product={p} compact /></div>
@@ -828,7 +828,7 @@ export const ProductDetailPage: React.FC = () => {
           {/* Details */}
           <div className="min-w-0 lg:col-start-2 lg:row-start-2">
             <section aria-labelledby="pdp-details-title" className="mt-8">
-              <h2 id="pdp-details-title" className="text-[17px] leading-6 font-semibold text-ink">{toyPage ? 'About this toy' : 'Product details'}</h2>
+              <h2 id="pdp-details-title" className="text-xl leading-7 font-semibold text-ink">{toyPage ? 'About this toy' : 'Product details'}</h2>
               {facts.length > 0 && (
                 <dl className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] text-sm leading-5 border-b border-line">
                   {facts.map(([label, value]) => (

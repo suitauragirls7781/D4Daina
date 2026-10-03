@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { CreditCard, ShieldCheck, Save, Loader2, Copy, Check, RefreshCw, KeyRound } from 'lucide-react';
@@ -42,11 +42,12 @@ export const Switch: React.FC<{ checked: boolean; onChange: (v: boolean) => void
 
 const CopyField: React.FC<{ title: string; value: string }> = ({ title, value }) => {
   const [copied, setCopied] = useState(false);
+  const fieldId = useId();
   return (
     <div>
-      <span className={label}>{title}</span>
+      <label className={label} htmlFor={fieldId}>{title}</label>
       <div className="flex gap-2">
-        <input readOnly value={value} className={`${input} min-w-0 bg-page font-mono text-[13px]`} />
+        <input id={fieldId} readOnly value={value} className={`${input} min-w-0 bg-page font-mono text-[13px]`} />
         <button
           type="button"
           onClick={() => { navigator.clipboard?.writeText(value).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }); }}

@@ -12,12 +12,14 @@ import { trackItem } from '../utils/visitorTracker';
 type Message = { from: 'you' | 'aura'; text: string; products?: Product[] };
 
 const SUGGESTIONS = ['Pink suit under ₹999', 'Wedding ke liye heavy suit', 'Daily wear under ₹699', 'XL blue suit', 'Party wear in stock'];
-const HIDDEN_ON = new Set(['checkout', 'cart', 'login', 'order-confirmation', 'admin', 'product-detail']);
-// Pages with no product cards, prices, product photos or bottom bars. On phones the body text here runs to the
-// right edge, so the floating button appears only once the reader reaches the end of the page (the footer's last
-// row has room for it); from tablet width up it shows all the time. On every other page (home, shop, wishlist, account…) it floats only on wide screens, in the empty margin
-// outside the 1280px content column; below that the home page offers the same assistant as a row in the page.
-const CLEAR_PAGES = new Set(['about', 'contact', 'size-guide', 'shipping-policy', 'return-policy', 'privacy-policy', 'terms-policy', 'terms-conditions', 'cancellation-policy']);
+// Info and policy pages are included: there the button sat on body text and crowded the "Track order" button,
+// and those pages already end with their own "Still have a question?" help card (Contact is the help page itself).
+const HIDDEN_ON = new Set([
+  'checkout', 'cart', 'login', 'order-confirmation', 'admin', 'product-detail',
+  'about', 'contact', 'size-guide', 'shipping-policy', 'return-policy', 'privacy-policy', 'terms-policy', 'terms-conditions', 'cancellation-policy',
+]);
+// Everywhere else (home, shop, wishlist, account…) it floats only on wide screens, in the empty margin outside
+// the 1280px content column; below that the home page offers the same assistant as a row in the page.
 
 /**
  * "Ask SuitAura": understands plain requests (English / Hinglish) and answers only with real
@@ -31,20 +33,6 @@ export const SmartAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Phones, clear pages: true once the page is scrolled to its end, so the button never sits on top of text
-  const [atPageEnd, setAtPageEnd] = useState(false);
-  useEffect(() => {
-    if (!CLEAR_PAGES.has(activePage)) return;
-    const check = () => {
-      const doc = document.documentElement;
-      setAtPageEnd(window.scrollY + window.innerHeight >= doc.scrollHeight - 24);
-    };
-    check();
-    window.addEventListener('scroll', check, { passive: true });
-    window.addEventListener('resize', check);
-    return () => { window.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
-  }, [activePage]);
 
   useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' }); }, [messages]);
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 50); }, [open]);
@@ -83,18 +71,14 @@ export const SmartAssistant: React.FC = () => {
   };
 
   if (!features.assistant || (HIDDEN_ON.has(activePage) && !open)) return null;
-  const clearPage = CLEAR_PAGES.has(activePage);
 
   return (
     <>
       {/* A quiet white button: teal is kept for buying, so this never competes with it */}
       {!open && (
         <button onClick={() => setOpen(true)} aria-label="Ask SuitAura shopping assistant"
-          className={`fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-6 z-40 h-12 rounded-full bg-white text-ink border border-line shadow-[var(--sag-shadow-pop)] items-center justify-center gap-2 text-sm font-semibold hover:bg-sunken transition-colors cursor-pointer ${
-            clearPage ? `${atPageEnd ? 'inline-flex' : 'hidden md:inline-flex'} right-3 md:right-5 w-12 md:w-auto md:px-4` :'hidden min-[1440px]:inline-flex right-3 w-12'
-          }`}>
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-6 z-40 h-12 rounded-full bg-white text-ink border border-line shadow-[var(--sag-shadow-pop)] items-center justify-center gap-2 text-sm font-semibold hover:bg-sunken transition-colors cursor-pointer hidden min-[1440px]:inline-flex right-3 w-12">
           <MessageCircleQuestion className="w-[22px] h-[22px]" strokeWidth={1.75} />
-          {clearPage && <span className="hidden md:inline">Ask SuitAura</span>}
         </button>
       )}
       {open && <div aria-hidden="true" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-[59] bg-ink/50 sag-fade" />}

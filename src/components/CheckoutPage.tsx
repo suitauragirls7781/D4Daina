@@ -1086,7 +1086,7 @@ export const CheckoutPage: React.FC = () => {
             <div className="space-y-3">
 
               <section className="sag-card p-4 sm:p-6" aria-labelledby="co-contact-title">
-                <h2 id="co-contact-title" className="text-[17px] leading-6 font-semibold text-ink">Contact</h2>
+                <h2 id="co-contact-title" className="text-xl leading-7 font-semibold text-ink">Contact</h2>
                 <div className="mt-3.5 space-y-4">
                   <Field id="co-mobile" label="Mobile number" error={mobileError}>
                     <div className={`relative flex h-[52px] rounded-control border-[1.5px] overflow-hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink ${mobileError ? 'border-danger bg-danger-tint' : 'border-control bg-white focus-within:border-brand'}`}>
@@ -1182,14 +1182,14 @@ export const CheckoutPage: React.FC = () => {
 
               {hasSavedAddresses && (
                 <section className="sag-card p-4 sm:p-6 space-y-3" aria-labelledby="co-saved-title">
-                  <h2 id="co-saved-title" className="text-[17px] leading-6 font-semibold text-ink">Deliver to a saved address</h2>
+                  <h2 id="co-saved-title" className="text-xl leading-7 font-semibold text-ink">Deliver to a saved address</h2>
                   <AddressBook onSelect={applySavedAddress} selectedId={selectedAddressId} />
                 </section>
               )}
 
               <section className="sag-card p-4 sm:p-6" aria-labelledby="co-address-title">
                 <div className="flex items-center justify-between gap-2 -my-2.5">
-                  <h2 id="co-address-title" className="text-[17px] leading-6 font-semibold text-ink">Delivery address</h2>
+                  <h2 id="co-address-title" className="text-xl leading-7 font-semibold text-ink">Delivery address</h2>
                   <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="sag-link gap-1.5 text-[13px] disabled:opacity-60">
                     {isDetectingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" aria-hidden="true" />}
                     Use my location
@@ -1327,7 +1327,7 @@ export const CheckoutPage: React.FC = () => {
               <section className="sag-card p-4 sm:p-6" aria-label="Delivery address">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h2 className="text-[17px] leading-6 font-semibold text-ink">Deliver to</h2>
+                    <h2 className="text-xl leading-7 font-semibold text-ink">Deliver to</h2>
                     <p className="mt-2 text-sm leading-5 font-semibold text-ink">
                       {fullNameText}
                       {address.type && <span className="sag-badge ml-2 align-middle">{address.type}</span>}
@@ -1345,7 +1345,7 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               <section className="sag-card p-4 sm:p-6 space-y-3" aria-label="Items">
-                <h2 className="text-[17px] leading-6 font-semibold text-ink">Your order <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
+                <h2 className="text-xl leading-7 font-semibold text-ink">Your order <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
                 {itemLines}
                 <p className="flex items-start gap-2 pt-3 border-t border-line text-sm leading-5 text-ink-muted">
                   <Truck className="h-[18px] w-[18px] shrink-0 mt-px text-ink" aria-hidden="true" />
@@ -1388,7 +1388,7 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               <section className="sag-card p-4 sm:p-6 space-y-3" aria-labelledby="co-pay-title">
-                <h2 id="co-pay-title" className="text-[17px] leading-6 font-semibold text-ink">Payment method</h2>
+                <h2 id="co-pay-title" className="text-xl leading-7 font-semibold text-ink">Payment method</h2>
 
                 {gateways === null ? (
                   <div className="min-h-[76px] rounded-control bg-sunken flex items-center justify-center gap-2 text-sm text-ink-muted" aria-busy="true" aria-label="Loading payment options">
@@ -1484,7 +1484,7 @@ export const CheckoutPage: React.FC = () => {
             <div id="co-order-summary" className={`${summaryOpen || checkoutStep === 'summary' ? 'block' : 'hidden'} lg:block ${checkoutStep === 'summary' ? '' : 'border-t border-line lg:border-t-0'} p-4 sm:p-6 space-y-4`}>
               {checkoutStep !== 'summary' && (
                 <div>
-                  <h2 className="hidden lg:block mb-3 text-[17px] leading-6 font-semibold text-ink">Order summary <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
+                  <h2 className="hidden lg:block mb-3 text-xl leading-7 font-semibold text-ink">Order summary <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
                   <div className="max-h-80 overflow-y-auto">{itemLines}</div>
                 </div>
               )}

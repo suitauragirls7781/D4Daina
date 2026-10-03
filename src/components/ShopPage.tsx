@@ -861,7 +861,7 @@ export const ShopPage: React.FC = () => {
             <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
               <h2 id="shop-filters-title" className="text-base leading-[22px] font-semibold text-ink inline-flex items-center gap-2">
                 Filter
-                {activeCount > 0 && <span className="text-sm font-normal text-ink-muted">{activeCount} selected</span>}
+                {activeCount > 0 && <span className="font-sans text-sm font-normal text-ink-muted">{activeCount} selected</span>}
               </h2>
               <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
                 <X className="w-[22px] h-[22px]" strokeWidth={1.75} />
