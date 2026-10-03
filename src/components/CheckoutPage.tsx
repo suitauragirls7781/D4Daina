@@ -1,3 +1,4 @@
+import { lineImage } from '../utils/lineImage';
 import React, { useState, useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -987,11 +988,6 @@ export const CheckoutPage: React.FC = () => {
     </>
   );
 
-  const lineImage = (item: (typeof cart)[number]) => {
-    const colours = item.product?.colors || [];
-    const colourIndex = colours.findIndex((c: any) => c.name === item.selectedColor?.name || c.hex === item.selectedColor?.hex);
-    return item.selectedColor?.imageUrl || (colourIndex !== -1 && item.product?.images?.[colourIndex]) || item.product?.images?.[0] || item.product?.image || '';
-  };
 
   // Compact bag lines: shown in the Review step, and inside the order summary on the other steps
   const itemLines = (

@@ -322,7 +322,13 @@ export const priceCart = async (db, rawItems, couponCode, customer = null) => {
     perProductQty.set(product.id, (perProductQty.get(product.id) || 0) + request.quantity);
     const price = Math.max(0, Math.round(Number(product.price) || 0));
     if (price <= 0) throw new UserError(`${product.name} cannot be ordered right now.`, 409);
-    const image = (Array.isArray(product.images) ? product.images[0] : '') || product.image || '';
+    // The photo of the colour the shopper chose (each colour may carry its own photo), else the first photo
+    const wantedColour = String(request.color.name || '').trim().toLowerCase();
+    const colourPhoto = wantedColour
+      ? (Array.isArray(product.colors) ? product.colors : []).find((c) => String(c?.name || '').trim().toLowerCase() === wantedColour)?.imageUrl
+      : '';
+    const image = (typeof colourPhoto === 'string' && /^https:\/\//.test(colourPhoto) ? colourPhoto : '')
+      || (Array.isArray(product.images) ? product.images[0] : '') || product.image || '';
     const parent = product.productType === 'accessory' ? products.get(request.parentId) : null;
     return {
       id: `${product.id}-${request.size}-${request.color.name || 'default'}${parent ? `-look-${parent.id}` : ''}`,

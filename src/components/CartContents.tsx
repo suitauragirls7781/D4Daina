@@ -1,3 +1,4 @@
+import { lineImage } from '../utils/lineImage';
 import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { getCleanImageUrl } from '../utils/imageHelper';
@@ -146,7 +147,7 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
                 className="shrink-0 w-[84px] aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-pointer"
                 aria-label={`View ${item.product.name}`}
               >
-                <img src={getCleanImageUrl(item.product.images?.[0] || item.product.image || '', 240)} alt="" width={84} height={105} className="w-full h-full object-cover object-top" loading="lazy" />
+                <img src={getCleanImageUrl(lineImage(item), 240)} alt="" width={84} height={105} className="w-full h-full object-cover object-top" loading="lazy" />
               </button>
               <div className="flex-1 min-w-0">
                 <button

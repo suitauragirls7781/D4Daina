@@ -932,7 +932,7 @@ export const ProductDetailPage: React.FC = () => {
       {sheetAction && (
         <BottomSheet title={kidsPage ? "Choose your child's age" : 'Choose your size'} onClose={() => setSheetAction(null)}>
           <div className="flex items-center gap-3">
-            <img src={getCleanImageUrl(images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 rounded-chip object-cover object-top bg-sunken" />
+            <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 rounded-chip object-cover object-top bg-sunken" />
             <div className="min-w-0">
               <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{product.name}</p>
               <p className="sag-num mt-0.5 flex items-baseline gap-1.5">
