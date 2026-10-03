@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Gauge, Loader2, RefreshCw } from 'lucide-react';
+import { AdminPageHeader, ui } from './kidsToysShared';
 
 /** What /api/admin-config?action=usage answers (api/_lib/usage.js). */
 type UsageView = {
@@ -27,24 +28,24 @@ const clock = (iso: string, seconds = false) => {
 const percentText = (percent: number) => (percent > 0 && percent < 0.1 ? '<0.1' : percent > 0 && percent < 10 ? percent.toFixed(1) : String(Math.round(percent)));
 const ms = (value: number | null) => (value === null ? 'not available' : `${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })} ms`);
 
-// Calm status colours: plum normally, champagne gold from 70%, rose from 90%
+// Calm status colours: teal normally, marigold from 70%, red from 90% (always with words, never colour alone)
 const tone = (percent: number) => (percent >= 90
-  ? { bar: 'bg-rose-700', text: 'text-rose-700', word: 'Almost at the limit' }
+  ? { bar: 'bg-danger', text: 'text-danger', word: 'Almost at the limit' }
   : percent >= 70
-    ? { bar: 'bg-line', text: 'text-ink-muted', word: 'Getting close' }
+    ? { bar: 'bg-sale', text: 'text-sale', word: 'Getting close' }
     : { bar: 'bg-brand', text: 'text-ink', word: '' });
 
 const UsageBar: React.FC<{ title: string; used: number; limit: number; detail: string; note?: string }> = ({ title, used, limit, detail, note }) => {
   const percent = limit > 0 ? (used / limit) * 100 : 0;
   const colours = tone(percent);
   return (
-    <div className="sag-card p-4 sm:p-5">
+    <div className={ui.card}>
       <div className="flex items-baseline justify-between gap-3">
-        <h4 className="text-sm font-semibold text-ink">{title}</h4>
-        <span className={`shrink-0 text-sm font-semibold tabular-nums ${colours.text}`}>{percentText(percent)}%</span>
+        <h4 className="text-[15px] leading-[22px] font-semibold text-ink">{title}</h4>
+        <span className={`shrink-0 text-[17px] leading-6 font-bold sag-num ${colours.text}`}>{percentText(percent)}%</span>
       </div>
       <div
-        className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-sunken"
+        className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-sunken"
         role="progressbar"
         aria-label={title}
         aria-valuemin={0}
@@ -54,17 +55,17 @@ const UsageBar: React.FC<{ title: string; used: number; limit: number; detail: s
       >
         <div className={`h-full rounded-full transition-[width] duration-300 ${colours.bar}`} style={{ width: `${Math.min(100, percent)}%` }} />
       </div>
-      <p className="mt-2.5 text-sm text-ink-muted tabular-nums">{detail}</p>
-      {colours.word && <p className={`mt-1 text-sm font-semibold ${colours.text}`}>{colours.word}</p>}
-      {note && <p className="mt-1 text-sm text-ink-muted">{note}</p>}
+      <p className="mt-2.5 text-sm leading-5 text-ink sag-num">{detail}</p>
+      {colours.word && <p className={`mt-1 text-[13px] leading-[18px] font-semibold ${colours.text}`}>{colours.word}</p>}
+      {note && <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{note}</p>}
     </div>
   );
 };
 
 const Unavailable: React.FC<{ title: string }> = ({ title }) => (
-  <div className="sag-card p-4 sm:p-5">
-    <h4 className="text-sm font-semibold text-ink">{title}</h4>
-    <p className="mt-2 text-sm text-ink-muted">Not available right now.</p>
+  <div className={ui.card}>
+    <h4 className="text-[15px] leading-[22px] font-semibold text-ink">{title}</h4>
+    <p className="mt-1.5 text-sm leading-5 text-ink-muted">Not available right now.</p>
   </div>
 );
 
@@ -125,45 +126,45 @@ export const AdminUsage: React.FC = () => {
   const since = sinceTime ? `today (since ${sinceTime})` : 'today';
 
   const refreshButton = (
-    <button type="button" onClick={load} disabled={loading} className="sag-btn-outline h-10 px-5 text-sm font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60 bg-white">
+    <button type="button" onClick={load} disabled={loading} className={ui.outline}>
       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />} Refresh
     </button>
   );
 
   return (
-    <div className="space-y-5 text-sm">
-      <div className="rounded-3xl bg-brand p-5 sm:p-7 text-white">
-        <h3 className="font-serif text-2xl sm:text-3xl font-semibold flex items-center gap-2.5"><Gauge className="h-5 w-5 shrink-0" /> Usage &amp; limits</h3>
-        <p className="text-sm text-white/75 mt-1.5 max-w-xl leading-relaxed">
-          What the store has used of Cloudflare's free daily limits, {since}. These are Cloudflare's own numbers; they run a minute or two behind real time.
-        </p>
-      </div>
+    <div id="admin-usage-page" className="space-y-4">
+      <AdminPageHeader
+        eyebrow="System"
+        title={<>Usage &amp; limits</>}
+        icon={<Gauge />}
+        description={<>What the store has used of Cloudflare's free daily limits, {since}. These are Cloudflare's own numbers; they run a minute or two behind real time.</>}
+      />
 
       {loadError && (
-        <div role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-700">
+        <div role="alert" className={ui.alert}>
           <p className="font-semibold">{loadError}</p>
-          {view && <p className="mt-1 text-sm">The numbers below are from {clock(view.fetchedAt, true)}.</p>}
-          <button type="button" onClick={load} disabled={loading} className="mt-3 h-10 px-4 rounded-full bg-white border border-rose-200 text-sm font-semibold text-rose-700 inline-flex items-center gap-2 hover:bg-rose-100 cursor-pointer disabled:opacity-60">
+          {view && <p className="mt-1">The numbers below are from {clock(view.fetchedAt, true)}.</p>}
+          <button type="button" onClick={load} disabled={loading} className={`mt-3 ${ui.outline}`}>
             <RefreshCw className="w-4 h-4" /> Try again
           </button>
         </div>
       )}
 
       {!view && !loadError && (
-        <div className="sag-card p-5 flex items-center gap-3 text-ink-muted" role="status" aria-busy="true">
+        <div className={`${ui.card} flex items-center gap-3 text-sm text-ink-muted`} role="status" aria-busy="true">
           <Loader2 className="w-5 h-5 animate-spin text-ink" /> Loading today's usage…
         </div>
       )}
 
       {view && !view.configured && (
-        <div className="sag-card p-5 sm:p-6">
-          <p className="sag-eyebrow font-semibold">Not connected yet</p>
-          <h4 className="mt-2 font-serif text-2xl font-semibold text-ink">Connect Cloudflare usage</h4>
-          <p className="mt-2 text-sm text-ink-muted leading-relaxed">
-            In the Cloudflare dashboard create an API token with the permission <strong>Account Analytics: Read</strong>, then add it to the Worker as the secret{' '}
+        <div className={ui.card}>
+          <p className={ui.eyebrow}>Not connected yet</p>
+          <h4 className="mt-1 font-display text-xl leading-7 text-ink">Connect Cloudflare usage</h4>
+          <p className="mt-2 text-sm leading-5 text-ink-muted">
+            In the Cloudflare dashboard create an API token with the permission <strong className="font-semibold text-ink">Account Analytics: Read</strong>, then add it to the Worker as the secret{' '}
             <code className="font-mono text-[13px] break-all text-ink">CLOUDFLARE_ANALYTICS_TOKEN</code>. Until then no numbers are shown here.
           </p>
-          {view.error && <p className="mt-2 text-sm text-ink-muted break-words">{view.error}</p>}
+          {view.error && <p className="mt-2 text-sm leading-5 text-ink-muted break-words">{view.error}</p>}
           <div className="mt-4">{refreshButton}</div>
         </div>
       )}
@@ -171,15 +172,15 @@ export const AdminUsage: React.FC = () => {
       {view && view.configured && (
         <>
           {view.error && (
-            <div role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 p-4 text-rose-700">
+            <div role="alert" className={ui.alert}>
               <p className="font-semibold break-words">{view.error}</p>
-              <button type="button" onClick={load} disabled={loading} className="mt-3 h-10 px-4 rounded-full bg-white border border-rose-200 text-sm font-semibold text-rose-700 inline-flex items-center gap-2 hover:bg-rose-100 cursor-pointer disabled:opacity-60">
+              <button type="button" onClick={load} disabled={loading} className={`mt-3 ${ui.outline}`}>
                 <RefreshCw className="w-4 h-4" /> Try again
               </button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
             {view.workers ? (
               <UsageBar
                 title="Worker requests"
@@ -223,38 +224,38 @@ export const AdminUsage: React.FC = () => {
                 note="Order and sign-in code emails."
               />
             ) : (
-              <div className="sag-card p-4 sm:p-5">
-                <h4 className="text-sm font-semibold text-ink">Emails (Brevo)</h4>
-                <p className="mt-2 text-sm text-ink-muted tabular-nums">{num(view.email.left)} email credits left</p>
+              <div className={ui.card}>
+                <h4 className="text-[15px] leading-[22px] font-semibold text-ink">Emails (Brevo)</h4>
+                <p className="mt-1.5 text-sm leading-5 text-ink sag-num">{num(view.email.left)} email credits left</p>
               </div>
             ))}
           </div>
 
-          <div className="sag-card p-4 sm:p-5">
-            <p className="sag-eyebrow font-semibold">More from {since}</p>
+          <div className={ui.card}>
+            <p className={ui.eyebrow}>More from {since}</p>
             <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
               <div>
-                <dt className="text-[12px] text-ink-muted">Requests that ended in an error</dt>
-                <dd className={`text-sm font-semibold tabular-nums ${view.workers && view.workers.errors > 0 ? 'text-rose-700' : 'text-ink'}`}>{view.workers ? num(view.workers.errors) : 'not available'}</dd>
+                <dt className="text-[13px] leading-[18px] text-ink-muted">Requests that ended in an error</dt>
+                <dd className={`text-[15px] leading-[22px] font-semibold sag-num ${view.workers && view.workers.errors > 0 ? 'text-danger' : 'text-ink'}`}>{view.workers ? num(view.workers.errors) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-ink-muted">Calls the store made to other services</dt>
-                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? num(view.workers.subrequests) : 'not available'}</dd>
+                <dt className="text-[13px] leading-[18px] text-ink-muted">Calls the store made to other services</dt>
+                <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{view.workers ? num(view.workers.subrequests) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-ink-muted">CPU time per request, typical (p50)</dt>
-                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? ms(view.workers.cpuP50Ms) : 'not available'}</dd>
+                <dt className="text-[13px] leading-[18px] text-ink-muted">CPU time per request, typical (p50)</dt>
+                <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{view.workers ? ms(view.workers.cpuP50Ms) : 'not available'}</dd>
               </div>
               <div>
-                <dt className="text-[12px] text-ink-muted">CPU time per request, slowest 1% (p99)</dt>
-                <dd className="text-sm font-semibold tabular-nums text-ink">{view.workers ? ms(view.workers.cpuP99Ms) : 'not available'}</dd>
+                <dt className="text-[13px] leading-[18px] text-ink-muted">CPU time per request, slowest 1% (p99)</dt>
+                <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{view.workers ? ms(view.workers.cpuP99Ms) : 'not available'}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-sm text-ink-muted leading-relaxed">The free plan allows about 10 ms of CPU time per request.</p>
+            <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">The free plan allows about 10 ms of CPU time per request.</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-ink-muted">
+            <p className="text-[13px] leading-[18px] text-ink-muted min-w-0 flex-1 basis-60">
               {resetTime && <>The limits reset at {resetTime}. </>}
               Updated {clock(view.fetchedAt, true)}; refreshes every minute while this page is open.
             </p>

@@ -224,7 +224,7 @@ export const AdminDealOfTheDay: React.FC = () => {
       <div className={`${card} space-y-5`}>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Clock className="h-5 w-5 text-current" /> Countdown timer</h2>
+            <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Clock className="h-5 w-5 text-current" /> Countdown timer</h2>
             <p className="text-[13px] text-ink-muted mt-0.5">Customers see a live countdown. It never restarts by itself; only you can start it again.</p>
           </div>
           <Toggle checked={showTimer} onChange={setShowTimer} label="Show countdown timer" />
@@ -306,7 +306,7 @@ export const AdminDealOfTheDay: React.FC = () => {
       <div className={`${card} space-y-4`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Zap className="h-5 w-5 text-current" /> Choose the deal product</h2>
+            <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Zap className="h-5 w-5 text-current" /> Choose the deal product</h2>
             <p className="text-[13px] text-ink-muted">One click makes it live{showTimer && !timerRunning ? ' and starts the timer' : ''}.</p>
           </div>
           <div className="grid grid-cols-1 min-[420px]:grid-cols-[minmax(0,1fr)_auto] gap-2 w-full sm:w-auto">
@@ -360,7 +360,7 @@ export const AdminDealOfTheDay: React.FC = () => {
 
       {/* Photo & text */}
       <form onSubmit={handleSaveForm} className={`${card} space-y-5`}>
-        <h2 className="text-[17px] leading-6 font-semibold text-ink">Photo and text</h2>
+        <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink">Photo and text</h2>
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
           <div className="md:col-span-4">
             <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-xl overflow-hidden border border-line bg-sunken">

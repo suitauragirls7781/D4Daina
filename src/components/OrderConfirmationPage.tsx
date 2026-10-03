@@ -214,7 +214,7 @@ export const OrderConfirmationPage: React.FC = () => {
             {(order.comboDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Combo discount</span><span>−{inr(order.comboDiscount || 0)}</span></div>}
             {(order.couponDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Coupon {order.couponCode}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
             {(order.prepaidDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Prepaid discount</span><span>−{inr(order.prepaidDiscount || 0)}</span></div>}
-            <div className={moneyRow}><span>Shipping</span>{order.shippingCharge === 0 ? <span className="font-semibold text-sale">Free</span> : <span className="text-ink">{inr(order.shippingCharge)}</span>}</div>
+            <div className={moneyRow}><span>Delivery</span>{order.shippingCharge === 0 ? <span className="font-semibold text-sale">Free</span> : <span className="text-ink">{inr(order.shippingCharge)}</span>}</div>
             <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
               <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Total'}</span>
               <span className="text-[22px] leading-7 font-bold">{inr(order.finalTotal)}</span>
@@ -228,7 +228,7 @@ export const OrderConfirmationPage: React.FC = () => {
               <span className="shrink-0 flex mt-0.5 text-ink-muted"><PinIcon className="w-5 h-5" mono live={false} /></span>
               <div className="text-ink-muted min-w-0">
                 <p className="font-semibold text-ink">Delivering to {address.fullName}</p>
-                {address.houseFlat && <p className="break-words">{[address.houseFlat, address.street, address.area].filter(Boolean).join(', ')}</p>}
+                {address.houseFlat && <p className="break-words">{[address.houseFlat, address.street, String(address.area || '').trim().toLowerCase() === String(address.street || '').trim().toLowerCase() ? '' : address.area].filter(Boolean).join(', ')}</p>}
                 <p>{[address.city, address.state].filter(Boolean).join(', ')} {address.pincode}</p>
                 {address.mobile && <p>Phone: {address.mobile}</p>}
               </div>

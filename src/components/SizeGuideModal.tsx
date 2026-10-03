@@ -78,7 +78,7 @@ export const SizeGuideModal: React.FC = () => {
         <div className="sticky top-0 z-10 bg-surface border-b border-line pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-3 pb-2">
           <span aria-hidden="true" className="sm:hidden block mx-auto mb-1 w-9 h-1 rounded-full bg-sunken-deep" />
           <div className="flex items-center justify-between gap-3">
-            <h3 id="size-guide-title" className="text-base leading-[22px] font-semibold text-ink">Size &amp; fitting guide</h3>
+            <h3 id="size-guide-title" className="font-display text-base leading-[22px] font-semibold text-ink">Size &amp; fitting guide</h3>
             <button
               id="close-size-guide-btn"
               type="button"

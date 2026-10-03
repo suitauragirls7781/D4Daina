@@ -5,7 +5,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableHomepageSection } from './SortableHomepageSection';
 import { HomeIcon } from '../StoreIcons';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader, tone, ui } from './kidsToysShared';
 import { 
   Eye, 
   EyeOff, 
@@ -182,7 +182,7 @@ export const AdminHomepage: React.FC = () => {
   };
 
   return (
-    <div id="admin-homepage-page" className="space-y-6 pb-12">
+    <div id="admin-homepage-page" className="space-y-4 pb-8">
       
       {/* Header */}
       <AdminPageHeader
@@ -195,7 +195,7 @@ export const AdminHomepage: React.FC = () => {
             type="button"
             onClick={handleResetDefaults}
             disabled={isResetting}
-            className="h-11 px-4 bg-white hover:bg-sunken text-ink border border-line rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
+            className={ui.outline}
             title="Reset to default order"
           >
             <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin' : ''}`} />
@@ -205,7 +205,7 @@ export const AdminHomepage: React.FC = () => {
           <button
             type="button"
             onClick={() => setActivePage('home')}
-            className="h-11 px-5 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-semibold transition-colors inline-flex items-center gap-2 shadow-sm cursor-pointer"
+            className={ui.primary}
           >
             <ExternalLink className="w-4 h-4 text-current" />
             <span>Preview live store</span>
@@ -215,60 +215,60 @@ export const AdminHomepage: React.FC = () => {
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0 bg-white px-3 py-3 sm:px-4 rounded-2xl border border-line flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Total Sections</span>
-            <div className="font-serif text-2xl sm:text-3xl leading-tight text-ink">{homepageSections.length}</div>
+            <span className={`block ${ui.eyebrow}`}>Total sections</span>
+            <div className={ui.stat}>{homepageSections.length}</div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-sunken text-ink flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[10px] bg-sunken text-ink flex items-center justify-center shrink-0" aria-hidden="true">
             <Layers className="w-4 h-4 text-current" />
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0 bg-white px-3 py-3 sm:px-4 rounded-2xl border border-line flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Active (Visible on Home)</span>
-            <div className="font-serif text-2xl sm:text-3xl leading-tight text-emerald-700">{homepageSections.filter(s => s.enabled !== false).length}</div>
+            <span className={`block ${ui.eyebrow}`}>Active (visible on home)</span>
+            <div className={`${ui.stat} !text-ok`}>{homepageSections.filter(s => s.enabled !== false).length}</div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[10px] bg-ok-tint text-ok flex items-center justify-center shrink-0" aria-hidden="true">
             <Eye className="w-4 h-4 text-current" />
           </div>
         </div>
 
-        <div className="bg-white p-3.5 sm:p-4 rounded-2xl border border-line shadow-[var(--sag-shadow)] flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
+        <div className="min-w-0 bg-white px-3 py-3 sm:px-4 rounded-2xl border border-line flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">Hidden Sections</span>
-            <div className="font-serif text-2xl sm:text-3xl leading-tight text-ink-faint">{homepageSections.filter(s => s.enabled === false).length}</div>
+            <span className={`block ${ui.eyebrow}`}>Hidden sections</span>
+            <div className={`${ui.stat} !text-ink-muted`}>{homepageSections.filter(s => s.enabled === false).length}</div>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-sunken text-ink-muted flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-[10px] bg-sunken text-ink-muted flex items-center justify-center shrink-0" aria-hidden="true">
             <EyeOff className="w-4 h-4 text-current" />
           </div>
         </div>
       </div>
 
       {/* Main Section Order Cards */}
-      <div className="bg-white p-4 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+      <div className={`${ui.card} space-y-4`}>
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-line pb-3">
           <div className="flex items-start gap-3">
-            <span className="w-9 h-9 rounded-xl bg-sunken text-ink flex items-center justify-center shrink-0"><Sliders className="w-4 h-4 text-current" /></span>
+            <span className="w-9 h-9 rounded-[10px] bg-sunken text-ink flex items-center justify-center shrink-0" aria-hidden="true"><Sliders className="w-[18px] h-[18px] text-current" /></span>
             <div>
-            <h3 className="font-serif text-xl font-semibold text-ink">
+            <h3 className={ui.h2}>
               Section order
             </h3>
-            <p className="text-xs text-ink-muted mt-0.5">
+            <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
               Drag the handle to move a section. Top to bottom order matches exactly how visitors see the homepage.
             </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 h-8 text-xs font-semibold text-emerald-800 bg-emerald-50 px-3 rounded-full border border-emerald-200">
+          <div className={`${ui.badge} ${tone.ok}`}>
             <CheckCircle2 className="w-3.5 h-3.5 text-current" />
             <span>Preview Updated</span>
           </div>
         </div>
 
         {/* List of Sections */}
-        <div className="space-y-2.5">
+        <div className="space-y-2">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={homepageSections.map(s => s.id)} strategy={verticalListSortingStrategy}>
               {homepageSections.map((sec, index) => (
@@ -290,11 +290,11 @@ export const AdminHomepage: React.FC = () => {
         </div>
 
         {/* Live sync helper box */}
-        <div className="p-4 bg-sunken rounded-2xl border border-line text-xs text-ink-muted flex items-start gap-3 mt-4">
+        <div className="px-3.5 py-3 bg-page rounded-xl border border-line text-[13px] leading-[18px] text-ink-muted flex items-start gap-2.5">
           <Sparkles className="w-4 h-4 text-ink shrink-0 mt-0.5" />
           <div className="space-y-0.5">
-            <span className="font-bold text-ink">Homepage Preview Controls:</span>
-            <p className="text-ink-muted text-[11px]">
+            <span className="font-semibold text-ink">Homepage Preview Controls:</span>
+            <p className="text-ink-muted">
               Changes apply immediately in this browser and are stored locally. Shared publishing across devices requires secure server-side configuration.
             </p>
           </div>

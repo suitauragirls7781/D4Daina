@@ -713,7 +713,7 @@ export const AdminSettings: React.FC = () => {
                     Secret path slug
                   </label>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    <div className="flex flex-1 min-w-0 h-12 rounded-xl border-[1.5px] border-control bg-white overflow-hidden focus-within:border-brand">
+                    <div className="flex sm:flex-1 min-w-0 h-12 rounded-xl border-[1.5px] border-control bg-white overflow-hidden focus-within:border-brand">
                       <span className="w-11 shrink-0 flex items-center justify-center bg-sunken border-r border-line text-ink-muted font-mono text-base" aria-hidden="true">
                         /
                       </span>
@@ -920,7 +920,7 @@ export const AdminSettings: React.FC = () => {
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
                 placeholder="you@example.com"
-                className={`${input} flex-1 min-w-0`}
+                className={`${input} sm:flex-1 min-w-0`}
               />
               <button
                 type="button"

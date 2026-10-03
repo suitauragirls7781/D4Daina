@@ -193,7 +193,7 @@ export const TrackOrderPage: React.FC = () => {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="sag-eyebrow">Order</p>
-                  <h2 id="tracked-order-title" className="text-lg leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
+                  <h2 id="tracked-order-title" className="font-sans text-lg leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
                   <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
                   </p>

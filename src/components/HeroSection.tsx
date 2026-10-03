@@ -8,6 +8,21 @@ import { slugToCategory } from '../utils/slugHelper';
 import { prepaidPercentApplies } from '../utils/prepaid';
 
 type LiveHeroSlide = HeroBannerConfig['slides'][number] & { rawProduct?: Product };
+// Labels the code fills in by itself (auto-made slides, or linking a product in Admin). They are not the
+// owner's words, so they are never shown as the eyebrow; only text the owner typed is.
+const AUTO_BADGES = new Set([
+  '👑 ROYAL FESTIVE EDIT',
+  '🌸 SUMMER GRACE ARTISAN',
+  '✨ LUXURY REGAL ANARKALI',
+  '🔥 BESTSELLER OF THE WEEK',
+  '🌿 PURE SILK HANDBLOCK',
+  '💎 EXCLUSIVE DESIGNER SUIT',
+  '🔥 POPULAR PICK',
+]);
+const ownerBadge = (badge?: string) => {
+  const text = (badge || '').trim();
+  return text && !AUTO_BADGES.has(text) ? text : '';
+};
 const HERO_CATEGORY_LINKS = ['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
 
 export const HeroSection: React.FC = () => {
@@ -76,9 +91,6 @@ export const HeroSection: React.FC = () => {
 
   const slides = liveProductSlides;
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  // Once the shopper swipes or taps a control, the slides stop changing by themselves
-  const [userTookOver, setUserTookOver] = useState(false);
   const stripRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef(0);
   const ignoreScrollUntil = useRef(0);
@@ -99,15 +111,7 @@ export const HeroSection: React.FC = () => {
     strip.scrollTo({ left: slide.offsetLeft - (strip.children[0] as HTMLElement).offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
   }, [slides.length]);
 
-  useEffect(() => {
-    if (!slides || slides.length <= 1 || isPaused || userTookOver) return;
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-    const timer = setInterval(() => {
-      if (document.hidden) return;
-      goTo(idxRef.current + 1);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [slides, isPaused, userTookOver, goTo]);
+  // Slides never change by themselves: only a swipe, an arrow or a thumbnail moves them.
 
   useEffect(() => {
     if (currentSlideIdx >= slides.length) {
@@ -117,9 +121,8 @@ export const HeroSection: React.FC = () => {
 
   useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
 
-  const takeOver = () => setUserTookOver(true);
-  const handlePrev = () => { takeOver(); goTo(idxRef.current - 1); };
-  const handleNext = () => { takeOver(); goTo(idxRef.current + 1); };
+  const handlePrev = () => goTo(idxRef.current - 1);
+  const handleNext = () => goTo(idxRef.current + 1);
 
   // A swipe on the strip: the slide nearest the left edge becomes the current one
   const onStripScroll = () => {
@@ -181,6 +184,8 @@ export const HeroSection: React.FC = () => {
   const originalPrice = Math.max(slidePrice, Number(currentSlide.originalPrice) || slidePrice);
   const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
   const count = slides.length;
+  // The admin's own badge text, or nothing
+  const eyebrow = ownerBadge(currentSlide.badge);
   // The percent offer is shown only when this product's price qualifies for it
   const onlineOffer = slidePrice <= 0
     ? ''
@@ -193,17 +198,12 @@ export const HeroSection: React.FC = () => {
 
   return (
     <section id="haute-couture-hero" aria-label="Featured collection" className="w-full bg-white pt-2 pb-6 lg:py-10">
-      <div
-        className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
+      <div className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
         {/* Photos: a swipeable strip. Nothing is ever drawn on a photo. */}
         <div className="min-w-0 lg:col-span-5">
           <div
             ref={stripRef}
             onScroll={onStripScroll}
-            onTouchStart={takeOver}
             className="sag-scroll-x flex gap-2 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-0 lg:scroll-px-0"
           >
             {slides.map((slide, index) => (
@@ -248,7 +248,7 @@ export const HeroSection: React.FC = () => {
 
         {/* Details sit below the photo on phones and beside it on desktop */}
         <div className="min-w-0 px-4 sm:px-6 lg:px-0 mt-3 lg:mt-0 lg:col-span-7">
-          {currentSlide.badge && <p className="sag-eyebrow hidden sm:block mb-2 truncate">{currentSlide.badge}</p>}
+          {eyebrow && <p className="sag-eyebrow hidden sm:block mb-2 truncate">{eyebrow}</p>}
 
           {/* Two lines are reserved on phones so a change of slide never moves the buttons */}
           <h1 className="font-display text-[28px] leading-8 sm:text-4xl sm:leading-[1.12] lg:text-5xl lg:leading-[1.08] text-ink line-clamp-2 min-h-16 sm:min-h-0">
@@ -298,7 +298,7 @@ export const HeroSection: React.FC = () => {
                     role="tab"
                     aria-selected={index === currentSlideIdx}
                     aria-label={`Show ${slide.title}`}
-                    onClick={() => { takeOver(); goTo(index); }}
+                    onClick={() => goTo(index)}
                     className={`h-20 w-16 overflow-hidden rounded-chip bg-sunken cursor-pointer border-2 ${index === currentSlideIdx ? 'border-ink' : 'border-transparent hover:border-control'}`}
                   >
                     <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" decoding="async" />

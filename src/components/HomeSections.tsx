@@ -4,7 +4,8 @@ import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './ProductCard';
 import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
-import { CheckCircle2, Loader2, Tag } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, Tag } from 'lucide-react';
+import { useDiscovery } from '../utils/discovery';
 import { BABY_BOYS, BABY_GIRLS, KIDS_ALL, KIDS_TOYS, TOYS, departmentOf, isToy } from '../utils/kids';
 import { Assurance } from './Assurance';
 
@@ -212,6 +213,34 @@ export const OfferBanner: React.FC = () => {
             )}
           </div>
         </div>
+      </div>
+    </section>
+  );
+};
+
+/**
+ * The shopping assistant as a plain row in the page. The floating "?" button is not shown over product
+ * cards, prices or photos, so below 1440px this row is how the home page opens it (SmartAssistant listens
+ * for the event). Shown only while the assistant feature is switched on.
+ */
+export const AskAssistantRow: React.FC = () => {
+  const { features } = useDiscovery();
+  if (!features.assistant) return null;
+  return (
+    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full bg-white pb-8 min-[1440px]:hidden">
+      <div className={HOME_WRAP}>
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('sag-open-assistant'))}
+          className="w-full min-h-[64px] flex items-center gap-3 rounded-card border border-line bg-white px-4 py-3 text-left hover:bg-sunken transition-colors cursor-pointer"
+        >
+          <MessageCircleQuestion className="w-[22px] h-[22px] shrink-0 text-ink" strokeWidth={1.75} aria-hidden="true" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm leading-5 font-semibold text-ink">Need help choosing? Ask SuitAura</span>
+            <span className="block text-[13px] leading-[18px] text-ink-muted">Tell us a colour, size or budget and see matching styles from our store.</span>
+          </span>
+          <ChevronRight className="w-5 h-5 shrink-0 text-ink-muted" aria-hidden="true" />
+        </button>
       </div>
     </section>
   );

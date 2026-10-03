@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { getCleanImageUrl } from '../utils/imageHelper';
-import { ChevronDown, Loader2, Minus, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, ChevronDown, Loader2, Minus, Plus, X } from 'lucide-react';
 import { isAccessory, outfitQtyIn } from '../utils/looks';
 import { HeartIcon, TagIcon, TruckIcon } from './StoreIcons';
 import { BagIcon } from './BrandIcons';
@@ -15,6 +15,103 @@ const sizeLabel = (size?: string) => (!size || /^(free ?size|one ?size|standard)
 export const useBagTotal = () => {
   const { cartTotal, prepaidDiscount } = useShop();
   return Math.max(0, cartTotal - prepaidDiscount);
+};
+
+/**
+ * Display only: applies a coupon through the shop's own applyCoupon() and keeps the reason it was refused,
+ * so the bag, the offers sheet and checkout can show it next to the coupon field (the toast still appears).
+ * The reason is the exact text applyCoupon() puts in its error toast; nothing is validated here.
+ */
+export const useCouponApply = () => {
+  const { applyCoupon, appliedCoupon, toast } = useShop();
+  const [applying, setApplying] = useState('');
+  const [error, setError] = useState('');
+  const [failedCode, setFailedCode] = useState('');
+  const awaitingReason = useRef(false);
+
+  useEffect(() => {
+    if (!awaitingReason.current || toast?.type !== 'error') return;
+    awaitingReason.current = false;
+    setError(toast.message);
+  }, [toast]);
+
+  useEffect(() => {
+    if (appliedCoupon) { setError(''); setFailedCode(''); }
+  }, [appliedCoupon]);
+
+  const clearError = () => { awaitingReason.current = false; setError(''); setFailedCode(''); };
+
+  const apply = async (value: string): Promise<boolean> => {
+    const code = value.trim().toUpperCase();
+    if (!code || applying) return false;
+    setApplying(code);
+    setError('');
+    setFailedCode('');
+    awaitingReason.current = true;
+    const ok = await applyCoupon(code);
+    setApplying('');
+    if (ok) {
+      awaitingReason.current = false;
+    } else {
+      setFailedCode(code);
+      setError((current) => current || 'This coupon could not be applied.');
+    }
+    return ok;
+  };
+
+  return { apply, applying, error, failedCode, clearError };
+};
+
+/** The refused-coupon reason, shown directly under the coupon field. */
+export const CouponError: React.FC<{ id?: string; message: string; className?: string }> = ({ id, message, className = 'mt-1.5' }) => (
+  message ? (
+    <p id={id} role="alert" className={`${className} flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger`}>
+      <AlertCircle className="w-4 h-4 shrink-0 mt-px" aria-hidden="true" /><span>{message}</span>
+    </p>
+  ) : null
+);
+
+/**
+ * Price breakdown: the same rows and words in the bag, the bag drawer and checkout.
+ * A preview built from the shop's own totals; the server recalculates everything before payment.
+ */
+export const PriceDetails: React.FC = () => {
+  const {
+    cart, cartSubtotal, shippingFee, discountAmount, appliedCoupon, prepaidDiscount, comboDiscount, comboOffer, freeShippingThreshold,
+  } = useShop();
+  const total = useBagTotal();
+  const totalMRP = cart.reduce((sum, item) => {
+    const price = Number(item.product?.price) || 0;
+    return sum + Math.max(price, Number(item.product?.originalPrice) || price) * item.quantity;
+  }, 0);
+  const catalogDiscount = Math.max(0, totalMRP - cartSubtotal);
+  const totalSavings = catalogDiscount + comboDiscount + discountAmount + prepaidDiscount;
+  return (
+    <div>
+      <h3 className="font-display text-base leading-[22px] font-semibold text-ink">Price details</h3>
+      <dl className="mt-2.5 space-y-2 text-sm leading-5 sag-num">
+        <div className="flex justify-between gap-3 text-ink-muted"><dt>Total MRP</dt><dd className="text-ink">{inr(totalMRP)}</dd></div>
+        {catalogDiscount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Discount on MRP</dt><dd className="font-semibold">−{inr(catalogDiscount)}</dd></div>}
+        <div className="flex justify-between gap-3 text-ink-muted"><dt>Subtotal</dt><dd className="text-ink">{inr(cartSubtotal)}</dd></div>
+        <div className="flex justify-between gap-3 text-ink-muted"><dt>Delivery</dt><dd className={shippingFee > 0 ? 'text-ink' : 'font-semibold text-sale'}>{shippingFee > 0 ? inr(shippingFee) : 'Free'}</dd></div>
+        {comboDiscount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Combo discount{comboOffer ? ` (${comboOffer.percent}% on ${comboOffer.minItems}+ outfits)` : ''}</dt><dd className="font-semibold">−{inr(comboDiscount)}</dd></div>}
+        {discountAmount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Coupon {appliedCoupon?.code}</dt><dd className="font-semibold">−{inr(discountAmount)}</dd></div>}
+        {prepaidDiscount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Online payment discount</dt><dd className="font-semibold">−{inr(prepaidDiscount)}</dd></div>}
+        <div className="flex justify-between items-baseline gap-3 pt-3 mt-1 border-t border-line">
+          <dt>
+            <span className="block text-base font-semibold text-ink">Total</span>
+            <span className="block text-xs leading-4 text-ink-muted">Inclusive of all taxes{shippingFee > 0 ? ' and delivery' : ''}{freeShippingThreshold > 0 && shippingFee > 0 ? ` · free delivery above ${inr(freeShippingThreshold)}` : ''}</span>
+          </dt>
+          <dd className="text-lg leading-[22px] font-bold text-ink">{inr(total)}</dd>
+        </div>
+      </dl>
+      {totalSavings > 0 && (
+        <p className="mt-2.5 text-[13px] leading-[18px] font-semibold text-sale sag-num">
+          You save {inr(totalSavings)} on this order
+        </p>
+      )}
+    </div>
+  );
 };
 
 /** Bag lines with quantity controls. Used by the cart drawer and the cart page. */
@@ -81,8 +178,9 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
             </div>
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="inline-flex items-center h-11 rounded-control border-[1.5px] border-control bg-white" role="group" aria-label={`Quantity of ${item.product.name}`}>
-                <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} aria-label={item.quantity <= 1 ? `Remove ${item.product.name}` : 'Decrease quantity'} className="w-11 h-11 flex items-center justify-center text-ink rounded-l-control hover:bg-sunken transition-colors cursor-pointer">
-                  {item.quantity <= 1 ? <Trash2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                {/* At quantity 1 the "Remove" link beside the stepper is the one way to take the line out */}
+                <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className="w-11 h-11 flex items-center justify-center text-ink rounded-l-control hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
+                  <Minus className="w-4 h-4" />
                 </button>
                 <span className="w-8 text-center text-[15px] font-semibold text-ink sag-num" aria-live="polite">{item.quantity}</span>
                 <button onClick={() => updateCartQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= cap} aria-label="Increase quantity" className="w-11 h-11 flex items-center justify-center text-ink rounded-r-control hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
@@ -131,7 +229,7 @@ export const EmptyBag: React.FC<{ onDone?: () => void; heading?: 'h1' | 'h2' }> 
   );
 };
 
-/** Free-shipping and combo nudges, built only from the store's real settings. */
+/** Free-delivery and combo nudges, built only from the store's real settings. */
 const BagNudges: React.FC = () => {
   const { cartSubtotal, shippingFee, freeShippingThreshold, comboDiscount, comboOffer, comboPieces = 0 } = useShop();
   const toFreeShipping = freeShippingThreshold > 0 && shippingFee > 0 ? freeShippingThreshold - cartSubtotal : 0;
@@ -146,9 +244,9 @@ const BagNudges: React.FC = () => {
         <div>
           <p className="flex items-center gap-2.5">
             <TruckIcon className="w-5 h-5 shrink-0 text-brand" mono live={false} />
-            <span>Add <span className="font-semibold sag-num">{inr(toFreeShipping)}</span> more for free shipping</span>
+            <span>Add <span className="font-semibold sag-num">{inr(toFreeShipping)}</span> more for free delivery</span>
           </p>
-          <div className="mt-2 h-1 rounded-full bg-white overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free shipping">
+          <div className="mt-2 h-1 rounded-full bg-white overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free delivery">
             <div className="h-full rounded-full bg-brand" style={{ width: `${progress}%` }} />
           </div>
         </div>
@@ -156,7 +254,7 @@ const BagNudges: React.FC = () => {
       {unlocked && (
         <p className="flex items-center gap-2.5 font-semibold text-ok">
           <TruckIcon className="w-5 h-5 shrink-0" mono live={false} />
-          <span>You have unlocked free shipping</span>
+          <span>You have unlocked free delivery</span>
         </p>
       )}
       {comboLeft > 0 && comboOffer && (
@@ -176,24 +274,20 @@ const BagNudges: React.FC = () => {
 };
 
 /** Coupon field + price breakdown. Totals are a preview; the server recalculates at checkout. */
-export const CartTotals: React.FC = () => {
-  const {
-    cart, cartSubtotal, shippingFee, discountAmount, appliedCoupon, applyCoupon, removeCoupon,
-    coupons = [], prepaidDiscount, comboDiscount, setIsCouponDrawerOpen,
-  } = useShop();
+export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }) => {
+  const { discountAmount, appliedCoupon, removeCoupon, coupons = [], setIsCouponDrawerOpen } = useShop();
   const [code, setCode] = useState('');
-  const [applying, setApplying] = useState(false);
   const [couponOpen, setCouponOpen] = useState(false);
-  const pieces = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const estimated = useBagTotal();
-  const mrpSavings = cart.reduce((sum, item) => sum + Math.max(0, (Number(item.product.originalPrice) || 0) - item.product.price) * item.quantity, 0);
-  const totalSavings = mrpSavings + comboDiscount + discountAmount + prepaidDiscount;
+  const { apply: applyCode, applying: applyingCode, error: couponError, clearError } = useCouponApply();
+  const applying = Boolean(applyingCode);
+  // The bag page and the bag drawer can be in the page together: each gets its own ids
+  const couponId = `${idPrefix}-coupon`;
+  const panelId = `${idPrefix}-coupon-panel`;
+  const errorId = `${idPrefix}-coupon-error`;
 
   const apply = async (value: string) => {
     if (!value.trim() || applying) return;
-    setApplying(true);
-    const ok = await applyCoupon(value);
-    setApplying(false);
+    const ok = await applyCode(value);
     if (ok) setCode('');
   };
 
@@ -225,7 +319,7 @@ export const CartTotals: React.FC = () => {
       ) : (
         <div className="rounded-control border border-line bg-white">
           <div className="flex items-center gap-2 pr-2">
-            <button type="button" onClick={() => setCouponOpen((open) => !open)} aria-expanded={couponOpen} aria-controls="bag-coupon-panel"
+            <button type="button" onClick={() => setCouponOpen((open) => !open)} aria-expanded={couponOpen} aria-controls={panelId}
               className="flex-1 min-w-0 flex items-center gap-2.5 min-h-[52px] pl-3.5 text-left text-sm font-semibold text-ink cursor-pointer">
               <TagIcon className="w-5 h-5 shrink-0" mono live={false} />
               <span className="flex-1">Apply coupon</span>
@@ -235,10 +329,10 @@ export const CartTotals: React.FC = () => {
           {!couponOpen && coupons.length > 0 && (
             <div className="px-3.5 pb-3 -mt-1">{chip(coupons[0])}</div>
           )}
-          <div id="bag-coupon-panel" className={couponOpen ? 'px-3.5 pb-3.5' : 'hidden'}>
+          <div id={panelId} className={couponOpen ? 'px-3.5 pb-3.5' : 'hidden'}>
             <form onSubmit={(e) => { e.preventDefault(); apply(code); }} className="flex gap-2">
-              <label htmlFor="bag-coupon" className="sr-only">Coupon code</label>
-              <input id="bag-coupon" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Enter coupon code" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} enterKeyHint="done"
+              <label htmlFor={couponId} className="sr-only">Coupon code</label>
+              <input id={couponId} value={code} onChange={(e) => { setCode(e.target.value.toUpperCase()); if (couponError) clearError(); }} aria-invalid={couponError ? true : undefined} aria-describedby={couponError ? errorId : undefined} placeholder="Enter coupon code" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} enterKeyHint="done"
                 className="sag-input sag-caps flex-1 min-w-0 h-12 uppercase placeholder:normal-case" />
               <button type="submit" disabled={applying || !code.trim()} className="sag-btn-outline h-12 min-w-[84px] px-4 text-sm">
                 {applying ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Applying" /> : 'Apply'}
@@ -253,31 +347,12 @@ export const CartTotals: React.FC = () => {
               </div>
             )}
           </div>
+          {/* Shown whether the field is open or the shopper tapped the coupon chip */}
+          <CouponError id={errorId} message={couponError} className={couponOpen ? 'px-3.5 pb-3.5 -mt-1.5' : 'px-3.5 pb-3'} />
         </div>
       )}
 
-      <div>
-        <h3 className="text-base leading-[22px] font-semibold text-ink">Price details</h3>
-        <dl className="mt-2.5 space-y-2 text-sm leading-5 sag-num">
-          <div className="flex justify-between gap-3 text-ink-muted"><dt>Subtotal ({pieces} {pieces === 1 ? 'item' : 'items'})</dt><dd className="text-ink">{inr(cartSubtotal)}</dd></div>
-          {comboDiscount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Combo discount</dt><dd className="font-semibold">−{inr(comboDiscount)}</dd></div>}
-          {discountAmount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Coupon {appliedCoupon?.code}</dt><dd className="font-semibold">−{inr(discountAmount)}</dd></div>}
-          {prepaidDiscount > 0 && <div className="flex justify-between gap-3 text-sale"><dt>Online payment discount</dt><dd className="font-semibold">−{inr(prepaidDiscount)}</dd></div>}
-          <div className="flex justify-between gap-3 text-ink-muted"><dt>Shipping</dt><dd className={shippingFee > 0 ? 'text-ink' : 'font-semibold text-sale'}>{shippingFee > 0 ? inr(shippingFee) : 'Free'}</dd></div>
-          <div className="flex justify-between items-baseline gap-3 pt-3 mt-1 border-t border-line">
-            <dt>
-              <span className="block text-base font-semibold text-ink">Total</span>
-              <span className="block text-xs leading-4 text-ink-muted">Inclusive of all taxes</span>
-            </dt>
-            <dd className="text-lg leading-[22px] font-bold text-ink">{inr(estimated)}</dd>
-          </div>
-        </dl>
-        {totalSavings > 0 && (
-          <p className="mt-2.5 text-[13px] leading-[18px] font-semibold text-sale sag-num">
-            You save {inr(totalSavings)} on this order
-          </p>
-        )}
-      </div>
+      <PriceDetails />
     </div>
   );
 };

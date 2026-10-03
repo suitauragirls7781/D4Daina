@@ -255,7 +255,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             >
               <span className="hidden sm:block"><Monogram /></span>
               <div className="min-w-0">
-                <h1 className="text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h1>
+                <h1 className="font-sans text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h1>
                 <span className="block text-[11px] leading-4 font-semibold uppercase tracking-[0.06em] text-ink-muted truncate">Admin Studio</span>
               </div>
             </div>

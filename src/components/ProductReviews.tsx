@@ -121,11 +121,14 @@ const readVoted = (): string[] => {
   }
 };
 
-/** Stars to the nearest half, so an average like 4.5 is drawn as four and a half, never as five. */
-const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-4 h-4' }) => {
-  const shown = Math.round((Number(rating) || 0) * 2) / 2;
+/**
+ * The one star row of the product page. It is filled to exactly the number printed beside it (one decimal):
+ * 4.5 is four and a half stars, 4.3 is four and three tenths, never rounded up to five.
+ */
+export const Stars: React.FC<{ rating: number; size?: string }> = ({ rating, size = 'w-4 h-4' }) => {
+  const shown = Math.max(0, Math.min(5, Math.round((Number(rating) || 0) * 10) / 10));
   return (
-    <span className="flex shrink-0" role="img" aria-label={`Rated ${Number(rating.toFixed(1))} out of 5`}>
+    <span className="flex shrink-0" role="img" aria-label={`Rated ${shown} out of 5`}>
       {[1, 2, 3, 4, 5].map((i) => {
         const fill = Math.max(0, Math.min(1, shown - (i - 1)));
         return (
@@ -368,7 +371,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   const photoRows = rows.filter((r) => r.imageUrl && !brokenPhotos.includes(r.imageUrl));
 
   return (
-    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-8 lg:mt-12 scroll-mt-20 lg:border-t lg:border-line lg:pt-8">
+    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-8 lg:mt-12 scroll-mt-20 lg:scroll-mt-36 lg:border-t lg:border-line lg:pt-8">
       <div className="flex items-center justify-between gap-4 min-h-11">
         <h2 id="pdp-reviews-title" className="text-[17px] leading-6 font-semibold text-ink">Customer reviews</h2>
         {(summary.count > 0 || formOpen) && (

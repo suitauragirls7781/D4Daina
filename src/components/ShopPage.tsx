@@ -726,7 +726,7 @@ export const ShopPage: React.FC = () => {
           <aside className="hidden lg:block" aria-label="Filters">
             <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain pr-3">
               <div className="flex items-center justify-between min-h-11 border-b border-line">
-                <p className="text-[17px] leading-6 font-semibold text-ink inline-flex items-center gap-2">
+                <p className="font-display text-[17px] leading-6 font-semibold text-ink inline-flex items-center gap-2">
                   Filters
                   {activeCount > 0 && <span className="sag-num min-w-5 h-5 px-1.5 rounded-full bg-ink text-white text-[11px] font-bold inline-flex items-center justify-center">{activeCount}</span>}
                 </p>
@@ -788,7 +788,7 @@ export const ShopPage: React.FC = () => {
                   <span className="mx-auto w-14 h-14 rounded-full bg-sunken flex items-center justify-center text-ink" aria-hidden="true">
                     <SearchIcon className="w-6 h-6" mono live={false} />
                   </span>
-                  <p className="mt-4 text-[17px] leading-6 font-semibold text-ink break-words">
+                  <p className="mt-4 font-display text-[17px] leading-6 font-semibold text-ink break-words">
                     {query.trim() ? `No styles match “${query.trim()}”` : narrowed ? 'No styles match these filters' : 'No styles here yet'}
                   </p>
                   <p className="mt-1.5 text-sm leading-5 text-ink-muted max-w-md mx-auto">

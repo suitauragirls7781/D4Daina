@@ -945,11 +945,11 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     wishlistPendingRef.current.set(String(product.id), exists ? null : product);
     if (exists) {
       setWishlist((prev) => prev.filter((item) => item.id !== product.id));
-      showToast(`Removed "${product.name}" from Wishlist.`, 'info');
+      showToast(`Removed from wishlist: ${product.name}`, 'info');
     } else {
       setWishlist((prev) => [...prev, product]);
       trackItem('wishlist_add', String(product.id));
-      showToast(`Added "${product.name}" to your Wishlist!`, 'success');
+      showToast(`Saved to wishlist: ${product.name}`, 'success');
     }
   };
 

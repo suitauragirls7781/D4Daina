@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Mic } from 'lucide-react';
+import { Mic, Square } from 'lucide-react';
 import { useDiscovery } from '../utils/discovery';
 
 const Recognition = typeof window !== 'undefined' ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
@@ -30,8 +30,12 @@ export const VoiceSearchButton: React.FC<{ onResult: (text: string) => void; cla
 
   return (
     <button type="button" onClick={start} aria-label={listening ? 'Stop voice search' : 'Search by voice'} aria-pressed={listening}
-      className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-brand text-white animate-pulse' : 'text-ink hover:bg-sunken'} ${className}`}>
-      <Mic className="w-4 h-4" />
+      title={listening ? 'Listening… tap to stop' : undefined}
+      className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-ink text-white' : 'text-ink-muted hover:bg-sunken hover:text-ink'} ${className}`}>
+      {/* Listening is shown by the ink fill and a square "stop" mark; nothing pulses */}
+      {listening
+        ? <Square className="w-3.5 h-3.5 fill-current" strokeWidth={1.75} aria-hidden="true" />
+        : <Mic className="w-[18px] h-[18px]" strokeWidth={1.75} aria-hidden="true" />}
     </button>
   );
 };

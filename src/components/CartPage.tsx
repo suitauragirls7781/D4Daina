@@ -38,7 +38,8 @@ export const CartPage: React.FC = () => {
           <div className="lg:col-span-7 sag-card px-4">
             <CartLines />
           </div>
-          <aside className="lg:col-span-5 lg:sticky lg:top-24">
+          {/* Desktop header = 68px bar + 48px category row + hairlines (118px); the summary sticks 16px below it */}
+          <aside className="lg:col-span-5 lg:sticky lg:top-[134px]">
             <div className="sag-card p-4 sm:p-6 space-y-4">
               <CartTotals />
               <button

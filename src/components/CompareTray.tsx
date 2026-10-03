@@ -93,7 +93,7 @@ export const CompareTray: React.FC = () => {
             className="bg-white text-ink w-full md:max-w-4xl max-h-[85dvh] rounded-t-sheet md:rounded-card flex flex-col shadow-[var(--sag-shadow-bar)] animate-in slide-in-from-bottom-5 fade-in">
             <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-1 rounded-full bg-sunken-deep" /></div>
             <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
-              <p className="text-base leading-[22px] font-semibold text-ink">Compare styles</p>
+              <p className="font-display text-base leading-[22px] font-semibold text-ink">Compare styles</p>
               <button onClick={() => setOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.75} /></button>
             </div>
             <div className="overflow-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">

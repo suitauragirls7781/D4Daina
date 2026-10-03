@@ -308,7 +308,7 @@ export const Header: React.FC = () => {
                   {results.length > 0 ? (
                     <>
                       <p className="sag-eyebrow mb-1 px-1">Styles</p>
-                      <div className="grid">
+                      <div className="grid grid-cols-[minmax(0,1fr)]">
                         {results.map((prod) => {
                           const mrp = Math.max(prod.price, Number(prod.originalPrice) || prod.price);
                           const off = mrp > prod.price ? Math.round(((mrp - prod.price) / mrp) * 100) : 0;
@@ -317,7 +317,7 @@ export const Header: React.FC = () => {
                               key={prod.id}
                               id={`search-result-${prod.id}`}
                               onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
-                              className="w-full flex items-center gap-3 p-2 rounded-control hover:bg-sunken focus-visible:bg-sunken text-left transition-colors cursor-pointer"
+                              className="w-full min-w-0 flex items-center gap-3 p-2 rounded-control hover:bg-sunken focus-visible:bg-sunken text-left transition-colors cursor-pointer"
                             >
                               <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 object-cover object-top rounded-chip bg-sunken" />
                               <div className="flex-1 min-w-0">
@@ -335,7 +335,7 @@ export const Header: React.FC = () => {
                         })}
                       </div>
                       <button type="button" onClick={() => executeSearch(searchInput)} className="sag-btn-outline mt-2 w-full h-11 px-4 text-sm gap-1.5">
-                        <span className="truncate">See all {matches.length} {matches.length === 1 ? 'result' : 'results'} for “{searchTrimmed}”</span>
+                        <span className="truncate">See all results for “{searchTrimmed}”</span>
                         <ChevronRight className="w-4 h-4 shrink-0" />
                       </button>
                     </>

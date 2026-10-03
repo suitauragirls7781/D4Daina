@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useEffect } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Check, Loader2, X } from 'lucide-react';
 import { couponRestrictionNotes } from '../utils/coupons';
-import { TagIcon } from './StoreIcons';
+import { CouponError, useCouponApply } from './CartContents';
 
 const validTill = (value?: string) => {
   if (!value) return '';
@@ -11,18 +10,18 @@ const validTill = (value?: string) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
+/** "View all offers": a bottom sheet on phones, a centred dialog on wider screens. Rendered only while open. */
 export const CouponDrawer: React.FC = () => {
   const {
     isCouponDrawerOpen,
     setIsCouponDrawerOpen,
     appliedCoupon,
-    applyCoupon,
     removeCoupon,
     coupons,
     cartSubtotal,
     cart,
   } = useShop();
-  const [applying, setApplying] = useState('');
+  const { apply, applying, error, failedCode } = useCouponApply();
   const close = () => setIsCouponDrawerOpen(false);
 
   useEffect(() => {
@@ -34,62 +33,51 @@ export const CouponDrawer: React.FC = () => {
 
   const handleApply = async (code: string) => {
     if (applying) return;
-    setApplying(code);
-    const ok = await applyCoupon(code);
-    setApplying('');
+    const ok = await apply(code);
     if (ok) close();
   };
+
+  if (!isCouponDrawerOpen) return null;
 
   return (
     <div
       id="coupon-drawer-overlay"
       onClick={close}
-      className={`fixed inset-0 z-[10000] bg-ink/50 flex justify-end transition-opacity duration-300 ${
-        isCouponDrawerOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-      }`}
+      className="fixed inset-0 z-[10000] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn"
     >
-      <motion.div
+      <div
         id="coupon-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="coupon-drawer-title"
         onClick={(e) => e.stopPropagation()}
-        initial={{ x: '100%' }}
-        animate={{ x: isCouponDrawerOpen ? 0 : '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="bg-page w-full sm:max-w-md h-full flex flex-col relative overflow-hidden shadow-2xl"
+        className="bg-white w-full sm:max-w-lg max-h-[85dvh] rounded-t-sheet sm:rounded-card overflow-hidden flex flex-col animate-in slide-in-from-bottom-5"
       >
-        {/* Header */}
-        <div className="px-5 h-[72px] border-b border-line flex items-center justify-between gap-3 bg-white shrink-0">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="w-10 h-10 shrink-0 rounded-full bg-sunken flex items-center justify-center">
-              <TagIcon className="w-5 h-5" />
-            </span>
-            <div className="min-w-0">
-              <h3 id="coupon-drawer-title" className="font-serif text-2xl leading-tight text-ink">Offers &amp; coupons</h3>
-              <p className="text-xs text-ink-muted">Tap apply to use a coupon on this bag</p>
-            </div>
+        <span aria-hidden="true" className="sm:hidden mx-auto mt-2 h-1 w-9 shrink-0 rounded-full bg-line" />
+
+        {/* Title row */}
+        <div className="flex items-center justify-between gap-3 pl-4 pr-1.5 min-h-14 border-b border-line shrink-0">
+          <div className="py-2 min-w-0">
+            <h2 id="coupon-drawer-title" className="font-display text-base leading-[22px] font-semibold text-ink">Offers &amp; coupons</h2>
+            <p className="text-[13px] leading-[18px] text-ink-muted">Tap apply to use a coupon on this bag</p>
           </div>
           <button
             type="button"
             onClick={close}
             aria-label="Close offers"
-            className="w-10 h-10 -mr-2 shrink-0 rounded-full flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer"
+            className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer"
             id="close-coupon-drawer"
           >
-            <X className="w-5 h-5" />
+            <X className="w-[22px] h-[22px]" />
           </button>
         </div>
 
         {/* Coupons */}
-        <div className="flex-1 overflow-y-auto overscroll-contain p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-3">
           {coupons.length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <span className="mx-auto w-20 h-20 rounded-full bg-sunken flex items-center justify-center">
-                <TagIcon className="w-9 h-9" />
-              </span>
-              <p className="mt-5 font-serif text-2xl text-ink">No coupons right now</p>
-              <p className="mt-1.5 text-sm text-ink-muted">New offers appear here as soon as the store adds them.</p>
+            <div className="text-center py-10 px-4">
+              <p className="font-display text-base leading-[22px] font-semibold text-ink">No coupons right now</p>
+              <p className="mt-1.5 text-sm leading-5 text-ink-muted">New offers appear here as soon as the store adds them.</p>
             </div>
           ) : (
             coupons.map((cp) => {
@@ -97,24 +85,23 @@ export const CouponDrawer: React.FC = () => {
               const discountLabel = cp.discountType === 'percentage' ? `${cp.discountValue}% off` : `₹${cp.discountValue.toLocaleString('en-IN')} off`;
               const short = cart.length > 0 && cp.minOrderValue > 0 && cartSubtotal < cp.minOrderValue ? cp.minOrderValue - cartSubtotal : 0;
               const till = validTill(cp.expiryDate);
+              const failed = Boolean(error) && failedCode === cp.code.trim().toUpperCase();
               return (
                 <div
                   key={cp.id}
-                  className={`rounded-2xl bg-white border transition-colors ${isApplied ? 'border-emerald-200 ring-2 ring-emerald-50' : 'border-line hover:border-control'} shadow-[var(--sag-shadow)]`}
+                  className={`rounded-control border border-dashed p-3.5 ${isApplied ? 'border-ok-line bg-ok-tint' : 'border-sale-line bg-sale-tint'}`}
                 >
-                  <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-serif text-[26px] leading-tight font-semibold text-ink lining-nums">{discountLabel}</p>
-                      <span className="mt-2 inline-flex items-center h-7 px-3 rounded-full border border-dashed border-line bg-page text-sm font-semibold tracking-[0.08em] text-ink">
-                        {cp.code}
-                      </span>
-                    </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="min-w-0 text-sm leading-5 sag-num">
+                      <span className="font-bold text-ink break-all">{cp.code}</span>
+                      <span className="ml-2 font-semibold text-sale whitespace-nowrap">{discountLabel}</span>
+                    </p>
                     {isApplied ? (
-                      <div className="flex flex-col items-end gap-1.5 shrink-0">
-                        <span className="inline-flex items-center gap-1 h-7 px-3 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-800">
-                          <Check className="w-3.5 h-3.5" strokeWidth={2.5} /> Applied
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-ok">
+                          <Check className="w-4 h-4" aria-hidden="true" /> Applied
                         </span>
-                        <button type="button" onClick={removeCoupon} className="h-9 px-3 rounded-full text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer">
+                        <button type="button" onClick={removeCoupon} className="sag-link text-[13px]">
                           Remove
                         </button>
                       </div>
@@ -123,21 +110,21 @@ export const CouponDrawer: React.FC = () => {
                         type="button"
                         onClick={() => handleApply(cp.code)}
                         disabled={Boolean(applying)}
-                        className="sag-btn-primary shrink-0 h-10 min-w-[92px] px-5 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center cursor-pointer disabled:opacity-60"
+                        aria-describedby={failed ? `coupon-drawer-error-${cp.id}` : undefined}
+                        className="sag-btn-outline h-11 min-w-[84px] px-4 text-sm shrink-0"
                       >
-                        {applying === cp.code ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Applying" /> : 'Apply'}
+                        {applying === cp.code.trim().toUpperCase() ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Applying" /> : 'Apply'}
                       </button>
                     )}
                   </div>
-                  <div className="relative border-t border-dashed border-line px-4 sm:px-5 py-3 text-xs leading-relaxed text-ink-muted space-y-1">
-                    <span aria-hidden="true" className="absolute -left-2 -top-2 w-4 h-4 rounded-full bg-page" />
-                    <span aria-hidden="true" className="absolute -right-2 -top-2 w-4 h-4 rounded-full bg-page" />
+                  {failed && <CouponError id={`coupon-drawer-error-${cp.id}`} message={error} className="mt-2" />}
+                  <div className="mt-2 space-y-0.5 text-[13px] leading-[18px] text-ink-muted sag-num">
                     <p>{cp.minOrderValue > 0 ? `On orders above ₹${cp.minOrderValue.toLocaleString('en-IN')}` : 'No minimum order'}{cp.maxDiscount ? ` · up to ₹${cp.maxDiscount.toLocaleString('en-IN')} off` : ''}</p>
                     {short > 0 && <p className="font-semibold text-sale">Add ₹{short.toLocaleString('en-IN')} more to use this coupon</p>}
                     {couponRestrictionNotes(cp).map((note) => (
                       <p key={note} className="font-medium text-ink">{note}</p>
                     ))}
-                    {till && <p className="text-ink-muted">Valid till {till}</p>}
+                    {till && <p>Valid till {till}</p>}
                   </div>
                 </div>
               );
@@ -146,12 +133,12 @@ export const CouponDrawer: React.FC = () => {
         </div>
 
         {/* Footer */}
-        <div className="px-5 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] border-t border-line bg-white text-center">
-          <p className="text-xs leading-relaxed text-ink-muted max-w-xs mx-auto">
+        <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line shrink-0 text-center">
+          <p className="text-xs leading-4 text-ink-muted">
             One coupon per order. The final discount is confirmed at checkout.
           </p>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

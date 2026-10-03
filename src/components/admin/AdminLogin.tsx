@@ -87,7 +87,7 @@ export const AdminLogin: React.FC = () => {
                 <ShieldCheck className="w-5 h-5" />
               </span>
               <div className="min-w-0">
-                <h2 className="text-[22px] leading-7 font-semibold text-ink">Admin sign in</h2>
+                <h2 className="text-[22px] leading-7 text-ink">Admin sign in</h2>
                 <p className="mt-0.5 text-sm leading-5 text-ink-muted">
                   For store staff. Manage products, orders, customers and store settings.
                 </p>
@@ -218,7 +218,7 @@ export const AdminLogin: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span>Sign in<span className="sr-only"> – unlock admin vault</span></span>
+                    <span>Unlock Admin Vault</span>
                     <ArrowRight className="w-[18px] h-[18px]" />
                   </>
                 )}

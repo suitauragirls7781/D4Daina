@@ -59,11 +59,19 @@
   --color-charcoal: #1B1A17;
   --color-lavender: #ECEAE4;
 
-  /* Two families only. font-serif now points at Inter, so old font-serif classes read as Inter;
-     font-display is added by hand to page titles and home headlines. */
+  /* Two families only: Inter for text, Playfair Display for main headings.
+     Why Playfair Display: compared in the browser on this site's real headings at 390px against
+     Marcellus, Lora, Libre Caslon Text, Cormorant Garamond, EB Garamond, Fraunces and the old DM Serif
+     Display. It keeps the fashion-label character of the approved look but is lighter and calmer than
+     DM Serif Display, stays crisp from 16px sheet titles to the 28px page title, is narrow enough that
+     titles do not wrap more at 390px (Lora and Libre Caslon did), and it has REAL 500 and 600 weights,
+     so nothing is ever faked (DM Serif Display and Marcellus have one weight; Cormorant and EB Garamond
+     read too small beside Inter at 17px).
+     --font-serif is no longer used by any component; it stays as an alias of Inter so a stray
+     font-serif class can never fall back to Times. */
   --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-  --font-display: 'DM Serif Display', 'DM Serif Fallback', Georgia, serif;
+  --font-display: 'Playfair Display', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 
   --radius-badge: 6px;
   --radius-chip: 10px;
@@ -81,12 +89,13 @@
   descent-override: 22.56%;
   line-gap-override: 0%;
 }
+/* Georgia set to Playfair Display's measured width (x1.027) and its ascent 1082 / descent 251 */
 @font-face {
-  font-family: 'DM Serif Fallback';
+  font-family: 'Playfair Fallback';
   src: local('Georgia');
-  size-adjust: 97%;
-  ascent-override: 106.8%;
-  descent-override: 34.5%;
+  size-adjust: 102.7%;
+  ascent-override: 105.4%;
+  descent-override: 24.4%;
   line-gap-override: 0%;
 }
 
@@ -159,12 +168,37 @@
     line-height: 22px;
   }
 
-  /* Headings are Inter 600. Page titles and home headlines add font-display by hand. */
-  h1, h2, h3, h4, h5, h6 {
+  /* ---- Heading system -------------------------------------------------
+     Main headings use the display face (Playfair Display):
+       page titles (h1), section titles (h2), the hero headline, and anything given font-display
+       by hand: dialog / sheet / drawer titles, empty-state titles, admin page titles.
+     Weight: 500 for titles of 20px and up; small titles (16-18px card, sheet and dialog titles)
+     keep font-semibold, which is the real 600. Only 500 and 600 are loaded, and
+     font-synthesis: none means a missing weight or italic is never faked by the browser.
+     Figures are lining (Playfair's default figures are old-style and look uneven in "Your bag (2 items)").
+     Sub-headings (h3-h6), product names, prices, buttons, labels, fields and navigation stay Inter;
+     an h1 / h2 that is really a product name or an order number carries font-sans. */
+  h1, h2, .font-display {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: 0;
+    font-synthesis: none;
+    font-variant-numeric: lining-nums;
+    font-kerning: normal;
+  }
+  h3, h4, h5, h6 {
     font-family: var(--font-sans);
     font-weight: 600;
     letter-spacing: 0;
+    font-synthesis: none;
   }
+  /* Larger desktop titles are set a touch tighter */
+  @media (min-width: 1024px) {
+    h1, h2, .font-display { letter-spacing: -0.01em; }
+  }
+  /* An h1 / h2 switched back to Inter (font-sans) drops the display tracking */
+  :is(h1, h2).font-sans { letter-spacing: 0; }
 
   ::selection {
     background: #E6F0EE;
@@ -206,12 +240,6 @@
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark, footer#main-footer) :focus-visible,
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark):focus-visible {
   outline-color: #FFFFFF;
-}
-
-/* DM Serif Display has a single weight */
-.font-display {
-  font-weight: 400;
-  letter-spacing: -0.01em;
 }
 
 /* Storefront copy is sentence case: older "uppercase tracking-[…]" labels and buttons are neutralised here.
@@ -635,3 +663,13 @@
 @supports (overflow: clip) {
   html, body, #root { overflow-x: clip; }
 }
+
+/* ------------------------------------------------------------------
+   Enclosed checkout (design/DESIGN.md 4.2): while the checkout page is
+   open the site header (menu, logo, search, bag, desktop category row)
+   is hidden, so only the "Secure checkout" row and the stepper show.
+   The header stays in the DOM, so its ids survive. CheckoutPage.tsx puts
+   "sag-checkout" on its root only while a bag is being checked out (the
+   empty-bag and payment-result screens keep the normal header).
+------------------------------------------------------------------- */
+#app-main-content:has(.sag-checkout) > header.sticky { display: none; }

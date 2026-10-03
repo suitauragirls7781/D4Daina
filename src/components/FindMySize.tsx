@@ -82,7 +82,7 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
               <button type="button" onClick={() => onPick(result.size!)} className="sag-btn-primary h-12 px-5 shrink-0">Select {result.size}</button>
             </div>
           )}
-          <p className={`${result.size ? 'mt-3' : ''} text-[13px] leading-[18px] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-semibold text-brand underline underline-offset-[3px] cursor-pointer py-1">size chart</button>.</p>
+          <p className={`${result.size ? 'mt-3' : ''} text-[13px] leading-[18px] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-semibold text-brand underline underline-offset-[3px] cursor-pointer inline-block py-[13px] -my-[13px]">size chart</button>.</p>
         </div>
       )}
     </div>

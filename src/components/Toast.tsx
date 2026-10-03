@@ -8,7 +8,7 @@ import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
  * an error (always with an icon and words), ink for plain information.
  */
 export const Toast: React.FC = () => {
-  const { toast } = useShop();
+  const { toast, activePage, isCartDrawerOpen, setIsCartDrawerOpen } = useShop();
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => { setHidden(false); }, [toast?.message]);
@@ -30,6 +30,9 @@ export const Toast: React.FC = () => {
       ? { Icon: Info, icon: 'text-ink', bar: 'bg-ink' }
       : { Icon: CheckCircle2, icon: 'text-ok', bar: 'bg-ok' };
   const { Icon } = tone;
+  // "Added to bag" carries a way to the bag, unless the shopper is already looking at it
+  const viewBag = toast.type === 'success' && toast.message.startsWith('Added to bag')
+    && !isCartDrawerOpen && activePage !== 'cart' && activePage !== 'checkout';
 
   return (
     <div
@@ -45,6 +48,11 @@ export const Toast: React.FC = () => {
       <div className="flex-1 min-w-0 py-2">
         <p className="text-sm leading-5 text-ink line-clamp-2 break-words">{toast.message}</p>
       </div>
+      {viewBag && (
+        <button type="button" onClick={() => { setIsCartDrawerOpen(true); setHidden(true); }} className="shrink-0 h-11 px-2 text-sm leading-5 font-semibold text-brand underline underline-offset-[3px] whitespace-nowrap cursor-pointer">
+          View bag
+        </button>
+      )}
       <button type="button" onClick={() => setHidden(true)} aria-label="Dismiss" className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
         <X className="w-4 h-4" />
       </button>

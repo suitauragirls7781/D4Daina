@@ -232,7 +232,7 @@ export const AdminDashboardOverview: React.FC = () => {
       {/* Greeting and the two everyday actions */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 pb-4 border-b border-line">
         <div className="min-w-0">
-          <p className={ui.eyebrow}>Executive store overview · {todayLabel}</p>
+          <p className={ui.eyebrow}>Executive Store Overview · {todayLabel}</p>
           <h2 className={`mt-0.5 ${ui.h1}`}>{greeting}</h2>
           <p className="mt-1 text-sm leading-5 text-ink-muted max-w-xl">
             Orders to send, requests waiting for you, and how the store is doing. Sales count only orders with a verified payment.

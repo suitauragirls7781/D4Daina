@@ -13,7 +13,7 @@ import { ShopByCategory } from './ShopByCategory';
 import { PersonalRails } from './PersonalRails';
 import { OccasionSection } from './OccasionSection';
 import { AuraReelsSection } from './AuraReels';
-import { FeaturedCollection, HomeAssuranceBand, KidsCorner, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
+import { AskAssistantRow, FeaturedCollection,HomeAssuranceBand, KidsCorner, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
 
 export const HomePage: React.FC = () => {
   const { homepageSections = [] } = useAdmin();
@@ -80,6 +80,8 @@ export const HomePage: React.FC = () => {
           {index === 3 && <OccasionSection />}
         </React.Fragment>
       ))}
+      {/* The assistant sits in the page here; its floating button is kept off product cards and photos */}
+      <AskAssistantRow />
     </div>
   );
 };

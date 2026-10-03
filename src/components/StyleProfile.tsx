@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { AlertCircle, Check, Loader2 } from 'lucide-react';
 import { StyleIcon } from './AccountIcons';
 import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
@@ -161,21 +161,20 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
   primeStylePrefs(key, value);
 };
 
-const chip = (on: boolean) =>
-  `min-h-11 px-4 rounded-full border text-sm font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer ${
-    on ? 'bg-brand border-ink text-white' : 'bg-white border-line text-ink hover:bg-sunken hover:border-control'
-  }`;
+// Selected chips are ink-filled (sag-chip reads aria-pressed); teal stays for the Save button
+const chipClass = 'sag-chip h-11 min-w-0 gap-1.5 text-sm';
+const legendClass = 'text-[13px] leading-[18px] font-semibold text-ink';
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
-  <fieldset className="space-y-2.5">
-    <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">{legend}</legend>
-    {hint && <p className="text-sm text-ink-muted -mt-1">{hint}</p>}
+  <fieldset className="space-y-2">
+    <legend className={legendClass}>{legend}</legend>
+    {hint && <p className="text-[13px] leading-[18px] text-ink-muted">{hint}</p>}
     <div className="flex flex-wrap gap-2">
       {options.map(({ value, label }) => {
         const on = selected.includes(value);
         return (
-          <button key={value} type="button" aria-pressed={on} onClick={() => onToggle(value)} className={chip(on)}>
-            {on && <Check className="w-3.5 h-3.5 text-current" aria-hidden="true" />}
+          <button key={value} type="button" aria-pressed={on} onClick={() => onToggle(value)} className={chipClass}>
+            {on && <Check className="w-4 h-4 text-current" aria-hidden="true" />}
             {label}
           </button>
         );
@@ -184,7 +183,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'h-12 w-full rounded-full border border-line bg-white px-4 text-sm text-ink transition focus:outline-none focus:border-ink focus:ring-2 focus:ring-brand';
+const inputClass = 'sag-input sag-num';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -276,9 +275,9 @@ export const StyleProfile: React.FC = () => {
 
   if (failed) {
     return (
-      <div className="sag-card p-6 text-center space-y-3" role="alert">
-        <p className="text-sm text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
-        <button type="button" onClick={retry} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer">Try again</button>
+      <div className="sag-card p-4 sm:p-6 text-center space-y-3" role="alert">
+        <p className="text-sm leading-5 text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
+        <button type="button" onClick={retry} className="sag-btn-outline h-11 px-5 text-sm">Try again</button>
       </div>
     );
   }
@@ -286,7 +285,7 @@ export const StyleProfile: React.FC = () => {
   if (!ready) {
     return (
       <div className="py-16 flex justify-center" role="status" aria-label="Loading your style profile">
-        <Loader2 className="w-6 h-6 animate-spin text-ink" />
+        <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
       </div>
     );
   }
@@ -294,13 +293,13 @@ export const StyleProfile: React.FC = () => {
   const anySelected = hasStylePrefs(preview);
 
   return (
-    <section className="space-y-5" aria-labelledby="style-profile-title">
-      <form onSubmit={handleSave} className="sag-card p-5 sm:p-7 space-y-7">
-        <div className="flex gap-3.5 rounded-2xl bg-sunken p-4">
-          <span className="w-12 h-12 shrink-0 rounded-full bg-white ring-1 ring-line flex items-center justify-center"><StyleIcon className="w-6 h-6" /></span>
+    <section className="space-y-6" aria-labelledby="style-profile-title">
+      <form onSubmit={handleSave} className="sag-card p-4 sm:p-6 space-y-6">
+        <div className="flex gap-3">
+          <span className="w-11 h-11 shrink-0 rounded-control bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
           <div className="min-w-0">
-            <h2 id="style-profile-title" className="font-serif text-2xl leading-tight text-ink">Your style profile</h2>
-            <p className="mt-1 text-sm text-ink-muted leading-relaxed">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
+            <h2 id="style-profile-title" className="font-display text-[22px] leading-7 text-ink">Your style profile</h2>
+            <p className="mt-1 text-sm leading-5 text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
           </div>
         </div>
 
@@ -317,20 +316,20 @@ export const StyleProfile: React.FC = () => {
           selected={draft.sizes}
           onToggle={toggle('sizes')}
         />
-        <fieldset className="space-y-2.5">
-          <legend className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink">Budget per outfit</legend>
+        <fieldset className="space-y-2">
+          <legend className={legendClass}>Budget per outfit</legend>
           {priceRange && (
-            <p className="text-sm text-ink-muted -mt-1">
+            <p className="sag-num text-[13px] leading-[18px] text-ink-muted">
               In-stock styles right now range from ₹{priceRange.min.toLocaleString('en-IN')} to ₹{priceRange.max.toLocaleString('en-IN')}.
             </p>
           )}
           <div className="grid grid-cols-2 gap-3 max-w-md">
-            <label className="space-y-1">
-              <span className="block pl-1 text-[13px] font-medium text-ink-muted">Minimum (₹)</span>
+            <label className="block">
+              <span className="sag-label font-medium text-ink-muted">Minimum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={minText} onChange={(e) => { setError(''); setMinText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
-            <label className="space-y-1">
-              <span className="block pl-1 text-[13px] font-medium text-ink-muted">Maximum (₹)</span>
+            <label className="block">
+              <span className="sag-label font-medium text-ink-muted">Maximum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={maxText} onChange={(e) => { setError(''); setMaxText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
           </div>
@@ -350,9 +349,13 @@ export const StyleProfile: React.FC = () => {
           />
         )}
 
-        {error && <p role="alert" className="rounded-2xl bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">{error}</p>}
+        {error && (
+          <p role="alert" className="flex items-start gap-2 rounded-control bg-danger-tint border border-danger-line px-3.5 py-3 text-sm leading-5 font-medium text-danger">
+            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />{error}
+          </p>
+        )}
 
-        <p className="rounded-2xl bg-page border border-line px-4 py-3 text-sm text-ink-muted" aria-live="polite">
+        <p className="sag-num rounded-control bg-page border border-line px-3.5 py-3 text-sm leading-5 text-ink-muted" aria-live="polite">
           {!anySelected
             ? 'Nothing selected yet. Saving with nothing selected removes your style profile.'
             : matches.length === 0
@@ -360,12 +363,12 @@ export const StyleProfile: React.FC = () => {
               : `${matches.length} in-stock ${matches.length === 1 ? 'style matches' : 'styles match'} your choices right now.`}
         </p>
 
-        <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-          <button type="submit" disabled={saving} className="sag-btn-primary h-12 px-7 justify-center text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer disabled:opacity-60 inline-flex items-center gap-2">
-            {saving && <Loader2 className="w-4 h-4 animate-spin text-current" />}
+        <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3">
+          <button type="submit" disabled={saving} className="sag-btn-primary h-12 px-6 gap-2">
+            {saving && <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" />}
             {saving ? 'Saving…' : 'Save style profile'}
           </button>
-          <button type="button" onClick={reset} disabled={saving} className="sag-btn-outline h-12 px-6 text-xs font-semibold uppercase tracking-[0.14em] cursor-pointer disabled:opacity-60">
+          <button type="button" onClick={reset} disabled={saving} className="sag-btn-outline h-12 px-6 text-[15px]">
             Clear selections
           </button>
         </div>
@@ -373,8 +376,8 @@ export const StyleProfile: React.FC = () => {
 
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-serif text-2xl text-ink">Matching styles</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+          <h3 className="text-[17px] leading-6 font-semibold text-ink">Matching styles</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 lg:gap-x-6">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>

@@ -87,7 +87,7 @@ export const AdminInstagram: React.FC = () => {
 
       {/* Add form */}
       <form onSubmit={handleAdd} className="bg-white rounded-2xl p-5 sm:p-6 border border-line space-y-3">
-        <h2 className="text-base font-semibold text-ink">Add a reel</h2>
+        <h2 className="font-sans text-base font-semibold text-ink">Add a reel</h2>
         <p className="text-sm text-ink-muted">
           On Instagram open the reel → tap ⋯ / Share → <strong>Copy link</strong>, then paste it below.
         </p>
@@ -97,7 +97,7 @@ export const AdminInstagram: React.FC = () => {
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="https://www.instagram.com/reel/…"
-            className="sag-input h-12 flex-1 min-w-0"
+            className="sag-input h-12 md:flex-1 min-w-0"
             required
           />
           <input

@@ -34,6 +34,7 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { BagIcon } from './BrandIcons';
 import { Assurance } from './Assurance';
+import { CouponError, PriceDetails, useCouponApply } from './CartContents';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 
@@ -70,6 +71,15 @@ const FIELD_INPUT_ID: Record<CheckoutField, string> = {
   firstName: 'co-first-name', lastName: 'co-last-name', mobile: 'co-mobile', email: 'co-email',
   houseFlat: 'co-house', street: 'co-street', city: 'co-city', state: 'co-state', pincode: 'co-pincode',
 };
+
+// The fields in the order they appear on the screen (mobile comes before the name in this layout)
+const FIELD_SCREEN_ORDER: CheckoutField[] = ['mobile', 'firstName', 'lastName', 'email', 'pincode', 'city', 'state', 'houseFlat', 'street'];
+
+/** Display only: the same problems as getCheckoutFieldErrors(), one per field, in on-screen order. */
+const inScreenOrder = (errors: Array<{ field: CheckoutField; message: string }>) =>
+  errors
+    .filter((entry, index) => errors.findIndex((other) => other.field === entry.field) === index)
+    .sort((a, b) => FIELD_SCREEN_ORDER.indexOf(a.field) - FIELD_SCREEN_ORDER.indexOf(b.field));
 
 /** Label above, field, then one line below: the error (with an icon) or the helper text. */
 const Field: React.FC<{ id: string; label: string; error?: string; helper?: React.ReactNode; className?: string; children: React.ReactNode }> = ({ id, label, error, helper, className = '', children }) => (
@@ -158,6 +168,8 @@ export const CheckoutPage: React.FC = () => {
   // Coupon Input State inside checkout
   const [couponCodeInput, setCouponCodeInput] = useState('');
   const [showCouponsModal, setShowCouponsModal] = useState(false);
+  // Display only: the reason a coupon was refused, shown under the coupon field
+  const { apply: applyCouponCode, error: couponError, clearError: clearCouponError } = useCouponApply();
 
   // Display only: which fields may show their message (after blur, or all of them after a failed Continue),
   // and whether the order strip under the stepper is open on a phone.
@@ -176,6 +188,15 @@ export const CheckoutPage: React.FC = () => {
   // Processing state & error
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  // Display only: true while the banner is showing an address-form problem (not a server or payment error),
+  // so it can follow the form and disappear the moment every field is valid again.
+  const [formErrorShown, setFormErrorShown] = useState(false);
+  useEffect(() => {
+    if (!formErrorShown) return;
+    if (getCheckoutFieldErrors({ firstName, lastName, address, pincodeError }).length > 0) return;
+    setFormErrorShown(false);
+    setErrorMessage('');
+  }, [formErrorShown, firstName, lastName, address, pincodeError]);
 
   // Prepaid gateways the admin has switched on (checked on the server each time the payment step opens)
   const [gateways, setGateways] = useState<{ razorpay: boolean; payu: boolean } | null>(null);
@@ -215,15 +236,6 @@ export const CheckoutPage: React.FC = () => {
 
   // Preview totals. The server recalculates everything from Firestore before payment.
   const finalCartTotal = Math.max(0, cartTotal - prepaidDiscount);
-
-  const totalMRP = cart.reduce((acc, item) => {
-    const itemPrice = Number(item.product?.price) || 0;
-    const origPrice = Math.max(itemPrice, Number(item.product?.originalPrice) || itemPrice);
-    return acc + (origPrice * item.quantity);
-  }, 0);
-
-  const catalogDiscount = Math.max(0, totalMRP - cartSubtotal);
-  const totalSavings = catalogDiscount + comboDiscount + discountAmount + prepaidDiscount;
 
   // Session ID & debounce timer ref for abandoned checkout tracking
   const getCheckoutSessionId = () => {
@@ -593,9 +605,10 @@ export const CheckoutPage: React.FC = () => {
       if (saveAddressOption) handleSaveAddressToDb(address);
       setCheckoutStep('summary');
     } else {
-      // Show every field message and take the shopper to the first field that needs fixing
+      // Show every field message and take the shopper to the first field on the screen that needs fixing
       setShowAllErrors(true);
-      const first = getCheckoutFieldErrors({ firstName, lastName, address, pincodeError })[0];
+      setFormErrorShown(true);
+      const first = inScreenOrder(getCheckoutFieldErrors({ firstName, lastName, address, pincodeError }))[0];
       const target = first ? document.getElementById(FIELD_INPUT_ID[first.field]) : null;
       if (target) {
         target.scrollIntoView({ block: 'center', behavior: 'smooth' });
@@ -610,6 +623,7 @@ export const CheckoutPage: React.FC = () => {
     if (step === 'details' || validateForm()) setCheckoutStep(step);
     else {
       setShowAllErrors(true);
+      setFormErrorShown(true);
       setCheckoutStep('details');
     }
   };
@@ -617,7 +631,7 @@ export const CheckoutPage: React.FC = () => {
   const handleCouponApply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!couponCodeInput.trim()) return;
-    const success = await applyCoupon(couponCodeInput);
+    const success = await applyCouponCode(couponCodeInput);
     if (success) {
       setCouponCodeInput('');
     }
@@ -723,6 +737,8 @@ export const CheckoutPage: React.FC = () => {
       return;
     }
     if (!validateForm()) {
+      setShowAllErrors(true);
+      setFormErrorShown(true);
       setCheckoutStep('details');
       window.scrollTo({ top: 100, behavior: 'smooth' });
       return;
@@ -917,6 +933,16 @@ export const CheckoutPage: React.FC = () => {
   const helpUrl = createSupportWhatsAppUrl('Hi Suit Aura Girls, I need help with my order checkout.');
 
   const fieldErrors = getCheckoutFieldErrors({ firstName, lastName, address, pincodeError });
+  // The banner for an address-form problem follows the form: one field = its own message, several = a plain count
+  const formProblems = formErrorShown ? inScreenOrder(fieldErrors) : [];
+  const bannerTitle = formProblems.length > 1 ? `Please check ${formProblems.length} fields` : 'Please check';
+  const bannerText = formProblems.length > 1
+    ? 'Each one is marked in red below. Fix them to continue.'
+    : formProblems.length === 1 ? formProblems[0].message : errorMessage;
+  // Display only: the street box fills "area" too, so the two are often the same text; show it once
+  const sameText = (a?: string, b?: string) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+  const addressLine = [address.houseFlat, address.street, sameText(address.area, address.street) ? '' : address.area, address.landmark, address.city, address.state]
+    .map((part) => String(part || '').trim()).filter(Boolean).join(', ');
   const errFor = (field: CheckoutField) => (showAllErrors || touched[field] ? fieldErrors.find((entry) => entry.field === field)?.message || '' : '');
   const nameError = errFor('firstName') || errFor('lastName');
   const mobileError = errFor('mobile');
@@ -991,9 +1017,10 @@ export const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-page text-ink font-sans text-left pb-32 lg:pb-10">
+    <div className="sag-checkout min-h-screen bg-page text-ink font-sans text-left pb-32 lg:pb-10">
 
-      {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the three steps, always visible. */}
+      {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the three steps, always visible.
+          The site header is hidden while this page is open (".sag-checkout" rule at the end of index.css). */}
       <div className="bg-white border-b border-line">
         <div className="max-w-6xl mx-auto flex items-center h-11 pl-1 pr-2 sm:px-4">
           <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
@@ -1042,8 +1069,8 @@ export const CheckoutPage: React.FC = () => {
             <div role="alert" className="rounded-control border border-danger-line bg-danger-tint p-3.5 text-sm leading-5 text-danger flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 shrink-0 mt-px" aria-hidden="true" />
               <div>
-                <p className="font-semibold">Please check</p>
-                <p className="mt-0.5">{errorMessage}</p>
+                <p className="font-semibold">{bannerTitle}</p>
+                <p className="mt-0.5">{bannerText}</p>
               </div>
             </div>
           )}
@@ -1300,7 +1327,7 @@ export const CheckoutPage: React.FC = () => {
                       {address.type && <span className="sag-badge ml-2 align-middle">{address.type}</span>}
                     </p>
                     <p className="mt-0.5 text-sm leading-5 text-ink-muted">
-                      {[address.houseFlat, address.street, address.area, address.landmark, address.city, address.state].filter(Boolean).join(', ')} – {address.pincode}
+                      {addressLine} – {address.pincode}
                     </p>
                     <p className="mt-0.5 text-sm leading-5 text-ink-muted">Mobile: {address.mobile}{address.altMobile ? ` · Alt: ${address.altMobile}` : ''}</p>
                     {address.email && <p className="text-sm leading-5 text-ink-muted break-all">{address.email}</p>}
@@ -1312,7 +1339,7 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               <section className="sag-card p-4 sm:p-6 space-y-3" aria-label="Items">
-                <h2 className="text-[17px] leading-6 font-semibold text-ink">Your order <span className="text-sm font-normal text-ink-muted">({itemsText})</span></h2>
+                <h2 className="text-[17px] leading-6 font-semibold text-ink">Your order <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
                 {itemLines}
                 <p className="flex items-start gap-2 pt-3 border-t border-line text-sm leading-5 text-ink-muted">
                   <Truck className="h-[18px] w-[18px] shrink-0 mt-px text-ink" aria-hidden="true" />
@@ -1411,7 +1438,7 @@ export const CheckoutPage: React.FC = () => {
               <section className="sag-card px-4 sm:px-6" aria-label="Why it is safe to pay">
                 <div className="sag-row">
                   <Lock className="w-5 h-5 shrink-0 text-brand" aria-hidden="true" />
-                  <span className="flex-1 min-w-0 font-medium">Secure {gatewayName} checkout. Your order is confirmed only after the payment is verified.</span>
+                  <span className="flex-1 min-w-0 font-medium">Secure {gatewayKnown ? `${gatewayName} ` : ''}checkout. Your order is confirmed only after the payment is verified.</span>
                 </div>
                 <div className="sag-row">
                   <Check className="w-5 h-5 shrink-0 text-brand" aria-hidden="true" />
@@ -1429,7 +1456,7 @@ export const CheckoutPage: React.FC = () => {
 
         {/* Order summary. Phones: one collapsed strip under the stepper that opens in place (always open on the
             Review step, where it sits under the items). Desktop: the right column. It holds no <select>. */}
-        <aside className={`lg:col-span-5 lg:sticky lg:top-24 lg:order-none min-w-0 ${checkoutStep === 'summary' ? '' : 'order-first'}`} aria-label="Order summary">
+        <aside className={`lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 ${checkoutStep === 'summary' ? '' : 'order-first'}`} aria-label="Order summary">
           <div className="sag-card overflow-hidden">
             {checkoutStep !== 'summary' && (
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
@@ -1451,7 +1478,7 @@ export const CheckoutPage: React.FC = () => {
             <div id="co-order-summary" className={`${summaryOpen || checkoutStep === 'summary' ? 'block' : 'hidden'} lg:block ${checkoutStep === 'summary' ? '' : 'border-t border-line lg:border-t-0'} p-4 sm:p-6 space-y-4`}>
               {checkoutStep !== 'summary' && (
                 <div>
-                  <h2 className="hidden lg:block mb-3 text-[17px] leading-6 font-semibold text-ink">Order summary <span className="text-sm font-normal text-ink-muted">({itemsText})</span></h2>
+                  <h2 className="hidden lg:block mb-3 text-[17px] leading-6 font-semibold text-ink">Order summary <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
                   <div className="max-h-80 overflow-y-auto">{itemLines}</div>
                 </div>
               )}
@@ -1483,6 +1510,9 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                     <form onSubmit={handleCouponApply} className="mt-1.5 flex gap-2">
                       <input aria-label="Coupon code"
+                        id="co-coupon"
+                        aria-invalid={couponError ? true : undefined}
+                        aria-describedby={couponError ? 'co-coupon-error' : undefined}
                         type="text"
                         autoComplete="off"
                         autoCapitalize="characters"
@@ -1490,7 +1520,7 @@ export const CheckoutPage: React.FC = () => {
                         spellCheck={false}
                         enterKeyHint="done"
                         value={couponCodeInput}
-                        onChange={(e) => setCouponCodeInput(e.target.value.toUpperCase())}
+                        onChange={(e) => { setCouponCodeInput(e.target.value.toUpperCase()); if (couponError) clearCouponError(); }}
                         placeholder="Enter coupon code"
                         className="sag-input flex-1 min-w-0 h-12 uppercase placeholder:normal-case"
                       />
@@ -1498,73 +1528,29 @@ export const CheckoutPage: React.FC = () => {
                         Apply
                       </button>
                     </form>
+                    <CouponError id="co-coupon-error" message={couponError} />
                   </>
                 )}
               </div>
 
               {/* Price details: a preview; the server recalculates before payment */}
               <div className="pt-4 border-t border-line">
-                <h2 className="text-base leading-[22px] font-semibold text-ink">Price details</h2>
-                <dl className="mt-2.5 space-y-2 text-sm leading-5 sag-num">
-                  <div className="flex justify-between gap-3 text-ink-muted">
-                    <dt>Total MRP</dt>
-                    <dd className="text-ink">{rupees(totalMRP)}</dd>
-                  </div>
-                  {catalogDiscount > 0 && (
-                    <div className="flex justify-between gap-3 text-sale">
-                      <dt>Discount on MRP</dt>
-                      <dd className="font-semibold">−{rupees(catalogDiscount)}</dd>
-                    </div>
-                  )}
-                  <div className="flex justify-between gap-3 text-ink-muted">
-                    <dt>Subtotal</dt>
-                    <dd className="text-ink">{rupees(cartSubtotal)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3 text-ink-muted">
-                    <dt>Delivery</dt>
-                    {shippingFee === 0 ? <dd className="font-semibold text-sale">Free</dd> : <dd className="text-ink">{rupees(shippingFee)}</dd>}
-                  </div>
-                  {comboDiscount > 0 && (
-                    <div className="flex justify-between gap-3 text-sale">
-                      <dt>Combo discount ({comboOffer?.percent}% on {comboOffer?.minItems}+ outfits)</dt>
-                      <dd className="font-semibold">−{rupees(comboDiscount)}</dd>
-                    </div>
-                  )}
-                  {discountAmount > 0 && (
-                    <div className="flex justify-between gap-3 text-sale">
-                      <dt>Coupon {appliedCoupon?.code}</dt>
-                      <dd className="font-semibold">−{rupees(discountAmount)}</dd>
-                    </div>
-                  )}
-                  {prepaidDiscount > 0 && (
-                    <div className="flex justify-between gap-3 text-sale">
-                      <dt>Online payment discount</dt>
-                      <dd className="font-semibold">−{rupees(prepaidDiscount)}</dd>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-baseline gap-3 pt-3 mt-1 border-t border-line">
-                    <dt>
-                      <span className="block text-base font-semibold text-ink">Total</span>
-                      <span className="block text-xs leading-4 text-ink-muted">Inclusive of all taxes{shippingFee > 0 ? ' and shipping' : ''}{freeShippingThreshold > 0 && shippingFee > 0 ? ` · free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}` : ''}</span>
-                    </dt>
-                    <dd className="text-lg leading-[22px] font-bold text-ink">{rupees(finalCartTotal)}</dd>
-                  </div>
-                </dl>
-                {totalSavings > 0 && (
-                  <p className="mt-2.5 text-[13px] leading-[18px] font-semibold text-sale sag-num">You save {rupees(totalSavings)} on this order</p>
-                )}
+                <PriceDetails />
               </div>
             </div>
           </div>
         </aside>
 
-        {/* Always last: the short assurance line and WhatsApp help */}
-        <div className="lg:col-span-7 space-y-3 pt-1">
-          <Assurance variant="line" gateway={checkoutStep === 'payment' && gatewayKnown ? gateway : undefined} />
-          <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 h-12 rounded-control border-[1.5px] border-control bg-white text-sm font-semibold text-ink hover:bg-sunken">
-            <WhatsAppIcon className="w-5 h-5" /> Need help? Chat with us on WhatsApp
-          </a>
-        </div>
+        {/* Always last on Address and Review: the short assurance line and WhatsApp help.
+            The Pay step says both once, in its own card above ("Secure … checkout", "Payment stuck?"). */}
+        {checkoutStep !== 'payment' && (
+          <div className="lg:col-span-7 space-y-3 pt-1">
+            <Assurance variant="line" />
+            <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 h-12 rounded-control border-[1.5px] border-control bg-white text-sm font-semibold text-ink hover:bg-sunken">
+              <WhatsAppIcon className="w-5 h-5" /> Need help? Chat with us on WhatsApp
+            </a>
+          </div>
+        )}
 
       </div>
 
@@ -1572,10 +1558,6 @@ export const CheckoutPage: React.FC = () => {
       <div className="sag-bar lg:hidden fixed inset-x-0 bottom-0 z-40">
         {checkoutStep === 'payment' ? (
           <div className="max-w-md mx-auto">
-            <p className="mb-2 flex items-center justify-center gap-1.5 text-xs leading-4 text-ink-muted">
-              <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-              {gatewayKnown ? `Secure payment by ${gatewayName}` : 'Secure online payment'}
-            </p>
             <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary w-full gap-2">
               {payButtonContent}
             </button>
@@ -1639,7 +1621,7 @@ export const CheckoutPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              applyCoupon(cp.code);
+                              applyCouponCode(cp.code);
                               setCouponCodeInput(cp.code);
                               setShowCouponsModal(false);
                             }}

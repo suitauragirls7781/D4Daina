@@ -58,7 +58,7 @@ export const ContactUsPage: React.FC = () => {
   const telHref = `tel:+91${SUPPORT_PHONE_DISPLAY.replace(/\D/g, '').replace(/^91/, '')}`;
   const optional = <span className="font-normal text-ink-muted">(optional)</span>;
   const helpBtn = 'inline-flex items-center justify-center gap-2 h-12 px-4 rounded-control bg-surface border-[1.5px] border-control text-[15px] font-semibold text-ink hover:bg-sunken transition-colors';
-  const rowTitle = 'block text-sm leading-5 font-semibold text-ink';
+  const rowTitle = 'block font-sans text-sm leading-5 font-semibold text-ink';
   const rowSub = 'block text-[13px] leading-[18px] font-normal text-ink-muted mt-0.5';
 
   return (

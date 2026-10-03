@@ -102,7 +102,7 @@ export const FestiveComboOffers: React.FC = () => {
           </div>
 
           <aside className="lg:col-span-4 sag-card p-4 sm:p-5 h-fit lg:sticky lg:top-24">
-            <h3 className="text-[17px] leading-6 font-semibold text-ink">Your combo</h3>
+            <h3 className="font-display text-[17px] leading-6 font-semibold text-ink">Your combo</h3>
             <p className={`mt-1 text-sm leading-5 ${qualifies ? 'text-ok font-semibold' : 'text-ink-muted'}`} role="status">
               {pickedProducts.length} of {minItems} pieces picked{qualifies ? '. Offer unlocked.' : ''}
             </p>

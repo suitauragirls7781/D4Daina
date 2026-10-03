@@ -16,7 +16,7 @@ export const OrderPlacedOverlay: React.FC = () => (
         </div>
       </div>
       <p className="mt-9 sag-eyebrow sag-placed-rise">Payment verified</p>
-      <h2 className="mt-2 font-serif text-5xl leading-none text-ink sag-placed-rise">Order placed</h2>
+      <h2 className="mt-2 font-display text-5xl leading-none text-ink sag-placed-rise">Order placed</h2>
       <p className="mt-3 text-sm text-ink-muted sag-placed-rise [animation-delay:120ms]">Opening your order details…</p>
     </div>
   </div>

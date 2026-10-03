@@ -18,12 +18,12 @@ import { productOccasions } from '../utils/smartQuery';
 import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from './ProductCard';
-import { ProductReviews } from './ProductReviews';
+import { ProductReviews, Stars } from './ProductReviews';
 import { ShimmerPDP } from './ShimmerPDP';
 import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, GitCompare, Heart, Minus, Plus, Share2, Star, Tag, X } from 'lucide-react';
+import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, GitCompare, Heart, Minus, Plus, Share2, Tag, X } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
 import { LockIcon, ReturnIcon, TruckIcon } from './StoreIcons';
 import { Assurance, assuranceFacts } from './Assurance';
@@ -270,6 +270,19 @@ export const ProductDetailPage: React.FC = () => {
 
   useEffect(() => () => { if (scrollFrame.current) cancelAnimationFrame(scrollFrame.current); }, []);
 
+  // Desktop: the sticky photo column sits 16px under the site header, whatever height the header really has
+  const [stickyTop, setStickyTop] = useState(96);
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>('header.sticky');
+    if (!header) return;
+    const measure = () => setStickyTop(Math.round(header.getBoundingClientRect().height) + 16);
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
+
   if (isLoading && !product) return <ShimmerPDP />;
 
   if (!product) {
@@ -508,19 +521,19 @@ export const ProductDetailPage: React.FC = () => {
   );
 
   return (
-    <div id="product-detail-page" className="bg-surface pb-8 md:pb-16">
+    <div id="product-detail-page" className="bg-surface pb-4 md:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
         {/* Breadcrumb: quiet, at the bottom on phones; at the top from tablet width */}
-        <nav aria-label="Breadcrumb" className="order-last md:order-first mt-6 md:mt-0 md:py-2 text-xs text-ink-muted flex items-center gap-1 overflow-hidden">
-          <button onClick={() => setActivePage('home')} className="min-h-11 inline-flex items-center hover:text-ink cursor-pointer shrink-0">Home</button>
+        <nav aria-label="Breadcrumb" className="order-last md:order-first mt-2 md:mt-0 md:py-2 -mx-1.5 px-1.5 text-xs text-ink-muted flex items-center gap-1 overflow-hidden">
+          <button onClick={() => setActivePage('home')} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">Home</button>
           <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
           {kidsPage && (
             <>
-              <button onClick={() => navigateToCategory(KIDS_ALL as any)} className="min-h-11 inline-flex items-center hover:text-ink cursor-pointer shrink-0">Kids</button>
+              <button onClick={() => navigateToCategory(KIDS_ALL as any)} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">Kids</button>
               <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
             </>
           )}
-          <button onClick={() => navigateToCategory((product.productType === 'accessory' ? 'All' : product.category) as any)} className="min-h-11 inline-flex items-center hover:text-ink cursor-pointer shrink-0">{product.productType === 'accessory' ? 'Shop' : product.category}</button>
+          <button onClick={() => navigateToCategory((product.productType === 'accessory' ? 'All' : product.category) as any)} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">{product.productType === 'accessory' ? 'Shop' : product.category}</button>
           <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
           <span className="text-ink truncate">{product.name}</span>
         </nav>
@@ -529,7 +542,7 @@ export const ProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-12">
           {/* Photos */}
           <div className="min-w-0 pt-2 md:pt-0 lg:col-start-1 lg:row-start-1 lg:row-span-2">
-            <div className="lg:sticky lg:top-24 lg:flex lg:gap-3 min-w-0">
+            <div style={{ top: stickyTop }} className="lg:sticky lg:flex lg:gap-3 min-w-0">
               {images.length > 1 && (
                 <div className="sag-scroll-x hidden lg:flex flex-col gap-2 overflow-y-auto max-h-[640px] w-20 shrink-0">
                   {images.map((img, idx) => (
@@ -583,7 +596,7 @@ export const ProductDetailPage: React.FC = () => {
           {/* Buy box */}
           <div className="min-w-0 lg:col-start-2 lg:row-start-1">
             <div className="mt-2 lg:mt-0 flex items-start gap-1">
-              <h1 className="flex-1 min-w-0 pt-2.5 text-lg leading-6 lg:text-[22px] lg:leading-7 font-semibold text-ink line-clamp-2">{product.name}</h1>
+              <h1 className="flex-1 min-w-0 pt-2.5 font-sans text-lg leading-6 lg:text-[22px] lg:leading-7 font-semibold text-ink line-clamp-2">{product.name}</h1>
               <button
                 type="button"
                 onClick={() => toggleWishlist(product)}
@@ -602,7 +615,7 @@ export const ProductDetailPage: React.FC = () => {
             <div className="min-h-5 flex items-center">
               {reviews.length > 0 && (
                 <button onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="-my-3 py-3 inline-flex items-center gap-1.5 text-sm leading-5 text-ink cursor-pointer">
-                  <Star className="w-4 h-4 fill-star text-star" aria-hidden="true" />
+                  <Stars rating={avgRating} />
                   <span className="sag-num underline underline-offset-2 decoration-line">{avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
                 </button>
               )}
@@ -659,17 +672,17 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Real counts for today, same thresholds as before. The line keeps its height while the count loads. */}
-            <p className="h-6 flex items-center gap-1.5 text-[13px] leading-[18px] text-ink-muted">
-              {todayStats && (todayStats.wishlists >= 2 || todayStats.views >= 5) && (
-                todayStats.wishlists >= 2
+            {/* Real counts for today, same thresholds as before. No line (and no empty band) when there is nothing to say. */}
+            {todayStats && (todayStats.wishlists >= 2 || todayStats.views >= 5) && (
+              <p className="mt-3 flex items-center gap-1.5 text-[13px] leading-[18px] text-ink-muted">
+                {todayStats.wishlists >= 2
                   ? <><Heart className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.wishlists} people saved this today</>
-                  : <><Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.views} people viewed this today</>
-              )}
-            </p>
+                  : <><Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.views} people viewed this today</>}
+              </p>
+            )}
 
             {colors.length > 1 && (
-              <div className="mt-1">
+              <div className="mt-4">
                 <p className="text-sm leading-5 text-ink"><span className="text-ink-muted">Colour:</span> <span className="font-semibold">{color?.name}</span></p>
                 <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2.5 overflow-x-auto pt-1 pb-1">
                   {colors.map((c) => {

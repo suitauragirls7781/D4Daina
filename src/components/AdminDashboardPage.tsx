@@ -71,13 +71,14 @@ export const AdminDashboardPage: React.FC = () => {
   }
   if (!isAdminLoggedIn) {
     return (
-      <div id="admin-404-guard" className="min-h-screen bg-page flex flex-col items-center justify-center px-6 text-center">
-        <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" className="h-14 w-auto mb-8" />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-ink-muted">Error 404</p>
-        <p className="mt-2 font-serif text-7xl sm:text-8xl font-semibold leading-none text-ink">404</p>
-        <h1 className="mt-4 font-serif text-2xl sm:text-3xl text-ink">This page could not be found</h1>
-        <p className="mt-2 max-w-sm text-sm text-ink-muted leading-relaxed">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
-        <a href="/" className="mt-8 sag-btn-primary h-12 px-8 inline-flex items-center text-sm font-semibold tracking-wide">Back to the store</a>
+      <div id="admin-404-guard" className="min-h-screen bg-page flex flex-col items-center justify-center px-4 sm:px-6 py-8">
+        <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" className="h-12 w-auto mb-6" />
+        <div className="sag-card w-full max-w-xl p-5 sm:p-8">
+          <p className="sag-eyebrow">Error 404</p>
+          <h1 className="font-display text-[28px] leading-8 lg:text-[40px] lg:leading-[46px] text-ink mt-1">This page could not be found</h1>
+          <p className="mt-2 text-[15px] leading-[22px] text-ink-muted">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
+          <a href="/" className="mt-5 sag-btn-primary w-full min-[420px]:w-auto">Back to the store</a>
+        </div>
       </div>
     );
   }
@@ -136,7 +137,7 @@ export const AdminDashboardPage: React.FC = () => {
       case 'toys':
         return <AdminToys />;
       case 'payments':
-        return <AdminPaymentGateways />;
+        return <AdminPaymentGateways asPage />;
       case 'usage':
         return <AdminUsage />;
       case 'dealOfTheDay':

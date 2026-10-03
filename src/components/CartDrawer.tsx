@@ -5,7 +5,7 @@ import { Assurance } from './Assurance';
 import { Lock, X } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
-  const { cart, cartCount, isCartDrawerOpen, setIsCartDrawerOpen, setActivePage } = useShop();
+  const { cart, cartCount, isCartDrawerOpen, setIsCartDrawerOpen, setActivePage, activePage } = useShop();
   const total = useBagTotal();
   const close = () => setIsCartDrawerOpen(false);
 
@@ -53,7 +53,8 @@ export const CartDrawer: React.FC = () => {
                 <CartLines onNavigate={close} />
               </div>
               <div className="sag-card p-4 space-y-4">
-                <CartTotals />
+                {/* On the bag page the page's own coupon field owns id="bag-coupon" */}
+                <CartTotals idPrefix={activePage === 'cart' ? 'drawer' : 'bag'} />
                 <Assurance variant="line" />
               </div>
               <button onClick={() => { close(); setActivePage('cart'); }} className="w-full sag-link justify-center">

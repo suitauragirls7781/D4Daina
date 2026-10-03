@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Crosshair, Loader2, Search } from 'lucide-react';
+import { AlertCircle, Crosshair, Loader2, Search } from 'lucide-react';
 import { PinIcon } from './StoreIcons';
 import type { Map as LeafletMap } from 'leaflet';
 import { PlaceResult, reversePlace, searchPlaces } from '../lib/addressBook';
@@ -17,10 +17,8 @@ const MIN_DETAIL_ZOOM = 14;
 const PLACE_ZOOM = 17;
 const REVERSE_DEBOUNCE_MS = 800;
 
-const fieldClass = 'w-full h-12 px-4 bg-white border rounded-full text-sm text-ink transition focus:outline-none focus:ring-2 focus:ring-brand placeholder:text-ink-faint';
-const labelClass = 'block text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted pl-1';
 
-const PlumPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
+const MapPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
   <div className="pointer-events-none absolute left-1/2 top-1/2 z-[500] -translate-x-1/2 -translate-y-full" aria-hidden="true">
     <svg
       width="36"
@@ -204,76 +202,79 @@ export const MapPinPicker: React.FC<{
     ? 'Search or use your current location, then drag the map so the pin sits on your door.'
     : '';
 
+  // Caution note: sale-tint fill with a sale-line left rule, ink text
+  const note = 'rounded-control border-l-4 border-sale-line bg-sale-tint px-3.5 py-3 text-sm leading-5 text-ink';
+
   return (
     <div className="space-y-4">
-      <label className="block space-y-1.5">
-        <span className={labelClass}>Search area, street or locality</span>
+      <label className="block">
+        <span className="sag-label">Search area, street or locality</span>
         <span className="relative block">
-          <Search className="w-4 h-4 text-ink-muted absolute left-4 top-1/2 -translate-y-1/2" aria-hidden="true" />
+          <Search className="w-5 h-5 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.75} aria-hidden="true" />
           <input
             data-autofocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Sector 21, Gurugram"
             autoComplete="off"
-            className={`${fieldClass} pl-11 pr-10 border-line focus:border-ink`}
+            className="sag-input pl-11 pr-11"
           />
-          {searching && <Loader2 className="w-4 h-4 animate-spin text-ink absolute right-4 top-1/2 -translate-y-1/2" aria-label="Searching" />}
+          {searching && <Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2" aria-label="Searching" />}
         </span>
       </label>
 
       {results.length > 0 && (
-        <ul className="rounded-2xl border border-line bg-white divide-y divide-line overflow-hidden shadow-[var(--sag-shadow)]" aria-label="Places found">
+        <ul className="rounded-control border border-line bg-white divide-y divide-line overflow-hidden" aria-label="Places found">
           {results.map((place) => (
             <li key={place.id}>
-              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-12 text-left flex items-start gap-3 px-4 py-3 hover:bg-sunken cursor-pointer transition-colors">
+              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-sunken cursor-pointer transition-colors">
                 <PinIcon className="w-5 h-5 shrink-0" live={false} />
-                <span className="text-sm text-ink leading-snug">{place.label}</span>
+                <span className="min-w-0 text-sm leading-5 text-ink break-words">{place.label}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <button type="button" onClick={useCurrentLocation} disabled={locating} className="sag-btn-outline w-full h-12 px-4 bg-white text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
-        {locating ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Crosshair className="w-4 h-4 text-current" />}
+      <button type="button" onClick={useCurrentLocation} disabled={locating} className="sag-btn-outline w-full h-12 px-4 gap-2 text-[15px]">
+        {locating ? <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" /> : <Crosshair className="w-[18px] h-[18px] text-current" strokeWidth={1.75} aria-hidden="true" />}
         {locating ? 'Finding your location…' : 'Use current location'}
       </button>
 
-      {message && <p role="status" className="rounded-2xl bg-sale-tint px-4 py-3 text-sm text-sale">{message}</p>}
+      {message && <p role="status" className={note}>{message}</p>}
 
       {mapState === 'error' ? (
-        <p role="status" className="rounded-2xl bg-sunken px-4 py-3 text-sm text-ink-muted">
+        <p role="status" className={note}>
           The map could not load right now. You can still search above, use your current location, or enter the address manually.
         </p>
       ) : (
-        <div className="relative isolate h-[260px] sm:h-[320px] rounded-3xl overflow-hidden border border-line bg-sunken shadow-[var(--sag-shadow)]">
+        <div className="relative isolate h-[260px] sm:h-[320px] rounded-card overflow-hidden border border-line bg-sunken">
           <div ref={mapEl} className="absolute inset-0 z-0" role="application" aria-label="Map. Drag to move the pin to your delivery spot." />
           {mapState === 'loading' && (
             <div className="absolute inset-0 z-[600] flex items-center justify-center gap-2 text-sm text-ink-muted">
-              <Loader2 className="w-5 h-5 animate-spin text-ink" /> Loading map…
+              <Loader2 className="w-5 h-5 animate-spin text-ink-muted" aria-hidden="true" /> Loading map…
             </div>
           )}
-          {mapState === 'ready' && <PlumPin lifted={moving} />}
+          {mapState === 'ready' && <MapPin lifted={moving} />}
           {tilesBlocked && (
-            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-2xl bg-white/95 px-3 py-2 text-xs text-sale border border-line">
+            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-control bg-white px-3 py-2 text-[13px] leading-[18px] text-ink border border-line">
               Map images could not load on this network. You can still search, use your location, or enter the address manually.
             </p>
           )}
         </div>
       )}
 
-      {hint && <p className="text-[13px] text-ink-muted text-center leading-relaxed px-2">{hint}</p>}
+      {hint && <p className="text-[13px] leading-[18px] text-ink-muted">{hint}</p>}
 
       {(detected || detecting || detectError) && (
-        <div className="rounded-3xl border border-line bg-white shadow-[var(--sag-shadow)] p-4 sm:p-5 space-y-3" aria-live="polite">
-          <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted"><PinIcon className="w-4 h-4" live={false} /> Deliver to</p>
+        <div className="sag-card p-4 space-y-3" aria-live="polite">
+          <p className="flex items-center gap-2 text-sm leading-5 font-semibold text-ink"><PinIcon className="w-5 h-5 shrink-0" live={false} /> Deliver to</p>
           {detecting ? (
-            <p className="flex items-center gap-2 text-sm text-ink-muted"><Loader2 className="w-4 h-4 animate-spin text-ink" /> Finding the address at the pin…</p>
+            <p className="flex items-center gap-2 text-sm leading-5 text-ink-muted"><Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted" aria-hidden="true" /> Finding the address at the pin…</p>
           ) : detectError ? (
-            <p className="text-sm text-sale">{detectError}</p>
+            <p className="flex items-start gap-2 text-sm leading-5 font-medium text-danger"><AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />{detectError}</p>
           ) : detected ? (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm leading-5">
               {([
                 ['Area', [detected.street, detected.area].filter(Boolean).join(', ')],
                 ['City', detected.city],
@@ -288,19 +289,19 @@ export const MapPinPicker: React.FC<{
               ))}
             </dl>
           ) : null}
-          <p className="text-[13px] text-ink-muted">You can correct anything on the next step.</p>
+          <p className="text-[13px] leading-[18px] text-ink-muted">You can correct anything on the next step.</p>
           <button
             type="button"
             disabled={!detected || detecting}
             onClick={() => detected && onConfirm(detected)}
-            className="sag-btn-primary w-full h-12 px-4 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="sag-btn-primary w-full h-12 px-4"
           >
             Confirm location
           </button>
         </div>
       )}
 
-      <button type="button" onClick={onManual} className="w-full min-h-11 rounded-full text-sm font-semibold text-ink underline underline-offset-4 hover:bg-sunken transition-colors cursor-pointer">
+      <button type="button" onClick={onManual} className="sag-link w-full justify-center">
         Enter address manually
       </button>
     </div>

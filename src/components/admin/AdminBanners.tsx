@@ -17,7 +17,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Banner } from '../../types';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader, tone, ui } from './kidsToysShared';
 
 export const AdminBanners: React.FC = () => {
   const { banners = [], addBanner, updateBanner, deleteBanner, toggleBannerStatus } = useAdmin();
@@ -120,7 +120,7 @@ export const AdminBanners: React.FC = () => {
   };
 
   return (
-    <div id="admin-banners-page" className="space-y-6">
+    <div id="admin-banners-page" className="space-y-4">
       
       {/* Header */}
       <AdminPageHeader
@@ -131,7 +131,7 @@ export const AdminBanners: React.FC = () => {
         actions={
           <button
             onClick={handleOpenAdd}
-            className="h-11 px-5 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-semibold transition-colors shadow-sm inline-flex items-center gap-2 cursor-pointer"
+            className={ui.primary}
           >
             <Plus className="w-4 h-4 text-current" />
             <span>Add banner</span>
@@ -139,24 +139,24 @@ export const AdminBanners: React.FC = () => {
         }
       />
       {banners.length === 0 && (
-        <div className="px-6 py-14 text-center bg-white rounded-3xl border border-dashed border-line">
-          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-sunken text-ink flex items-center justify-center"><ImageIcon className="w-6 h-6 text-current" /></span>
-          <p className="font-serif text-xl text-ink">No banners yet</p>
+        <div className={ui.empty}>
+          <span className="mx-auto mb-3 w-11 h-11 rounded-xl bg-sunken text-ink flex items-center justify-center"><ImageIcon className="w-5 h-5 text-current" /></span>
+          <p className="font-display text-xl leading-7 text-ink">No banners yet</p>
           <p className="mt-1 text-sm text-ink-muted">Use Add banner to create the first one.</p>
         </div>
       )}
 
       {/* Banners List */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         {banners.map((banner) => (
           <div
             key={banner.id}
-            className={`bg-white rounded-3xl border p-4 sm:p-5 shadow-[var(--sag-shadow)] overflow-hidden transition-colors flex flex-col md:flex-row gap-4 md:gap-5 md:items-center justify-between ${
-              banner.isActive ? 'border-line' : 'border-dashed border-line bg-page'
+            className={`rounded-2xl border border-line p-4 sm:p-5 overflow-hidden flex flex-col md:flex-row gap-4 md:gap-5 md:items-center justify-between ${
+              banner.isActive ? 'bg-white' : 'bg-page'
             }`}
           >
             {/* Banner Preview Thumbnail */}
-            <div className="w-full md:w-64 aspect-[2/1] md:aspect-auto md:h-32 rounded-2xl overflow-hidden shrink-0 bg-sunken flex items-center justify-center">
+            <div className="w-full md:w-64 aspect-[2/1] md:aspect-auto md:h-32 rounded-xl overflow-hidden shrink-0 bg-sunken flex items-center justify-center">
               {banner.image && banner.image.trim() !== "" ? (
                 <img
                   src={banner.image}
@@ -171,34 +171,33 @@ export const AdminBanners: React.FC = () => {
             {/* Banner Info */}
             <div className="flex-1 space-y-1.5 min-w-0">
               {banner.badge && (
-                <span className="inline-flex px-2.5 py-0.5 bg-sunken text-ink-muted text-[11px] font-semibold uppercase tracking-wider rounded-full">
+                <span className={`${ui.badge} ${tone.muted}`}>
                   {banner.badge}
                 </span>
               )}
-              <h4 className="font-serif text-xl font-semibold text-ink truncate">
+              <h4 className="text-base leading-[22px] font-semibold text-ink truncate">
                 {banner.title}
               </h4>
-              <p className="text-xs text-ink-muted line-clamp-2">
+              <p className="text-[13px] leading-[18px] text-ink-muted line-clamp-2">
                 {banner.subtitle}
               </p>
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-ink-muted pt-1">
-                <span className="px-2 py-0.5 rounded-full bg-page border border-line">Button: <strong className="text-ink">{banner.buttonText}</strong></span>
-                <span className="px-2 py-0.5 rounded-full bg-page border border-line max-w-full truncate">Link: <strong className="text-ink">{banner.buttonLink}</strong></span>
-                <span className="px-2 py-0.5 rounded-full bg-page border border-line">Position: <strong className="capitalize text-ink">{banner.position}</strong></span>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs leading-4 text-ink-muted pt-1">
+                <span className="px-2 py-1 rounded-md bg-page border border-line">Button: <strong className="font-semibold text-ink">{banner.buttonText}</strong></span>
+                <span className="px-2 py-1 rounded-md bg-page border border-line max-w-full truncate">Link: <strong className="font-semibold text-ink">{banner.buttonLink}</strong></span>
+                <span className="px-2 py-1 rounded-md bg-page border border-line">Position: <strong className="font-semibold capitalize text-ink">{banner.position}</strong></span>
               </div>
             </div>
 
             {/* Status & Actions */}
-            <div className="flex items-center gap-1.5 shrink-0 pt-3 md:pt-0 border-t md:border-0 border-line">
+            <div className="flex items-center gap-1 shrink-0 pt-3 md:pt-0 border-t md:border-0 border-line">
               <button
                 onClick={() => {
                   toggleBannerStatus(banner.id);
                   showToast(`Banner "${banner.title}" is now ${!banner.isActive ? 'Active' : 'Disabled'}.`, 'info');
                 }}
-                className={`h-9 px-3.5 rounded-full border text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer mr-auto md:mr-0 ${
-                  banner.isActive
-                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                    : 'bg-sunken text-ink border-line'
+                aria-pressed={banner.isActive}
+                className={`h-11 md:h-9 px-3 rounded-[10px] text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer mr-auto md:mr-0 ${
+                  banner.isActive ? tone.ok : tone.muted
                 }`}
               >
                 {banner.isActive ? <Eye className="w-3.5 h-3.5 text-current" /> : <EyeOff className="w-3.5 h-3.5 text-current" />}
@@ -207,16 +206,18 @@ export const AdminBanners: React.FC = () => {
 
               <button
                 onClick={() => handleOpenEdit(banner)}
-                className="w-9 h-9 inline-flex items-center justify-center hover:bg-sunken rounded-full text-ink transition-colors cursor-pointer"
+                className={`${ui.iconBtn} hover:bg-sunken text-ink`}
                 title="Edit Banner"
+                aria-label={`Edit banner ${banner.title}`}
               >
                 <Edit3 className="w-4 h-4 text-current" />
               </button>
 
               <button
                 onClick={() => handleDelete(banner)}
-                className="w-9 h-9 inline-flex items-center justify-center hover:bg-rose-50 rounded-full text-rose-700 transition-colors cursor-pointer"
+                className={`${ui.iconBtn} hover:bg-danger-tint text-danger`}
                 title="Delete Banner"
+                aria-label={`Delete banner ${banner.title}`}
               >
                 <Trash2 className="w-4 h-4 text-current" />
               </button>
@@ -228,14 +229,14 @@ export const AdminBanners: React.FC = () => {
 
       {/* Add / Edit Banner Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center sm:p-4">
-          <div role="dialog" aria-modal="true" aria-label={editingBannerId ? 'Edit promotional banner' : 'Add new banner'} className="bg-white rounded-t-3xl sm:rounded-3xl max-w-lg w-full max-h-[94dvh] overflow-y-auto p-5 sm:p-7 shadow-2xl border border-line space-y-4">
+        <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4">
+          <div role="dialog" aria-modal="true" aria-label={editingBannerId ? 'Edit promotional banner' : 'Add new banner'} className="bg-white rounded-t-[20px] sm:rounded-2xl max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain px-4 sm:px-5 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4">
             
-            <div className="flex items-center justify-between border-b border-line pb-3">
-              <h3 className="font-serif text-2xl font-semibold text-ink">
+            <div className="flex items-center justify-between gap-3 border-b border-line py-1 -mr-2">
+              <h3 className="font-display text-xl leading-7 text-ink">
                 {editingBannerId ? 'Edit banner' : 'Add a banner'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-10 h-10 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
+              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className={`${ui.iconBtn} hover:bg-sunken text-ink`}>
                 <X className="w-5 h-5 text-current" />
               </button>
             </div>
@@ -243,46 +244,46 @@ export const AdminBanners: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4 text-sm">
               
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Banner Headline *</label>
+                <label className={ui.label}>Banner Headline *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. THE AURA SALE"
-                  className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand font-semibold"
+                  className={ui.field}
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Subtitle / Subheading</label>
+                <label className={ui.label}>Subtitle / Subheading</label>
                 <input
                   type="text"
                   value={formData.subtitle}
                   onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                   placeholder="e.g. Up to 40% OFF on Festive Silhouettes"
-                  className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                  className={ui.field}
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Eyebrow Badge Text</label>
+                <label className={ui.label}>Eyebrow Badge Text</label>
                 <input
                   type="text"
                   value={formData.badge || ''}
                   onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                   placeholder="e.g. Limited Time Offer"
-                  className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                  className={ui.field}
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Banner Image *</label>
+                <label className={ui.label}>Banner Image *</label>
                 
                 {/* Visual Thumbnail & Upload Trigger */}
-                <div className="border-2 border-dashed border-line rounded-3xl p-4 bg-page space-y-3">
+                <div className="border-[1.5px] border-dashed border-control rounded-xl p-3 bg-page space-y-3">
                   {formData.image && formData.image.trim() !== "" ? (
-                    <div className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden bg-sunken border border-line">
+                    <div className="relative w-full aspect-[2/1] rounded-[10px] overflow-hidden bg-sunken border border-line">
                       <img
                         src={formData.image}
                         alt="Banner Preview"
@@ -291,24 +292,25 @@ export const AdminBanners: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setFormData({ ...formData, image: '' })}
-                        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center bg-white/95 hover:bg-white text-rose-700 border border-line rounded-full shadow-sm transition cursor-pointer"
+                        className="absolute top-1.5 right-1.5 w-11 h-11 flex items-center justify-center bg-white hover:bg-danger-tint text-danger border border-line rounded-full cursor-pointer"
                         title="Remove Image"
+                        aria-label="Remove image"
                       >
-                        <X className="w-3.5 h-3.5 text-current" />
+                        <X className="w-4 h-4 text-current" />
                       </button>
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-6 text-center text-ink-muted">
-                      <span className="w-12 h-12 mb-2 rounded-2xl bg-white border border-line text-ink flex items-center justify-center"><ImageIcon className="w-5 h-5 text-current" /></span>
-                      <p className="text-xs">No image selected</p>
+                      <span className="w-11 h-11 mb-2 rounded-xl bg-white border border-line text-ink flex items-center justify-center"><ImageIcon className="w-5 h-5 text-current" /></span>
+                      <p className="text-[13px] leading-[18px]">No image selected</p>
                     </div>
                   )}
 
                   <div className="flex flex-col sm:flex-row items-center gap-2">
-                    <label className={`w-full sm:w-auto h-11 px-5 border rounded-full text-sm font-semibold text-center cursor-pointer transition-colors flex items-center justify-center gap-2 ${
+                    <label className={`w-full sm:w-auto ${ui.outline} focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink ${
                       isUploading 
-                        ? 'bg-page border-line text-ink-faint' 
-                        : 'bg-brand border-transparent text-white hover:bg-brand-dark'
+                        ? 'opacity-60 cursor-wait' 
+                        : ''
                     }`}>
                       {isUploading ? (
                         <>
@@ -326,11 +328,11 @@ export const AdminBanners: React.FC = () => {
                         accept="image/*"
                         disabled={isUploading}
                         onChange={handleImageFileChange}
-                        className="hidden"
+                        className="sr-only"
                       />
                     </label>
 
-                    <span className="text-xs text-ink-muted">Or paste a direct link below</span>
+                    <span className="text-[13px] leading-[18px] text-ink-muted">Or paste a direct link below</span>
                   </div>
                 </div>
 
@@ -340,58 +342,58 @@ export const AdminBanners: React.FC = () => {
                   value={formData.image}
                   onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                   placeholder="Paste direct image URL"
-                  className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand mt-2"
+                  className={`${ui.field} mt-2`}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Button Text</label>
+                  <label className={ui.label}>Button Text</label>
                   <input
                     type="text"
                     value={formData.buttonText}
                     onChange={(e) => setFormData({ ...formData, buttonText: e.target.value })}
                     placeholder="e.g. SHOP SALE"
-                    className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                    className={ui.field}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1.5">Target Category / Link</label>
+                  <label className={ui.label}>Target Category / Link</label>
                   <input
                     type="text"
                     value={formData.buttonLink}
                     onChange={(e) => setFormData({ ...formData, buttonLink: e.target.value })}
                     placeholder="e.g. Sale or Festive Wear"
-                    className="w-full h-11 px-4 border border-line bg-white rounded-full text-base sm:text-sm text-ink focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                    className={ui.field}
                   />
                 </div>
               </div>
 
-              <div className="pt-2">
-                <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer text-sm font-semibold text-ink">
+              <div>
+                <label className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="peer sr-only"
                   />
-                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+                  <span className="relative shrink-0 w-12 h-7 rounded-full bg-control peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
                   <span className="order-first">Enable banner on live store</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-line">
+              <div className="flex gap-3 pt-3 border-t border-line sm:justify-end">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="h-11 px-5 border border-line rounded-full text-ink font-semibold hover:bg-sunken cursor-pointer"
+                  className={ui.outline}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="h-11 px-6 bg-brand hover:bg-brand-dark text-white rounded-full font-semibold flex items-center gap-2 cursor-pointer"
+                  className={`${ui.primary} flex-1 sm:flex-none`}
                 >
                   <Save className="w-4 h-4 text-current" /> Save banner
                 </button>

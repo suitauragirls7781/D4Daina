@@ -404,7 +404,7 @@ export const AddressBook: React.FC<{
     <section className="space-y-4" aria-label="Saved addresses">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[20px] leading-7 font-semibold text-ink">Saved addresses</h2>
+          <h2 className="text-[20px] leading-7 text-ink">Saved addresses</h2>
           <p className="mt-1 text-sm leading-5 text-ink-muted">Your default address fills in checkout automatically.</p>
         </div>
         {addresses.length > 0 && (
@@ -419,7 +419,7 @@ export const AddressBook: React.FC<{
       ) : addresses.length === 0 ? (
         <div className="sag-card px-4 py-10 text-center">
           <span className="w-14 h-14 mx-auto rounded-full bg-sunken text-ink-muted flex items-center justify-center"><PinIcon className="w-7 h-7" mono /></span>
-          <p className="mt-4 text-[17px] leading-6 font-semibold text-ink">No saved addresses yet</p>
+          <p className="mt-4 font-display text-[17px] leading-6 font-semibold text-ink">No saved addresses yet</p>
           <p className="mt-1 text-sm leading-5 text-ink-muted">Add your home or work address to check out faster.</p>
           <button type="button" onClick={() => setSheet({ editing: null })} className={`${onSelect ? 'sag-btn-outline' : 'sag-btn-primary'} mt-5 h-12 px-6 gap-2`}>
             <Plus className="w-[18px] h-[18px]" aria-hidden="true" /> Add address

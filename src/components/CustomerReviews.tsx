@@ -4,13 +4,27 @@ import { useShop } from '../context/ShopContext';
 import { Star } from 'lucide-react';
 import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
 
-const Stars: React.FC<{ value: number }> = ({ value }) => (
-  <span className="flex gap-0.5" aria-hidden="true">
-    {[1, 2, 3, 4, 5].map((i) => (
-      <Star key={i} className={`w-4 h-4 ${i <= value ? 'fill-star text-star' : 'fill-sunken-deep text-sunken-deep'}`} />
-    ))}
-  </span>
-);
+/** Star row filled to exactly the value (one decimal, same rule as the product page): 4.7 is four and seven tenths stars. */
+const Stars: React.FC<{ value: number }> = ({ value }) => {
+  const shown = Math.max(0, Math.min(5, Math.round((Number(value) || 0) * 10) / 10));
+  return (
+    <span className="flex gap-0.5" aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((i) => {
+        const fill = Math.max(0, Math.min(1, shown - (i - 1)));
+        return (
+          <span key={i} className="relative block shrink-0 w-4 h-4">
+            <Star className="block w-4 h-4 fill-sunken-deep text-sunken-deep" />
+            {fill > 0 && (
+              <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
+                <Star className="block max-w-none w-4 h-4 fill-star text-star" />
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
+};
 
 /** Approved customer reviews. Hidden entirely until there is at least one. */
 export const CustomerReviews: React.FC = () => {
@@ -33,7 +47,7 @@ export const CustomerReviews: React.FC = () => {
           <HomeSectionHeader titleId="customer-reviews-title" title="Customer reviews" className="mb-2" />
           {/* The average is worked out from the reviews shown below, nothing else */}
           <p className="mb-4 lg:mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm leading-5 text-ink">
-            <Stars value={Math.round(average)} />
+            <Stars value={average} />
             <span className="sag-num">
               <span className="font-semibold">{average.toFixed(1)}</span>
               <span className="text-ink-muted"> · average of our {reviews.length === 1 ? 'latest review' : `${reviews.length} latest reviews`}</span>

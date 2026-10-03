@@ -50,7 +50,7 @@ const CANCEL_REASONS = [
 
 /** Small buttons inside cards (the 52px height is for the one main action on a screen). */
 const smallBtn = 'h-11 px-4 gap-2 text-sm whitespace-nowrap';
-const sectionTitle = 'text-[20px] leading-7 font-semibold text-ink';
+const sectionTitle = 'text-[20px] leading-7 text-ink';
 const noteClass = 'text-[13px] leading-[18px] text-ink-muted';
 
 /** Phones open on the account menu; a link that names a tab (or /my-profile) opens that tab straight away. */
@@ -64,7 +64,7 @@ const initialMobileView = (): 'menu' | 'panel' => {
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, text, children }) => (
   <div className="sag-card px-4 py-10 text-center">
     <span className="w-14 h-14 mx-auto rounded-full bg-sunken text-ink-muted flex items-center justify-center">{icon}</span>
-    <p className="mt-4 text-[17px] leading-6 font-semibold text-ink">{title}</p>
+    <p className="mt-4 font-display text-[17px] leading-6 font-semibold text-ink">{title}</p>
     <p className="mt-1 text-sm leading-5 text-ink-muted max-w-sm mx-auto">{text}</p>
     {children && <div className="mt-5 flex flex-col sm:flex-row sm:justify-center gap-2">{children}</div>}
   </div>
@@ -373,7 +373,7 @@ const OrderCard: React.FC<{
       <header className="px-4 sm:px-5 pt-4 pb-3.5 border-b border-line space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 id={`order-${order.orderNumber}`} className="text-[15px] leading-[22px] font-semibold text-ink break-all">
+            <h2 id={`order-${order.orderNumber}`} className="font-sans text-[15px] leading-[22px] font-semibold text-ink break-all">
               <span className="sr-only">Order </span>#{order.orderNumber}
             </h2>
             <p className={noteClass}>

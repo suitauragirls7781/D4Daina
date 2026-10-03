@@ -170,7 +170,7 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
         className="bg-page w-full md:max-w-5xl h-[94dvh] md:h-[88vh] rounded-t-3xl md:rounded-3xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
         <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-line bg-white">
           <div className="min-w-0">
-            <p id="byl-title" className="font-serif text-2xl text-ink flex items-center gap-2"><Layers className="w-5 h-5 shrink-0" /> Build your look</p>
+            <p id="byl-title" className="font-display text-2xl text-ink flex items-center gap-2"><Layers className="w-5 h-5 shrink-0" /> Build your look</p>
             <p className="text-xs text-ink-muted">Combine in-stock styles and see the real total as you go.</p>
           </div>
           <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
@@ -228,7 +228,7 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
 
           {/* The look being built */}
           <div className={`${view === 'look' ? 'block' : 'hidden'} md:block w-full md:w-[380px] shrink-0 overflow-y-auto p-4 sm:p-5 bg-white md:border-l border-line`}>
-            <p className="font-serif text-xl text-ink">Your look</p>
+            <p className="text-xl text-ink">Your look</p>
             {lines.length === 0 ? (
               <div className="mt-6 text-center px-2">
                 <span className="mx-auto w-14 h-14 rounded-full bg-sunken flex items-center justify-center"><Layers className="w-6 h-6 text-ink" /></span>

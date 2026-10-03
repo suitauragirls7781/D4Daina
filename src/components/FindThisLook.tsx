@@ -261,7 +261,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
         className="bg-page w-full md:max-w-4xl max-h-[92dvh] rounded-t-3xl md:rounded-3xl flex flex-col outline-none animate-in slide-in-from-bottom-5 fade-in"
       >
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line">
-          <h2 id={titleId} className="font-serif text-2xl text-ink flex items-center gap-2"><Camera className="w-5 h-5" /> Find this look</h2>
+          <h2 id={titleId} className="font-display text-2xl text-ink flex items-center gap-2"><Camera className="w-5 h-5" /> Find this look</h2>
           <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
         </div>
 
@@ -279,7 +279,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
           {!hasPhoto && (
             <div className={`mt-4 rounded-2xl border border-dashed px-4 py-6 sm:py-8 text-center transition-colors ${dragging ? 'border-ink bg-sunken' : 'border-control bg-white'}`}>
               <ImagePlus className="w-8 h-8 mx-auto text-ink" aria-hidden="true" />
-              <p className="mt-3 font-serif text-xl text-ink">Add a photo of a look you love</p>
+              <p className="mt-3 font-display text-xl text-ink">Add a photo of a look you love</p>
               <p className="mt-1 text-sm text-ink-muted">A screenshot, a saved picture or a photo you take now.</p>
               <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
                 <button type="button" data-autofocus onClick={() => galleryRef.current?.click()}
@@ -442,7 +442,7 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
             match.close ? 'bg-sunken text-ink' : 'bg-sunken text-ink-muted'}`}>
             {BASIS_LABEL[match.basis] || (match.close ? 'Close colour match' : 'Nearest tone')}
           </span>
-          <h3 className="font-serif text-base sm:text-[17px] leading-snug text-ink line-clamp-2">
+          <h3 className="text-base sm:text-[17px] leading-snug text-ink line-clamp-2">
             <button type="button" onClick={() => onView(p)} className="text-left hover:text-ink focus-visible:underline cursor-pointer">{p.name}</button>
           </h3>
           <p className="flex items-baseline gap-2 flex-wrap">

@@ -3,6 +3,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { CreditCard, ShieldCheck, Save, Loader2, Copy, Check, RefreshCw, KeyRound } from 'lucide-react';
 import { PaymentGatewaySettings } from '../../types';
+import { AdminPageHeader } from './kidsToysShared';
 
 type GatewayView = {
   razorpay: {
@@ -60,7 +61,8 @@ const CopyField: React.FC<{ title: string; value: string }> = ({ title, value })
 };
 
 /** Admin → Settings → Payments: gateway switches (Razorpay, PayU), PayU credentials, payment channels and logs. */
-export const AdminPaymentGateways: React.FC = () => {
+// asPage: shown as its own admin page (/payments) with the shared page header; inside Settings the tab keeps the card header.
+export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = false }) => {
   const { paymentSettings, updatePaymentSettings, orders = [] } = useAdmin();
   const { showToast } = useShop();
 
@@ -162,6 +164,14 @@ export const AdminPaymentGateways: React.FC = () => {
   if (loadError || !view) {
     return (
       <div className="space-y-5 text-sm">
+        {asPage ? (
+          <AdminPageHeader
+            eyebrow="System"
+            title="Payment gateways"
+            icon={<CreditCard />}
+            description="Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds."
+          />
+        ) : (
         <div className="sag-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
             <span className="w-11 h-11 shrink-0 rounded-xl bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><CreditCard className="h-5 w-5" /></span>
@@ -171,6 +181,7 @@ export const AdminPaymentGateways: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
         {loadError ? (
           <div role="alert" className="rounded-xl bg-danger-tint border border-danger-line p-4 text-danger">
             <p className="font-semibold">{loadError}</p>
@@ -190,8 +201,23 @@ export const AdminPaymentGateways: React.FC = () => {
 
   const activeCount = Number(view.razorpay.enabled && view.razorpay.configured) + Number(view.payu.enabled);
 
+  const statusChip = (
+    <span role="status" className={`self-start shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-semibold ${activeCount ? 'bg-ok-tint border-ok-line text-ok' : 'bg-danger-tint border-danger-line text-danger'}`}>
+      {activeCount ? `${activeCount} gateway${activeCount > 1 ? 's' : ''} live at checkout` : 'No gateway on — customers cannot pay'}
+    </span>
+  );
+
   return (
     <div className="space-y-5 text-sm">
+      {asPage ? (
+        <AdminPageHeader
+          eyebrow="System"
+          title="Payment gateways"
+          icon={<CreditCard />}
+          description="Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds, no release needed."
+          actions={statusChip}
+        />
+      ) : (
       <div className="sag-card p-4 sm:p-6 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <span className="w-11 h-11 shrink-0 rounded-xl bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><CreditCard className="h-5 w-5" /></span>
@@ -200,10 +226,9 @@ export const AdminPaymentGateways: React.FC = () => {
             <p className="text-sm text-ink-muted mt-1 max-w-xl leading-relaxed">Prepaid only. Switch a gateway on or off here; checkout follows within about 20 seconds, no release needed.</p>
           </div>
         </div>
-        <span role="status" className={`self-start shrink-0 rounded-md border px-3 py-1.5 text-[13px] font-semibold ${activeCount ? 'bg-ok-tint border-ok-line text-ok' : 'bg-danger-tint border-danger-line text-danger'}`}>
-          {activeCount ? `${activeCount} gateway${activeCount > 1 ? 's' : ''} live at checkout` : 'No gateway on — customers cannot pay'}
-        </span>
+        {statusChip}
       </div>
+      )}
 
       {/* Razorpay */}
       <div className={card}>

@@ -12,16 +12,46 @@ import {
   Sparkles,
   Check,
   Layers,
-  Tag,
-  Info,
-  DollarSign,
+  IndianRupee,
   Package,
+  Plus,
   RefreshCw
 } from 'lucide-react';
 import { Product, ProductCategory, ProductSize, ProductColor } from '../../types';
 import { ACCESSORY_CATEGORY, FOOTWEAR_SIZES, SET_TYPES, isAccessory, setTypeHint } from '../../utils/looks';
 import { KIDS_CATEGORIES, TOYS, departmentOf } from '../../utils/kids';
 import { AiProductFill, type AiDraft } from './AiProductFill';
+import { SectionTitle, tone, ui } from './kidsToysShared';
+
+// On / off switch drawn after a hidden checkbox (same switch as the other admin pages)
+const SWITCH_TRACK = "relative shrink-0 w-12 h-7 rounded-full bg-control peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5";
+
+/** Page header with a back button, in the same layout as the order details page. */
+const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; description?: React.ReactNode; onBack: () => void; actions?: React.ReactNode }> = ({ crumb, title, description, onBack, actions }) => (
+  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-4 border-b border-line">
+    <div className="flex items-start gap-2 min-w-0">
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center hover:bg-sunken text-ink rounded-full transition-colors cursor-pointer"
+        title="Back to Products"
+        aria-label="Back to Products"
+      >
+        <ArrowLeft className="w-5 h-5 text-current" />
+      </button>
+      <div className="min-w-0">
+        <div className={`flex items-center gap-1.5 ${ui.eyebrow} min-w-0`}>
+          <span>Catalog</span>
+          <span aria-hidden="true">/</span>
+          <span className="truncate">{crumb}</span>
+        </div>
+        <h2 className={`mt-0.5 ${ui.h1} break-words`}>{title}</h2>
+        {description && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-2xl">{description}</p>}
+      </div>
+    </div>
+    {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
+  </div>
+);
 
 // Kids wear and toys are added only in Admin → Kids Wear / Toys, never from this women's product form.
 const KIDS_AND_TOY_CATEGORIES: readonly string[] = [...KIDS_CATEGORIES, TOYS];
@@ -486,45 +516,19 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   // Opened on an accessory (e.g. /admin/products/<id>/edit): accessories are edited only in Complete the Look.
   if (editingAccessory && existingProduct) {
     return (
-      <div id="admin-product-form-page" className="space-y-6 pb-12">
-        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
-          <button
-            type="button"
-            onClick={() => navigate('/admin/products')}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
-            title="Back to Products"
-            aria-label="Back to Products"
-          >
-            <ArrowLeft className="w-5 h-5 text-current" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
-              <span>Catalog</span>
-              <span>/</span>
-              <span>Accessory</span>
-            </div>
-            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">{existingProduct.name}</h2>
-          </div>
-        </div>
+      <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
+        <FormHeader crumb="Accessory" title={existingProduct.name} onBack={() => navigate('/admin/products')} />
 
-        <div id="admin-accessory-notice" role="status" className="rounded-3xl border border-line bg-sunken p-5 sm:p-7 space-y-4">
-          <p className="font-serif text-xl font-semibold text-ink">This is a Complete the Look accessory — edit it in Complete the Look</p>
-          <p className="text-sm text-ink-muted">
+        <div id="admin-accessory-notice" role="status" className={`${ui.card} space-y-3`}>
+          <p className={ui.h2}>This is a Complete the Look accessory — edit it in Complete the Look</p>
+          <p className="text-sm leading-5 text-ink-muted">
             Accessories are shown only on combo product pages, inside "Complete the look", and customers buy them only together with that outfit.
           </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => openAdminTab('looks')}
-              className="h-11 px-5 rounded-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold transition cursor-pointer"
-            >
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button type="button" onClick={() => openAdminTab('looks')} className={ui.primary}>
               Open Complete the Look
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/admin/products')}
-              className="h-11 px-5 rounded-full border border-control bg-white text-sm font-semibold text-ink hover:bg-sunken-deep transition cursor-pointer"
-            >
+            <button type="button" onClick={() => navigate('/admin/products')} className={ui.outline}>
               Back to Products
             </button>
           </div>
@@ -538,49 +542,23 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     const isToyItem = otherSection === 'toys';
     const sectionName = isToyItem ? 'Toys' : 'Kids Wear';
     return (
-      <div id="admin-product-form-page" className="space-y-6 pb-12">
-        <div className="flex items-center gap-3.5 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
-          <button
-            type="button"
-            onClick={() => navigate('/admin/products')}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
-            title="Back to Products"
-            aria-label="Back to Products"
-          >
-            <ArrowLeft className="w-5 h-5 text-current" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-ink-muted">
-              <span>Catalog</span>
-              <span>/</span>
-              <span>{isToyItem ? 'Toy' : 'Kids wear'}</span>
-            </div>
-            <h2 className="font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">{existingProduct.name}</h2>
-          </div>
-        </div>
+      <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
+        <FormHeader crumb={isToyItem ? 'Toy' : 'Kids wear'} title={existingProduct.name} onBack={() => navigate('/admin/products')} />
 
-        <div id="admin-kids-toys-notice" role="status" className="rounded-3xl border border-line bg-sunken p-5 sm:p-7 space-y-4">
-          <p className="font-serif text-xl font-semibold text-ink">
+        <div id="admin-kids-toys-notice" role="status" className={`${ui.card} space-y-3`}>
+          <p className={ui.h2}>
             {isToyItem ? 'This is a toy — edit it in Toys' : 'This is kids wear — edit it in Kids Wear'}
           </p>
-          <p className="text-sm text-ink-muted">
+          <p className="text-sm leading-5 text-ink-muted">
             {isToyItem
               ? 'Toys have their own section, with the kind of toy and a suitable age, and are sold as one piece. This women\'s product form is not used for them.'
               : 'Kids wear has its own section for Baby Girls and Baby Boys, with sizes by age (1-2 Y to 14-15 Y). This women\'s product form is not used for it.'}
           </p>
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={() => openAdminTab(isToyItem ? 'toys' : 'kids')}
-              className="h-11 px-5 rounded-full bg-brand hover:bg-brand-dark text-white text-sm font-semibold transition cursor-pointer"
-            >
+          <div className="flex flex-wrap gap-2 pt-1">
+            <button type="button" onClick={() => openAdminTab(isToyItem ? 'toys' : 'kids')} className={ui.primary}>
               Open {sectionName}
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/admin/products')}
-              className="h-11 px-5 rounded-full border border-control bg-white text-sm font-semibold text-ink hover:bg-sunken-deep transition cursor-pointer"
-            >
+            <button type="button" onClick={() => navigate('/admin/products')} className={ui.outline}>
               Back to Products
             </button>
           </div>
@@ -589,61 +567,39 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     );
   }
 
+  const flagToggles: Array<{ id: string; label: string; checked: boolean; onChange: (next: boolean) => void }> = [
+    { id: 'apf-flag-featured', label: 'Featured Product', checked: isFeatured, onChange: setIsFeatured },
+    { id: 'apf-flag-new', label: 'New Arrival', checked: isNewArrival, onChange: setIsNewArrival },
+    { id: 'apf-flag-bestseller', label: 'Best Seller', checked: isBestSeller, onChange: setIsBestSeller },
+    { id: 'apf-flag-sale', label: 'Sale Item', checked: isSale, onChange: setIsSale },
+    { id: 'apf-flag-trending', label: 'Trending Now', checked: isTrending, onChange: setIsTrending },
+    { id: 'apf-flag-festive', label: 'Festive Edit', checked: isFestive, onChange: setIsFestive },
+    { id: 'apf-flag-published', label: 'Published on store', checked: published, onChange: setPublished },
+  ];
+
   return (
-    <div id="admin-product-form-page" className="space-y-6 pb-12">
+    <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
 
-      {/* Top Header & Breadcrumb */}
-      <div className="relative overflow-hidden flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-line shadow-[var(--sag-shadow)]">
-        <span className="pointer-events-none absolute -right-10 -top-12 w-40 h-40 rounded-full bg-sunken" aria-hidden="true" />
-        <div className="relative flex items-start gap-3.5 min-w-0">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
-            title="Back to Products"
-            aria-label="Back to Products"
-          >
-            <ArrowLeft className="w-5 h-5 text-current" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-muted">
-              <span>Catalog</span>
-              <span aria-hidden="true">/</span>
-              <span>{isEditMode ? 'Edit product' : 'New product'}</span>
-            </div>
-            <h2 className="mt-0.5 font-serif text-[26px] sm:text-3xl leading-tight font-semibold text-ink break-words">
-              {isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
-            </h2>
-            <p className="mt-1 text-sm text-ink-muted">{isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}</p>
-          </div>
-        </div>
+      {/* Header: back, where you are, and the save action */}
+      <FormHeader
+        crumb={isEditMode ? 'Edit product' : 'New product'}
+        title={isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
+        description={isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}
+        onBack={handleCancel}
+        actions={
+          <>
+            <button type="button" disabled={isSaving} onClick={handleCancel} className={ui.outline}>
+              Cancel
+            </button>
+            <button type="submit" form="product-edit-form" disabled={isSaving} className={ui.primary}>
+              {isSaving ? <RefreshCw className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
+              <span>{isSaving ? 'Saving...' : 'Save product'}</span>
+            </button>
+          </>
+        }
+      />
 
-        <div className="relative flex items-center gap-2.5 shrink-0">
-          <button
-            type="button"
-            disabled={isSaving}
-            onClick={handleCancel}
-            className="h-11 px-5 border border-line bg-white hover:bg-sunken text-ink rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="product-edit-form"
-            disabled={isSaving}
-            className="h-11 px-5 bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-          >
-            {isSaving ? (
-              <RefreshCw className="w-4 h-4 animate-spin text-current" />
-            ) : (
-              <Save className="w-4 h-4 text-current" />
-            )}
-            <span>{isSaving ? 'Saving...' : 'Save product'}</span>
-          </button>
-        </div>
-      </div>
-
-      <form id="product-edit-form" onSubmit={handleSave} className="space-y-6">
+      <form id="product-edit-form" onSubmit={handleSave} className="space-y-4 sm:space-y-5">
 
         {/* Gemini: drafts the listing text from the product photos */}
         <AiProductFill
@@ -658,35 +614,30 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         />
 
         {/* Section 1: Basic Information */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
-            <Package className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
-            Basic Product Information
-          </h3>
+        <section className={ui.card}>
+          <SectionTitle icon={<Package className="text-current" />} title="Basic Product Information" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Product Name <span className="text-sale">*</span>
-              </label>
+              <label htmlFor="apf-name" className={ui.label}>Product Name *</label>
               <input
+                id="apf-name"
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Gulab Handblock Pure Cotton Anarkali Set"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-medium"
+                className={ui.field}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Category <span className="text-sale">*</span>
-              </label>
+              <label htmlFor="apf-category" className={ui.label}>Category *</label>
               <select
+                id="apf-category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ProductCategory)}
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink cursor-pointer"
+                className={`${ui.select} pl-3.5`}
               >
                 {categoryOptions.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -695,22 +646,19 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Subcategory / Collection Tag
-              </label>
+              <label htmlFor="apf-subcategory" className={ui.label}>Subcategory / Collection Tag <span className={ui.optional}>(optional)</span></label>
               <input
+                id="apf-subcategory"
                 type="text"
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}
                 placeholder="e.g. Cambric Cotton Suit Sets"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
             </div>
 
             <div className="md:col-span-2">
-              <label htmlFor="apf-set-type" className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Set / combo type
-              </label>
+              <label htmlFor="apf-set-type" className={ui.label}>Set / combo type</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <select
                   id="apf-set-type"
@@ -724,7 +672,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                       setSetType(e.target.value);
                     }
                   }}
-                  className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink cursor-pointer"
+                  className={`${ui.select} pl-3.5`}
                 >
                   <option value="">Not a set</option>
                   {SET_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -738,22 +686,18 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                     onChange={(e) => setSetType(e.target.value)}
                     placeholder="e.g. Kurti + palazzo + dupatta"
                     aria-label="Your own set / combo type"
-                    className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                    className={ui.field}
                   />
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-ink-muted">
+              <p className={ui.hint}>
                 "Complete the look" (bags, heels, jewellery... from Complete the Look in the menu) shows only on the pages of products with a set / combo type.
               </p>
               {!setType.trim() && !customSetType && nameHint.looksLikeSet && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-sunken px-3 py-2.5 text-xs text-ink">
-                  <span>This name looks like a set. Choose its set / combo type so accessories show on its page.</span>
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-sale-tint border border-sale-line pl-3.5 pr-1.5 py-1.5 text-[13px] leading-[18px] text-ink">
+                  <span className="min-w-0 flex-1 basis-56 py-1">This name looks like a set. Choose its set / combo type so accessories show on its page.</span>
                   {nameHint.suggestion && (
-                    <button
-                      type="button"
-                      onClick={() => setSetType(nameHint.suggestion)}
-                      className="h-8 px-3 rounded-full bg-brand text-white font-bold hover:bg-brand-dark transition cursor-pointer"
-                    >
+                    <button type="button" onClick={() => setSetType(nameHint.suggestion)} className={ui.small}>
                       Mark as "{nameHint.suggestion}"
                     </button>
                   )}
@@ -762,23 +706,21 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                SKU (Stock Keeping Unit)
-              </label>
+              <label htmlFor="apf-sku" className={ui.label}>SKU (Stock Keeping Unit)</label>
               <input
+                id="apf-sku"
                 type="text"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
                 placeholder="e.g. SAG-COT-9901"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-mono text-xs"
+                className={`${ui.field} font-mono`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Inventory Stock Quantity
-              </label>
+              <label htmlFor="apf-stock" className={ui.label}>Inventory Stock Quantity</label>
               <input
+                id="apf-stock"
                 type="number"
                 min="0"
                 value={stockQuantity}
@@ -788,134 +730,116 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                   if (val === 0) setInStock(false);
                   else setInStock(true);
                 }}
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={`${ui.field} sag-num`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Low-stock alert at (pieces)
-              </label>
+              <label htmlFor="apf-low-stock" className={ui.label}>Low-stock alert at (pieces) <span className={ui.optional}>(optional)</span></label>
               <input
+                id="apf-low-stock"
                 type="number"
                 min="0"
                 step="1"
                 value={lowStockOverride}
                 onChange={(e) => setLowStockOverride(e.target.value)}
                 placeholder="Store default"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={`${ui.field} sag-num`}
               />
-              <p className="mt-1 text-[11px] text-ink-muted">Optional. Leave empty to use the store setting in Products.</p>
+              <p className={ui.hint}>Leave empty to use the store setting in Products.</p>
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Product Description
-              </label>
+              <label htmlFor="apf-description" className={ui.label}>Product Description</label>
               <textarea
+                id="apf-description"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Write full product craftsmanship, silhouette, and drape details..."
-                className="w-full px-4 py-3 border border-line rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.textarea}
               />
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Section 2: Pricing & Discount */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
-            <DollarSign className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
-            Pricing & Currency (₹ INR)
-          </h3>
+        <section className={ui.card}>
+          <SectionTitle icon={<IndianRupee className="text-current" />} title="Pricing & Currency (₹ INR)" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Selling Price (₹) <span className="text-sale">*</span>
-              </label>
+              <label htmlFor="apf-price" className={ui.label}>Selling Price (₹) *</label>
               <input
+                id="apf-price"
                 type="number"
                 min="1"
                 required
                 value={price}
                 onChange={(e) => handlePriceChange(Number(e.target.value))}
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink font-bold"
+                className={`${ui.field} font-semibold sag-num`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                MRP / Original Price (₹)
-              </label>
+              <label htmlFor="apf-mrp" className={ui.label}>MRP / Original Price (₹)</label>
               <input
+                id="apf-mrp"
                 type="number"
                 min="1"
                 value={originalPrice}
                 onChange={(e) => handleOriginalPriceChange(Number(e.target.value))}
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={`${ui.field} sag-num`}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Discount Calculated (%)
-              </label>
+              <label htmlFor="apf-discount" className={ui.label}>Discount Calculated (%)</label>
               <div className="relative">
                 <input
+                  id="apf-discount"
                   type="number"
                   min="0"
                   max="100"
                   value={discount}
                   onChange={(e) => setDiscount(Number(e.target.value))}
-                  className="w-full h-11 pl-4 pr-16 border border-line rounded-full text-base sm:text-sm bg-sunken text-ink font-semibold focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                  className={`${ui.field} pr-20 font-semibold sag-num`}
                 />
-                <span className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 px-2.5 rounded-full bg-sale-tint inline-flex items-center text-[11px] font-bold text-sale">% OFF</span>
+                <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${ui.badge} ${tone.warn}`}>% OFF</span>
               </div>
             </div>
 
             {/* Colors Selection */}
-            <div className="pt-6 border-t border-line sm:col-span-3">
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
-                  Available Colors & Sync Image <span className="text-sale">*</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={addColor}
-                  className="h-9 px-4 text-sm bg-white border border-line text-ink rounded-full hover:bg-sunken font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5"
-                >
-                  + Add colour
+            <div className="pt-4 border-t border-line sm:col-span-3">
+              <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
+                <p className={`${ui.label} !mb-0`}>Available Colors & Sync Image *</p>
+                <button type="button" onClick={addColor} className={ui.small}>
+                  <Plus className="w-4 h-4 text-current" /> Add colour
                 </button>
               </div>
 
               {colourSuggestion && (
-                <div className="mb-4 flex flex-wrap items-center gap-3 p-3 bg-sunken border border-line rounded-2xl">
+                <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-xl bg-brand-wash border border-brand-line pl-3 pr-1 py-1.5">
                   <span
-                    className="w-9 h-9 rounded-full border-2 border-white shadow-md ring-1 ring-line shrink-0"
+                    className="w-8 h-8 rounded-full border-[1.5px] border-white ring-1 ring-line shrink-0"
                     style={{ backgroundColor: colourSuggestion.hex }}
                     aria-hidden="true"
                   />
                   {colourSuggestion.imageUrl && (
-                    <img src={colourSuggestion.imageUrl} alt="" className="w-7 h-9 rounded-md object-cover object-top border border-line" referrerPolicy="no-referrer" />
+                    <img src={colourSuggestion.imageUrl} alt="" className="w-7 aspect-[4/5] rounded-md object-cover object-top bg-sunken" referrerPolicy="no-referrer" />
                   )}
                   <div className="min-w-0 grow">
-                    <span className="block text-[11px] uppercase font-bold tracking-wider text-ink-muted">Detected colour</span>
+                    <span className={`block ${ui.eyebrow}`}>Detected colour</span>
                     <span className="text-sm font-semibold text-ink">{colourSuggestion.name}</span>
                     <span className="ml-2 text-xs font-mono text-ink-muted">{colourSuggestion.hex}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={addSuggestedColour}
-                    className="h-9 px-4 text-sm bg-brand text-white rounded-full hover:bg-brand-dark font-semibold transition-colors cursor-pointer"
-                  >
+                  <button type="button" onClick={addSuggestedColour} className={ui.small}>
                     Add
                   </button>
                   <button
                     type="button"
                     onClick={() => setColourSuggestion(null)}
-                    className="w-9 h-9 flex items-center justify-center text-ink hover:bg-white rounded-full transition-colors cursor-pointer"
+                    className={`${ui.iconBtn} hover:bg-white text-ink`}
                     title="Dismiss"
                     aria-label="Dismiss detected colour"
                   >
@@ -924,56 +848,62 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {colors.map((color, idx) => {
                   const previewHex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`;
                   return (
-                    <div key={idx} className="p-4 bg-page border border-line rounded-2xl space-y-3 relative">
-                      <button
-                        type="button"
-                        onClick={() => removeColor(idx)}
-                        className="absolute top-3 right-3 h-8 px-3 rounded-full text-rose-700 hover:bg-rose-50 font-semibold text-xs transition-colors cursor-pointer"
-                        title="Delete Color"
-                      >
-                        Delete
-                      </button>
+                    <div key={idx} className="rounded-xl border border-line bg-page p-3 sm:p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-2 -mt-1 -mr-1">
+                        <p className={ui.eyebrow}>Colour {idx + 1}</p>
+                        <button
+                          type="button"
+                          onClick={() => removeColor(idx)}
+                          className="h-11 md:h-9 px-3 rounded-[10px] text-[13px] font-semibold text-danger hover:bg-danger-tint transition-colors cursor-pointer"
+                          title="Delete Color"
+                        >
+                          Delete
+                        </button>
+                      </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
                         {/* Preview and Name */}
-                        <div className="md:col-span-6 flex items-center gap-3">
+                        <div className="flex items-end gap-2.5">
                           <label
-                            className="relative w-10 h-10 rounded-full border-2 border-white shadow-md flex-shrink-0 cursor-pointer overflow-hidden transition-all duration-200 hover:scale-105 ring-1 ring-line"
+                            className="relative w-12 h-12 sm:w-11 sm:h-11 shrink-0 rounded-full border-[1.5px] border-control overflow-hidden cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink"
                             title="Click to open color picker"
                           >
                             <input
                               type="color"
                               value={previewHex.length === 7 ? previewHex : '#241D1B'}
                               onChange={(e) => updateColor(idx, 'hex', e.target.value.toUpperCase())}
+                              aria-label={`Colour ${idx + 1} swatch`}
                               className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
                             />
-                            <div
-                              className="w-full h-full rounded-full"
+                            <span
+                              className="block w-full h-full"
                               style={{ backgroundColor: previewHex || '#e2e8f0' }}
                             />
                           </label>
-                          <div className="flex-grow space-y-1">
-                            <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">Color Name</span>
+                          <div className="flex-grow min-w-0">
+                            <label htmlFor={`apf-colour-name-${idx}`} className={ui.label}>Color Name</label>
                             <input
+                              id={`apf-colour-name-${idx}`}
                               type="text"
                               placeholder="e.g. Royal Blue"
                               value={color.name}
                               onChange={(e) => updateColor(idx, 'name', e.target.value)}
-                              className="w-full h-10 px-4 text-base sm:text-sm bg-white border border-line rounded-full focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                              className={ui.field}
                             />
                           </div>
                         </div>
 
                         {/* Hex Code Input */}
-                        <div className="md:col-span-6 space-y-1">
-                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">Hex Color Code</span>
+                        <div>
+                          <label htmlFor={`apf-colour-hex-${idx}`} className={ui.label}>Hex Color Code</label>
                           <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint text-sm font-mono">#</span>
+                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm font-mono" aria-hidden="true">#</span>
                             <input
+                              id={`apf-colour-hex-${idx}`}
                               type="text"
                               placeholder="58152D"
                               value={color.hex.replace('#', '')}
@@ -982,16 +912,16 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                                 const finalHex = typedVal.startsWith('#') ? typedVal : `#${typedVal}`;
                                 updateColor(idx, 'hex', finalHex);
                               }}
-                              className="w-full h-10 pl-8 pr-4 text-base sm:text-sm bg-white border border-line rounded-full font-mono focus:outline-none focus:border-control focus:ring-2 focus:ring-brand"
+                              className={`${ui.field} !pl-8 font-mono`}
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Sync Product Image */}
-                      <div className="pt-2 border-t border-line">
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className="text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted block">
+                      <div className="pt-3 border-t border-line">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                          <span className="text-[13px] leading-[18px] font-semibold text-ink">
                             Tap an uploaded image to sync with this color:
                           </span>
                           {color.imageUrl && (
@@ -999,7 +929,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                               type="button"
                               onClick={() => detectColourForRow(idx)}
                               disabled={detectingIdx !== null}
-                              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold text-ink-muted bg-white border border-line rounded-full hover:border-ink transition disabled:opacity-50 disabled:cursor-wait"
+                              className={`${ui.small} disabled:cursor-wait`}
                               title="Read this colour from the synced photo"
                             >
                               {detectingIdx === idx ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-current" /> : <Sparkles className="w-3.5 h-3.5 text-current" />}
@@ -1008,34 +938,32 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                           )}
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          {images.map((imgUrl, imgIdx) => (
-                            <button
-                              key={imgIdx}
-                              type="button"
-                              onClick={() => {
-                                // If already selected, clicking again toggles/deselects it
-                                if (color.imageUrl === imgUrl) {
-                                  updateColor(idx, 'imageUrl', '');
-                                } else {
-                                  updateColor(idx, 'imageUrl', imgUrl);
-                                }
-                              }}
-                              className={`relative w-12 h-15 rounded-lg overflow-hidden border-2 transition cursor-pointer ${
-                                color.imageUrl === imgUrl
-                                  ? 'border-ink ring-2 ring-line shadow-sm scale-105 opacity-100'
-                                  : 'border-transparent hover:border-line opacity-60 hover:opacity-100'
-                              }`}
-                            >
-                              <img src={imgUrl} className="w-full h-full object-cover object-top" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
-                              {color.imageUrl === imgUrl && (
-                                <div className="absolute inset-0 bg-sunken flex items-center justify-center">
-                                  <span className="text-[11px] font-bold text-white bg-brand px-1 py-0.5 rounded shadow-sm">Sync</span>
-                                </div>
-                              )}
-                            </button>
-                          ))}
+                          {images.map((imgUrl, imgIdx) => {
+                            const synced = color.imageUrl === imgUrl;
+                            return (
+                              <button
+                                key={imgIdx}
+                                type="button"
+                                aria-pressed={synced}
+                                onClick={() => {
+                                  // If already selected, clicking again toggles/deselects it
+                                  if (synced) {
+                                    updateColor(idx, 'imageUrl', '');
+                                  } else {
+                                    updateColor(idx, 'imageUrl', imgUrl);
+                                  }
+                                }}
+                                className="w-12 flex flex-col items-center gap-0.5 cursor-pointer"
+                              >
+                                <span className={`block w-full aspect-[4/5] rounded-[10px] overflow-hidden border-2 transition-colors ${synced ? 'border-brand' : 'border-transparent opacity-70 hover:opacity-100'}`}>
+                                  <img src={imgUrl} className="w-full h-full object-cover object-top bg-sunken" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
+                                </span>
+                                <span className={`text-[11px] leading-[14px] font-bold ${synced ? 'text-brand' : 'invisible'}`}>Sync</span>
+                              </button>
+                            );
+                          })}
                           {images.length === 0 && (
-                            <span className="text-xs text-ink-faint italic">Please upload product images below first.</span>
+                            <span className="text-[13px] leading-[18px] text-ink-muted">Please upload product images below first.</span>
                           )}
                         </div>
                       </div>
@@ -1045,323 +973,241 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Section 3: Product Imagery */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-5">
-          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
-            <ImageIcon className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
-            Product Gallery
-          </h3>
+        <section className={ui.card}>
+          <SectionTitle icon={<ImageIcon className="text-current" />} title="Product Gallery" hint="The first photo is the cover. Portrait (4:5) photos look best." />
 
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Upload Area */}
-            <div className="flex flex-col items-center justify-center border-2 border-dashed border-line rounded-3xl bg-page hover:border-control hover:bg-sunken transition-colors cursor-pointer group">
-              <label className="w-full flex flex-col items-center gap-2.5 px-6 py-10 cursor-pointer text-center">
-                <div className="w-14 h-14 rounded-2xl bg-white border border-line shadow-[var(--sag-shadow)] flex items-center justify-center text-ink group-hover:scale-105 transition-transform">
-                  <ImageIcon className="w-6 h-6 text-current" />
-                </div>
-                <span className="font-serif text-lg font-semibold text-ink">Upload product photos</span>
-                <span className="text-xs text-ink-muted">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="sr-only"
-                />
-              </label>
-            </div>
+            <label className="w-full flex flex-col items-center justify-center gap-1.5 px-4 py-8 rounded-xl border-[1.5px] border-dashed border-control bg-page hover:bg-sunken text-center cursor-pointer transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink">
+              <span className="w-11 h-11 mb-1 rounded-xl bg-white border border-line text-ink flex items-center justify-center" aria-hidden="true">
+                <ImageIcon className="w-5 h-5 text-current" />
+              </span>
+              <span className="text-[15px] leading-[22px] font-semibold text-ink">Upload product photos</span>
+              <span className="text-[13px] leading-[18px] text-ink-muted">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="sr-only"
+              />
+            </label>
 
             {/* Gallery Grid Preview */}
-            <div className="grid grid-cols-2 min-[480px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {images.map((imgUrl, idx) => (
-                <div key={idx} className="min-w-0">
-                  <div className="rounded-2xl overflow-hidden border border-line aspect-[4/5] bg-sunken">
-                  {imgUrl && imgUrl.trim() !== "" ? (
-                    <img src={imgUrl} alt={`Product preview ${idx + 1}`} className="w-full h-full object-cover object-top" />
-                  ) : (
-                    <div className="w-full h-full bg-sunken" />
-                  )}
-                  </div>
-                  <div className="mt-1.5 flex items-center justify-between gap-2">
-                  {/* Image Badge */}
-                  <span className={`h-6 px-2.5 rounded-full inline-flex items-center text-[11px] font-semibold ${idx === 0 ? 'bg-brand text-white' : 'bg-sunken text-ink'}`}>
-                    {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
-                  </span>
+            {images.length > 0 && (
+              <div className="grid grid-cols-3 min-[480px]:grid-cols-4 sm:grid-cols-5 gap-2.5">
+                {images.map((imgUrl, idx) => (
+                  <div key={idx} className="min-w-0">
+                    {imgUrl && imgUrl.trim() !== "" ? (
+                      <img src={imgUrl} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
+                    ) : (
+                      <div className="w-full aspect-[4/5] rounded-xl bg-sunken" />
+                    )}
+                    <div className="mt-1 flex items-center justify-between gap-1">
+                      {/* Image Badge */}
+                      <span className={`${ui.badge} ${idx === 0 ? tone.brand : tone.muted}`}>
+                        {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
+                      </span>
 
-                  {/* Delete Button */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleRemoveImage(idx);
-                    }}
-                    className="w-8 h-8 flex items-center justify-center text-rose-700 hover:bg-rose-50 rounded-full transition-colors cursor-pointer"
-                    title="Remove image"
-                    aria-label={`Remove photo ${idx + 1}`}
-                  >
-                    <X className="w-4 h-4 text-current" />
-                  </button>
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveImage(idx);
+                        }}
+                        className="w-10 h-10 shrink-0 rounded-full hover:bg-danger-tint text-danger flex items-center justify-center cursor-pointer"
+                        title="Remove image"
+                        aria-label={`Remove photo ${idx + 1}`}
+                      >
+                        <X className="w-4 h-4 text-current" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        </section>
 
         {/* Section 4: Sizes, Colors & Fabric Specs */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-6">
-          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
-            <Layers className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
-            Sizes, Colors & Fabric Specifications
-          </h3>
+        <section className={ui.card}>
+          <SectionTitle icon={<Layers className="text-current" />} title="Sizes, Colors & Fabric Specifications" />
 
           {/* Sizes Selection */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted">
-                Available Sizes <span className="text-sale">*</span>
-              </label>
+              <p id="apf-sizes-label" className={`${ui.label} !mb-0`}>Available Sizes *</p>
               <button
                 type="button"
                 onClick={() => setSelectedSizes(sortSizes([...RANGE_SIZES, ...selectedSizes.filter((s) => s === 'XS')]))}
-                className="h-8 px-3 text-xs font-semibold text-ink border border-line bg-white rounded-full hover:bg-sunken transition-colors cursor-pointer"
+                className={ui.small}
               >
                 Select S – 5XL
               </button>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div role="group" aria-labelledby="apf-sizes-label" className="flex flex-wrap gap-2">
               {sizeOptions.map((sz) => {
                 const isSelected = selectedSizes.includes(sz);
                 return (
                   <button
                     type="button"
                     key={sz}
+                    aria-pressed={isSelected}
                     onClick={() => toggleSize(sz)}
-                    className={`h-10 min-w-12 px-4 rounded-full text-sm font-semibold border transition-colors cursor-pointer ${
-                      isSelected
-                        ? 'bg-brand text-white border-ink shadow-[var(--sag-shadow)]'
-                        : 'bg-white text-ink-muted border-line hover:border-control'
-                    }`}
+                    className={`${ui.chip(isSelected)} min-w-12 sag-num`}
                   >
-                    {sz} {isSelected && '✓'}
+                    {sz} {isSelected && <Check className="w-3.5 h-3.5 text-current" aria-hidden="true" />}
                   </button>
                 );
               })}
             </div>
-            <p className="mt-2 text-[11px] text-ink-muted">
+            <p className={ui.hint}>
               Choosing Free Size replaces the other sizes.
             </p>
           </div>
 
-
-
           {/* Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-line">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 mt-4 border-t border-line">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Fabric Material
-              </label>
+              <label htmlFor="apf-fabric" className={ui.label}>Fabric Material</label>
               <input
+                id="apf-fabric"
                 type="text"
                 value={fabric}
                 onChange={(e) => setFabric(e.target.value)}
                 placeholder="e.g. 100% Pure Cambric Cotton with Chiffon Dupatta"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Fit & Silhouette
-              </label>
+              <label htmlFor="apf-fit" className={ui.label}>Fit & Silhouette</label>
               <input
+                id="apf-fit"
                 type="text"
                 value={fit}
                 onChange={(e) => setFit(e.target.value)}
                 placeholder="e.g. Regular Straight Cut Anarkali"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Occasion
-              </label>
+              <label htmlFor="apf-occasion" className={ui.label}>Occasion</label>
               <input
+                id="apf-occasion"
                 type="text"
                 value={occasion}
                 onChange={(e) => setOccasion(e.target.value)}
                 placeholder="e.g. Festive, Wedding, Office, Daily Wear"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">
-                Wash & Care Instructions
-              </label>
+              <label htmlFor="apf-wash-care" className={ui.label}>Wash & Care Instructions</label>
               <input
+                id="apf-wash-care"
                 type="text"
                 value={washCare}
                 onChange={(e) => setWashCare(e.target.value)}
                 placeholder="e.g. Gentle Hand Wash / Dry Clean for First Wash"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Section 5: Storefront Badges & Visibility */}
-        <div className="bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)] space-y-4">
-          <h3 className="font-serif text-xl font-semibold text-ink pb-3 border-b border-line flex items-center gap-3">
-            <Sparkles className="w-9 h-9 p-2 rounded-xl bg-sunken text-ink shrink-0" aria-hidden="true" />
-            Merchandising Badges & Visibility
-          </h3>
+        <section className={ui.card}>
+          <SectionTitle icon={<Sparkles className="text-current" />} title="Merchandising Badges & Visibility" />
 
-          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-3">
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isFeatured}
-                onChange={(e) => setIsFeatured(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-ink">Featured Product</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isNewArrival}
-                onChange={(e) => setIsNewArrival(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-ink">New Arrival</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isBestSeller}
-                onChange={(e) => setIsBestSeller(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-ink">Best Seller</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isSale}
-                onChange={(e) => setIsSale(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-rose-700">Sale Item</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isTrending}
-                onChange={(e) => setIsTrending(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-ink">Trending Now</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={isFestive}
-                onChange={(e) => setIsFestive(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-ink">Festive Edit</span>
-            </label>
-
-            <label className="flex items-center justify-between gap-3 p-3.5 rounded-2xl border border-line bg-page cursor-pointer hover:bg-sunken transition-colors has-[:checked]:border-control has-[:checked]:bg-sunken">
-              <input
-                type="checkbox"
-                checked={published}
-                onChange={(e) => setPublished(e.target.checked)}
-                className="peer sr-only"
-              />
-              <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:shadow-sm after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
-              <span className="order-first text-sm font-semibold text-emerald-800">Published on store</span>
-            </label>
+          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            {flagToggles.map((flag) => (
+              <label key={flag.id} className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink transition-colors has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
+                <input
+                  id={flag.id}
+                  type="checkbox"
+                  checked={flag.checked}
+                  onChange={(e) => flag.onChange(e.target.checked)}
+                  className="peer sr-only"
+                />
+                <span className={SWITCH_TRACK} aria-hidden="true" />
+                <span className="order-first">{flag.label}</span>
+              </label>
+            ))}
           </div>
-        </div>
+        </section>
 
         {/* Section 6: SEO (optional, collapsible) */}
-        <details className="group bg-white p-5 sm:p-7 rounded-3xl border border-line shadow-[var(--sag-shadow)]" open={Boolean(seoTitle || seoDescription || searchKeywords)}>
-          <summary className="cursor-pointer list-none flex items-center justify-between gap-2 font-serif text-xl font-semibold text-ink">
-            <span>SEO &amp; search (optional)</span>
-            <span className="h-8 px-3.5 rounded-full border border-line inline-flex items-center text-xs font-sans font-semibold text-ink group-open:hidden">Show</span>
-            <span className="h-8 px-3.5 rounded-full border border-line items-center text-xs font-sans font-semibold text-ink hidden group-open:inline-flex">Hide</span>
+        <details className={`group ${ui.card}`} open={Boolean(seoTitle || seoDescription || searchKeywords)}>
+          <summary className="cursor-pointer list-none flex items-center justify-between gap-2 min-h-11 -my-1">
+            <span className={ui.h2}>SEO &amp; search (optional)</span>
+            <span className="h-9 px-3 rounded-[10px] border-[1.5px] border-control inline-flex items-center text-[13px] font-semibold text-ink group-open:hidden">Show</span>
+            <span className="h-9 px-3 rounded-[10px] border-[1.5px] border-control items-center text-[13px] font-semibold text-ink hidden group-open:inline-flex">Hide</span>
           </summary>
-          <div className="mt-4 grid grid-cols-1 gap-4">
+          <div className="mt-4 pt-4 border-t border-line grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Page title</label>
+              <label htmlFor="apf-seo-title" className={ui.label}>Page title</label>
               <input
+                id="apf-seo-title"
                 type="text"
                 maxLength={120}
                 value={seoTitle}
                 onChange={(e) => setSeoTitle(e.target.value)}
                 placeholder={name ? `${name} | Suit Aura Girls` : 'Used as the browser / Google title'}
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
-              <p className="mt-1 text-[11px] text-ink-muted">{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
+              <p className={`${ui.hint} sag-num`}>{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Meta description</label>
+              <label htmlFor="apf-seo-description" className={ui.label}>Meta description</label>
               <textarea
+                id="apf-seo-description"
                 rows={2}
                 maxLength={320}
                 value={seoDescription}
                 onChange={(e) => setSeoDescription(e.target.value)}
                 placeholder="Short summary shown under the title in search results"
-                className="w-full px-4 py-3 border border-line rounded-2xl text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.textarea}
               />
-              <p className="mt-1 text-[11px] text-ink-muted">{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
+              <p className={`${ui.hint} sag-num`}>{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
             </div>
             <div>
-              <label className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-muted mb-1">Search keywords</label>
+              <label htmlFor="apf-search-keywords" className={ui.label}>Search keywords</label>
               <input
+                id="apf-search-keywords"
                 type="text"
                 maxLength={300}
                 value={searchKeywords}
                 onChange={(e) => setSearchKeywords(e.target.value)}
                 placeholder="e.g. chikankari, lucknowi, office wear"
-                className="w-full h-11 px-4 border border-line rounded-full text-base sm:text-sm bg-white focus:outline-none focus:border-control focus:ring-2 focus:ring-brand text-ink"
+                className={ui.field}
               />
-              <p className="mt-1 text-[11px] text-ink-muted">Comma separated. Shoppers searching these words on the store will find this product.</p>
+              <p className={ui.hint}>Comma separated. Shoppers searching these words on the store will find this product.</p>
             </div>
           </div>
         </details>
 
         {/* Bottom Save/Cancel Actions */}
-        <div className="sticky bottom-3 z-20 flex items-center justify-end gap-2.5 p-2 sm:p-2.5 rounded-full bg-white/95 border border-line shadow-[0_8px_30px_-12px_rgba(27,26,23,0.25)]">
+        <div className="sticky bottom-0 z-20 -mx-4 sm:mx-0 flex items-center gap-3 sm:justify-end px-4 sm:px-5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-3 bg-white border-t sm:border border-line sm:rounded-2xl shadow-[var(--sag-shadow-bar)]">
           <button
             type="button"
             disabled={isSaving}
             onClick={handleCancel}
-            className="h-11 px-5 border border-line bg-white hover:bg-sunken text-ink rounded-full text-sm font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            className={ui.outline}
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="h-11 px-6 bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-full text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+            className={`${ui.primary} flex-1 sm:flex-none`}
           >
             {isSaving ? (
               <RefreshCw className="w-4 h-4 animate-spin text-current" />
