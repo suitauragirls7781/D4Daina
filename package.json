@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:api": "node api/_lib/orders.test.mjs && node api/_lib/alerts.test.mjs && node api/_lib/payu.test.mjs"
+    "test:api": "node api/_lib/orders.test.mjs && node api/_lib/alerts.test.mjs && node api/_lib/payu.test.mjs",
+    "deploy:live": "git push origin main && npx wrangler deploy"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
