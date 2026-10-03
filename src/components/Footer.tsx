@@ -35,7 +35,7 @@ export const Footer: React.FC = () => {
   const whatsappDigits = (storeSettings?.whatsapp || SUPPORT_PHONE_DISPLAY).replace(/\D/g, '');
   const whatsappNumber = whatsappDigits.length === 10 ? `91${whatsappDigits}` : whatsappDigits;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hi Suit Aura Girls! I have a question.')}`;
-  const email = storeSettings?.storeEmail || 'suitauragirls@gmail.com';
+  const email = storeSettings?.storeEmail || 'contact.suitauragirls@gmail.com';
   const collections = [...new Set(products.filter((p) => departmentOf(p) === 'women').map((p) => p.category))].slice(0, 4);
   const hasKidsToys = products.some((p) => departmentOf(p) !== 'women');
 

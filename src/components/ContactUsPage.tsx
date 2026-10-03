@@ -9,12 +9,12 @@ import { InfoPageHeader } from './PolicyPages';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { markFirestoreQuotaExhausted, isQuotaExhausted } from '../utils/visitorTracker';
-import { STORE_ADDRESS_LINES, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
+import { DEFAULT_SUPPORT_EMAIL, STORE_ADDRESS_LINES, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 
-const SUPPORT_EMAIL = 'suitauragirls@gmail.com';
 
 export const ContactUsPage: React.FC = () => {
   const { storeSettings } = useAdmin();
+  const SUPPORT_EMAIL = storeSettings?.storeEmail || DEFAULT_SUPPORT_EMAIL;
   const instagram = instagramProfile(storeSettings?.instagramUrl || STORE_INSTAGRAM_URL);
   const { showToast } = useShop();
   const [name, setName] = useState('');

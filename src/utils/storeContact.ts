@@ -1,3 +1,6 @@
+/** Used only until the owner saves a support email in Admin -> Settings -> Store Details. */
+export const DEFAULT_SUPPORT_EMAIL = 'contact.suitauragirls@gmail.com';
+
 export const SUPPORT_PHONE = '8739835310';
 export const SUPPORT_PHONE_DISPLAY = '+91 87398 35310';
 export const SUPPORT_WHATSAPP_NUMBER = `91${SUPPORT_PHONE}`;

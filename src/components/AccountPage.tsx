@@ -284,7 +284,7 @@ const CouponsPanel: React.FC<{ coupons: Coupon[]; onShop: () => void }> = ({ cou
 /** Help Center: the store's real contact details and links to its policy pages. */
 const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab) => void }> = ({ onGo, onTab }) => {
   const { storeSettings } = useAdmin();
-  const email = storeSettings?.storeEmail || 'suitauragirls@gmail.com';
+  const email = storeSettings?.storeEmail || 'contact.suitauragirls@gmail.com';
   const links: Array<{ label: string; hint: string; action: () => void }> = [
     { label: 'Where is my order?', hint: 'Track any order with its number', action: () => onGo('track-order') },
     { label: 'Returns & exchanges', hint: 'Start a return or size exchange', action: () => onTab('returns') },

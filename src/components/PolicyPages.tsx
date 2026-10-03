@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { ChevronRight } from 'lucide-react';
 import { SIZE_CHART } from '../utils/sizeChart';
-import { SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
+import { DEFAULT_SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
+import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
 import { GmailIcon, WhatsAppIcon } from './BrandIcons';
 import {
@@ -32,7 +33,8 @@ interface PolicyWrapperProps {
   intro?: React.ReactNode;
 }
 
-const SUPPORT_EMAIL = 'suitauragirls@gmail.com';
+/** The support email the owner saved in Admin -> Settings -> Store Details. */
+const useSupportEmail = () => useAdmin().storeSettings?.storeEmail || DEFAULT_SUPPORT_EMAIL;
 
 const POLICY_LINKS: Array<[ActivePage, string]> = [
   ['shipping-policy', 'Shipping & delivery'],
@@ -89,6 +91,7 @@ export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: 
 /** "Still have a question?" card: WhatsApp, email and the contact page. Sits at the foot of the info pages. */
 export const HelpCard: React.FC<{ topic: string; showContactLink?: boolean }> = ({ topic, showContactLink = true }) => {
   const { setActivePage } = useShop();
+  const SUPPORT_EMAIL = useSupportEmail();
   const helpBtn = 'inline-flex items-center justify-center gap-2 h-12 px-4 rounded-control bg-surface border-[1.5px] border-control text-[15px] font-semibold text-ink hover:bg-sunken transition-colors';
   return (
     <section aria-labelledby="info-help-title" className="sag-card p-4 sm:p-6">
@@ -393,7 +396,9 @@ export const TermsPage: React.FC = () => (
   />
 );
 
-export const CancellationPolicyPage: React.FC = () => (
+export const CancellationPolicyPage: React.FC = () => {
+  const SUPPORT_EMAIL = useSupportEmail();
+  return (
   <PolicyWrapper
     page="cancellation-policy"
     title="Cancellation policy"
@@ -429,7 +434,8 @@ export const CancellationPolicyPage: React.FC = () => (
       },
     ]}
   />
-);
+  );
+};
 
 // Built from the one store chart (src/utils/sizeChart.ts), the same numbers as the size popup and "Find my size"
 const SIZE_ROWS: Array<[string, string, string, string, string, string]> = SIZE_CHART.map((row) => [

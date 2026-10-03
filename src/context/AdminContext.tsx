@@ -277,7 +277,7 @@ const INITIAL_STORE_SETTINGS: StoreSettings = {
   storeName: 'Suit Aura Girls',
   tagline: 'Elegance That Feels Like You',
   logoText: 'Suit Aura Girls',
-  storeEmail: 'suitauragirls@gmail.com',
+  storeEmail: 'contact.suitauragirls@gmail.com',
   phone: '+91 87398 35310',
   whatsapp: '+91 87398 35310',
   address: 'Shop No. 23, Asansol Junction Railway Station, Station Road, Asansol, Paschim Bardhaman, West Bengal - 713301, India.',
