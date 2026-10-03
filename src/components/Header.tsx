@@ -13,7 +13,6 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { ChevronDown, ChevronRight, Clock, Menu, Trash2, X } from 'lucide-react';
 import { BagIcon } from './BrandIcons';
 import { HeartIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
-import { LuxuryAnnouncementMarquee } from './LuxuryAnnouncementMarquee';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
 
@@ -128,8 +127,6 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* One static line above the header; it scrolls away with the page. Checkout stays free of it. */}
-      {activePage !== 'checkout' && <LuxuryAnnouncementMarquee />}
       <header className="sticky top-0 z-50 w-full bg-white border-b border-line select-none">
         <div className="max-w-7xl mx-auto px-1 sm:px-4 lg:px-8 h-[52px] lg:h-[68px] flex items-center justify-between gap-1 sm:gap-3">
           <div className="flex items-center min-w-0">
