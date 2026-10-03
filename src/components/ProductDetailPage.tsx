@@ -276,6 +276,13 @@ export const ProductDetailPage: React.FC = () => {
 
   useEffect(() => () => { if (scrollFrame.current) cancelAnimationFrame(scrollFrame.current); }, []);
   useEffect(() => () => window.clearTimeout(switchTimer.current), []);
+  // The colour is the one in the photo on screen (each colour has its own photo); the bag and the order carry it
+  useEffect(() => {
+    const shown = (product?.images || []).filter(Boolean)[imageIdx];
+    const match = (product?.colors || []).find((c) => c && c.name && c.imageUrl && c.imageUrl === shown);
+    if (match) setColor(match);
+  }, [imageIdx, product]);
+
   // Keep the small photo of the one on screen visible in its row
   useEffect(() => {
     const row = thumbs.current;
@@ -416,14 +423,6 @@ export const ProductDetailPage: React.FC = () => {
     });
   };
   const go = (delta: number) => showImage((imageIdx + delta + images.length) % images.length, false);
-
-  const pickColor = (c: ProductColor) => {
-    setColor(c);
-    if (c.imageUrl) {
-      const idx = images.indexOf(c.imageUrl);
-      if (idx >= 0) showImage(idx);
-    }
-  };
 
   const sizeMissing = (chosen: ProductSize | null) => sizes.length > 0 && !chosen && !oneSize;
   const bagKey = (chosen: ProductSize | null | undefined) => `${chosen || ''}|${color?.name || ''}|${qty}`;
@@ -624,7 +623,10 @@ export const ProductDetailPage: React.FC = () => {
                   </div>
                 )}
                 {images.length > 1 && (
-                  <div className="mt-2 h-5 flex items-center gap-3" aria-hidden="true">
+                  <div className="mt-2 h-5 flex items-center gap-3">
+                    {colors.length > 1 && color?.name && color.name !== 'Default' && (
+                      <span className="shrink-0 text-[13px] leading-5 text-ink-muted">Colour: <span className="font-semibold text-ink">{color.name}</span></span>
+                    )}
                     <span className="flex flex-1 gap-1">
                       {images.map((_, idx) => <span key={idx} className={`h-[3px] flex-1 max-w-8 rounded-full ${idx === imageIdx ? 'bg-ink' : 'bg-line'}`} />)}
                     </span>
@@ -721,31 +723,6 @@ export const ProductDetailPage: React.FC = () => {
                   ? <><Heart className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.wishlists} people saved this today</>
                   : <><Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.views} people viewed this today</>}
               </p>
-            )}
-
-            {colors.length > 1 && (
-              <div className="mt-4">
-                <p className="text-sm leading-5 text-ink"><span className="text-ink-muted">Colour:</span> <span className="font-semibold">{color?.name}</span></p>
-                <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2.5 overflow-x-auto pt-1 pb-1">
-                  {colors.map((c) => {
-                    const selected = color?.name === c.name;
-                    return (
-                      <button key={c.name} type="button" onClick={() => pickColor(c)} aria-label={c.name} aria-pressed={selected} className="shrink-0 w-[64px] flex flex-col items-center cursor-pointer">
-                        {c.imageUrl ? (
-                          <span className={`block w-[60px] rounded-[12px] p-0.5 border-2 ${selected ? 'border-ink' : 'border-transparent'}`}>
-                            <img src={getCleanImageUrl(c.imageUrl, 160)} alt="" loading="lazy" className="block w-full aspect-[4/5] rounded-[8px] object-cover object-top bg-sunken" />
-                          </span>
-                        ) : (
-                          <span className={`flex w-12 h-12 rounded-full p-0.5 border-2 ${selected ? 'border-ink' : 'border-transparent'}`}>
-                            <span className="block w-full h-full rounded-full border border-line" style={{ backgroundColor: c.hex || '#eee' }} />
-                          </span>
-                        )}
-                        <span className={`mt-1 w-full truncate text-center text-xs leading-4 ${selected ? 'font-semibold text-ink' : 'text-ink-muted'}`}>{c.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             )}
 
             {sizes.length > 0 && !oneSize && (
