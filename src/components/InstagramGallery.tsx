@@ -21,6 +21,9 @@ export const InstagramGallery: React.FC = () => {
     </a>
   );
 
+  // No reels added in Admin yet: the section is left out, rather than an empty card
+  if (instagramReels.length === 0) return null;
+
   return (
     <section id="instagram-gallery-section" aria-labelledby="instagram-gallery-title" className={`${HOME_SECTION} bg-page`}>
       <div className="max-w-7xl mx-auto">
@@ -33,22 +36,9 @@ export const InstagramGallery: React.FC = () => {
               Tag <span className="font-semibold text-ink">#SuitAuraGirls</span> to be featured.
             </p>
           </div>
-          {instagramReels.length > 0 && <div className="hidden md:block shrink-0">{followButton}</div>}
+          <div className="hidden md:block shrink-0">{followButton}</div>
         </div>
 
-        {instagramReels.length === 0 ? (
-          <div className="px-4 sm:px-6 lg:px-8">
-            <div className="sag-card px-5 py-8 text-center">
-              <span className="mx-auto grid place-items-center w-12 h-12 rounded-control bg-sunken">
-                <InstagramIcon className="w-6 h-6" />
-              </span>
-              <p className="mt-3 text-base leading-[22px] font-semibold text-ink">New reels are on their way</p>
-              <p className="mt-1 mb-4 text-sm leading-5 text-ink-muted">See our latest styles and styling videos on Instagram.</p>
-              {followButton}
-            </div>
-          </div>
-        ) : (
-          <>
             {/* Swipe row on mobile, grid from large screens */}
             <div className="sag-scroll-x flex lg:grid lg:grid-cols-4 gap-3 lg:gap-5 overflow-x-auto lg:overflow-visible px-4 sm:px-6 lg:px-8 pb-1">
               {instagramReels.map((reel, index) => (
@@ -73,8 +63,6 @@ export const InstagramGallery: React.FC = () => {
               ))}
             </div>
             <div className="mt-5 px-4 flex justify-center md:hidden">{followButton}</div>
-          </>
-        )}
       </div>
     </section>
   );

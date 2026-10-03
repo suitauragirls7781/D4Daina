@@ -25,11 +25,11 @@ const ownerBadge = (badge?: string) => {
 };
 const HERO_CATEGORY_LINKS = ['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
 
-export const HeroSection: React.FC = () => {
-  const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
-  const { heroConfig, isLoading } = useAdmin();
-
-  const liveProductSlides = React.useMemo<LiveHeroSlide[]>(() => {
+/**
+ * The slides the hero shows, worked out from the admin's hero settings and the live products.
+ * Exported so the home page can tell which products the hero already shows (and not repeat them in the rails below).
+ */
+export const buildHeroSlides = (heroConfig: HeroBannerConfig | null | undefined, products: Product[] | null | undefined): LiveHeroSlide[] => {
     // 1. If live products are synced from the database, ALWAYS generate slides from real synced products!
     if (products && products.length > 0) {
       // Admin-configured slides: linked to a live product, or carrying their own uploaded banner photo
@@ -87,9 +87,13 @@ export const HeroSection: React.FC = () => {
     }
 
     return [];
-  }, [heroConfig, products]);
+};
 
-  const slides = liveProductSlides;
+export const HeroSection: React.FC = () => {
+  const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
+  const { heroConfig, isLoading } = useAdmin();
+
+  const slides = React.useMemo(() => buildHeroSlides(heroConfig, products), [heroConfig, products]);
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
   const stripRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef(0);

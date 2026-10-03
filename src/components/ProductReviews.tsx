@@ -494,8 +494,8 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                 <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto">
                   {photoRows.map((r) => (
                     <button key={r.id} type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                      className="shrink-0 w-[72px] aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-zoom-in">
-                      <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
+                      className="shrink-0 w-[88px] aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in">
+                      <img src={getCleanImageUrl(r.imageUrl, 320)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                         className="w-full h-full object-cover object-top" />
                     </button>
                   ))}
@@ -545,8 +545,8 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                     <p className="mt-2 text-[15px] leading-[22px] text-ink whitespace-pre-line break-words">{r.comment}</p>
                     {r.imageUrl && !brokenPhotos.includes(r.imageUrl) && (
                       <button type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                        className="mt-3 block w-20 aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-zoom-in">
-                        <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
+                        className="mt-3 block w-[88px] aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in">
+                        <img src={getCleanImageUrl(r.imageUrl, 320)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                           className="w-full h-full object-cover object-top" />
                       </button>
                     )}

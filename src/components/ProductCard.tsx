@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { preloadImage } from '../utils/pageTransition';
 import { Product, ProductSize } from '../types';
 import { useShop } from '../context/ShopContext';
@@ -17,6 +17,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const { isInWishlist, toggleWishlist, navigateToProduct, addToCart, cart, setIsCartDrawerOpen } = useShop();
   const { reviewsList = [] } = useAdmin();
   const [picking, setPicking] = useState(false);
+  // Photo fade-in: 'wait' until the photo has loaded, 'fade' once it loads on screen, 'shown' when it was
+  // already there (cached) at mount, so a cached photo never flashes. The 4/5 box keeps its size throughout.
+  const photoRef = useRef<HTMLImageElement>(null);
+  const [photo, setPhoto] = useState<'wait' | 'fade' | 'shown'>('wait');
+  useLayoutEffect(() => {
+    if (photoRef.current?.complete) setPhoto('shown');
+  }, []);
   // Stays "Added" for as long as this style is in the bag (not a timed flash)
   const justAdded = cart.some((item) => String(item.product?.id) === String(product.id));
 
@@ -80,12 +87,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden rounded-control bg-sunken">
         <img
           src={getCleanImageUrl(primary, compact ? 420 : 600)}
+          ref={photoRef}
           alt={product.name}
-          className={`w-full h-full object-cover object-top ${soldOut ? 'opacity-60 grayscale-[35%]' : ''}`}
+          className={`w-full h-full object-cover object-top ${photo === 'fade' ? 'motion-safe:transition-opacity motion-safe:duration-200' : ''} ${photo === 'wait' ? 'opacity-0' : soldOut ? 'opacity-60' : 'opacity-100'} ${soldOut ? 'grayscale-[35%]' : ''}`}
           loading="lazy"
           decoding="async"
+          onLoad={() => setPhoto((state) => (state === 'wait' ? 'fade' : state))}
           onError={(e) => {
             if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
+            setPhoto((state) => (state === 'wait' ? 'fade' : state));
           }}
         />
         {secondary && !soldOut && (
@@ -167,12 +177,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             disabled={soldOut}
             onClick={onQuickAdd}
             aria-label={soldOut ? `${product.name} is sold out` : justAdded ? `${product.name} is in your bag. Open bag` : `Add ${product.name} to bag`}
-            className={`mt-2 w-full h-11 rounded-control text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+            className={`mt-2 w-full h-11 rounded-control text-[13px] leading-5 font-semibold flex items-center justify-center gap-1.5 transition-colors ${
               soldOut
                 ? 'bg-sunken-deep text-ink-muted cursor-not-allowed'
                 : justAdded
                 ? 'bg-ok-tint text-ok border border-ok-line cursor-pointer'
-                : 'bg-white text-ink border-[1.5px] border-ink hover:bg-sunken cursor-pointer'
+                : 'bg-white text-ink border-[1.5px] border-control hover:bg-sunken cursor-pointer'
             }`}
           >
             {soldOut ? 'Sold out' : justAdded ? <><Check className="w-4 h-4" /> In bag · View</> : <><BagIcon mono className="w-4 h-4" /> Add to bag</>}

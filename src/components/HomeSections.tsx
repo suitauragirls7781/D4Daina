@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
@@ -8,6 +8,9 @@ import { CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, Tag } from 
 import { useDiscovery } from '../utils/discovery';
 import { BABY_BOYS, BABY_GIRLS, KIDS_ALL, KIDS_TOYS, TOYS, departmentOf, isToy } from '../utils/kids';
 import { Assurance } from './Assurance';
+import { Product } from '../types';
+import { createSupportWhatsAppUrl } from '../utils/storeContact';
+import { WhatsAppIcon } from './BrandIcons';
 
 /** Shared widths so every home section lines up on the same gutters. */
 export const HOME_WRAP = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
@@ -15,6 +18,55 @@ export const HOME_WRAP = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 export const HOME_SECTION = 'w-full py-8 lg:py-12';
 /** One card in a horizontal product rail: two and a bit cards show on a phone, so the rail reads as swipeable. */
 export const HOME_RAIL_ITEM = 'shrink-0 w-[44%] max-w-[200px] sm:w-[220px] sm:max-w-none lg:w-[250px]';
+/**
+ * Goes on the home page container. Two neighbouring sections on the same background would otherwise stack
+ * their paddings (64px on a phone); the second one drops its top padding, so the gap is the 32 / 48px rhythm.
+ */
+export const HOME_RHYTHM = [
+  '[&>section.bg-white.py-8+section.bg-white.py-8]:pt-0',
+  '[&>section.bg-white.pb-8+section.bg-white.py-8]:pt-0',
+  '[&>section.bg-page.py-8+section.bg-page.py-8]:pt-0',
+].join(' ');
+
+/** Ids of the products already shown higher on the home page. */
+export type SeenIds = ReadonlySet<string>;
+/** A rail is topped up with repeats only when it would otherwise hold fewer than this many products. */
+export const RAIL_MIN = 4;
+
+/**
+ * Keeps the pool's own order (the admin's picks) but leaves out products already shown higher on the page.
+ * When that would leave fewer than RAIL_MIN, already-shown products from the same pool fill it back up.
+ * No randomness: the same catalogue always gives the same rails.
+ */
+export const preferUnseen = <T extends { id: string }>(pool: T[], seen: SeenIds | undefined, limit: number): T[] => {
+  if (!seen || seen.size === 0) return pool.slice(0, limit);
+  const fresh = pool.filter((p) => !seen.has(String(p.id)));
+  const enough = Math.min(RAIL_MIN, pool.length, limit);
+  if (fresh.length >= enough) return fresh.slice(0, limit);
+  const repeats = pool.filter((p) => seen.has(String(p.id)));
+  return [...fresh, ...repeats].slice(0, enough);
+};
+
+/**
+ * A photo that fades in once it has loaded (200ms). It sits in a box that already has its size, so nothing
+ * moves; with "reduce motion" on it simply appears. A photo that fails to load is still shown (the caller's
+ * onError swaps in the placeholder).
+ */
+export const FadeImg: React.FC<React.ImgHTMLAttributes<HTMLImageElement>> = ({ className = '', onLoad, onError, ...rest }) => {
+  const ref = useRef<HTMLImageElement>(null);
+  const [shown, setShown] = useState(false);
+  // A photo already in the browser cache is complete before React attaches onLoad
+  useEffect(() => { if (ref.current?.complete) setShown(true); }, []);
+  return (
+    <img
+      ref={ref}
+      {...rest}
+      onLoad={(e) => { setShown(true); onLoad?.(e); }}
+      onError={(e) => { setShown(true); onError?.(e); }}
+      className={`${className} transition-opacity duration-200 motion-reduce:transition-none ${shown ? 'opacity-100' : 'opacity-0'}`}
+    />
+  );
+};
 
 interface HomeSectionHeaderProps {
   title: string;
@@ -44,26 +96,37 @@ export const HomeSectionHeader: React.FC<HomeSectionHeaderProps> = ({ title, tex
 
 /** The four store facts, straight under the hero. The wording lives in Assurance.tsx. */
 export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assurance' }) => (
-  <section id={id} aria-label="Shopping with us" className="w-full bg-white pb-6 lg:pb-8">
+  <section id={id} aria-label="Shopping with us" className="w-full bg-white pb-8 lg:pb-12">
     <div className={HOME_WRAP}>
       <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />
     </div>
   </section>
 );
 
+/** How many Featured cards a phone shows (the rest of the grid appears from tablet width). */
+export const FEATURED_ON_PHONE = 4;
+
+export const pickFeatured = (products: Product[], seen?: SeenIds): Product[] => {
+  const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
+  const picked = live.filter((p) => p.isFeatured || p.isBestSeller);
+  return preferUnseen(picked.length >= 2 ? picked : live, seen, 8);
+};
+
+export const pickNewArrivals = (products: Product[], seen?: SeenIds): Product[] => {
+  const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
+  const fresh = live.filter((p) => p.isNewArrival);
+  return preferUnseen(fresh.length > 0 ? fresh : live, seen, 12);
+};
+
 /** Featured collection: admin "featured" / bestseller picks, otherwise the latest styles. */
-export const FeaturedCollection: React.FC = () => {
+export const FeaturedCollection: React.FC<{ seen?: SeenIds }> = ({ seen }) => {
   const { products = [], navigateToCategory } = useShop();
-  const items = useMemo(() => {
-    const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
-    const picked = live.filter((p) => p.isFeatured || p.isBestSeller);
-    return (picked.length >= 2 ? picked : live).slice(0, 8);
-  }, [products]);
+  const items = useMemo(() => pickFeatured(products, seen), [products, seen]);
   if (items.length === 0) return null;
   return (
     <section id="featured-collection" aria-labelledby="featured-collection-title" className={`${HOME_SECTION} bg-white`}>
       <div className={HOME_WRAP}>
-        <HomeSectionHeader titleId="featured-collection-title" title="Featured collection" text="Styles we love right now." action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
+        <HomeSectionHeader titleId="featured-collection-title" title="Featured collection" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 lg:gap-x-6 lg:gap-y-8">
           {items.map((product, index) => (
             <div key={product.id} className={index >= 6 ? 'hidden lg:block' : index >= 4 ? 'hidden md:block' : ''}>
@@ -71,28 +134,21 @@ export const FeaturedCollection: React.FC = () => {
             </div>
           ))}
         </div>
-        <div className="mt-6 sm:hidden">
-          <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-outline w-full h-12 text-[15px]">View all styles</button>
-        </div>
       </div>
     </section>
   );
 };
 
 /** New arrivals as a swipeable rail. */
-export const NewArrivalsRail: React.FC = () => {
+export const NewArrivalsRail: React.FC<{ seen?: SeenIds }> = ({ seen }) => {
   const { products = [], navigateToCategory } = useShop();
-  const items = useMemo(() => {
-    const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
-    const fresh = live.filter((p) => p.isNewArrival);
-    return (fresh.length > 0 ? fresh : live).slice(0, 12);
-  }, [products]);
+  const items = useMemo(() => pickNewArrivals(products, seen), [products, seen]);
   if (items.length === 0) return null;
   return (
     <section id="new-arrivals-rail" aria-labelledby="new-arrivals-title" className={`${HOME_SECTION} bg-page`}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
-          <HomeSectionHeader titleId="new-arrivals-title" title="New arrivals" text="Just in this week." action={{ label: 'View all', onClick: () => navigateToCategory('New Arrivals') }} />
+          <HomeSectionHeader titleId="new-arrivals-title" title="New arrivals" action={{ label: 'View all', onClick: () => navigateToCategory('New Arrivals') }} />
         </div>
         <div className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
           {items.map((product) => (
@@ -246,21 +302,39 @@ export const AskAssistantRow: React.FC = () => {
   );
 };
 
-/** Why shop with us: the same four facts as everywhere else (Assurance.tsx), never a second set of claims. */
-export const WhyShop: React.FC = () => (
+const WHY_SHOP_TEXT = 'Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help.';
+const WHY_SHOP_WHATSAPP = 'Hi Suit Aura Girls, I need some help.';
+
+/**
+ * Why shop with us: the same four facts as everywhere else (Assurance.tsx), never a second set of claims.
+ * `compact` is set when the four tiles are already on the page (the band under the hero): the tiles are not
+ * drawn again, only the sentence and the WhatsApp action.
+ */
+export const WhyShop: React.FC<{ compact?: boolean }> = ({ compact = false }) => (
   <section id="why-shop-with-us" aria-labelledby="why-shop-title" className={`${HOME_SECTION} bg-page`}>
-    <div className={`${HOME_WRAP} lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center`}>
-      <div className="lg:col-span-5">
-        <HomeSectionHeader
-          titleId="why-shop-title"
-          title="Why shop with us"
-          text="Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help."
-        />
+    {compact ? (
+      <div className={`${HOME_WRAP} lg:flex lg:items-center lg:justify-between lg:gap-10`}>
+        <HomeSectionHeader titleId="why-shop-title" title="Why shop with us" text={WHY_SHOP_TEXT} className="mb-4 lg:mb-0" />
+        <a
+          href={createSupportWhatsAppUrl(WHY_SHOP_WHATSAPP)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="sag-btn-outline w-full sm:w-auto h-12 gap-2 px-5 text-[15px] shrink-0"
+        >
+          <WhatsAppIcon className="w-5 h-5 shrink-0" />
+          Chat with us on WhatsApp
+        </a>
       </div>
-      <div className="lg:col-span-7">
-        <Assurance variant="full" whatsappMessage="Hi Suit Aura Girls, I need some help." />
+    ) : (
+      <div className={`${HOME_WRAP} lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center`}>
+        <div className="lg:col-span-5">
+          <HomeSectionHeader titleId="why-shop-title" title="Why shop with us" text={WHY_SHOP_TEXT} />
+        </div>
+        <div className="lg:col-span-7">
+          <Assurance variant="full" whatsappMessage={WHY_SHOP_WHATSAPP} />
+        </div>
       </div>
-    </div>
+    )}
   </section>
 );
 

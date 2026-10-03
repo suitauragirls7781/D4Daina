@@ -8,7 +8,7 @@ import { AuraReel, isReelVideoUrl, reelPosterSrc, reelVideoSrc, useAuraReels } f
 import { isAvailable } from '../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
 import { trackItem } from '../utils/visitorTracker';
-import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
+import { FadeImg, HOME_SECTION, HomeSectionHeader } from './HomeSections';
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 const PLACEHOLDER_COLOURS = new Set(['default', 'standard']);
@@ -125,9 +125,8 @@ export const AuraReelsSection: React.FC = () => {
         <div className="px-4 sm:px-6 lg:px-8">
           <HomeSectionHeader
             titleId="aura-reels-title"
-            eyebrow="Aura Reels"
             title="See the styles move"
-            text={`Tap a reel to watch${anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}`}
+            text={anyProduct ? 'Styles linked to a reel can be shopped right from the video.' : undefined}
           />
         </div>
         <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
@@ -143,7 +142,7 @@ export const AuraReelsSection: React.FC = () => {
                 >
                   {/* Nothing is drawn on the poster: the "Watch" label, caption and product sit below it */}
                   <span className="block aspect-[9/16] rounded-control overflow-hidden bg-sunken">
-                    <img
+                    <FadeImg
                       src={reelPosterSrc(reel, 400)}
                       alt=""
                       loading="lazy"

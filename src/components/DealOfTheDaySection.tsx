@@ -5,6 +5,7 @@ import { ProductSize } from '../types';
 import { Heart, Check, Clock } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { BagIcon } from './BrandIcons';
+import { FadeImg } from './HomeSections';
 
 type TimeLeft = { days: number; hours: number; minutes: number; seconds: number; fraction: number };
 
@@ -104,7 +105,7 @@ export const DealOfTheDaySection: React.FC = () => {
               className="block w-full overflow-hidden rounded-control bg-sunken cursor-pointer"
               aria-label={`View ${product.name}`}
             >
-              <img
+              <FadeImg
                 key={mainImage}
                 src={getCleanImageUrl(mainImage, 900)}
                 alt={product.name}

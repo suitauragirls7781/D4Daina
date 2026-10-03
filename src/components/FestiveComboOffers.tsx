@@ -4,7 +4,7 @@ import { Check } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { ProductSize } from '../types';
 import { BagIcon } from './BrandIcons';
-import { HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
+import { FadeImg, HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
 
 const MAX_PICKS = 4;
 
@@ -58,7 +58,7 @@ export const FestiveComboOffers: React.FC = () => {
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="combo-offer-title"
-          eyebrow={comboOffer.title || 'Combo offer'}
+          eyebrow={comboOffer.title || undefined}
           title={`Buy ${minItems} or more, save ${comboOffer.percent}%`}
           text={comboOffer.subtitle || `Mix and match any outfits. ${comboOffer.percent}% comes off automatically in your bag once it holds ${minItems} or more outfits.`}
         />
@@ -71,7 +71,7 @@ export const FestiveComboOffers: React.FC = () => {
               return (
                 <div key={product.id} className="flex flex-col min-w-0">
                   <button type="button" onClick={() => navigateToProduct(product)} className="block overflow-hidden rounded-control bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
-                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] object-cover object-top" loading="lazy" decoding="async" />
+                    <FadeImg src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] object-cover object-top" loading="lazy" decoding="async" />
                   </button>
                   <div className="pt-2 flex-1 flex flex-col gap-2">
                     <p className="text-sm leading-5 font-medium text-ink line-clamp-2 min-h-10">{product.name}</p>

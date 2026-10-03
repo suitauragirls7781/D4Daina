@@ -687,7 +687,7 @@ export const ProductDetailPage: React.FC = () => {
                   </div>
                 )}
                 {extraOffers > 0 && prepaidLines.length > 0 && (
-                  <button type="button" onClick={() => setMoreOffers((v) => !v)} aria-expanded={moreOffers} className="sag-link gap-1">
+                  <button type="button" onClick={() => setMoreOffers((v) => !v)} aria-expanded={moreOffers} className={`sag-link gap-1 ${moreOffers ? '' : '-mb-3'}`}>
                     {extraOffers} more {extraOffers === 1 ? 'offer' : 'offers'} <ChevronDown className={`w-4 h-4 transition-transform ${moreOffers ? 'rotate-180' : ''}`} aria-hidden="true" />
                   </button>
                 )}
@@ -718,15 +718,16 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Real counts for today, same thresholds as before. No line (and no empty band) when there is nothing to say. */}
             {todayStats && (todayStats.wishlists >= 2 || todayStats.views >= 5) && (
-              <p className="mt-3 flex items-center gap-1.5 text-[13px] leading-[18px] text-ink-muted">
+              <p className="mt-4 flex items-center gap-1.5 text-[13px] leading-[18px] text-ink-muted">
                 {todayStats.wishlists >= 2
                   ? <><Heart className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.wishlists} people saved this today</>
                   : <><Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.views} people viewed this today</>}
               </p>
             )}
 
+            {/* mt-1: the 44px label row already has 12px of air above its text, so the gap reads as 16px */}
             {sizes.length > 0 && !oneSize && (
-              <div id="pdp-size-selector" className="mt-3 scroll-mt-24">
+              <div id="pdp-size-selector" className="mt-1 scroll-mt-24">
                 <div className="flex items-center justify-between gap-3 min-h-11">
                   <p className={`text-sm leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
                     {needSize && !size ? chooseSizeText : <><span className="text-ink-muted">{sizeWord}:</span> <span className="font-semibold">{size || 'Select'}</span></>}

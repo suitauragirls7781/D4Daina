@@ -148,7 +148,8 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
       </div>
 
       {/* Matching accessories: tap to add them to the look */}
-      <ul aria-label="Matching accessories" className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 gap-y-5">
+      {/* Small cards (144px, photo 96px) in one row that scrolls sideways on phones and wraps from tablet width */}
+      <ul aria-label="Matching accessories" className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-3 -mx-4 px-4 py-1 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto overscroll-x-contain sm:flex-wrap sm:gap-x-4 sm:gap-y-5 sm:overflow-visible">
         {items.map((p) => {
           const added = inLook(p);
           const picked = Boolean(picks[p.id]) && !added;
@@ -156,22 +157,22 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
           const sizes = sizesOf(p);
           const colours = coloursOf(p);
           return (
-            <li key={p.id} className="flex flex-col min-w-0">
+            <li key={p.id} className="flex flex-col w-36 shrink-0 min-w-0">
               <button type="button" onClick={() => toggle(p)} disabled={added} aria-pressed={picked}
                 aria-label={added ? `${p.name} is in your bag with this outfit` : `${picked ? 'Remove' : 'Add'} ${p.name} ${picked ? 'from' : 'to'} this look`}
                 className="block w-full text-left cursor-pointer disabled:cursor-default active:[transform:none]!">
-                <span className="block overflow-hidden rounded-control bg-sunken">
-                  <img src={getCleanImageUrl(firstImage(p), 360)} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover object-top" />
-                </span>
-                <span className="mt-2 flex items-center justify-between gap-2">
-                  <span className="text-xs leading-4 font-semibold text-ink-muted truncate">{accessoryTypeOf(p)}</span>
+                <span className="flex items-start justify-between gap-2">
+                  <span className={`block w-24 shrink-0 overflow-hidden rounded-control bg-sunken ${picked || added ? 'outline-2 outline-ink' : ''}`}>
+                    <img src={getCleanImageUrl(firstImage(p), 240)} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover object-top" />
+                  </span>
                   <span aria-hidden="true" className={`w-6 h-6 shrink-0 rounded-[6px] border-[1.5px] flex items-center justify-center ${picked || added ? 'bg-ink border-ink text-white' : 'bg-white border-control'}`}>
                     {(picked || added) && <Check className="w-4 h-4" strokeWidth={3} />}
                   </span>
                 </span>
-                <span className="mt-0.5 block text-sm leading-5 font-medium text-ink line-clamp-2">{p.name}</span>
-                <span className="sag-num mt-0.5 flex items-baseline gap-1.5">
-                  <span className="text-base leading-5 font-bold text-ink">{inr(p.price)}</span>
+                <span className="mt-2 block text-xs leading-4 font-semibold text-ink-muted truncate">{accessoryTypeOf(p)}</span>
+                <span className="block text-[13px] leading-[18px] font-medium text-ink line-clamp-2">{p.name}</span>
+                <span className="sag-num mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="text-[15px] leading-5 font-bold text-ink">{inr(p.price)}</span>
                   {mrp > p.price && <span className="text-[13px] text-ink-faint line-through">{inr(mrp)}</span>}
                 </span>
               </button>
@@ -180,7 +181,7 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
                 <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} size`}>
                   {sizes.map((sz) => (
                     <button key={sz} type="button" onClick={() => choose(p, { size: sz })} aria-pressed={picks[p.id]?.size === sz}
-                      className="sag-chip h-11 min-w-11 px-2.5 text-sm">
+                      className="sag-chip h-11 min-w-11 px-1 text-[13px] whitespace-nowrap">
                       {sz}
                     </button>
                   ))}
@@ -190,14 +191,14 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
                 <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} colour`}>
                   {colours.map((c) => (
                     <button key={c.name} type="button" onClick={() => choose(p, { colour: c.name })} aria-pressed={picks[p.id]?.colour === c.name}
-                      className="sag-chip h-11 min-w-11 px-2.5 text-[13px] gap-1.5">
-                      <span className="w-3.5 h-3.5 shrink-0 rounded-full border border-line" style={{ background: c.hex || '#ccc' }} /> {c.name}
+                      className="sag-chip h-11 min-w-11 max-w-full px-2 text-[13px] gap-1.5">
+                      <span className="w-3.5 h-3.5 shrink-0 rounded-full border border-line" style={{ background: c.hex || '#ccc' }} /> <span className="truncate">{c.name}</span>
                     </button>
                   ))}
                 </div>
               )}
 
-              <p className={`mt-auto pt-2 text-[13px] leading-[18px] ${added ? 'text-ok font-semibold' : picked ? 'text-ink font-semibold' : 'text-ink-muted'}`}>
+              <p className={`mt-auto pt-1.5 text-[13px] leading-[18px] ${added ? 'text-ok font-semibold' : picked ? 'text-ink font-semibold' : 'text-ink-muted'}`}>
                 {added ? 'In your bag with this outfit' : picked ? (needsSizeChoice(p) && !picks[p.id]?.size ? 'Choose a size' : 'Added to your look') : 'Tap to add'}
               </p>
             </li>
@@ -206,7 +207,7 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
       </ul>
 
       {/* Summary and the one button that adds the look */}
-      <div className="mt-5 sag-card p-4 flex flex-col sm:flex-row sm:items-center gap-3" aria-live="polite">
+      <div className="mt-4 sag-card p-4 flex flex-col sm:flex-row sm:items-center gap-3" aria-live="polite">
         <div className="sag-num min-w-0 flex-1 text-sm leading-5 text-ink">
           {count > 0 ? (
             <p>

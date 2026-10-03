@@ -4,7 +4,7 @@ import { useAdmin } from '../context/AdminContext';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { LayoutGrid } from 'lucide-react';
 import { KIDS_TOYS, departmentOf } from '../utils/kids';
-import { HomeSectionHeader } from './HomeSections';
+import { FadeImg, HomeSectionHeader } from './HomeSections';
 
 /** Category rail at the top of the homepage, built only from categories that have products. */
 export const ShopByCategory: React.FC = () => {
@@ -64,7 +64,7 @@ export const ShopByCategory: React.FC = () => {
             <li key={card.name} className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(card.name as any)} className={tile}>
                 <span className={photo}>
-                  <img
+                  <FadeImg
                     src={card.image ? getCleanImageUrl(card.image, 320) : ELEGANT_PLACEHOLDER_SVG}
                     alt=""
                     loading="eager"
@@ -81,7 +81,7 @@ export const ShopByCategory: React.FC = () => {
             <li className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(KIDS_TOYS as any)} className={tile}>
                 <span className={photo}>
-                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full object-cover object-top" />
+                  <FadeImg src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full object-cover object-top" />
                 </span>
                 <span className={name}>{KIDS_TOYS}</span>
                 <span className={count}>{designs(kidsToys.count)}</span>
