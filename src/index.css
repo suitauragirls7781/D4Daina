@@ -389,6 +389,21 @@
 }
 .sag-btn-primary svg.lucide { color: inherit; }
 
+/* "Buy now" on the product page: yellow with dark text (owner's choice, 2026-10-03). Only this button. */
+.sag-btn-primary.sag-btn-buy { background: #FFC200; color: var(--sag-ink); }
+.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: #F0B400; }
+
+/* Product photo while it loads or right after the shopper picks another one: a small spinner, gone once it shows */
+.sag-photo-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.sag-photo-spinner {
+  width: 28px; height: 28px; border-radius: 9999px;
+  border: 3px solid rgba(255, 255, 255, 0.85); border-top-color: var(--sag-brand);
+  box-shadow: 0 0 0 1px rgba(27, 26, 23, 0.08);
+  animation: sag-photo-spin 700ms linear infinite;
+}
+@keyframes sag-photo-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sag-photo-spinner { animation: none; } }
+
 /* Secondary button */
 .sag-btn-outline {
   background: #FFFFFF;

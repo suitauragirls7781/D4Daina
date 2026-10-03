@@ -141,6 +141,12 @@ export const ProductDetailPage: React.FC = () => {
   const strip = useRef<HTMLDivElement>(null);
   const scrollFrame = useRef(0);
   const scrollLock = useRef(0);
+  // Small photos under the main photo (phones and tablets); the active one is kept in view
+  const thumbs = useRef<HTMLDivElement>(null);
+  // Photos that have finished loading, and a short "changing photo" moment after the shopper picks one
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [switching, setSwitching] = useState(false);
+  const switchTimer = useRef(0);
 
   useEffect(() => {
     setImageIdx(0);
@@ -269,6 +275,15 @@ export const ProductDetailPage: React.FC = () => {
   }, [lightbox]);
 
   useEffect(() => () => { if (scrollFrame.current) cancelAnimationFrame(scrollFrame.current); }, []);
+  useEffect(() => () => window.clearTimeout(switchTimer.current), []);
+  // Keep the small photo of the one on screen visible in its row
+  useEffect(() => {
+    const row = thumbs.current;
+    const item = row?.children[imageIdx] as HTMLElement | undefined;
+    if (!row || !item) return;
+    const left = item.offsetLeft - row.offsetLeft - (row.clientWidth - item.clientWidth) / 2;
+    row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+  }, [imageIdx]);
 
   // Desktop: the sticky photo column sits 16px under the site header, whatever height the header really has
   const [stickyTop, setStickyTop] = useState(96);
@@ -360,8 +375,15 @@ export const ProductDetailPage: React.FC = () => {
     else showToast(r.added ? 'Added to compare.' : 'Removed from compare.', 'info');
   };
 
+  const markLoaded = (img: string) => setLoadedImages((done) => (done[img] ? done : { ...done, [img]: true }));
+
   /** Shows photo `idx` and moves the strip to it. */
   const showImage = (idx: number, smooth = true) => {
+    if (idx !== imageIdx) {
+      setSwitching(true);
+      window.clearTimeout(switchTimer.current);
+      switchTimer.current = window.setTimeout(() => setSwitching(false), 350);
+    }
     setImageIdx(idx);
     const el = strip.current;
     const slide = el?.children[idx] as HTMLElement | undefined;
@@ -571,16 +593,36 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => { setImageIdx(idx); setLightbox(true); }}
                       aria-label={images.length > 1 ? `Open photo ${idx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className={`shrink-0 ${images.length > 1 ? 'w-[84vw] sm:w-[58%]' : 'w-full sm:w-[58%]'} lg:w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!`}
+                      className={`relative shrink-0 ${images.length > 1 ? 'w-[84vw] sm:w-[58%]' : 'w-full sm:w-[58%]'} lg:w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!`}
                     >
                       {idx === 0 ? (
-                        <img src={getCleanImageUrl(img, 1100)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" />
+                        <img src={getCleanImageUrl(img, 1100)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
                       ) : (
-                        <img src={getCleanImageUrl(img, 1100)} alt={`${product.name}, photo ${idx + 1}`} className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
+                        <img src={getCleanImageUrl(img, 1100)} alt={`${product.name}, photo ${idx + 1}`} className="w-full h-full object-cover object-top" loading="lazy" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
+                      )}
+                      {/* Shown only while this photo is loading, or for a moment after the shopper picks it */}
+                      {idx === imageIdx && (switching || !loadedImages[img]) && (
+                        <span className="sag-photo-loading" role="status" aria-label="Loading photo"><span className="sag-photo-spinner" /></span>
                       )}
                     </button>
                   ))}
                 </div>
+                {images.length > 1 && (
+                  <div ref={thumbs} className="sag-scroll-x lg:hidden mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto overscroll-x-contain">
+                    {images.map((img, idx) => (
+                      <button
+                        key={img + idx}
+                        type="button"
+                        onClick={() => showImage(idx)}
+                        aria-label={`Show photo ${idx + 1}`}
+                        aria-current={idx === imageIdx}
+                        className={`shrink-0 w-14 aspect-[4/5] rounded-chip overflow-hidden bg-sunken border-2 cursor-pointer ${idx === imageIdx ? 'border-ink' : 'border-transparent'}`}
+                      >
+                        <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {images.length > 1 && (
                   <div className="mt-2 h-5 flex items-center gap-3" aria-hidden="true">
                     <span className="flex flex-1 gap-1">
@@ -777,7 +819,7 @@ export const ProductDetailPage: React.FC = () => {
                     <button id="pdp-add-to-bag" type="button" onClick={() => (inBagNow ? openBag() : onAdd())} className="sag-btn-outline flex-1 gap-2 cursor-pointer">
                       {justAdded ? <><Check className="w-[18px] h-[18px]" aria-hidden="true" /> Added to bag</> : inBagNow ? 'View bag' : 'Add to bag'}
                     </button>
-                    <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary flex-[1.3] cursor-pointer">Buy now</button>
+                    <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary sag-btn-buy flex-[1.3] cursor-pointer">Buy now</button>
                   </>
                 )}
               </div>
@@ -904,7 +946,7 @@ export const ProductDetailPage: React.FC = () => {
             <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="sag-btn-outline flex-1 min-w-0 px-2 text-[15px] gap-1.5 whitespace-nowrap cursor-pointer">
               {justAdded ? <><Check className="w-4 h-4" aria-hidden="true" /> Added</> : inBagNow ? 'View bag' : 'Add to bag'}
             </button>
-            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary flex-[1.3] min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
+            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary sag-btn-buy flex-[1.3] min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
           </div>
         )}
       </div>
@@ -931,7 +973,7 @@ export const ProductDetailPage: React.FC = () => {
           </div>
           {sizeChips(sheetError)}
           {kidsPage && <p className="mt-2.5 text-[13px] leading-[18px] text-ink-muted">If your child is between two sizes, pick the bigger one.</p>}
-          <button type="button" onClick={confirmSheet} className="sag-btn-primary mt-4 w-full cursor-pointer">{sheetAction === 'add' ? 'Add to bag' : 'Buy now'}</button>
+          <button type="button" onClick={confirmSheet} className={`sag-btn-primary ${sheetAction === 'add' ? '' : 'sag-btn-buy'} mt-4 w-full cursor-pointer`}>{sheetAction === 'add' ? 'Add to bag' : 'Buy now'}</button>
           <Assurance variant="line" className="mt-3" />
         </BottomSheet>
       )}
