@@ -965,8 +965,14 @@ export const CheckoutPage: React.FC = () => {
     noMethodSwitch || paymentSettings?.enableCards ? 'debit / credit cards' : '',
     noMethodSwitch || paymentSettings?.enableNetBanking ? 'net banking and wallets' : '',
   ].filter(Boolean).join(', ');
+  const upiOnly = Boolean(paymentSettings?.enableUpi) && !paymentSettings?.enableCards && !paymentSettings?.enableNetBanking;
+  const razorpayTitle = upiOnly ? 'Pay by UPI' : [
+    noMethodSwitch || paymentSettings?.enableUpi ? 'UPI' : '',
+    noMethodSwitch || paymentSettings?.enableCards ? 'cards' : '',
+    noMethodSwitch || paymentSettings?.enableNetBanking ? 'net banking' : '',
+  ].filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' & $1');
   const paymentOptions = ([
-    ['razorpay', 'UPI, cards & net banking', razorpayDetail],
+    ['razorpay', razorpayTitle, upiOnly ? 'Google Pay, PhonePe, Paytm, BHIM or any UPI app, or scan the QR code' : razorpayDetail],
     ['payu', 'Pay with PayU', 'UPI, debit / credit cards and net banking on PayU\'s secure page'],
   ] as Array<[Gateway, string, string]>).filter(([id]) => gateways?.[id]);
   const payButtonContent = isProcessing ? (

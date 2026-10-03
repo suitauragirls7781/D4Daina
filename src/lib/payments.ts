@@ -13,12 +13,19 @@ export const razorpayDisplayConfig = (settings?: MethodSwitches) => {
   const banking = none || Boolean(settings?.enableNetBanking);
   const blocks: Record<string, { name: string; instruments: Array<Record<string, unknown>> }> = {};
   if (upi) {
-    blocks.upiApps = { name: 'Pay with UPI app', instruments: [{ method: 'upi', flows: ['intent'], apps: ['google_pay', 'phonepe', 'paytm'] }] };
-    blocks.upiOther = { name: 'UPI ID or QR code', instruments: [{ method: 'upi', flows: ['collect', 'qr'] }] };
+    // No app list: Razorpay then offers every UPI app installed on the phone (GPay, PhonePe, Paytm, BHIM, CRED, bank apps...)
+    blocks.upiApps = { name: 'Pay with any UPI app', instruments: [{ method: 'upi', flows: ['intent'] }] };
+    // Laptops and phones without a UPI app: scan the QR with any UPI app, or type a UPI ID
+    blocks.upiOther = { name: 'Scan QR or enter UPI ID', instruments: [{ method: 'upi', flows: ['qr', 'collect'] }] };
   }
   const other = [...(cards ? [{ method: 'card' }] : []), ...(banking ? [{ method: 'netbanking' }, { method: 'wallet' }] : [])];
   if (other.length) blocks.other = { name: cards && banking ? 'Cards, net banking & wallets' : cards ? 'Debit & credit cards' : 'Net banking & wallets', instruments: other };
-  return { display: { blocks, sequence: Object.keys(blocks).map((key) => `block.${key}`), preferences: { show_default_blocks: false } } };
+  // Methods the admin switched off are hidden everywhere in the window, not only left out of the blocks
+  const hide = [
+    ...(cards ? [] : [{ method: 'card' }, { method: 'emi' }]),
+    ...(banking ? [] : [{ method: 'netbanking' }, { method: 'wallet' }, { method: 'paylater' }, { method: 'cardless_emi' }]),
+  ];
+  return { display: { blocks, sequence: Object.keys(blocks).map((key) => `block.${key}`), preferences: { show_default_blocks: false }, ...(hide.length ? { hide } : {}) } };
 };
 
 export const loadRazorpaySDK = (): Promise<boolean> => new Promise((resolve) => {

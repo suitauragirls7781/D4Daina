@@ -254,7 +254,7 @@ export const WhyShop: React.FC = () => (
         <HomeSectionHeader
           titleId="why-shop-title"
           title="Why shop with us"
-          text="Pay online by UPI, card or net banking. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help."
+          text="Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help."
         />
       </div>
       <div className="lg:col-span-7">

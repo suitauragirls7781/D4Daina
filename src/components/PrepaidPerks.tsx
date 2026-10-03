@@ -16,7 +16,7 @@ export const PrepaidPerks: React.FC = () => {
     shippingCharge === 0
       ? { icon: TruckIcon, text: 'Free shipping on every order', sale: true }
       : freeShippingThreshold > 0 && { icon: TruckIcon, text: `Free shipping above ₹${freeShippingThreshold.toLocaleString('en-IN')}`, sale: true },
-    { icon: BagIcon, text: 'Pay in seconds with UPI, cards or net banking' },
+    { icon: BagIcon, text: 'Pay in seconds with any UPI app' },
     { icon: LockIcon, text: 'Secure online checkout' },
     { icon: OrdersIcon, text: 'Order confirmation on email' },
     { icon: PackageIcon, text: 'Track your order anytime' },
