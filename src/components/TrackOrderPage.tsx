@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
+import { useAdmin } from '../context/AdminContext';
+import { useRouter } from '../context/RouterContext';
 import { ordersApi } from '../lib/api';
 import { AlertCircle, ChevronRight, Loader2, Phone, Search, Share2 } from 'lucide-react';
 import { PinIcon, ReturnIcon } from './StoreIcons';
 import { WhatsAppIcon } from './BrandIcons';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { getCleanImageUrl } from '../utils/imageHelper';
-import { CourierCard, DeliveryAgentCard, OrderProgress, OrderWithRequests, StatusHistory, StatusPill, formatDateTime, formatWindowEnd, latestUpdate } from './OrderProgress';
+import { CourierCard, DeliveryAgentCard, OrderProgress, OrderWithRequests, StatusHistory, StatusPill, canRequestCancel, formatDateTime, formatWindowEnd, latestUpdate } from './OrderProgress';
 import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
@@ -35,6 +37,8 @@ const savedContactFor = (orderNumber: string) => {
 export const TrackOrderPage: React.FC = () => {
   const { trackOrderNumber, confirmedOrder, setActivePage, showToast } = useShop();
   const { user } = useAuth();
+  const { storeSettings } = useAdmin();
+  const { navigate } = useRouter();
 
   const [orderQuery, setOrderQuery] = useState(trackOrderNumber || confirmedOrder?.orderNumber || '');
   const [contactQuery, setContactQuery] = useState(() => confirmedOrder?.customerEmail || savedContactFor(trackOrderNumber || confirmedOrder?.orderNumber || ''));
@@ -85,6 +89,8 @@ export const TrackOrderPage: React.FC = () => {
   const address = isOwner ? order?.deliveryAddress : null;
   const pieces = order ? order.items.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0) : 0;
   const paid = order?.paymentStatus === 'Paid';
+  // A paid order that has not been shipped can still be cancelled, but only from My account (sign-in needed)
+  const canCancel = order ? canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0) : false;
 
   const share = async () => {
     if (!order) return;
@@ -326,6 +332,14 @@ export const TrackOrderPage: React.FC = () => {
                   </button>
                 )}
               </div>
+              {canCancel && (
+                <div>
+                  <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link">Need to cancel this order?</button>
+                  <p className="text-[13px] leading-[18px] text-ink-muted">
+                    {user ? 'You can ask to cancel it from My account → Orders.' : 'Sign in with the email used for this order, then open My account → Orders.'}
+                  </p>
+                </div>
+              )}
             </section>
           </>
         )}

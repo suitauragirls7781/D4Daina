@@ -581,7 +581,7 @@ export const AdminSettings: React.FC = () => {
           <fieldset className="space-y-4">
             <legend className="text-base leading-[22px] font-semibold text-ink border-b border-line pb-2 w-full mb-4">Cancellation &amp; delivery</legend>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Cancellation window (hours, 0 = no limit)" hint="Customers can ask to cancel only before packing and within this many hours of paying.">
+              <Field label="Cancellation window (hours, 0 = no limit)" hint="Customers can ask to cancel only before the order is shipped and within this many hours of paying.">
                 <input type="number" inputMode="numeric" min={0} max={720} step={1} value={storeForm.cancellationWindowHours ?? 0} onChange={(e) => setStoreForm({ ...storeForm, cancellationWindowHours: Number(e.target.value) })} className={`${input} sag-num`} />
               </Field>
               <Field label="Processing days (to pack and ship)">

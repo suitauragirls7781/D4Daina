@@ -412,7 +412,7 @@ export const CancellationPolicyPage: React.FC = () => {
       {
         id: 'window',
         title: 'Cancellation window',
-        body: <p className={P}>You can cancel your order free of cost while it is <S>still being processed</S> — that is, before it is packed and handed to the courier.</p>,
+        body: <p className={P}>You can cancel your order free of cost while it is <S>still with us</S> — that is, before it is handed to the courier.</p>,
       },
       {
         id: 'how-to',

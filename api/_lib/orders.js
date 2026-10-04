@@ -508,16 +508,20 @@ export const ORDER_STATUSES = ['Pending', 'Processing', 'Packed', 'Shipped', 'In
 
 export { timelineEntry };
 
-/** Statuses in which a customer may still ask to cancel (nothing has been packed yet). */
-export const CANCELLABLE_STATUSES = ['Pending', 'Processing'];
+/**
+ * Statuses in which a customer may still ask to cancel: until the parcel is handed to the courier.
+ * A packed order is still in the store, so it can be asked for; from Shipped onward it cannot.
+ * The browser's copy of this list is CANCELLABLE_STATUSES in src/components/OrderProgress.tsx.
+ */
+export const CANCELLABLE_STATUSES = ['Pending', 'Processing', 'Packed'];
 
 /** Statuses in which the order is not going ahead (money back to the customer). */
 const STOPPED_STATUSES = ['Cancelled', 'Refund Requested', 'Refunded'];
 
 /**
  * How an admin update closes a customer's open cancellation request: 'cancelled', 'kept', or null when it stays open.
- * The admin choosing "Keep order", or moving the order past Processing (packed, shipped, delivered), keeps it;
- * cancelling or refunding closes it as cancelled. nextStatus is the status the update sets ('' = unchanged).
+ * The admin choosing "Keep order", or handing the order to the courier (shipped or any later status), keeps it;
+ * packing the order leaves the request open. Cancelling or refunding closes it as cancelled. nextStatus is the status the update sets ('' = unchanged).
  */
 export const cancelRequestOutcome = (order, { nextStatus = '', keep = false } = {}) => {
   const request = order?.cancelRequest;
@@ -546,7 +550,7 @@ export const cancelBlockReason = (order, { windowHours = 0, now = Date.now() } =
   if (order.paymentStatus === 'Refunded' || order.status === 'Refunded') return 'This order has already been refunded.';
   if (order.paymentStatus !== 'Paid') return 'Only paid orders can be cancelled from your account.';
   if (!CANCELLABLE_STATUSES.includes(order.status)) {
-    return 'This order has already been packed or shipped, so it can no longer be cancelled here. Please contact us on WhatsApp.';
+    return 'This order has already been shipped, so it can no longer be cancelled here. Please contact us on WhatsApp.';
   }
   // The owner's extra time limit (Admin → Settings → Checkout), counted from payment; 0 = none
   const paid = new Date(order.paidAt || '').getTime();
@@ -557,7 +561,7 @@ export const cancelBlockReason = (order, { windowHours = 0, now = Date.now() } =
 };
 
 /**
- * Records a signed-in customer's request to cancel their own paid, not-yet-packed order.
+ * Records a signed-in customer's request to cancel their own paid order that has not been shipped yet.
  * Nothing is refunded here: the admin reviews the request, cancels the order and refunds by hand.
  * Returns the updated order.
  */

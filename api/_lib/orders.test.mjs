@@ -289,12 +289,13 @@ const cancelSetup = (overrides = {}) => {
   return db;
 };
 
-test('cancel eligibility: only paid orders that are not packed, one request per order', () => {
+test('cancel eligibility: only paid orders that are not shipped yet (packed still counts), one request per order', () => {
   const base = { paymentStatus: 'Paid', status: 'Processing' };
   assert.equal(cancelBlockReason(base), '');
   assert.equal(cancelBlockReason({ ...base, status: 'Pending' }), '');
-  for (const status of ['Packed', 'Shipped', 'Delivered', 'Refund Requested']) {
-    assert.match(cancelBlockReason({ ...base, status }), /packed or shipped/, status);
+  assert.equal(cancelBlockReason({ ...base, status: 'Packed' }), '', 'a packed order is still in the store');
+  for (const status of ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned', 'Refund Requested']) {
+    assert.match(cancelBlockReason({ ...base, status }), /already been shipped/, status);
   }
   assert.match(cancelBlockReason({ ...base, status: 'Cancelled' }), /already cancelled/);
   assert.match(cancelBlockReason({ paymentStatus: 'Refunded', status: 'Refunded' }), /refunded/);
@@ -327,9 +328,9 @@ test('cancellation request is refused for other customers, guests, bad input and
   await assert.rejects(requestCancellation(db, { orderNumber: 'SAG-2', email: 'asha@example.com', reason: ' ' }), /why you want to cancel/);
   assert.equal(db.data.orders['SAG-2'].cancelRequest, undefined);
   for (const [overrides, pattern] of [
-    [{ status: 'Packed' }, /packed or shipped/],
-    [{ status: 'Shipped' }, /packed or shipped/],
-    [{ status: 'Delivered' }, /packed or shipped/],
+    [{ status: 'Shipped' }, /already been shipped/],
+    [{ status: 'Out for Delivery' }, /already been shipped/],
+    [{ status: 'Delivered' }, /already been shipped/],
     [{ status: 'Cancelled' }, /already cancelled/],
     [{ paymentStatus: 'Unpaid', status: 'Pending' }, /Only paid/],
   ]) {
@@ -337,6 +338,19 @@ test('cancellation request is refused for other customers, guests, bad input and
     await assert.rejects(requestCancellation(other, { orderNumber: 'SAG-2', email: 'asha@example.com', reason: 'Changed my mind' }), (error) => pattern.test(error.message) && error.status === 409);
     assert.equal(other.data.orders['SAG-2'].cancelRequest, undefined);
   }
+});
+
+test('a packed order can still be asked to be cancelled: the request is recorded and the order stays Packed', async () => {
+  const db = cancelSetup({ status: 'Packed' });
+  const order = await requestCancellation(db, { orderNumber: 'SAG-2', email: 'asha@example.com', reason: 'Changed my mind' });
+  const saved = db.data.orders['SAG-2'];
+  assert.equal(order.cancelRequest.reason, 'Changed my mind');
+  assert.deepEqual([saved.status, saved.paymentStatus, saved.cancelRequest.reason], ['Packed', 'Paid', 'Changed my mind']);
+  assert.equal(saved.timeline.at(-1).status, 'Cancellation requested');
+  // The request stays open while the order is packed; it closes only when the order is shipped, kept or cancelled
+  assert.equal(cancelRequestOutcome(saved), null);
+  assert.equal(cancelRequestOutcome(saved, { nextStatus: 'Shipped' }), 'kept');
+  assert.equal(cancelRequestOutcome(saved, { nextStatus: 'Cancelled' }), 'cancelled');
 });
 
 test('guest lookups get the short view; the owner view adds the full address and payment reference', () => {
@@ -353,12 +367,18 @@ test('guest lookups get the short view; the owner view adds the full address and
   assert.equal(own.customerMobile, '');
 });
 
-test('an open cancellation request is closed by keep, by any move past Processing, and by cancel / refund', () => {
+test('an open cancellation request is closed by keep, by shipping the order (or any later status), and by cancel / refund', () => {
   const open = { status: 'Processing', cancelRequest: { reason: 'r', at: 'a' } };
   assert.equal(cancelRequestOutcome(open), null, 'a plain save (e.g. tracking only) leaves it open');
   assert.equal(cancelRequestOutcome(open, { nextStatus: 'Pending' }), null);
+  assert.equal(cancelRequestOutcome(open, { nextStatus: 'Packed' }), null, 'packing the order leaves the request open');
+  assert.equal(cancelRequestOutcome({ ...open, status: 'Packed' }), null, 'a request on a packed order stays open');
+  assert.equal(cancelRequestOutcome({ ...open, status: 'Packed' }, { keep: true }), 'kept');
   assert.equal(cancelRequestOutcome(open, { keep: true }), 'kept');
-  for (const status of ['Packed', 'Shipped', 'Delivered']) assert.equal(cancelRequestOutcome(open, { nextStatus: status }), 'kept', status);
+  for (const status of ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered']) {
+    assert.equal(cancelRequestOutcome(open, { nextStatus: status }), 'kept', status);
+    assert.equal(cancelRequestOutcome({ ...open, status: 'Packed' }, { nextStatus: status }), 'kept', `Packed -> ${status}`);
+  }
   for (const status of ['Cancelled', 'Refund Requested', 'Refunded']) assert.equal(cancelRequestOutcome(open, { nextStatus: status }), 'cancelled', status);
   assert.equal(cancelRequestOutcome(open, { nextStatus: 'Cancelled', keep: true }), 'cancelled', 'cancelling wins over keep');
   // A request left open on an order that has already moved on (older data) closes on the next save.
@@ -815,7 +835,9 @@ test('cancellation time limit counts from payment; 0 or no payment time = no ext
   assert.equal(cancelBlockReason(order, { windowHours: 48, now }), '');
   assert.equal(cancelBlockReason(order, { windowHours: 0, now }), '');
   assert.equal(cancelBlockReason({ paymentStatus: 'Paid', status: 'Processing' }, { windowHours: 1, now }), '');
-  assert.match(cancelBlockReason({ ...order, status: 'Packed' }, { windowHours: 48, now }), /packed or shipped/, 'still only before packing');
+  assert.equal(cancelBlockReason({ ...order, status: 'Packed' }, { windowHours: 48, now }), '', 'a packed order inside the window can be asked for');
+  assert.match(cancelBlockReason({ ...order, status: 'Packed' }, { windowHours: 24, now }), /within 24 hours of payment/, 'the time limit applies to a packed order too');
+  assert.match(cancelBlockReason({ ...order, status: 'Shipped' }, { windowHours: 48, now }), /already been shipped/, 'never after it is shipped');
   // requestCancellation reads the owner's window (no limit until the owner sets one)
   const lateOrders = { 'SAG-9': { orderNumber: 'SAG-9', customerEmail: 'a@b.com', paymentStatus: 'Paid', status: 'Processing', paidAt: '2020-01-01T00:00:00Z', timeline: [] } };
   const limited = createDb({ orders: structuredClone(lateOrders), storefront_settings: { storeSettings: { value_json: JSON.stringify({ cancellationWindowHours: 24 }) } } });

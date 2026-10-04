@@ -18,8 +18,40 @@ export type CancelRequest = {
 };
 export type OrderWithRequests = Order & { cancelRequest?: CancelRequest | null };
 
-/** Statuses in which a cancellation can still be asked for / acted on (same as api/_lib/orders.js). */
-export const CANCELLABLE_STATUSES: readonly string[] = ['Pending', 'Processing'];
+/**
+ * Statuses in which a cancellation can still be asked for / acted on: until the parcel is handed to the
+ * courier, so a packed order still counts (same list as CANCELLABLE_STATUSES in api/_lib/orders.js).
+ */
+export const CANCELLABLE_STATUSES: readonly string[] = ['Pending', 'Processing', 'Packed'];
+
+/** True when the owner's cancellation window (hours after payment; 0 = no limit) has run out for this order. */
+const cancelWindowPassed = (order: Order, windowHours = 0) => {
+  const paid = new Date(order.paidAt || '').getTime();
+  return windowHours > 0 && Number.isFinite(paid) && Date.now() - paid > windowHours * 60 * 60 * 1000;
+};
+
+/**
+ * Same rule as the server (api/_lib/orders.js cancelBlockReason): paid, not shipped yet, no earlier request, and
+ * within the owner's cancellation window after payment (Admin → Settings → Checkout; 0 = no time limit).
+ */
+export const canRequestCancel = (order: OrderWithRequests, windowHours = 0) =>
+  order.paymentStatus === 'Paid' && CANCELLABLE_STATUSES.includes(order.status) && !order.cancelRequest && !cancelWindowPassed(order, windowHours);
+
+/**
+ * One short line for a paid order that can no longer be cancelled, shown where the "Cancel order" button would be.
+ * '' when the button is shown, when a request was already sent (the order's own status lines cover that), and for
+ * orders that are delivered, cancelled or refunded (there is nothing left to cancel).
+ */
+export const cancelClosedNote = (order: OrderWithRequests, windowHours = 0) => {
+  if (order.paymentStatus !== 'Paid' || order.cancelRequest) return '';
+  if (['Shipped', 'In Transit', 'Out for Delivery'].includes(order.status)) {
+    return "This order has been shipped, so it can't be cancelled. You can ask for a return or exchange within 7 days of delivery.";
+  }
+  if (CANCELLABLE_STATUSES.includes(order.status) && cancelWindowPassed(order, windowHours)) {
+    return 'The cancellation time for this order has passed.';
+  }
+  return '';
+};
 
 // ---- Dates (only real timestamps from the order; nothing is estimated) ----
 

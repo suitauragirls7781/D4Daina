@@ -5,7 +5,7 @@ import {
 } from './lib.mjs';
 
 const SIDEBAR_PAGES = [
-  'Products', 'Add Product', 'Kids Wear', 'Toys', 'Categories', 'Orders', 'Returns & Exchanges', 'Customers', 'Captured Leads',
+  'Products', 'Add Product', 'Kids Wear', 'Toys', 'Categories', 'Orders', 'Returns & Exchanges', 'Cancellations', 'Customers', 'Captured Leads',
   'Coupons', 'Deal of the Day', 'Combo Offer', 'Reviews', 'Homepage', 'Hero Slides', 'Discovery features', 'Aura Reels',
   'Complete the Look', 'Banners', 'Instagram Reels', 'Payment Gateways', 'Settings', 'Dashboard',
 ];

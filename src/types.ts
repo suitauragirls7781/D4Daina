@@ -459,6 +459,7 @@ export type AdminTab =
   | 'categories'
   | 'orders'
   | 'returns'
+  | 'cancellations'
   | 'customers'
   | 'leads'
   | 'abandoned'

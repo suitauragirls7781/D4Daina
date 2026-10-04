@@ -188,7 +188,7 @@ export const AdminDashboardOverview: React.FC = () => {
   const totalOrders = revenueOrders.length;
   const pendingOrders = paidOrders.filter((o) => o.status === 'Processing' || o.status === 'Packed').length;
   const returnRequests = paidOrders.filter((o) => (o.returnRequest?.status ? ['requested', 'approved', 'received'].includes(o.returnRequest.status) : o.status === 'Refund Requested')).length;
-  // Cancellation requests the owner has not answered yet (answered on the Returns page)
+  // Cancellation requests the owner has not answered yet (answered on the Cancellations page)
   const cancelRequests = orders.filter((o) => o.cancelRequest && !o.cancelRequest.handledAt).length;
   const totalRevenue = revenueOrders.reduce((sum, ord) => sum + ord.finalTotal, 0);
   const todayRevenue = revenueOrders.filter((o) => String(o.date).startsWith(todayStr)).reduce((sum, ord) => sum + ord.finalTotal, 0);
@@ -221,7 +221,7 @@ export const AdminDashboardOverview: React.FC = () => {
 
   const salesTiles: Array<{ label: string; value: string; note: string; icon: React.FC<{ className?: string }>; highlight?: boolean; open?: () => void }> = [
     { label: 'To pack & ship', value: String(pendingOrders), note: 'Processing or packed', icon: Truck, highlight: ordersLoaded && pendingOrders > 0, open: () => openAdminTab('orders') },
-    { label: 'Returns & cancellations', value: String(returnRequests + cancelRequests), note: cancelRequests > 0 ? `${cancelRequests} cancellation ${cancelRequests === 1 ? 'request' : 'requests'} waiting` : 'Waiting or in progress', icon: RotateCcw, highlight: ordersLoaded && cancelRequests > 0, open: () => openAdminTab('returns') },
+    { label: 'Returns & cancellations', value: String(returnRequests + cancelRequests), note: cancelRequests > 0 ? `${cancelRequests} cancellation ${cancelRequests === 1 ? 'request' : 'requests'} waiting` : 'Waiting or in progress', icon: RotateCcw, highlight: ordersLoaded && cancelRequests > 0, open: () => openAdminTab(cancelRequests > 0 ? 'cancellations' : 'returns') },
     { label: 'Revenue (paid)', value: `₹${Math.round(totalRevenue).toLocaleString('en-IN')}`, note: `Today ₹${Math.round(todayRevenue).toLocaleString('en-IN')} · ${totalOrders} orders`, icon: IndianRupee },
     { label: 'Average order value', value: `₹${totalOrders > 0 ? Math.round(totalRevenue / totalOrders).toLocaleString('en-IN') : 0}`, note: 'Paid, not cancelled', icon: TrendingUp },
   ];

@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
+import { useAdmin } from '../context/AdminContext';
+import { useRouter } from '../context/RouterContext';
 import { ordersApi } from '../lib/api';
 import { Order, Product } from '../types';
 import { Check, ChevronRight, Clock, Copy, FileText, Loader2, Mail, Send } from 'lucide-react';
@@ -11,7 +14,7 @@ import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { similarProducts } from '../utils/recommend';
 import { isAvailable } from '../utils/smartQuery';
 import { trackItem } from '../utils/visitorTracker';
-import { OrderProgress } from './OrderProgress';
+import { OrderProgress, canRequestCancel } from './OrderProgress';
 import { OrderInvoice } from './OrderInvoice';
 import { ProductCard } from './ProductCard';
 
@@ -48,6 +51,9 @@ const formatDateTime = (value?: string) => {
 
 export const OrderConfirmationPage: React.FC = () => {
   const { confirmedOrder, setConfirmedOrder, setActivePage, navigateToCategory, setTrackOrderNumber, allProducts = [], coupons = [], showToast } = useShop();
+  const { user } = useAuth();
+  const { storeSettings } = useAdmin();
+  const { navigate } = useRouter();
   const [loading, setLoading] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const suggestions = useMemo(() => (confirmedOrder ? alsoLike(confirmedOrder, allProducts) : []), [confirmedOrder, allProducts]);
@@ -134,6 +140,8 @@ export const OrderConfirmationPage: React.FC = () => {
   const moneyRow = 'flex justify-between gap-3';
   const blockTitle = 'text-base leading-[22px] font-semibold text-ink';
   const trackOrder = () => { setTrackOrderNumber(order.orderNumber); setActivePage('track-order'); };
+  // A paid order that has not been shipped can still be cancelled, but only from My account (sign-in needed)
+  const canCancel = canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0);
 
   return (
     <div id="order-confirmation-page" className="bg-page px-4 pt-6 pb-10 sm:py-12">
@@ -300,6 +308,15 @@ export const OrderConfirmationPage: React.FC = () => {
             </button>
           )}
         </div>
+
+        {canCancel && (
+          <div className="text-center">
+            <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link">Need to cancel this order?</button>
+            <p className="text-[13px] leading-[18px] text-ink-muted">
+              {user ? 'You can ask to cancel it from My account → Orders.' : 'Sign in with the email used for this order, then open My account → Orders.'}
+            </p>
+          </div>
+        )}
 
         {paid && nextCoupons.length > 0 && (
           <section className="sag-card p-4 sm:p-5 space-y-3" aria-label="Coupons for your next order">

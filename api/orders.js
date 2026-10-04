@@ -228,7 +228,7 @@ const notifyStoreOfCancelRequest = async (db, order) => {
         para(`Order <strong>${escapeHtml(order.orderNumber)}</strong> · ${inr(order.finalTotal)} paid · status <strong>${escapeHtml(order.status)}</strong>`),
         para(`Customer: ${escapeHtml(order.customerName || '')} (${escapeHtml(order.customerEmail || '')})`),
         para(`<strong>Reason:</strong> ${escapeHtml(reason)}`),
-        para(`If it has not been packed, set the order to Cancelled in the admin panel (its stock goes back automatically) and refund the payment${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''} from your Razorpay dashboard.`),
+        para(`If it has not been handed to the courier, set the order to Cancelled in the admin panel (its stock goes back automatically) and refund the payment${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''} from your Razorpay dashboard.`),
         `<p style="margin:20px 0 4px"><a href="${adminUrl}" style="display:inline-block;background:#4B1D3F;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">OPEN ORDER</a></p>`,
       ].join('\n')),
       text: `Cancellation requested for order ${order.orderNumber} (${inr(order.finalTotal)} paid) by ${order.customerEmail}. Reason: ${reason}. Review it at ${adminUrl}`,
@@ -657,7 +657,7 @@ const actions = {
     };
   },
 
-  // Signed-in customer asks to cancel their own paid order before it is packed. Nothing is refunded
+  // Signed-in customer asks to cancel their own paid order before it is shipped. Nothing is refunded
   // automatically: the store is emailed and the admin cancels and refunds from the admin panel.
   async 'request-cancel'(db, body, req, identity) {
     if (!identity.email) throw new UserError('Please sign in to cancel an order.', 401);
@@ -772,7 +772,7 @@ const actions = {
 
       let restore = null;
       const changed = Boolean(nextStatus && nextStatus !== data.status);
-      // An open cancellation request is closed when the admin keeps the order, moves it past Processing, or cancels / refunds it.
+      // An open cancellation request is closed when the admin keeps the order, ships it, or cancels / refunds it.
       const outcome = cancelRequestOutcome(data, { nextStatus: changed ? nextStatus : '', keep: body.cancelRequestHandled === true });
       if (outcome) update.cancelRequest = { ...data.cancelRequest, handledAt: update.updatedAt, outcome };
       if (changed) {

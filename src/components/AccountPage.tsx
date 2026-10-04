@@ -6,7 +6,7 @@ import { COLLECTIONS, emailKey, getDocById, saveDoc } from '../lib/dataStore';
 import { ordersApi } from '../lib/api';
 import { PendingPayment } from './PendingPayment';
 import { WhatsAppIcon } from './BrandIcons';
-import { CANCELLABLE_STATUSES, CourierCard, DeliveryAgentCard, ORDER_FILTERS, OrderFilter, OrderProgress, OrderWithRequests, ReturnProgress, StatusPill, formatDateTime, formatWindowEnd, isDelivered, latestUpdate, matchesOrderFilter, paymentFailed } from './OrderProgress';
+import { CourierCard, canRequestCancel, cancelClosedNote, DeliveryAgentCard, ORDER_FILTERS, OrderFilter, OrderProgress, OrderWithRequests, ReturnProgress, StatusPill, formatDateTime, formatWindowEnd, isDelivered, latestUpdate, matchesOrderFilter, paymentFailed } from './OrderProgress';
 import { isAvailable } from '../utils/smartQuery';
 import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
 import { OrderInvoice, useDialogA11y } from './OrderInvoice';
@@ -88,15 +88,6 @@ const formatDate = (value?: string) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
-/**
- * Same rule as the server (api/_lib/orders.js cancelBlockReason): paid, not packed yet, no earlier request, and
- * within the owner's cancellation window after payment (Admin → Settings → Checkout; 0 = no time limit).
- */
-const canRequestCancel = (order: OrderWithRequests, windowHours = 0) => {
-  if (order.paymentStatus !== 'Paid' || !CANCELLABLE_STATUSES.includes(order.status) || order.cancelRequest) return false;
-  const paid = new Date(order.paidAt || '').getTime();
-  return !(windowHours > 0 && Number.isFinite(paid) && Date.now() - paid > windowHours * 60 * 60 * 1000);
-};
 /** "Buy again" is offered on finished orders: delivered (or returned) and cancelled ones. */
 const canBuyAgain = (order: OrderWithRequests) => (isDelivered(order) || order.status === 'Cancelled') && order.items.some((item) => !item.lookParentId);
 const hasReceipt = (order: OrderWithRequests) => order.paymentStatus === 'Paid' || order.paymentStatus === 'Refunded';
@@ -171,7 +162,7 @@ const CancelOrderDialog: React.FC<{
         </div>
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 space-y-5">
           <p id="cancel-order-desc" className="text-sm leading-5 text-ink-muted">
-            You can ask to cancel until your order is packed. Our team reviews every request and emails you. Orders cancelled before dispatch are refunded in full to your original payment method.{' '}
+            You can ask to cancel until your order is handed to the courier. Our team reviews every request and emails you. Orders cancelled before dispatch are refunded in full to your original payment method.{' '}
             <button type="button" onClick={onPolicy} className="font-semibold text-brand underline underline-offset-[3px] cursor-pointer">Cancellation policy</button>
           </p>
           <fieldset className="space-y-2">
@@ -290,7 +281,7 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
     { label: 'Returns & exchanges', hint: 'Start a return or size exchange', action: () => onTab('returns') },
     { label: 'Shipping policy', hint: 'Delivery areas, charges and timelines', action: () => onGo('shipping-policy') },
     { label: 'Return policy', hint: 'What can be returned and how', action: () => onGo('return-policy') },
-    { label: 'Cancellation policy', hint: 'Cancelling before your order is packed', action: () => onGo('cancellation-policy') },
+    { label: 'Cancellation policy', hint: 'Cancelling before your order is shipped', action: () => onGo('cancellation-policy') },
     { label: 'Privacy policy', hint: 'How we use and protect your details', action: () => onGo('privacy-policy') },
     { label: 'Terms & conditions', hint: 'Terms of using this store', action: () => onGo('terms-conditions') },
   ];
@@ -355,6 +346,8 @@ const OrderCard: React.FC<{
 }> = ({ order, onTrack, onInvoice, onCancel, onReturn, onOpenProduct, onRate, onBuyAgain, cancelWindowHours }) => {
   const pieces = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const canCancel = canRequestCancel(order, cancelWindowHours);
+  // Why there is no "Cancel order" button on a paid order that is still on its way ('' when there is nothing to say)
+  const cancelNote = canCancel ? '' : cancelClosedNote(order, cancelWindowHours);
   const buyAgain = canBuyAgain(order);
   const canRate = isDelivered(order);
   const address = order.deliveryAddress;
@@ -496,6 +489,7 @@ const OrderCard: React.FC<{
               <WhatsAppIcon className="w-[18px] h-[18px] shrink-0" /> Help
             </a>
           </div>
+          {cancelNote && <p className={`${noteClass} pt-1`}>{cancelNote}</p>}
         </div>
       </div>
     </article>

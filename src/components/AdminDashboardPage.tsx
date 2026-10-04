@@ -10,6 +10,7 @@ import { AdminCategories } from './admin/AdminCategories';
 import { AdminOrders } from './admin/AdminOrders';
 import { isAdminAreaPath, isAdminEntryPath } from '../utils/adminEntry';
 import { AdminReturns } from './admin/AdminReturns';
+import { AdminCancellations } from './admin/AdminCancellations';
 import { AdminOrderDetails } from './admin/AdminOrderDetails';
 import { AdminCustomers } from './admin/AdminCustomers';
 import { AdminCoupons } from './admin/AdminCoupons';
@@ -112,6 +113,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminOrders />;
       case 'returns':
         return <AdminReturns />;
+      case 'cancellations':
+        return <AdminCancellations />;
       case 'customers':
         return <AdminCustomers />;
       case 'abandoned':

@@ -33,9 +33,10 @@ import {
   Compass,
   Shirt
 } from 'lucide-react';
-import { RotateCcw, ShoppingCart } from 'lucide-react';
+import { RotateCcw, ShoppingCart, XCircle } from 'lucide-react';
 import { AdminTab } from '../../types';
-import { returnRows, waitingCancelRows } from './AdminReturns';
+import { returnRows } from './AdminReturns';
+import { waitingCancelRows } from './AdminCancellations';
 import { departmentOf } from '../../utils/kids';
 import { isLowStock } from '../../utils/inventory';
 
@@ -68,7 +69,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   // Return / exchange requests waiting for the admin's decision (orders are a live listener, so this is live)
   const rows = returnRows(orders);
   const waitingReturns = rows.filter((r) => r.state === 'requested');
-  // Cancellation requests not answered yet are shown on the same page, so they count on the same badge
+  // Cancellation requests not answered yet have their own page and badge; the bell counts both kinds
   const waitingCancels = waitingCancelRows(orders);
   const waitingRequests = waitingReturns.length + waitingCancels.length;
 
@@ -89,7 +90,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       showToast(`New ${r.kind === 'exchange' ? 'exchange' : 'return'} request · ${r.order.orderNumber} · ${r.order.customerName || 'customer'}. Open Returns to approve or deny.`, 'info');
     });
     freshCancels.forEach((r) => {
-      showToast(`New cancellation request · ${r.order.orderNumber} · ${r.order.customerName || 'customer'}. Open Returns to cancel or keep the order.`, 'info');
+      showToast(`New cancellation request · ${r.order.orderNumber} · ${r.order.customerName || 'customer'}. Open Cancellations to cancel or keep the order.`, 'info');
     });
   }, [orders]);
 
@@ -102,7 +103,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'toys', label: 'Toys', route: '/admin/toys', icon: ToyBrick, group: 'Catalogue', badge: products.filter((p) => departmentOf(p) === 'toys').length },
     { id: 'categories', label: 'Categories', route: '/admin/categories', icon: Layers, group: 'Catalogue', badge: categories.length },
     { id: 'orders', label: 'Orders', route: '/admin/orders', icon: ShoppingBag, group: 'Sales', badge: pendingOrdersCount, alert: pendingOrdersCount > 0 },
-    { id: 'returns', label: 'Returns & Exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Sales', badge: waitingRequests, alert: waitingRequests > 0 },
+    { id: 'returns', label: 'Returns & Exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Sales', badge: waitingReturns.length, alert: waitingReturns.length > 0 },
+    { id: 'cancellations', label: 'Cancellations', route: '/admin/cancellations', icon: XCircle, group: 'Sales', badge: waitingCancels.length, alert: waitingCancels.length > 0 },
     { id: 'customers', label: 'Customers', route: '/admin/customers', icon: Users, group: 'Sales' },
     { id: 'abandoned', label: 'Abandoned checkouts', route: '/admin/abandoned', icon: ShoppingCart, group: 'Sales' },
     { id: 'leads', label: 'Captured Leads', route: '/admin/leads', icon: MessageSquare, group: 'Sales' },
@@ -172,7 +174,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         : 'bg-sunken text-ink-muted';
 
   // The jobs done many times a day, one tap away on a phone (the full menu is behind the menu button)
-  const quickIds: Array<AdminTab | 'add-product'> = ['dashboard', 'orders', 'returns', 'products', 'add-product', 'customers'];
+  const quickIds: Array<AdminTab | 'add-product'> = ['dashboard', 'orders', 'returns', 'cancellations', 'products', 'add-product', 'customers'];
   const quickItems = quickIds.map((id) => navItems.find((item) => item.id === id)!).filter(Boolean);
 
   const Monogram: React.FC<{ size?: string }> = ({ size = 'w-9 h-9 text-sm' }) => (
@@ -286,7 +288,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <button
               onClick={() => (waitingRequests
-                ? openAdminTab('returns')
+                ? openAdminTab(waitingCancels.length ? 'cancellations' : 'returns')
                 : showToast(`${pendingOrdersCount} ${pendingOrdersCount === 1 ? 'order' : 'orders'} to pack and ship · ${lowStockCount} ${lowStockCount === 1 ? 'product' : 'products'} low on stock.`, 'info'))}
               className="w-11 h-11 flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors relative cursor-pointer"
               title="Notifications"

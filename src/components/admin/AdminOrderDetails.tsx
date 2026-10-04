@@ -176,7 +176,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
   const liveExpected = requests?.expectedDeliveryDate ?? '';
   const courierLink = trackingLinkFor({ courierPartner, trackingNumber, trackingUrl });
   const cancelRequestPending = Boolean(cancelRequest && !cancelRequest.handledAt);
-  // Only actionable before packing. A request still open on a later status (older data) can just be closed.
+  // Actionable until the order is shipped. A request still open on a later status can just be closed.
   const cancelRequestOpen = cancelRequestPending && CANCELLABLE_STATUSES.includes(order.status);
   const cancelRequestStale = cancelRequestPending && !cancelRequestOpen;
   const orderStopped = ['Cancelled', 'Refund Requested', 'Refunded'].includes(order.status);
@@ -193,9 +193,9 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
       return;
     }
     if (status === 'Cancelled' && order.status !== 'Cancelled' && !window.confirm('Cancel this order? Its stock will be returned to inventory. Refund the payment from your Razorpay dashboard.')) return;
-    // Moving the order past Processing closes an open cancellation request on the server.
+    // Shipping the order (or any later status) closes an open cancellation request on the server.
     if (cancelRequestOpen && status !== order.status && status !== 'Cancelled' && !CANCELLABLE_STATUSES.includes(status)) {
-      const kept = ['Packed', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned'].includes(status);
+      const kept = ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned'].includes(status);
       const question = kept
         ? `The customer asked to cancel this order. Saving it as ${status} closes the request as "order kept"${notifyCustomer ? ' and emails the customer that the order is going ahead' : ' (the customer is not emailed because the email box is unticked)'}. Continue?`
         : `The customer asked to cancel this order. Saving it as ${status} closes the request as cancelled. Continue?`;
@@ -424,7 +424,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               </p>
               {cancelRequestOpen && (
                 <p className="text-[13px] leading-[18px] text-ink-muted">
-                  Cancelling returns the stock automatically and emails the customer (if the email box below is ticked). Refund ₹{order.finalTotal.toLocaleString('en-IN')} from your Razorpay dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the status to Refunded. Keeping the order, or saving it as Packed, Shipped or Delivered, closes the request and emails the customer that it is going ahead.
+                  Cancelling returns the stock automatically and emails the customer (if the email box below is ticked). Refund ₹{order.finalTotal.toLocaleString('en-IN')} from your Razorpay dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the status to Refunded. Keeping the order, or saving it as Shipped or Delivered, closes the request and emails the customer that it is going ahead.
                 </p>
               )}
               {cancelRequestPending && cancelRequest.storeNotified === false && (

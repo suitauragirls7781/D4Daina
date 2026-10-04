@@ -261,6 +261,61 @@ test('request-cancel: an unpaid order cannot be cancelled this way; "keep order"
   assert.equal(mailsTo(ASHA, `Update on your cancellation request for order ${orderNumber}`).length, 1);
 });
 
+test('request-cancel: allowed on a packed order, refused once it is shipped; cancelling the packed order puts the stock back', async () => {
+  const stockBefore = await stock();
+  const orderNumber = await paidOrder(ASHA, [lineOf(outfit, 2)]);
+  assert.equal((await adminUpdate(orderNumber, { status: 'Packed', notify: false })).status, 200);
+  assert.equal(await stock(), stockBefore - 2);
+
+  const asked = await orders({ action: 'request-cancel', orderNumber, reason: 'Ordered the wrong size' }, { token: ashaToken });
+  assert.equal(asked.status, 200, asked.text);
+  let stored = await h.doc('orders', orderNumber);
+  assert.deepEqual([stored.status, stored.cancelRequest.reason, stored.cancelRequest.handledAt], ['Packed', 'Ordered the wrong size', undefined]);
+  assert.equal(mailsTo(STORE_EMAIL, `Cancellation requested: order ${orderNumber}`).length, 1);
+  // A save that does not change the status (a note) leaves the request open
+  await adminUpdate(orderNumber, { notes: 'will call the customer' });
+  assert.equal((await h.doc('orders', orderNumber)).cancelRequest.handledAt, undefined);
+
+  // The admin cancels the packed order: the request closes as cancelled and the stock comes back, once
+  const cancelled = await adminUpdate(orderNumber, { status: 'Cancelled' });
+  assert.equal(cancelled.status, 200, cancelled.text);
+  stored = await h.doc('orders', orderNumber);
+  assert.deepEqual([stored.status, stored.stockDeducted, stored.deductedQuantities, stored.cancelRequest.outcome], ['Cancelled', false, {}, 'cancelled']);
+  assert.ok(stored.cancelRequest.handledAt);
+  assert.equal(await stock(), stockBefore);
+  assert.equal(mailsTo(ASHA, `Order ${orderNumber} cancelled`).length, 1);
+  await adminUpdate(orderNumber, { status: 'Cancelled', notes: 'refunded in Razorpay' });
+  assert.equal(await stock(), stockBefore);
+
+  // Once the order is with the courier the customer can no longer ask
+  const shipped = await paidOrder(ASHA, [lineOf(outfit, 1)]);
+  assert.equal((await adminUpdate(shipped, { status: 'Shipped', notify: false })).status, 200);
+  const refused = await orders({ action: 'request-cancel', orderNumber: shipped, reason: 'Changed my mind' }, { token: ashaToken });
+  assert.equal(refused.status, 409, refused.text);
+  assert.match(refused.body.error, /already been shipped/);
+  assert.equal((await h.doc('orders', shipped)).cancelRequest, undefined);
+});
+
+test('request-cancel: packing an order keeps its request open; shipping it closes the request as "order kept" and tells the customer', async () => {
+  const stockBefore = await stock();
+  const orderNumber = await paidOrder(ASHA, [lineOf(outfit, 1)]);
+  const asked = await orders({ action: 'request-cancel', orderNumber, reason: 'Changed my mind' }, { token: ashaToken });
+  assert.equal(asked.status, 200, asked.text);
+
+  assert.equal((await adminUpdate(orderNumber, { status: 'Packed', notify: false })).status, 200);
+  let stored = await h.doc('orders', orderNumber);
+  assert.deepEqual([stored.status, stored.cancelRequest.handledAt, stored.cancelRequest.outcome], ['Packed', undefined, undefined]);
+
+  const shipped = await adminUpdate(orderNumber, { status: 'Shipped' });
+  assert.equal(shipped.status, 200, shipped.text);
+  assert.equal(shipped.body.cancelKeptEmailSent, true);
+  stored = await h.doc('orders', orderNumber);
+  assert.deepEqual([stored.status, stored.cancelRequest.outcome, stored.stockDeducted], ['Shipped', 'kept', true]);
+  assert.ok(stored.cancelRequest.handledAt);
+  assert.equal(await stock(), stockBefore - 1);
+  assert.equal(mailsTo(ASHA, `Update on your cancellation request for order ${orderNumber}`).length, 1);
+});
+
 // ---- the admin's order updates ----
 
 test('admin-update: admin only; statuses, tracking links and dates are checked; a status change emails the customer', async () => {
