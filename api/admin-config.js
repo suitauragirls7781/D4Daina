@@ -396,6 +396,12 @@ const parseBody = (req) => {
   return {};
 };
 
+// Usage & limits: the visits the store counted on the given days (api/track.js), for the photo capacity estimate
+const visitsOn = (client) => async (dates) => Object.fromEntries(await Promise.all(dates.map(async (date) => [
+  date,
+  Number((await client.collection('daily_analytics').doc(date).get()).data()?.visits) || 0,
+])));
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     res.status(204).end();
@@ -442,7 +448,7 @@ export default async function handler(req, res) {
       if (action === 'usage') {
         const auth = await authenticate(req, client);
         if (!auth) return reply(res, 401, { error: 'Admin session required.' });
-        return reply(res, 200, await readUsage(process.env, new Date(), await effectivePlan(client, process.env, true)));
+        return reply(res, 200, await readUsage(process.env, new Date(), await effectivePlan(client, process.env, true), visitsOn(client)));
       }
 
       // Admin only: the latest Razorpay payments with their status and failure reason (for checking payments)
@@ -678,7 +684,7 @@ export default async function handler(req, res) {
       const plan = body.cloudflarePlan;
       if (plan !== 'free' && plan !== 'paid') return reply(res, 400, { error: 'Choose the free or the paid plan.' });
       await savePlan(client, plan);
-      return reply(res, 200, await readUsage(process.env, new Date(), plan));
+      return reply(res, 200, await readUsage(process.env, new Date(), plan, visitsOn(client)));
     }
 
     // Product-photo assistant: the free Gemini API key (server-only document), checked with Google before saving

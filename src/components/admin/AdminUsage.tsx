@@ -16,6 +16,15 @@ type UsageView = {
   } | null;
   d1: { rowsRead: number; rowsReadLimit: number; rowsWritten: number; rowsWrittenLimit: number; readQueries: number; writeQueries: number } | null;
   email: { left: number; dailyCap: number | null } | null;
+  cloudinary?: {
+    plan: string; creditsUsed: number | null; creditsLimit: number | null;
+    storageBytes: number; storageCredits: number | null; bandwidthBytes: number; bandwidthCredits: number | null;
+    transformations: number; transformationCredits: number | null; files: number; maxImageBytes: number | null;
+  } | null;
+  photoCapacity?: {
+    measuredDays: number; visits: number; bandwidthBytes: number; bytesPerVisit: number; visitsPerDay: number;
+    visitsLeft: number; visitsPer30Days: number; daysLeftAtThisPace: number;
+  } | null;
   error?: string;
 };
 
@@ -29,6 +38,9 @@ const clock = (iso: string, seconds = false) => {
 };
 // Tiny real usage is shown as "<0.1", not as a misleading "0.0"
 const percentText = (percent: number) => (percent > 0 && percent < 0.1 ? '<0.1' : percent > 0 && percent < 10 ? percent.toFixed(1) : String(Math.round(percent)));
+const decimals = (value: number) => value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+const size = (bytes: number) => (bytes >= 1e9 ? `${decimals(bytes / 1e9)} GB` : `${decimals(bytes / 1e6)} MB`);
+const credits = (value: number | null) => (value === null ? '' : ` · ${decimals(value)} credits`);
 const ms = (value: number | null) => (value === null ? 'not available' : `${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })} ms`);
 
 // Calm status colours: teal normally, marigold from 70%, red from 90% (always with words, never colour alone)
@@ -332,6 +344,90 @@ export const AdminUsage: React.FC = () => {
             </dl>
             <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">{view.plan === 'paid' ? 'The paid plan allows up to 30 seconds of CPU time per request.' : 'The free plan allows about 10 ms of CPU time per request.'}</p>
           </div>
+
+          {/* Photos and reels: Cloudinary's own usage numbers (its free plan counts credits over the last 30 days) */}
+          {view.cloudinary && (
+            <div id="admin-usage-cloudinary" className="space-y-3">
+              <p className={ui.eyebrow}>Photos and reels (Cloudinary{view.cloudinary.plan ? `, ${view.cloudinary.plan} plan` : ''})</p>
+              {view.cloudinary.creditsLimit !== null && view.cloudinary.creditsUsed !== null && (
+                <UsageBar
+                  title="Cloudinary credits"
+                  used={view.cloudinary.creditsUsed}
+                  limit={view.cloudinary.creditsLimit}
+                  detail={`${decimals(view.cloudinary.creditsUsed)} of ${decimals(view.cloudinary.creditsLimit)} credits used in the last 30 days · ${decimals(Math.max(0, view.cloudinary.creditsLimit - view.cloudinary.creditsUsed))} left`}
+                  note="1 credit = 1 GB of photos stored, or 1 GB shown to shoppers, or 1,000 photo resizes. If the credits run out, Cloudinary can stop showing photos."
+                />
+              )}
+              <div className={ui.card}>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                  <div>
+                    <dt className="text-[13px] leading-[18px] text-ink-muted">Stored photos and videos</dt>
+                    <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{num(view.cloudinary.files)} files · {size(view.cloudinary.storageBytes)}{credits(view.cloudinary.storageCredits)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[13px] leading-[18px] text-ink-muted">Shown to shoppers, last 30 days</dt>
+                    <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{size(view.cloudinary.bandwidthBytes)}{credits(view.cloudinary.bandwidthCredits)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[13px] leading-[18px] text-ink-muted">Photo resizes, last 30 days</dt>
+                    <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{num(view.cloudinary.transformations)}{credits(view.cloudinary.transformationCredits)}</dd>
+                  </div>
+                  {view.cloudinary.maxImageBytes !== null && (
+                    <div>
+                      <dt className="text-[13px] leading-[18px] text-ink-muted">Largest photo this plan accepts</dt>
+                      <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{size(view.cloudinary.maxImageBytes)}</dd>
+                    </div>
+                  )}
+                </dl>
+                <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">Shoppers looking at photos use the most credits, so this grows with visitors more than with the number of products.</p>
+              </div>
+
+              {/* An estimate from measured days: Cloudinary's photo data per day against the visits the store counted */}
+              {view.photoCapacity ? (() => {
+                const capacity = view.photoCapacity;
+                const short = capacity.daysLeftAtThisPace < 30;
+                return (
+                  <div id="admin-usage-capacity" className={ui.card}>
+                    <h4 className="text-[15px] leading-[22px] font-semibold text-ink">How many visitors the photo plan can carry</h4>
+                    <p className="mt-1.5 text-sm leading-5 text-ink-muted">
+                      Measured over the last {capacity.measuredDays === 1 ? 'full day' : `${capacity.measuredDays} full days`}: {num(capacity.visits)} counted visits used {size(capacity.bandwidthBytes)} of photos, about {size(capacity.bytesPerVisit)} a visit.
+                    </p>
+                    <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
+                      <div>
+                        <dt className="text-[13px] leading-[18px] text-ink-muted">Visits the credits left can still carry</dt>
+                        <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">about {num(capacity.visitsLeft)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[13px] leading-[18px] text-ink-muted">Visits this plan carries in 30 days</dt>
+                        <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">about {num(capacity.visitsPer30Days)} (about {num(Math.floor(capacity.visitsPer30Days / 30))} a day)</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[13px] leading-[18px] text-ink-muted">Visits a day now</dt>
+                        <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">about {num(capacity.visitsPerDay)}</dd>
+                      </div>
+                      <div>
+                        <dt className="text-[13px] leading-[18px] text-ink-muted">At this pace the credits last</dt>
+                        <dd className={`text-[15px] leading-[22px] font-semibold sag-num ${short ? 'text-danger' : 'text-ink'}`}>
+                          {short ? `about ${num(capacity.daysLeftAtThisPace)} more ${capacity.daysLeftAtThisPace === 1 ? 'day' : 'days'}` : '30 days or more'}
+                        </dd>
+                      </div>
+                    </dl>
+                    {short && (
+                      <p role="alert" className="mt-3 text-sm leading-5 font-semibold text-danger">
+                        At this pace the free credits run out in about {num(capacity.daysLeftAtThisPace)} {capacity.daysLeftAtThisPace === 1 ? 'day' : 'days'}. After that Cloudinary can stop showing photos until you upgrade its plan or visits drop.
+                      </p>
+                    )}
+                    <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">An estimate from these days only. Visits that were not counted (while visitor counting was paused) make it come out lower than the truth.</p>
+                  </div>
+                );
+              })() : view.cloudinary.creditsLimit !== null && (
+                <div id="admin-usage-capacity" className={ui.card}>
+                  <h4 className="text-[15px] leading-[22px] font-semibold text-ink">How many visitors the photo plan can carry</h4>
+                  <p className="mt-1.5 text-sm leading-5 text-ink-muted">Not enough measured days yet. This appears after a full day with at least 100 counted visits.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13px] leading-[18px] text-ink-muted min-w-0 flex-1 basis-60">
