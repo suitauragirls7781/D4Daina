@@ -103,7 +103,9 @@ test('usage: Cloudflare and Brevo numbers with the free-plan limits; CPU time co
   const response = await usage();
   assert.equal(response.status, 200, response.text);
   assert.equal(response.headers.get('cache-control'), 'no-store, max-age=0');
-  const { fetchedAt, resetAt, ...numbers } = response.body;
+  const { fetchedAt, resetAt, plan, period, periodStart, ...numbers } = response.body;
+  assert.deepEqual({ plan, period }, { plan: 'free', period: 'day' });
+  assert.match(periodStart, /T00:00:00.000Z$/);
   assert.deepEqual(numbers, {
     configured: true,
     // Requests of every Worker in the account count towards the limit; the rest is the store's own Worker
@@ -184,4 +186,39 @@ test('usage: a day without traffic is zero, a paid Brevo plan has no daily cap, 
   const noCpu = await usage();
   assert.equal(noCpu.body.workers.cpuP50Ms, null);
   assert.equal(noCpu.body.workers.cpuP99Ms, 2.5);
+});
+
+test('usage: on the paid plan the month is counted against what the plan includes', async () => {
+  const { readUsage, clearUsageCache, PAID_WORKER_REQUESTS_PER_MONTH, PAID_D1_ROWS_WRITTEN_PER_MONTH } = await import('../../../api/_lib/usage.js');
+  clearUsageCache();
+  const calls = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    const body = init?.body ? JSON.parse(init.body) : {};
+    calls.push(body.variables || {});
+    if (String(url).includes('brevo')) return new Response('{}', { status: 500 });
+    const data = String(body.query || '').includes('workersInvocationsAdaptive')
+      ? { viewer: { accounts: [{ workersInvocationsAdaptive: [{ sum: { requests: 250000, subrequests: 0, errors: 0 }, quantiles: { cpuTimeP50: 2000, cpuTimeP99: 9000 }, dimensions: { scriptName: 'd4daina' } }] }] } }
+      : { viewer: { accounts: [{ d1AnalyticsAdaptiveGroups: [
+        { sum: { readQueries: 1, writeQueries: 1, rowsRead: 100, rowsWritten: 40 }, dimensions: { date: '2026-10-01' } },
+        { sum: { readQueries: 2, writeQueries: 2, rowsRead: 200, rowsWritten: 60 }, dimensions: { date: '2026-10-04' } },
+      ] }] } };
+    return new Response(JSON.stringify({ data }), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  try {
+    const now = new Date('2026-10-04T10:00:00.000Z');
+    const body = await readUsage({ CLOUDFLARE_ANALYTICS_TOKEN: 't', CLOUDFLARE_ACCOUNT_ID: 'acc', CLOUDFLARE_D1_ID: 'db', CLOUDFLARE_PLAN: 'paid' }, now);
+    assert.equal(body.plan, 'paid');
+    assert.equal(body.period, 'month');
+    assert.equal(body.periodStart, '2026-10-01T00:00:00.000Z');
+    assert.equal(body.resetAt, '2026-11-01T00:00:00.000Z');
+    assert.equal(body.workers.limit, PAID_WORKER_REQUESTS_PER_MONTH);
+    assert.equal(body.workers.requests, 250000);
+    assert.equal(body.d1.rowsWritten, 100);
+    assert.equal(body.d1.rowsWrittenLimit, PAID_D1_ROWS_WRITTEN_PER_MONTH);
+    assert.ok(calls.some((v) => v.start === '2026-10-01T00:00:00.000Z') && calls.some((v) => v.date === '2026-10-01'));
+  } finally {
+    globalThis.fetch = realFetch;
+    clearUsageCache();
+  }
 });

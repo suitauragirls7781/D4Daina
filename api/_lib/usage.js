@@ -7,6 +7,13 @@
 export const WORKER_REQUESTS_PER_DAY = 100000;
 export const D1_ROWS_READ_PER_DAY = 5000000;
 export const D1_ROWS_WRITTEN_PER_DAY = 100000;
+// Workers Paid plan: no daily caps. These are the amounts included each calendar month (UTC) before
+// Cloudflare bills extra, so on the paid plan the page shows this month's usage against them.
+export const PAID_WORKER_REQUESTS_PER_MONTH = 10000000;
+export const PAID_D1_ROWS_READ_PER_MONTH = 25000000000;
+export const PAID_D1_ROWS_WRITTEN_PER_MONTH = 50000000;
+/** "paid" when the owner set CLOUDFLARE_PLAN=paid in wrangler.jsonc after upgrading; anything else is the free plan. */
+export const cloudflarePlan = (env = process.env) => (String(env.CLOUDFLARE_PLAN || '').trim().toLowerCase() === 'paid' ? 'paid' : 'free');
 // Brevo free plan: emails per day. Brevo reports the emails LEFT today, not the cap.
 export const BREVO_FREE_EMAILS_PER_DAY = 300;
 
@@ -53,7 +60,7 @@ const cloudflareQuery = async (token, query, variables) => {
   return account;
 };
 
-const readWorkers = async ({ token, accountId, workerName, start, end }) => {
+const readWorkers = async ({ token, accountId, workerName, start, end, limit }) => {
   const account = await cloudflareQuery(token, WORKERS_QUERY, { acc: accountId, start, end });
   const rows = Array.isArray(account.workersInvocationsAdaptive) ? account.workersInvocationsAdaptive : [];
   // The daily limit counts every Worker of the account, so the requests of all scripts are added up
@@ -66,7 +73,7 @@ const readWorkers = async ({ token, accountId, workerName, start, end }) => {
   };
   return {
     requests,
-    limit: WORKER_REQUESTS_PER_DAY,
+    limit,
     scriptName: workerName,
     scriptRequests: own.reduce((total, row) => total + count(row?.sum?.requests), 0),
     errors: own.reduce((total, row) => total + count(row?.sum?.errors), 0),
@@ -76,17 +83,17 @@ const readWorkers = async ({ token, accountId, workerName, start, end }) => {
   };
 };
 
-const readD1 = async ({ token, accountId, databaseId, date }) => {
+const readD1 = async ({ token, accountId, databaseId, date, rowsReadLimit, rowsWrittenLimit }) => {
   if (!databaseId) throw new Error('CLOUDFLARE_D1_ID is not set on the Worker');
   const account = await cloudflareQuery(token, D1_QUERY, { acc: accountId, date, db: databaseId });
   const rows = (Array.isArray(account.d1AnalyticsAdaptiveGroups) ? account.d1AnalyticsAdaptiveGroups : [])
-    .filter((row) => !row?.dimensions?.date || row.dimensions.date === date);
+    .filter((row) => !row?.dimensions?.date || row.dimensions.date >= date);
   const sum = (name) => rows.reduce((total, row) => total + count(row?.sum?.[name]), 0);
   return {
     rowsRead: sum('rowsRead'),
-    rowsReadLimit: D1_ROWS_READ_PER_DAY,
+    rowsReadLimit,
     rowsWritten: sum('rowsWritten'),
-    rowsWrittenLimit: D1_ROWS_WRITTEN_PER_DAY,
+    rowsWrittenLimit,
     readQueries: sum('readQueries'),
     writeQueries: sum('writeQueries'),
   };
@@ -114,10 +121,20 @@ const readEmail = async (apiKey) => {
 export const readUsage = async (env = process.env, now = new Date()) => {
   const token = String(env.CLOUDFLARE_ANALYTICS_TOKEN || '').trim();
   const accountId = String(env.CLOUDFLARE_ACCOUNT_ID || '').trim();
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // Free plan: the UTC day. Paid plan: the UTC calendar month (what the plan's included amounts are counted over).
+  const plan = cloudflarePlan(env);
+  const paid = plan === 'paid';
+  const dayStart = paid
+    ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
+    : new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const times = {
+    plan,
+    period: paid ? 'month' : 'day',
     fetchedAt: now.toISOString(),
-    resetAt: new Date(dayStart.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    periodStart: dayStart.toISOString(),
+    resetAt: paid
+      ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString()
+      : new Date(dayStart.getTime() + 24 * 60 * 60 * 1000).toISOString(),
   };
 
   if (!token || !accountId) {
@@ -134,7 +151,7 @@ export const readUsage = async (env = process.env, now = new Date()) => {
   }
 
   const date = dayStart.toISOString().slice(0, 10);
-  const key = `${accountId}|${date}`;
+  const key = `${accountId}|${plan}|${date}`;
   const brevoKey = String(env.BREVO_API_KEY || '').trim();
   const hit = cached;
   if (hit && hit.key === key && now.getTime() - hit.at < CACHE_MS && now.getTime() >= hit.at) {
@@ -147,9 +164,13 @@ export const readUsage = async (env = process.env, now = new Date()) => {
   }
 
   const [workers, d1, email] = await Promise.all([
-    readWorkers({ token, accountId, workerName: String(env.CLOUDFLARE_WORKER_NAME || 'd4daina').trim(), start: dayStart.toISOString(), end: now.toISOString() })
+    readWorkers({ token, accountId, workerName: String(env.CLOUDFLARE_WORKER_NAME || 'd4daina').trim(), start: dayStart.toISOString(), end: now.toISOString(), limit: paid ? PAID_WORKER_REQUESTS_PER_MONTH : WORKER_REQUESTS_PER_DAY })
       .catch((error) => ({ failed: reason(error, token) })),
-    readD1({ token, accountId, databaseId: String(env.CLOUDFLARE_D1_ID || '').trim(), date })
+    readD1({
+      token, accountId, databaseId: String(env.CLOUDFLARE_D1_ID || '').trim(), date,
+      rowsReadLimit: paid ? PAID_D1_ROWS_READ_PER_MONTH : D1_ROWS_READ_PER_DAY,
+      rowsWrittenLimit: paid ? PAID_D1_ROWS_WRITTEN_PER_MONTH : D1_ROWS_WRITTEN_PER_DAY,
+    })
       .catch((error) => ({ failed: reason(error, token) })),
     readEmail(brevoKey),
   ]);

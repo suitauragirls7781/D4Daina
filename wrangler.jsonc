@@ -38,7 +38,10 @@
     "CLOUDFLARE_WORKER_NAME": "d4daina",
     // Visitor counting stops for the day at this budget (api/track.js) so orders keep their share of D1's
     // 100,000 rows written a day. Measured on 2 Oct 2026: 8,000 budget units came to about 14,700 rows.
-    "TRACK_WRITE_BUDGET": "35000"
+    "TRACK_WRITE_BUDGET": "35000",
+    // Change "free" to "paid" after buying the Workers Paid plan: Admin -> Usage & limits then shows the
+    // month's usage against what the plan includes, and visitor counting no longer pauses at the free budget.
+    "CLOUDFLARE_PLAN": "free"
   },
 
   // Secrets set on the Worker are kept when the Git build deploys

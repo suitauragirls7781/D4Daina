@@ -28,7 +28,9 @@ const hash = (value) => createHash('sha256').update(value).digest('hex').slice(0
 // payments and the admin panel. Visitor counting may use only part of it: once today's counting has used
 // its share (or the database is already refusing writes), counting pauses until tomorrow and the rest of
 // the day's allowance is kept for orders. The storefront itself is not affected.
-const TRACK_WRITE_BUDGET = Number(process.env.TRACK_WRITE_BUDGET) || 8000;
+const PAID_PLAN = String(process.env.CLOUDFLARE_PLAN || '').trim().toLowerCase() === 'paid';
+// Paid plan: 50 million rows written a month are included, so counting only stops at a very high daily number
+const TRACK_WRITE_BUDGET = PAID_PLAN ? 600000 : (Number(process.env.TRACK_WRITE_BUDGET) || 8000);
 let budget = { day: '', at: 0, used: 0 };
 const isQuotaError = (error) => error?.code === 8 || /RESOURCE_EXHAUSTED|quota/i.test(String(error?.message || ''));
 const pauseCounting = (day) => { budget = { day, at: Date.now() + 9 * 60 * 1000, used: Infinity }; }; // checked again in 10 minutes

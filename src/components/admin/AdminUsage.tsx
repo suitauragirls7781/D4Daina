@@ -5,6 +5,9 @@ import { AdminPageHeader, ui } from './kidsToysShared';
 /** What /api/admin-config?action=usage answers (api/_lib/usage.js). */
 type UsageView = {
   configured: boolean;
+  plan?: 'free' | 'paid';
+  period?: 'day' | 'month';
+  periodStart?: string;
   fetchedAt: string;
   resetAt: string;
   workers: {
@@ -123,7 +126,11 @@ export const AdminUsage: React.FC = () => {
 
   const resetTime = view ? clock(view.resetAt) : '';
   const sinceTime = view ? clock(new Date(new Date(view.resetAt).getTime() - DAY_MS).toISOString()) : '';
-  const since = sinceTime ? `today (since ${sinceTime})` : 'today';
+  const monthly = view?.period === 'month';
+  const dayOf = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const since = monthly
+    ? `this month (since ${view?.periodStart ? dayOf(view.periodStart) : 'the 1st'})`
+    : sinceTime ? `today (since ${sinceTime})` : 'today';
 
   const refreshButton = (
     <button type="button" onClick={load} disabled={loading} className={ui.outline}>
@@ -137,7 +144,7 @@ export const AdminUsage: React.FC = () => {
         eyebrow="System"
         title={<>Usage &amp; limits</>}
         icon={<Gauge />}
-        description={<>What the store has used of Cloudflare's free daily limits, {since}. These are Cloudflare's own numbers; they run a minute or two behind real time.</>}
+        description={<>{monthly ? <>What the store has used of what Cloudflare's paid plan includes, {since}.</> : <>What the store has used of Cloudflare's free daily limits, {since}.</>} These are Cloudflare's own numbers; they run a minute or two behind real time.</>}
       />
 
       {loadError && (
@@ -252,12 +259,14 @@ export const AdminUsage: React.FC = () => {
                 <dd className="text-[15px] leading-[22px] font-semibold sag-num text-ink">{view.workers ? ms(view.workers.cpuP99Ms) : 'not available'}</dd>
               </div>
             </dl>
-            <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">The free plan allows about 10 ms of CPU time per request.</p>
+            <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">{view.plan === 'paid' ? 'The paid plan allows up to 30 seconds of CPU time per request.' : 'The free plan allows about 10 ms of CPU time per request.'}</p>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-[13px] leading-[18px] text-ink-muted min-w-0 flex-1 basis-60">
-              {resetTime && <>The limits reset at {resetTime}. </>}
+              {monthly
+                ? <>Usage above these amounts is billed by Cloudflare; the count starts again on {dayOf(view.resetAt)}. </>
+                : resetTime && <>The limits reset at {resetTime}. </>}
               Updated {clock(view.fetchedAt, true)}; refreshes every minute while this page is open.
             </p>
             {refreshButton}
