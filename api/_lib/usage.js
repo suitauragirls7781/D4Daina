@@ -12,8 +12,37 @@ export const D1_ROWS_WRITTEN_PER_DAY = 100000;
 export const PAID_WORKER_REQUESTS_PER_MONTH = 10000000;
 export const PAID_D1_ROWS_READ_PER_MONTH = 25000000000;
 export const PAID_D1_ROWS_WRITTEN_PER_MONTH = 50000000;
-/** "paid" when the owner set CLOUDFLARE_PLAN=paid in wrangler.jsonc after upgrading; anything else is the free plan. */
+/** "paid" when CLOUDFLARE_PLAN=paid is set in wrangler.jsonc; anything else is the free plan. */
 export const cloudflarePlan = (env = process.env) => (String(env.CLOUDFLARE_PLAN || '').trim().toLowerCase() === 'paid' ? 'paid' : 'free');
+
+// The owner's own switch (Admin -> Usage & limits), kept in a server-only document. Once it has been set it
+// decides the plan; until then the wrangler.jsonc variable does. Cloudflare does not tell the Worker which
+// plan the account is on, so the owner flips this after buying Workers Paid.
+export const planDoc = (db) => db.collection('private_settings').doc('cloudflare_plan');
+const PLAN_CACHE_MS = 60 * 1000;
+let planCache = null; // { at, plan }
+export const clearPlanCache = () => { planCache = null; };
+
+/** The plan in force: the saved switch, else the variable. Never throws (a database error falls back to the variable). */
+export const effectivePlan = async (db, env = process.env, fresh = false) => {
+  if (!fresh && planCache && Date.now() - planCache.at < PLAN_CACHE_MS && Date.now() >= planCache.at) return planCache.plan;
+  let plan = cloudflarePlan(env);
+  try {
+    const saved = (await planDoc(db).get()).data()?.plan;
+    if (saved === 'paid' || saved === 'free') plan = saved;
+    planCache = { at: Date.now(), plan };
+  } catch {
+    // not cached: asked again on the next call
+  }
+  return plan;
+};
+
+/** Saves the owner's switch. */
+export const savePlan = async (db, plan) => {
+  await planDoc(db).set({ plan, updatedAt: new Date().toISOString() });
+  planCache = { at: Date.now(), plan };
+  cached = null;
+};
 // Brevo free plan: emails per day. Brevo reports the emails LEFT today, not the cap.
 export const BREVO_FREE_EMAILS_PER_DAY = 300;
 
@@ -118,11 +147,11 @@ const readEmail = async (apiKey) => {
 };
 
 /** The answer of /api/admin-config?action=usage. Never throws. */
-export const readUsage = async (env = process.env, now = new Date()) => {
+export const readUsage = async (env = process.env, now = new Date(), savedPlan = '') => {
   const token = String(env.CLOUDFLARE_ANALYTICS_TOKEN || '').trim();
   const accountId = String(env.CLOUDFLARE_ACCOUNT_ID || '').trim();
   // Free plan: the UTC day. Paid plan: the UTC calendar month (what the plan's included amounts are counted over).
-  const plan = cloudflarePlan(env);
+  const plan = savedPlan === 'paid' || savedPlan === 'free' ? savedPlan : cloudflarePlan(env);
   const paid = plan === 'paid';
   const dayStart = paid
     ? new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))

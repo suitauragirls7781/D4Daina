@@ -3,7 +3,7 @@ import { createUploadSignature, destroyImage } from './_lib/cloudinary.js';
 import { createHmac, pbkdf2Sync, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { clearGatewayCache, gatewaysDoc, normalizeGateways, razorpayCreds } from './_lib/payu.js';
 import { GEMINI_MESSAGES, aiAdminView, aiDoc, describeProduct, pickModel, readAi } from './_lib/gemini.js';
-import { readUsage } from './_lib/usage.js';
+import { effectivePlan, readUsage, savePlan } from './_lib/usage.js';
 
 const hint = (value) => (value ? `••••${value.slice(-4)}` : '');
 
@@ -442,7 +442,7 @@ export default async function handler(req, res) {
       if (action === 'usage') {
         const auth = await authenticate(req, client);
         if (!auth) return reply(res, 401, { error: 'Admin session required.' });
-        return reply(res, 200, await readUsage());
+        return reply(res, 200, await readUsage(process.env, new Date(), await effectivePlan(client, process.env, true)));
       }
 
       // Admin only: the latest Razorpay payments with their status and failure reason (for checking payments)
@@ -673,8 +673,16 @@ export default async function handler(req, res) {
       return reply(res, 200, { success: true, sessionVersion: nextCredentials.session_version });
     }
 
+    // Usage & limits: the owner's Cloudflare plan switch (server-only document). Answers with the usage for that plan.
+    if (body.cloudflarePlan !== undefined) {
+      const plan = body.cloudflarePlan;
+      if (plan !== 'free' && plan !== 'paid') return reply(res, 400, { error: 'Choose the free or the paid plan.' });
+      await savePlan(client, plan);
+      return reply(res, 200, await readUsage(process.env, new Date(), plan));
+    }
+
     // Product-photo assistant: the free Gemini API key (server-only document), checked with Google before saving
-    if (body.aiAssistant && typeof body.aiAssistant === 'object') {
+    if (body.aiAssistant&& typeof body.aiAssistant === 'object') {
       if (body.aiAssistant.clear === true) {
         await aiDoc(client).set({ geminiKey: '', model: '', updatedAt: new Date().toISOString() });
         return reply(res, 200, { success: true, ai: aiAdminView({ geminiKey: '', model: '' }) });

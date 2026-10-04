@@ -124,6 +124,35 @@ export const AdminUsage: React.FC = () => {
     };
   }, [load]);
 
+  // The plan switch. Moving to "paid" asks first: on a free account it would let visitor counting use up the day's writes.
+  const [confirmPaid, setConfirmPaid] = useState(false);
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [planError, setPlanError] = useState('');
+  const savePlan = (plan: 'free' | 'paid') => {
+    setSavingPlan(true);
+    setPlanError('');
+    fetch('/api/admin-config', {
+      method: 'PUT',
+      credentials: 'same-origin',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ cloudflarePlan: plan }),
+    })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok || !result) throw new Error(response.status === 401 ? 'Please sign in again to change the plan.' : result?.error || 'The plan could not be saved right now.');
+        // A refresh still on its way would bring back the old plan's numbers
+        inFlight.current?.abort();
+        inFlight.current = null;
+        setLoading(false);
+        lastLoad.current = Date.now();
+        setView(result as UsageView);
+        setLoadError('');
+        setConfirmPaid(false);
+      })
+      .catch((error) => setPlanError(error.message))
+      .finally(() => setSavingPlan(false));
+  };
+
   const resetTime = view ? clock(view.resetAt) : '';
   const sinceTime = view ? clock(new Date(new Date(view.resetAt).getTime() - DAY_MS).toISOString()) : '';
   const monthly = view?.period === 'month';
@@ -174,6 +203,48 @@ export const AdminUsage: React.FC = () => {
           {/* The server's "token missing" message repeats the paragraph above; only show other reasons (e.g. no account ID) */}
           {view.error && !view.error.includes('CLOUDFLARE_ANALYTICS_TOKEN') && <p className="mt-2 text-sm leading-5 text-ink-muted break-words">{view.error}</p>}
           <div className="mt-4">{refreshButton}</div>
+        </div>
+      )}
+
+      {view && (
+        <div id="admin-usage-plan" className={ui.card}>
+          <p className={ui.eyebrow}>Cloudflare plan</p>
+          <h4 className="mt-1 text-[15px] leading-[22px] font-semibold text-ink">
+            {view.plan === 'paid' ? 'Workers Paid ($5 a month)' : 'Free plan'}
+          </h4>
+          <p className="mt-1.5 text-sm leading-5 text-ink-muted">
+            {view.plan === 'paid'
+              ? 'This page counts the month against what the paid plan includes, and visitor counting does not pause.'
+              : 'This page counts each day against the free limits, and visitor counting pauses before the day\'s free writes run out, so orders keep working.'}
+            {' '}Cloudflare does not tell the store which plan the account is on, so set it here.
+          </p>
+          {planError && <p role="alert" className="mt-2 text-sm leading-5 font-semibold text-danger">{planError}</p>}
+          {confirmPaid ? (
+            <div className="mt-3 rounded-xl border border-sale-line bg-sale-tint px-4 py-3">
+              <p className="text-sm leading-5 font-semibold text-ink">Have you already bought Workers Paid in Cloudflare?</p>
+              <p className="mt-1 text-sm leading-5 text-ink">
+                Switch only after buying it. On a free account this would let visitor counting use up the day's free writes, and orders would stop until 5:30 am.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => savePlan('paid')} disabled={savingPlan} className={ui.primary}>
+                  {savingPlan && <Loader2 className="h-4 w-4 animate-spin" />} Yes, I have bought it
+                </button>
+                <button type="button" onClick={() => setConfirmPaid(false)} disabled={savingPlan} className={ui.outline}>Not yet</button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-3">
+              {view.plan === 'paid' ? (
+                <button type="button" onClick={() => savePlan('free')} disabled={savingPlan} className={ui.outline}>
+                  {savingPlan && <Loader2 className="h-4 w-4 animate-spin" />} Switch back to the free plan
+                </button>
+              ) : (
+                <button type="button" onClick={() => { setPlanError(''); setConfirmPaid(true); }} className={ui.outline}>
+                  I have bought the paid plan
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

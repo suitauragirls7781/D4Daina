@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, isSameOrigin, parseBody, reply } from './_lib/http.js';
+import { effectivePlan } from './_lib/usage.js';
 
 // Anonymous visitor counting. Browsers can no longer write analytics directly; each count is made here,
 // at most once per visitor (IP + browser) per day and event, with a cap per IP so a script can't inflate numbers.
@@ -28,15 +29,18 @@ const hash = (value) => createHash('sha256').update(value).digest('hex').slice(0
 // payments and the admin panel. Visitor counting may use only part of it: once today's counting has used
 // its share (or the database is already refusing writes), counting pauses until tomorrow and the rest of
 // the day's allowance is kept for orders. The storefront itself is not affected.
-const PAID_PLAN = String(process.env.CLOUDFLARE_PLAN || '').trim().toLowerCase() === 'paid';
+const FREE_WRITE_BUDGET = Number(process.env.TRACK_WRITE_BUDGET) || 8000;
 // Paid plan: 50 million rows written a month are included, so counting only stops at a very high daily number
-const TRACK_WRITE_BUDGET = PAID_PLAN ? 600000 : (Number(process.env.TRACK_WRITE_BUDGET) || 8000);
+const PAID_WRITE_BUDGET = 600000;
+// The plan is the owner's switch in Admin -> Usage & limits (api/_lib/usage.js), looked up again once a minute
+let TRACK_WRITE_BUDGET = FREE_WRITE_BUDGET;
 let budget = { day: '', at: 0, used: 0 };
 const isQuotaError = (error) => error?.code === 8 || /RESOURCE_EXHAUSTED|quota/i.test(String(error?.message || ''));
 const pauseCounting = (day) => { budget = { day, at: Date.now() + 9 * 60 * 1000, used: Infinity }; }; // checked again in 10 minutes
 const countingPaused = async (db, day) => {
   if (budget.day === day && Date.now() - budget.at < 60 * 1000) return budget.used >= TRACK_WRITE_BUDGET;
   try {
+    TRACK_WRITE_BUDGET = (await effectivePlan(db)) === 'paid' ? PAID_WRITE_BUDGET : FREE_WRITE_BUDGET;
     const d = (await db.collection('daily_analytics').doc(day).get()).data() || {};
     const n = (key) => Number(d[key]) || 0;
     // roughly what today's counting has written so far (6 per visit, 4 per item event, 2-3 for the rest)

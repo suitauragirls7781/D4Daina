@@ -188,6 +188,32 @@ test('usage: a day without traffic is zero, a paid Brevo plan has no daily cap, 
   assert.equal(noCpu.body.workers.cpuP99Ms, 2.5);
 });
 
+test('usage: the admin\'s plan switch is saved, changes the limits shown, and can be switched back', async () => {
+  const { clearUsageCache, PAID_WORKER_REQUESTS_PER_MONTH } = await import('../../../api/_lib/usage.js');
+  const put = (body, sessionCookie = cookie) => h.call('/api/admin-config', { method: 'PUT', json: body, cookie: sessionCookie });
+  clearUsageCache();
+  mockCloudflare();
+  mockBrevo();
+
+  // Only the admin, only the two plans
+  assert.equal((await put({ cloudflarePlan: 'paid' }, '')).status, 401);
+  assert.equal((await put({ cloudflarePlan: 'business' })).status, 400);
+  assert.equal(await h.doc('private_settings', 'cloudflare_plan'), null);
+  assert.equal((await usage()).body.plan, 'free');
+
+  const paid = await put({ cloudflarePlan: 'paid' });
+  assert.equal(paid.status, 200, paid.text);
+  assert.deepEqual({ plan: paid.body.plan, period: paid.body.period, limit: paid.body.workers.limit }, { plan: 'paid', period: 'month', limit: PAID_WORKER_REQUESTS_PER_MONTH });
+  assert.equal((await h.doc('private_settings', 'cloudflare_plan')).plan, 'paid');
+  const shown = await usage();
+  assert.deepEqual({ plan: shown.body.plan, period: shown.body.period }, { plan: 'paid', period: 'month' });
+
+  const free = await put({ cloudflarePlan: 'free' });
+  assert.deepEqual({ plan: free.body.plan, period: free.body.period, limit: free.body.workers.limit }, { plan: 'free', period: 'day', limit: 100000 });
+  assert.equal((await usage()).body.plan, 'free');
+  clearUsageCache();
+});
+
 test('usage: on the paid plan the month is counted against what the plan includes', async () => {
   const { readUsage, clearUsageCache, PAID_WORKER_REQUESTS_PER_MONTH, PAID_D1_ROWS_WRITTEN_PER_MONTH } = await import('../../../api/_lib/usage.js');
   clearUsageCache();
