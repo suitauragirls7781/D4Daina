@@ -21,7 +21,7 @@ import { ProductCard } from './ProductCard';
 import { ProductReviews, Stars } from './ProductReviews';
 import { ShimmerPDP } from './ShimmerPDP';
 import { Product, ProductColor, ProductSize } from '../types';
-import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, GitCompare, Heart, Minus, Plus, Share2, Tag, X } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
@@ -146,6 +146,9 @@ export const ProductDetailPage: React.FC = () => {
   // Photos that have finished loading, and a short "changing photo" moment after the shopper picks one
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [switching, setSwitching] = useState(false);
+  // Big photos the shopper has actually looked at. Only these are downloaded: the photos of colours nobody
+  // picked stay as the small picture the row below already has.
+  const [viewedImages, setViewedImages] = useState<Record<string, boolean>>({});
   const switchTimer = useRef(0);
 
   useEffect(() => {
@@ -281,6 +284,11 @@ export const ProductDetailPage: React.FC = () => {
     const shown = (product?.images || []).filter(Boolean)[imageIdx];
     const match = (product?.colors || []).find((c) => c && c.name && c.imageUrl && c.imageUrl === shown);
     if (match) setColor(match);
+  }, [imageIdx, product]);
+
+  useEffect(() => {
+    const shown = (product?.images || []).filter(Boolean)[imageIdx];
+    if (shown) setViewedImages((seen) => (seen[shown] ? seen : { ...seen, [shown]: true }));
   }, [imageIdx, product]);
 
   // Keep the small photo of the one on screen visible in its row
@@ -595,9 +603,15 @@ export const ProductDetailPage: React.FC = () => {
                       className={`relative shrink-0 ${images.length > 1 ? 'w-[84vw] sm:w-[58%]' : 'w-full sm:w-[58%]'} lg:w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!`}
                     >
                       {idx === 0 ? (
-                        <img src={getCleanImageUrl(img, 1100)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
+                        <img {...productPhoto(img)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
                       ) : (
-                        <img src={getCleanImageUrl(img, 1100)} alt={`${product.name}, photo ${idx + 1}`} className="w-full h-full object-cover object-top" loading="lazy" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
+                        <>
+                          {/* Until this photo is picked, its place holds the small picture the row below already downloaded */}
+                          <img src={getCleanImageUrl(img, 160)} alt="" aria-hidden="true" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
+                          {(idx === imageIdx || viewedImages[img]) && (
+                            <img {...productPhoto(img)} alt={`${product.name}, photo ${idx + 1}`} className="absolute inset-0 w-full h-full object-cover object-top" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
+                          )}
+                        </>
                       )}
                       {/* Shown only while this photo is loading, or for a moment after the shopper picks it */}
                       {idx === imageIdx && (switching || !loadedImages[img]) && (

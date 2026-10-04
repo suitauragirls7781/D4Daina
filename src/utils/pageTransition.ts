@@ -40,13 +40,18 @@ export const withPageTransition = (update: () => void) => {
 };
 
 /** Loads an image (up to `maxWait` ms) so the product page photo is ready when the animation lands. */
-export const preloadImage = (src: string, maxWait = 280) =>
+export const preloadImage = (src: string, maxWait = 280, responsive?: { srcSet?: string; sizes?: string }) =>
   new Promise<void>((resolve) => {
     if (!src) return resolve();
     const img = new Image();
     const done = () => resolve();
     img.onload = done;
     img.onerror = done;
+    // The same srcset as the page's photo, so the browser picks (and keeps) the very file the page will show
+    if (responsive?.srcSet) {
+      img.sizes = responsive.sizes || '';
+      img.srcset = responsive.srcSet;
+    }
     img.src = src;
     if (img.complete) return resolve();
     setTimeout(done, maxWait);

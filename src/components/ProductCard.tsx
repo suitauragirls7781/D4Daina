@@ -5,7 +5,7 @@ import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { Check, Heart, Star, X } from 'lucide-react';
 import { BagIcon } from './BrandIcons';
-import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 
 interface ProductCardProps {
   product: Product;
@@ -62,7 +62,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       photo.style.viewTransitionName = 'pdp-hero';
       photo.setAttribute('data-vt-source', '');
     }
-    preloadImage(getCleanImageUrl(primary, 1100)).then(() => navigateToProduct(product.id));
+    const hero = productPhoto(primary);
+    preloadImage(hero.src, 280, hero).then(() => navigateToProduct(product.id));
   };
 
   const onQuickAdd = (e: React.MouseEvent) => {
