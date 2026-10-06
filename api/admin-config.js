@@ -1,5 +1,5 @@
 import { createAdminFirebaseToken, firestore, revokeAdminFirebaseSessions } from './_lib/firebaseAdmin.js';
-import { createUploadSignature, destroyImage } from './_lib/cloudinary.js';
+import { createMediaGrant, deleteMedia, mediaImage, mediaVideo, parseMediaUrl } from './_lib/media.js';
 import { createHmac, pbkdf2Sync, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { clearGatewayCache, gatewaysDoc, normalizeGateways, razorpayCreds } from './_lib/payu.js';
 import { GEMINI_MESSAGES, aiAdminView, aiDoc, describeProduct, pickModel, readAi } from './_lib/gemini.js';
@@ -69,13 +69,13 @@ const PUBLIC_SETTINGS = new Set([
 
 const FEATURE_KEYS = ['assistant', 'voiceSearch', 'compare', 'surpriseMe', 'findMySize', 'personalRails', 'occasions', 'giftMode', 'shareWishlist', 'priceDropAlerts', 'backInStockAlerts', 'googleOneTap', 'reels', 'completeLook', 'bundleBuilder', 'visualSearch', 'reviewPhotos', 'styleProfile'];
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
-const CLOUDINARY_VIDEO = /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/video\/upload\/[^\s"'<>]+$/;
-const CLOUDINARY_ASSET = /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/(image|video)\/upload\/[^\s"'<>]+$/;
-// Aura Reels: only this store's Cloudinary videos, each optionally linked to a product
+// A reel's own thumbnail: a photo of this store, or the first frame stored beside a reel video
+const isReelPoster = (url) => Boolean(mediaImage(url)) || parseMediaUrl(url)?.file === 'poster.jpg';
+// Aura Reels: only this store's own videos (media.suitauragirls.in), each optionally linked to a product
 const sanitizeAuraReels = (value) => (Array.isArray(value) ? value : []).slice(0, 50).map((r, i) => ({
   id: text(r?.id, 40).replace(/[^a-z0-9-]/gi, '').toLowerCase() || `reel-${i + 1}`,
-  videoUrl: CLOUDINARY_VIDEO.test(String(r?.videoUrl || '')) ? String(r.videoUrl) : '',
-  posterUrl: CLOUDINARY_ASSET.test(String(r?.posterUrl || '')) ? String(r.posterUrl) : '',
+  videoUrl: mediaVideo(r?.videoUrl) ? String(r.videoUrl).trim() : '',
+  posterUrl: isReelPoster(r?.posterUrl) ? String(r.posterUrl).trim() : '',
   caption: text(r?.caption, 200),
   productId: ID.test(String(r?.productId || '')) ? String(r.productId) : '',
   enabled: Boolean(r?.enabled),
@@ -613,12 +613,13 @@ export default async function handler(req, res) {
       return reply(res, 200, { success: true });
     }
 
-    if (req.method === 'POST' && (action === 'cloudinary-sign' || action === 'cloudinary-delete')) {
+    // Admin uploads and deletes of photos and reel videos (stored in R2, see api/_lib/media.js)
+    if (req.method === 'POST' && (action === 'media-grant' || action === 'media-delete')) {
       const auth = await authenticate(req, client);
       if (!auth) return reply(res, 401, { error: 'Admin session required.' });
-      if (action === 'cloudinary-sign') return reply(res, 200, createUploadSignature(String(body.folder || '')));
+      if (action === 'media-grant') return reply(res, 200, createMediaGrant(String(body.folder || ''), body.kind === 'video' ? 'video' : 'image'));
       const urls = (Array.isArray(body.urls) ? body.urls : [body.url]).filter((url) => typeof url === 'string').slice(0, 50);
-      const results = await Promise.allSettled(urls.map((url) => destroyImage(url)));
+      const results = await Promise.allSettled(urls.map((url) => deleteMedia(url)));
       const failed = urls.filter((_, index) => results[index].status === 'rejected');
       return reply(res, failed.length ? 207 : 200, { success: failed.length === 0, failed });
     }
@@ -780,7 +781,7 @@ export default async function handler(req, res) {
   } catch (error) {
     const message = error?.message || 'Unable to process admin configuration.';
     if (message === 'INVALID_UPLOAD_FOLDER') return reply(res, 400, { error: 'Unsupported upload folder.' });
-    if (message === 'CLOUDINARY_CONFIG_MISSING') return reply(res, 503, { error: 'Image uploads are not configured yet.' });
+    if (message === 'INVALID_UPLOAD_KIND' || message === 'INVALID_UPLOAD_ID') return reply(res, 400, { error: 'Unsupported upload.' });
     const status = ['SERVER_CONFIG_MISSING', 'ADMIN_BOOTSTRAP_CONFIG_MISSING'].includes(message) ? 503 : 500;
     console.error('Admin config API error:', message);
     return reply(res, status, { error: status === 503 ? 'Server-side admin credentials are not configured.' : 'Unable to process admin configuration.' });

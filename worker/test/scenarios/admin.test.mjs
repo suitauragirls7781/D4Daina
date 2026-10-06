@@ -2,6 +2,7 @@
 // payment gateway keys, upload signatures, the photo assistant, logout and "sign out everywhere".
 // Run: node --test worker/test/scenarios/admin.test.mjs
 import test from 'node:test';
+import { readMediaGrant, setMediaBucket } from '../../../api/_lib/media.js';
 import assert from 'node:assert/strict';
 import { createHash, createHmac } from 'node:crypto';
 import { startHarness } from '../harness/harness.mjs';
@@ -27,6 +28,12 @@ let cookie = '';
 let token = '';
 
 // ---- sign-in ----
+
+// A stand-in for the R2 bucket: remembers what it is asked to delete
+const fakeBucket = (keys) => {
+  const deleted = [];
+  return { deleted, list: async ({ prefix }) => ({ objects: keys.filter((key) => key.startsWith(prefix)).map((key) => ({ key })) }), delete: async (list) => { deleted.push(...list); } };
+};
 
 test('login: a wrong username, password or PIN is refused and sets no cookie; the first attempt creates hashed credentials', async () => {
   assert.equal(await h.doc('admin_credentials', 'singleton'), null);
@@ -251,30 +258,42 @@ test('razorpay-payments: the latest payments are listed for the admin only', asy
 
 // ---- uploads and the photo assistant ----
 
-test('cloudinary-sign: a signature for the store\'s own folders only; cloudinary-delete removes only the store\'s files', async () => {
-  const signed = await adminPost('cloudinary-sign', cookie, { folder: 'product-images' });
-  assert.equal(signed.status, 200, signed.text);
-  const { signature, cloudName, apiKey, folder, timestamp } = signed.body;
-  assert.deepEqual([cloudName, apiKey, folder], [h.env.CLOUDINARY_CLOUD_NAME, h.env.CLOUDINARY_API_KEY, 'suitauragirls/product-images']);
-  assert.ok(Math.abs(timestamp - Date.now() / 1000) < 5);
-  assert.equal(signature, createHash('sha1').update(`folder=${folder}&timestamp=${timestamp}${h.env.CLOUDINARY_API_SECRET}`).digest('hex'));
-  assert.ok(!signed.text.includes(h.env.CLOUDINARY_API_SECRET));
+test('media-grant: permission to upload one photo into the store\'s own folders only; media-delete removes only the store\'s files', async () => {
+  const granted = await adminPost('media-grant', cookie, { folder: 'product-images' });
+  assert.equal(granted.status, 200, granted.text);
+  const { grant, kind, folder, id, files, url } = granted.body;
+  assert.deepEqual([kind, folder], ['image', 'product-images']);
+  assert.match(id, /^[a-f0-9]{20}$/);
+  assert.equal(url, `https://media.suitauragirls.in/i/product-images/${id}/w1100.webp`);
+  assert.deepEqual(files, ['w160.webp', 'w320.webp', 'w480.webp', 'w640.webp', 'w828.webp', 'w1100.webp', 'w1600.webp', 'j480.jpg', 'j1200.jpg']);
+  // The grant is signed by the server: it reads back as issued, and any change to it is refused
+  assert.deepEqual(readMediaGrant(grant), { kind: 'image', folder: 'product-images', id });
+  assert.equal(readMediaGrant(grant.replace('product-images', 'reviews')), null);
+  assert.equal(readMediaGrant(grant.slice(0, -1) + (grant.endsWith('0') ? '1' : '0')), null);
+  assert.equal(readMediaGrant(grant, Date.now() + 31 * 60 * 1000), null, 'out of date after 30 minutes');
+  assert.ok(!granted.text.includes(h.env.ADMIN_SESSION_SECRET));
+  const video = await adminPost('media-grant', cookie, { folder: 'reels', kind: 'video' });
+  assert.deepEqual([video.body.kind, video.body.files, video.body.url], ['video', ['play.mp4', 'poster.jpg'], `https://media.suitauragirls.in/v/reels/${video.body.id}/play.mp4`]);
 
-  assert.equal((await adminPost('cloudinary-sign', cookie, { folder: '../private' })).status, 400);
-  assert.equal((await adminPost('cloudinary-sign', '', { folder: 'product-images' })).status, 401);
-  assert.equal((await adminPost('cloudinary-sign', cookie, { folder: 'product-images' }, { origin: 'https://evil.example' })).status, 403);
+  assert.equal((await adminPost('media-grant', cookie, { folder: '../private' })).status, 400);
+  assert.equal((await adminPost('media-grant', '', { folder: 'product-images' })).status, 401);
+  assert.equal((await adminPost('media-grant', cookie, { folder: 'product-images' }, { origin: 'https://evil.example' })).status, 403);
 
-  const own = `https://res.cloudinary.com/${h.env.CLOUDINARY_CLOUD_NAME}/image/upload/v1764000000/suitauragirls/product-images/abc123.jpg`;
-  const deleted = await adminPost('cloudinary-delete', cookie, { urls: [own] });
+  // Deleting a photo removes every stored size of it (and a migrated photo's original), nothing else
+  const bucket = fakeBucket(['i/product-images/abc12345/w160.webp', 'i/product-images/abc12345/w1100.webp', 'i/product-images/abc12345/j480.jpg', 'o/product-images/abc12345.png', 'i/product-images/abc123456/w1100.webp', 'i/product-images/other999/w1100.webp']);
+  setMediaBucket(bucket);
+  const own = 'https://media.suitauragirls.in/i/product-images/abc12345/w1100.webp';
+  const deleted = await adminPost('media-delete', cookie, { urls: [own] });
   assert.equal(deleted.status, 200, deleted.text);
-  assert.deepEqual(h.services.cloudinaryDestroyed, ['suitauragirls/product-images/abc123']);
+  assert.deepEqual(bucket.deleted.sort(), ['i/product-images/abc12345/j480.jpg', 'i/product-images/abc12345/w1100.webp', 'i/product-images/abc12345/w160.webp', 'o/product-images/abc12345.png']);
 
-  const foreign = ['https://res.cloudinary.com/another-cloud/image/upload/suitauragirls/product-images/abc.jpg', `https://res.cloudinary.com/${h.env.CLOUDINARY_CLOUD_NAME}/image/upload/someone-else/abc.jpg`];
-  const refused = await adminPost('cloudinary-delete', cookie, { urls: foreign });
+  const foreign = ['https://media.example.com/i/product-images/abc12345/w1100.webp', 'https://media.suitauragirls.in/i/private/abc12345/w1100.webp', 'https://media.suitauragirls.in/../secrets'];
+  const refused = await adminPost('media-delete', cookie, { urls: foreign });
   assert.equal(refused.status, 207);
   assert.deepEqual(refused.body.failed, foreign);
-  assert.equal(h.services.cloudinaryDestroyed.length, 1);
-  assert.equal((await adminPost('cloudinary-delete', '', { urls: [own] })).status, 401);
+  assert.equal(bucket.deleted.length, 4);
+  assert.equal((await adminPost('media-delete', '', { urls: [own] })).status, 401);
+  setMediaBucket(null);
 });
 
 test('ai-assistant: status without the key; a key is saved only after Google accepts it; it can be removed', async () => {

@@ -1,3 +1,4 @@
+import { getCleanImageUrl } from './imageHelper';
 /**
  * Admin-only helper: guesses the main colour of the GARMENT in a product photo, so the admin does
  * not have to type a colour name and hex by hand. Everything runs in the browser on a small copy
@@ -579,16 +580,11 @@ export const detectColourFromFile = async (file: Blob): Promise<DetectedColour |
   }
 };
 
-/** Asks Cloudinary for a small copy (the detector only needs ~160px). Other URLs are left as they are. */
-const smallCopyOf = (url: string) => {
-  const marker = '/image/upload/';
-  if (!url.startsWith('https://res.cloudinary.com/') || !url.includes(marker)) return url;
-  const [base, rest] = url.split(marker);
-  return `${base}${marker}c_limit,w_400/${rest}`;
-};
+/** A small stored copy of one of the store's photos (the detector only needs a few hundred pixels). Other URLs are left as they are. */
+const smallCopyOf = (url: string) => getCleanImageUrl(url, 480);
 
 /**
- * Main garment colour of an image URL. The image is loaded with CORS (Cloudinary allows it);
+ * Main garment colour of an image URL. The image is loaded with CORS (the store's media address allows it);
  * null when it cannot be loaded or read.
  */
 export const detectColourFromUrl = async (url: string): Promise<DetectedColour | null> => {

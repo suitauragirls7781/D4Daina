@@ -64,7 +64,7 @@ export const AdminCategories: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  // A Cloudinary photo is removed only when nothing else on the store still shows it
+  // A stored photo is removed only when nothing else on the store still shows it
   const removeUnusedImage = (url: string | undefined, keep: string[] = [], ignoreCategoryId = '') => {
     if (!url) return;
     const stillUsed = new Set<string>([

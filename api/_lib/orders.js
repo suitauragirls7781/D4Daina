@@ -1,6 +1,7 @@
 import { FieldValue } from 'firebase-admin/firestore';
 import { randomInt } from 'node:crypto';
 import { cleanText, isValidEmail } from './http.js';
+import { mediaImage } from './media.js';
 import { sendNewOrderAlert } from './email.js';
 
 export const MAX_QTY_PER_LINE = 10;
@@ -765,13 +766,9 @@ export const returnBlockReason = (order, now = Date.now()) => {
 };
 
 /** Key of a return photo uploaded with a signature from this server (see api/orders.js), or null for any other URL. */
-export const returnPhotoKey = (value, cloudName = process.env.CLOUDINARY_CLOUD_NAME || '') => {
-  const url = String(value || '').trim();
-  const cloud = String(cloudName || '');
-  if (!url || url.length > 400 || !/^[A-Za-z0-9_-]+$/.test(cloud)) return null;
-  const pattern = new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/image/upload/(?:v\\d+/)?${RETURN_PHOTO_FOLDER}/(rt_[a-f0-9]{24})\\.(?:jpe?g|png|webp|heic|heif)$`);
-  const match = url.match(pattern);
-  return match ? match[1] : null;
+export const returnPhotoKey = (value) => {
+  const photo = mediaImage(value, 'returns');
+  return photo && /^rt_[a-f0-9]{24}$/.test(photo.id) ? photo.id : null;
 };
 
 const lineName = (item) => cleanText(item?.product?.name, 120) || 'Item';

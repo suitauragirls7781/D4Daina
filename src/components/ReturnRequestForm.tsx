@@ -7,6 +7,7 @@ import { ordersApi } from '../lib/api';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { useDialogA11y } from './OrderInvoice';
 import { OrderWithRequests, formatWindowEnd, isReturnOpen, returnStatusOf } from './OrderProgress';
+import { MediaGrant, makeImageFiles, putMediaFile } from '../lib/media';
 
 // Same lists and limits as the server (api/_lib/orders.js); the server checks everything again.
 const REASONS = ["Size doesn't fit", 'Damaged / defective', 'Wrong item received', 'Colour or quality not as expected', 'Other'] as const;
@@ -164,30 +165,22 @@ export const ReturnRequestForm: React.FC<{
         if (existing.preview) URL.revokeObjectURL(existing.preview);
         updatePhoto(id, { preview: URL.createObjectURL(blob) });
       }
-      const signed = await ordersApi<{ cloudName: string; apiKey: string; signature: string; fields: Record<string, string | number> }>('return-photo-sign', { orderNumber: order.orderNumber });
+      const grant = await ordersApi<MediaGrant>('return-photo-sign', { orderNumber: order.orderNumber });
       if (!photosRef.current.some((photo) => photo.id === id)) return; // removed meanwhile
-      const form = new FormData();
-      form.append('file', blob, blob === file ? file.name : 'return-photo.jpg');
-      form.append('api_key', signed.apiKey);
-      Object.entries(signed.fields || {}).forEach(([key, value]) => form.append(key, String(value)));
-      form.append('signature', signed.signature);
-      const url = await new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        updatePhoto(id, { xhr });
-        xhr.open('POST', `https://api.cloudinary.com/v1_1/${encodeURIComponent(signed.cloudName)}/image/upload`);
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) updatePhoto(id, { progress: Math.min(99, Math.round((event.loaded / event.total) * 100)) });
-        };
-        xhr.onload = () => {
-          let result: any = {};
-          try { result = JSON.parse(xhr.responseText || '{}'); } catch { result = {}; }
-          if (xhr.status >= 200 && xhr.status < 300 && typeof result.secure_url === 'string') resolve(result.secure_url);
-          else reject(new Error('This photo could not be uploaded. Please try another photo.'));
-        };
-        xhr.onerror = () => reject(new Error('Upload failed. Check your connection and try again.'));
-        xhr.onabort = () => reject(new Error('aborted'));
-        xhr.send(form);
-      });
+      // Every size is made here and sent to the store's storage; the bar moves as each one arrives
+      const prepared = await makeImageFiles(blob, grant.files);
+      let sent = 0;
+      for (const part of prepared) {
+        if (!photosRef.current.some((photo) => photo.id === id)) throw new Error('aborted');
+        try {
+          await putMediaFile(grant.grant, part.name, part.blob);
+        } catch {
+          throw new Error('This photo could not be uploaded. Please try another photo.');
+        }
+        sent += 1;
+        updatePhoto(id, { progress: Math.min(99, Math.round((sent / prepared.length) * 100)) });
+      }
+      const url = grant.url;
       updatePhoto(id, { status: 'done', progress: 100, url, xhr: undefined });
     } catch (err: any) {
       if (err?.message === 'aborted') return;

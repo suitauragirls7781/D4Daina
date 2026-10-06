@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, getIdentity, isSameOrigin, isValidEmail, parseBody, reply } from './_lib/http.js';
 import { escapeHtml, layout, sendEmail } from './_lib/email.js';
+import { mediaVariant } from './_lib/media.js';
 
 // Price-drop and back-in-stock emails, built only from real changes:
 // the server remembers each product's last price/availability (alert_state) and compares with the
@@ -23,7 +24,7 @@ const readFeatures = async (db) => {
 };
 
 const productBlock = (p, line) => {
-  const img = (p.images || [])[0] || p.image || '';
+  const img = mediaVariant((p.images || [])[0] || p.image || '', 'j480.jpg');
   return `${img ? `<p style="margin:0 0 16px"><img src="${escapeHtml(img)}" alt="" width="220" style="border-radius:12px;max-width:100%"></p>` : ''}
 <p style="margin:0 0 8px;font-size:16px"><strong>${escapeHtml(p.name)}</strong></p>
 <p style="margin:0 0 20px;font-size:15px">${line}</p>

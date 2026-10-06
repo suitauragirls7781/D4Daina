@@ -1,3 +1,5 @@
+import { MEDIA_BASE, mediaImage } from '../lib/media';
+
 /**
  * Image helper utility for Suit Aura Girls
  * Ensures image URLs are clean, valid, and properly formatted.
@@ -29,15 +31,10 @@ export const getCleanImageUrl = (url: string | undefined | null, targetWidth?: n
     return cleanUrl;
   }
 
-  // Serve Cloudinary originals resized, in the best format and quality for the browser.
-  const cloudinaryUpload = '/image/upload/';
-  if (cleanUrl.startsWith('https://res.cloudinary.com/') && cleanUrl.includes(cloudinaryUpload)) {
-    const [base, rest] = cleanUrl.split(cloudinaryUpload);
-    const hasTransform = !/^(v\d+\/|suitauragirls\/)/.test(rest);
-    if (!hasTransform) {
-      return `${base}${cloudinaryUpload}f_auto,q_auto,c_limit,w_${targetWidth || 960}/${rest}`;
-    }
-    return cleanUrl;
+  // The store's own photos (media.suitauragirls.in): the stored size that fits the place it is shown in.
+  // A link saved before the photos moved there is translated to the same photo's new address.
+  if (cleanUrl.startsWith(MEDIA_BASE) || cleanUrl.startsWith('https://res.cloudinary.com/')) {
+    return mediaImage(cleanUrl, targetWidth || 1100);
   }
 
   // Optimize Unsplash image loading speed & cross-browser compatibility (Android, iOS, WebViews)

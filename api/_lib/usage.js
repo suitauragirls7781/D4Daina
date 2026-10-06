@@ -1,5 +1,5 @@
-// Today's real usage of the Cloudflare account against the free plan's daily limits, plus the emails Brevo
-// still allows today. Read for the admin page "Usage & limits" (api/admin-config.js, action "usage").
+// Today's real usage of the Cloudflare account against the free plan's daily limits, the photo storage (R2)
+// and the emails Brevo still allows today. Read for the admin page "Usage & limits" (api/admin-config.js, action "usage").
 // Every number comes from Cloudflare's or Brevo's own API; when one of them cannot be read, that part is
 // returned as null with a reason, never as a guess.
 
@@ -58,7 +58,7 @@ const D1_QUERY = 'query($acc:String!,$date:Date!,$db:String!){viewer{accounts(fi
 let cached = null; // { at, key, body }
 
 /** Forgets the cached answer (used by the tests). */
-export const clearUsageCache = () => { cached = null; capacityDays = null; };
+export const clearUsageCache = () => { cached = null; };
 
 const count = (value) => (Number.isFinite(Number(value)) ? Math.max(0, Math.round(Number(value))) : 0);
 // Cloudflare reports CPU time in microseconds; the page shows milliseconds with two decimals
@@ -146,110 +146,81 @@ const readEmail = async (apiKey) => {
   }
 };
 
-/**
- * What the Cloudinary account (product photos and reels) has used, from Cloudinary's own usage API, or null
- * when Cloudinary is not set up or does not answer. The free plan is measured in credits over the last
- * 30 days: 1 credit = 1 GB stored, or 1 GB delivered to shoppers, or 1,000 photo transformations.
- */
-const readCloudinary = async (env) => {
-  const cloudName = String(env.CLOUDINARY_CLOUD_NAME || '').trim();
-  const apiKey = String(env.CLOUDINARY_API_KEY || '').trim();
-  const apiSecret = String(env.CLOUDINARY_API_SECRET || '').trim();
-  if (!cloudName || !apiKey || !apiSecret) return null;
+// ---- Photo storage (Cloudflare R2) ----------------------------------------------------------------------
+// The photos and reel videos live in one R2 bucket and are read through Cloudflare's CDN. R2's free amounts
+// are per calendar month (UTC): 10 GB stored, 1 million writes ("Class A"), 10 million reads ("Class B").
+// Sending a photo to a shopper costs nothing, so there is no bandwidth limit to run out of.
+export const R2_FREE_STORAGE_BYTES = 10 * 1000 * 1000 * 1000;
+export const R2_FREE_WRITES_PER_MONTH = 1000000;
+export const R2_FREE_READS_PER_MONTH = 10000000;
+// Every photo is kept in nine ready-made files (seven WebP widths and two JPEGs); migrated photos also keep their original
+export const FILES_PER_PHOTO = 9;
+
+const R2_QUERY = 'query($acc:String!,$bucket:String!,$start:Time!,$end:Time!){viewer{accounts(filter:{accountTag:$acc}){storage:r2StorageAdaptiveGroups(limit:1,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end},orderBy:[datetime_DESC]){max{payloadSize objectCount metadataSize}} ops:r2OperationsAdaptiveGroups(limit:1000,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end}){sum{requests} dimensions{actionType}}}}}';
+// How R2 bills each action: writes and listings are Class A, reads are Class B, deletes are free
+const isWrite = (action) => /^(Put|Copy|List|Create|Complete|Upload)/.test(action);
+const isRead = (action) => /^(Get|Head)/.test(action);
+
+/** This month's storage and request counts of the media bucket, or null when it cannot be read. */
+const readMedia = async ({ token, accountId, bucket, now }) => {
+  if (!bucket) return null;
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/usage`, {
-      headers: { accept: 'application/json', authorization: `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}` },
-      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-    });
-    if (!response.ok) return null;
-    const usage = await response.json();
-    const real = (value) => (Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : null);
-    const creditsLimit = real(usage?.credits?.limit);
+    const account = await cloudflareQuery(token, R2_QUERY, { acc: accountId, bucket, start: monthStart.toISOString(), end: now.toISOString() });
+    const ops = Array.isArray(account.ops) ? account.ops : [];
+    const total = (test) => ops.reduce((sum, row) => sum + (test(String(row?.dimensions?.actionType || '')) ? count(row?.sum?.requests) : 0), 0);
+    const stored = account.storage?.[0]?.max;
+    const objects = stored ? count(stored.objectCount) : null;
     return {
-      plan: String(usage?.plan || '').slice(0, 40),
-      // Plans without credits (older paid plans) leave these null: the page then shows the amounts only
-      creditsUsed: creditsLimit ? real(usage?.credits?.usage) : null,
-      creditsLimit: creditsLimit || null,
-      storageBytes: count(usage?.storage?.usage),
-      storageCredits: real(usage?.storage?.credits_usage),
-      bandwidthBytes: count(usage?.bandwidth?.usage),
-      bandwidthCredits: real(usage?.bandwidth?.credits_usage),
-      transformations: count(usage?.transformations?.usage),
-      transformationCredits: real(usage?.transformations?.credits_usage),
-      files: count(usage?.resources),
-      maxImageBytes: real(usage?.media_limits?.image_max_size_bytes),
+      bucket,
+      // Cloudflare reports storage a few hours behind; null until its first report of the month
+      storageBytes: stored ? count(stored.payloadSize) + count(stored.metadataSize) : null,
+      storageLimit: R2_FREE_STORAGE_BYTES,
+      objects,
+      photos: objects === null ? null : Math.round(objects / (FILES_PER_PHOTO + 1)),
+      writes: total(isWrite),
+      writesLimit: R2_FREE_WRITES_PER_MONTH,
+      reads: total(isRead),
+      readsLimit: R2_FREE_READS_PER_MONTH,
+      monthStart: monthStart.toISOString(),
+      resetAt: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString(),
     };
   } catch {
     return null;
   }
 };
 
-// How many visitors the photo plan can carry. Cloudinary reports each finished day on its own (?date=dd-mm-yyyy),
-// so the photo data of the last full days is set against the visits the store counted on the same days.
-// Finished days no longer change: they are asked for once every few hours, not on every refresh
-// (Cloudinary's free plan allows 500 of these calls an hour).
-const CAPACITY_DAYS = 7;
-const CAPACITY_CACHE_MS = 6 * 60 * 60 * 1000;
-const CAPACITY_MIN_VISITS = 100;
-const GB = 1e9;
-let capacityDays = null; // { at, key, days: [{ date, bandwidthBytes, visits }] }
-
-const readCapacityDays = async (env, now, loadVisits) => {
-  const cloudName = String(env.CLOUDINARY_CLOUD_NAME || '').trim();
-  const apiKey = String(env.CLOUDINARY_API_KEY || '').trim();
-  const apiSecret = String(env.CLOUDINARY_API_SECRET || '').trim();
-  if (!cloudName || !apiKey || !apiSecret || typeof loadVisits !== 'function') return null;
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  const dates = Array.from({ length: CAPACITY_DAYS }, (_, index) => new Date(today - (index + 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
-  const key = `${cloudName}|${dates[0]}`;
-  if (capacityDays && capacityDays.key === key && now.getTime() - capacityDays.at < CAPACITY_CACHE_MS && now.getTime() >= capacityDays.at) return capacityDays.days;
-  try {
-    const [visits, bandwidth] = await Promise.all([
-      loadVisits(dates),
-      Promise.all(dates.map(async (date) => {
-        const [year, month, day] = date.split('-');
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudName)}/usage?date=${day}-${month}-${year}`, {
-          headers: { accept: 'application/json', authorization: `Basic ${Buffer.from(`${apiKey}:${apiSecret}`).toString('base64')}` },
-          signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return count((await response.json())?.bandwidth?.usage);
-      })),
-    ]);
-    const days = dates.map((date, index) => ({ date, bandwidthBytes: bandwidth[index], visits: count(visits?.[date]) }));
-    capacityDays = { at: now.getTime(), key, days };
-    return days;
-  } catch {
-    return null;
-  }
-};
+const CAPACITY_MIN_VISITS = 50;
 
 /**
- * An estimate, from measured days only: photo data per counted visit, and what the credits still allow.
- * null when there is no credit limit or too few visits to measure from.
+ * How many visitors the free plan can carry, worked out from real numbers only: what today's counted visits
+ * used of each daily limit (Worker requests, database rows written), and what this month's visits used of the
+ * photo reads. The smallest of them is the store's ceiling. null when there are too few visits to measure.
  */
-const photoCapacity = (cloudinary, days) => {
-  if (!cloudinary || !cloudinary.creditsLimit || cloudinary.creditsUsed === null || !Array.isArray(days)) return null;
-  // Only days on which both photos were shown and visits were counted
-  const measured = days.filter((day) => day.bandwidthBytes > 0 && day.visits > 0);
-  const visits = measured.reduce((total, day) => total + day.visits, 0);
-  const bandwidthBytes = measured.reduce((total, day) => total + day.bandwidthBytes, 0);
-  if (visits < CAPACITY_MIN_VISITS || !bandwidthBytes) return null;
-  const bytesPerVisit = bandwidthBytes / visits;
-  const creditsLeft = Math.max(0, cloudinary.creditsLimit - cloudinary.creditsUsed);
-  // Stored photos and resizes take their credits whoever visits; the rest is what showing photos may use in 30 days
-  const forShowing = Math.max(0, cloudinary.creditsLimit - (cloudinary.storageCredits || 0) - (cloudinary.transformationCredits || 0));
-  const bytesPerDay = bandwidthBytes / measured.length;
-  return {
-    measuredDays: measured.length,
-    visits,
-    bandwidthBytes,
-    bytesPerVisit: Math.round(bytesPerVisit),
-    visitsPerDay: Math.round(visits / measured.length),
-    visitsLeft: Math.floor((creditsLeft * GB) / bytesPerVisit),
-    visitsPer30Days: Math.floor((forShowing * GB) / bytesPerVisit),
-    daysLeftAtThisPace: Math.floor((creditsLeft * GB) / bytesPerDay),
-  };
+const visitCapacity = ({ plan, workers, d1, media, visitsToday, visitsThisMonth }) => {
+  const out = { visitsToday, visitsThisMonth, perDay: [], perMonth: [] };
+  if (plan === 'free' && visitsToday >= CAPACITY_MIN_VISITS) {
+    if (workers && workers.requests > 0) out.perDay.push({ limit: 'requests', perVisit: Math.round((workers.requests / visitsToday) * 10) / 10, visits: Math.floor(workers.limit / (workers.requests / visitsToday)) });
+    if (d1 && d1.rowsWritten > 0) out.perDay.push({ limit: 'writes', perVisit: Math.round((d1.rowsWritten / visitsToday) * 10) / 10, visits: Math.floor(d1.rowsWrittenLimit / (d1.rowsWritten / visitsToday)) });
+    if (d1 && d1.rowsRead > 0) out.perDay.push({ limit: 'reads', perVisit: Math.round((d1.rowsRead / visitsToday) * 10) / 10, visits: Math.floor(d1.rowsReadLimit / (d1.rowsRead / visitsToday)) });
+  }
+  if (media && media.reads > 0 && visitsThisMonth >= CAPACITY_MIN_VISITS) {
+    out.perMonth.push({ limit: 'photoReads', perVisit: Math.round((media.reads / visitsThisMonth) * 10) / 10, visits: Math.floor(media.readsLimit / (media.reads / visitsThisMonth)) });
+  }
+  if (!out.perDay.length && !out.perMonth.length) return null;
+  const day = out.perDay.length ? out.perDay.reduce((low, row) => (row.visits < low.visits ? row : low)) : null;
+  const month = out.perMonth.length ? out.perMonth.reduce((low, row) => (row.visits < low.visits ? row : low)) : null;
+  // The month's ceiling: thirty days of the daily ceiling, or the photo-read ceiling, whichever is lower
+  const candidates = [day ? { limit: day.limit, visits: day.visits * 30 } : null, month].filter(Boolean);
+  const tightest = candidates.reduce((low, row) => (row.visits < low.visits ? row : low));
+  return { ...out, visitsPerDay: day ? day.visits : null, tightestDaily: day ? day.limit : null, visitsPerMonth: tightest.visits, tightest: tightest.limit };
+};
+
+/** Photos that still fit in the free storage, from the average size of the photos stored so far. */
+const photoRoom = (media) => {
+  if (!media || media.storageBytes === null || !media.photos) return null;
+  const perPhoto = media.storageBytes / media.photos;
+  return { bytesPerPhoto: Math.round(perPhoto), photosLeft: Math.max(0, Math.floor((media.storageLimit - media.storageBytes) / perPhoto)) };
 };
 
 /** The answer of /api/admin-config?action=usage. Never throws. */
@@ -279,8 +250,9 @@ export const readUsage = async (env = process.env, now = new Date(), savedPlan =
       workers: null,
       d1: null,
       email: null,
-      cloudinary: null,
-      photoCapacity: null,
+      media: null,
+      photoRoom: null,
+      capacity: null,
       error: !token
         ? 'Cloudflare usage is not connected yet. Create a Cloudflare API token with "Account Analytics: Read" and add it to the Worker as the secret CLOUDFLARE_ANALYTICS_TOKEN.'
         : 'CLOUDFLARE_ACCOUNT_ID is not set on the Worker (it is a plain variable in wrangler.jsonc).',
@@ -297,14 +269,11 @@ export const readUsage = async (env = process.env, now = new Date(), savedPlan =
       const retried = await readEmail(brevoKey);
       if (retried) hit.body = { ...hit.body, email: retried };
     }
-    if (!hit.body.cloudinary) {
-      const retried = await readCloudinary(env);
-      if (retried) hit.body = { ...hit.body, cloudinary: retried, photoCapacity: photoCapacity(retried, await readCapacityDays(env, now, loadVisits)) };
-    }
     return hit.body;
   }
 
-  const [workers, d1, email, cloudinary, capacityHistory] = await Promise.all([
+  const monthDates = Array.from({ length: now.getUTCDate() }, (_, index) => new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), index + 1)).toISOString().slice(0, 10));
+  const [workers, d1, email, media, visits] = await Promise.all([
     readWorkers({ token, accountId, workerName: String(env.CLOUDFLARE_WORKER_NAME || 'd4daina').trim(), start: dayStart.toISOString(), end: now.toISOString(), limit: paid ? PAID_WORKER_REQUESTS_PER_MONTH : WORKER_REQUESTS_PER_DAY })
       .catch((error) => ({ failed: reason(error, token) })),
     readD1({
@@ -314,8 +283,9 @@ export const readUsage = async (env = process.env, now = new Date(), savedPlan =
     })
       .catch((error) => ({ failed: reason(error, token) })),
     readEmail(brevoKey),
-    readCloudinary(env),
-    readCapacityDays(env, now, loadVisits),
+    readMedia({ token, accountId, bucket: String(env.MEDIA_BUCKET_NAME || '').trim(), now }),
+    // Visits the store counted on each day of this month (api/track.js), for the capacity estimate
+    typeof loadVisits === 'function' ? loadVisits(monthDates).catch(() => null) : null,
   ]);
 
   const failures = [workers.failed && `Worker requests: ${workers.failed}`, d1.failed && `Database: ${d1.failed}`].filter(Boolean);
@@ -325,8 +295,16 @@ export const readUsage = async (env = process.env, now = new Date(), savedPlan =
     workers: workers.failed ? null : workers,
     d1: d1.failed ? null : d1,
     email,
-    cloudinary,
-    photoCapacity: photoCapacity(cloudinary, capacityHistory),
+    media,
+    photoRoom: photoRoom(media),
+    capacity: visits ? visitCapacity({
+      plan,
+      workers: workers.failed ? null : workers,
+      d1: d1.failed ? null : d1,
+      media,
+      visitsToday: count(visits[now.toISOString().slice(0, 10)]),
+      visitsThisMonth: monthDates.reduce((sum, day) => sum + count(visits[day]), 0),
+    }) : null,
     ...(failures.length ? { error: `Cloudflare did not return all of today's numbers. ${failures.join(' · ')}`.slice(0, 400) } : {}),
   };
   // A failed read is not kept, so "Try again" really asks Cloudflare again

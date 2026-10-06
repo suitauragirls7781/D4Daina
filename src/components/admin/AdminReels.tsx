@@ -14,14 +14,15 @@ import { useDiscovery } from '../../utils/discovery';
 import { isAvailable } from '../../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminPageHeader } from './kidsToysShared';
+import { makeVideoPoster, putMediaFile, uploadImageWithGrant } from '../../lib/media';
 
-// Sizes in decimal MB, as phones show them (and never above Cloudinary's own limits, whichever unit it counts in)
+// Sizes in decimal MB, as phones show them
 const MB = 1000 * 1000;
-// Cloudinary makes the phone copy and first-frame thumbnail on the fly only for videos up to 40 MB on the
-// Free plan; larger ones are refused ("too large to process synchronously") and a .mov original may not play
-const MAX_VIDEO_BYTES = 40 * MB;
+// The video is stored and played exactly as it is uploaded (nothing re-encodes it), so it must be an MP4
+// that phones play, and small enough to start quickly on mobile data.
+const MAX_VIDEO_BYTES = 50 * MB;
 const MAX_POSTER_BYTES = 10 * MB;
-const VIDEO_TYPES = ['video/mp4', 'video/quicktime', 'video/webm'];
+const VIDEO_TYPES = ['video/mp4'];
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const CANCELLED = 'UPLOAD_CANCELLED';
 
@@ -29,9 +30,9 @@ const mb = (bytes: number) => `${(bytes / MB).toFixed(1)} MB`;
 const inr = (n: number) => `₹${Math.round(Number(n) || 0).toLocaleString('en-IN')}`;
 
 const videoProblem = (file: File) => {
-  if (!VIDEO_TYPES.includes(file.type) && !/\.(mp4|mov|webm)$/i.test(file.name)) return 'Choose an MP4, MOV or WebM video.';
+  if (!VIDEO_TYPES.includes(file.type) && !/\.mp4$/i.test(file.name)) return 'Choose an MP4 video (on an iPhone: Settings → Camera → Formats → Most Compatible, or export the clip as MP4).';
   if (file.size === 0) return 'This video file is empty.';
-  if (file.size > MAX_VIDEO_BYTES) return `This video is ${mb(file.size)}. The limit is 40 MB — trim it or export it at a lower resolution (720p or 1080p), then choose it again.`;
+  if (file.size > MAX_VIDEO_BYTES) return `This video is ${mb(file.size)}. The limit is 50 MB — trim it or export it at a lower resolution (720p or 1080p), then choose it again.`;
   return '';
 };
 const posterProblem = (file: File) => {
@@ -43,43 +44,45 @@ const posterProblem = (file: File) => {
 interface UploadResult { secure_url: string; width?: number; height?: number }
 
 /**
- * Signed upload straight from the browser to Cloudinary (folder "reels"), reporting progress.
- * The API secret never reaches the browser; /api/admin-config signs the request.
+ * Upload to the store's own storage (folder "reels"), reporting progress. A video goes up as it is, with its
+ * first frame as the thumbnail; a thumbnail photo is resized in the browser first (see src/lib/media.ts).
  */
-const uploadToCloudinary = async (
+const uploadReelFile = async (
   file: File,
   resourceType: 'video' | 'image',
   onProgress: (fraction: number) => void,
   xhrRef: React.MutableRefObject<XMLHttpRequest | null>,
 ): Promise<UploadResult> => {
-  const response = await fetch('/api/admin-config?action=cloudinary-sign', {
+  const response = await fetch('/api/admin-config?action=media-grant', {
     method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ folder: 'reels' }),
+    body: JSON.stringify({ folder: 'reels', kind: resourceType }),
   });
-  const signed = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(signed.error || 'Could not start the upload. Please sign in again.');
-  const form = new FormData();
-  form.append('file', file);
-  form.append('api_key', signed.apiKey);
-  form.append('timestamp', String(signed.timestamp));
-  form.append('folder', signed.folder);
-  form.append('signature', signed.signature);
-  return new Promise((resolve, reject) => {
+  const grant = await response.json().catch(() => ({}));
+  if (!response.ok || !grant.grant) throw new Error(grant.error || 'Could not start the upload. Please sign in again.');
+  if (resourceType === 'image') {
+    const url = await uploadImageWithGrant(file, grant);
+    onProgress(1);
+    return { secure_url: url };
+  }
+  // The first frame is saved beside the video, so the reel has a thumbnail without anything being made later
+  await putMediaFile(grant.grant, 'poster.jpg', await makeVideoPoster(file));
+  await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhrRef.current = xhr;
-    xhr.open('POST', `https://api.cloudinary.com/v1_1/${signed.cloudName}/${resourceType}/upload`);
+    xhr.open('PUT', `/api/media?grant=${encodeURIComponent(grant.grant)}&file=play.mp4`);
     xhr.upload.onprogress = (e) => { if (e.lengthComputable) onProgress(e.loaded / e.total); };
     xhr.onload = () => {
       xhrRef.current = null;
       let body: any = {};
       try { body = JSON.parse(xhr.responseText); } catch {}
-      if (xhr.status >= 200 && xhr.status < 300 && typeof body.secure_url === 'string') resolve(body);
-      else reject(new Error(body?.error?.message ? `Cloudinary: ${body.error.message}` : `Upload failed (error ${xhr.status}). Please try again.`));
+      if (xhr.status >= 200 && xhr.status < 300) resolve();
+      else reject(new Error(body?.error || `Upload failed (error ${xhr.status}). Please try again.`));
     };
     xhr.onerror = () => { xhrRef.current = null; reject(new Error('Network error during upload. Check your connection and try again.')); };
     xhr.onabort = () => { xhrRef.current = null; reject(new Error(CANCELLED)); };
-    xhr.send(form);
+    xhr.send(file);
   });
+  return { secure_url: grant.url };
 };
 
 const saveReels = async (reels: AuraReel[]) => {
@@ -90,13 +93,8 @@ const saveReels = async (reels: AuraReel[]) => {
   if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'Could not save. Please try again.');
 };
 
-// Ask Cloudinary to prepare the phone-sized copy and thumbnail now, so the first shopper does not wait.
-// A GET is what makes Cloudinary transcode; once its reply starts the copy exists, so the download is stopped.
+// Loads the thumbnail once, so it is in Cloudflare's cache before the first shopper asks for it
 const warmUp = (reel: AuraReel) => {
-  try {
-    const controller = new AbortController();
-    fetch(reelVideoSrc(reel.videoUrl), { mode: 'no-cors', signal: controller.signal }).then(() => controller.abort(), () => {});
-  } catch {}
   const img = new Image();
   img.src = reelPosterSrc(reel, 400);
 };
@@ -261,7 +259,7 @@ export const AdminReels: React.FC = () => {
     }
   };
 
-  /** Deletes Cloudinary files that no reel uses any more. */
+  /** Deletes stored files that no reel uses any more. */
   const removeAssets = async (urls: string[], remaining: AuraReel[]) => {
     const inUse = new Set(remaining.flatMap((r) => [r.videoUrl, r.posterUrl]));
     const targets = Array.from(new Set(urls.filter((u) => u && !inUse.has(u))));
@@ -269,7 +267,7 @@ export const AdminReels: React.FC = () => {
     try {
       await deleteImages(targets);
     } catch (err: any) {
-      showToast(`Saved, but the old file could not be deleted from Cloudinary (${err?.message || 'unknown error'}). You can remove it in the Cloudinary media library.`, 'info');
+      showToast(`Saved, but the old file could not be deleted from storage (${err?.message || 'unknown error'}).`, 'info');
     }
   };
 
@@ -294,8 +292,8 @@ export const AdminReels: React.FC = () => {
     let posterUrl = '';
     try {
       setProgress({ label: 'Uploading video', fraction: 0 });
-      const video = await uploadToCloudinary(videoFile, 'video', (f) => setProgress({ label: 'Uploading video', fraction: f }), xhrRef);
-      if (!isReelVideoUrl(video.secure_url)) throw new Error('Cloudinary did not return a video link. Please try again.');
+      const video = await uploadReelFile(videoFile, 'video', (f) => setProgress({ label: 'Uploading video', fraction: f }), xhrRef);
+      if (!isReelVideoUrl(video.secure_url)) throw new Error('The video was not saved. Please try again.');
       videoUrl = video.secure_url;
       if (video.width && video.height && video.width > video.height) {
         setUploadNote('This video is landscape. Reels look best filmed vertically (9:16); it will show with bars above and below.');
@@ -303,7 +301,7 @@ export const AdminReels: React.FC = () => {
       if (posterFile) {
         try {
           setProgress({ label: 'Uploading thumbnail', fraction: 0 });
-          const image = await uploadToCloudinary(posterFile, 'image', (f) => setProgress({ label: 'Uploading thumbnail', fraction: f }), xhrRef);
+          const image = await uploadReelFile(posterFile, 'image', (f) => setProgress({ label: 'Uploading thumbnail', fraction: f }), xhrRef);
           if (isCustomPosterImage(image.secure_url)) posterUrl = image.secure_url;
         } catch (err: any) {
           if (err?.message === CANCELLED) throw err;
@@ -356,7 +354,7 @@ export const AdminReels: React.FC = () => {
   const remove = async (index: number) => {
     const reel = list[index];
     const customPoster = isCustomPosterImage(reel.posterUrl) ? reel.posterUrl : '';
-    if (!window.confirm(`Delete this reel? Its video${customPoster ? ' and thumbnail' : ''} will be permanently deleted from Cloudinary. This cannot be undone.`)) return;
+    if (!window.confirm(`Delete this reel? Its video${customPoster ? ' and thumbnail' : ''} will be permanently deleted. This cannot be undone.`)) return;
     const next = list.filter((_, i) => i !== index);
     if (await persist(next, 'Reel deleted.')) {
       if (editingId === reel.id) closeEditor(false);
@@ -385,8 +383,8 @@ export const AdminReels: React.FC = () => {
     if (problem) { showToast(problem, 'error'); return; }
     try {
       setPosterProgress(0);
-      const image = await uploadToCloudinary(file, 'image', (f) => setPosterProgress(f), posterXhrRef);
-      if (!isCustomPosterImage(image.secure_url)) throw new Error('Cloudinary did not return an image link.');
+      const image = await uploadReelFile(file, 'image', (f) => setPosterProgress(f), posterXhrRef);
+      if (!isCustomPosterImage(image.secure_url)) throw new Error('The thumbnail was not saved. Please try again.');
       const previous = draftPosterRef.current;
       draftPosterRef.current = image.secure_url;
       setDraft((d) => ({ ...d, posterUrl: image.secure_url }));
@@ -443,12 +441,12 @@ export const AdminReels: React.FC = () => {
 
       <section className={card} aria-labelledby="add-reel-title">
         <h3 id="add-reel-title" className="font-semibold text-ink mb-1">Add a reel</h3>
-        <p className="text-[13px] text-ink-muted mb-4">MP4, MOV or WebM, up to 40 MB (the largest video Cloudinary can make a phone-friendly copy of). Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy.</p>
+        <p className="text-[13px] text-ink-muted mb-4">MP4 only, up to 50 MB. The video is shown exactly as you upload it, so export it at 720p for a quick start on mobile data. Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy.</p>
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-4">
             <label className="block text-[13px] text-ink-muted space-y-1.5">
               <span className="block">Video</span>
-              <input key={`video-${formKey}`} type="file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm" disabled={uploading}
+              <input key={`video-${formKey}`} type="file" accept="video/mp4,.mp4" disabled={uploading}
                 onChange={(e) => { setVideoFile(e.target.files?.[0] || null); setUploadError(''); setUploadNote(''); }} className={fileInput} />
             </label>
             {videoFile && (

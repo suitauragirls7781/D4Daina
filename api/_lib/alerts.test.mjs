@@ -32,7 +32,7 @@ const test = async (name, fn) => {
   try { await fn(); results.push(true); console.log(`PASS  ${name}`); } catch (e) { results.push(false); console.log(`FAIL  ${name}\n      ${e.message}`); }
 };
 
-const product = { name: 'Rose Suit', price: 999, stockQuantity: 5, inStock: true, images: ['https://res.cloudinary.com/x.jpg'] };
+const product = { name: 'Rose Suit', price: 999, stockQuantity: 5, inStock: true, images: ['https://media.suitauragirls.in/i/product-images/rosesuit01/w1100.webp'] };
 const seed = () => ({
   products: { p1: clone(product) },
   profiles: {

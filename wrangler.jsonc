@@ -24,6 +24,11 @@
     "run_worker_first": ["/api/*", "/sitemap.xml"]
   },
 
+  // Photos and reel videos (read from https://media.suitauragirls.in, written through /api/media)
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "suitauragirls-media" }
+  ],
+
   "d1_databases": [
     { "binding": "DB", "database_name": "suitauragirls-db", "database_id": "bae4a715-99a3-4021-9d42-56843baed258" }
   ],
@@ -36,6 +41,8 @@
     "CLOUDFLARE_ACCOUNT_ID": "65142a242e92f18ec9db9798f3ac35b4",
     "CLOUDFLARE_D1_ID": "bae4a715-99a3-4021-9d42-56843baed258",
     "CLOUDFLARE_WORKER_NAME": "d4daina",
+    // The R2 bucket with the photos and reel videos (Usage & limits reads its storage and requests)
+    "MEDIA_BUCKET_NAME": "suitauragirls-media",
     // Visitor counting stops for the day at this budget (api/track.js) so orders keep their share of D1's
     // 100,000 rows written a day. Measured on 2 Oct 2026: 8,000 budget units came to about 14,700 rows.
     "TRACK_WRITE_BUDGET": "35000",

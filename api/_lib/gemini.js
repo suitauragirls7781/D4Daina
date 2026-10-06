@@ -1,7 +1,7 @@
 // Admin-only product helper: Google Gemini reads the product photos and drafts the listing text
 // (name, description, category, colours, fabric, occasion, care, SEO). Price, MRP, sizes and stock are
 // never guessed; the admin fills those. The API key lives only in private_settings/ai_assistant.
-import { CLOUDINARY_ROOT_FOLDER } from './cloudinary.js';
+import { mediaImage, mediaVariant } from './media.js';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 const FALLBACK_MODELS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
@@ -100,17 +100,8 @@ export const modelLadder = async (key) => {
 /** Checks the key with Google; returns the best model for it. */
 export const pickModel = async (key) => (await modelLadder(key))[0];
 
-/** Only this store's Cloudinary product photos are read, resized for a quick upload to Gemini. */
-const photoUrl = (url) => {
-  const cloud = process.env.CLOUDINARY_CLOUD_NAME || '';
-  let parsed;
-  try { parsed = new URL(String(url)); } catch { return null; }
-  if (parsed.protocol !== 'https:' || parsed.hostname !== 'res.cloudinary.com') return null;
-  const prefix = `/${cloud}/image/upload/`;
-  if (!cloud || !parsed.pathname.startsWith(prefix) || !parsed.pathname.includes(`/${CLOUDINARY_ROOT_FOLDER}/`)) return null;
-  const rest = parsed.pathname.slice(prefix.length);
-  return `https://res.cloudinary.com${prefix}w_1024,h_1280,c_limit,q_auto:good,f_jpg/${rest.replace(/^([a-z]_[^/]*\/)+/, '')}`;
-};
+/** Only this store's own photos are read, in the stored 1200px JPEG (a quick upload to Gemini). */
+const photoUrl = (url) => (mediaImage(url) ? mediaVariant(url, 'j1200.jpg') : null);
 
 const loadPhoto = async (url) => {
   const t = withTimeout(10000);

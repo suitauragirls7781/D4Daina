@@ -20,20 +20,8 @@ const h = await startHarness({ env: { CLOUDFLARE_ACCOUNT_ID: ACCOUNT, CLOUDFLARE
 const { cookie } = await signInAdmin(h);
 
 const usage = (sessionCookie = cookie) => h.call('/api/admin-config?action=usage', { cookie: sessionCookie });
-const CLOUDINARY = 'https://api.cloudinary.com/v1_1/harnesscloud/usage';
-const CLOUDINARY_VIEW = { plan: 'Free', creditsUsed: 7.32, creditsLimit: 25, storageBytes: 499852240, storageCredits: 0.47, bandwidthBytes: 5466379151, bandwidthCredits: 5.09, transformations: 1760, transformationCredits: 1.76, files: 192, maxImageBytes: 10485760 };
-const upstreamCalls = () => h.net.callsTo(GRAPHQL).length + h.net.callsTo(BREVO).length + h.net.callsTo(CLOUDINARY).length;
-// What Cloudinary's usage API reports (the shape of a real answer of the free plan)
-// A finished day asked for on its own (?date=) reports nothing here, so no capacity estimate is made by default
-const mockCloudinary = (respond = (call) => jsonResponse(200, call?.query?.date ? { bandwidth: { usage: 0 } } : {
-  plan: 'Free', last_updated: '2026-10-04', resources: 192, derived_resources: 1447,
-  credits: { usage: 7.32, limit: 25, used_percent: 29.28 },
-  storage: { usage: 499852240, credits_usage: 0.47 },
-  bandwidth: { usage: 5466379151, credits_usage: 5.09 },
-  transformations: { usage: 1760, credits_usage: 1.76 },
-  media_limits: { image_max_size_bytes: 10485760 },
-})) => { h.net.on('GET', CLOUDINARY, respond); };
-mockCloudinary();
+const upstreamCalls = () => h.net.callsTo(GRAPHQL).length + h.net.callsTo(BREVO).length;
+
 const account = (node) => jsonResponse(200, { data: { viewer: { accounts: [node] } }, errors: null });
 
 // What Cloudflare reports today: two Workers in the account, CPU time in microseconds
@@ -125,13 +113,11 @@ test('usage: Cloudflare and Brevo numbers with the free-plan limits; CPU time co
     workers: { requests: 42000, limit: 100000, scriptName: 'd4daina', scriptRequests: 41250, errors: 12, subrequests: 9000, cpuP50Ms: 1.84, cpuP99Ms: 9.68 },
     d1: { rowsRead: 1234567, rowsReadLimit: 5000000, rowsWritten: 4321, rowsWrittenLimit: 100000, readQueries: 5200, writeQueries: 310 },
     email: { left: 287, dailyCap: 300 },
-    cloudinary: CLOUDINARY_VIEW,
-    // Nothing measured on the past days: no estimate is made up
-    photoCapacity: null,
+    // No media bucket is named in this test store, and nothing was measured today
+    media: null,
+    photoRoom: null,
+    capacity: null,
   });
-  // Cloudinary is asked with the account's key and secret, which never reach the browser
-  assert.equal(h.net.callsTo(CLOUDINARY).at(-1).headers.authorization, `Basic ${Buffer.from(`${h.env.CLOUDINARY_API_KEY}:${h.env.CLOUDINARY_API_SECRET}`).toString('base64')}`);
-  assert.ok(!response.text.includes(h.env.CLOUDINARY_API_SECRET) && !response.text.includes(h.env.CLOUDINARY_API_KEY));
   assert.ok(Math.abs(Date.parse(fetchedAt) - started) < 5000);
   // The Cloudflare day ends at the next 00:00 UTC (05:30 in India)
   assert.match(resetAt, /T00:00:00\.000Z$/);
@@ -207,32 +193,6 @@ test('usage: a day without traffic is zero, a paid Brevo plan has no daily cap, 
   assert.equal(noCpu.body.workers.cpuP99Ms, 2.5);
 });
 
-test('usage: a Cloudinary failure does not fail the page, and a plan without credits shows amounts only', async () => {
-  const { clearUsageCache } = await import('../../../api/_lib/usage.js');
-  mockCloudflare();
-  mockBrevo();
-  for (const down of [() => jsonResponse(401, { error: { message: 'bad credentials' } }), () => { throw new TypeError('fetch failed'); }]) {
-    clearUsageCache();
-    mockCloudinary(down);
-    const response = await usage();
-    assert.equal(response.status, 200, response.text);
-    assert.equal(response.body.cloudinary, null);
-    assert.equal(response.body.error, undefined);
-    assert.equal(response.body.workers.requests, 42000);
-  }
-  // Cloudinary comes back within the cached minute: it alone is asked again
-  const cloudflareBefore = h.net.callsTo(GRAPHQL).length;
-  mockCloudinary();
-  assert.deepEqual((await usage()).body.cloudinary, CLOUDINARY_VIEW);
-  assert.equal(h.net.callsTo(GRAPHQL).length, cloudflareBefore);
-
-  clearUsageCache();
-  mockCloudinary(() => jsonResponse(200, { plan: 'Plus', resources: 10, storage: { usage: 2000000 }, bandwidth: { usage: 3000000 }, transformations: { usage: 12 } }));
-  assert.deepEqual((await usage()).body.cloudinary, { plan: 'Plus', creditsUsed: null, creditsLimit: null, storageBytes: 2000000, storageCredits: null, bandwidthBytes: 3000000, bandwidthCredits: null, transformations: 12, transformationCredits: null, files: 10, maxImageBytes: null });
-  clearUsageCache();
-  mockCloudinary();
-});
-
 test('usage: the admin\'s plan switch is saved, changes the limits shown, and can be switched back', async () => {
   const { clearUsageCache, PAID_WORKER_REQUESTS_PER_MONTH } = await import('../../../api/_lib/usage.js');
   const put = (body, sessionCookie = cookie) => h.call('/api/admin-config', { method: 'PUT', json: body, cookie: sessionCookie });
@@ -259,37 +219,62 @@ test('usage: the admin\'s plan switch is saved, changes the limits shown, and ca
   clearUsageCache();
 });
 
-test('usage: the photo capacity estimate comes from measured days only (Cloudinary per day against counted visits)', async () => {
-  const { clearUsageCache } = await import('../../../api/_lib/usage.js');
-  const dayBefore = (n) => new Date(Date.parse(`${h.today()}T00:00:00Z`) - n * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-  const asked = (date) => date.split('-').reverse().join('-'); // Cloudinary wants dd-mm-yyyy
-  for (let n = 1; n <= 7; n += 1) await h.put('daily_analytics', dayBefore(n), { date: dayBefore(n), visits: 0 });
-  await h.put('daily_analytics', dayBefore(1), { date: dayBefore(1), visits: 1500 });
-  await h.put('daily_analytics', dayBefore(2), { date: dayBefore(2), visits: 500 });
-  // A day with photos shown but no counted visits, and a day with visits but nothing from Cloudinary: both left out
-  await h.put('daily_analytics', dayBefore(4), { date: dayBefore(4), visits: 900 });
-  const perDay = { [asked(dayBefore(1))]: 1500000000, [asked(dayBefore(2))]: 500000000, [asked(dayBefore(3))]: 800000000 };
-  const summary = { plan: 'Free', resources: 192, credits: { usage: 7.32, limit: 25 }, storage: { usage: 499852240, credits_usage: 0.47 }, bandwidth: { usage: 5466379151, credits_usage: 5.09 }, transformations: { usage: 1760, credits_usage: 1.76 }, media_limits: { image_max_size_bytes: 10485760 } };
+test('usage: photo storage (R2) and the visitor capacity are worked out from measured numbers only', async () => {
+  const { readUsage, clearUsageCache } = await import('../../../api/_lib/usage.js');
   clearUsageCache();
-  mockCloudflare();
-  mockBrevo();
-  mockCloudinary((call) => jsonResponse(200, call.query.date ? { bandwidth: { usage: perDay[call.query.date] || 0 } } : summary));
-  const before = h.net.callsTo(CLOUDINARY).length;
-  const { photoCapacity } = (await usage()).body;
-  const { visitsLeft, visitsPer30Days, ...rest } = photoCapacity;
-  assert.deepEqual(rest, { measuredDays: 2, visits: 2000, bandwidthBytes: 2000000000, bytesPerVisit: 1000000, visitsPerDay: 1000, daysLeftAtThisPace: 17 });
-  // 17.68 credits left = 17.68 GB at 1 MB a visit; 25 - 0.47 stored - 1.76 resizes = 22.77 GB for showing photos
-  assert.ok(Math.abs(visitsLeft - 17680) <= 1, String(visitsLeft));
-  assert.ok(Math.abs(visitsPer30Days - 22770) <= 1, String(visitsPer30Days));
-  // The summary and the seven finished days were asked for once; the days are then remembered for hours
-  const dated = h.net.callsTo(CLOUDINARY).slice(before).filter((call) => call.query.date).map((call) => call.query.date);
-  assert.equal(dated.length, 7);
-  assert.ok(dated.includes(asked(dayBefore(1))) && dated.includes(asked(dayBefore(7))) && !dated.includes(asked(h.today())));
-  const again = h.net.callsTo(CLOUDINARY).length;
-  await usage();
-  assert.equal(h.net.callsTo(CLOUDINARY).length, again);
-  clearUsageCache();
-  mockCloudinary();
+  const now = new Date('2026-10-07T10:00:00.000Z');
+  const asked = [];
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    const body = init?.body ? JSON.parse(init.body) : {};
+    if (String(url).includes('brevo')) return new Response('{}', { status: 500 });
+    const query = String(body.query || '');
+    asked.push(query.includes('r2StorageAdaptiveGroups') ? { r2: body.variables } : null);
+    const account = query.includes('r2StorageAdaptiveGroups')
+      ? { storage: [{ max: { payloadSize: 2000000000, objectCount: 1000, metadataSize: 0 } }], ops: [['PutObject', 900], ['ListObjects', 100], ['GetObject', 40000], ['HeadObject', 10000], ['DeleteObject', 5]].map(([actionType, requests]) => ({ sum: { requests }, dimensions: { actionType } })) }
+      : query.includes('workersInvocationsAdaptive')
+        ? { workersInvocationsAdaptive: [{ sum: { requests: 20000, subrequests: 0, errors: 0 }, quantiles: { cpuTimeP50: 2000, cpuTimeP99: 9000 }, dimensions: { scriptName: 'd4daina' } }] }
+        : { d1AnalyticsAdaptiveGroups: [{ sum: { readQueries: 1, writeQueries: 1, rowsRead: 300000, rowsWritten: 12000 }, dimensions: { date: '2026-10-07' } }] };
+    return new Response(JSON.stringify({ data: { viewer: { accounts: [account] } } }), { status: 200, headers: { 'content-type': 'application/json' } });
+  };
+  const env = { CLOUDFLARE_ANALYTICS_TOKEN: 't', CLOUDFLARE_ACCOUNT_ID: 'acc', CLOUDFLARE_D1_ID: 'db', MEDIA_BUCKET_NAME: 'store-media' };
+  const visits = async (dates) => Object.fromEntries(dates.map((date) => [date, date === '2026-10-07' || date === '2026-10-06' ? 1000 : 0]));
+  try {
+    const body = await readUsage(env, now, 'free', visits);
+    // Storage and this month's requests of the named bucket; deletes are free and are not counted
+    assert.deepEqual(asked.find(Boolean).r2, { acc: 'acc', bucket: 'store-media', start: '2026-10-01T00:00:00.000Z', end: now.toISOString() });
+    assert.deepEqual(body.media, {
+      bucket: 'store-media', storageBytes: 2000000000, storageLimit: 10000000000, objects: 1000, photos: 100,
+      writes: 1000, writesLimit: 1000000, reads: 50000, readsLimit: 10000000, monthStart: '2026-10-01T00:00:00.000Z', resetAt: '2026-11-01T00:00:00.000Z',
+    });
+    // 100 photos take 2 GB, so 8 GB more holds about 400 photos of that size
+    assert.deepEqual(body.photoRoom, { bytesPerPhoto: 20000000, photosLeft: 400 });
+    // Today: 1,000 visits used 20,000 requests (20 a visit, room for 5,000 visits a day), 12 rows written a visit
+    // (8,333) and 300 rows read a visit (16,666). This month: 2,000 visits read 50,000 photo files (25 a visit).
+    assert.deepEqual(body.capacity, {
+      visitsToday: 1000, visitsThisMonth: 2000,
+      perDay: [{ limit: 'requests', perVisit: 20, visits: 5000 }, { limit: 'writes', perVisit: 12, visits: 8333 }, { limit: 'reads', perVisit: 300, visits: 16666 }],
+      perMonth: [{ limit: 'photoReads', perVisit: 25, visits: 400000 }],
+      visitsPerDay: 5000, tightestDaily: 'requests', visitsPerMonth: 150000, tightest: 'requests',
+    });
+
+    // Too few visits counted: no estimate is made up
+    clearUsageCache();
+    assert.equal((await readUsage(env, now, 'free', async (dates) => Object.fromEntries(dates.map((date) => [date, 3])))).capacity, null);
+    // Storage not reported yet this month: shown as unknown, never as zero
+    clearUsageCache();
+    const realAnswer = globalThis.fetch;
+    globalThis.fetch = async (url, init) => {
+      const response = await realAnswer(url, init);
+      if (!String(init?.body || '').includes('r2StorageAdaptiveGroups')) return response;
+      return new Response(JSON.stringify({ data: { viewer: { accounts: [{ storage: [], ops: [] }] } } }), { status: 200, headers: { 'content-type': 'application/json' } });
+    };
+    const early = await readUsage(env, now, 'free', visits);
+    assert.deepEqual([early.media.storageBytes, early.media.objects, early.media.photos, early.photoRoom], [null, null, null, null]);
+  } finally {
+    globalThis.fetch = realFetch;
+    clearUsageCache();
+  }
 });
 
 test('usage: on the paid plan the month is counted against what the plan includes', async () => {

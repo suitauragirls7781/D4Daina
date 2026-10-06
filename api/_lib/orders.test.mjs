@@ -410,7 +410,7 @@ test('the store alert result is recorded on the request, kept from the customer 
 
 const DAY = 24 * 60 * 60 * 1000;
 const CLOUD = 'democloud';
-const photoUrl = (key = 'a'.repeat(24), cloud = CLOUD) => `https://res.cloudinary.com/${cloud}/image/upload/v1790000000/suitauragirls/returns/rt_${key}.jpg`;
+const photoUrl = (key = 'a'.repeat(24)) => `https://media.suitauragirls.in/i/returns/rt_${key}/w1100.webp`;
 const deliveredOrder = (overrides = {}) => ({
   orderNumber: 'SAG-3', customerEmail: 'asha@example.com', customerName: 'Asha', customerMobile: '9876543210',
   paymentStatus: 'Paid', status: 'Delivered', paymentRef: 'pay_3', finalTotal: 3997, giftNote: 'Happy birthday',
@@ -427,7 +427,7 @@ const deliveredOrder = (overrides = {}) => ({
 });
 const deliveredMs = new Date('2026-09-10T10:00:00.000Z').getTime();
 const catalogue = new Map([['p1', { sizes: ['S', 'M', 'L'] }], ['p4', { sizes: ['M', 'L', 'XL'] }]]);
-const photoCheck = (url) => Boolean(returnPhotoKey(url, CLOUD));
+const photoCheck = (url) => Boolean(returnPhotoKey(url));
 
 test('return window: until 11:59 pm India time on the 7th day after delivery; unknown delivery date is left to the admin', () => {
   // Delivered 10 Sept, 3:30 pm IST: requests are taken until 17 Sept, 11:59:59 pm IST (6:29:59 pm UTC).
@@ -475,16 +475,15 @@ test('return eligibility: delivered + paid only, one open request at a time, nev
   assert.match(returnBlockReason(deliveredOrder({ returnRequest: { reason: 'too big', at: 'x' } }), now), /already been handled/);
 });
 
-test('return photos: only this cloud, the returns folder and a server-issued key', () => {
-  assert.equal(returnPhotoKey(photoUrl(), CLOUD), `rt_${'a'.repeat(24)}`);
-  assert.equal(returnPhotoKey(photoUrl().replace('/v1790000000', ''), CLOUD), `rt_${'a'.repeat(24)}`);
-  assert.equal(returnPhotoKey(photoUrl('b'.repeat(24), 'othercloud'), CLOUD), null);
-  assert.equal(returnPhotoKey(photoUrl().replace('https://', 'http://'), CLOUD), null);
-  assert.equal(returnPhotoKey(photoUrl().replace('/returns/', '/reviews/'), CLOUD), null);
-  assert.equal(returnPhotoKey(photoUrl().replace('/upload/', '/upload/w_9000/'), CLOUD), null);
-  assert.equal(returnPhotoKey(photoUrl('A'.repeat(24)), CLOUD), null);
-  assert.equal(returnPhotoKey(`${photoUrl()}?x=1`, CLOUD), null);
-  assert.equal(returnPhotoKey(photoUrl(), ''), null, 'no cloud configured');
+test('return photos: only the store\'s own storage, the returns folder and a server-issued key', () => {
+  assert.equal(returnPhotoKey(photoUrl()), `rt_${'a'.repeat(24)}`);
+  assert.equal(returnPhotoKey(photoUrl().replace('media.suitauragirls.in', 'media.example.com')), null, 'another host');
+  assert.equal(returnPhotoKey(photoUrl().replace('https://', 'http://')), null);
+  assert.equal(returnPhotoKey(photoUrl().replace('/returns/', '/reviews/')), null, 'another folder');
+  assert.equal(returnPhotoKey(photoUrl().replace('w1100.webp', 'w480.webp')), null, 'only the saved address of a photo');
+  assert.equal(returnPhotoKey(photoUrl('A'.repeat(24))), null);
+  assert.equal(returnPhotoKey(photoUrl().replace('/rt_', '/xx_')), null, 'only an id this server issued');
+  assert.equal(returnPhotoKey(`${photoUrl()}?x=1`), null);
 });
 
 test('return request validation: items, quantities, clearance, sizes, reasons and photos', () => {

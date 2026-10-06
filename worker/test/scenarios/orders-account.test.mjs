@@ -2,6 +2,7 @@
 // the customer's own order list, cancellation requests, returns / exchanges and the admin's side of them.
 // Run: node --test worker/test/scenarios/orders-account.test.mjs
 import test from 'node:test';
+import { readMediaGrant } from '../../../api/_lib/media.js';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { startHarness } from '../harness/harness.mjs';
@@ -491,23 +492,24 @@ test('return with photos: only photos signed for this customer and order; when e
 
   const signed = await sign(twoPieces, ashaToken);
   assert.equal(signed.status, 200, signed.text);
-  const { fields, signature, cloudName, apiKey } = signed.body;
-  assert.deepEqual([cloudName, apiKey], [h.env.CLOUDINARY_CLOUD_NAME, h.env.CLOUDINARY_API_KEY]);
-  assert.match(fields.public_id, /^suitauragirls\/returns\/rt_[a-f0-9]{24}$/);
-  assert.deepEqual([fields.allowed_formats, fields.overwrite], ['jpg,png,webp,heic,heif', 'false']);
-  const toSign = Object.keys(fields).sort().map((name) => `${name}=${fields[name]}`).join('&');
-  assert.equal(signature, createHash('sha1').update(toSign + h.env.CLOUDINARY_API_SECRET).digest('hex'));
-  assert.ok(!signed.text.includes(h.env.CLOUDINARY_API_SECRET));
-  const key = fields.public_id.split('/').at(-1);
+  // The answer is a permission to upload exactly one photo, under an id the server chose, into "returns"
+  const grant = signed.body;
+  assert.deepEqual([grant.kind, grant.folder], ['image', 'returns']);
+  assert.match(grant.id, /^rt_[a-f0-9]{24}$/);
+  assert.equal(grant.url, `https://media.suitauragirls.in/i/returns/${grant.id}/w1100.webp`);
+  assert.deepEqual(readMediaGrant(grant.grant), { kind: 'image', folder: 'returns', id: grant.id });
+  assert.equal(readMediaGrant(grant.grant.replace(grant.id, 'rt_' + 'f'.repeat(24))), null, 'a grant cannot be pointed at another id');
+  assert.ok(!signed.text.includes(h.env.ADMIN_SESSION_SECRET));
+  const key = grant.id;
   assert.equal((await h.doc('return_photos', key)).orderNumber, twoPieces);
-  const photoUrl = `https://res.cloudinary.com/${cloudName}/image/upload/v1764000000/${fields.public_id}.jpg`;
+  const photoUrl = grant.url;
 
   // A photo signed for Meera's order cannot be attached to Asha's request
   const meeras = await deliveredOrder(MEERA, [lineOf(outfit, 1)], { address: { mobile: '9000000001' } });
-  const meerasPhoto = (await sign(meeras, meeraToken)).body.fields.public_id;
+  const meerasPhoto = (await sign(meeras, meeraToken)).body.url;
   const damaged = (photos) => returnRequest(twoPieces, ashaToken, { type: 'return', reason: 'Damaged / defective', details: 'Torn seam', items: [{ line: 0, qty: 1 }], photos });
-  assert.equal((await damaged([`https://res.cloudinary.com/${cloudName}/image/upload/${meerasPhoto}.jpg`])).status, 400);
-  assert.equal((await damaged([`https://res.cloudinary.com/another-cloud/image/upload/${fields.public_id}.jpg`])).status, 400);
+  assert.equal((await damaged([meerasPhoto])).status, 400);
+  assert.equal((await damaged([photoUrl.replace('media.suitauragirls.in', 'media.example.com')])).status, 400);
   assert.equal((await h.doc('orders', twoPieces)).returnRequest.status, 'rejected');
 
   const asked = await damaged([photoUrl]);

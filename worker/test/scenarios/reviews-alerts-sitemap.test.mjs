@@ -2,6 +2,7 @@
 // (api/alerts.js), and the sitemap (api/sitemap.js).
 // Run: node --test worker/test/scenarios/reviews-alerts-sitemap.test.mjs
 import test from 'node:test';
+import { readMediaGrant, setMediaBucket } from '../../../api/_lib/media.js';
 import assert from 'node:assert/strict';
 import { createHash, createHmac } from 'node:crypto';
 import { startHarness, SITE } from '../harness/harness.mjs';
@@ -31,6 +32,12 @@ const customerReviewId = (email, productId) => `rv_${createHmac('sha256', 'suita
 const reviewsOf = (productId) => h.docs('reviews', [['productId', '==', productId]]);
 
 // ---- reviews ----
+
+// A stand-in for the R2 bucket: remembers what it is asked to delete
+const fakeBucket = (keys) => {
+  const deleted = [];
+  return { deleted, list: async ({ prefix }) => ({ objects: keys.filter((key) => key.startsWith(prefix)).map((key) => ({ key })) }), delete: async (list) => { deleted.push(...list); } };
+};
 
 test('submit: a guest\'s review is stored as pending under a new id and is not public yet', async () => {
   const before = (await reviewsOf(outfit.id)).map((row) => row.id);
@@ -147,12 +154,13 @@ test('review photos: signed for one signed-in customer, attached only to that cu
   assert.equal((await reviews({ action: 'photo-sign' })).status, 401);
   const signed = await reviews({ action: 'photo-sign' }, { token: meeraToken });
   assert.equal(signed.status, 200, signed.text);
-  const { fields, signature, cloudName } = signed.body;
-  assert.match(fields.public_id, /^rv_[a-f0-9]{24}$/);
-  assert.deepEqual([fields.folder, fields.overwrite, fields.allowed_formats], ['suitauragirls/reviews', 'false', 'jpg,png,webp,heic,heif']);
-  const toSign = Object.keys(fields).sort().map((name) => `${name}=${fields[name]}`).join('&');
-  assert.equal(signature, createHash('sha1').update(toSign + h.env.CLOUDINARY_API_SECRET).digest('hex'));
-  const photoUrl = `https://res.cloudinary.com/${cloudName}/image/upload/v1764000000/suitauragirls/reviews/${fields.public_id}.jpg`;
+  // A permission for exactly one photo, under an id the server chose, in the "reviews" folder
+  const grant = signed.body;
+  assert.match(grant.id, /^rv_[a-f0-9]{24}$/);
+  assert.deepEqual([grant.kind, grant.folder], ['image', 'reviews']);
+  assert.deepEqual(readMediaGrant(grant.grant), { kind: 'image', folder: 'reviews', id: grant.id });
+  const photoUrl = grant.url;
+  assert.equal(photoUrl, `https://media.suitauragirls.in/i/reviews/${grant.id}/w1100.webp`);
 
   // Guests cannot add photos; Asha cannot use the photo signed for Meera; a photo from elsewhere is refused
   assert.equal((await reviews({ ...GOOD_REVIEW, photoUrl })).status, 401);
@@ -164,13 +172,15 @@ test('review photos: signed for one signed-in customer, attached only to that cu
   assert.equal(withPhoto.status, 200, withPhoto.text);
   const reviewId = customerReviewId(MEERA, outfit.id);
   const stored = await h.doc('reviews', reviewId);
-  assert.deepEqual([stored.imageUrl, stored.photoId], [photoUrl, `suitauragirls/reviews/${fields.public_id}`]);
-  const record = await h.doc('review_photos', fields.public_id);
+  assert.deepEqual([stored.imageUrl, stored.photoId], [photoUrl, `suitauragirls/reviews/${grant.id}`]);
+  const record = await h.doc('review_photos', grant.id);
   assert.deepEqual([record.reviewId, record.url], [reviewId, photoUrl]);
   // The same photo cannot be moved to another review
   assert.equal((await reviews({ ...GOOD_REVIEW, productId: other.id, photoUrl }, { token: meeraToken })).status, 400);
 
-  // Removing photos: admin only, and only once the review itself is gone
+  // Removing photos: admin only, and only once the review itself is gone. Every stored size goes.
+  const bucket = fakeBucket([`i/reviews/${grant.id}/w160.webp`, `i/reviews/${grant.id}/w1100.webp`, `i/reviews/${grant.id}/j480.jpg`, 'i/reviews/rv_someoneelse000000000000/w1100.webp']);
+  setMediaBucket(bucket);
   const remove = (token) => reviews({ action: 'remove-photos', reviewId }, { token });
   assert.equal((await remove(meeraToken)).status, 401);
   assert.equal((await remove(adminToken)).status, 409);
@@ -178,8 +188,9 @@ test('review photos: signed for one signed-in customer, attached only to that cu
   assert.equal(deleted.body.results[0].error, undefined);
   const removed = await remove(adminToken);
   assert.deepEqual(removed.body, { ok: true, removed: 1 });
-  assert.deepEqual(h.services.cloudinaryDestroyed, [`suitauragirls/reviews/${fields.public_id}`]);
-  assert.equal(await h.doc('review_photos', fields.public_id), null);
+  assert.deepEqual(bucket.deleted.sort(), [`i/reviews/${grant.id}/j480.jpg`, `i/reviews/${grant.id}/w1100.webp`, `i/reviews/${grant.id}/w160.webp`]);
+  assert.equal(await h.doc('review_photos', grant.id), null);
+  setMediaBucket(null);
 });
 
 test('submit: at most 12 reviews a day from one address', async () => {

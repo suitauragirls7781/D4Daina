@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { getCleanImageUrl } from './imageHelper';
+import { isStoreImageUrl, isStoreVideoUrl, mediaFile, parseMediaUrl, toMediaUrl } from '../lib/media';
 import { fromCatalogOrLive } from '../lib/catalog';
 
 /** One Aura Reel (storefront_settings/auraReels is an ordered array of these). */
 export interface AuraReel {
   id: string;
-  /** Cloudinary delivery URL: https://res.cloudinary.com/<cloud>/video/upload/... */
+  /** The reel's video in the store's storage: https://media.suitauragirls.in/v/reels/<id>/play.mp4 */
   videoUrl: string;
-  /** Custom thumbnail (Cloudinary image or video URL). Empty = first frame of the video. */
+  /** Custom thumbnail (one of the store's photos). Empty = first frame of the video. */
   posterUrl: string;
   caption: string;
   /** Linked product id; empty = no product. */
@@ -18,67 +19,36 @@ export interface AuraReel {
 }
 
 // Same rules as sanitizeAuraReels in api/admin-config.js
-export const CLOUDINARY_VIDEO = /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/video\/upload\/[^\s"'<>]+$/;
-const CLOUDINARY_ASSET = /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/(image|video)\/upload\/[^\s"'<>]+$/;
 const PRODUCT_ID = /^[A-Za-z0-9_-]{1,60}$/;
 export const MAX_REELS = 50;
 export const MAX_CAPTION = 200;
 
-export const isReelVideoUrl = (url: unknown): url is string => typeof url === 'string' && CLOUDINARY_VIDEO.test(url);
-export const isCustomPosterImage = (url: string) => /^https:\/\/res\.cloudinary\.com\/[A-Za-z0-9_-]+\/image\/upload\//.test(url || '');
+export const isReelVideoUrl = (url: unknown): url is string => typeof url === 'string' && isStoreVideoUrl(url);
+export const isCustomPosterImage = (url: string) => isStoreImageUrl(url || '');
+const isPosterUrl = (url: string) => isCustomPosterImage(url) || parseMediaUrl(url)?.file === 'poster.jpg';
 
 /** Reel ids are lowercase letters, digits and hyphens (the server strips anything else). */
 export const newReelId = () => `reel-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
 
 const clean = (v: unknown, max: number) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max) : '');
 
-/** Keeps only well-formed reels with a Cloudinary video, in the saved order. */
+/** Keeps only well-formed reels with one of the store's videos, in the saved order. */
 export const normaliseReels = (raw: unknown): AuraReel[] => (Array.isArray(raw) ? raw : []).slice(0, MAX_REELS).map((r: any, i: number) => ({
   id: clean(r?.id, 40).replace(/[^a-z0-9-]/gi, '').toLowerCase() || `reel-${i + 1}`,
-  videoUrl: isReelVideoUrl(r?.videoUrl) ? r.videoUrl : '',
-  posterUrl: CLOUDINARY_ASSET.test(String(r?.posterUrl || '')) ? String(r.posterUrl) : '',
+  videoUrl: isReelVideoUrl(r?.videoUrl) ? toMediaUrl(r.videoUrl) : '',
+  posterUrl: isPosterUrl(String(r?.posterUrl || '')) ? toMediaUrl(String(r.posterUrl)) : '',
   caption: clean(r?.caption, MAX_CAPTION),
   productId: PRODUCT_ID.test(String(r?.productId || '')) ? String(r.productId) : '',
   enabled: Boolean(r?.enabled),
 })).filter((r) => r.videoUrl);
 
-/**
- * Inserts a Cloudinary transformation right after /video/upload/ and swaps the file extension.
- * URLs that already carry a transformation keep it (ours is chained in front of it).
- */
-const transformVideoUrl = (url: string, transformation: string, extension: string) => {
-  const marker = '/video/upload/';
-  const [path, query] = url.split('?');
-  const at = path.indexOf(marker);
-  if (at === -1) return url;
-  const base = path.slice(0, at + marker.length);
-  const rest = path.slice(at + marker.length);
-  const slash = rest.lastIndexOf('/');
-  const file = rest.slice(slash + 1);
-  const renamed = file.includes('.') ? file.replace(/\.[^.]+$/, `.${extension}`) : `${file}.${extension}`;
-  return `${base}${transformation}/${rest.slice(0, slash + 1)}${renamed}${query ? `?${query}` : ''}`;
-};
+/** The video a shopper plays: the stored MP4. */
+export const reelVideoSrc = (videoUrl: string) => toMediaUrl(videoUrl);
 
-const hasTransformation = (url: string) => {
-  const rest = url.split('/video/upload/')[1] || '';
-  return !/^(v\d+\/|suitauragirls\/)/.test(rest);
-};
-
-/**
- * Phone-friendly delivery: automatic quality and codec, at most 720px wide, as MP4 so
- * .mov and .webm uploads play in every browser. A URL that already has a transformation
- * is used as it is. (The viewer falls back to the original upload if this copy fails.)
- * Made on the fly, which Cloudinary's Free plan allows only up to 40 MB, so AdminReels caps uploads there.
- */
-export const reelVideoSrc = (videoUrl: string, width = 720) =>
-  hasTransformation(videoUrl) ? videoUrl : transformVideoUrl(videoUrl, `q_auto,vc_auto,c_limit,w_${width}`, 'mp4');
-
-/** Thumbnail: the custom poster, or the first frame of the video (so_0) as an image. */
+/** Thumbnail: the custom poster, or the first frame stored beside the video when it was uploaded. */
 export const reelPosterSrc = (reel: Pick<AuraReel, 'videoUrl' | 'posterUrl'>, width = 480) => {
-  if (reel.posterUrl) {
-    return isCustomPosterImage(reel.posterUrl) ? getCleanImageUrl(reel.posterUrl, width) : reel.posterUrl;
-  }
-  return transformVideoUrl(reel.videoUrl, `so_0,f_auto,q_auto,c_limit,w_${width}`, 'jpg');
+  if (reel.posterUrl) return isCustomPosterImage(reel.posterUrl) ? getCleanImageUrl(reel.posterUrl, width) : toMediaUrl(reel.posterUrl);
+  return mediaFile(reel.videoUrl, 'poster.jpg');
 };
 
 // One shared live listener for the storefront (like useDiscovery)

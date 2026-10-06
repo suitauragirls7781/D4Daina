@@ -117,7 +117,7 @@ export const AdminHero: React.FC = () => {
     try {
       imageUrl = await uploadImage(file, 'hero');
     } catch (err: any) {
-      console.error('Cloudinary hero upload failed:', err);
+      console.error('Hero upload failed:', err);
       showToast(`Failed to upload banner image: ${err?.message || 'Please try again.'}`, 'error');
       setUploadingSlideId(null);
       return;

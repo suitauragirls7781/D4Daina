@@ -1,6 +1,7 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, getIdentity, isSameOrigin, isValidEmail, parseBody, reply } from './_lib/http.js';
+import { createMediaGrant } from './_lib/media.js';
 import {
   ORDER_STATUSES,
   RETURN_PHOTO_FOLDER,
@@ -268,17 +269,10 @@ const notifyCustomerOfReturnUpdate = async (db, order) => {
 const emailHash = (email) => createHash('sha256').update(String(email || '').trim().toLowerCase()).digest('hex').slice(0, 32);
 
 /**
- * Upload signature for exactly one return photo: a server-chosen public id under suitauragirls/returns,
- * image formats only and no overwrite (same signing scheme as api/_lib/cloudinary.js). The full public id is
- * signed rather than a folder, so the delivery URL is the same in fixed and dynamic folder mode.
+ * Permission to upload exactly one return photo under a server-chosen id in the "returns" folder (see
+ * api/_lib/media.js).
  */
-const returnPhotoSignature = (key) => {
-  const { CLOUDINARY_CLOUD_NAME: cloudName, CLOUDINARY_API_KEY: apiKey, CLOUDINARY_API_SECRET: apiSecret } = process.env;
-  if (!cloudName || !apiKey || !apiSecret) throw new Error('CLOUDINARY_CONFIG_MISSING');
-  const fields = { allowed_formats: 'jpg,png,webp,heic,heif', overwrite: 'false', public_id: `${RETURN_PHOTO_FOLDER}/${key}`, timestamp: Math.floor(Date.now() / 1000) };
-  const toSign = Object.keys(fields).sort().map((name) => `${name}=${fields[name]}`).join('&');
-  return { cloudName, apiKey, fields, signature: createHash('sha1').update(toSign + apiSecret).digest('hex') };
-};
+const returnPhotoSignature = (key) => createMediaGrant('returns', 'image', { id: key });
 
 /** The signed-in customer's own order, or a 404 (never says whether someone else's order exists). */
 const ownOrder = async (db, orderNumber, email) => {
@@ -599,8 +593,7 @@ const actions = {
     const input = body.type
       ? body
       : { type: 'return', items: returnableQty(first).map((qty, line) => ({ line, qty })).filter((entry) => entry.qty > 0), reason: 'Other', details: body.reason, photos: [] };
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || '';
-    const isPhotoUrl = (url) => Boolean(returnPhotoKey(url, cloudName));
+    const isPhotoUrl = (url) => Boolean(returnPhotoKey(url));
     const blockedEarly = returnBlockReason(first);
     if (blockedEarly) throw new UserError(blockedEarly, 409);
     // Exchange sizes are checked against the live catalogue.
@@ -611,7 +604,7 @@ const actions = {
       products = new Map(snaps.filter((snap) => snap.exists).map((snap) => [snap.id, { sizes: Array.isArray(snap.data().sizes) ? snap.data().sizes : [] }]));
     }
     const clean = validateReturnInput(first, input, { products, isPhotoUrl });
-    const photoKeys = clean.photos.map((url) => returnPhotoKey(url, cloudName));
+    const photoKeys = clean.photos.map((url) => returnPhotoKey(url));
 
     const ref = db.collection('orders').doc(orderNumber);
     const order = await db.runTransaction(async (tx) => {

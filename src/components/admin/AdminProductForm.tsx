@@ -139,7 +139,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   const [images, setImages] = useState<string[]>([]);
   // Images uploaded in this editing session (not yet referenced by a saved product)
   const [sessionUploads, setSessionUploads] = useState<string[]>([]);
-  // Previously saved images the admin removed; deleted from Cloudinary only after a successful save
+  // Previously saved images the admin removed; deleted from storage only after a successful save
   const [pendingDeletes, setPendingDeletes] = useState<string[]>([]);
 
   // Sizes - standard available sizes
@@ -271,7 +271,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     showToast(`Colour "${suggestion.name}" added — change it if needed`, 'success');
   };
 
-  // Re-reads the colour from the photo linked to a colour row (loaded from Cloudinary with CORS).
+  // Re-reads the colour from the photo linked to a colour row (loaded from the store's media address with CORS).
   const detectColourForRow = async (idx: number) => {
     const imageUrl = colors[idx]?.imageUrl;
     if (!imageUrl || detectingIdx !== null) return;
@@ -301,7 +301,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
       try {
         imageUrl = await uploadImage(file, 'product-images');
       } catch (err: any) {
-        console.error('Cloudinary upload failed:', err);
+        console.error('Photo upload failed:', err);
         showToast(`Failed to upload "${file.name}": ${err?.message || 'Please try again.'}`, 'error');
         continue;
       }
@@ -348,9 +348,9 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     const imageUrlToRemove = images[index];
 
     if (sessionUploads.includes(imageUrlToRemove)) {
-      // Never saved on a product, so it can be deleted from Cloudinary right away
+      // Never saved on a product, so it can be deleted from storage right away
       setSessionUploads((current) => current.filter((url) => url !== imageUrlToRemove));
-      deleteImages([imageUrlToRemove]).catch((error) => console.error('Error deleting image from Cloudinary:', error));
+      deleteImages([imageUrlToRemove]).catch((error) => console.error('Error deleting photo from storage:', error));
     } else {
       setPendingDeletes((current) => [...current, imageUrlToRemove]);
     }
@@ -501,7 +501,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
       );
       const removedImages = pendingDeletes.filter((url) => !images.includes(url) && !usedElsewhere.has(url));
       if (removedImages.length > 0) {
-        deleteImages(removedImages).catch((error) => console.error('Error deleting removed images from Cloudinary:', error));
+        deleteImages(removedImages).catch((error) => console.error('Error deleting removed photos from storage:', error));
       }
       setSessionUploads([]);
       setPendingDeletes([]);

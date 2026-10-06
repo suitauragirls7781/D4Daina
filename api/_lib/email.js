@@ -1,3 +1,4 @@
+import { mediaVariant } from './media.js';
 // Transactional email through Brevo. Every template is plain, flat HTML in the brand palette.
 const SITE_URL = 'https://www.suitauragirls.in';
 
@@ -208,8 +209,8 @@ export const sendOtpEmail = async ({ email, name, code, purpose }) => {
 
 const p = (html) => `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">${html}</p>`;
 
-/** Cloudinary thumbnail of a return photo (always JPEG, so phone HEIC photos open everywhere). */
-const photoThumb = (url, width = 320) => String(url).replace('/image/upload/', `/image/upload/c_limit,w_${width},f_jpg,q_auto/`);
+/** Small JPEG of a stored photo (JPEG opens in every mail app; other URLs are used as they are). */
+const photoThumb = (url) => mediaVariant(url, 'j480.jpg');
 
 const returnItemsTable = (request) => {
   const rows = (request.items || []).map((item) => {

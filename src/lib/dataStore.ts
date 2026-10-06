@@ -13,6 +13,7 @@ import {
 } from 'firebase/firestore';
 import { signInWithCustomToken, signOut } from 'firebase/auth';
 import { adminAuth, adminDb, db as customerDb } from './firebase';
+import { isStoreMediaUrl, toMediaUrl, uploadImageWithGrant } from './media';
 
 /** Admin reads/writes go through the admin's Firebase app; everyone else uses the storefront one. */
 const store = () => (adminAuth.currentUser ? adminDb : customerDb);
@@ -95,7 +96,7 @@ export const watchCollection = (name: CollectionName, onChange: (rows: Row[], me
 
 export type ImageFolder = 'product-images' | 'banners' | 'hero' | 'deals' | 'categories' | 'reviews';
 
-const adminImageRequest = async (action: 'cloudinary-sign' | 'cloudinary-delete', body: object) => {
+const adminImageRequest = async (action: 'media-grant' | 'media-delete', body: object) => {
   const response = await fetch(`/api/admin-config?action=${action}`, {
     method: 'POST',
     credentials: 'same-origin',
@@ -108,32 +109,23 @@ const adminImageRequest = async (action: 'cloudinary-sign' | 'cloudinary-delete'
 };
 
 /**
- * Uploads an image straight from the browser to Cloudinary using a signature from the
- * admin API (the API secret never reaches the browser). Returns the secure delivery URL.
+ * Uploads a photo to the store's own storage. The browser first makes every size the site shows (small
+ * WebP files), so a 5 MB phone photo goes up as well under 1 MB in all. Returns the address to save.
  */
 export const uploadImage = async (file: File | Blob, folder: ImageFolder) => {
-  const signed = await adminImageRequest('cloudinary-sign', { folder });
-  const form = new FormData();
-  form.append('file', file);
-  form.append('api_key', signed.apiKey);
-  form.append('timestamp', String(signed.timestamp));
-  form.append('folder', signed.folder);
-  form.append('signature', signed.signature);
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`, { method: 'POST', body: form });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.secure_url) throw new Error(result.error?.message || 'Cloudinary upload failed.');
-  return result.secure_url as string;
+  const grant = await adminImageRequest('media-grant', { folder, kind: 'image' });
+  return uploadImageWithGrant(file, grant);
 };
 
-export const isCloudinaryUrl = (url: string) =>
-  typeof url === 'string' && url.startsWith('https://res.cloudinary.com/');
+/** A photo or reel in the store's own storage (other URLs are never deleted by the admin). */
+export const isStoredMediaUrl = (url: string) => typeof url === 'string' && isStoreMediaUrl(url);
 
-/** Permanently deletes Cloudinary images; non-Cloudinary URLs are ignored. */
+/** Permanently deletes stored photos (every size of each); other URLs are ignored. */
 export const deleteImages = async (urls: string[]) => {
-  const targets = Array.from(new Set(urls.filter(isCloudinaryUrl)));
+  const targets = Array.from(new Set(urls.filter(isStoredMediaUrl).map(toMediaUrl)));
   if (targets.length === 0) return;
-  const result = await adminImageRequest('cloudinary-delete', { urls: targets });
-  if (result.failed?.length) console.warn('Some images could not be deleted from Cloudinary:', result.failed);
+  const result = await adminImageRequest('media-delete', { urls: targets });
+  if (result.failed?.length) console.warn('Some photos could not be deleted from storage:', result.failed);
 };
 
 /** Signs the admin into Firebase with the custom token issued by /api/admin-config. */

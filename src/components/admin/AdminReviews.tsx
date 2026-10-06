@@ -10,6 +10,7 @@ import { useProducts } from '../../context/ProductContext';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { Review } from '../../types';
 import { AdminPageHeader } from './kidsToysShared';
+import { parseMediaUrl } from '../../lib/media';
 
 /** Fields the review API stores that the shared review list does not carry. */
 interface ReviewExtras {
@@ -38,7 +39,7 @@ const fieldLabel = 'grid gap-1.5 text-[13px] leading-[18px] font-semibold text-i
 const input = 'sag-input font-normal';
 const pill = 'h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50';
 
-// Same limit as the other admin photo uploads (Cloudinary refuses larger images)
+// Same limit as the other admin photo uploads
 const MAX_UPLOAD_MB = 10;
 // Some phones and Windows give HEIC photos no file type, so the file name is checked as well
 const isImageFile = (file: File) => file.type ? file.type.startsWith('image/') : /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i.test(file.name);
@@ -47,7 +48,8 @@ const isImageFile = (file: File) => file.type ? file.type.startsWith('image/') :
  * customer uploads (those are named rv_… and are only ever deleted by the server, from its own records).
  */
 const isAdminReviewUpload = (url: string) => {
-  const match = /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\/(?:v\d+\/)?suitauragirls\/reviews\/([^/.]+)\.[a-z0-9]+$/i.exec(url || '');
+  const parsed = parseMediaUrl(url || '');
+  const match = parsed && parsed.kind === 'image' && parsed.folder === 'reviews' ? [url, parsed.id] : null;
   return match !== null && !/^rv_[a-f0-9]{24}$/.test(match[1]);
 };
 
@@ -406,7 +408,7 @@ export const AdminReviews: React.FC = () => {
                   </div>
                 </div>
                 <label className={fieldLabel}>Or paste a photo link
-                  <input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://res.cloudinary.com/…" disabled={uploading} className={input} />
+                  <input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://media.suitauragirls.in/…" disabled={uploading} className={input} />
                 </label>
               </div>
               <label className={fieldLabel}>Review text *

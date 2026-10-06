@@ -635,13 +635,13 @@ export const AdminSettings: React.FC = () => {
       {/* Tab 2: Payment gateways (Razorpay, PayU) */}
       {activeTab === 'payment' && <AdminPaymentGateways />}
 
-      {/* Tab 3: Database Architecture (Firebase Firestore + Cloudinary images) */}
+      {/* Tab 3: Database Architecture (database + photo storage) */}
       {activeTab === 'database' && (
         <div className={`${panel} space-y-5`}>
           <PanelTitle
             icon={<Database className="w-5 h-5" />}
             title="Firebase database & schema overview"
-            hint="Store data lives in Firebase (Cloud Firestore for records, Cloudinary for images). The connection is configured at build time, so there are no credentials to manage here."
+            hint="Store data lives in Firebase (Cloud Firestore for records, Cloudflare R2 for photos). The connection is configured at build time, so there are no credentials to manage here."
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

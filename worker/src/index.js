@@ -2,6 +2,8 @@ import process from 'node:process';
 import { setEnv } from './env.js';
 import { handleDb } from './gateway.js';
 import { runNodeHandler } from './node-adapter.js';
+import { handleMedia } from './media.js';
+import { setMediaBucket } from '../../api/_lib/media.js';
 import * as adminConfig from '../../api/admin-config.js';
 import * as orders from '../../api/orders.js';
 import * as customerAuth from '../../api/customer-auth.js';
@@ -30,6 +32,8 @@ const API_MODULES = new Map([
   ['/sitemap.xml', sitemap],
 ]);
 const DB_PATH = '/api/db';
+// Uploads of photos and reel videos into the R2 bucket (reading goes to media.suitauragirls.in, not here)
+const MEDIA_PATH = '/api/media';
 
 // Sent with every response. public/_headers covers static files only, so responses
 // made by the Worker get them here.
@@ -112,7 +116,9 @@ const answerApi = async (apiModule, path, request, env, ctx) => {
   try {
     exposeEnv(env);
     setEnv(env);
-    if (apiModule) ({ response, cache } = await serveApi(apiModule, request, ctx));
+    if (env.MEDIA) setMediaBucket(env.MEDIA);
+    if (path === MEDIA_PATH) response = await handleMedia(request, env);
+    else if (apiModule) ({ response, cache } = await serveApi(apiModule, request, ctx));
     else response = await handleDb(request, env, ctx);
   } catch (error) {
     console.error(JSON.stringify({
@@ -134,7 +140,7 @@ export default {
     const apiModule = API_MODULES.get(path);
     // Static files, the app shell and unknown paths: Workers Static Assets answers (GET and HEAD), with the
     // single-page-app fallback from wrangler.jsonc and the headers from public/_headers.
-    if (!apiModule && path !== DB_PATH) return env.ASSETS.fetch(request);
+    if (!apiModule && path !== DB_PATH && path !== MEDIA_PATH) return env.ASSETS.fetch(request);
 
     // Workers stops a request's work when the caller goes away (a closed tab, Razorpay's 5-second webhook
     // timeout) unless waitUntil holds it. The handlers were written for a runtime where a function always

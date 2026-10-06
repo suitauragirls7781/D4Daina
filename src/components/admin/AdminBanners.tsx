@@ -101,7 +101,7 @@ export const AdminBanners: React.FC = () => {
     try {
       imageUrl = await uploadImage(file, 'banners');
     } catch (err: any) {
-      console.error('Cloudinary banner upload failed:', err);
+      console.error('Banner upload failed:', err);
       showToast(`Failed to upload banner image: ${err?.message || 'Please try again.'}`, 'error');
       setIsUploading(false);
       return;

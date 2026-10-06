@@ -2,7 +2,7 @@ import { createHash, createHmac, randomBytes } from 'node:crypto';
 import { FieldValue } from 'firebase-admin/firestore';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, getIdentity, isSameOrigin, parseBody, reply } from './_lib/http.js';
-import { CLOUDINARY_ROOT_FOLDER, destroyImage } from './_lib/cloudinary.js';
+import { createMediaGrant, deleteMedia, mediaImage } from './_lib/media.js';
 
 // Product reviews from the storefront. Every review waits for the admin's approval (status 'pending').
 // "Verified purchase" is decided here, never by the browser: only a signed-in customer whose paid order
@@ -17,14 +17,15 @@ const ID = /^[A-Za-z0-9_-]{1,120}$/;
 const LIMITS = { submitPerIp: 12, helpfulPerIp: 60, signPerCustomer: 10, signPerIp: 30 };
 const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|headless|lighthouse/i;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const PHOTO_FOLDER = `${CLOUDINARY_ROOT_FOLDER}/reviews`;
+// Photo ids keep the form they had on the old image host ("suitauragirls/reviews/<key>"), so existing reviews still match
+const PHOTO_FOLDER = 'suitauragirls/reviews';
 const PHOTO_FORMATS = 'jpg,png,webp,heic,heif';
 const PHOTO_KEY = /^rv_[a-f0-9]{24}$/;
 
 const hash = (value, length = 24) => createHash('sha256').update(value).digest('hex').slice(0, length);
 const today = () => new Date().toISOString().slice(0, 10);
 
-/** Key of a server-issued review photo from its Cloudinary public id, or null for any other image. */
+/** Key of a server-issued review photo from its photo id, or null for any other image. */
 const photoKeyOf = (photoId) => {
   const key = String(photoId || '').startsWith(`${PHOTO_FOLDER}/`) ? String(photoId).slice(PHOTO_FOLDER.length + 1) : '';
   return PHOTO_KEY.test(key) ? key : null;
@@ -47,17 +48,12 @@ export const cleanComment = (value) => String(value ?? '')
   .trim();
 
 /**
- * A photo this account's Cloudinary stored in suitauragirls/reviews: returns its URL and public id
- * (the same image can be addressed with or without a version segment, so the public id identifies it).
+ * A review photo stored by this store (media.suitauragirls.in, folder "reviews"): returns its address and
+ * photo id, or null for any other URL.
  */
-export const reviewPhoto = (value, cloudName = process.env.CLOUDINARY_CLOUD_NAME || '') => {
-  const url = String(value || '').trim();
-  if (!cloudName || !url || url.length > 400) return null;
-  const cloud = cloudName.replace(/[^A-Za-z0-9_-]/g, '');
-  if (!cloud || cloud !== cloudName) return null;
-  const pattern = new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/image/upload/(?:v\\d+/)?(${CLOUDINARY_ROOT_FOLDER}/reviews/[A-Za-z0-9_-]+)\\.(?:jpe?g|png|webp|avif|heic|heif)$`, 'i');
-  const match = url.match(pattern);
-  return match ? { url, photoId: match[1] } : null;
+export const reviewPhoto = (value) => {
+  const photo = mediaImage(value, 'reviews');
+  return photo ? { url: photo.url, photoId: `${PHOTO_FOLDER}/${photo.id}` } : null;
 };
 
 /**
@@ -75,20 +71,13 @@ const customerReviewId = (email, productId) => {
 };
 
 /**
- * Upload signature for exactly one photo: a server-chosen public id in suitauragirls/reviews, image formats
- * only, and no overwrite, so it can't be reused for more files or to swap the photo after approval.
- * (Same signing scheme as api/_lib/cloudinary.js.) Every signed field must be sent with the upload.
+ * Permission to upload exactly one photo under a server-chosen id in the "reviews" folder (see
+ * api/_lib/media.js): it cannot be used for more photos, and it stops working after 30 minutes.
  */
-const photoUploadSignature = (key) => {
-  const { CLOUDINARY_CLOUD_NAME: cloudName, CLOUDINARY_API_KEY: apiKey, CLOUDINARY_API_SECRET: apiSecret } = process.env;
-  if (!cloudName || !apiKey || !apiSecret) throw new Error('CLOUDINARY_CONFIG_MISSING');
-  const fields = { allowed_formats: PHOTO_FORMATS, folder: PHOTO_FOLDER, overwrite: 'false', public_id: key, timestamp: Math.floor(Date.now() / 1000) };
-  const toSign = Object.keys(fields).sort().map((name) => `${name}=${fields[name]}`).join('&');
-  return { cloudName, apiKey, fields, signature: createHash('sha1').update(toSign + apiSecret).digest('hex') };
-};
+const photoUploadSignature = (key) => createMediaGrant('reviews', 'image', { id: key });
 
 /**
- * Deletes a review photo from Cloudinary, but only when the server's own record binds it to `reviewId`.
+ * Deletes a review photo from storage, but only when the server's own record binds it to `reviewId`.
  * The URL comes from that record (checked when the photo was attached), never from the review document.
  */
 const destroyReviewPhoto = async (db, key, reviewId) => {
@@ -97,7 +86,7 @@ const destroyReviewPhoto = async (db, key, reviewId) => {
   if (!record || record.reviewId !== reviewId) return false;
   const photo = reviewPhoto(record.url);
   if (!photo || photo.photoId !== `${PHOTO_FOLDER}/${key}`) return false;
-  await destroyImage(photo.url);
+  await deleteMedia(photo.url);
   await ref.delete();
   return true;
 };

@@ -455,7 +455,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Duplicated products share image URLs, so keep any image another product still uses
       const stillUsed = new Set(products.filter((product) => product.id !== id).flatMap(productImageUrls));
       const imageUrls = productImageUrls(target).filter((url) => !stillUsed.has(url));
-      deleteImages(imageUrls).catch((error) => console.error('Error deleting product images from Cloudinary:', error));
+      deleteImages(imageUrls).catch((error) => console.error('Error deleting product photos from storage:', error));
     }
 
     setProducts((prev) => {

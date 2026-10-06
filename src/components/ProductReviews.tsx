@@ -9,6 +9,7 @@ import { useShop } from '../context/ShopContext';
 import { useDiscovery } from '../utils/discovery';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { Product } from '../types';
+import { MediaGrant, uploadImageWithGrant } from '../lib/media';
 
 // Product reviews: rating summary, what customers mention, the approved reviews and the review form.
 // Everything shown comes from approved reviews; new reviews go to /api/reviews and wait for approval.
@@ -231,7 +232,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   const listed = activeAspect ? rows.filter((r) => summary.mentionsById.get(r.id)?.has(activeAspect.key)) : rows;
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [photo, setPhoto] = useState<ReviewRow | null>(null);
-  // Photos that failed to load (e.g. removed from Cloudinary) are left out instead of showing a broken image
+  // Photos that failed to load (e.g. removed from storage) are left out instead of showing a broken image
   const [brokenPhotos, setBrokenPhotos] = useState<string[]>([]);
 
   // Helpful votes: one per review per browser (the server also counts each visitor once)
@@ -310,26 +311,19 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
     if (fileInput.current) fileInput.current.value = '';
   };
 
-  // Signed direct upload of this one photo to suitauragirls/reviews; the same photo is not uploaded twice
-  // after a failed submit. The server signs the public id, folder and formats, and all of them must be sent.
+  // Upload of this one photo to the store's storage (folder "reviews"); the same photo is not uploaded twice
+  // after a failed submit. The server issues the permission for exactly one photo under an id it chose.
   const uploadPhoto = async (photoFile: File) => {
     if (uploaded.current?.file === photoFile) return uploaded.current.url;
-    const signed = await apiPost<{ cloudName: string; apiKey: string; signature: string; fields: Record<string, string | number> }>('/api/reviews', { action: 'photo-sign' });
-    const form = new FormData();
-    form.append('file', photoFile);
-    form.append('api_key', signed.apiKey);
-    Object.entries(signed.fields || {}).forEach(([key, value]) => form.append(key, String(value)));
-    form.append('signature', signed.signature);
-    let response: Response;
+    const grant = await apiPost<MediaGrant>('/api/reviews', { action: 'photo-sign' });
+    let url: string;
     try {
-      response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(signed.cloudName)}/image/upload`, { method: 'POST', body: form });
+      url = await uploadImageWithGrant(photoFile, grant);
     } catch {
-      throw new Error('The photo could not be uploaded. Check your connection, or post your review without a photo.');
+      throw new Error('The photo could not be uploaded. Please try another photo, or post your review without one.');
     }
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.secure_url) throw new Error('The photo could not be uploaded. Please try another photo, or post your review without one.');
-    uploaded.current = { file: photoFile, url: result.secure_url };
-    return result.secure_url as string;
+    uploaded.current = { file: photoFile, url };
+    return url;
   };
 
   const submit = async (e: React.FormEvent) => {
