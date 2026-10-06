@@ -655,7 +655,7 @@ export const CheckoutPage: React.FC = () => {
     setPaymentReturn(null);
     // Short "Order placed" moment, then the full confirmation page
     setCelebrating(true);
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#5B3FD1', '#F0A30A', '#FFE1D2', '#10B981'], zIndex: 10001 });
+    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#0B1F3F', '#F5A300', '#FFEFC9', '#10B981'], zIndex: 10001 });
     window.setTimeout(() => {
       setActivePage('order-confirmation');
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -816,7 +816,7 @@ export const CheckoutPage: React.FC = () => {
         image: '/suit-aura-logo-512.png',
         prefill: { name: fullName, email: address.email, contact: address.mobile },
         notes: { order_number: created.orderNumber },
-        theme: { color: '#5B3FD1' },
+        theme: { color: '#0B1F3F' },
         config: razorpayDisplayConfig(paymentSettings),
         retry: { enabled: true },
         handler: async (response: any) => {
@@ -940,9 +940,9 @@ export const CheckoutPage: React.FC = () => {
         key={block.step}
         type="button"
         onClick={() => goToStep(block.step)}
-        className={`flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left cursor-pointer ${done ? 'bg-mint' : 'bg-sky'}`}
+        className={`flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left cursor-pointer ${done ? 'bg-mint' : 'bg-white border border-line'}`}
       >
-        <span className={`sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold ${done ? 'bg-ok text-white' : 'bg-white text-ink'}`}>
+        <span className={`sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold ${done ? 'bg-ok text-white' : 'bg-sunken text-ink'}`}>
           {done ? <Check className="h-4 w-4" aria-hidden="true" /> : index + 1}
         </span>
         <span className="min-w-0 flex-1">

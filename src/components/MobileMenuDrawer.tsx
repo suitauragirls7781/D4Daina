@@ -61,7 +61,7 @@ export const MobileMenuDrawer: React.FC = () => {
         <div className="flex items-center justify-between gap-2 px-3.5 pt-3 shrink-0">
           <button type="button" onClick={() => goPage('home')} aria-current={activePage === 'home' ? 'page' : undefined} className="flex min-w-0 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
             <img src="/suit-aura-mark-132.webp" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full bg-white object-cover" />
-            <span className="truncate text-[15px] font-extrabold tracking-[0.04em] text-ink">SUIT AURA <span className="text-brand">GIRLS</span></span>
+            <span className="truncate text-[15px] font-extrabold tracking-[0.04em] text-ink">SUIT AURA <span className="text-accent">GIRLS</span></span>
           </button>
           <span className="flex shrink-0 gap-2">
             <button type="button" onClick={() => { close(); setIsSearchOpen(true); }} aria-label="Search styles" className={round}><SearchIcon mono className="w-5 h-5" /></button>

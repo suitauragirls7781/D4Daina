@@ -231,7 +231,7 @@ export const LoginPage: React.FC = () => {
                     aria-selected={mode === tab}
                     onClick={() => switchMode(tab)}
                     className={`h-11 rounded-full text-sm font-bold transition-colors cursor-pointer ${
-                      mode === tab ? 'bg-white text-ink shadow-[0_1px_4px_rgba(34,27,51,0.10)]' : 'text-lilac-ink hover:text-ink'
+                      mode === tab ? 'bg-white text-ink shadow-[0_1px_4px_rgba(11,31,63,0.10)]' : 'text-lilac-ink hover:text-ink'
                     }`}
                   >
                     {tab === 'login' ? 'Sign in' : 'New account'}

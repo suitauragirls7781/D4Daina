@@ -198,8 +198,8 @@ const notifyCustomerCancelKept = async (db, order) => {
         para(`Dear ${escapeHtml(order.customerName || 'Customer')},`),
         para(`We have reviewed your request to cancel order <strong>${escapeHtml(order.orderNumber)}</strong>. The order has not been cancelled, so it is going ahead.${already ? ` ${already}` : ''}`),
         order.customerNote ? para(`<strong>Note from our team:</strong> ${escapeHtml(order.customerNote)}`) : '',
-        para(`If you still need help, please <a href="${SITE_URL}/contact" style="color:#4B1D3F">contact us</a> with your order number.`),
-        `<p style="margin:20px 0 4px"><a href="${ordersUrl}" style="display:inline-block;background:#4B1D3F;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">VIEW YOUR ORDER</a></p>`,
+        para(`If you still need help, please <a href="${SITE_URL}/contact" style="color:#0B1F3F">contact us</a> with your order number.`),
+        `<p style="margin:20px 0 4px"><a href="${ordersUrl}" style="display:inline-block;background:#0B1F3F;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">VIEW YOUR ORDER</a></p>`,
       ].join('\n')),
       text: `We have reviewed your request to cancel order ${order.orderNumber}. The order has not been cancelled, so it is going ahead.${already ? ` ${already}` : ''}${order.customerNote ? ` Note from our team: ${order.customerNote}` : ''} See it at ${ordersUrl}`,
     });
@@ -229,7 +229,7 @@ const notifyStoreOfCancelRequest = async (db, order) => {
         para(`Customer: ${escapeHtml(order.customerName || '')} (${escapeHtml(order.customerEmail || '')})`),
         para(`<strong>Reason:</strong> ${escapeHtml(reason)}`),
         para(`If it has not been handed to the courier, set the order to Cancelled in the admin panel (its stock goes back automatically) and refund the payment${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''} from your Razorpay dashboard.`),
-        `<p style="margin:20px 0 4px"><a href="${adminUrl}" style="display:inline-block;background:#4B1D3F;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">OPEN ORDER</a></p>`,
+        `<p style="margin:20px 0 4px"><a href="${adminUrl}" style="display:inline-block;background:#0B1F3F;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">OPEN ORDER</a></p>`,
       ].join('\n')),
       text: `Cancellation requested for order ${order.orderNumber} (${inr(order.finalTotal)} paid) by ${order.customerEmail}. Reason: ${reason}. Review it at ${adminUrl}`,
     });
@@ -688,7 +688,7 @@ const actions = {
         to: email,
         name: 'Suit Aura Girls admin',
         subject: 'Suit Aura Girls test email',
-        html: '<p style="font-family:Arial,sans-serif;color:#3D0F1F">This is a test email from your Suit Aura Girls store. Transactional email is working.</p>',
+        html: '<p style="font-family:Arial,sans-serif;color:#071630">This is a test email from your Suit Aura Girls store. Transactional email is working.</p>',
         text: 'This is a test email from your Suit Aura Girls store. Transactional email is working.',
       });
     } catch (error) {

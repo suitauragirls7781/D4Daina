@@ -300,10 +300,10 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
         return (
           <li
             key={step.label}
-            className={`flex items-center gap-3 rounded-[18px] px-3 py-2.5 ${isCurrent ? 'bg-lilac' : done ? 'bg-mint' : 'bg-sunken'}`}
+            className={`flex items-center gap-3 rounded-[18px] px-3 py-2.5 ${isCurrent ? 'bg-butter' : done ? 'bg-mint' : 'bg-sunken'}`}
             aria-current={isCurrent ? 'step' : undefined}
           >
-            <span className={`${isCurrent ? 'sag-ring' : ''} flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white ${isCurrent ? 'text-brand' : done ? 'text-ok' : 'text-ink-muted'}`}>
+            <span className={`${isCurrent ? 'sag-ring' : ''} flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white ${isCurrent ? 'text-accent' : done ? 'text-ok' : 'text-ink-muted'}`}>
               {done ? <Check className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" /> : <StepIcon className="w-[18px] h-[18px]" aria-hidden="true" />}
             </span>
             <div className="min-w-0">
@@ -312,9 +312,9 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
                 <span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span>
               </p>
               {when ? (
-                <p className={`sag-num text-xs leading-[18px] ${isCurrent ? 'text-lilac-ink' : 'text-mint-ink'}`}>{when}</p>
+                <p className={`sag-num text-xs leading-[18px] ${isCurrent ? 'text-butter-ink' : 'text-mint-ink'}`}>{when}</p>
               ) : isCurrent ? (
-                <p className="text-xs leading-[18px] text-lilac-ink">Happening now</p>
+                <p className="text-xs leading-[18px] text-butter-ink">Happening now</p>
               ) : !reached && index === current + 1 && !waiting ? (
                 <p className="text-xs leading-[18px] text-ink-muted">Next</p>
               ) : null}
