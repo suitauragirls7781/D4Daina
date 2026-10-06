@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, CheckCircle2, ChevronDown, Copy, ExternalLink, Phone, XCircle } from 'lucide-react';
+import { BadgeCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, Copy, ExternalLink, Home, MapPin, Package, Phone, Route, Truck, XCircle } from 'lucide-react';
 import { PackageIcon, ReturnIcon, TruckIcon, UserIcon } from './StoreIcons';
 import { Order, ReturnRequest, ReturnRequestStatus } from '../types';
 import { trackingLinkFor, findCourier } from '../utils/courier';
@@ -209,6 +209,8 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
 
 const STEPS = [{ label: 'Ordered' }, { label: 'Confirmed' }, { label: 'Packed' }, { label: 'Shipped' }, { label: 'In transit' }, { label: 'Out for delivery' }, { label: 'Delivered' }] as const;
 const DELIVERED_STEP = STEPS.length - 1;
+// One icon per stage, in the order of STEPS
+const STEP_ICONS = [ClipboardCheck, BadgeCheck, Package, Truck, Route, MapPin, Home];
 
 /** Where each order status sits on the tracker (an older 'Refund Requested' order, and a 'Returned' one, had been delivered). */
 const STATUS_STEP: Record<string, number> = { Pending: 0, Processing: 1, Packed: 2, Shipped: 3, 'In Transit': 4, 'Out for Delivery': 5, Delivered: 6, 'Refund Requested': 6, Returned: 6 };
@@ -286,39 +288,35 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
   }
 
   return (
-    <ol className="grid lg:grid-cols-7" aria-label="Order progress">
+    // Step cards (owner's pick 4): every stage is a card with a round icon. Reached stages are mint with a tick,
+    // the stage the order is at is lilac with the slow ring, the stages still to come are quiet.
+    <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-label="Order progress">
       {STEPS.map((step, index) => {
-        const done = index <= current;
         const isCurrent = index === current;
-        const when = done ? formatDateTime(times[index]) : '';
+        const done = index < current;
+        const reached = index <= current;
+        const when = reached ? formatDateTime(times[index]) : '';
+        const StepIcon = STEP_ICONS[index];
         return (
           <li
             key={step.label}
-            className={`relative flex gap-3 lg:flex-col lg:items-center lg:gap-2 lg:text-center lg:pb-0 ${index < STEPS.length - 1 ? 'pb-5' : ''}`}
+            className={`flex items-center gap-3 rounded-[18px] px-3 py-2.5 ${isCurrent ? 'bg-lilac' : done ? 'bg-mint' : 'bg-sunken'}`}
             aria-current={isCurrent ? 'step' : undefined}
           >
-            {index < STEPS.length - 1 && (
-              <span aria-hidden="true" className={`lg:hidden absolute left-[11px] top-6 bottom-0 w-0.5 ${index < current ? 'bg-ink' : 'bg-line'}`} />
-            )}
-            {index > 0 && (
-              <span aria-hidden="true" className={`hidden lg:block absolute top-[11px] right-1/2 w-full h-0.5 ${index <= current ? 'bg-ink' : 'bg-line'}`} />
-            )}
-            <span
-              className={`relative z-10 w-6 h-6 shrink-0 rounded-full flex items-center justify-center border-2 ${
-                isCurrent ? 'bg-brand border-brand text-white' : done ? 'bg-ink border-ink text-white' : 'bg-white border-line'
-              }`}
-            >
-              {done && <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} aria-hidden="true" />}
+            <span className={`${isCurrent ? 'sag-ring' : ''} flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white ${isCurrent ? 'text-brand' : done ? 'text-ok' : 'text-ink-muted'}`}>
+              {done ? <Check className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" /> : <StepIcon className="w-[18px] h-[18px]" aria-hidden="true" />}
             </span>
-            <div className="min-w-0 pt-0.5 lg:pt-0">
-              <p className={`text-sm leading-5 ${isCurrent ? 'text-brand font-semibold' : done ? 'text-ink font-medium' : 'text-ink-muted'}`}>
+            <div className="min-w-0">
+              <p className={`text-sm leading-5 font-bold ${reached ? 'text-ink' : 'text-ink-muted'}`}>
                 {step.label}
-                <span className="sr-only">{done ? ' (done)' : ' (not yet)'}</span>
+                <span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span>
               </p>
               {when ? (
-                <p className="text-[13px] leading-[18px] text-ink-muted">{when}</p>
-              ) : !done && index === current + 1 && !waiting ? (
-                <p className="text-[13px] leading-[18px] text-ink-muted">Next</p>
+                <p className={`sag-num text-xs leading-[18px] ${isCurrent ? 'text-lilac-ink' : 'text-mint-ink'}`}>{when}</p>
+              ) : isCurrent ? (
+                <p className="text-xs leading-[18px] text-lilac-ink">Happening now</p>
+              ) : !reached && index === current + 1 && !waiting ? (
+                <p className="text-xs leading-[18px] text-ink-muted">Next</p>
               ) : null}
             </div>
           </li>

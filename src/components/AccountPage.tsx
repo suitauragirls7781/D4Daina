@@ -733,24 +733,45 @@ export const AccountPage: React.FC = () => {
             <p className="text-sm leading-5 text-ink-muted truncate">{user.email}</p>
           </div>
 
-          {newestOrder && (
-            <button type="button" onClick={() => openTab('orders')} className="lg:hidden sag-card w-full p-4 text-left cursor-pointer">
-              <span className="flex items-center justify-between gap-3">
-                <span className="sag-eyebrow">Your latest order</span>
-                <StatusPill order={newestOrder} />
-              </span>
-              <span className="mt-1 flex items-center justify-between gap-3">
-                <span className="min-w-0">
-                  <span className="block text-[15px] leading-[22px] font-semibold text-ink break-all">#{newestOrder.orderNumber}</span>
-                  {newestUpdate && <span className={`block ${noteClass}`}>{newestUpdate.label} · {formatDateTime(newestUpdate.at)}</span>}
-                </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
-              </span>
-            </button>
-          )}
+          {newestOrder && (() => {
+            // How far the order has come, as seven short bars (none for a cancelled, returned or refunded order)
+            const stage = ['Pending', 'Processing', 'Packed', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'].indexOf(String(newestOrder.status));
+            const first = newestOrder.items?.[0];
+            const photo = first?.product?.images?.[0] || first?.product?.image || '';
+            const more = (newestOrder.items?.length || 0) - 1;
+            return (
+              <section aria-labelledby="account-latest-order" className="rounded-[24px] bg-mint p-3.5">
+                <h2 id="account-latest-order" className="flex items-center gap-2 font-sans text-sm leading-5 font-extrabold text-mint-ink">
+                  <TruckIcon className="w-5 h-5 shrink-0" mono /> Your latest order
+                </h2>
+                <button type="button" onClick={() => openTab('orders')} className="mt-2.5 grid w-full grid-cols-[62px_minmax(0,1fr)] items-center gap-3 rounded-[20px] bg-white p-3 text-left cursor-pointer">
+                  {photo
+                    ? <img src={getCleanImageUrl(photo, 160)} alt="" loading="lazy" className="w-[62px] aspect-[4/5] rounded-chip object-cover object-top bg-sunken" />
+                    : <span className="w-[62px] aspect-[4/5] rounded-chip bg-sunken" />}
+                  <span className="min-w-0">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="sag-num min-w-0 truncate text-xs leading-4 text-ink-muted">#{newestOrder.orderNumber}</span>
+                      <StatusPill order={newestOrder} />
+                    </span>
+                    {first?.product?.name && <span className="mt-1 block text-[13px] leading-[17px] font-bold text-ink line-clamp-2">{first.product.name}{more > 0 ? ` + ${more} more` : ''}</span>}
+                    {newestUpdate && <span className={`mt-1 block ${noteClass}`}>{newestUpdate.label} · {formatDateTime(newestUpdate.at)}</span>}
+                    {stage >= 0 && (
+                      <span className="mt-2 flex gap-1" aria-hidden="true">
+                        {[0, 1, 2, 3, 4, 5, 6].map((index) => <span key={index} className={`h-[5px] flex-1 rounded-full ${index <= stage ? 'bg-ok' : 'bg-line'}`} />)}
+                      </span>
+                    )}
+                  </span>
+                </button>
+                <div className="mt-2.5 flex gap-2">
+                  <button type="button" onClick={() => openTab('orders')} className="h-11 flex-1 min-w-0 rounded-full bg-ink text-[13.5px] font-bold text-white cursor-pointer">Track order</button>
+                  <button type="button" onClick={() => openTab('help')} className="h-11 flex-1 min-w-0 rounded-full bg-white text-[13.5px] font-bold text-ink cursor-pointer">Need help?</button>
+                </div>
+              </section>
+            );
+          })()}
 
           <div className="sag-card overflow-hidden" role="tablist" aria-label="My account" aria-orientation="vertical">
-            {tabs.map(({ key, label, icon: Icon }) => (
+            {tabs.map(({ key, label, icon: Icon }, tabIndex) => (
               <button
                 key={key}
                 id={`account-tab-${key}`}
@@ -761,7 +782,9 @@ export const AccountPage: React.FC = () => {
                 onClick={() => openTab(key)}
                 className={`sag-row min-h-14 w-full px-4 text-left cursor-pointer hover:bg-sunken transition-colors ${tab === key ? 'lg:bg-brand-wash lg:hover:bg-brand-wash lg:text-brand' : ''}`}
               >
-                <Icon className="w-5 h-5 shrink-0" mono live={false} />
+                <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink ${['bg-peach', 'bg-lilac', 'bg-sky', 'bg-butter', 'bg-mint'][tabIndex % 5]}`}>
+                  <Icon className="w-[18px] h-[18px]" mono live={false} />
+                </span>
                 <span className="min-w-0 flex-1">
                   <span className="block">{label}</span>
                   {tabNote[key] && <span className={`sag-num block font-normal ${noteClass}`}>{tabNote[key]}</span>}
