@@ -46,7 +46,7 @@ Helper classes live in `src/index.css`: `sag-card`, `sag-btn-primary`, `sag-btn-
 - **Order tracking**: "step cards" (pick 4): each stage is a card with a round icon; reached stages are mint with a tick, the current one lilac with the turning ring, later ones quiet. Times shown are the order's real ones.
 - **Focus**: a visible 2px ink outline on everything (white on dark and violet surfaces).
 - **Icons**: outline icons in the colour of the surrounding text (lucide, or `StoreIcons` / `BagIcon`).
-- **Motion**: page fade, sheet and drawer slide, a small press on buttons, 150ms colour transitions. Three gentle loops came with the chosen designs and are the only ones allowed: the header logo floats (`sag-float`), the trust badges carry a thin ring that turns slowly (`sag-ring`), and the hero sticker bobs (`sag-bob`). No marquees, shimmer or blinking; `prefers-reduced-motion` removes all motion.
+- **Motion**: page fade, sheet and drawer slide, a small press on buttons, 150ms colour transitions. A few gentle loops came with the chosen designs and are the only ones allowed: the header logo floats (`sag-float`), the brand name's letters rise in and a slow wave passes through them (`sag-wave`), the search hint types the store's collection names with a blinking caret (`sag-type`), the trust badges carry a thin ring that turns slowly (`sag-ring`), and the hero sticker bobs (`sag-bob`). No marquees, shimmer or blinking; `prefers-reduced-motion` removes all motion.
 
 ---
 

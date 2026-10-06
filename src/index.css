@@ -744,3 +744,27 @@
   box-shadow: none;
   border-radius: 24px;
 }
+
+/* Header (owner's request, 2026-10-06): the brand name's letters rise in once and then a slow wave passes
+   through them; the search hint types itself and carries a blinking caret. Off with reduced motion. */
+@keyframes sag-letter-rise { from { opacity: 0; transform: translateY(9px); } }
+@keyframes sag-letter-wave { 0%, 7%, 100% { transform: none; } 3.5% { transform: translateY(-4px); } }
+@keyframes sag-caret { 50% { opacity: 0; } }
+.sag-wave span { display: inline-block; }
+.sag-wave span[style] {
+  animation: sag-letter-rise 0.6s both, sag-letter-wave 6s ease-in-out infinite;
+  animation-delay: calc(var(--i) * 45ms), calc(var(--i) * 90ms + 1.6s);
+}
+.sag-type::after {
+  content: "";
+  display: inline-block;
+  width: 1.5px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -2px;
+  background: var(--sag-brand);
+  animation: sag-caret 1s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sag-wave span[style], .sag-type::after { animation: none; }
+}

@@ -18,6 +18,50 @@ import { HeartIcon, PinIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons'
 
 const RECENT_KEY = 'sag_recent_searches_v1';
 
+/** The brand name with each letter rising in once, then a slow wave passing through it (as in the chosen header). */
+const WaveName: React.FC = () => {
+  const letters = (text: string, from: number) => text.split('').map((letter, index) => (
+    <span key={from + index} style={{ ['--i' as any]: from + index }}>{letter === ' ' ? ' ' : letter}</span>
+  ));
+  return (
+    <span className="sag-wave block truncate text-base font-extrabold leading-[17px] tracking-[0.04em] text-ink" aria-hidden="true">
+      {letters('SUIT AURA ', 0)}<span className="text-brand">{letters('GIRLS', 10)}</span>
+    </span>
+  );
+};
+
+/**
+ * The search field's hint types itself: a suggestion is written letter by letter, rests, is erased, and the
+ * next one follows. The suggestions are the store's own collections, so each one finds something.
+ * With reduced motion the plain label is shown.
+ */
+const TypedSearchHint: React.FC<{ words: string[]; fallback: string }> = ({ words, fallback }) => {
+  const [text, setText] = useState('');
+  const still = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const list = words.join('|');
+  useEffect(() => {
+    const items = list ? list.split('|') : [];
+    if (still || items.length === 0) return;
+    let word = 0;
+    let shown = 0;
+    let direction = 1;
+    let timer = 0;
+    const tick = () => {
+      const current = items[word];
+      shown += direction;
+      setText(current.slice(0, shown));
+      let wait = direction > 0 ? 90 : 40;
+      if (direction > 0 && shown >= current.length) { direction = -1; wait = 1500; }
+      else if (direction < 0 && shown <= 0) { direction = 1; word = (word + 1) % items.length; wait = 350; }
+      timer = window.setTimeout(tick, wait);
+    };
+    timer = window.setTimeout(tick, 900);
+    return () => window.clearTimeout(timer);
+  }, [list, still]);
+  if (still || !list) return <span className="truncate">{fallback}</span>;
+  return <span className="sag-type truncate" aria-hidden="true">Search “{text}</span>;
+};
+
 /**
  * "PIN" in the header: the shopper types a PIN code and sees the place it belongs to (India Post directory,
  * the same lookup the product page and the checkout use). The store delivers across India, so a PIN code
@@ -200,6 +244,8 @@ export const Header: React.FC = () => {
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
   const chip = 'h-11 px-3.5 rounded-chip bg-sunken text-sm font-medium text-ink hover:bg-sunken-deep inline-flex items-center gap-1.5 transition-colors cursor-pointer';
   const searchLabel = 'Search suits, kurtis & more';
+  // What the search hint types: the store's biggest collections, in the words a shopper would use
+  const searchHints = collections.slice(0, 5).map(([name]) => name.toLowerCase());
 
   return (
     <>
@@ -211,7 +257,7 @@ export const Header: React.FC = () => {
             <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
               <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" className="sag-float h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
               <span className="min-w-0">
-                <span className="block truncate text-base font-extrabold leading-[17px] tracking-[0.04em] text-ink">SUIT AURA <span className="text-brand">GIRLS</span></span>
+                <WaveName />
                 <span className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold leading-[14px] text-mint-ink">
                   <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0 rounded-full bg-ok" />
                   <span className="truncate">Delivery across India</span>
@@ -251,7 +297,7 @@ export const Header: React.FC = () => {
               aria-expanded={isSearchOpen}
             >
               <span className="flex shrink-0 text-brand"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
-              <span className="truncate">{searchLabel}</span>
+              <TypedSearchHint words={searchHints} fallback={searchLabel} />
             </button>
             <button
               id="header-pin-btn"
