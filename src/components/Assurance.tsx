@@ -62,12 +62,12 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
     const badge = `flex w-full flex-col items-center rounded-control px-0.5 text-center ${onDark ? 'text-on-dark' : 'text-ink'}`;
     const body = (row: (typeof rows)[number], index: number) => (
       <>
-        <span className={`sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mb-2 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-brand`}>{row.icon}</span>
-        <span className="block text-[11.5px] sm:text-[13px] font-bold leading-[1.25]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
+        <span className={`sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mb-1.5 flex h-[42px] w-[42px] sm:h-[52px] sm:w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-brand`}>{row.icon}</span>
+        <span className="block text-[11px] sm:text-[13px] font-bold leading-[1.25]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
       </>
     );
     return (
-      <ul className={`grid grid-cols-4 gap-x-1 rounded-[24px] px-2 pt-5 pb-4 ${onDark ? 'bg-white/10' : 'bg-lilac'} ${className}`}>
+      <ul className={`grid grid-cols-4 gap-x-1 rounded-[20px] px-1.5 pt-4 pb-3 sm:rounded-[24px] sm:px-2 sm:pt-5 sm:pb-4 ${onDark ? 'bg-white/10' : 'bg-lilac'} ${className}`}>
         {rows.map((row, index) => (
           <li key={row.key} className="flex">
             {row.href ? (

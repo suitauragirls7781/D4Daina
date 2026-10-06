@@ -139,7 +139,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         )}
 
         <div className="sag-num flex items-baseline gap-x-1.5 gap-y-0 flex-wrap mt-auto pt-1">
-          <span className={`text-[17px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
+          <span className={`text-[16px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
           {mrp > price && <span className="text-[13px] text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span>}
           {discount > 0 && <span className="text-[13px] font-bold text-sale whitespace-nowrap">{discount}% off</span>}
         </div>

@@ -170,7 +170,7 @@ export const HeroSection: React.FC = () => {
       <div className="pt-2 pb-6 lg:py-10" aria-hidden="true">
         <div className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
           <div className="px-4 sm:px-6 lg:px-0 lg:col-span-5">
-            <div className="w-full h-[300px] lg:h-auto lg:aspect-[4/5] rounded-[28px] lg:rounded-control bg-peach lg:bg-sunken-deep" />
+            <div className="w-full h-[236px] lg:h-auto lg:aspect-[4/5] rounded-[28px] lg:rounded-control bg-peach lg:bg-sunken-deep" />
           </div>
           <div className="px-4 sm:px-6 lg:px-0 mt-8 lg:mt-0 lg:col-span-7 space-y-3">
             <div className="h-8 w-3/4 rounded-badge bg-sunken-deep" />
@@ -219,20 +219,20 @@ export const HeroSection: React.FC = () => {
                   key={slide.id || index}
                   type="button"
                   onClick={() => handleSlideClick(slide)}
-                  className={`${slideWidth} relative block min-h-[300px] overflow-hidden rounded-[28px] bg-peach text-left cursor-pointer lg:min-h-0 lg:rounded-control lg:bg-sunken`}
+                  className={`${slideWidth} relative block min-h-[236px] overflow-hidden rounded-[22px] bg-peach text-left cursor-pointer lg:min-h-0 lg:rounded-control lg:bg-sunken`}
                   aria-label={`View ${slide.title}`}
                 >
                   {/* Phones and tablets: the words sit on the block, left of the arch */}
-                  <span className="lg:hidden flex min-h-[300px] w-[54%] flex-col items-start justify-center py-5 pl-4">
+                  <span className="lg:hidden flex min-h-[236px] w-[54%] flex-col items-start justify-center py-5 pl-4">
                     {badge && <span className="mb-2.5 max-w-full truncate rounded-full bg-white px-2.5 py-1 text-[11px] font-extrabold leading-4 text-peach-ink">{badge}</span>}
-                    <span className="font-display text-[22px] font-bold leading-[1.12] text-ink line-clamp-4">{slide.title}</span>
+                    <span className="font-display max-w-full pr-2 text-[18px] font-bold leading-[1.15] text-ink line-clamp-4">{slide.title}</span>
                     {money.now > 0 && (
                       <span className="sag-num mt-2 flex flex-wrap items-baseline gap-x-1.5 text-[13px] leading-5 text-peach-ink">
-                        <span className="text-[19px] font-extrabold text-ink">₹{money.now.toLocaleString('en-IN')}</span>
+                        <span className="text-[17px] font-extrabold text-ink">₹{money.now.toLocaleString('en-IN')}</span>
                         {money.was > money.now && <span className="line-through">₹{money.was.toLocaleString('en-IN')}</span>}
                       </span>
                     )}
-                    <span className="mt-3 inline-flex h-[42px] items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-5 text-sm font-bold text-white">Shop now <ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
+                    <span className="mt-2.5 inline-flex h-[36px] items-center gap-1 whitespace-nowrap rounded-full bg-ink px-4 text-[13px] font-bold text-white">Shop now <ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
                   </span>
                   <span className="absolute -right-1.5 bottom-0 block h-[92%] w-[50%] overflow-hidden rounded-t-[120px] bg-white/60 lg:static lg:h-auto lg:w-full lg:rounded-none lg:bg-transparent lg:aspect-[4/5]">
                     <img
@@ -251,8 +251,8 @@ export const HeroSection: React.FC = () => {
                   </span>
                   {/* The sticker shows the style's real discount, and only when there is one */}
                   {money.off > 0 && (
-                    <span className="sag-bob lg:hidden absolute bottom-5 right-[40%] z-[2] flex h-[62px] w-[62px] flex-col items-center justify-center rounded-full bg-sun text-center text-xs font-extrabold leading-[1.05] text-ink">
-                      <span className="sag-num text-[15px]">{money.off}%</span>off
+                    <span className="sag-bob lg:hidden absolute bottom-5 right-[40%] z-[2] flex h-[50px] w-[50px] flex-col items-center justify-center rounded-full bg-sun text-center text-[11px] font-extrabold leading-[1.05] text-ink">
+                      <span className="sag-num text-[13px]">{money.off}%</span>off
                     </span>
                   )}
                 </button>

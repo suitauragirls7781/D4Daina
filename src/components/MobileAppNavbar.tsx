@@ -55,7 +55,7 @@ export const MobileAppNavbar: React.FC = () => {
       className="md:hidden fixed bottom-0 left-0 right-0 z-[45] bg-dark pb-[env(safe-area-inset-bottom)] select-none"
     >
       {/* A black bar flush with the bottom edge of the screen; the current tab is an amber tile with dark text */}
-      <div className="max-w-md mx-auto grid grid-cols-5 gap-0.5 px-1.5 py-1.5">
+      <div className="max-w-md mx-auto grid grid-cols-5 gap-0.5 px-1.5 py-1">
         {tabs.map(({ id, label, icon: Icon, active, count, dot }) => (
           <button
             key={id}
@@ -64,10 +64,10 @@ export const MobileAppNavbar: React.FC = () => {
             onClick={() => go(id)}
             aria-current={active ? 'page' : undefined}
             aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
-            className={`relative h-[50px] flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${active ? 'bg-highlight text-ink' : 'text-on-dark-muted'}`}
+            className={`relative h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${active ? 'bg-highlight text-ink' : 'text-on-dark-muted'}`}
           >
             <span className="relative flex">
-              <Icon className="w-[22px] h-[22px]" mono />
+              <Icon className="w-[20px] h-[20px]" mono />
               {Boolean(count) && (
                 <span className={`absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold tabular-nums leading-none flex items-center justify-center ring-2 ${active ? 'ring-highlight' : 'ring-dark'}`}>
                   {count! > 99 ? '99+' : count}
@@ -75,7 +75,7 @@ export const MobileAppNavbar: React.FC = () => {
               )}
               {dot && <span className={`absolute -bottom-0.5 -right-1 w-2 h-2 rounded-full bg-highlight ring-2 ${active ? 'ring-highlight' : 'ring-dark'}`} />}
             </span>
-            <span className={`text-[11px] leading-3 whitespace-nowrap ${active ? 'font-bold' : 'font-semibold'}`}>{label}</span>
+            <span className={`text-[10.5px] leading-3 whitespace-nowrap ${active ? 'font-bold' : 'font-semibold'}`}>{label}</span>
           </button>
         ))}
       </div>

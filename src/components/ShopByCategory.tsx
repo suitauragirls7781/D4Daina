@@ -37,12 +37,12 @@ export const ShopByCategory: React.FC = () => {
 
   if (cards.length === 0 && kidsToys.count === 0) return null;
 
-  const tile = 'group block w-[78px] sm:w-[92px] lg:w-[112px] pt-1 text-center cursor-pointer rounded-[22px]';
+  const tile = 'group block w-[66px] sm:w-[92px] lg:w-[112px] pt-1 text-center cursor-pointer rounded-[22px]';
   // Each tile sits on the next pastel block colour
   const TILES = ['bg-peach', 'bg-mint', 'bg-sky', 'bg-lilac', 'bg-butter'];
   // Story circles (owner's pick 2): a round photo inside the thin ring that turns slowly; every other ring turns the other way
-  const photoOn = (index: number) => `sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mx-auto block h-[70px] w-[70px] sm:h-[84px] sm:w-[84px] lg:h-[100px] lg:w-[100px] rounded-full ${TILES[index % TILES.length]}`;
-  const name = 'mt-2 block text-xs sm:text-[13px] leading-4 font-bold text-ink line-clamp-2';
+  const photoOn = (index: number) => `sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mx-auto block h-[58px] w-[58px] sm:h-[84px] sm:w-[84px] lg:h-[100px] lg:w-[100px] rounded-full ${TILES[index % TILES.length]}`;
+  const name = 'mt-1.5 block text-[11.5px] sm:text-[13px] leading-[14px] sm:leading-4 font-bold text-ink line-clamp-2';
   const count = 'sr-only';
   const designs = (n: number) => `${n} ${n === 1 ? 'design' : 'designs'}`;
 

@@ -24,7 +24,7 @@ const WaveName: React.FC<{ onDark?: boolean }> = ({ onDark = false }) => {
     <span key={from + index} style={{ ['--i' as any]: from + index }}>{letter === ' ' ? ' ' : letter}</span>
   ));
   return (
-    <span className={`sag-wave block truncate text-[17px] font-black leading-[18px] tracking-[0.1em] ${onDark ? 'text-white' : 'text-ink'}`} aria-hidden="true">
+    <span className={`sag-wave block truncate text-[14.5px] font-black leading-[16px] tracking-[0.08em] ${onDark ? 'text-white' : 'text-ink'}`} aria-hidden="true">
       {letters('SUIT AURA ', 0)}<span className={onDark ? 'text-highlight' : 'text-accent'}>{letters('GIRLS', 10)}</span>
     </span>
   );
@@ -266,7 +266,7 @@ export const Header: React.FC = () => {
   const iconButton = 'relative w-11 h-11 shrink-0 rounded-full items-center justify-center text-ink hover:bg-sunken cursor-pointer transition-colors';
   const badge = 'absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold tabular-nums leading-none flex items-center justify-center';
   // On the black phone header the count sits on amber with dark figures
-  const badgeOnDark = 'absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-highlight text-ink text-[11px] font-extrabold tabular-nums leading-none flex items-center justify-center';
+  const badgeOnDark = 'absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-highlight text-ink text-[11px] font-extrabold tabular-nums leading-none flex items-center justify-center';
   const navLink = (active: boolean) => `relative h-12 inline-flex items-center text-sm cursor-pointer transition-colors ${active ? 'text-ink font-semibold' : 'font-medium text-ink-muted hover:text-ink'}`;
   const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-0 h-0.5 bg-brand ${active ? '' : 'hidden'}`;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
@@ -279,67 +279,67 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full rounded-b-[26px] bg-dark lg:rounded-none lg:bg-white lg:border-b lg:border-line select-none">
+      <header className="sticky top-0 z-50 w-full rounded-b-[18px] bg-dark lg:rounded-none lg:bg-white lg:border-b lg:border-line select-none">
         {/* Phones and tablets: the all-black header. Logo in a turning amber ring, the name, wishlist and bag;
             under them the menu, the dark search field and the amber search button. */}
-        <div className={`lg:hidden max-w-2xl mx-auto px-3 pt-3 transition-[padding] duration-200 ${rowHidden ? 'pb-2.5' : 'pb-3.5'}`}>
-          <div className="flex items-center gap-2.5">
-            <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
-              <span className="sag-ring-amber flex h-[52px] w-[52px] shrink-0 items-center justify-center">
-                <img src="/suit-aura-mark-132.webp" alt="" width="42" height="42" className="h-[42px] w-[42px] rounded-full bg-white object-cover" />
+        <div className={`lg:hidden max-w-2xl mx-auto px-2.5 pt-2 transition-[padding] duration-200 ${rowHidden ? 'pb-2' : 'pb-2.5'}`}>
+          <div className="flex items-center gap-2">
+            <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
+              <span className="sag-ring-amber flex h-[40px] w-[40px] shrink-0 items-center justify-center">
+                <img src="/suit-aura-mark-132.webp" alt="" width="32" height="32" className="h-[32px] w-[32px] rounded-full bg-white object-cover" />
               </span>
               <span className="min-w-0">
                 <WaveName onDark />
-                <span className="mt-1 block truncate text-[11px] font-semibold leading-[14px] text-on-dark-muted">Ethnic wear · Delivery across India</span>
+                <span className="mt-px block truncate text-[10.5px] font-semibold leading-[13px] text-on-dark-muted">Ethnic wear · Delivery across India</span>
               </span>
             </button>
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer" aria-label={`Wishlist, ${wishlist.length} items`}>
-              <HeartIcon className="w-[22px] h-[22px]" mono />
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className="relative flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer" aria-label={`Wishlist, ${wishlist.length} items`}>
+              <HeartIcon className="w-[19px] h-[19px]" mono />
               {wishlist.length > 0 && <span className={badgeOnDark}>{wishlist.length > 99 ? '99+' : wishlist.length}</span>}
             </button>
             <button
               id="header-cart-btn-mobile"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
-              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
+              className="relative flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
               aria-label={`Bag, ${cartCount} items`}
             >
-              <BagIcon className="w-[22px] h-[22px]" mono />
+              <BagIcon className="w-[19px] h-[19px]" mono />
               {cartCount > 0 && <span className={badgeOnDark}>{cartCount > 99 ? '99+' : cartCount}</span>}
             </button>
           </div>
           {/* Slides away on the way down the page, back on the way up; always shown while the menu or search is open */}
           <div
-            className={`grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out ${rowHidden ? 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100 mt-3'}`}
+            className={`grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out ${rowHidden ? 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100 mt-2'}`}
             {...(rowHidden ? { inert: true } : {})}
           >
           <div className="min-h-0 overflow-hidden -m-1.5 p-1.5 flex items-center gap-2">
             <button
               id="mobile-menu-trigger"
               onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
+              className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-[22px] h-[22px]" strokeWidth={1.9} /> : <Menu className="w-[22px] h-[22px]" strokeWidth={1.9} />}
+              {isMobileMenuOpen ? <X className="w-[19px] h-[19px]" strokeWidth={1.9} /> : <Menu className="w-[19px] h-[19px]" strokeWidth={1.9} />}
             </button>
             {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
             <button
               id="header-search-btn"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(!isSearchOpen); }}
-              className="flex h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-4 text-left text-[14.5px] text-white cursor-pointer"
+              className="flex h-[38px] min-w-0 flex-1 items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3.5 text-left text-[13px] text-white cursor-pointer"
               aria-label={searchLabel}
               aria-expanded={isSearchOpen}
             >
-              <span className="flex shrink-0 text-highlight"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
+              <span className="flex shrink-0 text-highlight"><SearchIcon className="w-[17px] h-[17px]" mono /></span>
               <TypedSearchHint words={searchHints} fallback={searchLabel} />
             </button>
             <button
               type="button"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="sag-glow flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-sun text-ink cursor-pointer"
+              className="sag-glow flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-sun text-ink cursor-pointer"
               aria-label="Open search"
             >
-              <SearchIcon className="w-5 h-5" mono />
+              <SearchIcon className="w-[17px] h-[17px]" mono />
             </button>
           </div>
           </div>

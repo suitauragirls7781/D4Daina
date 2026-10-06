@@ -788,3 +788,27 @@
 @media (prefers-reduced-motion: reduce) {
   .sag-ring-amber::before, .sag-glow { animation: none; }
 }
+
+/* ------------------------------------------------------------------
+   Phone scale (owner, 2026-10-07): on phones everything sits one size
+   smaller. Tailwind's spacing and type are rem-based, so a smaller root
+   size tightens the whole layout at once; headings, buttons, fields and
+   chips (set in px) are trimmed here. Text in fields stays 16px, so a
+   phone does not zoom in when a field is tapped.
+------------------------------------------------------------------- */
+@media (max-width: 639px) {
+  html { font-size: 90.625%; }
+  body { font-size: 14px; line-height: 20px; }
+  /* Display headings: page titles 21px, section titles 18px (an h1 / h2 that is a product name or an order
+     number carries font-sans and keeps its own size) */
+  #app-main-content h1:not(.font-sans):not(.sr-only) { font-size: 21px !important; line-height: 27px !important; }
+  #app-main-content h2:not(.font-sans):not(.sr-only) { font-size: 18px !important; line-height: 24px !important; }
+}
+@layer components {
+  @media (max-width: 639px) {
+    .sag-btn-primary, .sag-btn-outline { height: 46px; padding-inline: 18px; font-size: 15px; }
+    .sag-input { height: 46px; }
+    .sag-chip { height: 40px; min-width: 44px; padding-inline: 12px; font-size: 14px; }
+    .sag-row { min-height: 46px; }
+  }
+}
