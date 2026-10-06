@@ -737,3 +737,10 @@
 @media (prefers-reduced-motion: reduce) {
   .sag-float, .sag-bob, .sag-ring::before { animation: none; }
 }
+
+/* Checkout "Blocks" (owner's pick, 2026-10-06): the open step's sections are lilac blocks */
+.sag-co-blocks > div > section.sag-card {
+  background: var(--sag-lilac);
+  box-shadow: none;
+  border-radius: 24px;
+}

@@ -1,168 +1,98 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useShop } from '../context/ShopContext';
-import { KIDS_TOYS, departmentOf } from '../utils/kids';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
 import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPLAY } from '../utils/storeContact';
-import { ArrowUp, ChevronDown, Clock, Lock, Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin } from 'lucide-react';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
-import { TruckIcon } from './StoreIcons';
-import { Assurance } from './Assurance';
 
-/** A link group: an accordion row on phones (48px), an open list from tablet width up. */
-const FooterGroup: React.FC<{ title: string; defaultOpen?: boolean; children: React.ReactNode }> = ({ title, defaultOpen = false, children }) => {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <nav aria-label={title} className="border-b border-white/15 sm:border-0">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        aria-expanded={open}
-        className="sm:hidden w-full h-12 flex items-center justify-between text-left text-[15px] font-semibold text-on-dark cursor-pointer"
-      >
-        {title}
-        <ChevronDown className={`w-4 h-4 text-on-dark-muted ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
-      </button>
-      <p className="hidden sm:block mb-2 text-[15px] font-semibold text-on-dark">{title}</p>
-      <ul className={`${open ? 'block' : 'hidden'} sm:block pb-3 sm:pb-0`}>{children}</ul>
-    </nav>
-  );
-};
-
+/**
+ * The "slim" footer (owner's pick 4): one dark block with the round logo and the name, three round buttons
+ * (Instagram, WhatsApp, email), every help and policy link as a chip, and one line of small print.
+ * It takes little room on a phone; the catalogue is reached from the header menu and the bottom navigation.
+ */
 export const Footer: React.FC = () => {
-  const { setActivePage, navigateToCategory, products = [], activePage } = useShop();
+  const { setActivePage, activePage } = useShop();
   const { storeSettings } = useAdmin();
   const whatsappDigits = (storeSettings?.whatsapp || SUPPORT_PHONE_DISPLAY).replace(/\D/g, '');
   const whatsappNumber = whatsappDigits.length === 10 ? `91${whatsappDigits}` : whatsappDigits;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hi Suit Aura Girls! I have a question.')}`;
   const email = storeSettings?.storeEmail || 'contact.suitauragirls@gmail.com';
-  const collections = [...new Set(products.filter((p) => departmentOf(p) === 'women').map((p) => p.category))].slice(0, 4);
-  const hasKidsToys = products.some((p) => departmentOf(p) !== 'women');
 
   const go = (page: ActivePage) => {
     setActivePage(page);
     window.scrollTo(0, 0);
   };
 
+  const round = 'w-[42px] h-[42px] shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-on-dark transition-colors';
   const socials = [
     { icon: InstagramIcon, href: storeSettings?.instagramUrl || STORE_INSTAGRAM_URL, label: 'Instagram' },
     { icon: FacebookIcon, href: storeSettings?.facebookUrl || '', label: 'Facebook' },
     { icon: XIcon, href: storeSettings?.twitterUrl || '', label: 'X (Twitter)' },
   ].filter((s) => s.href);
 
-  const policies: Array<[ActivePage, string]> = [
+  // The first chip (Track order) is the mint one
+  const links: Array<[ActivePage, string]> = [
+    ['track-order', 'Track order'],
+    ['return-policy', 'Returns & exchange'],
     ['shipping-policy', 'Shipping'],
-    ['return-policy', 'Returns & exchanges'],
     ['cancellation-policy', 'Cancellation'],
+    ['contact', 'Contact us'],
+    ['size-guide', 'Size guide'],
+    ['account', 'My account'],
+    ['about', 'About us'],
     ['privacy-policy', 'Privacy'],
     ['terms-policy', 'Terms'],
   ];
-  const Link: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
-    <li>
-      <button onClick={onClick} className="min-h-11 sm:min-h-9 inline-flex items-center text-left text-sm text-on-dark-muted hover:text-on-dark hover:underline underline-offset-4 transition-colors cursor-pointer">
-        {children}
-      </button>
-    </li>
-  );
 
   // Phones: room under the footer for whichever fixed bar the page shows (bottom navigation, bag bar or buy bar)
   const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(5.75rem+env(safe-area-inset-bottom))]';
 
   return (
-    <footer id="main-footer" className={`w-full rounded-t-[28px] bg-dark text-on-dark pt-8 sm:pt-12 md:pb-10 ${bottomRoom}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Need help? */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <p className="font-display text-[22px] leading-7 text-on-dark">Need help?</p>
-            <p className="mt-1 text-sm leading-5 text-on-dark-muted">Ask us about size, fabric or your order.</p>
-            <p className="mt-1 flex items-center gap-1.5 text-[13px] text-on-dark-muted">
-              <Clock className="w-4 h-4 shrink-0" aria-hidden="true" /> Monday to Saturday, 10:00 AM – 7:00 PM IST
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="h-12 px-5 rounded-control bg-white text-ink text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-sunken transition-colors">
-              <WhatsAppIcon className="w-5 h-5" /> Chat on WhatsApp
-            </a>
-            <button onClick={() => go('track-order')} className="h-12 px-5 rounded-control border-[1.5px] border-on-dark-muted text-on-dark text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-white/10 transition-colors cursor-pointer">
-              <TruckIcon className="w-5 h-5" mono /> Track my order
-            </button>
-            <button onClick={() => go('contact')} className="h-12 px-3 text-sm font-semibold text-on-dark underline underline-offset-4 hover:text-white cursor-pointer">
-              Contact us
-            </button>
-          </div>
-        </div>
-
-        {/* The four facts, worded in one place (Assurance.tsx) */}
-        <Assurance variant="grid" onDark className="mt-6" />
-
-        <div className="mt-8 grid gap-8 md:grid-cols-12">
-          {/* Links */}
-          <div className="md:col-span-7 md:order-2 grid sm:grid-cols-3 sm:gap-x-6 border-t border-white/15 sm:border-0">
-            {/* Shop starts open on phones: its links (Kids & Toys among them) are the quickest way into the catalogue from any page */}
-            <FooterGroup title="Shop" defaultOpen>
-              <Link onClick={() => navigateToCategory('All')}>All styles</Link>
-              <Link onClick={() => navigateToCategory('New Arrivals')}>New arrivals</Link>
-              {hasKidsToys && <Link onClick={() => navigateToCategory(KIDS_TOYS as any)}>Kids &amp; Toys</Link>}
-              {collections.map((name) => (
-                <Link key={name} onClick={() => navigateToCategory(name as any)}>{name}</Link>
-              ))}
-            </FooterGroup>
-            <FooterGroup title="Help">
-              <Link onClick={() => go('track-order')}>Track order</Link>
-              <Link onClick={() => go('account')}>My account</Link>
-              <Link onClick={() => go('size-guide')}>Size guide</Link>
-              <Link onClick={() => go('contact')}>Contact us</Link>
-              <Link onClick={() => go('about')}>About us</Link>
-            </FooterGroup>
-            <FooterGroup title="Policies">
-              {policies.map(([page, label]) => (
-                <Link key={page} onClick={() => go(page)}>{label}</Link>
-              ))}
-            </FooterGroup>
-          </div>
-
-          {/* Brand and business contact */}
-          <div className="md:col-span-5 md:order-1">
-            <span className="inline-flex rounded-control bg-white px-3 py-1.5">
-              <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" width="480" height="240" loading="lazy" className="h-12 w-auto object-contain" />
-            </span>
-            <p className="mt-3 text-sm leading-5 text-on-dark-muted max-w-sm">
-              {storeSettings?.tagline?.trim() || 'Ethnic and contemporary wear for women, designed and finished with care in India.'}
-            </p>
-            <a href={`mailto:${email}`} className="mt-3 min-h-11 inline-flex items-center gap-2 text-sm text-on-dark hover:underline underline-offset-4 break-all">
-              <Mail className="w-4 h-4 shrink-0 text-on-dark-muted" aria-hidden="true" /> {email}
-            </a>
-            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 py-1 text-[13px] leading-5 text-on-dark-muted hover:text-on-dark max-w-sm">
-              <MapPin className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
-              <span>{storeSettings?.address?.trim() || STORE_ADDRESS}</span>
-            </a>
-            {socials.length > 0 && (
-              <div className="mt-3 flex gap-2">
-                {socials.map(({ icon: Icon, href, label }) => (
-                  <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="w-11 h-11 rounded-full bg-white flex items-center justify-center">
-                    <Icon className="w-5 h-5" />
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="mt-8 pt-5 border-t border-white/15 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="flex items-start gap-1.5 text-[13px] leading-5 text-on-dark-muted">
-              <Lock className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" /> Secure online payment · UPI · Cards · Net banking
-            </p>
-            <p className="mt-1 text-[13px] leading-5 text-on-dark-muted">© {new Date().getFullYear()} Suit Aura Girls. All rights reserved.</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="self-start sm:self-auto h-11 px-4 rounded-control border-[1.5px] border-on-dark-muted text-sm font-semibold text-on-dark inline-flex items-center gap-1.5 hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <ArrowUp className="w-4 h-4" aria-hidden="true" /> Back to top
+    <footer id="main-footer" className={`w-full rounded-t-[28px] bg-dark text-on-dark pt-[18px] md:pb-6 ${bottomRoom}`}>
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <button type="button" onClick={() => go('home')} className="flex min-w-0 items-center gap-2.5 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
+            <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" loading="lazy" className="h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
+            <span className="truncate text-base font-extrabold tracking-[0.04em] text-on-dark">SUIT AURA <span className="text-highlight">GIRLS</span></span>
           </button>
+          <div className="flex shrink-0 gap-2">
+            {socials.slice(0, 1).map(({ icon: Icon, href, label }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={round}><Icon className="w-5 h-5" /></a>
+            ))}
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={round}><WhatsAppIcon className="w-5 h-5" /></a>
+            <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={round}><Mail className="w-5 h-5" aria-hidden="true" /></a>
+          </div>
+        </div>
+
+        <nav aria-label="Help and policies" className="mt-3.5">
+          <ul className="flex flex-wrap gap-[7px]">
+            {links.map(([page, label], index) => (
+              <li key={page}>
+                <button
+                  type="button"
+                  onClick={() => go(page)}
+                  className={`h-9 px-3.5 rounded-full text-[12.5px] font-bold inline-flex items-center cursor-pointer transition-colors ${index === 0 ? 'bg-highlight text-ink' : 'bg-white/10 text-on-dark hover:bg-white/20'}`}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+            {socials.slice(1).map(({ icon: Icon, href, label }) => (
+              <li key={label}>
+                <a href={href} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-full bg-white/10 text-[12.5px] font-bold text-on-dark inline-flex items-center gap-1.5 hover:bg-white/20"><Icon className="w-4 h-4" /> {label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="mt-3.5 flex items-start gap-1.5 text-xs leading-[18px] text-on-dark-muted hover:text-on-dark">
+          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
+          <span>{storeSettings?.address?.trim() || STORE_ADDRESS}</span>
+        </a>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs leading-[18px] text-on-dark-muted">
+          <p>© {new Date().getFullYear()} Suit Aura Girls</p>
+          <p>UPI · Secure online payment</p>
         </div>
       </div>
     </footer>

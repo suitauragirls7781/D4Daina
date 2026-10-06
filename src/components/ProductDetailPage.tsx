@@ -329,6 +329,8 @@ export const ProductDetailPage: React.FC = () => {
     ? product.images.filter(Boolean)
     : [product.image || ELEGANT_PLACEHOLDER_SVG];
   const colors = (product.colors || []).filter((c) => c && c.name);
+  // Colours that have their own photo in the gallery (the colour picker beside the photo jumps to it)
+  const colourPhotos = colors.map((c) => ({ name: c.name, index: c.imageUrl ? images.indexOf(c.imageUrl) : -1 })).filter((c) => c.index >= 0);
   // Accessories are sold only through "Complete the look": no size finder, size chart, compare or similar outfits
   const accessoryPage = isAccessory(product);
   // Kids wear is sized by age and toys are one size: the women's size finder and size chart don't apply
@@ -589,10 +591,11 @@ export const ProductDetailPage: React.FC = () => {
                 </div>
               )}
               <div className="flex-1 min-w-0">
+                <div className="grid grid-cols-[54%_minmax(0,1fr)] gap-3 lg:block">
                 <div
                   ref={strip}
                   onScroll={onStripScroll}
-                  className="sag-scroll-x scroll-px-4 sm:scroll-px-0 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto overscroll-x-contain"
+                  className="sag-scroll-x scroll-px-0 min-w-0 flex gap-2 overflow-x-auto overscroll-x-contain"
                 >
                   {images.map((img, idx) => (
                     <button
@@ -600,7 +603,7 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => { setImageIdx(idx); setLightbox(true); }}
                       aria-label={images.length > 1 ? `Open photo ${idx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className={`relative shrink-0 ${images.length > 1 ? 'w-[84vw] sm:w-[58%]' : 'w-full sm:w-[58%]'} lg:w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!`}
+                      className="relative shrink-0 w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!"
                     >
                       {idx === 0 ? (
                         <img {...productPhoto(img)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
@@ -619,6 +622,56 @@ export const ProductDetailPage: React.FC = () => {
                       )}
                     </button>
                   ))}
+                </div>
+                {/* Phones and tablets: everything needed to decide, beside the photo */}
+                <div className="lg:hidden min-w-0 flex flex-col items-start gap-2">
+                  {(product.isNewArrival || product.isBestSeller) && !soldOut && (
+                    <span className={`sag-badge ${product.isNewArrival ? 'bg-ink text-white' : 'bg-accent-tint text-accent'}`}>{product.isNewArrival ? 'New' : 'Bestseller'}</span>
+                  )}
+                  <h1 className="font-sans text-[15px] leading-[19px] font-bold text-ink line-clamp-4">{product.name}</h1>
+                  {reviews.length > 0 && (
+                    <button type="button" onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="-my-2 py-2 inline-flex items-center gap-1.5 text-xs text-ink-muted cursor-pointer" aria-label={`Rated ${avgRating.toFixed(1)} out of 5 from ${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`}>
+                      <span className="sag-num inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">{avgRating.toFixed(1)} ★</span>
+                      <span className="sag-num">({reviews.length})</span>
+                    </button>
+                  )}
+                  <div className="sag-num">
+                    <p className="text-[22px] leading-7 font-extrabold text-ink">₹{price.toLocaleString('en-IN')}</p>
+                    {mrp > price && (
+                      <p className="text-xs leading-4"><span className="sr-only">MRP </span><span className="text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span> <span className="font-extrabold text-sale">{discount}% off</span></p>
+                    )}
+                  </div>
+                  {sizes.length > 0 && !oneSize && (
+                    <select
+                      aria-label={sizeWord}
+                      value={size || ''}
+                      onChange={(e) => { if (e.target.value) pickSize(e.target.value as ProductSize); }}
+                      className={`h-11 w-full rounded-full border-[1.5px] bg-white pl-3.5 pr-2 text-[13px] font-semibold text-ink cursor-pointer ${needSize && !size ? 'border-danger' : 'border-control'}`}
+                    >
+                      <option value="">{sizeWord}: Select</option>
+                      {sizes.map((s) => <option key={s} value={s}>{sizeWord}: {s}</option>)}
+                    </select>
+                  )}
+                  {colourPhotos.length > 1 && (
+                    <select
+                      aria-label="Colour"
+                      value={colourPhotos.some((c) => c.index === imageIdx) ? String(imageIdx) : ''}
+                      onChange={(e) => { if (e.target.value !== '') showImage(Number(e.target.value)); }}
+                      className="h-11 w-full rounded-full border-[1.5px] border-control bg-white pl-3.5 pr-2 text-[13px] font-semibold text-ink cursor-pointer"
+                    >
+                      <option value="">Colour</option>
+                      {colourPhotos.map((c) => <option key={c.index} value={c.index}>{c.name}</option>)}
+                    </select>
+                  )}
+                  <span className="flex items-center gap-2">
+                    <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer ${fav ? 'bg-accent-tint text-accent' : 'bg-sunken text-ink'}`}>
+                      <Heart className={`w-5 h-5 ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.75} />
+                    </button>
+                    <button type="button" onClick={share} aria-label="Share this style" className="w-10 h-10 shrink-0 rounded-full bg-sunken flex items-center justify-center text-ink cursor-pointer">
+                      <Share2 className="w-5 h-5" strokeWidth={1.75} />
+                    </button>
+                  </span>
+                </div>
                 </div>
                 {images.length > 1 && (
                   <div ref={thumbs} className="sag-scroll-x lg:hidden mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto overscroll-x-contain">
@@ -653,8 +706,8 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Buy box */}
           <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-            <div className="mt-2 lg:mt-0 flex items-start gap-1">
-              <h1 className="flex-1 min-w-0 pt-2.5 font-sans text-lg leading-6 lg:text-[22px] lg:leading-7 font-semibold text-ink line-clamp-2">{product.name}</h1>
+            <div className="hidden lg:flex items-start gap-1">
+              <p role="heading" aria-level={1} className="flex-1 min-w-0 pt-2.5 font-sans text-[22px] leading-7 font-semibold text-ink line-clamp-2">{product.name}</p>
               <button
                 type="button"
                 onClick={() => toggleWishlist(product)}
@@ -670,7 +723,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Rating: only with real approved reviews. The row keeps its height either way. */}
-            <div className="min-h-5 flex items-center">
+            <div className="min-h-5 hidden lg:flex items-center">
               {reviews.length > 0 && (
                 <button onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="-my-3 py-3 inline-flex items-center gap-1.5 text-sm leading-5 text-ink cursor-pointer">
                   <Stars rating={avgRating} />
@@ -679,12 +732,12 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            <div className="sag-num mt-2 flex flex-wrap items-baseline gap-x-2.5">
+            <div className="sag-num mt-2 hidden lg:flex flex-wrap items-baseline gap-x-2.5">
               <span className="text-[28px] leading-8 font-bold text-ink">₹{price.toLocaleString('en-IN')}</span>
               {mrp > price && <span className="text-[15px] leading-5 text-ink-faint"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
               {discount > 0 && <span className="text-[15px] leading-5 font-bold text-sale">{discount}% off</span>}
             </div>
-            <p className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted">
+            <p className="sag-num mt-3 lg:mt-0.5 text-[13px] leading-[18px] text-ink-muted">
               {mrp > price && <span className="font-semibold text-sale">You save ₹{(mrp - price).toLocaleString('en-IN')} · </span>}Inclusive of all taxes
             </p>
             {toyPage && product.ageRange && (
@@ -740,7 +793,7 @@ export const ProductDetailPage: React.FC = () => {
             )}
 
             {sizes.length > 0 && !oneSize && (
-              <div id="pdp-size-selector" className="mt-3 scroll-mt-24">
+              <div id="pdp-size-selector" className={`mt-3 scroll-mt-24 ${kidsPage ? '' : 'hidden lg:block'}`}>
                 <div className="flex items-center justify-between gap-3 min-h-11">
                   <p className={`text-sm leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
                     {needSize && !size ? chooseSizeText : <><span className="text-ink-muted">{sizeWord}:</span> <span className="font-semibold">{size || 'Select'}</span></>}
@@ -798,19 +851,26 @@ export const ProductDetailPage: React.FC = () => {
               </form>
             )}
 
-            {/* Inline buttons from tablet width; on phones the fixed bar below carries them */}
-            <div className="mt-6 hidden md:block">
-              <div className="flex gap-3">
+            {womenSizing && sizes.length > 0 && !oneSize && (
+              <p className="lg:hidden mt-3 flex items-center gap-4">
+                {features.findMySize && <button type="button" onClick={() => setFindSizeOpen((v) => !v)} aria-expanded={findSizeOpen} className="sag-link">Find my size</button>}
+                <button type="button" onClick={() => setIsSizeGuideOpen(true)} className="sag-link">Size guide</button>
+              </p>
+            )}
+
+            {/* The two buttons, stacked on phones and side by side from tablet width (phones also keep the fixed bar) */}
+            <div className="mt-4 md:mt-6">
+              <div className="flex flex-col-reverse gap-2 md:flex-row md:gap-3">
                 {soldOut ? (
-                  <button type="button" onClick={notifyRestock} className="sag-btn-primary flex-1 gap-2 cursor-pointer">
+                  <button type="button" onClick={notifyRestock} className="sag-btn-primary md:flex-1 gap-2 cursor-pointer">
                     <Bell className="w-[18px] h-[18px]" aria-hidden="true" /> Notify me when back
                   </button>
                 ) : (
                   <>
-                    <button id="pdp-add-to-bag" type="button" onClick={() => (inBagNow ? openBag() : onAdd())} className="sag-btn-outline flex-1 gap-2 cursor-pointer">
+                    <button id="pdp-add-to-bag" type="button" onClick={() => (inBagNow ? openBag() : onAdd())} className="sag-btn-outline md:flex-1 gap-2 cursor-pointer">
                       {justAdded ? <><Check className="w-[18px] h-[18px]" aria-hidden="true" /> Added to bag</> : inBagNow ? 'View bag' : 'Add to bag'}
                     </button>
-                    <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary sag-btn-buy flex-[1.3] cursor-pointer">Buy now</button>
+                    <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary sag-btn-buy md:flex-[1.3] cursor-pointer">Buy now</button>
                   </>
                 )}
               </div>
@@ -818,38 +878,31 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* What the store stands behind, and the PIN code check, in one block */}
-            <div className="mt-6 rounded-card border border-brand-line bg-brand-wash px-4">
-              <div className="sag-row border-brand-line">
-                <span className="shrink-0 flex text-brand"><LockIcon className="w-5 h-5" mono /></span>
-                <span className="flex-1 min-w-0">
-                  {assurance.payment}
-                  <span className="block text-[13px] leading-[18px] font-normal text-ink-muted">Your order is confirmed only after the payment is verified.</span>
-                </span>
-              </div>
-              <button type="button" onClick={() => { setActivePage('return-policy'); window.scrollTo(0, 0); }} className="sag-row border-brand-line w-full text-left cursor-pointer">
-                <span className="shrink-0 flex text-brand"><ReturnIcon className="w-5 h-5" mono /></span>
-                <span className="flex-1 min-w-0">{assurance.returns}</span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
-              </button>
-              <button type="button" onClick={() => { setActivePage('shipping-policy'); window.scrollTo(0, 0); }} className="sag-row border-brand-line w-full text-left cursor-pointer">
-                <span className="shrink-0 flex text-brand"><TruckIcon className="w-5 h-5" mono /></span>
-                <span className="flex-1 min-w-0">
-                  {assurance.delivery}
-                  <span className="sag-num block text-[13px] leading-[18px] font-normal text-ink-muted">
-                    A tracking number is emailed when your order ships.{freeShippingThreshold > 0 ? ` Free shipping on orders above ${inr(freeShippingThreshold)}.` : ''}
-                  </span>
-                </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
-              </button>
-              <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about "${product.name}".`)} target="_blank" rel="noopener noreferrer" className="sag-row border-brand-line">
-                <span className="shrink-0 flex"><WhatsAppIcon className="w-5 h-5" /></span>
-                <span className="flex-1 min-w-0">
-                  {assurance.help}
-                  <span className="block text-[13px] leading-[18px] font-normal text-ink-muted">Ask us about size, fabric or delivery.</span>
-                </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
-              </a>
-              <DeliveryCheck product={product} quantity={qty} className="border-t border-brand-line py-3" />
+            <ul className="mt-5 grid grid-cols-4 gap-x-1 rounded-[20px] bg-dark px-1 py-3 text-center text-[11px] font-bold leading-[1.25] text-on-dark">
+              {([
+                { key: 'payment', icon: <LockIcon className="w-[17px] h-[17px]" mono />, text: assurance.payment },
+                { key: 'returns', icon: <ReturnIcon className="w-[17px] h-[17px]" mono />, text: assurance.returns, page: 'return-policy' as const },
+                { key: 'delivery', icon: <TruckIcon className="w-[17px] h-[17px]" mono />, text: assurance.delivery, page: 'shipping-policy' as const },
+                { key: 'help', icon: <WhatsAppIcon className="w-[17px] h-[17px]" />, text: 'Chat with us on WhatsApp', href: createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about "${product.name}".`) },
+              ]).map((fact) => {
+                const inner = (
+                  <>
+                    <span className="mb-1.5 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-highlight text-ink">{fact.icon}</span>
+                    <span>{fact.text}</span>
+                  </>
+                );
+                const cls = 'flex w-full flex-col items-center rounded-chip px-0.5 py-1 text-on-dark';
+                return (
+                  <li key={fact.key} className="flex">
+                    {fact.href ? <a href={fact.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                      : fact.page ? <button type="button" onClick={() => { setActivePage(fact.page!); window.scrollTo(0, 0); }} className={`${cls} cursor-pointer`}>{inner}</button>
+                      : <span className={cls}>{inner}</span>}
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="mt-3 rounded-card bg-sky px-4">
+              <DeliveryCheck product={product} quantity={qty} className="py-3" />
             </div>
           </div>
 

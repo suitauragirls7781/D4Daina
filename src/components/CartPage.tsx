@@ -4,7 +4,7 @@ import { useShop } from '../context/ShopContext';
 import { CartLines, CartTotals, EmptyBag, useBagTotal } from './CartContents';
 import { ProductCard } from './ProductCard';
 import { Assurance } from './Assurance';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, ChevronRight } from 'lucide-react';
 
 export const CartPage: React.FC = () => {
   const { cart, cartCount, products = [], setActivePage, navigateToCategory } = useShop();
@@ -23,10 +23,22 @@ export const CartPage: React.FC = () => {
   const checkout = () => setActivePage('checkout');
 
   return (
-    <div id="cart-page" className="bg-page pt-5 pb-28 sm:pt-8 md:pb-16">
+    <div id="cart-page" className="bg-page pt-3 pb-28 sm:pt-8 md:pb-16">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* The three steps to an order (owner's pick 4): the bag is step 1 */}
+        <ol aria-label="Steps to place the order" className="mb-4 flex items-center gap-1.5 text-xs font-bold lg:max-w-md">
+          {['Bag', 'Address', 'Pay'].map((step, index) => (
+            <React.Fragment key={step}>
+              {index > 0 && <li aria-hidden="true" className="h-0.5 flex-1 bg-line" />}
+              <li aria-current={index === 0 ? 'step' : undefined} className={`flex items-center gap-1.5 ${index === 0 ? 'text-ink' : 'text-ink-muted'}`}>
+                <span className={`sag-num flex h-[22px] w-[22px] items-center justify-center rounded-full text-[11px] ${index === 0 ? 'bg-brand text-white' : 'bg-line text-ink-muted'}`}>{index + 1}</span>
+                {step}
+              </li>
+            </React.Fragment>
+          ))}
+        </ol>
         <div className="flex items-end justify-between gap-3">
-          <h1 className="font-display text-[28px] leading-8 text-ink">
+          <h1 className="font-display text-[24px] leading-8 text-ink">
             Your bag <span className="font-sans text-sm font-normal tracking-normal text-ink-muted">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span>
           </h1>
           <button onClick={() => navigateToCategory('All')} className="hidden sm:inline-flex sag-link gap-1.5">
@@ -47,7 +59,7 @@ export const CartPage: React.FC = () => {
                 onClick={checkout}
                 className="sag-btn-primary hidden md:inline-flex w-full gap-2"
               >
-                <Lock className="w-[18px] h-[18px]" aria-hidden="true" /> Checkout securely
+                Continue to address <ChevronRight className="w-[18px] h-[18px]" aria-hidden="true" />
               </button>
               <Assurance variant="line" />
             </div>
@@ -75,8 +87,8 @@ export const CartPage: React.FC = () => {
               <p className="text-lg leading-[22px] font-bold text-ink sag-num">₹{total.toLocaleString('en-IN')}</p>
               <p className="text-[11px] leading-[14px] text-ink-muted">Total, incl. taxes</p>
             </div>
-            <button type="button" onClick={checkout} className="sag-btn-primary flex-1 min-w-0 px-3 gap-2">
-              <Lock className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> Checkout securely
+            <button type="button" onClick={checkout} className="sag-btn-primary flex-1 min-w-0 px-3 gap-1.5">
+              Continue to address <ChevronRight className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
             </button>
           </div>
         </div>,

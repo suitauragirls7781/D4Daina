@@ -926,6 +926,33 @@ export const CheckoutPage: React.FC = () => {
   const itemsText = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
   const fullNameText = `${firstName} ${lastName}`.trim();
   const stepIndex = ['details', 'summary', 'payment'].indexOf(checkoutStep);
+  // The three steps as blocks: what each is called, and the one line a closed block shows
+  const stepBlocks = [
+    { step: 'details' as const, title: 'Contact and address', done: [fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', '), next: 'Name, mobile, email and where to deliver' },
+    { step: 'summary' as const, title: 'Review your order', done: `${itemsText} checked`, next: `${itemsText} · check before you pay` },
+    { step: 'payment' as const, title: 'Payment', done: '', next: `Pay online · ${rupees(finalCartTotal)}` },
+  ];
+  const stepRow = (index: number) => {
+    const block = stepBlocks[index];
+    const done = index < stepIndex;
+    return (
+      <button
+        key={block.step}
+        type="button"
+        onClick={() => goToStep(block.step)}
+        className={`flex w-full items-center gap-2.5 rounded-[20px] px-3.5 py-3 text-left cursor-pointer ${done ? 'bg-mint' : 'bg-sky'}`}
+      >
+        <span className={`sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[13px] font-extrabold ${done ? 'bg-ok text-white' : 'bg-white text-ink'}`}>
+          {done ? <Check className="h-4 w-4" aria-hidden="true" /> : index + 1}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm leading-5 font-extrabold text-ink">{block.title}{done && <span className="sr-only"> (done)</span>}</span>
+          <span className={`sag-num block truncate text-xs leading-[18px] ${done ? 'text-mint-ink' : 'text-sky-ink'}`}>{done ? block.done : block.next}</span>
+        </span>
+        {done ? <span className="shrink-0 text-xs font-bold text-brand underline underline-offset-2">Edit</span> : <ChevronDown className="h-4 w-4 shrink-0 text-sky-ink" aria-hidden="true" />}
+      </button>
+    );
+  };
   const goBack = () => {
     if (checkoutStep === 'payment') setCheckoutStep('summary');
     else if (checkoutStep === 'summary') setCheckoutStep('details');
@@ -1035,37 +1062,12 @@ export const CheckoutPage: React.FC = () => {
             <WhatsAppIcon className="w-5 h-5" /> Help
           </a>
         </div>
-        <nav aria-label="Checkout steps" className="border-t border-line">
-          <ol className="max-w-6xl mx-auto flex items-center px-4 sm:px-6">
-            {([['details', 'Address'], ['summary', 'Review'], ['payment', 'Pay']] as const).map(([step, text], index, all) => {
-              const done = index < stepIndex;
-              const active = index === stepIndex;
-              return (
-                <li key={step} className={`flex items-center ${index < all.length - 1 ? 'flex-1' : ''}`}>
-                  <button
-                    type="button"
-                    onClick={() => goToStep(step)}
-                    aria-current={active ? 'step' : undefined}
-                    className="flex items-center gap-1.5 h-11 cursor-pointer"
-                  >
-                    <span className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? 'bg-ok text-white' : active ? 'bg-ink text-white' : 'border-[1.5px] border-control text-ink-muted'}`}>
-                      {done ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : index + 1}
-                    </span>
-                    <span className={`text-[13px] leading-[18px] whitespace-nowrap ${active ? 'font-bold text-ink' : done ? 'font-semibold text-ink' : 'font-medium text-ink-muted'}`}>{text}</span>
-                    {done && <span className="sr-only">(done)</span>}
-                  </button>
-                  {index < all.length - 1 && <span aria-hidden="true" className={`mx-2.5 h-px flex-1 ${done ? 'bg-ok' : 'bg-line'}`} />}
-                </li>
-              );
-            })}
-          </ol>
-        </nav>
       </div>
 
       <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-6 grid grid-cols-1 lg:grid-cols-12 gap-3 lg:gap-8 items-start">
 
         {/* Left column: the current step */}
-        <div className="lg:col-span-7 space-y-3 min-w-0">
+        <div className="sag-co-blocks lg:col-span-7 space-y-3 min-w-0">
 
           {errorMessage && (
             <div role="alert" className="rounded-control border border-danger-line bg-danger-tint p-3.5 text-sm leading-5 text-danger flex items-start gap-2.5">
@@ -1076,6 +1078,15 @@ export const CheckoutPage: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Finished steps: closed mint rows. Then the name of the step that is open. */}
+          <nav aria-label="Checkout steps" className="space-y-3">
+            {stepBlocks.slice(0, stepIndex).map((_, index) => stepRow(index))}
+            <p aria-current="step" className="flex items-center gap-2.5 px-1 pt-1">
+              <span className="sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-[13px] font-extrabold text-white">{stepIndex + 1}</span>
+              <span className="text-base leading-6 font-extrabold text-ink">{stepBlocks[stepIndex]?.title}</span>
+            </p>
+          </nav>
 
           {/* STEP 1: ADDRESS */}
           {checkoutStep === 'details' && (
@@ -1451,6 +1462,13 @@ export const CheckoutPage: React.FC = () => {
                   <span className="flex-1 min-w-0">Payment stuck? Chat on WhatsApp</span>
                 </a>
               </section>
+            </div>
+          )}
+
+          {/* Steps still to come: closed sky rows */}
+          {stepIndex < stepBlocks.length - 1 && (
+            <div className="space-y-3">
+              {stepBlocks.map((_, index) => (index > stepIndex ? stepRow(index) : null))}
             </div>
           )}
 

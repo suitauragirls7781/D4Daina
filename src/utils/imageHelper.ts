@@ -58,11 +58,11 @@ export const getCleanImageUrl = (url: string | undefined | null, targetWidth?: n
   return cleanUrl;
 };
 
-// The main product page photo, in the size the screen needs. A phone shows it about 330px wide: 828px is
-// sharp there (about 2.5x) and far lighter than 1100px, so the browser is told a phone needs 70vw.
+// The main product page photo, in the size the screen needs. On a phone it sits in the left half of the
+// screen (about 200px wide): 480px is sharp there (about 2.4x) and far lighter, so the browser is told 40vw.
 // The product card preloads the photo with the same srcset, so the page reuses that download.
 const PRODUCT_PHOTO_WIDTHS = [480, 828, 1100];
-export const PRODUCT_PHOTO_SIZES = '(min-width: 1024px) 50vw, (min-width: 640px) 58vw, 70vw';
+export const PRODUCT_PHOTO_SIZES = '(min-width: 1024px) 50vw, 40vw';
 /** src / srcSet / sizes for the big photo on the product page. */
 export const productPhoto = (url: string | undefined | null): { src: string; srcSet?: string; sizes?: string } => {
   const src = getCleanImageUrl(url, 828);

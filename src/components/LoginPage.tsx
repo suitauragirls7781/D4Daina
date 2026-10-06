@@ -202,22 +202,27 @@ export const LoginPage: React.FC = () => {
   const changeEmail = () => { setOtpStep(false); setError(null); };
 
   return (
-    <div className="min-h-[80vh] bg-page px-4 pt-2 pb-12 sm:py-12 flex items-start justify-center">
+    <div className="min-h-[80vh] bg-lilac rounded-b-[28px] px-4 pt-1 pb-10 sm:py-12 flex items-start justify-center">
       <div className="w-full max-w-[440px]">
         <button type="button" onClick={() => setActivePage('home')} className="sag-link gap-1.5">
           <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           <span>Back to shop</span>
         </button>
 
-        <div className="sag-card mt-1 p-4 sm:p-6">
-          <h1 className="font-display text-[28px] leading-8 text-ink">{title}</h1>
-          <p className="mt-1.5 text-sm leading-5 text-ink-muted">
-            {otpStep ? 'Enter the 6-digit code we emailed you.' : 'No password needed. We email you a one-time code.'}
-          </p>
+        <div className="mt-2">
+          <div className="text-center">
+            <span className="sag-ring inline-block rounded-full">
+              <img src="/suit-aura-mark-132.webp" alt="" width="72" height="72" className="h-[72px] w-[72px] rounded-full bg-white object-cover" />
+            </span>
+            <h1 className="mt-3.5 font-display text-[24px] leading-[30px] text-ink">{otpStep ? title : mode === 'login' ? 'Sign in to Suit Aura Girls' : 'Create your account'}</h1>
+            <p className="mt-1 text-[13px] leading-[18px] text-lilac-ink">
+              {otpStep ? 'Enter the 6-digit code we emailed you.' : 'Track orders, request returns and save addresses.'}
+            </p>
+          </div>
 
-          <div className="mt-5 space-y-5">
+          <div className="mt-5 space-y-4">
             {!otpStep && (
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-control bg-sunken" role="tablist" aria-label="Sign in or create an account">
+              <div className="grid grid-cols-2 gap-1 p-1 rounded-full bg-white/60" role="tablist" aria-label="Sign in or create an account">
                 {(['login', 'signup'] as AuthMode[]).map((tab) => (
                   <button
                     key={tab}
@@ -225,8 +230,8 @@ export const LoginPage: React.FC = () => {
                     role="tab"
                     aria-selected={mode === tab}
                     onClick={() => switchMode(tab)}
-                    className={`h-11 rounded-[8px] text-sm font-semibold transition-colors cursor-pointer ${
-                      mode === tab ? 'bg-white text-ink' : 'text-ink-muted hover:text-ink'
+                    className={`h-11 rounded-full text-sm font-bold transition-colors cursor-pointer ${
+                      mode === tab ? 'bg-white text-ink shadow-[0_1px_4px_rgba(34,27,51,0.10)]' : 'text-lilac-ink hover:text-ink'
                     }`}
                   >
                     {tab === 'login' ? 'Sign in' : 'New account'}
@@ -248,8 +253,8 @@ export const LoginPage: React.FC = () => {
                   <div id="auth-google" ref={googleButtonRef} className={`w-full flex justify-center ${googleLoading ? 'opacity-40 pointer-events-none' : ''}`} />
                   {googleLoading && <Loader2 className="absolute top-3 w-5 h-5 animate-spin text-ink" aria-label="Signing in with Google" />}
                 </div>
-                <div className="flex items-center gap-3 text-[13px] leading-[18px] text-ink-muted">
-                  <span className="h-px flex-1 bg-line" />or use your email<span className="h-px flex-1 bg-line" />
+                <div className="flex items-center gap-3 text-xs leading-[18px] font-bold text-lilac-ink">
+                  <span className="h-px flex-1 bg-brand-line" />or use your email<span className="h-px flex-1 bg-brand-line" />
                 </div>
               </>
             )}
@@ -260,11 +265,11 @@ export const LoginPage: React.FC = () => {
                   <>
                     <div>
                       <label htmlFor="signup-name" className="sag-label">Full name</label>
-                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" className="sag-input" />
+                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" className="sag-input rounded-full border-transparent focus:border-brand" />
                     </div>
                     <div>
                       <label htmlFor="signup-phone" className="sag-label">Mobile number</label>
-                      <div className="flex h-[52px] rounded-control border-[1.5px] border-control bg-white overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
+                      <div className="flex h-[52px] rounded-full border-[1.5px] border-transparent bg-white overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
                         <span className="flex items-center px-3.5 bg-sunken border-r border-line text-base text-ink-muted" aria-hidden="true">+91</span>
                         <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-white text-base text-ink placeholder:text-ink-faint focus:outline-none" />
                       </div>
@@ -273,19 +278,19 @@ export const LoginPage: React.FC = () => {
                 )}
                 <div>
                   <label htmlFor="auth-email" className="sag-label">Email</label>
-                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" className="sag-input" />
+                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" className="sag-input rounded-full border-transparent focus:border-brand" />
                 </div>
-                <button id="auth-send-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
+                <button id="auth-send-code" type="submit" disabled={loading} className="w-full h-[52px] rounded-full bg-ink text-white text-base font-bold inline-flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60">
                   {loading && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
                   <span>{loading ? 'Sending code…' : 'Email me a code'}</span>
                 </button>
-                <p className="text-[13px] leading-[18px] text-ink-muted text-center">
-                  {mode === 'login' ? 'New here? A code also creates your account.' : 'Already have an account? Use the Sign in tab.'}
+                <p className="text-[13px] leading-[18px] text-lilac-ink text-center">
+                  {mode === 'login' ? 'No password needed. New here? The code also creates your account.' : 'Already have an account? Use the Sign in tab.'}
                 </p>
               </form>
             ) : (
               <form onSubmit={handleVerify} className="space-y-5">
-                <div className="flex items-center justify-between gap-3 rounded-control bg-sunken px-3.5 py-2">
+                <div className="flex items-center justify-between gap-3 rounded-control bg-white px-3.5 py-2">
                   <div className="min-w-0">
                     <p className="text-[13px] leading-[18px] text-ink-muted">Code sent to</p>
                     <p className="text-sm leading-5 font-semibold text-ink break-all">{email}</p>
@@ -317,14 +322,14 @@ export const LoginPage: React.FC = () => {
                     ))}
                   </div>
                 </fieldset>
-                <p className="text-[13px] leading-[18px] text-ink-muted">The code expires in 10 minutes. Check spam if it has not arrived.</p>
+                <p className="text-[13px] leading-[18px] text-lilac-ink">The code expires in 10 minutes. Check spam if it has not arrived.</p>
                 <button id="auth-verify-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
                   {loading ? <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" /> : <Lock className="w-[18px] h-[18px]" aria-hidden="true" />}
                   <span>{loading ? 'Verifying…' : mode === 'signup' ? 'Verify & create account' : 'Verify & sign in'}</span>
                 </button>
                 <div className="flex justify-center">
                   {resendCooldown > 0 ? (
-                    <span className="sag-num inline-flex items-center min-h-11 text-sm text-ink-muted">Resend in {resendCooldown}s</span>
+                    <span className="sag-num inline-flex items-center min-h-11 text-sm text-lilac-ink">Resend in {resendCooldown}s</span>
                   ) : (
                     <button type="button" disabled={loading} onClick={handleResend} className="sag-link gap-1.5 disabled:opacity-60">
                       <RefreshCw className="w-4 h-4" aria-hidden="true" />
@@ -336,11 +341,6 @@ export const LoginPage: React.FC = () => {
             )}
           </div>
 
-          {!otpStep && (
-            <p className="mt-5 pt-4 border-t border-line text-[13px] leading-[18px] text-ink-muted text-center">
-              Track orders, request returns and save addresses.
-            </p>
-          )}
         </div>
       </div>
     </div>
