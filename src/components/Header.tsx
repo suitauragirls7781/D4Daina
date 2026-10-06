@@ -253,7 +253,7 @@ export const Header: React.FC = () => {
         {/* Phones and tablets: the "floating pill". A white pill with the logo, name, wishlist and bag;
             under it the menu, the search field and the PIN code check. */}
         <div className="lg:hidden max-w-2xl mx-auto p-2.5">
-          <div className="flex items-center gap-2 rounded-full bg-white py-[5px] pl-[5px] pr-1.5 shadow-[0_4px_14px_rgba(11,31,63,0.10)]">
+          <div className="flex items-center gap-2 rounded-full bg-white py-[5px] pl-[5px] pr-1.5 shadow-[0_4px_14px_rgba(10,10,10,0.10)]">
             <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
               <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" className="sag-float h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
               <span className="min-w-0">

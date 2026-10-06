@@ -109,7 +109,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         aria-pressed={fav}
         className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center cursor-pointer"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sunken sm:bg-white text-accent sm:shadow-[0_1px_4px_rgba(11,31,63,0.16)]">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sunken sm:bg-white text-accent sm:shadow-[0_1px_4px_rgba(10,10,10,0.16)]">
           <Heart className={`w-[18px] h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
         </span>
       </button>
