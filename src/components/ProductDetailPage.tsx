@@ -549,7 +549,7 @@ export const ProductDetailPage: React.FC = () => {
       <h2 className="text-xl leading-7 font-semibold text-ink">{title}</h2>
       <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
         {items.map((p) => (
-          <div key={p.id} className="w-[44%] sm:w-52 shrink-0 lg:w-auto min-w-0"><ProductCard product={p} compact /></div>
+          <div key={p.id} className="w-[86%] sm:w-52 shrink-0 lg:w-auto min-w-0"><ProductCard product={p} compact /></div>
         ))}
       </div>
     </section>

@@ -349,7 +349,7 @@ export const OrderConfirmationPage: React.FC = () => {
         {suggestions.length > 0 && (
           <section className="pt-6 space-y-4" aria-labelledby="also-like-title">
             <h2 id="also-like-title" className="font-display text-[22px] leading-7 text-ink">You may also like</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6">
               {suggestions.map((p) => (
                 <div key={p.id} onClickCapture={() => trackItem('feature_use', 'reco_click')}>
                   <ProductCard product={p} compact />

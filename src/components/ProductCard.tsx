@@ -76,8 +76,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   };
 
   return (
-    <article id={`product-card-${product.id}`} className="group relative flex flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
-      {/* The photo carries only the wishlist heart, in its top-right corner (the watermark is top-left); badge, price and button sit below */}
+    <article id={`product-card-${product.id}`} className="group relative grid grid-cols-[42%_minmax(0,1fr)] sm:flex sm:flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
+      {/* Phones: a row, photo left and details right, with the heart at the row's top-right corner.
+          From tablet width: photo on top, and the heart sits on the photo's top-right corner (the watermark is top-left). */}
       <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, compact ? 420 : 600)}
@@ -108,13 +109,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         aria-pressed={fav}
         className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center cursor-pointer"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-accent shadow-[0_1px_4px_rgba(34,27,51,0.16)]">
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sunken sm:bg-white text-accent sm:shadow-[0_1px_4px_rgba(34,27,51,0.16)]">
           <Heart className={`w-[18px] h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
         </span>
       </button>
 
-      <div className="flex flex-col flex-1 px-2.5 pt-2.5 pb-2.5">
-        <div className="flex items-center min-h-[22px] mb-1">
+      <div className="flex flex-col flex-1 min-w-0 py-3 pr-3 pl-3 sm:px-2.5 sm:pt-2.5 sm:pb-2.5">
+        <div className="flex items-center min-h-[22px] mb-1 pr-10 sm:pr-0">
           {badge ? (
             <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : 'bg-ink text-white'}`}>
               {badge}
@@ -124,7 +125,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           )}
         </div>
 
-        <h3 className="text-[13px] leading-[17px] font-semibold text-ink line-clamp-2 min-h-[34px]" title={product.name}>
+        <h3 className="text-[13px] leading-[17px] font-bold sm:font-semibold text-ink sm:line-clamp-2 sm:min-h-[34px]" title={product.name}>
           <a href={href} onClick={openProduct} className="hover:underline underline-offset-2 focus-visible:underline">{product.name}</a>
         </h3>
 

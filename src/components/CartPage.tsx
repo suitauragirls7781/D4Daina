@@ -72,7 +72,7 @@ export const CartPage: React.FC = () => {
         {suggestions.length > 0 && (
           <section className="mt-8 sm:mt-12">
             <h2 className="mb-4 font-display text-[22px] leading-7 text-ink">You may also like</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {suggestions.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
           </section>

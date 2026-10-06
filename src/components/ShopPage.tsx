@@ -592,7 +592,7 @@ export const ShopPage: React.FC = () => {
   const sortChoices = SORTS.filter((s) => s.key !== 'top-rated' || hasRatings);
   const tool = 'shrink-0 whitespace-nowrap h-11 px-3.5 rounded-chip border-[1.5px] border-control bg-white text-sm font-medium text-ink inline-flex items-center gap-1.5 hover:bg-sunken transition-colors cursor-pointer';
   const barButton = 'flex-1 min-w-0 h-11 px-3 rounded-control border-[1.5px] border-ink bg-white text-sm font-semibold text-ink inline-flex items-center justify-center gap-2 hover:bg-sunken transition-colors cursor-pointer';
-  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9';
+  const grid = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-9';
   // Collections that really have products, offered when a listing comes up empty
   const suggestions = useMemo(() => {
     const counts = new Map<string, number>();

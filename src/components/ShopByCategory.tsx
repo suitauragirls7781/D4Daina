@@ -37,11 +37,12 @@ export const ShopByCategory: React.FC = () => {
 
   if (cards.length === 0 && kidsToys.count === 0) return null;
 
-  const tile = 'group block w-[76px] sm:w-[92px] lg:w-[112px] text-center cursor-pointer rounded-[22px]';
+  const tile = 'group block w-[78px] sm:w-[92px] lg:w-[112px] pt-1 text-center cursor-pointer rounded-[22px]';
   // Each tile sits on the next pastel block colour
   const TILES = ['bg-peach', 'bg-mint', 'bg-sky', 'bg-lilac', 'bg-butter'];
-  const photoOn = (index: number) => `block aspect-square w-full overflow-hidden rounded-[22px] ${TILES[index % TILES.length]}`;
-  const name = 'mt-1.5 block text-xs sm:text-[13px] leading-4 font-semibold text-ink line-clamp-2';
+  // Story circles (owner's pick 2): a round photo inside the thin ring that turns slowly; every other ring turns the other way
+  const photoOn = (index: number) => `sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mx-auto block h-[70px] w-[70px] sm:h-[84px] sm:w-[84px] lg:h-[100px] lg:w-[100px] rounded-full ${TILES[index % TILES.length]}`;
+  const name = 'mt-2 block text-xs sm:text-[13px] leading-4 font-bold text-ink line-clamp-2';
   const count = 'sr-only';
   const designs = (n: number) => `${n} ${n === 1 ? 'design' : 'designs'}`;
 
@@ -52,7 +53,7 @@ export const ShopByCategory: React.FC = () => {
           <HomeSectionHeader titleId="shop-by-category-title" title="Shop by category" className="mb-3 lg:mb-5" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
         </div>
 
-        <ul className="sag-scroll-x flex gap-3 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+        <ul className="sag-scroll-x flex gap-2.5 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
           <li className="shrink-0">
             <button type="button" onClick={() => navigateToCategory('All')} className={tile}>
               <span className={`${photoOn(3)} flex items-center justify-center`}>
@@ -71,7 +72,7 @@ export const ShopByCategory: React.FC = () => {
                     alt=""
                     loading="eager"
                     decoding="async"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full rounded-full object-cover object-top"
                   />
                 </span>
                 <span className={name}>{card.name}</span>
@@ -83,7 +84,7 @@ export const ShopByCategory: React.FC = () => {
             <li className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(KIDS_TOYS as any)} className={tile}>
                 <span className={photoOn(cards.length)}>
-                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full object-cover object-top" />
+                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full rounded-full object-cover object-top" />
                 </span>
                 <span className={name}>{KIDS_TOYS}</span>
                 <span className={count}>{designs(kidsToys.count)}</span>

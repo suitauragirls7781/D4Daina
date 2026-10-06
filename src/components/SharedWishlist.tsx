@@ -50,7 +50,7 @@ export const SharedWishlistView: React.FC<{ id: string }> = ({ id }) => {
               <p className="sag-num text-sm text-ink-muted">{items.length} {items.length === 1 ? 'style' : 'styles'}</p>
               {items.length > 0 && <button onClick={saveAll} className="sag-btn-outline h-11 px-4 text-sm gap-1.5"><Heart className="w-4 h-4" /> Save all to my wishlist</button>}
             </div>
-            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-9">
               {items.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
             {items.length === 0 && (

@@ -14,7 +14,7 @@ export const HOME_WRAP = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
 /** Section rhythm: 32px on phones, 48px on desktop. */
 export const HOME_SECTION = 'w-full py-8 lg:py-12';
 /** One card in a horizontal product rail: two and a bit cards show on a phone, so the rail reads as swipeable. */
-export const HOME_RAIL_ITEM = 'shrink-0 w-[44%] max-w-[200px] sm:w-[220px] sm:max-w-none lg:w-[250px]';
+export const HOME_RAIL_ITEM = 'shrink-0 w-[86%] max-w-[360px] sm:w-[220px] sm:max-w-none lg:w-[250px]';
 
 interface HomeSectionHeaderProps {
   title: string;
@@ -64,7 +64,7 @@ export const FeaturedCollection: React.FC = () => {
     <section id="featured-collection" aria-labelledby="featured-collection-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader titleId="featured-collection-title" title="Featured collection" text="Styles we love right now." action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 lg:gap-x-6 lg:gap-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6 lg:gap-x-6 lg:gap-y-8">
           {items.map((product, index) => (
             <div key={product.id} className={index >= 6 ? 'hidden lg:block' : index >= 4 ? 'hidden md:block' : ''}>
               <ProductCard product={product} />

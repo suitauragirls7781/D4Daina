@@ -917,7 +917,7 @@ export const AccountPage: React.FC = () => {
                 ) : (
                   <>
                     <SectionIntro title="Wishlist" text={`${wishlist.length} ${wishlist.length === 1 ? 'style' : 'styles'} saved to your account.`} />
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-3 sm:gap-y-6">
                       {wishlist.map((saved) => {
                         const live = allProducts.find((p) => String(p.id) === String(saved.id));
                         return live ? <ProductCard key={saved.id} product={live} /> : (
