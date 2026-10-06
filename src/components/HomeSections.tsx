@@ -44,7 +44,7 @@ export const HomeSectionHeader: React.FC<HomeSectionHeaderProps> = ({ title, tex
 
 /** The four store facts, straight under the hero. The wording lives in Assurance.tsx. */
 export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assurance' }) => (
-  <section id={id} aria-label="Shopping with us" className="w-full bg-white pb-6 lg:pb-8">
+  <section id={id} aria-label="Shopping with us" className="w-full pt-4 pb-1 lg:pt-0 lg:pb-8">
     <div className={HOME_WRAP}>
       <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />
     </div>
@@ -61,7 +61,7 @@ export const FeaturedCollection: React.FC = () => {
   }, [products]);
   if (items.length === 0) return null;
   return (
-    <section id="featured-collection" aria-labelledby="featured-collection-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="featured-collection" aria-labelledby="featured-collection-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader titleId="featured-collection-title" title="Featured collection" text="Styles we love right now." action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 lg:gap-x-6 lg:gap-y-8">
@@ -89,7 +89,7 @@ export const NewArrivalsRail: React.FC = () => {
   }, [products]);
   if (items.length === 0) return null;
   return (
-    <section id="new-arrivals-rail" aria-labelledby="new-arrivals-title" className={`${HOME_SECTION} bg-page`}>
+    <section id="new-arrivals-rail" aria-labelledby="new-arrivals-title" className={`${HOME_SECTION} mt-5 rounded-[28px] bg-mint`}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
           <HomeSectionHeader titleId="new-arrivals-title" title="New arrivals" text="Just in this week." action={{ label: 'View all', onClick: () => navigateToCategory('New Arrivals') }} />
@@ -119,7 +119,7 @@ export const KidsCorner: React.FC = () => {
   const current = groups[Math.min(tab, groups.length - 1)];
   const hasKids = groups.some((g) => g.key !== TOYS);
   return (
-    <section id="kids-corner" aria-labelledby="kids-corner-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="kids-corner" aria-labelledby="kids-corner-title" className={`${HOME_SECTION} mt-5 rounded-[28px] bg-sky`}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
           <HomeSectionHeader
@@ -181,7 +181,7 @@ export const OfferBanner: React.FC = () => {
     : prepaidPercentLine || offers[0];
 
   return (
-    <section id="offer-banner" aria-labelledby="offer-banner-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="offer-banner" aria-labelledby="offer-banner-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <div className="rounded-card border border-sale-line bg-sale-tint p-5 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
           <div className="min-w-0 max-w-2xl">
@@ -227,7 +227,7 @@ export const AskAssistantRow: React.FC = () => {
   const { features } = useDiscovery();
   if (!features.assistant) return null;
   return (
-    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full bg-white pb-8 min-[1440px]:hidden">
+    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full pb-8 min-[1440px]:hidden">
       <div className={HOME_WRAP}>
         <button
           type="button"
@@ -248,7 +248,7 @@ export const AskAssistantRow: React.FC = () => {
 
 /** Why shop with us: the same four facts as everywhere else (Assurance.tsx), never a second set of claims. */
 export const WhyShop: React.FC = () => (
-  <section id="why-shop-with-us" aria-labelledby="why-shop-title" className={`${HOME_SECTION} bg-page`}>
+  <section id="why-shop-with-us" aria-labelledby="why-shop-title" className={HOME_SECTION}>
     <div className={`${HOME_WRAP} lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center`}>
       <div className="lg:col-span-5">
         <HomeSectionHeader
@@ -286,7 +286,7 @@ export const NewsletterSignup: React.FC = () => {
   };
 
   return (
-    <section id="newsletter-section" aria-labelledby="newsletter-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="newsletter-section" aria-labelledby="newsletter-title" className={`${HOME_SECTION} rounded-t-[28px] bg-lilac`}>
       <div className={HOME_WRAP}>
         <div className="rounded-card border border-brand-line bg-brand-wash p-5 sm:p-8 lg:p-10 lg:flex lg:items-center lg:justify-between lg:gap-10">
           <div className="lg:max-w-md">

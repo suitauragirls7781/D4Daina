@@ -52,9 +52,10 @@ export const MobileAppNavbar: React.FC = () => {
     <nav
       id="mobile-app-bottom-navbar"
       aria-label="Mobile navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] bg-white border-t border-line pb-[env(safe-area-inset-bottom)] select-none"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] px-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] select-none pointer-events-none"
     >
-      <div className="max-w-md mx-auto h-14 grid grid-cols-5">
+      {/* A dark pill that floats above the bottom edge; the current tab is a mint tile with dark text */}
+      <div className="pointer-events-auto max-w-md mx-auto grid grid-cols-5 gap-0.5 rounded-[22px] bg-dark p-1.5 shadow-[0_8px_24px_-8px_rgba(34,27,51,0.45)]">
         {tabs.map(({ id, label, icon: Icon, active, count, dot }) => (
           <button
             key={id}
@@ -63,19 +64,18 @@ export const MobileAppNavbar: React.FC = () => {
             onClick={() => go(id)}
             aria-current={active ? 'page' : undefined}
             aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
-            className={`relative h-full flex flex-col items-center justify-center gap-1 cursor-pointer ${active ? 'text-brand' : 'text-ink-muted'}`}
+            className={`relative h-[50px] flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${active ? 'bg-highlight text-ink' : 'text-on-dark-muted'}`}
           >
-            {active && <span aria-hidden="true" className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-b-sm bg-brand" />}
             <span className="relative flex">
-              <Icon className="w-6 h-6" mono={!active} />
+              <Icon className="w-[22px] h-[22px]" mono />
               {Boolean(count) && (
-                <span className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold tabular-nums leading-none flex items-center justify-center ring-2 ring-white">
+                <span className={`absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold tabular-nums leading-none flex items-center justify-center ring-2 ${active ? 'ring-highlight' : 'ring-dark'}`}>
                   {count! > 99 ? '99+' : count}
                 </span>
               )}
-              {dot && <span className="absolute -bottom-0.5 -right-1 w-2 h-2 rounded-full bg-ok ring-2 ring-white" />}
+              {dot && <span className={`absolute -bottom-0.5 -right-1 w-2 h-2 rounded-full bg-[#3DDC84] ring-2 ${active ? 'ring-highlight' : 'ring-dark'}`} />}
             </span>
-            <span className={`text-[11px] leading-3 whitespace-nowrap ${active ? 'font-bold' : 'font-medium'}`}>{label}</span>
+            <span className={`text-[11px] leading-3 whitespace-nowrap ${active ? 'font-bold' : 'font-semibold'}`}>{label}</span>
           </button>
         ))}
       </div>

@@ -8,8 +8,8 @@ import { fromCatalogOrLive } from '../lib/catalog';
 import { useAdmin } from '../context/AdminContext';
 import { deliveryEstimateText } from '../utils/delivery';
 
-const PIN_KEY = 'sag_user_pincode';
-const PIN_RE = /^[1-9]\d{5}$/;
+export const PIN_KEY = 'sag_user_pincode';
+export const PIN_RE = /^[1-9]\d{5}$/;
 const LOOKUP_TIMEOUT_MS = 8000;
 
 type Place = { district: string; state: string };
@@ -18,7 +18,7 @@ type Status = 'idle' | 'loading' | 'ok' | 'invalid' | 'not-found' | 'error';
 // PIN codes are looked up in the India Post directory (the same service the checkout uses),
 // once per PIN code per visit. A failed lookup is forgotten so Retry asks again.
 const lookups = new Map<string, Promise<Place | null>>();
-const lookupPincode = (pin: string): Promise<Place | null> => {
+export const lookupPincode = (pin: string): Promise<Place | null> => {
   const cached = lookups.get(pin);
   if (cached) return cached;
   const controller = new AbortController();

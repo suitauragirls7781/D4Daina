@@ -10,11 +10,82 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { isAvailable, searchQueryMatcher } from '../utils/smartQuery';
 import { getCleanImageUrl } from '../utils/imageHelper';
-import { ChevronDown, ChevronRight, Clock, Menu, Trash2, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, CircleAlert, CircleCheck, Clock, Loader2, Menu, Trash2, X } from 'lucide-react';
+import { PIN_KEY, PIN_RE, lookupPincode } from './DeliveryCheck';
 import { BagIcon } from './BrandIcons';
-import { HeartIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
+import { HeartIcon, PinIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
+
+/**
+ * "PIN" in the header: the shopper types a PIN code and sees the place it belongs to (India Post directory,
+ * the same lookup the product page and the checkout use). The store delivers across India, so a PIN code
+ * that exists is one we deliver to. The PIN code is remembered for the product page's delivery check.
+ */
+const HeaderPinCheck: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [pin, setPin] = useState(() => {
+    try { const saved = localStorage.getItem(PIN_KEY) || ''; return PIN_RE.test(saved) ? saved : ''; } catch { return ''; }
+  });
+  const [state, setState] = useState<{ status: 'idle' | 'loading' | 'ok' | 'invalid' | 'not-found' | 'error'; place?: string }>({ status: 'idle' });
+  const field = useRef<HTMLInputElement>(null);
+  const request = useRef(0);
+  useEffect(() => { field.current?.focus(); }, []);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const check = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!PIN_RE.test(pin)) { setState({ status: 'invalid' }); return; }
+    const id = ++request.current;
+    setState({ status: 'loading' });
+    lookupPincode(pin)
+      .then((place) => {
+        if (id !== request.current) return;
+        if (!place) { setState({ status: 'not-found' }); return; }
+        try { localStorage.setItem(PIN_KEY, pin); } catch {}
+        setState({ status: 'ok', place: [place.district, place.state].filter(Boolean).join(', ') });
+      })
+      .catch(() => { if (id === request.current) setState({ status: 'error' }); });
+  };
+
+  return (
+    <div id="header-pin-panel" className="sag-drop relative">
+      <div className="absolute left-0 right-0 top-full h-screen bg-ink/50 sag-fade" onClick={onClose} aria-hidden="true" />
+      <div className="relative mx-2.5 mb-2.5 rounded-card bg-white p-4 shadow-[var(--sag-shadow-pop)]">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-base font-bold leading-6 text-ink">Check delivery to your PIN code</p>
+          <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 -mt-2 -mr-2 shrink-0 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer"><X className="w-5 h-5" /></button>
+        </div>
+        <form onSubmit={check} className="mt-2 flex gap-2">
+          <input
+            ref={field}
+            id="header-pin-input"
+            value={pin}
+            onChange={(e) => { setPin(e.target.value.replace(/\D/g, '').slice(0, 6)); setState({ status: 'idle' }); }}
+            inputMode="numeric"
+            autoComplete="postal-code"
+            placeholder="6-digit PIN code"
+            aria-label="PIN code"
+            aria-invalid={state.status === 'invalid' || state.status === 'not-found'}
+            className="sag-input h-12 flex-1 min-w-0 sag-num"
+          />
+          <button type="submit" disabled={state.status === 'loading'} className="sag-btn-primary h-12 px-5 text-sm shrink-0 gap-1.5">
+            {state.status === 'loading' && <Loader2 className="w-4 h-4 animate-spin" />} Check
+          </button>
+        </form>
+        <div className="mt-2 min-h-5 text-sm leading-5" role="status" aria-live="polite">
+          {state.status === 'ok' && <p className="flex items-start gap-1.5 font-semibold text-ok"><CircleCheck className="w-4 h-4 mt-0.5 shrink-0" /> We deliver to {state.place} ({pin}).</p>}
+          {state.status === 'invalid' && <p className="flex items-start gap-1.5 font-semibold text-danger"><CircleAlert className="w-4 h-4 mt-0.5 shrink-0" /> Enter a 6-digit PIN code.</p>}
+          {state.status === 'not-found' && <p className="flex items-start gap-1.5 font-semibold text-danger"><CircleAlert className="w-4 h-4 mt-0.5 shrink-0" /> We could not find this PIN code. Please check it.</p>}
+          {state.status === 'error' && <p className="flex items-start gap-1.5 font-semibold text-danger"><CircleAlert className="w-4 h-4 mt-0.5 shrink-0" /> The PIN code could not be checked right now. Please try again.</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const Header: React.FC = () => {
   const { user } = useAuth();
@@ -39,6 +110,7 @@ export const Header: React.FC = () => {
   const { features } = useDiscovery();
   const [searchInput, setSearchInput] = useState('');
   const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
@@ -127,18 +199,71 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-line select-none">
-        <div className="max-w-7xl mx-auto px-1 sm:px-4 lg:px-8 h-[52px] lg:h-[68px] flex items-center justify-between gap-1 sm:gap-3">
-          <div className="flex items-center min-w-0">
+      <header className="sticky top-0 z-50 w-full bg-lilac lg:bg-white lg:border-b lg:border-line select-none">
+        {/* Phones and tablets: the "floating pill". A white pill with the logo, name, wishlist and bag;
+            under it the menu, the search field and the PIN code check. */}
+        <div className="lg:hidden max-w-2xl mx-auto p-2.5">
+          <div className="flex items-center gap-2 rounded-full bg-white py-[5px] pl-[5px] pr-1.5 shadow-[0_4px_14px_rgba(34,27,51,0.10)]">
+            <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
+              <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" className="sag-float h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
+              <span className="min-w-0">
+                <span className="block truncate text-base font-extrabold leading-[17px] tracking-[0.04em] text-ink">SUIT AURA <span className="text-brand">GIRLS</span></span>
+                <span className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold leading-[14px] text-mint-ink">
+                  <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0 rounded-full bg-ok" />
+                  <span className="truncate">Delivery across India</span>
+                </span>
+              </span>
+            </button>
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-sunken text-ink cursor-pointer" aria-label={`Wishlist, ${wishlist.length} items`}>
+              <HeartIcon className="w-[22px] h-[22px]" mono />
+              {wishlist.length > 0 && <span className={badge}>{wishlist.length > 99 ? '99+' : wishlist.length}</span>}
+            </button>
+            <button
+              id="header-cart-btn-mobile"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setPinOpen(false); setIsCartDrawerOpen(true); }}
+              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-sunken text-ink cursor-pointer"
+              aria-label={`Bag, ${cartCount} items`}
+            >
+              <BagIcon className="w-[22px] h-[22px]" mono />
+              {cartCount > 0 && <span className={badge}>{cartCount > 99 ? '99+' : cartCount}</span>}
+            </button>
+          </div>
+          <div className="mt-2 flex items-center gap-2">
             <button
               id="mobile-menu-trigger"
-              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className={`${iconButton} flex lg:hidden`}
+              onClick={() => { setIsSearchOpen(false); setPinOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-ink cursor-pointer"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-6 h-6" strokeWidth={1.75} /> : <Menu className="w-6 h-6" strokeWidth={1.75} />}
+              {isMobileMenuOpen ? <X className="w-[22px] h-[22px]" strokeWidth={1.9} /> : <Menu className="w-[22px] h-[22px]" strokeWidth={1.9} />}
             </button>
+            {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
+            <button
+              id="header-search-btn"
+              onClick={() => { setIsMobileMenuOpen(false); setPinOpen(false); setIsSearchOpen(!isSearchOpen); }}
+              className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white px-3.5 text-left text-sm text-ink-muted cursor-pointer"
+              aria-label={searchLabel}
+              aria-expanded={isSearchOpen}
+            >
+              <span className="flex shrink-0 text-brand"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
+              <span className="truncate">{searchLabel}</span>
+            </button>
+            <button
+              id="header-pin-btn"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setPinOpen(!pinOpen); }}
+              className="flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[13px] font-bold text-white cursor-pointer"
+              aria-label="Check delivery to your PIN code"
+              aria-expanded={pinOpen}
+            >
+              <span className="flex text-sun"><PinIcon className="w-4 h-4" mono /></span> PIN
+            </button>
+          </div>
+        </div>
+        {pinOpen && <div className="lg:hidden"><HeaderPinCheck onClose={() => setPinOpen(false)} /></div>}
+
+        <div className="hidden lg:flex max-w-7xl mx-auto px-8 h-[68px] items-center justify-between gap-3">
+          <div className="flex items-center min-w-0">
             <button
               id="header-brand-logo"
               onClick={() => setActivePage('home')}
@@ -161,7 +286,7 @@ export const Header: React.FC = () => {
               type="button"
               id="desktop-search-field"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="w-full h-11 pl-11 pr-12 rounded-control border-[1.5px] border-control bg-white hover:bg-page text-left text-sm text-ink-muted truncate cursor-pointer transition-colors"
+              className="w-full h-11 pl-11 pr-12 rounded-full bg-sunken hover:bg-sunken-deep text-left text-sm text-ink-muted truncate cursor-pointer transition-colors"
             >
               {searchLabel}
             </button>
@@ -172,10 +297,6 @@ export const Header: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-0 lg:gap-1 shrink-0">
-            {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
-            <button id="header-search-btn" onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(!isSearchOpen); }} className={`${iconButton} flex lg:hidden`} aria-label={searchLabel} aria-expanded={isSearchOpen}>
-              <SearchIcon className="w-[22px] h-[22px]" mono />
-            </button>
             {/* Phones reach the wishlist and account from the bottom bar, so these two show from tablet width up */}
             <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className={`${iconButton} hidden md:flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
               <HeartIcon className="w-[22px] h-[22px]" mono />
@@ -271,7 +392,7 @@ export const Header: React.FC = () => {
         </div>
 
         {isSearchOpen && (
-          <div id="search-drawer-overlay" className="sag-drop relative border-t border-line bg-white">
+          <div id="search-drawer-overlay" className="sag-drop relative lg:border-t lg:border-line bg-white">
             {/* Dim the page under the panel; a tap outside closes it */}
             <div className="absolute left-0 right-0 top-full h-screen bg-ink/50 sag-fade" onClick={() => setIsSearchOpen(false)} aria-hidden="true" />
             <div className="relative max-w-3xl mx-auto px-4 sm:px-8 pt-3 pb-6 max-h-[calc(100vh-5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain">

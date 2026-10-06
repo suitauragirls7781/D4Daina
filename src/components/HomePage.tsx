@@ -72,7 +72,7 @@ export const HomePage: React.FC = () => {
     .sort((first, second) => first.order - second.order);
 
   return (
-    <div id="dynamic-storefront-homepage" className="flex flex-col relative gap-0 bg-white">
+    <div id="dynamic-storefront-homepage" className="flex flex-col relative gap-0 bg-page">
       {visibleSections.map((section, index) => (
         <React.Fragment key={section.id}>
           {renderSectionComponent(section.key)}

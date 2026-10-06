@@ -76,9 +76,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   };
 
   return (
-    <article id={`product-card-${product.id}`} className="group relative flex flex-col h-full">
-      {/* The photo carries nothing: badge, heart, price and button all sit below it */}
-      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden rounded-control bg-sunken">
+    <article id={`product-card-${product.id}`} className="group relative flex flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
+      {/* The photo carries only the wishlist heart, in its top-right corner (the watermark is top-left); badge, price and button sit below */}
+      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, compact ? 420 : 600)}
           alt={product.name}
@@ -100,42 +100,45 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           />
         )}
       </a>
+      <button
+        id={`wishlist-btn-${product.id}`}
+        type="button"
+        onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+        aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
+        aria-pressed={fav}
+        className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center cursor-pointer"
+      >
+        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-accent shadow-[0_1px_4px_rgba(34,27,51,0.16)]">
+          <Heart className={`w-[18px] h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
+        </span>
+      </button>
 
-      <div className="flex flex-col flex-1 pt-1">
-        <div className="flex items-center justify-between gap-2 min-h-11">
+      <div className="flex flex-col flex-1 px-2.5 pt-2.5 pb-2.5">
+        <div className="flex items-center min-h-[22px] mb-1">
           {badge ? (
-            <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : ''}`}>
+            <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : 'bg-ink text-white'}`}>
               {badge}
             </span>
           ) : (
             <span className="min-w-0 truncate text-xs text-ink-muted">{product.category}</span>
           )}
-          <button
-            id={`wishlist-btn-${product.id}`}
-            type="button"
-            onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
-            aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
-            aria-pressed={fav}
-            className={`w-11 h-11 -mr-2 shrink-0 rounded-full flex items-center justify-center transition-colors cursor-pointer ${fav ? 'text-accent' : 'text-ink hover:bg-sunken'}`}
-          >
-            <Heart className={`w-[22px] h-[22px] ${fav ? 'fill-accent' : ''}`} strokeWidth={1.75} aria-hidden="true" />
-          </button>
         </div>
 
-        <h3 className="text-sm leading-5 font-medium text-ink line-clamp-2 min-h-10" title={product.name}>
+        <h3 className="text-[13px] leading-[17px] font-semibold text-ink line-clamp-2 min-h-[34px]" title={product.name}>
           <a href={href} onClick={openProduct} className="hover:underline underline-offset-2 focus-visible:underline">{product.name}</a>
         </h3>
 
         {rating && (
-          <div className="mt-1 flex items-center gap-1 text-[13px] leading-5 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
-            <Star className="w-3.5 h-3.5 fill-star text-star" aria-hidden="true" />
-            <span className="font-semibold text-ink">{rating.avg.toFixed(1)}</span>
+          <div className="mt-1 flex items-center gap-1.5 text-xs leading-5 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
+            <span className="inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">
+              {rating.avg.toFixed(1)} <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
+            </span>
             <span>({rating.count})</span>
           </div>
         )}
 
         <div className="sag-num flex items-baseline gap-x-1.5 gap-y-0 flex-wrap mt-auto pt-1">
-          <span className={`text-base leading-5 font-bold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
+          <span className={`text-[17px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
           {mrp > price && <span className="text-[13px] text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span>}
           {discount > 0 && <span className="text-[13px] font-bold text-sale whitespace-nowrap">{discount}% off</span>}
         </div>
@@ -168,12 +171,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             disabled={soldOut}
             onClick={onQuickAdd}
             aria-label={soldOut ? `${product.name} is sold out` : justAdded ? `${product.name} is in your bag. Open bag` : `Add ${product.name} to bag`}
-            className={`mt-2 w-full h-11 rounded-control text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+            className={`mt-2 w-full h-10 rounded-full text-[13px] font-bold flex items-center justify-center gap-1.5 transition-colors ${
               soldOut
                 ? 'bg-sunken-deep text-ink-muted cursor-not-allowed'
                 : justAdded
                 ? 'bg-ok-tint text-ok border border-ok-line cursor-pointer'
-                : 'bg-white text-ink border-[1.5px] border-ink hover:bg-sunken cursor-pointer'
+                : 'bg-white text-brand border-[1.5px] border-brand hover:bg-brand-wash cursor-pointer'
             }`}
           >
             {soldOut ? 'Sold out' : justAdded ? <><Check className="w-4 h-4" /> In bag · View</> : <><BagIcon mono className="w-4 h-4" /> Add to bag</>}

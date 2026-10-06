@@ -58,17 +58,24 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
   ];
 
   if (variant === 'grid') {
-    const tile = `flex items-center gap-2.5 min-h-[52px] rounded-control px-3 py-2 text-left text-[13px] leading-[18px] font-semibold ${onDark ? 'bg-white/10 text-on-dark' : 'bg-brand-wash text-ink border border-brand-line'}`;
+    // Round badges (owner's pick 5): four white circles on a lilac block, each with a thin ring that turns slowly
+    const badge = `flex w-full flex-col items-center rounded-control px-0.5 text-center ${onDark ? 'text-on-dark' : 'text-ink'}`;
+    const body = (row: (typeof rows)[number], index: number) => (
+      <>
+        <span className={`sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mb-2 flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-brand`}>{row.icon}</span>
+        <span className="block text-[11.5px] sm:text-[13px] font-bold leading-[1.25]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
+      </>
+    );
     return (
-      <ul className={`grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 ${className}`}>
-        {rows.map((row) => (
+      <ul className={`grid grid-cols-4 gap-x-1 rounded-[24px] px-2 pt-5 pb-4 ${onDark ? 'bg-white/10' : 'bg-lilac'} ${className}`}>
+        {rows.map((row, index) => (
           <li key={row.key} className="flex">
             {row.href ? (
-              <a href={row.href} target="_blank" rel="noopener noreferrer" className={`${tile} w-full`}><span className="shrink-0 flex">{row.icon}</span><span>{row.text}</span></a>
+              <a href={row.href} target="_blank" rel="noopener noreferrer" className={badge}>{body(row, index)}</a>
             ) : row.onClick ? (
-              <button type="button" onClick={row.onClick} className={`${tile} w-full cursor-pointer`}><span className="shrink-0 flex">{row.icon}</span><span>{row.text}</span></button>
+              <button type="button" onClick={row.onClick} className={`${badge} cursor-pointer`}>{body(row, index)}</button>
             ) : (
-              <span className={`${tile} w-full`}><span className="shrink-0 flex">{row.icon}</span><span>{row.text}</span></span>
+              <span className={badge}>{body(row, index)}</span>
             )}
           </li>
         ))}

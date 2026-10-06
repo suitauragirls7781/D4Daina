@@ -157,15 +157,20 @@ export const HeroSection: React.FC = () => {
     }
   };
 
-  // On a phone the next photo peeks in from the right, so the strip reads as swipeable
-  const slideWidth = 'shrink-0 w-[84%] sm:w-[56%] lg:w-full';
+  // Phones and tablets: one block per screen, swiped sideways (the dots under it show the place)
+  const slideWidth = 'shrink-0 w-full';
+  const priceOf = (slide: LiveHeroSlide) => {
+    const now = Number(slide.price) || 0;
+    const was = Math.max(now, Number(slide.originalPrice) || now);
+    return { now, was, off: was > now ? Math.round(((was - now) / was) * 100) : 0 };
+  };
 
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="bg-white pt-2 pb-6 lg:py-10" aria-hidden="true">
+      <div className="pt-2 pb-6 lg:py-10" aria-hidden="true">
         <div className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
           <div className="px-4 sm:px-6 lg:px-0 lg:col-span-5">
-            <div className={`${slideWidth} aspect-[4/5] rounded-control bg-sunken-deep`} />
+            <div className="w-full h-[300px] lg:h-auto lg:aspect-[4/5] rounded-[28px] lg:rounded-control bg-peach lg:bg-sunken-deep" />
           </div>
           <div className="px-4 sm:px-6 lg:px-0 mt-8 lg:mt-0 lg:col-span-7 space-y-3">
             <div className="h-8 w-3/4 rounded-badge bg-sunken-deep" />
@@ -197,57 +202,78 @@ export const HeroSection: React.FC = () => {
   const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-control bg-white text-ink hover:bg-sunken transition-colors cursor-pointer';
 
   return (
-    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full bg-white pt-2 pb-6 lg:py-10">
+    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full pt-2 pb-2 lg:py-10">
       <div className="mx-auto max-w-7xl lg:px-8 lg:grid lg:grid-cols-12 lg:gap-12 lg:items-center">
         {/* Photos: a swipeable strip. Nothing is ever drawn on a photo. */}
         <div className="min-w-0 lg:col-span-5">
           <div
             ref={stripRef}
             onScroll={onStripScroll}
-            className="sag-scroll-x flex gap-2 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-0 lg:scroll-px-0"
+            className="sag-scroll-x flex gap-3 lg:gap-4 overflow-x-auto px-3.5 scroll-px-3.5 sm:px-6 sm:scroll-px-6 lg:px-0 lg:scroll-px-0"
           >
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id || index}
-                type="button"
-                onClick={() => handleSlideClick(slide)}
-                className={`${slideWidth} block overflow-hidden rounded-control bg-sunken text-left cursor-pointer`}
-                aria-label={`View ${slide.title}`}
-              >
-                <span className="block aspect-[4/5] w-full">
-                  <img
-                    src={getCleanImageUrl(slide.image, index === 0 ? 1000 : 800) || ELEGANT_PLACEHOLDER_SVG}
-                    alt={slide.title || 'Featured Suit Aura Girls design'}
-                    className="h-full w-full object-cover object-top"
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    decoding="async"
-                    onError={(event) => {
-                      if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG;
-                    }}
-                  />
-                </span>
-              </button>
-            ))}
+            {slides.map((slide, index) => {
+              const money = priceOf(slide);
+              const badge = ownerBadge(slide.badge);
+              return (
+                <button
+                  key={slide.id || index}
+                  type="button"
+                  onClick={() => handleSlideClick(slide)}
+                  className={`${slideWidth} relative block min-h-[300px] overflow-hidden rounded-[28px] bg-peach text-left cursor-pointer lg:min-h-0 lg:rounded-control lg:bg-sunken`}
+                  aria-label={`View ${slide.title}`}
+                >
+                  {/* Phones and tablets: the words sit on the block, left of the arch */}
+                  <span className="lg:hidden flex min-h-[300px] w-[54%] flex-col items-start justify-center py-5 pl-4">
+                    {badge && <span className="mb-2.5 max-w-full truncate rounded-full bg-white px-2.5 py-1 text-[11px] font-extrabold leading-4 text-peach-ink">{badge}</span>}
+                    <span className="font-display text-[22px] font-bold leading-[1.12] text-ink line-clamp-4">{slide.title}</span>
+                    {money.now > 0 && (
+                      <span className="sag-num mt-2 flex flex-wrap items-baseline gap-x-1.5 text-[13px] leading-5 text-peach-ink">
+                        <span className="text-[19px] font-extrabold text-ink">₹{money.now.toLocaleString('en-IN')}</span>
+                        {money.was > money.now && <span className="line-through">₹{money.was.toLocaleString('en-IN')}</span>}
+                      </span>
+                    )}
+                    <span className="mt-3 inline-flex h-[42px] items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-5 text-sm font-bold text-white">Shop now <ChevronRight className="h-4 w-4" aria-hidden="true" /></span>
+                  </span>
+                  <span className="absolute -right-1.5 bottom-0 block h-[92%] w-[50%] overflow-hidden rounded-t-[120px] bg-white/60 lg:static lg:h-auto lg:w-full lg:rounded-none lg:bg-transparent lg:aspect-[4/5]">
+                    <img
+                      src={getCleanImageUrl(slide.image, 640) || ELEGANT_PLACEHOLDER_SVG}
+                      srcSet={slide.image && getCleanImageUrl(slide.image, 640) !== getCleanImageUrl(slide.image, 1000) ? `${getCleanImageUrl(slide.image, 640)} 640w, ${getCleanImageUrl(slide.image, 1000)} 1000w` : undefined}
+                      sizes="(min-width: 1024px) 40vw, 50vw"
+                      alt={slide.title || 'Featured Suit Aura Girls design'}
+                      className="h-full w-full object-cover object-top"
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'auto'}
+                      decoding="async"
+                      onError={(event) => {
+                        if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
+                      }}
+                    />
+                  </span>
+                  {/* The sticker shows the style's real discount, and only when there is one */}
+                  {money.off > 0 && (
+                    <span className="sag-bob lg:hidden absolute bottom-5 right-[40%] z-[2] flex h-[62px] w-[62px] flex-col items-center justify-center rounded-full bg-sun text-center text-xs font-extrabold leading-[1.05] text-ink">
+                      <span className="sag-num text-[15px]">{money.off}%</span>off
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Segment indicator under the photo: swipe on phones, arrows and thumbnails on desktop */}
           {count > 1 && (
-            <div className="mt-2 flex items-center gap-3 px-4 sm:px-6 lg:px-0 h-5">
-              <div className="flex flex-1 items-center gap-1" aria-hidden="true">
-                {slides.map((slide, index) => (
-                  <span key={slide.id || index} className={`h-[3px] flex-1 max-w-10 rounded-full ${index === currentSlideIdx ? 'bg-ink' : 'bg-line'}`} />
-                ))}
-              </div>
-              <p className="sag-num shrink-0 text-xs leading-4 text-ink-muted">
-                <span className="sr-only">Design </span>{currentSlideIdx + 1} / {count}
-              </p>
+            <div className="mt-2.5 flex items-center justify-center gap-[5px] px-4 h-2" aria-hidden="true">
+              {slides.map((slide, index) => (
+                <span key={slide.id || index} className={`h-1.5 rounded-full transition-[width] ${index === currentSlideIdx ? 'w-5 bg-brand' : 'w-1.5 bg-line'}`} />
+              ))}
+              <span className="sr-only">Design {currentSlideIdx + 1} of {count}</span>
             </div>
           )}
         </div>
 
         {/* Details sit below the photo on phones and beside it on desktop */}
-        <div className="min-w-0 px-4 sm:px-6 lg:px-0 mt-3 lg:mt-0 lg:col-span-7">
+        <h1 className="sr-only lg:hidden">Suit Aura Girls: {currentSlide.title}</h1>
+        <div className="hidden lg:block min-w-0 lg:col-span-7">
           {eyebrow && <p className="sag-eyebrow hidden sm:block mb-2 truncate">{eyebrow}</p>}
 
           {/* Two lines are reserved on phones so a change of slide never moves the buttons. The slide title is a full
