@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Order tracking: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.ord{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center}
+.ord img{width:58px;aspect-ratio:4/5;border-radius:12px}
+.tl{position:relative;padding-left:34px}
+.tl>div{position:relative;padding-bottom:16px;font-weight:600}
+.tl>div:last-child{padding-bottom:0}
+.tl>div::before{content:"";position:absolute;left:-34px;top:0;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:inset 0 0 0 2px var(--line)}
+.tl>div::after{content:"";position:absolute;left:-24px;top:22px;bottom:0;width:2px;background:var(--line)}
+.tl>div:last-child::after{display:none}
+.tl .done::before{background:var(--sale);box-shadow:none}.tl .done::after{background:var(--sale)}
+.tl .now::before{background:var(--brand);box-shadow:0 0 0 4px var(--lilac)}
+.tl .next{color:var(--muted);font-weight:500}
+.tl small{display:block;font-weight:500;font-size:12px;color:var(--muted)}
+.hz{display:flex;align-items:center}
+.hz b{width:16px;height:16px;border-radius:50%;background:var(--line);flex:none}
+.hz i{flex:1;height:3px;background:var(--line)}
+.hz .d{background:var(--sale)}.hz .n{background:var(--brand);box-shadow:0 0 0 4px var(--lilac)}
+.hzl{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:var(--muted);margin-top:8px}
+.st{display:flex;align-items:center;gap:12px;border-radius:18px;padding:11px 12px;font-weight:700}
+.st i{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#fff;flex:none}
+.st small{display:block;font-weight:500;font-size:12px}
+.seg{display:flex;gap:4px}.seg i{flex:1;height:6px;border-radius:3px;background:var(--line)}.seg i.on{background:var(--sale)}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+const STEPS = ['Ordered', 'Confirmed', 'Packed', 'Shipped', 'Out for delivery', 'Delivered'];
+const AT = 3; // the example order is at "Shipped"
+const order = `<div class="ord"><img src="${img(P1.photos[0], 160)}" alt=""><div><div class="t12 muted num">Order SAG-261005-XXXXX</div><div class="b t13 clamp2 mt4">${P1.name}</div><div class="t12 muted mt4 num">Size M · Sky Blue · ${rs(P1.price)}</div></div></div>`;
+const form = (pill) => `<div class="col g10"><label><span class="lbl">Order number</span><span class="field"${pill ? ' style="border-radius:99px;box-shadow:none"' : ''}>SAG-260928-XXXXX</span></label><label><span class="lbl">Email or mobile</span><span class="field"${pill ? ' style="border-radius:99px;box-shadow:none"' : ''}>name@example.com</span></label><span class="pill btn ${pill ? 'dark' : 'primary'}">${I.search}Track order</span></div>`;
+const help = `<div class="row g8"><span class="pill btn-sm ghost f1" style="height:44px">${I.wa}Chat on WhatsApp</span><span class="pill btn-sm ghost f1" style="height:44px">Order details</span></div>`;
+const hint = (i) => (i < AT ? 'Done' : i === AT ? 'Tracking number is emailed to you' : '');
+
+render('Order tracking', [
+  ['Timeline', 'Abhi jaisa, naye rang me: upar order number ka form, neeche seedhi lakeer par chhe padav. Jo ho gaya hara, jo chal raha violet.',
+    `${miniHeader()}<div class="p14"><div class="serif t22">Track your order</div><div class="card p14 mt10">${form()}</div>
+     <div class="card p14 mt12">${order}<div class="hr mt12"></div><div class="tl mt14">${STEPS.map((s, i) => `<div class="${i < AT ? 'done' : i === AT ? 'now' : 'next'}">${s}${hint(i) ? `<small>${hint(i)}</small>` : ''}</div>`).join('')}</div></div><div class="mt12">${help}</div></div>`],
+  ['Progress bar', 'Order ka butter ticket, uske neeche ek leti hui lakeer par chhe bindu. Bade akshar me abhi ka haal "Shipped" aur agla kadam. Ek nazar me samajh aata hai.',
+    `${miniHeader()}<div class="p14"><div class="bg-butter blk p14">${order}</div>
+     <div class="card p16 mt12"><div class="t12 muted b">Status</div><div class="serif t26" style="line-height:1.1">Shipped</div><div class="t13 muted mt4">Next: Out for delivery</div>
+     <div class="hz mt16">${STEPS.map((_, i) => `${i ? `<i class="${i <= AT ? 'd' : ''}"></i>` : ''}<b class="${i < AT ? 'd' : i === AT ? 'n' : ''}"></b>`).join('')}</div><div class="hzl"><span>Ordered</span><span>Shipped</span><span>Delivered</span></div></div>
+     <div class="row g8 p12 bg-sky mt12" style="border-radius:16px;color:var(--sky-ink);font-size:12.5px;font-weight:700">${I.truck}The tracking number is emailed when the order ships</div><div class="mt12">${help}</div></div>`],
+  ['Big status', 'Sabse upar mint ka bada block: "On its way to you" aur truck. Customer ko pehle achhi khabar dikhti hai, baaki padav neeche chhote.',
+    `${miniHeader()}<div class="p14"><div class="bg-mint blk p16" style="text-align:center"><span class="ic ring" style="background:#fff;color:var(--sale);width:56px;height:56px;margin:0 auto">${I.truck}</span><div class="serif t22 mt12">On its way to you</div><div class="t13 mt4" style="color:var(--mint-ink)">Shipped · Next: Out for delivery</div><div class="seg mt14">${STEPS.map((_, i) => `<i class="${i <= AT ? 'on' : ''}"></i>`).join('')}</div></div>
+     <div class="card p14 mt12">${order}</div><div class="card p14 mt12"><div class="row between b">All updates ${I.down}</div></div><div class="mt12">${help}</div></div>`],
+  ['Step cards', 'Har padav apna card, gol icon ke saath: ho chuke hare, chalu wala lilac par ghoomti ring ke saath, aage wale halke. Trust badge jaisa hi roop.',
+    `${miniHeader()}<div class="p14"><div class="card p12">${order}</div><div class="col g8 mt12">${[['check', 'Ordered'], ['check', 'Confirmed'], ['box', 'Packed'], ['truck', 'Shipped'], ['pin', 'Out for delivery'], ['heart', 'Delivered']].map(([k, s], i) => `<div class="st ${i < AT ? 'bg-mint' : i === AT ? 'bg-lilac' : 'bg-sunken'}" style="${i > AT ? 'color:var(--muted)' : ''}"><i class="${i === AT ? 'ring' : ''}" style="color:${i < AT ? 'var(--sale)' : i === AT ? 'var(--brand)' : 'var(--muted)'}">${I[k]}</i><div>${s}<small>${i < AT ? 'Done' : i === AT ? 'Happening now' : 'Coming up'}</small></div></div>`).join('')}</div><div class="mt12">${help}</div></div>`],
+  ['Compact', 'Sabse chhota: lilac block me gol khane wala form, aur nateeja ek hi chhote card me patti ke saath. Jaldi dekhne walon ke liye.',
+    `${miniHeader()}<div class="p14"><div class="bg-lilac blk p16"><div class="serif t22">Track your order</div><div class="t13 mt4" style="color:var(--lilac-ink)">Enter the order number from your confirmation email.</div><div class="mt12">${form(true)}</div></div>
+     <div class="card p14 mt12">${order}<div class="seg mt12">${STEPS.map((_, i) => `<i class="${i <= AT ? 'on' : ''}"></i>`).join('')}</div><div class="row between mt8"><span class="xb salec">Shipped</span><span class="t12 muted">Next: Out for delivery</span></div></div>
+     <div class="row g8 mt12"><span class="pill btn-sm ghost f1" style="height:44px">${I.wa}Chat on WhatsApp</span></div></div>`],
+], 'Order aur order number sirf namoone ke liye hain. Padav wahi hain jo site par abhi hain (Ordered se Delivered tak).');
+</script>
+</body>
+</html>
