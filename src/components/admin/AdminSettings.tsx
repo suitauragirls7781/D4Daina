@@ -659,7 +659,7 @@ export const AdminSettings: React.FC = () => {
           <div className="p-4 bg-sunken rounded-xl text-sm leading-5 text-ink-muted flex items-start gap-2.5">
             <Info className="w-4 h-4 text-ink shrink-0 mt-0.5" />
             <span>
-              <strong className="text-ink">Firebase live sync:</strong> Customer profiles, orders, categories, coupons, and reviews are stored in Cloud Firestore and sync in real time; product and banner images are stored in Cloudinary.
+              <strong className="text-ink">Firebase live sync:</strong> Customer profiles, orders, categories, coupons, and reviews are stored in Cloud Firestore and sync in real time; product and banner images are stored in Cloudflare R2.
             </span>
           </div>
 

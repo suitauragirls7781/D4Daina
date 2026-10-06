@@ -25,9 +25,6 @@
     "RAZORPAY_KEY_SECRET": "SmokeRazorpaySecret01",
     "RAZORPAY_WEBHOOK_SECRET": "smoke-webhook-secret",
     "BREVO_API_KEY": "smoke-brevo-key",
-    "BREVO_SENDER_EMAIL": "sender@store.example",
-    "CLOUDINARY_CLOUD_NAME": "smokecloud",
-    "CLOUDINARY_API_KEY": "123456789012345",
-    "CLOUDINARY_API_SECRET": "smoke-cloudinary-secret"
+    "BREVO_SENDER_EMAIL": "sender@store.example"
   }
 }

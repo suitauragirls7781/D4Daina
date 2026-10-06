@@ -13,10 +13,7 @@ ADMIN_INITIAL_USERNAME=
 ADMIN_INITIAL_PASSWORD=
 ADMIN_INITIAL_PIN=
 
-# Cloudinary (image upload signatures and deletes).
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
+# Photos and reel videos use the R2 bucket bound as MEDIA in wrangler.jsonc (no key needed).
 
 # Razorpay fallbacks, used when no keys are saved in Admin -> Payment Gateways.
 RAZORPAY_KEY_ID=

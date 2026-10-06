@@ -45,7 +45,7 @@ const loadPlaywright = () => {
 
 const baseHost = new URL(BASE_URL).host;
 // Photos, reels and fonts may load from outside; nothing else leaves this machine.
-const ALLOWED_OUTSIDE = new Set(['res.cloudinary.com', 'fonts.googleapis.com', 'fonts.gstatic.com']);
+const ALLOWED_OUTSIDE = new Set(['media.suitauragirls.in', 'fonts.googleapis.com', 'fonts.gstatic.com']);
 // The old backend and the live site: a request to any of these means the build is not on the shims.
 const FORBIDDEN = /firestore\.googleapis\.com|identitytoolkit|securetoken\.googleapis|firebaseio\.com|firebaseapp\.com|suitauragirls\.in/i;
 
@@ -90,7 +90,7 @@ export const openPage = async (browser, { mobile = false } = {}) => {
   page.on('console', (message) => {
     if (message.type() !== 'error') return;
     const source = message.location()?.url || '';
-    // A photo the old Cloudinary account no longer has, or a host blocked above, is not the app's fault.
+    // A photo that was deleted from storage, or a host blocked above, is not the app's fault.
     if (source && !source.startsWith(BASE_URL)) return;
     watch.consoleErrors.push(`${message.text()} @ ${page.url()}`);
   });

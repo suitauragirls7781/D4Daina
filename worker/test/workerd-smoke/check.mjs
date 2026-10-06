@@ -84,7 +84,7 @@ const step = async (name, run) => {
 
 const PRODUCT = {
   name: 'Smoke Cotton Suit', price: 1200, originalPrice: 1500, sizes: ['M', 'L'], stockQuantity: 5, inStock: true, category: 'Suits',
-  images: ['https://res.cloudinary.com/smokecloud/image/upload/suitauragirls/product-images/smoke.jpg'], createdAt: '2026-09-01T00:00:00.000Z',
+  images: ['https://media.suitauragirls.in/i/product-images/smoke001/w1100.webp'], createdAt: '2026-09-01T00:00:00.000Z',
 };
 const ADDRESS = { fullName: 'Smoke Customer', mobile: '9876543210', email: 'smoke@example.test', houseFlat: '1 Smoke Lane', city: 'Asansol', state: 'West Bengal', pincode: '713301' };
 

@@ -1,7 +1,7 @@
 # Local end-to-end checks
 
 A real Chrome drives the Cloudflare build of the store, served by the Worker under `wrangler dev` with local
-D1. Nothing leaves this machine except product photos, reels and fonts (`res.cloudinary.com`, Google Fonts);
+D1. Nothing leaves this machine except product photos, reels and fonts (`media.suitauragirls.in`, Google Fonts);
 every other outside host is blocked in the browser, and a request to Firestore, Firebase Auth or the live
 site fails the run.
 
@@ -24,7 +24,7 @@ All commands from the repository root, in Git Bash.
 #      AUTH_TOKEN_SECRET, ADMIN_SESSION_SECRET  any long random strings
 #      ADMIN_INITIAL_USERNAME=localadmin  ADMIN_INITIAL_PASSWORD="Local#Pass123"  ADMIN_INITIAL_PIN=123456
 #      RAZORPAY_KEY_ID=rzp_live_LocalDummy0000 (a "live" looking id, or the checkout offers no gateway to shoppers)
-#      dummy RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, BREVO_*, CLOUDINARY_*, GEMINI_API_KEY
+#      dummy RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, BREVO_*, GEMINI_API_KEY
 npm run build:cf
 (cd worker && npx wrangler dev --local --port 8799 --ip 127.0.0.1 > .wrangler/dev.log 2>&1 &)
 

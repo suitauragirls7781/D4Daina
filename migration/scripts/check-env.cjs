@@ -1,5 +1,5 @@
 // Checks .env.migration without ever printing a value: which keys are filled, whether they look right, and
-// (read-only API calls) whether Cloudinary, Razorpay and Brevo accept them.
+// (read-only API calls) whether Razorpay and Brevo accept them.
 const fs = require('fs');
 const path = require('path');
 
@@ -9,9 +9,6 @@ for (const line of fs.readFileSync(path.resolve(__dirname, '..', '..', '.env.mig
   if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
 }
 const shape = {
-  CLOUDINARY_CLOUD_NAME: /^[a-z0-9_-]{3,40}$/i,
-  CLOUDINARY_API_KEY: /^\d{10,20}$/,
-  CLOUDINARY_API_SECRET: /^[A-Za-z0-9_-]{20,40}$/,
   RAZORPAY_KEY_ID: /^rzp_(live|test)_[A-Za-z0-9]{6,40}$/,
   RAZORPAY_KEY_SECRET: /^[A-Za-z0-9]{10,80}$/,
   RAZORPAY_WEBHOOK_SECRET: /^.{8,200}$/,
@@ -37,10 +34,6 @@ const call = async (label, url, headers) => {
 
 (async () => {
   console.log('\nLive checks (read-only):');
-  if (env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET) {
-    const r = await call('cloudinary', `https://api.cloudinary.com/v1_1/${env.CLOUDINARY_CLOUD_NAME}/usage`, { authorization: basic(env.CLOUDINARY_API_KEY, env.CLOUDINARY_API_SECRET) });
-    console.log('Cloudinary:', r.status === 200 ? `OK (plan ${r.data.plan || '?'}, storage used ${Math.round((r.data.storage?.usage || 0) / 1048576)} MB, credits ${r.data.credits?.usage ?? '?'}/${r.data.credits?.limit ?? '?'})` : `REJECTED (${r.status}) ${String(r.data?.error?.message || '').slice(0, 100)}`);
-  } else console.log('Cloudinary: not filled');
   if (env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET) {
     const r = await call('razorpay', 'https://api.razorpay.com/v1/payments?count=1', { authorization: basic(env.RAZORPAY_KEY_ID, env.RAZORPAY_KEY_SECRET) });
     console.log('Razorpay:', r.status === 200 ? `OK (${env.RAZORPAY_KEY_ID.startsWith('rzp_live') ? 'LIVE' : 'TEST'} key accepted)` : `REJECTED (${r.status}) ${String(r.data?.error?.description || '').slice(0, 100)}`);

@@ -53,6 +53,12 @@ Helper classes live in `src/index.css`: `sag-card`, `sag-btn-primary`, `sag-btn-
 - Portrait photos use `aspect-[4/5]` with `object-cover object-top`.
 - `public/cropped_circle_image.png` is another store's logo and must never be shown; the round mark in the header is `public/suit-aura-mark-132.webp`, cut from this store's own logo.
 
+- **Where photos and reels live** (owner, 2026-10-07: moved off Cloudinary, which is gone from this project and must not come back): the Cloudflare R2 bucket `suitauragirls-media`, read straight from `https://media.suitauragirls.in` (Cloudflare's CDN; a photo costs no Worker request and no bandwidth fee). Nothing is resized on the fly. Every photo is stored in ready-made files: `i/<folder>/<id>/w160|w320|w480|w640|w828|w1100|w1600.webp` plus `j480.jpg` (emails) and `j1200.jpg` (link previews, the AI photo reader); a reel is `v/<folder>/<id>/play.mp4` and `poster.jpg`. The address saved in the database is `…/w1100.webp` or `…/play.mp4`.
+  - Show a photo only through `getCleanImageUrl(url, width)` (`src/utils/imageHelper.ts`), which picks the stored size that fits; never write a size into a URL by hand. Links saved before the move are translated by `toMediaUrl` in `src/lib/media.ts`.
+  - Uploads: the browser makes every size first (`makeImageFiles` in `src/lib/media.ts`), then sends each file to `PUT /api/media` with a grant the server signed for that one photo (`createMediaGrant` in `api/_lib/media.js`; admin via `/api/admin-config?action=media-grant`, customers via the review and return forms). A 5 MB phone photo goes up as about 0.3-1 MB in all. Reel videos are stored as uploaded: MP4 only, 50 MB at most.
+  - Deleting a photo deletes every stored size of it (`deleteMedia`).
+  - Admin → Usage & limits shows the bucket's storage and requests against R2's free amounts (10 GB, 1 million writes and 10 million reads a month) and an estimate of how many visits the free plan can carry, from measured numbers only.
+
 ---
 
 ## 📐 4. Homepage Flow

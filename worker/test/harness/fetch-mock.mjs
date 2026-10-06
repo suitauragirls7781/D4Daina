@@ -1,4 +1,4 @@
-// Stand-in for the outside world. The handlers call Razorpay, PayU, Brevo, Cloudinary, Gemini and Google with
+// Stand-in for the outside world. The handlers call Razorpay, PayU, Brevo, Gemini and Google with
 // the global fetch; here every such call is answered locally and recorded. A request nobody registered an
 // answer for is refused and remembered in `unexpected`, and the harness fails the test that made it:
 // nothing may leave the machine.
@@ -66,7 +66,6 @@ export const mockServices = (net, env) => {
     razorpayKeys: new Set([`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`]), // key pairs Razorpay accepts
     payu: { key: '', salt: '' },   // the merchant account PayU knows (set by the PayU tests)
     payuTransactions: {},          // txnid -> what PayU's verify API says about it
-    cloudinaryDestroyed: [],       // public ids deleted at Cloudinary
     googleKeys: [],                // JWKs served as Google's signing keys
     geminiModels: ['models/gemini-3.1-flash-lite', 'models/gemini-flash-latest'],
   };
@@ -109,15 +108,6 @@ export const mockServices = (net, env) => {
   net.on('POST', 'https://test.payu.in/merchant/postservice.php', payuVerify);
   net.on('POST', 'https://info.payu.in/merchant/postservice', payuVerify);
 
-  // ---- Cloudinary delete ----
-  net.on('POST', /^https:\/\/api\.cloudinary\.com\/v1_1\/[^/]+\/(image|video)\/destroy$/, (call) => {
-    const form = Object.fromEntries(new URLSearchParams(call.body));
-    const signed = Object.keys(form).filter((name) => !['api_key', 'signature'].includes(name)).sort().map((name) => `${name}=${form[name]}`).join('&');
-    const expected = createHash('sha1').update(signed + env.CLOUDINARY_API_SECRET).digest('hex');
-    if (form.api_key !== env.CLOUDINARY_API_KEY || form.signature !== expected) return jsonResponse(401, { error: { message: 'Invalid Signature' } });
-    state.cloudinaryDestroyed.push(form.public_id);
-    return jsonResponse(200, { result: 'ok' });
-  });
 
   // ---- Google: sign-in keys and the Gemini model list ----
   net.on('GET', 'https://www.googleapis.com/oauth2/v3/certs', () => jsonResponse(200, { keys: state.googleKeys }, { 'cache-control': 'public, max-age=3600' }));
