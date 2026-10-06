@@ -81,7 +81,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           From tablet width: photo on top, and the heart sits on the photo's top-right corner (the watermark is top-left). */}
       <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden bg-sunken">
         <img
-          src={getCleanImageUrl(primary, compact ? 420 : 600)}
+          src={getCleanImageUrl(primary, 480)}
+          // A phone's row card shows the photo about 150px wide, a desktop card about 280px: the browser takes the stored size that fits
+          srcSet={getCleanImageUrl(primary, 480) !== getCleanImageUrl(primary, 640) ? `${getCleanImageUrl(primary, 480)} 480w, ${getCleanImageUrl(primary, 640)} 640w, ${getCleanImageUrl(primary, 828)} 828w` : undefined}
+          sizes="(min-width: 1024px) 24vw, (min-width: 640px) 46vw, 36vw"
           alt={product.name}
           className={`w-full h-full object-cover object-top ${soldOut ? 'opacity-60 grayscale-[35%]' : ''}`}
           loading="lazy"
