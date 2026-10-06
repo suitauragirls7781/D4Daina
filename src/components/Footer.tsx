@@ -66,10 +66,10 @@ export const Footer: React.FC = () => {
   );
 
   // Phones: room under the footer for whichever fixed bar the page shows (bottom navigation, bag bar or buy bar)
-  const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]';
+  const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(5.75rem+env(safe-area-inset-bottom))]';
 
   return (
-    <footer id="main-footer" className={`w-full bg-dark text-on-dark pt-8 sm:pt-12 md:pb-10 ${bottomRoom}`}>
+    <footer id="main-footer" className={`w-full rounded-t-[28px] bg-dark text-on-dark pt-8 sm:pt-12 md:pb-10 ${bottomRoom}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Need help? */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">

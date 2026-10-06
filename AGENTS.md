@@ -1,54 +1,58 @@
 # Suit Aura Girls - Brand & UI/UX Guidelines
 
-These rules are set for the "Suit Aura Girls" women's fashion storefront. All code, styles, and UI adjustments must adhere to these guidelines. (Updated 2026-10-03: the owner asked for a full redesign of the whole site, colours included, to win trust from first-time shoppers who arrive on a phone from Instagram ads and pay online. The design system is "Bharosa Atelier"; the full spec is `design/DESIGN.md`. It replaces the lavender & plum palette of 2026-09-28. Do not bring the old plum, lavender, blush or champagne colours back.)
+These rules are set for the "Suit Aura Girls" women's fashion storefront. All code, styles, and UI adjustments must adhere to these guidelines. (Updated 2026-10-06: the owner picked a new look for the whole site from numbered mockups: look **B · Pastel blocks**, header **3 · Floating pill**, deal of the day **1 · Ticket**, trust cards **5 · Round badges**. It replaces the teal "Bharosa Atelier" system of 2026-10-03. Do not bring the teal, the old plum / lavender palettes, Inter or Playfair Display back. The brand is always "Suit Aura Girls": the mockups were drawn for another store, and none of its name, logo or photos belongs here.)
 
 ---
 
-## 🎨 1. Core Color System (Bharosa Atelier: paper, ink and peacock teal)
-Use the token classes (`bg-brand`, `text-ink-muted`, `border-line` …), never raw hex in components. Tokens are defined once in `src/index.css` (`@theme`, mirrored on `:root` as `--sag-*`).
+## 🎨 1. Core Color System (Pastel blocks: cream, plum ink, violet and soft blocks)
+Use the token classes (`bg-brand`, `text-ink-muted`, `bg-peach` …), never raw hex in components. Tokens are defined once in `src/index.css` (`@theme`, mirrored on `:root` as `--sag-*`). The token names are the same as in the earlier system, so a component written with tokens needs no change.
 
-- **Page** `#F5F4F1` (`page`) — page background on bag, checkout, account. **Surface** `#FFFFFF` (`surface` / `white`) — cards, header, bars, sheets, inputs, and the home, shop and product page bands.
-- **Sunken** `#ECEAE4` (`sunken`, deeper `#DEDBD3` `sunken-deep`) — photo placeholders, icon tiles, hover fills, disabled fills, skeletons.
-- **Ink** `#1B1A17` (`ink`) — text, headings, prices, and the fill of a selected chip. Secondary text is the solid **Ink muted** `#5F5A53` (`ink-muted`); struck MRP and placeholders use **Ink faint** `#6E6961` (`ink-faint`). Do not use opacity steps (`/55`, `/70`) for text; they fail contrast.
-- **Line** `#E2DFD8` (`line`) — hairlines and card borders. **Control** `#857F74` (`control`) — borders of inputs, unselected chips.
-- **Brand, peacock teal** `#0E4F4F` (`brand`, hover/pressed `#0A3C3C` `brand-dark`) — only for things that move the shopper forward: Buy, Continue, Pay, links, input focus, the active nav tab, a selected payment or address card. One primary button per screen. Tint `#E6F0EE` (`brand-wash`) with border `#BFD8D3` (`brand-line`) for the assurance block and selected cards.
-- **Sale, marigold-brown** `#8A5A00` (`sale`; tint `#FBF0D9` `sale-tint`, border `#E3C078` `sale-line`) — only for money saved: "% off", "You save", "Free", offer rows, coupon chips.
-- **Accent, rani** `#B0124A` (`accent`, tint `#FCE8EF` `accent-tint`) — only the filled wishlist heart, count badges and the "Bestseller" badge.
-- **Star** `#D98E04` (`star`) — star fill only, always next to the real numeric rating. Never text.
-- **OK** `#17663F` (`ok`, `ok-tint` `#E9F5EE`, `ok-line` `#B9DEC8`) — confirmed states only (coupon applied, valid, payment verified). **Danger** `#B3261E` (`danger`, `danger-tint` `#FCEDEA`, `danger-line` `#F0B8B2`) — errors only, always with an icon and words.
-- **Dark** `#12211F` (`dark`) — footer, announcement bar, lightbox. Text on it: `on-dark` `#F5F4F1`, `on-dark-muted` `#B9C4C1`; highlighted words `highlight` `#F2C14E` (on dark only).
+- **Page** `#FFFDFB` (`page`) — the cream page background. **Surface** `#FFFFFF` (`surface` / `white`) — cards, sheets, inputs, the header pill.
+- **Sunken** `#F3EEFF` (`sunken`, deeper `#E3DAF7` `sunken-deep`) — photo placeholders, icon buttons, hover fills, disabled fills, skeletons.
+- **Ink** `#221B33` (`ink`) — text, headings, prices, dark pills ("Shop now", "Grab it", "PIN") and a selected chip. Secondary text is **Ink muted** `#5F5970` (`ink-muted`); struck MRP and placeholders use **Ink faint** `#6F6A7D` (`ink-faint`). No opacity steps for text.
+- **Line** `#E6E0F0` (`line`) — hairlines. **Control** `#8A83A3` (`control`) — borders of inputs and unselected chips.
+- **Brand, violet** `#5B3FD1` (`brand`, hover/pressed `#4930B8` `brand-dark`) — Buy, Continue, Pay, links, input focus, "Add to bag" outline, the search icon. Tint `#EDE6FF` (`brand-wash`) with border `#CFC3F7` (`brand-line`).
+- **Pastel blocks** — section backgrounds and tiles, each with an ink for text on it: lilac `#EDE6FF` (`lilac` / `lilac-ink` `#3B2A99`), peach `#FFE1D2` (`peach` / `peach-ink` `#9A3412`), mint `#DDF5E6` (`mint` / `mint-ink` `#14603B`), sky `#CFE9FF` (`sky` / `sky-ink` `#0F4C81`), butter `#FFF1B8` (`butter` / `butter-ink` `#7A5200`), and sun `#FFE14D` (`sun`) for the round "% off" sticker and the product page's Buy now.
+- **Sale, green** `#167A4A` (`sale`; tint `#FFF1B8` `sale-tint`, border `#E0C766` `sale-line`) — only for money saved: "% off", "You save", "Free", offer rows, coupon chips.
+- **Accent, pink** `#CC2354` (`accent`, tint `#FDE7EE` `accent-tint`) — the wishlist heart, count badges and the "Bestseller" badge.
+- **Star** `#F0A30A` (`star`) — star fill only, next to the real numeric rating. A product card shows the rating as a green pill ("4.7 ★").
+- **OK** `#14603B` (`ok`, `ok-tint` `#DDF5E6`, `ok-line` `#A9DDBD`) — confirmed states. **Danger** `#B3261E` (`danger`, `danger-tint`, `danger-line`) — errors only, always with an icon and words.
+- **Dark** `#221B33` (`dark`) — footer, the floating bottom navigation, lightbox. Text on it: `on-dark` `#FFFFFF`, `on-dark-muted` `#B9B3CC`; the current tab and highlighted words use mint `highlight` `#C9F2DC`.
 - WhatsApp green stays inside the WhatsApp glyph.
-- **Negative constraint**: no gradients anywhere, no coloured glows, no neon, no colours beyond this list.
+- **Negative constraint**: no gradients, no coloured glows, no neon, no colours beyond this list.
 
-Helper classes live in `src/index.css`: `sag-card`, `sag-btn-primary`, `sag-btn-outline`, `sag-link`, `sag-input`, `sag-label`, `sag-chip`, `sag-badge`, `sag-row`, `sag-bar`, `sag-eyebrow`, `sag-num`, `sag-scroll-x`. The four trust facts are worded once in `src/components/Assurance.tsx`; reuse that component instead of writing new claims. `design/codemod-colors.cjs` maps any old colour literal to the new tokens and is safe to re-run.
+Helper classes live in `src/index.css`: `sag-card`, `sag-btn-primary`, `sag-btn-outline`, `sag-link`, `sag-input`, `sag-label`, `sag-chip`, `sag-badge`, `sag-row`, `sag-bar`, `sag-eyebrow`, `sag-num`, `sag-scroll-x`, plus `sag-float`, `sag-bob` and `sag-ring` for the three gentle loops below. The four trust facts are worded once in `src/components/Assurance.tsx`; reuse that component instead of writing new claims.
 
 ---
 
 ## 💎 2. Visual Language
-- **Flat, solid surfaces**: white cards on a paper-grey page, solid fills, no gradients. Product cards have no box at all: a photo with details below it.
-- **Radius**: badges 6px (`rounded-badge`), chips 10px (`rounded-chip`), buttons, inputs and photos 12px (`rounded-control`), cards 16px (`rounded-card`), bottom sheets 20px on the top corners (`rounded-sheet`). Fully round only for icon buttons, count badges and colour dots. No pill buttons or pill inputs.
-- **Borders**: 1px `line` for cards and dividers; 1.5px `control` for inputs, chips and outline buttons; 2px for selected and error states.
-- **Shadows**: cards have none. Only fixed bottom bars and sheets (`--sag-shadow-bar`) and toasts and menus (`--sag-shadow-pop`) carry a soft neutral shadow.
-- **Typography**: two families only. **Inter** for all text and every number; **Playfair Display** (`font-display`, real weights 500 and 600 only) for main headings: page titles (h1), section titles (h2), the hero headline, dialog / sheet / drawer titles, empty-state titles and admin page titles. Titles of 20px and up are 500; small 16-18px titles keep `font-semibold` (real 600). The rule lives in `src/index.css` (`h1, h2, .font-display`) with `font-synthesis: none`, so a bold or italic is never faked, and lining figures. Never the display face for prices, product names in lists or on the product page, order numbers, forms, buttons, labels or navigation (an h1/h2 of that kind carries `font-sans`). Chosen 2026-10-03 after comparing Marcellus, Lora, Libre Caslon Text, Cormorant Garamond, EB Garamond, Fraunces and the old DM Serif Display on real headings at 390px: Playfair keeps the fashion-label character of the approved look, is calmer than DM Serif Display, does not wrap titles more, stays clear at 16px and has real weights. Sentence case everywhere: no uppercase, letter-spaced labels or buttons. Prices use tabular figures (`sag-num`). Body ≥ 14px, labels ≥ 11px, text in fields 16px.
-- **Buy now on the product page** is the one exception to the teal primary: yellow `#FFC200` with ink text (class `sag-btn-buy`, owner's choice 2026-10-03). On phones and tablets a row of small photos sits under the main photo; a small spinner shows on a photo only while it loads or right after it is picked.
-- **Buttons**: primary is teal, 52px high, white 16/600 text; secondary is white with a 1.5px ink border. Tap targets are at least 44×44px. Selected chips are ink-filled (teal is kept for "move forward").
-- **Focus**: a visible 2px ink outline on everything (white on dark and teal surfaces).
-- **Icons**: outline icons in the colour of the surrounding text (lucide, or `StoreIcons` / `BagIcon`, which draw in `currentColor`). No coloured icon tiles.
-- **Bars**: the header is white, 52px on phones, with a hairline below and no change on scroll. At most one fixed bottom bar per screen (bottom navigation, or a page's buy / checkout / pay bar); never blur or hide them.
-- **Motion**: page fade, sheet and drawer slide, a small press on buttons, 150ms colour transitions. Nothing loops: no marquees, shimmer, Ken Burns, staggered reveals or animated icons. `prefers-reduced-motion` removes all of it.
+- **Soft blocks**: white cards on a cream page, and whole sections set on a pastel block with large round corners (28px). Solid fills only.
+- **Radius**: badges 8px (`rounded-badge`), small thumbnails 14px (`rounded-chip`), inputs and photos 16px (`rounded-control`), cards 20-22px (`rounded-card`), blocks and sheets 28px (`rounded-sheet`). **Buttons and chips are pills** (the helper classes do this).
+- **Cards**: no border, a soft shadow (`--sag-shadow`). A product card is a white card: photo on top, then badge, name, rating pill, price and an outline "Add to bag" pill.
+- **Typography**: two families only. **Figtree** for all text and every number; **Fraunces** (`font-display`, 600 / 700) for main headings: page titles (h1), section titles (h2), the hero headline, dialog / sheet titles and empty-state titles. Never the display face for prices, product names in lists or on the product page, order numbers, forms, buttons, labels or navigation (an h1/h2 of that kind carries `font-sans`). Sentence case, except the small "DEAL OF THE DAY" ticket label and the brand name in the header. Prices use tabular figures (`sag-num`). Body ≥ 14px, labels ≥ 11px, text in fields 16px.
+- **Buttons**: primary is a violet pill, 52px high, white 16/700 text; secondary is a white pill with a 1.5px violet border and violet text. Dark ink pills are used inside pastel blocks. **Buy now on the product page** is yellow (`sag-btn-buy`, sun). Tap targets are at least 44×44px.
+- **Header (phones and tablets)**: the "floating pill" on a lilac band: a white pill with the round logo mark, "SUIT AURA GIRLS" and the line "Delivery across India", the wishlist and the bag; under it the menu button, the search field and a dark "PIN" button that checks a PIN code (India Post lookup, the same one the product page uses). Desktop keeps a white bar with the wide logo, a search field and the menu row.
+- **Bottom navigation (phones)**: a dark pill floating above the bottom edge; the current tab is a mint tile with dark text. At most one fixed bottom bar per screen.
+- **Deal of the day**: one butter "ticket" (photo, name, price, a dashed tear line, the time left and "Grab it") that opens the product. The clock shows only for a deal with a real end time set in Admin.
+- **Trust facts on the homepage**: four white round badges on a lilac block (`Assurance` variant `grid`).
+- **Hero (phones and tablets)**: one peach block per slide, words on the left, the photo in an arch on the right, and a round yellow sticker with the style's real "% off" (hidden when there is no discount).
+- **Focus**: a visible 2px ink outline on everything (white on dark and violet surfaces).
+- **Icons**: outline icons in the colour of the surrounding text (lucide, or `StoreIcons` / `BagIcon`).
+- **Motion**: page fade, sheet and drawer slide, a small press on buttons, 150ms colour transitions. Three gentle loops came with the chosen designs and are the only ones allowed: the header logo floats (`sag-float`), the trust badges carry a thin ring that turns slowly (`sag-ring`), and the hero sticker bobs (`sag-bob`). No marquees, shimmer or blinking; `prefers-reduced-motion` removes all motion.
 
 ---
 
 ## 📸 3. Model & Media Treatment
-- **Unmasked catalog images**: never cover product photos with gradients, text, badges or absolute buttons. Badges, wishlist hearts and prices sit below the image.
+- **Clear catalog images**: never cover product photos with gradients, text or badges. The one thing allowed on a product card photo is the wishlist heart in a white circle in the top-right corner (the brand watermark sits top-left). Badges and prices sit below the image.
 - **No watermark overlaps**: catalog photos already carry the brand watermark; never overlay logos on them.
 - Portrait photos use `aspect-[4/5]` with `object-cover object-top`.
+- `public/cropped_circle_image.png` is another store's logo and must never be shown; the round mark in the header is `public/suit-aura-mark-132.webp`, cut from this store's own logo.
 
 ---
 
 ## 📐 4. Homepage Flow
 Default order (admin can reorder/toggle in Admin → Homepage; stored in `storefront_settings/homepageSections`):
-1. Announcement bar (in the header; admin text or a real live offer)
+1. Header (the floating pill; there is no announcement bar)
 2. Hero (image + headline, "Shop now" and "Explore collection")
 3. Shop by category (only categories that have products)
 4. Featured collection
