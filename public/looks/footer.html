@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Footer: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.above{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.above i{display:block;height:54px;border-radius:16px}
+.dk{background:var(--ink);color:#fff;border-radius:28px 28px 0 0;padding:18px 14px 18px}
+.m{color:#B9B3CC}
+.soc{display:flex;gap:8px}
+.soc span{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#34313F}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips span{height:36px;padding:0 13px;border-radius:99px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center;background:#34313F}
+.lt .chips span{background:#fff;box-shadow:inset 0 0 0 1.5px var(--line)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:13.5px}
+.cols b{display:block;font-size:13px;margin-bottom:4px}
+.cols span{display:block;padding:5px 0}
+.acc{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:1px solid var(--line);font-weight:700}
+.addr{display:flex;gap:6px;font-size:12px;line-height:1.5}
+.addr svg{width:14px;height:14px;margin-top:2px}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+const above = '<div class="above"><i class="bg-peach"></i><i class="bg-mint"></i></div>';
+const mark = `<img src="${LOGO}" alt="" style="width:44px;height:44px;border-radius:50%;background:#fff">`;
+const name = (c = 'var(--hl)') => `<span class="xb t16" style="letter-spacing:.04em">SUIT AURA <span style="color:${c}">GIRLS</span></span>`;
+const LINKS = ['Track order', 'Returns & exchange', 'Shipping', 'Cancellation', 'Contact us', 'Size guide', 'My account', 'About us', 'Privacy', 'Terms'];
+const hours = 'Monday to Saturday, 10:00 AM – 7:00 PM IST';
+const addr = (cls = 'm') => `<div class="addr ${cls}">${I.pin}<span>Store address shows here (from Admin → Store details)</span></div>`;
+const small = (cls = 'm') => `<div class="row between t12 ${cls}"><span>© 2026 Suit Aura Girls</span><span>UPI · Secure online payment</span></div>`;
+const soc = `<div class="soc"><span>${I.insta}</span><span>${I.wa}</span><span>${I.mail}</span></div>`;
+
+render('Footer', [
+  ['Slim', 'Abhi jo live hai: logo aur naam, teen gol icon, saare link gol chip me (Track order mint), pata aur ek line. Sabse chhota.',
+    `${above}<div class="dk"><div class="row between"><div class="row g10">${mark}${name()}</div>${soc}</div><div class="chips mt14">${LINKS.map((l, i) => `<span${i === 0 ? ' style="background:var(--hl);color:var(--ink)"' : ''}>${l}</span>`).join('')}</div><div class="mt14">${addr()}</div><div class="mt8">${small()}</div></div>`],
+  ['Help on top', 'Slim jaisa hi, par sabse upar mint patti: "Need help?" samay ke saath, aur WhatsApp / Track order ke do bade button. Madad sabse pehle dikhti hai.',
+    `${above}<div class="dk"><div class="bg-mint p14" style="border-radius:20px;color:var(--ink)"><div class="serif t20">Need help?</div><div class="row g6 t12 mt4" style="color:var(--mint-ink)">${I.clock.replace('<svg', '<svg style="width:15px;height:15px"')}${hours}</div><div class="row g8 mt12"><span class="pill btn-sm dark f1" style="height:44px">${I.wa}WhatsApp</span><span class="pill btn-sm bg-white f1" style="height:44px">${I.box}Track order</span></div></div>
+     <div class="row between mt16"><div class="row g10">${mark}${name()}</div><div class="soc"><span>${I.insta}</span><span>${I.mail}</span></div></div><div class="chips mt14">${LINKS.slice(1).map((l) => `<span>${l}</span>`).join('')}</div><div class="mt14">${addr()}</div><div class="mt8">${small()}</div></div>`],
+  ['Two columns', 'Dark block me do saaf column: Help aur Policies, naam ke saath. Chip nahi, seedhi list, jaise badi shopping site me hota hai.',
+    `${above}<div class="dk"><div class="row between"><div class="row g10">${mark}${name()}</div>${soc}</div><div class="hr mt14" style="background:#3A3350"></div>
+     <div class="cols mt14"><div><b style="color:var(--hl)">Help</b>${['Track order', 'Contact us', 'Size guide', 'My account', 'About us'].map((l) => `<span class="m">${l}</span>`).join('')}</div><div><b style="color:var(--hl)">Policies</b>${['Returns & exchange', 'Shipping', 'Cancellation', 'Privacy', 'Terms'].map((l) => `<span class="m">${l}</span>`).join('')}</div></div>
+     <div class="hr mt14" style="background:#3A3350"></div><div class="mt14">${addr()}</div><div class="mt8">${small()}</div></div>`],
+  ['Lilac light', 'Dark nahi: halka lilac block, bada serif naam, do gol button aur safed chip me link. Site ke baaki pastel block jaisa hi.',
+    `${above}<div class="bg-lilac lt" style="border-radius:28px 28px 0 0;padding:20px 14px 18px"><div class="row g10">${mark}<div><div class="serif t22" style="line-height:1.1">Suit Aura Girls</div><div class="t12" style="color:var(--lilac-ink)">${hours}</div></div></div>
+     <div class="row g8 mt14"><span class="pill btn-sm dark f1" style="height:44px">${I.wa}WhatsApp</span><span class="pill btn-sm bg-white f1" style="height:44px">${I.box}Track order</span></div><div class="chips mt14">${LINKS.slice(1).map((l) => `<span>${l}</span>`).join('')}</div>
+     <div class="mt14">${addr('muted')}</div><div class="mt8">${small('muted')}</div></div>`],
+  ['Card and strip', 'Cream zameen par safed card jisme khulne wali list (Help, Policies, Contact), aur sabse neeche patli dark patti naam ke saath. Sabse halka dikhta hai.',
+    `${above}<div style="padding:0 14px 14px"><div class="card" style="padding:2px 14px"><div class="acc" style="border-top:0">Help ${I.down}</div><div class="acc">Policies ${I.down}</div><div class="acc">Contact us ${I.down}</div><div class="acc">Follow us on Instagram ${I.insta}</div></div>
+     <div class="row g8 mt12"><span class="pill btn-sm dark f1" style="height:44px">${I.wa}WhatsApp</span><span class="pill btn-sm ghost f1" style="height:44px">${I.box}Track order</span></div><div class="mt12">${addr('muted')}</div></div>
+     <div class="bg-ink row between t12" style="padding:14px 16px">${name()}<span class="m">© 2026 · UPI</span></div>`],
+], 'Upar ke do rangeen dabbe sirf yeh dikhane ke liye hain ki footer page ke ant me kaise lagta hai. Pata Admin ki store details se aata hai.');
+</script>
+</body>
+</html>
