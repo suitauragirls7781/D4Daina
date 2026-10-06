@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Checkout: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.sec{display:flex;align-items:center;gap:8px;padding:12px 14px;background:#fff;border-bottom:1px solid var(--line);font-weight:800}
+.steps{display:flex;align-items:center;gap:6px;padding:12px 14px;font-size:12px;font-weight:700}
+.steps b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--muted);font-size:11px}
+.steps .on b{background:var(--brand);color:#fff}.steps .done b{background:var(--sale);color:#fff}.steps span{color:var(--muted);display:flex;align-items:center;gap:5px}.steps .on,.steps .done{color:var(--ink)}
+.steps i{flex:1;height:2px;background:var(--line)}.steps svg{width:13px;height:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sum{display:flex;justify-content:space-between;padding:5px 0;font-size:14px}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-top:1px solid var(--line);margin-top:14px}
+.fold{display:flex;align-items:center;gap:10px;border-radius:20px;padding:12px 14px}
+.num-b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;font-size:13px;flex:none}
+.tk{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;border-radius:20px;background:var(--butter);padding:10px}
+.tk .imgs{display:flex}.tk .imgs img{width:44px;aspect-ratio:4/5;border-radius:10px;box-shadow:0 0 0 2px var(--butter)}.tk .imgs img+img{margin-left:-14px}
+.upi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.upi>div{border-radius:18px;padding:14px 12px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font-weight:700;font-size:13px}
+.upi>div.on{box-shadow:inset 0 0 0 2px var(--brand);background:var(--brand-wash)}
+.upi i{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--sunken);margin-bottom:8px;color:var(--brand)}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+const f = (label, hint, cls = '') => `<label class="${cls}"><span class="lbl">${label}</span><span class="field">${hint}</span></label>`;
+const form = `<div class="col g10">${f('Full name', 'Your name')}<div class="two">${f('Mobile number', '10-digit mobile')}${f('PIN code', '6 digits')}</div>${f('Email', 'name@example.com')}${f('House no., street, area', 'Address')}<div class="two">${f('City', 'City')}${f('State', 'State')}</div></div>`;
+const secure = `<div class="sec">${I.lock}Secure checkout<span class="f1"></span><span class="t12 muted sb">Need help? Chat</span></div>`;
+const steps = (at) => `<div class="steps">${['Bag', 'Address', 'Pay'].map((s, i) => `<span class="${i + 1 < at ? 'done' : i + 1 === at ? 'on' : ''}"><b>${i + 1 < at ? I.check : i + 1}</b>${s}</span>`).join('<i></i>')}</div>`;
+const totals = (dark) => `<div class="sum"><span>Item total (2)</span><span class="num">${rs(BAG.items)}</span></div><div class="sum"><span>Coupon AURA10</span><span class="num ${dark ? '' : 'salec'} b">− ${rs(BAG.coupon)}</span></div><div class="sum"><span>Delivery</span><span class="${dark ? '' : 'salec'} b">Free</span></div>`;
+const order = `<div class="tk"><span class="imgs"><img src="${img(P1.photos[0], 160)}" alt=""><img src="${img(P2.photo, 160)}" alt=""></span><div><div class="xb t13">2 items · ${rs(BAG.total)}</div><div class="t12" style="color:var(--butter-ink)">You save ${rs(BAG.saved)}</div></div>${I.down}</div>`;
+const trust = `<div class="row center g6 t12 muted">${I.lock.replace('<svg', '<svg style="width:15px;height:15px"')}Secure payment by Razorpay · 7-day returns & exchange</div>`;
+
+render('Checkout', [
+  ['Stepper', 'Abhi jaisa, naye rang me: upar "Secure checkout" aur teen kadam, order ki chhoti patti, ek safed card me saara form. Neeche chipka button.',
+    `${secure}${steps(2)}<div class="px14">${order}<div class="card p14 mt12"><div class="serif t18">Delivery address</div><div class="mt12">${form}</div></div></div>
+     <div class="bar"><div class="none num"><div class="xb t18">${rs(BAG.total)}</div><div class="t11 muted">To pay</div></div><span class="pill btn primary f1">Continue to payment ${I.chev}</span></div>`],
+  ['Blocks', 'Teen rangeen block: Contact (ho gaya, band), Address (khula), Payment (band). Jo ho gaya us par hara tick. Customer ko ek baar me ek hi kaam dikhta hai.',
+    `${secure}<div class="col g10 p14"><div class="fold bg-mint"><span class="num-b" style="background:var(--sale)">${I.check.replace('<svg', '<svg style="width:15px;height:15px"')}</span><div class="f1"><div class="xb">Contact</div><div class="t12" style="color:var(--mint-ink)">Name, mobile and email added</div></div><span class="b t12 brand" style="text-decoration:underline">Edit</span></div>
+     <div class="bg-lilac blk p14"><div class="row g10"><span class="num-b">2</span><div class="xb t16">Delivery address</div></div><div class="col g10 mt12"><div class="two">${f('PIN code', '6 digits')}${f('City', 'Fills by itself')}</div>${f('House no., street, area', 'Address')}${f('State', 'Fills by itself')}</div><span class="pill btn primary mt12" style="width:100%">Save and continue</span></div>
+     <div class="fold bg-sky"><span class="num-b" style="background:#fff;color:var(--ink)">3</span><div class="f1"><div class="xb">Payment</div><div class="t12" style="color:var(--sky-ink)">UPI · ${rs(BAG.total)} to pay</div></div>${I.down}</div>${trust}</div>`],
+  ['Order first', 'Sabse upar order ka butter ticket (kya kharid rahe ho, kitni bachat), phir form, aur neeche dark block me hisaab aur "Continue". Bag ke "Tickets" design se mel khata hai.',
+    `${secure}<div class="p14">${order}<div class="serif t18 mt16">Where should we deliver?</div><div class="mt12">${form}</div></div>
+     <div class="bg-ink p16" style="border-radius:28px 28px 0 0">${totals(true)}<div class="hr mt6" style="background:#3A3350"></div><div class="row between mt10"><div><div class="t12" style="color:#B9B3CC">To pay</div><div class="xb t22 num">${rs(BAG.total)}</div></div><span class="pill btn" style="background:var(--hl);color:var(--ink)">Continue ${I.chev}</span></div></div>`],
+  ['Pay step', 'Yeh payment wala kadam hai: upar pata (badalne ka link), phir UPI ke do bade tile, online payment ki chhoot ki patti, hisaab aur bada "Pay securely" button.',
+    `${secure}${steps(3)}<div class="col g10 px14"><div class="card p14 row g10"><span class="ic bg-sunken">${I.pin}</span><div class="f1"><div class="xb t13">Deliver to</div><div class="t12 muted">Your saved address shows here</div></div><span class="b t12 brand" style="text-decoration:underline">Change</span></div>
+     <div class="serif t18 mt6">Pay by UPI</div><div class="upi"><div class="on"><i>${I.bag}</i>Pay with any UPI app<div class="t11 muted sb mt4">Opens the app on your phone</div></div><div><i>${I.search}</i>Scan QR or enter UPI ID<div class="t11 muted sb mt4">Pay from another phone</div></div></div>
+     <div class="row g8 p12 bg-butter" style="border-radius:16px;color:var(--butter-ink);font-weight:700;font-size:13px">${I.tag}Extra 5% off for paying online is applied on this step</div>
+     <div class="card p14">${totals()}<div class="hr mt6"></div><div class="sum xb t18 mt6"><span>To pay</span><span class="num">${rs(BAG.total)}</span></div></div>
+     <span class="pill btn primary">${I.lock}Pay securely</span>${trust}<div style="height:6px"></div></div>`],
+  ['One page', 'Sab kuch ek hi lambe page par, 1-2-3 ke gol number ke saath: contact, pata, payment. Koi agla page nahi; neeche chipki patti me rakam aur Pay.',
+    `${secure}<div class="col g14 p14">${order}
+     <div><div class="row g10"><span class="num-b">1</span><div class="xb t16">Contact</div></div><div class="col g10 mt10">${f('Full name', 'Your name')}<div class="two">${f('Mobile number', '10-digit mobile')}${f('Email', 'name@example.com')}</div></div></div>
+     <div><div class="row g10"><span class="num-b">2</span><div class="xb t16">Address</div></div><div class="col g10 mt10"><div class="two">${f('PIN code', '6 digits')}${f('City', 'City')}</div>${f('House no., street, area', 'Address')}</div></div>
+     <div><div class="row g10"><span class="num-b">3</span><div class="xb t16">Payment</div></div><div class="fold bg-lilac mt10"><span class="ic" style="background:#fff;color:var(--brand)">${I.lock}</span><div class="f1"><div class="xb t13">UPI (any app or QR)</div><div class="t12" style="color:var(--lilac-ink)">Online payment only · Razorpay</div></div>${I.check}</div></div></div>
+     <div class="bar"><div class="none num"><div class="xb t18">${rs(BAG.total)}</div><div class="t11 salec b">Save ${rs(BAG.saved)}</div></div><span class="pill btn primary f1">${I.lock}Pay ${rs(BAG.total)}</span></div>`],
+], 'Checkout me email zaroori hi rahega aur payment sirf online (UPI) hoga, jaisa abhi hai.');
+</script>
+</body>
+</html>

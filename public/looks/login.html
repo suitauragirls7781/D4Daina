@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Sign in: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--sunken);border-radius:16px;padding:4px;font-weight:700;text-align:center}
+.tabs span{height:42px;display:grid;place-items:center;border-radius:13px;color:var(--muted)}
+.tabs .on{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(34,27,51,.10)}
+.or{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;font-weight:700}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.arch{background:var(--peach);padding:18px 16px 0;display:grid;grid-template-columns:1fr 46%;gap:8px;align-items:end;min-height:230px}
+.arch img{width:100%;height:210px;border-radius:120px 120px 0 0}
+.sheet{background:#fff;border-radius:28px 28px 0 0;margin-top:-22px;position:relative;padding:20px 16px;box-shadow:0 -6px 18px rgba(34,27,51,.07)}
+.code{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.code span{height:52px;border-radius:14px;box-shadow:inset 0 0 0 1.5px var(--control);background:#fff;display:grid;place-items:center;font-size:20px;font-weight:800}
+.code span.on{box-shadow:inset 0 0 0 2px var(--brand)}
+.steps{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.steps b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--line);color:var(--muted);font-size:11px}
+.steps .on b{background:var(--brand);color:#fff}.steps .done b{background:var(--sale);color:#fff}.steps span{display:flex;align-items:center;gap:5px;color:var(--muted)}.steps .on,.steps .done{color:var(--ink)}
+.steps i{flex:1;height:2px;background:var(--line)}.steps svg{width:13px;height:13px}
+.perks{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;font-size:11.5px;font-weight:700;line-height:1.25}
+.perks i{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#fff;color:var(--brand);margin:0 auto 8px}
+.band{background:var(--ink);color:#fff;border-radius:0 0 28px 28px;padding:22px 16px 26px;text-align:center}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+const email = `<label><span class="lbl">Email</span><span class="field">${I.mail.replace('<svg', '<svg style="margin-right:10px;color:var(--brand)"')}name@example.com</span></label>`;
+const go = `<span class="pill btn primary" style="width:100%">Email me a code</span>`;
+const google = (cls = 'ghost') => `<span class="pill btn ${cls}" style="width:100%">${I.google}Continue with Google</span>`;
+const mark = (size = 64) => `<img src="${LOGO}" alt="" style="width:${size}px;height:${size}px;border-radius:50%;background:#fff">`;
+const why = 'Track orders, request returns and save addresses.';
+
+render('Sign in page', [
+  ['Card', 'Abhi jaisa, naye rang me: safed card, Sign in / New account ke do tab, email ka khana aur "Email me a code". Sabse seedha.',
+    `${miniHeader(0)}<div class="p14"><div class="card p16"><div class="serif t26">Sign in</div><div class="muted mt4">No password needed. We email you a one-time code.</div><div class="tabs mt14"><span class="on">Sign in</span><span>New account</span></div><div class="mt14">${email}</div><div class="mt12">${go}</div><div class="or mt14">or</div><div class="mt14">${google()}</div><div class="hr mt16"></div><div class="t12 muted mt12" style="text-align:center">${why}</div></div></div>`],
+  ['Arch welcome', 'Upar peach block par "Welcome" aur mehraab me kapde ki photo, neeche se safed sheet uthti hai jisme form. Home ke hero jaisa hi, isliye site ek jaisi lagti hai.',
+    `<div class="arch"><div style="padding-bottom:34px"><span class="pill" style="background:#fff;color:var(--peach-ink);font-size:11px;font-weight:800;padding:5px 10px">Suit Aura Girls</span><div class="serif t26 mt10" style="line-height:1.05;font-weight:700">Welcome, lovely to see you</div></div><img src="${img(P1.photos[0])}" alt=""></div>
+     <div class="sheet"><div class="xb t18">Sign in or create an account</div><div class="muted t13 mt4">We email you a one-time code. No password.</div><div class="mt14">${email}</div><div class="mt12">${go}</div><div class="or mt14">or</div><div class="mt14">${google()}</div><div class="row center g6 t12 muted mt14">${I.lock.replace('<svg', '<svg style="width:15px;height:15px"')}Your email is used only for your orders</div></div>`],
+  ['Lilac logo', 'Poora page lilac, beech me gol logo ghoomti ring ke saath. Google ka button sabse upar (ek tap me andar), neeche email ka raasta. Kam likhna padta hai.',
+    `<div class="bg-lilac" style="padding:28px 16px 22px;text-align:center"><span class="ring" style="display:inline-block;border-radius:50%">${mark(72)}</span><div class="serif t22 mt14">Sign in to Suit Aura Girls</div><div class="t13 mt4" style="color:var(--lilac-ink)">${why}</div>
+     <div class="mt16">${google('bg-white')}</div><div class="or mt14" style="color:var(--lilac-ink)">or use your email</div>
+     <div class="mt14" style="text-align:left"><span class="field" style="border-radius:99px;box-shadow:none">${I.mail.replace('<svg', '<svg style="margin-right:10px;color:var(--brand)"')}name@example.com</span></div><div class="mt10"><span class="pill btn dark" style="width:100%">Email me a code</span></div>
+     <div class="t12 mt14" style="color:var(--lilac-ink)">New here? The code also creates your account.</div></div>`],
+  ['Two steps', 'Upar do kadam dikhte hain: Email → Code. Yahan doosra kadam dikhaya hai: chhe khano me code. Neeche teen gol badge batate hain account se kya milta hai.',
+    `${miniHeader(0)}<div class="p16"><div class="steps"><span class="done"><b>${I.check}</b>Email</span><i></i><span class="on"><b>2</b>Code</span></div>
+     <div class="serif t22 mt16">Enter the 6-digit code</div><div class="muted t13 mt4">We sent it to your email.</div>
+     <div class="code mt14"><span>4</span><span>7</span><span class="on"></span><span></span><span></span><span></span></div>
+     <div class="mt14"><span class="pill btn primary" style="width:100%">Verify and continue</span></div><div class="row between t13 mt12"><span class="brand b" style="text-decoration:underline">Change email</span><span class="brand b" style="text-decoration:underline">Send again</span></div></div>
+     <div class="bg-lilac" style="border-radius:28px 28px 0 0;padding:18px 10px 16px"><div class="perks"><div><i>${I.box}</i>Track every order</div><div><i>${I.back}</i>Easy returns</div><div><i>${I.pin}</i>Saved addresses</div></div></div>`,
+  ],
+  ['Dark band', 'Upar gehra dark band, usme logo aur naam safed aur mint me; neeche cream par sirf ek khana aur ek button. Sabse alag aur premium, footer aur navbar se mel khata hai.',
+    `<div class="band">${mark(60)}<div class="xb t18 mt10" style="letter-spacing:.06em">SUIT AURA <span style="color:var(--hl)">GIRLS</span></div><div class="t12 mt4" style="color:#B9B3CC">Sign in to track orders and returns</div></div>
+     <div class="p16"><div class="serif t22">Sign in</div><div class="mt12">${email}</div><div class="mt12">${go}</div>
+     <div class="row g8 p12 bg-mint mt14" style="border-radius:16px;color:var(--mint-ink);font-size:12.5px;font-weight:700">${I.check}No password needed. New here? The code also creates your account.</div>
+     <div class="or mt14">or</div><div class="mt14">${google()}</div></div>`],
+], 'Login ka tareeka wahi rahega: email par one-time code, ya Google.');
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Footer: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.above{padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.above i{display:block;height:54px;border-radius:16px}
+.dk{background:var(--ink);color:#fff;border-radius:28px 28px 0 0;padding:22px 16px 20px}
+.dk .m{color:#B9B3CC}
+.lnk{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;font-size:13.5px;font-weight:500}
+.acc{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-top:1px solid #3A3350;font-weight:700}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);text-align:center;font-size:11px;font-weight:700;line-height:1.25}
+.badges i{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#fff;color:var(--brand);margin:0 auto 8px}
+.soc{display:flex;gap:8px}
+.soc span{width:42px;height:42px;border-radius:50%;display:grid;place-items:center}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chips span{height:34px;padding:0 13px;border-radius:99px;font-size:12.5px;font-weight:700;display:inline-flex;align-items:center}
+.lt .acc{border-color:var(--line)}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+const above = '<div class="above"><i class="bg-peach"></i><i class="bg-mint"></i></div>';
+const hours = 'Monday to Saturday, 10:00 AM – 7:00 PM IST';
+const mark = `<img src="${LOGO}" alt="" style="width:44px;height:44px;border-radius:50%;background:#fff">`;
+const name = (c = 'var(--hl)') => `<span class="xb t16" style="letter-spacing:.04em">SUIT AURA <span style="color:${c}">GIRLS</span></span>`;
+const SHOP = ['All styles', 'New arrivals', 'Offers', 'Suits', 'Anarkali', 'Co-ord Sets'];
+const HELP = ['Track order', 'Returns & exchange', 'Shipping', 'Contact us'];
+const POLICY = ['Privacy policy', 'Terms', 'Return policy', 'Shipping policy'];
+const copy = '© 2026 Suit Aura Girls';
+const wa = (cls = '') => `<span class="pill btn-sm ${cls}" style="height:46px">${I.wa}Chat on WhatsApp</span>`;
+const track = (cls = 'ghost') => `<span class="pill btn-sm ${cls}" style="height:46px">${I.box}Track my order</span>`;
+
+render('Footer', [
+  ['Dark block', 'Abhi jaisa, naye rang me: gol kone wala dark block. Upar "Need help?" ke saath WhatsApp aur Track order ke button, phir khulne wali link ki list.',
+    `${above}<div class="dk"><div class="serif t22">Need help?</div><div class="m t13 mt4">Ask us about size, fabric or your order.</div><div class="row g6 m t12 mt8">${I.clock.replace('<svg', '<svg style="width:15px;height:15px"')}${hours}</div>
+     <div class="col g8 mt14">${wa('bg-white')}<span class="pill btn-sm" style="height:46px;box-shadow:inset 0 0 0 1.5px #fff">${I.box}Track my order</span></div>
+     <div class="mt16"><div class="acc">Shop ${I.down}</div><div class="acc">Help ${I.down}</div><div class="acc">Policies ${I.down}</div></div>
+     <div class="row g10 mt14">${mark}<div><div>${name()}</div><div class="m t12">contact.suitauragirls@gmail.com</div></div></div><div class="m t12 mt14">${I.lock.replace('<svg', '<svg style="width:14px;height:14px;display:inline;vertical-align:-2px"')} Secure online payment · UPI · ${copy}</div></div>`],
+  ['Lilac light', 'Halka footer: lilac zameen, bada serif naam, do gol button aur do column me link. Site ke baaki pastel block se mel khata hai, dark nahi.',
+    `${above}<div class="bg-lilac" style="border-radius:28px 28px 0 0;padding:22px 16px 20px"><div class="row g10">${mark}<div><div class="serif t22" style="line-height:1.1">Suit Aura Girls</div><div class="t12 muted">Ethnic wear, delivered across India</div></div></div>
+     <div class="row g8 mt14"><span class="pill btn-sm dark f1" style="height:46px">${I.wa}WhatsApp</span><span class="pill btn-sm bg-white f1" style="height:46px">${I.box}Track order</span></div>
+     <div class="lnk mt16">${[...HELP, ...POLICY].map((l) => `<span>${l}</span>`).join('')}</div>
+     <div class="row g8 p12 bg-mint mt16" style="border-radius:16px;color:var(--mint-ink);font-size:12.5px;font-weight:700">${I.clock}${hours}</div>
+     <div class="row between t12 muted mt14"><span>${copy}</span><span class="row g6">${I.lock.replace('<svg', '<svg style="width:14px;height:14px"')}Secure UPI payment</span></div></div>`],
+  ['Badges first', 'Dark footer ke sabse upar wahi chaar gol badge (ghoomti ring ke saath) jo home par hain, taaki page ke ant me bharosa dobara dikhe. Neeche do column link.',
+    `${above}<div class="dk"><div class="badges">${FACTS.map(([k, t]) => `<div><i class="ring">${I[k]}</i>${t}</div>`).join('')}</div>
+     <div class="hr mt16" style="background:#3A3350"></div><div class="lnk mt16"><div class="col g8"><span class="xb" style="color:var(--hl)">Shop</span>${SHOP.slice(0, 4).map((l) => `<span class="m">${l}</span>`).join('')}</div><div class="col g8"><span class="xb" style="color:var(--hl)">Help</span>${HELP.map((l) => `<span class="m">${l}</span>`).join('')}</div></div>
+     <div class="row between mt16"><div class="row g10">${mark}${name()}</div><div class="soc"><span style="background:#34313F">${I.insta}</span><span style="background:#34313F">${I.mail}</span></div></div><div class="m t12 mt14">${POLICY.join(' · ')}</div><div class="m t12 mt6">${copy}</div></div>`],
+  ['Slim', 'Sabse chhota footer: logo aur naam ek line me, link gol chip ban kar, teen gol icon (Instagram, WhatsApp, email). Phone par bahut kam jagah leta hai.',
+    `${above}<div class="dk" style="padding:18px 14px 16px"><div class="row between"><div class="row g10">${mark}${name()}</div><div class="soc"><span style="background:#34313F">${I.insta}</span><span style="background:#34313F">${I.wa}</span><span style="background:#34313F">${I.mail}</span></div></div>
+     <div class="chips mt14"><span style="background:var(--hl);color:var(--ink)">Track order</span>${['Returns & exchange', 'Shipping', 'Contact us', 'Privacy', 'Terms'].map((l) => `<span style="background:#34313F">${l}</span>`).join('')}</div>
+     <div class="row between m t12 mt14"><span>${copy}</span><span>UPI · Secure payment</span></div></div>`],
+  ['Help card', 'Dark block nahi: cream zameen par mint ka "Need help?" card (samay aur dono button), neeche safed card me khulne wali list, aur sabse neeche ek patli dark patti.',
+    `${above}<div class="lt" style="padding:0 14px 14px"><div class="bg-mint blk p16"><div class="serif t22">Need help?</div><div class="t13 mt4" style="color:var(--mint-ink)">Ask us about size, fabric or your order.</div><div class="row g6 t12 mt8" style="color:var(--mint-ink)">${I.clock.replace('<svg', '<svg style="width:15px;height:15px"')}${hours}</div><div class="row g8 mt12"><span class="pill btn-sm dark f1" style="height:46px">${I.wa}WhatsApp</span><span class="pill btn-sm bg-white f1" style="height:46px">${I.box}Track order</span></div></div>
+     <div class="card mt12" style="padding:2px 14px"><div class="acc" style="border-top:0">Shop ${I.down}</div><div class="acc">Help ${I.down}</div><div class="acc">Policies ${I.down}</div><div class="acc">Follow us on Instagram ${I.insta}</div></div></div>
+     <div class="bg-ink row between t12" style="padding:14px 16px"><span class="row g8">${name()}</span><span style="color:#B9B3CC">${copy}</span></div>`],
+], 'Upar ke do rangeen dabbe sirf yeh dikhane ke liye hain ki footer page ke ant me kaise lagta hai.');
+</script>
+</body>
+</html>
