@@ -156,6 +156,33 @@ export const Header: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
+  // Phones: the row with the menu and the search field slides away while the shopper scrolls down, and comes
+  // back as soon as they scroll up (or are near the top), so the header takes one line while reading.
+  const [searchRowHidden, setSearchRowHidden] = useState(false);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let frame = 0;
+    let quietUntil = 0; // the header changing height moves the page a little: ignore that for a moment
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        if (Date.now() < quietUntil) { lastY = y; return; }
+        const delta = y - lastY;
+        if (y < 80) {
+          setSearchRowHidden((hidden) => { if (hidden) quietUntil = Date.now() + 350; return false; });
+        } else if (delta > 8 && y > 200) {
+          setSearchRowHidden((hidden) => { if (!hidden) quietUntil = Date.now() + 350; return true; });
+        } else if (delta < -12) {
+          setSearchRowHidden((hidden) => { if (hidden) quietUntil = Date.now() + 350; return false; });
+        }
+        if (Math.abs(delta) > 4) lastY = y;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
+  }, []);
   // The phone's Back button closes the search panel or the PIN check instead of leaving the page
   useBackToClose(isSearchOpen, () => setIsSearchOpen(false));
   useBackToClose(pinOpen, () => setPinOpen(false));
@@ -246,6 +273,7 @@ export const Header: React.FC = () => {
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
   const chip = 'h-11 px-3.5 rounded-chip bg-sunken text-sm font-medium text-ink hover:bg-sunken-deep inline-flex items-center gap-1.5 transition-colors cursor-pointer';
   const searchLabel = 'Search suits, kurtis & more';
+  const rowHidden = searchRowHidden && !isSearchOpen && !isMobileMenuOpen;
   // What the search hint types: the store's biggest collections, in the words a shopper would use
   const searchHints = collections.slice(0, 5).map(([name]) => name.toLowerCase());
 
@@ -254,7 +282,7 @@ export const Header: React.FC = () => {
       <header className="sticky top-0 z-50 w-full rounded-b-[26px] bg-dark lg:rounded-none lg:bg-white lg:border-b lg:border-line select-none">
         {/* Phones and tablets: the all-black header. Logo in a turning amber ring, the name, wishlist and bag;
             under them the menu, the dark search field and the amber search button. */}
-        <div className="lg:hidden max-w-2xl mx-auto px-3 pt-3 pb-3.5">
+        <div className={`lg:hidden max-w-2xl mx-auto px-3 pt-3 transition-[padding] duration-200 ${rowHidden ? 'pb-2.5' : 'pb-3.5'}`}>
           <div className="flex items-center gap-2.5">
             <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
               <span className="sag-ring-amber flex h-[52px] w-[52px] shrink-0 items-center justify-center">
@@ -279,7 +307,12 @@ export const Header: React.FC = () => {
               {cartCount > 0 && <span className={badgeOnDark}>{cartCount > 99 ? '99+' : cartCount}</span>}
             </button>
           </div>
-          <div className="mt-3 flex items-center gap-2">
+          {/* Slides away on the way down the page, back on the way up; always shown while the menu or search is open */}
+          <div
+            className={`grid transition-[grid-template-rows,opacity,margin] duration-200 ease-out ${rowHidden ? 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100 mt-3'}`}
+            {...(rowHidden ? { inert: true } : {})}
+          >
+          <div className="min-h-0 overflow-hidden -m-1.5 p-1.5 flex items-center gap-2">
             <button
               id="mobile-menu-trigger"
               onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
@@ -308,6 +341,7 @@ export const Header: React.FC = () => {
             >
               <SearchIcon className="w-5 h-5" mono />
             </button>
+          </div>
           </div>
         </div>
 
