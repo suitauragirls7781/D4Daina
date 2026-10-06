@@ -768,3 +768,23 @@
 @media (prefers-reduced-motion: reduce) {
   .sag-wave span[style], .sag-type::after { animation: none; }
 }
+
+/* All-black phone header (owner's pick 2, 2026-10-07): an amber ring turns around the logo, and the amber
+   search button pulses softly. Off with reduced motion. */
+.sag-ring-amber { position: relative; }
+.sag-ring-amber::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  border-top-color: var(--sag-sun);
+  border-right-color: var(--sag-sun);
+  animation: sag-spin 4s linear infinite;
+  pointer-events: none;
+}
+@keyframes sag-glow { 50% { box-shadow: 0 0 0 5px rgba(245, 163, 0, 0.22); } }
+.sag-glow { animation: sag-glow 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .sag-ring-amber::before, .sag-glow { animation: none; }
+}

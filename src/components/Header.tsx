@@ -19,13 +19,13 @@ import { HeartIcon, PinIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons'
 const RECENT_KEY = 'sag_recent_searches_v1';
 
 /** The brand name with each letter rising in once, then a slow wave passing through it (as in the chosen header). */
-const WaveName: React.FC = () => {
+const WaveName: React.FC<{ onDark?: boolean }> = ({ onDark = false }) => {
   const letters = (text: string, from: number) => text.split('').map((letter, index) => (
     <span key={from + index} style={{ ['--i' as any]: from + index }}>{letter === ' ' ? ' ' : letter}</span>
   ));
   return (
-    <span className="sag-wave block truncate text-base font-extrabold leading-[17px] tracking-[0.04em] text-ink" aria-hidden="true">
-      {letters('SUIT AURA ', 0)}<span className="text-accent">{letters('GIRLS', 10)}</span>
+    <span className={`sag-wave block truncate text-[17px] font-black leading-[18px] tracking-[0.1em] ${onDark ? 'text-white' : 'text-ink'}`} aria-hidden="true">
+      {letters('SUIT AURA ', 0)}<span className={onDark ? 'text-highlight' : 'text-accent'}>{letters('GIRLS', 10)}</span>
     </span>
   );
 };
@@ -238,6 +238,8 @@ export const Header: React.FC = () => {
   // One look for every header control: a 44px round button, ink icon, grey fill on hover
   const iconButton = 'relative w-11 h-11 shrink-0 rounded-full items-center justify-center text-ink hover:bg-sunken cursor-pointer transition-colors';
   const badge = 'absolute top-0.5 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-accent text-white text-[11px] font-bold tabular-nums leading-none flex items-center justify-center';
+  // On the black phone header the count sits on amber with dark figures
+  const badgeOnDark = 'absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-highlight text-ink text-[11px] font-extrabold tabular-nums leading-none flex items-center justify-center';
   const navLink = (active: boolean) => `relative h-12 inline-flex items-center text-sm cursor-pointer transition-colors ${active ? 'text-ink font-semibold' : 'font-medium text-ink-muted hover:text-ink'}`;
   const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-0 h-0.5 bg-brand ${active ? '' : 'hidden'}`;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
@@ -249,40 +251,39 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-dark lg:bg-white lg:border-b lg:border-line select-none">
-        {/* Phones and tablets: the "floating pill". A white pill with the logo, name, wishlist and bag;
-            under it the menu, the search field and the PIN code check. */}
-        <div className="lg:hidden max-w-2xl mx-auto p-2.5">
-          <div className="flex items-center gap-2 rounded-full bg-white py-[5px] pl-[5px] pr-1.5 shadow-[0_4px_14px_rgba(10,10,10,0.10)]">
-            <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
-              <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" className="sag-float h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
+      <header className="sticky top-0 z-50 w-full rounded-b-[26px] bg-dark lg:rounded-none lg:bg-white lg:border-b lg:border-line select-none">
+        {/* Phones and tablets: the all-black header. Logo in a turning amber ring, the name, wishlist and bag;
+            under them the menu, the dark search field and the amber search button. */}
+        <div className="lg:hidden max-w-2xl mx-auto px-3 pt-3 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
+              <span className="sag-ring-amber flex h-[52px] w-[52px] shrink-0 items-center justify-center">
+                <img src="/suit-aura-mark-132.webp" alt="" width="42" height="42" className="h-[42px] w-[42px] rounded-full bg-white object-cover" />
+              </span>
               <span className="min-w-0">
-                <WaveName />
-                <span className="mt-0.5 flex items-center gap-1.5 text-[11px] font-bold leading-[14px] text-mint-ink">
-                  <span aria-hidden="true" className="h-[7px] w-[7px] shrink-0 rounded-full bg-sun" />
-                  <span className="truncate">Delivery across India</span>
-                </span>
+                <WaveName onDark />
+                <span className="mt-1 block truncate text-[11px] font-semibold leading-[14px] text-on-dark-muted">Ethnic wear · Delivery across India</span>
               </span>
             </button>
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-sunken text-ink cursor-pointer" aria-label={`Wishlist, ${wishlist.length} items`}>
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer" aria-label={`Wishlist, ${wishlist.length} items`}>
               <HeartIcon className="w-[22px] h-[22px]" mono />
-              {wishlist.length > 0 && <span className={badge}>{wishlist.length > 99 ? '99+' : wishlist.length}</span>}
+              {wishlist.length > 0 && <span className={badgeOnDark}>{wishlist.length > 99 ? '99+' : wishlist.length}</span>}
             </button>
             <button
               id="header-cart-btn-mobile"
-              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setPinOpen(false); setIsCartDrawerOpen(true); }}
-              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-sunken text-ink cursor-pointer"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
+              className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
               aria-label={`Bag, ${cartCount} items`}
             >
               <BagIcon className="w-[22px] h-[22px]" mono />
-              {cartCount > 0 && <span className={badge}>{cartCount > 99 ? '99+' : cartCount}</span>}
+              {cartCount > 0 && <span className={badgeOnDark}>{cartCount > 99 ? '99+' : cartCount}</span>}
             </button>
           </div>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-3 flex items-center gap-2">
             <button
               id="mobile-menu-trigger"
-              onClick={() => { setIsSearchOpen(false); setPinOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-ink cursor-pointer"
+              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white cursor-pointer"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
             >
@@ -291,13 +292,21 @@ export const Header: React.FC = () => {
             {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
             <button
               id="header-search-btn"
-              onClick={() => { setIsMobileMenuOpen(false); setPinOpen(false); setIsSearchOpen(!isSearchOpen); }}
-              className="flex h-11 min-w-0 flex-1 items-center gap-2.5 rounded-full bg-white px-3.5 text-left text-sm text-ink-muted cursor-pointer"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(!isSearchOpen); }}
+              className="flex h-[46px] min-w-0 flex-1 items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-4 text-left text-[14.5px] text-white cursor-pointer"
               aria-label={searchLabel}
               aria-expanded={isSearchOpen}
             >
-              <span className="flex shrink-0 text-brand"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
+              <span className="flex shrink-0 text-highlight"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
               <TypedSearchHint words={searchHints} fallback={searchLabel} />
+            </button>
+            <button
+              type="button"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+              className="sag-glow flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-sun text-ink cursor-pointer"
+              aria-label="Open search"
+            >
+              <SearchIcon className="w-5 h-5" mono />
             </button>
           </div>
         </div>
