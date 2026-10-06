@@ -299,18 +299,8 @@ export const Header: React.FC = () => {
               <span className="flex shrink-0 text-brand"><SearchIcon className="w-[19px] h-[19px]" mono /></span>
               <TypedSearchHint words={searchHints} fallback={searchLabel} />
             </button>
-            <button
-              id="header-pin-btn"
-              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setPinOpen(!pinOpen); }}
-              className="flex h-11 shrink-0 items-center gap-1.5 rounded-full bg-sun px-3.5 text-[13px] font-extrabold text-ink cursor-pointer"
-              aria-label="Check delivery to your PIN code"
-              aria-expanded={pinOpen}
-            >
-              <span className="flex text-ink"><PinIcon className="w-4 h-4" mono /></span> PIN
-            </button>
           </div>
         </div>
-        {pinOpen && <div className="lg:hidden"><HeaderPinCheck onClose={() => setPinOpen(false)} /></div>}
 
         <div className="hidden lg:flex max-w-7xl mx-auto px-8 h-[68px] items-center justify-between gap-3">
           <div className="flex items-center min-w-0">

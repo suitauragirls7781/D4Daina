@@ -52,10 +52,10 @@ export const MobileAppNavbar: React.FC = () => {
     <nav
       id="mobile-app-bottom-navbar"
       aria-label="Mobile navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] px-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] select-none pointer-events-none"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] bg-dark pb-[env(safe-area-inset-bottom)] select-none"
     >
-      {/* A dark pill that floats above the bottom edge; the current tab is a mint tile with dark text */}
-      <div className="pointer-events-auto max-w-md mx-auto grid grid-cols-5 gap-0.5 rounded-[22px] bg-dark p-1.5 ring-1 ring-white/15 shadow-[0_8px_24px_-8px_rgba(10,10,10,0.45)]">
+      {/* A black bar flush with the bottom edge of the screen; the current tab is an amber tile with dark text */}
+      <div className="max-w-md mx-auto grid grid-cols-5 gap-0.5 px-1.5 py-1.5">
         {tabs.map(({ id, label, icon: Icon, active, count, dot }) => (
           <button
             key={id}
