@@ -3,61 +3,73 @@
 @source not "../design";
 
 /* ------------------------------------------------------------------
-   Suit Aura Girls design system "Bharosa Atelier" (see design/DESIGN.md)
-   Paper grey page, white surfaces, warm ink text, peacock teal for
-   every "move forward" action, marigold-brown for money saved,
-   rani pink only for the wishlist heart and count badges.
-   No gradients, no coloured glows, no looping animation.
+   Suit Aura Girls design system "Pastel blocks" (owner's pick, 2026-10-06)
+   Cream page, white cards, deep plum ink, violet for every "move forward"
+   action, soft lilac / peach / mint / sky / butter blocks for sections,
+   green for money saved, pink only for the wishlist heart and count badges.
+   No gradients. Token names are unchanged from the earlier system.
 ------------------------------------------------------------------- */
 @theme {
   /* Surfaces */
-  --color-page: #F5F4F1;
+  --color-page: #FFFDFB;
   --color-surface: #FFFFFF;
-  --color-sunken: #ECEAE4;
-  --color-sunken-deep: #DEDBD3;
+  --color-sunken: #F3EEFF;
+  --color-sunken-deep: #E3DAF7;
   /* Text and lines */
-  --color-ink: #1B1A17;
-  --color-ink-muted: #5F5A53;
-  --color-ink-faint: #6E6961;
-  --color-line: #E2DFD8;
-  --color-control: #857F74;
+  --color-ink: #221B33;
+  --color-ink-muted: #5F5970;
+  --color-ink-faint: #6F6A7D;
+  --color-line: #E6E0F0;
+  --color-control: #8A83A3;
   /* Brand (peacock teal): buy, continue, pay, links, active nav */
-  --color-brand: #0E4F4F;
-  --color-brand-dark: #0A3C3C;
-  --color-brand-wash: #E6F0EE;
-  --color-brand-line: #BFD8D3;
+  --color-brand: #5B3FD1;
+  --color-brand-dark: #4930B8;
+  --color-brand-wash: #EDE6FF;
+  --color-brand-line: #CFC3F7;
   /* Accent (rani): filled wishlist heart and count badges only */
-  --color-accent: #B0124A;
-  --color-accent-tint: #FCE8EF;
+  --color-accent: #CC2354;
+  --color-accent-tint: #FDE7EE;
   /* Sale: "% off", "You save", "Free" */
-  --color-sale: #8A5A00;
-  --color-sale-tint: #FBF0D9;
-  --color-sale-line: #E3C078;
-  --color-star: #D98E04;
+  --color-sale: #167A4A;
+  --color-sale-tint: #FFF1B8;
+  --color-sale-line: #E0C766;
+  --color-star: #F0A30A;
   /* Confirmed states */
-  --color-ok: #17663F;
-  --color-ok-tint: #E9F5EE;
-  --color-ok-line: #B9DEC8;
+  --color-ok: #14603B;
+  --color-ok-tint: #DDF5E6;
+  --color-ok-line: #A9DDBD;
   /* Errors */
   --color-danger: #B3261E;
   --color-danger-tint: #FCEDEA;
   --color-danger-line: #F0B8B2;
   /* Dark surfaces: footer, announcement bar, lightbox */
-  --color-dark: #12211F;
-  --color-on-dark: #F5F4F1;
-  --color-on-dark-muted: #B9C4C1;
-  --color-highlight: #F2C14E;
+  --color-dark: #221B33;
+  --color-on-dark: #FFFFFF;
+  --color-on-dark-muted: #B9B3CC;
+  --color-highlight: #C9F2DC;
+  /* Pastel blocks: section backgrounds and tiles. Each has an ink for text placed on it. */
+  --color-lilac: #EDE6FF;
+  --color-lilac-ink: #3B2A99;
+  --color-peach: #FFE1D2;
+  --color-peach-ink: #9A3412;
+  --color-mint: #DDF5E6;
+  --color-mint-ink: #14603B;
+  --color-sky: #CFE9FF;
+  --color-sky-ink: #0F4C81;
+  --color-butter: #FFF1B8;
+  --color-butter-ink: #7A5200;
+  --color-sun: #FFE14D;
 
   /* Old palette names kept for one release as aliases of the new values */
-  --color-bottle-maroon: #0E4F4F;
-  --color-brand-maroon: #0E4F4F;
-  --color-plum: #0E4F4F;
-  --color-antique-gold: #D98E04;
-  --color-ivory: #F5F4F1;
-  --color-dusty-rose: #FBF0D9;
-  --color-blush: #FBF0D9;
-  --color-charcoal: #1B1A17;
-  --color-lavender: #ECEAE4;
+  --color-bottle-maroon: #5B3FD1;
+  --color-brand-maroon: #5B3FD1;
+  --color-plum: #5B3FD1;
+  --color-antique-gold: #F0A30A;
+  --color-ivory: #FFFDFB;
+  --color-dusty-rose: #FFF1B8;
+  --color-blush: #FFF1B8;
+  --color-charcoal: #221B33;
+  --color-lavender: #F3EEFF;
 
   /* Two families only: Inter for text, Playfair Display for main headings.
      Why Playfair Display: compared in the browser on this site's real headings at 390px against
@@ -69,15 +81,16 @@
      read too small beside Inter at 17px).
      --font-serif is no longer used by any component; it stays as an alias of Inter so a stray
      font-serif class can never fall back to Times. */
-  --font-sans: 'Inter', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-  --font-display: 'Playfair Display', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Figtree', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Figtree', 'Inter Fallback', system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 
-  --radius-badge: 6px;
-  --radius-chip: 10px;
-  --radius-control: 12px;
-  --radius-card: 16px;
-  --radius-sheet: 20px;
+  /* Soft, round shapes. Buttons and chips are pills through their helper classes (sag-btn-*, sag-chip). */
+  --radius-badge: 8px;
+  --radius-chip: 14px;
+  --radius-control: 16px;
+  --radius-card: 22px;
+  --radius-sheet: 28px;
 }
 
 /* Fallback faces sized to the web fonts, so the swap does not move the layout */
@@ -100,41 +113,47 @@
 }
 
 :root {
-  --sag-page: #F5F4F1;
+  --sag-page: #FFFDFB;
   --sag-surface: #FFFFFF;
-  --sag-sunken: #ECEAE4;
-  --sag-sunken-deep: #DEDBD3;
-  --sag-ink: #1B1A17;
-  --sag-ink-muted: #5F5A53;
-  --sag-ink-faint: #6E6961;
-  --sag-line: #E2DFD8;
-  --sag-control: #857F74;
-  --sag-brand: #0E4F4F;
-  --sag-brand-dark: #0A3C3C;
-  --sag-brand-wash: #E6F0EE;
-  --sag-brand-line: #BFD8D3;
-  --sag-accent: #B0124A;
-  --sag-accent-tint: #FCE8EF;
-  --sag-sale: #8A5A00;
-  --sag-sale-tint: #FBF0D9;
-  --sag-sale-line: #E3C078;
-  --sag-star: #D98E04;
-  --sag-ok: #17663F;
-  --sag-ok-tint: #E9F5EE;
-  --sag-ok-line: #B9DEC8;
+  --sag-sunken: #F3EEFF;
+  --sag-sunken-deep: #E3DAF7;
+  --sag-ink: #221B33;
+  --sag-ink-muted: #5F5970;
+  --sag-ink-faint: #6F6A7D;
+  --sag-line: #E6E0F0;
+  --sag-control: #8A83A3;
+  --sag-brand: #5B3FD1;
+  --sag-brand-dark: #4930B8;
+  --sag-brand-wash: #EDE6FF;
+  --sag-brand-line: #CFC3F7;
+  --sag-accent: #CC2354;
+  --sag-accent-tint: #FDE7EE;
+  --sag-sale: #167A4A;
+  --sag-sale-tint: #FFF1B8;
+  --sag-sale-line: #E0C766;
+  --sag-star: #F0A30A;
+  --sag-ok: #14603B;
+  --sag-ok-tint: #DDF5E6;
+  --sag-ok-line: #A9DDBD;
   --sag-danger: #B3261E;
   --sag-danger-tint: #FCEDEA;
   --sag-danger-line: #F0B8B2;
-  --sag-dark: #12211F;
-  --sag-on-dark: #F5F4F1;
-  --sag-on-dark-muted: #B9C4C1;
-  --sag-highlight: #F2C14E;
-  --sag-scrim: rgba(27, 26, 23, 0.5);
+  --sag-dark: #221B33;
+  --sag-on-dark: #FFFFFF;
+  --sag-on-dark-muted: #B9B3CC;
+  --sag-highlight: #C9F2DC;
+  --sag-lilac: #EDE6FF;
+  --sag-peach: #FFE1D2;
+  --sag-mint: #DDF5E6;
+  --sag-sky: #CFE9FF;
+  --sag-butter: #FFF1B8;
+  --sag-sun: #FFE14D;
+  --sag-scrim: rgba(34, 27, 51, 0.5);
 
   /* Cards carry no shadow. --sag-shadow stays defined so older references keep working. */
-  --sag-shadow: none;
-  --sag-shadow-bar: 0 -4px 16px rgba(27, 26, 23, 0.08);
-  --sag-shadow-pop: 0 8px 24px -12px rgba(27, 26, 23, 0.18);
+  --sag-shadow: 0 2px 10px rgba(34, 27, 51, 0.07);
+  --sag-shadow-bar: 0 -4px 16px rgba(34, 27, 51, 0.08);
+  --sag-shadow-pop: 0 8px 24px -12px rgba(34, 27, 51, 0.18);
 
   /* Old variable names, aliased for one release */
   --sag-lavender: var(--sag-sunken);
@@ -153,12 +172,12 @@
   html, body, #root {
     font-family: var(--font-sans);
     scroll-behavior: smooth;
-    background-color: #F5F4F1;
+    background-color: #FFFDFB;
     color-scheme: light;
     max-width: 100vw;
     overflow-x: hidden;
     width: 100%;
-    color: #1B1A17;
+    color: #221B33;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
@@ -180,7 +199,7 @@
      an h1 / h2 that is really a product name or an order number carries font-sans. */
   h1, h2, .font-display {
     font-family: var(--font-display);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.25;
     letter-spacing: 0;
     font-synthesis: none;
@@ -201,12 +220,12 @@
   :is(h1, h2).font-sans { letter-spacing: 0; }
 
   ::selection {
-    background: #E6F0EE;
-    color: #1B1A17;
+    background: #EDE6FF;
+    color: #221B33;
   }
 
   input, select, textarea {
-    color: #1B1A17;
+    color: #221B33;
     background-color: #FFFFFF;
     /* Sticky buy / pay bars stay on screen while typing; keep the focused field clear of them */
     scroll-margin-bottom: 96px;
@@ -219,15 +238,15 @@
 
   select option {
     background-color: #FFFFFF;
-    color: #1B1A17;
+    color: #221B33;
   }
 
   input[type="checkbox"], input[type="radio"] {
-    accent-color: #0E4F4F;
+    accent-color: #5B3FD1;
   }
 
   :focus-visible {
-    outline: 2px solid #1B1A17;
+    outline: 2px solid #221B33;
     outline-offset: 2px;
   }
 
@@ -361,9 +380,9 @@
 /* Card: white, 1px line, radius 16, no shadow. Selected: add data-selected="true" (or aria-checked / aria-pressed). */
 .sag-card {
   background: #FFFFFF;
-  border: 1px solid var(--sag-line);
-  border-radius: 16px;
-  box-shadow: none;
+  border: 1px solid transparent;
+  border-radius: 22px;
+  box-shadow: var(--sag-shadow);
 }
 .sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) {
   background: var(--sag-brand-wash);
@@ -376,7 +395,7 @@
   background: var(--sag-brand);
   color: #FFFFFF;
   border: 0;
-  border-radius: 12px;
+  border-radius: 9999px;
   text-transform: none;
   letter-spacing: 0;
   transition: background-color 150ms ease, transform 150ms ease;
@@ -390,15 +409,15 @@
 .sag-btn-primary svg.lucide { color: inherit; }
 
 /* "Buy now" on the product page: yellow with dark text (owner's choice, 2026-10-03). Only this button. */
-.sag-btn-primary.sag-btn-buy { background: #FFC200; color: var(--sag-ink); }
-.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: #F0B400; }
+.sag-btn-primary.sag-btn-buy { background: #FFE14D; color: var(--sag-ink); }
+.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: #F5D21F; }
 
 /* Product photo while it loads or right after the shopper picks another one: a small spinner, gone once it shows */
 .sag-photo-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .sag-photo-spinner {
   width: 28px; height: 28px; border-radius: 9999px;
   border: 3px solid rgba(255, 255, 255, 0.85); border-top-color: var(--sag-brand);
-  box-shadow: 0 0 0 1px rgba(27, 26, 23, 0.08);
+  box-shadow: 0 0 0 1px rgba(34, 27, 51, 0.08);
   animation: sag-photo-spin 700ms linear infinite;
 }
 @keyframes sag-photo-spin { to { transform: rotate(360deg); } }
@@ -408,8 +427,9 @@
 .sag-btn-outline {
   background: #FFFFFF;
   color: var(--sag-ink);
-  border: 1.5px solid var(--sag-ink);
-  border-radius: 12px;
+  border: 1.5px solid var(--sag-brand);
+  color: var(--sag-brand);
+  border-radius: 9999px;
   text-transform: none;
   letter-spacing: 0;
   transition: background-color 150ms ease, border-color 150ms ease;
@@ -447,7 +467,7 @@
     padding-inline: 20px;
     font-size: 16px;
     line-height: 20px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
   }
 
@@ -473,7 +493,7 @@
     height: 52px;
     padding-inline: 14px;
     border: 1.5px solid var(--sag-control);
-    border-radius: 12px;
+    border-radius: 16px;
     background: #FFFFFF;
     color: var(--sag-ink);
     font-size: 16px;
@@ -508,7 +528,7 @@
     min-width: 52px;
     padding-inline: 14px;
     border: 1.5px solid var(--sag-control);
-    border-radius: 10px;
+    border-radius: 9999px;
     background: #FFFFFF;
     color: var(--sag-ink);
     font-size: 15px;
@@ -556,7 +576,7 @@
     align-items: center;
     height: 22px;
     padding-inline: 8px;
-    border-radius: 6px;
+    border-radius: 8px;
     background: var(--sag-sunken);
     color: var(--sag-ink);
     font-size: 11px;
@@ -688,3 +708,32 @@
    empty-bag and payment-result screens keep the normal header).
 ------------------------------------------------------------------- */
 #app-main-content:has(.sag-checkout) > header.sticky { display: none; }
+
+/* ------------------------------------------------------------------
+   Pastel blocks (owner's pick, 2026-10-06): a few gentle loops that
+   came with the chosen header, trust badges and hero sticker.
+   prefers-reduced-motion switches all of them off.
+------------------------------------------------------------------- */
+@keyframes sag-float { 50% { transform: translateY(-3px); } }
+@keyframes sag-spin { to { transform: rotate(360deg); } }
+@keyframes sag-bob { 50% { transform: rotate(-4deg) translateY(-5px); } }
+.sag-float { animation: sag-float 3.5s ease-in-out infinite; }
+.sag-bob { transform: rotate(-10deg); animation: sag-bob 3s ease-in-out infinite; }
+/* A thin three-colour ring that turns slowly around a round badge */
+.sag-ring { position: relative; }
+.sag-ring::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  border-top-color: var(--sag-brand);
+  border-right-color: var(--sag-accent);
+  border-bottom-color: var(--sag-star);
+  animation: sag-spin 7s linear infinite;
+  pointer-events: none;
+}
+.sag-ring-reverse::before { animation-direction: reverse; }
+@media (prefers-reduced-motion: reduce) {
+  .sag-float, .sag-bob, .sag-ring::before { animation: none; }
+}
