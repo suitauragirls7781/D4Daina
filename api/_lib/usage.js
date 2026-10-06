@@ -156,7 +156,7 @@ export const R2_FREE_READS_PER_MONTH = 10000000;
 // Every photo is kept in nine ready-made files (seven WebP widths and two JPEGs); migrated photos also keep their original
 export const FILES_PER_PHOTO = 9;
 
-const R2_QUERY = 'query($acc:String!,$bucket:String!,$start:Time!,$end:Time!){viewer{accounts(filter:{accountTag:$acc}){storage:r2StorageAdaptiveGroups(limit:1,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end},orderBy:[datetime_DESC]){max{payloadSize objectCount metadataSize}} ops:r2OperationsAdaptiveGroups(limit:1000,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end}){sum{requests} dimensions{actionType}}}}}';
+const R2_QUERY = 'query($acc:String!,$bucket:String!,$start:Time!,$end:Time!){viewer{accounts(filter:{accountTag:$acc}){storage:r2StorageAdaptiveGroups(limit:1,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end},orderBy:[datetime_DESC]){max{payloadSize objectCount metadataSize} dimensions{datetime}} ops:r2OperationsAdaptiveGroups(limit:1000,filter:{bucketName:$bucket,datetime_geq:$start,datetime_leq:$end}){sum{requests} dimensions{actionType}}}}}';
 // How R2 bills each action: writes and listings are Class A, reads are Class B, deletes are free
 const isWrite = (action) => /^(Put|Copy|List|Create|Complete|Upload)/.test(action);
 const isRead = (action) => /^(Get|Head)/.test(action);
