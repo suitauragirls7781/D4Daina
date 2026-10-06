@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useBackToClose } from '../utils/backClose';
 import { useShop } from '../context/ShopContext';
 import { CartLines, CartTotals, EmptyBag, useBagTotal } from './CartContents';
 import { Assurance } from './Assurance';
@@ -8,6 +9,8 @@ export const CartDrawer: React.FC = () => {
   const { cart, cartCount, isCartDrawerOpen, setIsCartDrawerOpen, setActivePage, activePage } = useShop();
   const total = useBagTotal();
   const close = () => setIsCartDrawerOpen(false);
+
+  useBackToClose(isCartDrawerOpen, () => setIsCartDrawerOpen(false));
 
   useEffect(() => {
     if (!isCartDrawerOpen) return;

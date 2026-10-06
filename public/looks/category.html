@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Shop by category: 5 options</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/looks/looks.css">
+<style>
+.hd2{display:flex;align-items:flex-end;justify-content:space-between;padding:16px 14px 10px}
+.rail{display:flex;gap:12px;overflow:hidden;padding:2px 14px 16px}
+.sq{flex:none;width:76px;text-align:center;font-size:12px;font-weight:600}
+.sq i{display:block;width:76px;height:76px;border-radius:22px;overflow:hidden;margin-bottom:6px}
+.sq img{width:100%;height:100%}
+.ci{flex:none;width:76px;text-align:center;font-size:12px;font-weight:700}
+.ci i{display:block;width:70px;height:70px;border-radius:50%;margin:3px auto 8px}
+.ci i img{width:70px;height:70px;border-radius:50%}
+.ar{flex:none;width:96px;text-align:center}
+.ar i{display:block;width:96px;height:124px;border-radius:60px 60px 16px 16px;overflow:hidden;padding:4px 4px 0}
+.ar i img{width:100%;height:100%;border-radius:56px 56px 0 0}
+.ar span{display:inline-block;margin-top:-14px;position:relative;background:#fff;border-radius:99px;padding:5px 11px;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(34,27,51,.10)}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 16px}
+.gr>div{border-radius:20px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:84px}
+.gr b{display:block;font-size:14.5px;font-weight:800}
+.gr small{font-size:12px;font-weight:600;opacity:.85}
+.gr img{width:58px;height:58px;border-radius:50%;flex:none;box-shadow:0 0 0 3px #fff}
+.ch{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 16px}
+.ch span{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 14px 0 5px;border-radius:99px;background:#fff;box-shadow:inset 0 0 0 1.5px var(--line);font-size:13.5px;font-weight:700}
+.ch img{width:38px;height:38px;border-radius:50%}
+.ch small{color:var(--muted);font-weight:600}
+.below{padding:0 14px 14px;display:grid;grid-template-columns:1fr;gap:8px}
+.below i{display:block;height:70px;border-radius:24px;background:var(--peach)}
+</style>
+</head>
+<body>
+<script src="/looks/kit.js"></script>
+<script>
+// The store's categories and their counts today
+const CAT = [['Suits', 11, P1.photos[0]], ['Co-ord Sets', 4, P1.photos[4]], ['Anarkali', 4, P3.photo], ['Dresses', 2, P1.photos[3]], ['Festive Wear', 2, P2.photo], ['Kurtis', 2, P1.photos[2]]];
+const TINT = ['bg-peach', 'bg-mint', 'bg-sky', 'bg-lilac', 'bg-butter', 'bg-peach'];
+const head = `<div class="hd2"><div class="serif t20">Shop by category</div><span class="brand b t13" style="text-decoration:underline">View all</span></div>`;
+const below = '<div class="below"><i></i></div>';
+
+render('Shop by category', [
+  ['Pastel squares', 'Abhi jaisa: gol kone wale chhote chaukor, har ek alag pastel rang par, naam neeche. Ungli se khiskao.',
+    `${miniHeader()}${head}<div class="rail">${CAT.map(([n, , p], i) => `<div class="sq"><i class="${TINT[i]}"><img src="${img(p, 200)}" alt=""></i>${n}</div>`).join('')}</div>${below}`],
+  ['Story circles', 'Gol photo, charon taraf patli ghoomti ring, jaise Instagram ki story. Ad se aane walon ko jana-pehchana lagta hai.',
+    `${miniHeader()}${head}<div class="rail">${CAT.map(([n, , p]) => `<div class="ci"><i class="ring"><img src="${img(p, 200)}" alt=""></i>${n}</div>`).join('')}</div>${below}`],
+  ['Arch tiles', 'Lambi mehraab (arch) wali photo, naam safed gol patti me photo ke neeche tika hua. Home ke hero ki arch se mel khata hai, kapda zyada dikhta hai.',
+    `${miniHeader()}${head}<div class="rail">${CAT.map(([n, , p], i) => `<div class="ar"><i class="${TINT[i]}"><img src="${img(p, 240)}" alt=""></i><span>${n}</span></div>`).join('')}</div>${below}`],
+  ['Tile grid', 'Khiskana nahi padta: do column me rangeen card, naam aur kitne design baayein, gol photo daayein. Saari category ek nazar me.',
+    `${miniHeader()}${head}<div class="gr">${CAT.map(([n, c, p], i) => `<div class="${TINT[i]}"><div><b>${n}</b><small class="num">${c} ${c === 1 ? 'design' : 'designs'}</small></div><img src="${img(p, 160)}" alt=""></div>`).join('')}</div>${below}`],
+  ['Photo chips', 'Sabse kam jagah: gol patti me chhoti gol photo, naam aur ginti. Do-teen line me saari category aa jati hai.',
+    `${miniHeader()}${head}<div class="ch">${CAT.map(([n, c, p]) => `<span><img src="${img(p, 120)}" alt="">${n} <small class="num">${c}</small></span>`).join('')}</div>${below}`],
+], 'Category aur ginti store se apne aap aati hai; photo us category ke pehle product ki hoti hai.');
+</script>
+</body>
+</html>

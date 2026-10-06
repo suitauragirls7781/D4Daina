@@ -22,6 +22,7 @@ import { ProductReviews, Stars } from './ProductReviews';
 import { ShimmerPDP } from './ShimmerPDP';
 import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { useBackToClose } from '../utils/backClose';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, GitCompare, Heart, Minus, Plus, Share2, Tag, X } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
@@ -134,6 +135,9 @@ export const ProductDetailPage: React.FC = () => {
   const [needSize, setNeedSize] = useState(false);
   // Size sheet: which bar button opened it (null = closed)
   const [sheetAction, setSheetAction] = useState<BuyAction | null>(null);
+  // The phone's Back button closes the full-size photo or the size sheet instead of leaving the product
+  useBackToClose(lightbox, () => setLightbox(false));
+  useBackToClose(sheetAction !== null, () => setSheetAction(null));
   const [sheetError, setSheetError] = useState(false);
   const [moreOffers, setMoreOffers] = useState(false);
   const [descOpen, setDescOpen] = useState(false);

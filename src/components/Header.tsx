@@ -13,6 +13,7 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { ChevronDown, ChevronRight, CircleAlert, CircleCheck, Clock, Loader2, Menu, Trash2, X } from 'lucide-react';
 import { PIN_KEY, PIN_RE, lookupPincode } from './DeliveryCheck';
 import { BagIcon } from './BrandIcons';
+import { useBackToClose } from '../utils/backClose';
 import { HeartIcon, PinIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
@@ -111,6 +112,9 @@ export const Header: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
+  // The phone's Back button closes the search panel or the PIN check instead of leaving the page
+  useBackToClose(isSearchOpen, () => setIsSearchOpen(false));
+  useBackToClose(pinOpen, () => setPinOpen(false));
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');

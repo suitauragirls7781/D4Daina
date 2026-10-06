@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { seedHomeUnderFirstPage } from '../utils/backClose';
 import { withPageTransition } from '../utils/pageTransition';
 import { isAdminEntryPath, toAppPath, toBrowserPath } from '../utils/adminEntry';
 
@@ -201,6 +202,9 @@ export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCurrentPath(url.pathname);
     setRouteState(parsePath(url.pathname, url.search));
   }, []);
+
+  // A visit that starts on an inner page gets the homepage under it, so Back stays in the store once
+  useEffect(() => { seedHomeUnderFirstPage(); }, []);
 
   // Listen to popstate (browser back / forward buttons)
   useEffect(() => {

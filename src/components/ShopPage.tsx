@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useBackToClose } from '../utils/backClose';
 import { createPortal } from 'react-dom';
 import { useShop } from '../context/ShopContext';
 import { useRouter } from '../context/RouterContext';
@@ -108,6 +109,8 @@ export const ShopPage: React.FC = () => {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
+  useBackToClose(filtersOpen, () => setFiltersOpen(false));
+  useBackToClose(sortOpen, () => setSortOpen(false));
   const [visible, setVisible] = useState(PAGE);
   // Typed min/max prices apply on blur or Enter, so a half-typed number never empties the list.
   const [minDraft, setMinDraft] = useState('');

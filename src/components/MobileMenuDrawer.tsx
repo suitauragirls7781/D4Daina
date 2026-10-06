@@ -5,6 +5,7 @@ import { ChevronRight, X } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { ActivePage } from '../types';
+import { useBackToClose } from '../utils/backClose';
 import { KIDS_TOYS, departmentOf, isKidsToysListing } from '../utils/kids';
 import { HeartIcon, HomeIcon, SearchIcon, TruckIcon, UserIcon } from './StoreIcons';
 
@@ -17,6 +18,7 @@ export const MobileMenuDrawer: React.FC = () => {
   const { isMobileMenuOpen, setIsMobileMenuOpen, products = [], navigateToCategory, setActivePage, setIsSearchOpen, wishlist, activePage, selectedCategory } = useShop();
   const { user } = useAuth();
   const close = () => setIsMobileMenuOpen(false);
+  useBackToClose(isMobileMenuOpen, close);
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
