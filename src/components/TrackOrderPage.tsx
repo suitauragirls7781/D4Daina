@@ -318,10 +318,18 @@ export const TrackOrderPage: React.FC = () => {
                 {Number(order.subtotal) > 0 && (
                   <div className={moneyRow}><span>Shipping</span>{Number(order.shippingCharge) > 0 ? <span className="text-ink">{inr(order.shippingCharge)}</span> : <span className="font-semibold text-sale">Free</span>}</div>
                 )}
+                {order.payMode === 'cod' ? (
+              <>
+                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-lg leading-[22px] font-bold">{inr(order.codDue || 0)}</span></div>
+              </>
+            ) : (
                 <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
                   <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Order total'}</span>
                   <span className="text-lg leading-[22px] font-bold">{inr(order.finalTotal)}</span>
                 </div>
+                )}
                 <div className={`${moneyRow} text-[13px] leading-[18px]`}>
                   <span>Payment</span>
                   <span className="text-right text-ink">

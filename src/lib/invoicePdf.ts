@@ -225,7 +225,8 @@ export const buildInvoicePdf = async (order: Order, settings?: Partial<StoreSett
   y += rows.length * 6 + 2;
   doc.setFillColor(...PLUM);
   doc.roundedRect(tx - 4, y - 1, W - M - tx + 4, 13, 3, 3, 'F');
-  text(paid || refunded ? 'Total paid' : 'Total', tx, y + 7.4, { size: 11, bold: true, color: [255, 255, 255] });
+  const cod = order.payMode === 'cod';
+  text(cod ? `Total (${rs(order.codAdvance || 0)} paid, ${rs(order.codDue || 0)} cash on delivery)` : paid || refunded ? 'Total paid' : 'Total', tx, y + 7.4, { size: cod ? 8.5 : 11, bold: true, color: [255, 255, 255] });
   text(rs(order.finalTotal), W - M - 3, y + 7.6, { size: 13, bold: true, color: [255, 255, 255], align: 'right' });
   const totalSavings = mrpSavings + named;
   if (totalSavings > 0) text(`You saved ${rs(totalSavings)} on this order`, W - M, y + 19, { size: 9, bold: true, color: EMERALD, align: 'right' });

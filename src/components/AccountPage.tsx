@@ -154,7 +154,7 @@ const CancelOrderDialog: React.FC<{
         <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line">
           <div className="min-w-0 pt-2">
             <h2 id="cancel-order-title" className="text-base leading-[22px] font-semibold text-ink">Cancel this order?</h2>
-            <p className="sag-num mt-0.5 text-sm leading-5 text-ink-muted break-words">#{order.orderNumber} · {inr(order.finalTotal)} paid</p>
+            <p className="sag-num mt-0.5 text-sm leading-5 text-ink-muted break-words">#{order.orderNumber} · {order.payMode === 'cod' ? `${inr(order.codAdvance || 0)} paid, ${inr(order.codDue || 0)} cash on delivery` : `${inr(order.finalTotal)} paid`}</p>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
             <X className="w-[22px] h-[22px]" />
@@ -375,6 +375,7 @@ const OrderCard: React.FC<{
           </div>
           <p className="sag-num shrink-0 text-right text-base leading-[22px] font-bold text-ink">
             <span className="sr-only">Total </span>{inr(order.finalTotal)}
+            {order.payMode === 'cod' && <span className="block text-xs leading-4 font-semibold text-sale">{inr(order.codDue || 0)} cash on delivery</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">

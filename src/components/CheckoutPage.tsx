@@ -105,6 +105,7 @@ export const CheckoutPage: React.FC = () => {
     shippingFee,
     cartTotal,
     prepaidDiscount,
+    storeOffers,
     comboDiscount,
     comboOffer,
     freeShippingThreshold,
@@ -240,6 +241,12 @@ export const CheckoutPage: React.FC = () => {
 
   // Preview totals. The server recalculates everything from Firestore before payment.
   const finalCartTotal = Math.max(0, cartTotal - prepaidDiscount);
+  // Cash on delivery (when the owner has it on): the charge is paid online now, the rest in cash at the door.
+  // No online payment discount, and the charge replaces the delivery charge. Same sums as priceCart on the server.
+  const [payMode, setPayMode] = useState<'prepaid' | 'cod'>('prepaid');
+  const codCharge = storeOffers.codCharge;
+  const codDue = Math.max(0, cartTotal - shippingFee);
+  const codTotal = codDue + codCharge;
 
   // Session ID & debounce timer ref for abandoned checkout tracking
   const getCheckoutSessionId = () => {
@@ -758,8 +765,11 @@ export const CheckoutPage: React.FC = () => {
       setErrorMessage('Online payment is paused for a few minutes. Please try again shortly.');
       return;
     }
-    const sdkReady = gateway === 'razorpay' ? loadRazorpaySDK() : Promise.resolve(true);
-    const signature = JSON.stringify([cart.map((item) => [item.product.id, item.selectedSize, item.selectedColor?.name || '', item.quantity, item.lookParentId || '']), appliedCoupon?.code || '']);
+    // The advance of a cash-on-delivery order always goes through Razorpay
+    const cod = payMode === 'cod' && codOn;
+    const payGateway: Gateway = cod ? 'razorpay' : gateway;
+    const sdkReady = payGateway === 'razorpay' ? loadRazorpaySDK() : Promise.resolve(true);
+    const signature = JSON.stringify([cart.map((item) => [item.product.id, item.selectedSize, item.selectedColor?.name || '', item.quantity, item.lookParentId || '']), appliedCoupon?.code || '', cod ? 'cod' : '']);
     let created: {
       gateway?: Gateway; alreadyPaid?: boolean; orderNumber: string; order: Order;
       razorpayOrderId: string; amount: number; currency: string; keyId: string;
@@ -767,7 +777,8 @@ export const CheckoutPage: React.FC = () => {
     };
     try {
       created = await ordersApi('create', {
-        gateway,
+        gateway: payGateway,
+        payMode: cod ? 'cod' : 'prepaid',
         attemptKey: checkoutAttemptKey(signature),
         items: cart.map((item) => ({
           productId: item.product.id,
@@ -803,7 +814,7 @@ export const CheckoutPage: React.FC = () => {
     }
     setPayStage('paying');
 
-    if (Math.round(created.order.finalTotal) !== Math.round(finalCartTotal)) {
+    if (Math.round(created.order.finalTotal) !== Math.round(cod ? codTotal : finalCartTotal)) {
       showToast(`Your total was updated to ₹${created.order.finalTotal.toLocaleString('en-IN')} based on current prices.`, 'info');
     }
 
@@ -815,7 +826,7 @@ export const CheckoutPage: React.FC = () => {
         amount: created.amount,
         currency: created.currency,
         name: 'Suit Aura Girls',
-        description: `Order ${created.orderNumber}`,
+        description: cod ? `Advance for cash on delivery order ${created.orderNumber}` : `Order ${created.orderNumber}`,
         image: '/suit-aura-logo-512.png',
         prefill: { name: fullName, email: address.email, contact: address.mobile },
         notes: { order_number: created.orderNumber },
@@ -933,7 +944,7 @@ export const CheckoutPage: React.FC = () => {
   const stepBlocks = [
     { step: 'details' as const, title: 'Contact and address', done: [fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', '), next: 'Name, mobile, email and where to deliver' },
     { step: 'summary' as const, title: 'Review your order', done: `${itemsText} checked`, next: `${itemsText} · check before you pay` },
-    { step: 'payment' as const, title: 'Payment', done: '', next: `Pay online · ${rupees(finalCartTotal)}` },
+    { step: 'payment' as const, title: 'Payment', done: '', next: storeOffers.codEnabled ? `Pay online ${rupees(finalCartTotal)}, or cash on delivery` : `Pay online · ${rupees(finalCartTotal)}` },
   ];
   const stepRow = (index: number) => {
     const block = stepBlocks[index];
@@ -1005,16 +1016,20 @@ export const CheckoutPage: React.FC = () => {
     ['razorpay', razorpayTitle, upiOnly ? 'Google Pay, PhonePe, Paytm, BHIM or any UPI app, or scan the QR code' : razorpayDetail],
     ['payu', 'Pay with PayU', 'UPI, debit / credit cards and net banking on PayU\'s secure page'],
   ] as Array<[Gateway, string, string]>).filter(([id]) => gateways?.[id]);
+  // Cash on delivery is offered only when the owner has it on and Razorpay can take the advance
+  const codOn = storeOffers.codEnabled && Boolean(gateways?.razorpay);
+  const codChosen = payMode === 'cod' && codOn;
+  const prepaidSaving = Math.max(0, codTotal - finalCartTotal);
   const payButtonContent = isProcessing ? (
     <>
       <Loader2 className="w-[18px] h-[18px] animate-spin shrink-0" />
-      <span>{payStage === 'creating' ? 'Creating your order…' : gateway === 'payu' ? 'Taking you to PayU…' : 'Processing your payment…'}</span>
+      <span>{payStage === 'creating' ? 'Creating your order…' : gateway === 'payu' && !codChosen ? 'Taking you to PayU…' : 'Processing your payment…'}</span>
     </>
   ) : (
     <>
       <Lock className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
       {/* "Pay by UPI" only when UPI is the one method the chosen gateway offers; otherwise the wording as before */}
-      <span className="sag-num">{gateway === 'razorpay' && upiOnly ? 'Pay by UPI' : `Pay ${rupees(finalCartTotal)} securely`}</span>
+      <span className="sag-num">{codChosen ? `Pay ${rupees(codCharge)} now to confirm` : gateway === 'razorpay' && upiOnly ? 'Pay by UPI' : `Pay ${rupees(finalCartTotal)} securely`}</span>
     </>
   );
   // "Secure payment by <gateway>": the store's own wording (Assurance), with the name only once the gateway is known
@@ -1411,6 +1426,35 @@ export const CheckoutPage: React.FC = () => {
                   <p className="sag-num shrink-0 text-xs leading-4 text-on-dark-muted">Step {stepIndex + 1} of {stepBlocks.length}</p>
                 </div>
 
+                {codOn && (
+                  <div id="co-pay-mode" className="grid gap-2" role="radiogroup" aria-label="How would you like to pay?">
+                    {([
+                      ['prepaid', 'Pay online now', [storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off` : '', shippingFee === 0 ? 'Free delivery' : ''].filter(Boolean).join(' · '), finalCartTotal],
+                      ['cod', 'Cash on delivery', `Pay ${rupees(codCharge)} now, ${rupees(codDue)} in cash at delivery`, codTotal],
+                    ] as Array<['prepaid' | 'cod', string, string, number]>).map(([id, title, detail, amount]) => (
+                      <label key={id} className={`flex cursor-pointer items-center gap-3 rounded-control p-3 ${payMode === id ? 'bg-surface text-ink' : 'bg-white/10 text-on-dark'}`}>
+                        <input type="radio" name="payMode" value={id} checked={payMode === id} onChange={() => setPayMode(id)} disabled={isProcessing} className="h-5 w-5 shrink-0 accent-brand" />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[15px] leading-[22px] font-bold">
+                            {title}
+                            {id === 'prepaid' && prepaidSaving > 0 && <span className="rounded-badge bg-sun px-1.5 py-0.5 text-[11px] leading-4 font-extrabold text-ink sag-num">Save {rupees(prepaidSaving)}</span>}
+                          </span>
+                          {detail && <span className={`mt-0.5 block text-[13px] leading-[18px] sag-num ${payMode === id ? 'text-ink-muted' : 'text-on-dark-muted'}`}>{detail}</span>}
+                        </span>
+                        <span className="shrink-0 text-[15px] leading-[22px] font-extrabold sag-num">{rupees(amount)}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
+                {codChosen ? (
+                  <div className="py-1.5 text-center">
+                    <p className="text-sm leading-5 text-on-dark-muted">Pay now to confirm your order</p>
+                    <p className="sag-num text-[36px] leading-[1.15] font-extrabold text-on-dark">{rupees(codCharge)}</p>
+                    <p className="sag-num mt-0.5 text-[13px] leading-[18px] font-bold text-on-dark">+ {rupees(codDue)} in cash when the parcel arrives</p>
+                    <p className="sag-num mt-0.5 text-xs leading-4 text-on-dark-muted">Order total {rupees(codTotal)} (includes {rupees(codCharge)} cash on delivery shipping)</p>
+                  </div>
+                ) : (
                 <div className="py-1.5 text-center">
                   <p className="text-sm leading-5 text-on-dark-muted">Amount to pay</p>
                   <p className="sag-num text-[36px] leading-[1.15] font-extrabold text-on-dark">{rupees(finalCartTotal)}</p>
@@ -1418,6 +1462,15 @@ export const CheckoutPage: React.FC = () => {
                     <p className="sag-num mt-0.5 text-[13px] leading-[18px] font-bold text-highlight">You saved {rupees(Math.round(totalSavings))}</p>
                   )}
                 </div>
+                )}
+
+                {codChosen && prepaidSaving > 0 && (
+                  <div id="co-prepaid-nudge" className="rounded-control bg-peach p-3 text-ink">
+                    <p className="text-[15px] leading-[22px] font-extrabold sag-num">{storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off on prepaid orders` : 'Pay online and save'}</p>
+                    <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted sag-num">Pay {rupees(finalCartTotal)} online instead of {rupees(codTotal)} and save {rupees(prepaidSaving)}.</p>
+                    <button type="button" onClick={() => setPayMode('prepaid')} className="mt-2 inline-flex h-10 items-center rounded-full bg-brand px-4 text-[13px] font-bold text-white cursor-pointer">Pay online and save {rupees(prepaidSaving)}</button>
+                  </div>
+                )}
 
                 <ul className="space-y-2 rounded-control bg-white/10 p-3 text-[13px] leading-[18px] font-semibold text-on-dark">
                   <li className="flex items-start gap-2">
@@ -1445,7 +1498,9 @@ export const CheckoutPage: React.FC = () => {
                   </p>
                 ) : (
                   <>
-                    {paymentOptions.length === 1 ? (
+                    {codChosen ? (
+                      <p className="text-center text-[13px] leading-[18px] text-on-dark-muted">The {rupees(codCharge)} is paid by UPI through Razorpay. It is not refunded if the parcel is refused at delivery.</p>
+                    ) : paymentOptions.length === 1 ? (
                       // One way to pay: named in a quiet line (the gold button below is the action)
                       <p className="text-center text-[13px] leading-[18px] text-on-dark-muted">
                         <span className="font-bold text-on-dark">{paymentOptions[0][1]}</span> · {paymentOptions[0][2]}
@@ -1463,7 +1518,7 @@ export const CheckoutPage: React.FC = () => {
                         ))}
                       </div>
                     )}
-                    {prepaidDiscount > 0 && (
+                    {prepaidDiscount > 0 && !codChosen && (
                       <p className="text-center text-[13px] leading-[18px] font-semibold text-highlight sag-num">
                         Online payment discount of ₹{prepaidDiscount.toLocaleString('en-IN')} applied.
                       </p>

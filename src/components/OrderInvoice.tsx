@@ -268,10 +268,18 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
                 <span className="whitespace-nowrap">{value}</span>
               </div>
             ))}
+            {order.payMode === 'cod' ? (
+              <>
+                <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-lg leading-[22px] whitespace-nowrap font-bold">{inr(order.codDue || 0)}</span></div>
+              </>
+            ) : (
             <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink">
               <span className="font-semibold">{paid || refunded ? 'Total paid' : 'Order total'}</span>
               <span className="font-bold text-lg leading-[22px] whitespace-nowrap">{inr(order.finalTotal)}</span>
             </div>
+            )}
             {refunded && <p className="text-[13px] leading-[18px] text-ink-muted">This order has been refunded to the original payment method.</p>}
             {mrpSavings > 0 && <p className="text-[13px] leading-[18px] font-semibold text-sale">You saved {inr(mrpSavings)} on MRP.</p>}
           </div>

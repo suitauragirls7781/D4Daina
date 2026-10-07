@@ -168,6 +168,10 @@ export interface Order {
   couponCode?: string;
   shippingCharge: number;
   finalTotal: number;
+  /** 'cod' = cash on delivery: codAdvance was paid online, codDue is collected in cash at the door. */
+  payMode?: 'prepaid' | 'cod';
+  codAdvance?: number;
+  codDue?: number;
   deliveryAddress: DeliveryAddress;
   paymentMethod: PaymentMethodType;
   paymentStatus?: 'Paid' | 'Pending' | 'Refunded' | 'Unpaid' | 'Pending Verification';
@@ -372,6 +376,10 @@ export interface StoreSettings {
   prepaidPercent?: number;
   /** The percent discount is given only on products whose unit price is above this (₹; 0 = every product). */
   prepaidMinPrice?: number;
+  /** Cash on delivery: the shopper pays codCharge online to confirm, the rest in cash at delivery. */
+  codEnabled?: boolean;
+  /** ₹ paid online for a cash-on-delivery order (its shipping charge). */
+  codCharge?: number;
   announcementText?: string;
   announcementActive?: boolean;
   // ---- Checkout rules (Admin → Settings → Checkout; the server enforces them again) ----

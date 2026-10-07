@@ -397,6 +397,7 @@ export const ProductDetailPage: React.FC = () => {
   const prepaidLines = [
     prepaidDiscount > 0 && `₹${prepaidDiscount} off at checkout when you pay online`,
     prepaidPercentHere && `${storeOffers.prepaidPercent}% off this style at checkout when you pay online`,
+    storeOffers.codEnabled && `Cash on delivery available: pay ₹${storeOffers.codCharge} online to confirm, the rest in cash at delivery`,
   ].filter(Boolean) as string[];
   const comboHere = comboOffer && !accessoryPage ? comboOffer : null;
   const extraOffers = (comboHere ? 1 : 0) + (bestCoupon ? 1 : 0);

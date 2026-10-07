@@ -243,6 +243,7 @@ export const AdminOrders: React.FC = () => {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-base leading-5 font-bold text-ink tabular-nums">₹{order.finalTotal.toLocaleString('en-IN')}</p>
+                    {order.payMode === 'cod' && <p className="text-xs leading-4 font-bold text-sale tabular-nums">COD · collect ₹{(order.codDue || 0).toLocaleString('en-IN')}</p>}
                     <p className="text-xs leading-4 text-ink-muted">{order.items.length} {order.items.length === 1 ? 'item' : 'items'}</p>
                   </div>
                 </div>
@@ -320,6 +321,7 @@ export const AdminOrders: React.FC = () => {
                       {/* 4. Amount */}
                       <td className="py-3 px-3 font-bold text-ink text-sm tabular-nums whitespace-nowrap">
                         ₹{order.finalTotal.toLocaleString('en-IN')}
+                        {order.payMode === 'cod' && <span className="block text-xs font-bold text-sale">COD · collect ₹{(order.codDue || 0).toLocaleString('en-IN')}</span>}
                         <span className="block text-xs font-normal text-ink-muted">
                           {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                         </span>

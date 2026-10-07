@@ -105,7 +105,7 @@ interface ShopContextType {
   comboPieces: number;
   freeShippingThreshold: number;
   /** Admin settings as configured (independent of the bag), for store-wide messages */
-  storeOffers: { prepaidDiscount: number; prepaidPercent: number; prepaidMinPrice: number; freeShippingThreshold: number; shippingCharge: number };
+  storeOffers: { prepaidDiscount: number; prepaidPercent: number; prepaidMinPrice: number; freeShippingThreshold: number; shippingCharge: number; codEnabled: boolean; codCharge: number };
   maxQtyPerItem: number;
   navigateToProduct: (productOrId: string | Product) => void;
   navigateToCategory: (category: ProductCategory | 'Sale' | 'New Arrivals' | 'Best Sellers' | 'Trending' | 'All') => void;
@@ -1071,7 +1071,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
   const cartSubtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
 
-  const [storeShippingSettings, setStoreShippingSettings] = useState({ shippingCharge: 0, freeShippingThreshold: 0, prepaidDiscount: 0, prepaidPercent: 0, prepaidMinPrice: 0 });
+  const [storeShippingSettings, setStoreShippingSettings] = useState({ shippingCharge: 0, freeShippingThreshold: 0, prepaidDiscount: 0, prepaidPercent: 0, prepaidMinPrice: 0, codEnabled: false, codCharge: 99 });
   const [couponsEnabled, setCouponsEnabled] = useState(true);
   useEffect(() => {
     const apply = (value: any) => {
@@ -1079,6 +1079,9 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         shippingCharge: Math.max(0, Number(value?.shippingCharge) || 0),
         freeShippingThreshold: Math.max(0, Number(value?.freeShippingThreshold) || 0),
         ...prepaidRulesFrom(value),
+        // Cash on delivery (the server decides; this is only for the checkout's preview)
+        codEnabled: value?.codEnabled === true,
+        codCharge: Math.max(0, Math.floor(Number(value?.codCharge) || 0)) || 99,
       });
       setCouponsEnabled(value?.couponsEnabled !== false);
     };

@@ -223,7 +223,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
   // Same cancel as choosing "Cancelled" in the form: stock goes back and the request is closed by the server.
   const handleCancelNow = async () => {
-    if (!window.confirm(`Cancel order ${order.orderNumber}? Its stock will be returned to inventory. Refund ₹${order.finalTotal.toLocaleString('en-IN')} from your Razorpay dashboard.`)) return;
+    if (!window.confirm(`Cancel order ${order.orderNumber}? Its stock will be returned to inventory. Refund ₹${(order.payMode === 'cod' ? order.codAdvance || 0 : order.finalTotal).toLocaleString('en-IN')} from your Razorpay dashboard.`)) return;
     setIsSaving(true);
     try {
       await updateOrderStatus(order.orderNumber, 'Cancelled', trackingNumber, notes, { courierPartner, customerNote, notify: notifyCustomer });
@@ -424,7 +424,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               </p>
               {cancelRequestOpen && (
                 <p className="text-[13px] leading-[18px] text-ink-muted">
-                  Cancelling returns the stock automatically and emails the customer (if the email box below is ticked). Refund ₹{order.finalTotal.toLocaleString('en-IN')} from your Razorpay dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the status to Refunded. Keeping the order, or saving it as Shipped or Delivered, closes the request and emails the customer that it is going ahead.
+                  Cancelling returns the stock automatically and emails the customer (if the email box below is ticked). Refund ₹{(order.payMode === 'cod' ? order.codAdvance || 0 : order.finalTotal).toLocaleString('en-IN')} from your Razorpay dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the status to Refunded. Keeping the order, or saving it as Shipped or Delivered, closes the request and emails the customer that it is going ahead.
                 </p>
               )}
               {cancelRequestPending && cancelRequest.storeNotified === false && (
@@ -765,9 +765,16 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                 </span>
               </div>
               <div className="flex justify-between items-baseline pt-2 border-t border-line text-[15px] font-semibold text-ink">
-                <span>{paid ? 'Total paid' : 'Order total'}</span>
+                <span>{order.payMode === 'cod' ? 'Order total' : paid ? 'Total paid' : 'Order total'}</span>
                 <span className="text-lg font-bold text-ink">₹{order.finalTotal.toLocaleString('en-IN')}</span>
               </div>
+              {order.payMode === 'cod' && (
+                <div id="admin-order-cod" className="rounded-control bg-peach p-3 text-sm leading-5 text-ink">
+                  <p className="font-bold">Cash on delivery</p>
+                  <p>Paid online: ₹{(order.codAdvance || 0).toLocaleString('en-IN')}</p>
+                  <p className="font-bold">Collect in cash at delivery: ₹{(order.codDue || 0).toLocaleString('en-IN')}</p>
+                </div>
+              )}
             </div>
           </div>
 

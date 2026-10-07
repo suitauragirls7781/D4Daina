@@ -10,7 +10,7 @@ const GATEWAY_NAME: Record<AssuranceGateway, string> = { razorpay: 'Razorpay', p
 
 /**
  * The four facts the store stands behind, worded in ONE place so they read the same on every page.
- * They are true today: payment is online only, by UPI, returns and exchange within 7 days,
+ * They are true today: payment is by UPI (in full, or the advance of a cash on delivery order when the owner has that on), returns and exchange within 7 days,
  * delivery across India, help on WhatsApp. Do not add a claim here that the owner has not confirmed.
  * The gateway name is shown only when the caller knows which gateway is active (the pay step does).
  */

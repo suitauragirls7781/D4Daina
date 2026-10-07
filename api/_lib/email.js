@@ -44,6 +44,10 @@ ${body}
 <p style="text-align:center;font-size:11px;color:#55635D;margin:16px 0 0">Suit Aura Girls · Asansol, West Bengal · <a href="${SITE_URL}" style="color:#55635D">suitauragirls.in</a></p>
 </main></body></html>`;
 
+// Cash on delivery: only the advance was paid online; the rest is collected in cash at the door
+const isCod = (order) => order?.payMode === 'cod';
+const paidOnline = (order) => (isCod(order) ? Number(order.codAdvance) || 0 : Number(order?.finalTotal) || 0);
+
 const itemsTable = (order) => {
   const rows = (order.items || []).map((item) => `<tr>
 <td style="padding:10px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.product?.name)}<br><span style="font-size:12px;color:#55635D">Size ${escapeHtml(item.selectedSize)} · Qty ${Number(item.quantity) || 1}</span></td>
@@ -55,8 +59,10 @@ ${line('Subtotal', inr(order.subtotal))}
 ${order.comboDiscount ? line('Combo discount', `−${inr(order.comboDiscount)}`) : ''}
 ${order.couponDiscount ? line(`Coupon ${escapeHtml(order.couponCode)}`, `−${inr(order.couponDiscount)}`) : ''}
 ${order.prepaidDiscount ? line('Prepaid discount', `−${inr(order.prepaidDiscount)}`) : ''}
-${line('Shipping', order.shippingCharge ? inr(order.shippingCharge) : 'Free')}
-${line('Total paid', inr(order.finalTotal), true)}
+${line(isCod(order) ? 'Shipping (cash on delivery)' : 'Shipping', order.shippingCharge ? inr(order.shippingCharge) : 'Free')}
+${isCod(order) ? `${line('Order total', inr(order.finalTotal), true)}
+${line('Paid online', inr(paidOnline(order)))}
+${line('Pay in cash on delivery', inr(order.codDue), true)}` : line('Total paid', inr(order.finalTotal), true)}
 </table>`;
 };
 
@@ -98,9 +104,11 @@ const deliveryLine = (order) => {
 
 const TEMPLATES = {
   confirmed: (order) => ({
-    subject: `Order ${order.orderNumber} confirmed — payment received`,
+    subject: isCod(order) ? `Order ${order.orderNumber} confirmed — cash on delivery` : `Order ${order.orderNumber} confirmed — payment received`,
     heading: 'Thank you, your order is confirmed',
-    intro: `We have received your payment of <strong>${inr(order.finalTotal)}</strong> (payment ref ${escapeHtml(order.paymentRef)}). We will now prepare your order.${deliveryLine(order)}`,
+    intro: isCod(order)
+      ? `We have received your advance of <strong>${inr(paidOnline(order))}</strong> (payment ref ${escapeHtml(order.paymentRef)}). Please keep <strong>${inr(order.codDue)}</strong> ready in cash to pay when the parcel arrives. We will now prepare your order.${deliveryLine(order)}`
+      : `We have received your payment of <strong>${inr(order.finalTotal)}</strong> (payment ref ${escapeHtml(order.paymentRef)}). We will now prepare your order.${deliveryLine(order)}`,
     full: true,
   }),
   'In Transit': (order) => ({
@@ -132,13 +140,15 @@ const TEMPLATES = {
     subject: `Order ${order.orderNumber} cancelled`,
     heading: 'Your order has been cancelled',
     intro: order.paymentStatus === 'Paid' || order.paymentStatus === 'Refunded'
-      ? `Your order has been cancelled. Any amount paid (${inr(order.finalTotal)}) will be refunded to your original payment method.`
+      ? `Your order has been cancelled. Any amount paid (${inr(paidOnline(order))}) will be refunded to your original payment method.`
       : 'Your order has been cancelled.',
   }),
   Refunded: (order) => ({
     subject: `Refund processed for order ${order.orderNumber}`,
     heading: 'Your refund has been processed',
-    intro: `A refund of <strong>${inr(order.finalTotal)}</strong> has been issued to your original payment method. Banks usually take 5–7 working days to show it.`,
+    intro: isCod(order)
+      ? 'Your refund for this order has been processed. Banks usually take 5–7 working days to show it.'
+      : `A refund of <strong>${inr(order.finalTotal)}</strong> has been issued to your original payment method. Banks usually take 5–7 working days to show it.`,
   }),
 };
 
@@ -181,14 +191,14 @@ export const sendNewOrderAlert = async (order, to) => {
   await sendEmail({
     to,
     name: 'Suit Aura Girls',
-    subject: `New order ${order.orderNumber} · ${inr(order.finalTotal)} paid`,
+    subject: isCod(order) ? `New COD order ${order.orderNumber} · ${inr(paidOnline(order))} paid, collect ${inr(order.codDue)}` : `New order ${order.orderNumber} · ${inr(order.finalTotal)} paid`,
     html: layout('You have a new order', [
-      p(`Order <strong>${escapeHtml(order.orderNumber)}</strong> · <strong>${inr(order.finalTotal)}</strong> paid · ${escapeHtml(method)}${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''}`),
+      p(`Order <strong>${escapeHtml(order.orderNumber)}</strong> · <strong>${inr(paidOnline(order))}</strong> paid${isCod(order) ? ` · <strong>collect ${inr(order.codDue)} in cash on delivery</strong>` : ''} · ${escapeHtml(method)}${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''}`),
       p(`Customer: ${escapeHtml(order.customerName || '')}${city ? ` · ${escapeHtml(city)}` : ''}`),
       itemsTable(order),
       button(adminUrl, 'OPEN ORDER'),
     ].join('\n')),
-    text: `New order ${order.orderNumber}: ${inr(order.finalTotal)} paid (${method}) by ${order.customerName || 'customer'}${city ? `, ${city}` : ''}. ${count} piece${count === 1 ? '' : 's'}: ${itemsText}. Open it at ${adminUrl}`,
+    text: `New ${isCod(order) ? 'COD ' : ''}order ${order.orderNumber}: ${inr(paidOnline(order))} paid${isCod(order) ? `, collect ${inr(order.codDue)} in cash` : ''} (${method}) by ${order.customerName || 'customer'}${city ? `, ${city}` : ''}. ${count} piece${count === 1 ? '' : 's'}: ${itemsText}. Open it at ${adminUrl}`,
   });
 };
 

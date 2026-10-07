@@ -536,6 +536,32 @@ export const AdminSettings: React.FC = () => {
                     className={`${input} sag-num`}
                   />
                 </Field>
+
+                <Field
+                  label="Cash on delivery"
+                  hint="When on, the shopper can choose cash on delivery at the pay step: the charge below is paid online (UPI, Razorpay) to confirm the order and the rest is collected in cash at delivery. Cash on delivery orders get no online payment discount."
+                >
+                  <label className="flex min-h-11 items-center gap-3 text-sm text-ink">
+                    <input id="admin-cod-enabled" type="checkbox" checked={storeForm.codEnabled === true} onChange={(e) => setStoreForm({ ...storeForm, codEnabled: e.target.checked })} className="h-5 w-5 accent-brand" />
+                    Offer cash on delivery
+                  </label>
+                </Field>
+
+                <Field
+                  label="Cash on delivery charge (₹, paid online)"
+                  hint="Shipping charge of a cash on delivery order. The shopper pays it online to confirm; it is the whole online payment of that order."
+                >
+                  <input
+                    id="admin-cod-charge"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    step={1}
+                    value={storeForm.codCharge ?? 99}
+                    onChange={(e) => setStoreForm({ ...storeForm, codCharge: Math.max(0, Math.floor(Number(e.target.value) || 0)) })}
+                    className={`${input} sag-num`}
+                  />
+                </Field>
               </div>
             </div>
 

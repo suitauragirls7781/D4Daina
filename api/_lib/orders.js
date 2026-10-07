@@ -48,6 +48,12 @@ export const alertStoreOfNewOrder = async (db, order, { send = sendNewOrderAlert
   }
 };
 
+export const DEFAULT_COD_CHARGE = 99;
+export const COD_OFF_MESSAGE = 'Cash on delivery is not available right now. Please pay online.';
+
+/** What the shopper pays online now: the whole order, or only the advance of a cash-on-delivery order. */
+export const payableNow = (order) => (order?.payMode === 'cod' ? Number(order.codAdvance) || 0 : Number(order?.finalTotal) || 0);
+
 /** Store-level pricing rules, always read on the server. */
 export const readPricingRules = async (db) => {
   const [storeSetting, comboSetting] = await Promise.all([readSetting(db, 'storeSettings'), readSetting(db, 'comboOffer')]);
@@ -63,6 +69,9 @@ export const readPricingRules = async (db) => {
     // Percent off for online payment (0 = off), only on products whose unit price is above prepaidMinPrice
     prepaidPercent: Math.min(50, wholeNumber(store.prepaidPercent)),
     prepaidMinPrice: wholeNumber(store.prepaidMinPrice),
+    // Cash on delivery (Admin → Settings): the shopper pays codCharge online now, the rest in cash at the door
+    codEnabled: store.codEnabled === true,
+    codCharge: wholeNumber(store.codCharge) || DEFAULT_COD_CHARGE,
     ...checkoutRulesFrom(store),
   };
 };
@@ -285,7 +294,7 @@ const checkLookAccessories = async (db, requests, products) => {
  * (and, for "Complete the look" accessories, the outfit they go with).
  * `customer` ({ email, phone }), when known, enforces a coupon's per-customer limit.
  */
-export const priceCart = async (db, rawItems, couponCode, customer = null) => {
+export const priceCart = async (db, rawItems, couponCode, customer = null, { payMode = 'prepaid' } = {}) => {
   if (!Array.isArray(rawItems) || rawItems.length === 0) throw new UserError('Your bag is empty.');
   if (rawItems.length > MAX_LINES) throw new UserError(`A single order can hold up to ${MAX_LINES} different items.`);
 
@@ -374,7 +383,10 @@ export const priceCart = async (db, rawItems, couponCode, customer = null) => {
     const couponBase = result.eligibleSubtotal < subtotal ? Math.round((afterCombo * result.eligibleSubtotal) / subtotal) : afterCombo;
     couponDiscount = Math.min(couponDiscountFor(coupon, couponBase), afterCombo);
   }
-  const shippingCharge = rules.freeShippingThreshold > 0 && subtotal >= rules.freeShippingThreshold ? 0 : rules.shippingCharge;
+  const cod = payMode === 'cod';
+  if (cod && !rules.codEnabled) throw new UserError(COD_OFF_MESSAGE, 409);
+  // Cash on delivery: the fixed charge replaces the store's shipping charge and is the advance paid online
+  const shippingCharge = cod ? rules.codCharge : (rules.freeShippingThreshold > 0 && subtotal >= rules.freeShippingThreshold ? 0 : rules.shippingCharge);
   const afterCoupon = Math.max(0, afterCombo - couponDiscount);
   // Online payment discount: the flat amount per order plus a percentage on the products priced above the
   // owner's minimum (strictly above). Those products carry their share of the combo / coupon reductions,
@@ -384,7 +396,8 @@ export const priceCart = async (db, rawItems, couponCode, customer = null) => {
     : 0;
   const eligibleShare = eligibleSubtotal === subtotal ? afterCoupon : Math.round((afterCoupon * eligibleSubtotal) / subtotal);
   const percentPart = Math.round((eligibleShare * rules.prepaidPercent) / 100);
-  const prepaidDiscount = Math.min(rules.prepaidDiscount + percentPart, Math.max(0, afterCoupon - 1));
+  // The online payment discount is for orders paid in full online, never for cash on delivery
+  const prepaidDiscount = cod ? 0 : Math.min(rules.prepaidDiscount + percentPart, Math.max(0, afterCoupon - 1));
   // The owner's minimum / maximum order value: the amount after every discount, before shipping
   checkOrderLimits(afterCoupon - prepaidDiscount, rules);
   const finalTotal = afterCoupon - prepaidDiscount + shippingCharge;
@@ -401,6 +414,13 @@ export const priceCart = async (db, rawItems, couponCode, customer = null) => {
     shippingCharge,
     discountAmount: comboDiscount + couponDiscount + prepaidDiscount,
     finalTotal,
+    payMode: cod ? 'cod' : 'prepaid',
+    // Cash on delivery: paid online now / collected in cash at the door (0 for an order paid in full)
+    codAdvance: cod ? shippingCharge : 0,
+    codDue: cod ? finalTotal - shippingCharge : 0,
+    // For the checkout's choice between the two ways to pay
+    codEnabled: rules.codEnabled,
+    codCharge: rules.codCharge,
     // Owner's delivery days from the same settings read (for the order's delivery estimate)
     deliveryRules: { processingDays: rules.processingDays, deliveryMinDays: rules.deliveryMinDays, deliveryMaxDays: rules.deliveryMaxDays },
   };
@@ -470,7 +490,7 @@ export const finalizePaidOrder = async (db, orderNumber, { paymentId, razorpayOr
       stockDeducted: true,
       deductedQuantities: deducted,
       stockShortfall: shortfall,
-      timeline: [...(order.timeline || []), timelineEntry('Processing', 'Payment received')],
+      timeline: [...(order.timeline || []), timelineEntry('Processing', order.payMode === 'cod' ? `Advance of ₹${payableNow(order)} received. ₹${Number(order.codDue) || 0} to be collected in cash on delivery` : 'Payment received')],
       updatedAt: paidAt,
     };
     if (shortfall.length) {
@@ -1089,6 +1109,9 @@ export const publicOrderView = (order) => ({
   discountAmount: order.discountAmount || 0,
   shippingCharge: order.shippingCharge || 0,
   finalTotal: order.finalTotal || 0,
+  payMode: order.payMode === 'cod' ? 'cod' : 'prepaid',
+  codAdvance: order.payMode === 'cod' ? Number(order.codAdvance) || 0 : 0,
+  codDue: order.payMode === 'cod' ? Number(order.codDue) || 0 : 0,
   trackingNumber: order.trackingNumber || '',
   courierPartner: order.courierPartner || '',
   trackingUrl: order.trackingUrl || '',

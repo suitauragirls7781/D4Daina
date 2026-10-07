@@ -7,6 +7,8 @@ import {
   RETURN_PHOTO_FOLDER,
   UserError,
   alertStoreOfNewOrder,
+  COD_OFF_MESSAGE,
+  payableNow,
   applyReturnAction,
   cancelRequestOutcome,
   cleanExpectedDate,
@@ -98,7 +100,7 @@ const paymentSessionBody = async (gateways, order, gateway, extra = {}) => {
     gateway,
     orderNumber: order.orderNumber,
     razorpayOrderId: extra.razorpayOrderId || order.razorpayOrderId,
-    amount: Math.round(order.finalTotal * 100),
+    amount: Math.round(payableNow(order) * 100),
     currency: 'INR',
     keyId: razorpayCreds(gateways).keyId,
     order: publicOrderView(order),
@@ -226,13 +228,13 @@ const notifyStoreOfCancelRequest = async (db, order) => {
       name: 'Suit Aura Girls',
       subject: `Cancellation requested: order ${order.orderNumber}`,
       html: layout('A customer asked to cancel an order', [
-        para(`Order <strong>${escapeHtml(order.orderNumber)}</strong> · ${inr(order.finalTotal)} paid · status <strong>${escapeHtml(order.status)}</strong>`),
+        para(`Order <strong>${escapeHtml(order.orderNumber)}</strong> · ${inr(payableNow(order))} paid${order.payMode === 'cod' ? ' (cash on delivery advance)' : ''} · status <strong>${escapeHtml(order.status)}</strong>`),
         para(`Customer: ${escapeHtml(order.customerName || '')} (${escapeHtml(order.customerEmail || '')})`),
         para(`<strong>Reason:</strong> ${escapeHtml(reason)}`),
         para(`If it has not been handed to the courier, set the order to Cancelled in the admin panel (its stock goes back automatically) and refund the payment${order.paymentRef ? ` (${escapeHtml(order.paymentRef)})` : ''} from your Razorpay dashboard.`),
         `<p style="margin:20px 0 4px"><a href="${adminUrl}" style="display:inline-block;background:#0A0A0A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">OPEN ORDER</a></p>`,
       ].join('\n')),
-      text: `Cancellation requested for order ${order.orderNumber} (${inr(order.finalTotal)} paid) by ${order.customerEmail}. Reason: ${reason}. Review it at ${adminUrl}`,
+      text: `Cancellation requested for order ${order.orderNumber} (${inr(payableNow(order))} paid) by ${order.customerEmail}. Reason: ${reason}. Review it at ${adminUrl}`,
     });
     return true;
   } catch (error) {
@@ -302,7 +304,7 @@ const rateLimit = async (db, key, limit, windowMs) => {
 const actions = {
   // Price preview for the bag and checkout (also validates coupons). Nothing is written.
   async quote(db, body) {
-    const priced = await priceCart(db, body.items, body.couponCode);
+    const priced = await priceCart(db, body.items, body.couponCode, null, { payMode: body.payMode === 'cod' ? 'cod' : 'prepaid' });
     return { status: 200, body: { quote: { ...priced, lines: undefined, deliveryRules: undefined } } };
   },
 
@@ -334,15 +336,18 @@ const actions = {
   async create(db, body, req, identity) {
     const address = validateAddress(body.address);
     const attemptKey = /^[A-Za-z0-9_-]{16,64}$/.test(String(body.attemptKey || '')) ? String(body.attemptKey) : '';
+    const payMode = body.payMode === 'cod' ? 'cod' : 'prepaid';
     // The attempt limit, the pricing, the gateway switches and an earlier attempt of this same checkout are read together
     const [allowed, priced, gateways, earlier] = await Promise.all([
       rateLimit(db, `order:${clientIp(req)}`, 20, 60 * 60 * 1000),
-      priceCart(db, body.items, body.couponCode, { email: identity.email || address.email, phone: address.mobile }),
+      priceCart(db, body.items, body.couponCode, { email: identity.email || address.email, phone: address.mobile }, { payMode }),
       readGateways(db),
       attemptKey ? db.collection('orders').where('attemptKey', '==', attemptKey).limit(1).get() : null,
     ]);
     if (!allowed) throw new UserError('Too many checkout attempts. Please wait a few minutes and try again.', 429);
-    const gateway = pickGateway(publicGateways(gateways, { admin: identity.admin }), String(body.gateway || ''));
+    // The advance of a cash-on-delivery order is always taken through Razorpay
+    const gateway = pickGateway(publicGateways(gateways, { admin: identity.admin }), payMode === 'cod' ? 'razorpay' : String(body.gateway || ''));
+    if (payMode === 'cod' && gateway !== 'razorpay') throw new UserError(COD_OFF_MESSAGE, 409);
     const customerEmail = identity.email || address.email;
     const giftNote = cleanText(body.giftNote, 300);
     const now = new Date();
@@ -354,7 +359,7 @@ const actions = {
         return { status: 200, body: { alreadyPaid: true, orderNumber: previous.orderNumber, order: ownerOrderView(previous) } };
       }
       const fresh = Date.now() - new Date(previous.createdAt).getTime() < 30 * 60 * 1000;
-      const sameCart = Math.round(previous.finalTotal) === Math.round(priced.finalTotal) && previous.status === 'Pending';
+      const sameCart = Math.round(previous.finalTotal) === Math.round(priced.finalTotal) && previous.status === 'Pending' && (previous.payMode === 'cod' ? 'cod' : 'prepaid') === payMode;
       if (fresh && sameCart && previous.paymentStatus === 'Unpaid') {
         const ref = db.collection('orders').doc(previous.orderNumber);
         const update = { deliveryAddress: address, customerName: address.fullName, customerMobile: address.mobile, giftNote, updatedAt: now.toISOString() };
@@ -363,7 +368,7 @@ const actions = {
           extra.txnid = `${previous.orderNumber}-${(previous.payuTxnIds || []).length + 1}`;
           Object.assign(update, { paymentMethod: 'payu', payuTxnId: extra.txnid, payuTxnIds: [...(previous.payuTxnIds || []), extra.txnid] });
         } else if (!previous.razorpayOrderId) {
-          const razorpayOrder = await createRazorpayOrder(gateways, { amountPaise: Math.round(previous.finalTotal * 100), receipt: previous.orderNumber, notes: { order_number: previous.orderNumber, customer_email: customerEmail } });
+          const razorpayOrder = await createRazorpayOrder(gateways, { amountPaise: Math.round(payableNow(previous) * 100), receipt: previous.orderNumber, notes: { order_number: previous.orderNumber, customer_email: customerEmail } });
           extra.razorpayOrderId = razorpayOrder.id;
           Object.assign(update, { paymentMethod: 'razorpay', razorpayOrderId: razorpayOrder.id, razorpayOrderIds: [...(previous.razorpayOrderIds || []), razorpayOrder.id] });
         } else {
@@ -382,7 +387,7 @@ const actions = {
         orderRef.get(),
         gateway === 'razorpay'
           ? createRazorpayOrder(gateways, {
-            amountPaise: Math.round(priced.finalTotal * 100),
+            amountPaise: Math.round(payableNow(priced) * 100),
             receipt: orderNumber,
             notes: { order_number: orderNumber, customer_email: customerEmail },
           })
@@ -418,6 +423,9 @@ const actions = {
         discountAmount: priced.discountAmount,
         shippingCharge: priced.shippingCharge,
         finalTotal: priced.finalTotal,
+        payMode,
+        codAdvance: priced.codAdvance,
+        codDue: priced.codDue,
         giftNote,
         // From the owner's processing + delivery days (Sundays skipped); '' when not configured
         estimatedDeliveryDate: estimateDelivery(priced.deliveryRules, now)?.max.toISOString() || '',
@@ -481,7 +489,8 @@ const actions = {
     if (order.paymentStatus !== 'Unpaid' || order.status !== 'Pending') throw new UserError('This order cannot be paid any more. Please place a new order.', 409);
     if (Date.now() - new Date(order.createdAt).getTime() > 3 * 24 * 60 * 60 * 1000) throw new UserError('This order has expired. Please place a new order.', 409);
     const gateways = await readGateways(db);
-    const gateway = pickGateway(publicGateways(gateways, { admin: identity.admin }), String(body.gateway || order.paymentMethod || ''));
+    const gateway = pickGateway(publicGateways(gateways, { admin: identity.admin }), order.payMode === 'cod' ? 'razorpay' : String(body.gateway || order.paymentMethod || ''));
+    if (order.payMode === 'cod' && gateway !== 'razorpay') throw new UserError(COD_OFF_MESSAGE, 409);
     const ref = db.collection('orders').doc(orderNumber);
     const update = { paymentMethod: gateway, updatedAt: new Date().toISOString() };
     const extra = {};
@@ -489,7 +498,7 @@ const actions = {
       extra.txnid = `${orderNumber}-${(order.payuTxnIds || []).length + 1}`;
       Object.assign(update, { payuTxnId: extra.txnid, payuTxnIds: [...(order.payuTxnIds || []), extra.txnid] });
     } else {
-      const razorpayOrder = await createRazorpayOrder(gateways, { amountPaise: Math.round(order.finalTotal * 100), receipt: orderNumber, notes: { order_number: orderNumber, customer_email: order.customerEmail } });
+      const razorpayOrder = await createRazorpayOrder(gateways, { amountPaise: Math.round(payableNow(order) * 100), receipt: orderNumber, notes: { order_number: orderNumber, customer_email: order.customerEmail } });
       extra.razorpayOrderId = razorpayOrder.id;
       Object.assign(update, { razorpayOrderId: razorpayOrder.id, razorpayOrderIds: [...new Set([...(order.razorpayOrderIds || []), order.razorpayOrderId, razorpayOrder.id].filter(Boolean))] });
     }

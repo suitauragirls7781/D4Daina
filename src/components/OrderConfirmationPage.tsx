@@ -122,7 +122,7 @@ export const OrderConfirmationPage: React.FC = () => {
     const text = [
       `Suit Aura Girls order #${order.orderNumber}`,
       ...order.items.map((item) => `• ${item.product?.name}${item.selectedSize ? ` (${item.selectedSize})` : ''} × ${item.quantity}`),
-      `Total ${paid ? 'paid' : ''}: ${inr(order.finalTotal)}`.replace('  ', ' '),
+      order.payMode === 'cod' ? `Order total: ${inr(order.finalTotal)} (paid ${inr(order.codAdvance || 0)}, ${inr(order.codDue || 0)} in cash on delivery)` : `Total ${paid ? 'paid' : ''}: ${inr(order.finalTotal)}`.replace('  ', ' '),
       `Track: ${link}`,
     ].join('\n');
     try {
@@ -156,7 +156,7 @@ export const OrderConfirmationPage: React.FC = () => {
         </h1>
         <p className="mt-1.5 text-sm leading-5 text-on-dark-muted max-w-md mx-auto">
           {paid
-            ? <>Order <span className="sag-num font-semibold text-on-dark break-all">#{order.orderNumber}</span> is confirmed and paid.</>
+            ? <>Order <span className="sag-num font-semibold text-on-dark break-all">#{order.orderNumber}</span> is confirmed{order.payMode === 'cod' ? <>. Keep <span className="sag-num font-semibold text-on-dark">{inr(order.codDue || 0)}</span> ready in cash for the delivery.</> : ' and paid.'}</>
             : 'We are confirming your payment. This page will update once it is verified.'}
         </p>
         {paid && (
@@ -249,10 +249,18 @@ export const OrderConfirmationPage: React.FC = () => {
             {(order.couponDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Coupon {order.couponCode}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
             {(order.prepaidDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Prepaid discount</span><span>−{inr(order.prepaidDiscount || 0)}</span></div>}
             <div className={moneyRow}><span>Delivery</span>{order.shippingCharge === 0 ? <span className="font-semibold text-sale">Free</span> : <span className="text-ink">{inr(order.shippingCharge)}</span>}</div>
+            {order.payMode === 'cod' ? (
+              <>
+                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-[22px] leading-7 font-bold">{inr(order.codDue || 0)}</span></div>
+              </>
+            ) : (
             <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
               <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Total'}</span>
               <span className="text-[22px] leading-7 font-bold">{inr(order.finalTotal)}</span>
             </div>
+            )}
             {paid && order.paymentRef && <p className="text-[13px] leading-[18px] break-all">Payment ID: {order.paymentRef}</p>}
           </div>
 
