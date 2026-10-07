@@ -163,6 +163,9 @@ const MainContent: React.FC = () => {
   }, [activePage, currentPath]);
 
   // Global loading blocker
+  // Sections rise in once as they come into view (storefront only; the hook itself skips nothing else)
+  useScrollReveal();
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -181,8 +184,6 @@ const MainContent: React.FC = () => {
   }
 
   // Customer-facing Storefront
-  useScrollReveal();
-
   return (
     <div id="app-main-content" className="min-h-screen flex flex-col bg-page text-ink w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10001] focus:rounded-full focus:bg-brand focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
