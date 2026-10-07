@@ -91,7 +91,8 @@ export const MobileMenuDrawer: React.FC = () => {
             </button>
           </div>
 
-          <div className="px-4">
+          {/* The rows enter one after another each time the menu opens */}
+          <div className={`px-4 ${isMobileMenuOpen ? 'sag-stagger' : ''}`}>
             {mainRows.map((row) => (
               <button key={row.key} type="button" onClick={row.onClick} aria-current={row.current ? 'page' : undefined} className="flex w-full min-h-[54px] items-center gap-3 border-b border-line py-3 text-left cursor-pointer">
                 <span className={`min-w-0 flex-1 truncate font-display text-[19px] font-medium leading-7 text-ink ${row.current ? 'underline underline-offset-[6px] decoration-1' : ''}`}>{row.label}</span>

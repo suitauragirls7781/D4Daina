@@ -28,13 +28,41 @@ const WORDMARK = 'sag-caps font-display font-medium uppercase whitespace-nowrap 
  */
 const AnnouncementLine: React.FC = () => {
   const round = useFestiveRound();
-  if (!round) return null;
-  const ends = round.daysLeft <= 0 ? 'Ends today' : `Till ${round.lastDay}`;
+  const { storeOffers } = useShop();
+  const [turn, setTurn] = useState(0);
+  const [still, setStill] = useState(false);
+
+  // Up to three real messages: the round itself, the online payment percent and cash on delivery (both from settings)
+  const messages: string[] = [];
+  if (round) {
+    const ends = round.daysLeft <= 0 ? 'Ends today' : `Till ${round.lastDay}`;
+    messages.push(`${round.title} · ${round.offer} with code ${round.code} · ${ends}`);
+    if (round.prepaidPercent > 0) messages.push(`${round.prepaidPercent}% off when you pay online`);
+    if (storeOffers.codEnabled) messages.push('Cash on delivery available');
+  }
+  const count = messages.length;
+
+  // One message at a time, changed every 4 seconds; with reduced motion only the first is shown
+  useEffect(() => {
+    if (count < 2) return;
+    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (query.matches) { setStill(true); return; }
+    const timer = window.setInterval(() => setTurn((value) => value + 1), 4000);
+    return () => window.clearInterval(timer);
+  }, [count]);
+
+  if (!round || count === 0) return null;
+  const current = still ? 0 : turn % count;
   return (
     <div id="festive-announcement" role="region" aria-label="Store announcement" className="w-full bg-dark text-on-dark">
-      <p className="sag-num mx-auto max-w-7xl px-3 py-2 text-center text-[11.5px] leading-4 tracking-[0.06em]">
-        {round.title} · {round.offer} with code {round.code} · {ends}
-      </p>
+      {/* Every message sits in the same cell, so the line keeps the height of the longest one and never jumps */}
+      <div className="sag-num mx-auto grid max-w-7xl px-3 py-2 text-center text-[11.5px] leading-4 tracking-[0.06em]">
+        {(still ? messages.slice(0, 1) : messages).map((message, index) => (
+          index === current
+            ? <p key={`${index}-${turn}`} className="sag-settle col-start-1 row-start-1 min-w-0">{message}</p>
+            : <p key={index} aria-hidden="true" className="invisible col-start-1 row-start-1 min-w-0">{message}</p>
+        ))}
+      </div>
     </div>
   );
 };

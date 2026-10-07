@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Heart, Home, LayoutGrid, ShoppingBag, User, type LucideIcon } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +23,18 @@ export const MobileAppNavbar: React.FC = () => {
   } = useShop();
   const { user } = useAuth();
   const { routeState } = useRouter();
+
+  // When the bag count goes up, the bag icon jumps once and the new count rises in
+  const [bumped, setBumped] = useState(false);
+  const lastCount = useRef(cartCount);
+  useEffect(() => {
+    const before = lastCount.current;
+    lastCount.current = cartCount;
+    if (!(cartCount > before)) return;
+    setBumped(true);
+    const timer = setTimeout(() => setBumped(false), 520);
+    return () => clearTimeout(timer);
+  }, [cartCount]);
 
   // Hidden in the admin panel. The product page, the bag page and checkout have their own bottom bars,
   // and only one fixed bar shows at a time.
@@ -65,10 +77,10 @@ export const MobileAppNavbar: React.FC = () => {
             className={`h-[44px] flex flex-col items-center justify-center gap-[3px] cursor-pointer transition-colors ${active ? 'text-ink' : 'text-ink-muted'}`}
           >
             <span className="relative flex">
-              <Icon className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+              <Icon className={`w-5 h-5 ${id === 'cart' && bumped ? 'sag-bump' : ''}`} strokeWidth={1.5} aria-hidden="true" />
               {Boolean(count) && (
                 <span className="sag-num absolute -top-[5px] -right-[8px] min-w-[15px] h-[15px] px-[3px] rounded-full bg-ink text-white text-[10px] font-semibold leading-none flex items-center justify-center">
-                  {count! > 99 ? '99+' : count}
+                  <span key={count} className={id === 'cart' && bumped ? 'sag-settle' : undefined}>{count! > 99 ? '99+' : count}</span>
                 </span>
               )}
               {dot && <span className="absolute -bottom-0.5 -right-1 w-[7px] h-[7px] rounded-full bg-ink ring-2 ring-surface" />}

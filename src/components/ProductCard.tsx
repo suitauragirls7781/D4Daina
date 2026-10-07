@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { preloadImage } from '../utils/pageTransition';
 import { Product, ProductSize } from '../types';
 import { useShop } from '../context/ShopContext';
@@ -19,6 +19,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const [picking, setPicking] = useState(false);
   // Stays "Added" for as long as this style is in the bag (not a timed flash)
   const justAdded = cart.some((item) => String(item.product?.id) === String(product.id));
+
+  // One heart beat when the style is saved, and a short "Added" when it has just gone into the bag
+  const [beat, setBeat] = useState(false);
+  const [flashAdded, setFlashAdded] = useState(false);
+  const wasAdded = useRef(justAdded);
+  useEffect(() => {
+    if (!beat) return;
+    const timer = setTimeout(() => setBeat(false), 450);
+    return () => clearTimeout(timer);
+  }, [beat]);
+  useEffect(() => {
+    const before = wasAdded.current;
+    wasAdded.current = justAdded;
+    if (!justAdded || before) return;
+    setFlashAdded(true);
+    const timer = setTimeout(() => setFlashAdded(false), 1200);
+    return () => clearTimeout(timer);
+  }, [justAdded]);
 
   const images = Array.isArray(product.images) ? product.images.filter((img) => typeof img === 'string' && img.trim()) : [];
   const primary = images[0] || product.image || ELEGANT_PLACEHOLDER_SVG;
@@ -78,7 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   return (
     <article id={`product-card-${product.id}`} className="group relative flex h-full min-w-0 flex-col">
       {/* No card chrome: the photo, then the text under it. The heart sits on the photo's top-right corner (the watermark is top-left). */}
-      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-sunken">
+      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="sag-zoom relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, 480)}
           // Two columns on phones (about 170px wide), about 280px on a desktop. The phone value is kept a little
@@ -108,13 +126,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       <button
         id={`wishlist-btn-${product.id}`}
         type="button"
-        onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
+        onClick={(e) => { e.stopPropagation(); if (!fav) setBeat(true); toggleWishlist(product); }}
         aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         aria-pressed={fav}
         className="absolute top-px right-px w-11 h-11 flex items-center justify-center cursor-pointer"
       >
         <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/90 text-ink">
-          <Heart className={`w-[15px] h-[15px] ${fav ? 'fill-current' : ''}`} strokeWidth={1.5} aria-hidden="true" />
+          <Heart className={`w-[15px] h-[15px] ${fav ? 'fill-current' : ''} ${beat ? 'sag-beat' : ''}`} strokeWidth={1.5} aria-hidden="true" />
         </span>
       </button>
 
@@ -175,7 +193,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             className={soldOut ? 'sr-only' : 'mt-auto -mb-1 self-start min-h-9 sm:min-h-10 inline-flex items-center gap-1.5 whitespace-nowrap text-[11.5px] leading-4 font-medium uppercase tracking-[0.1em] text-ink hover:text-ink-muted transition-colors cursor-pointer'}
           >
             {soldOut ? 'Sold out' : justAdded ? (
-              <><Check className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /><span className="underline decoration-1 underline-offset-4">In bag · View</span></>
+              <><Check className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /><span key={flashAdded ? 'added' : 'in-bag'} className={`underline decoration-1 underline-offset-4 ${flashAdded ? 'sag-settle' : ''}`}>{flashAdded ? 'Added' : 'In bag · View'}</span></>
             ) : (
               <><BagIcon mono className="w-3.5 h-3.5" /><span className="underline decoration-1 underline-offset-4">Add to bag</span></>
             )}

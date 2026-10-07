@@ -42,7 +42,7 @@ export const SavingsStrip: React.FC<{ className?: string }> = ({ className = '' 
   if (!(totalSavings > 0)) return null;
   return (
     <p className={`bg-sunken px-3 py-2.5 text-xs leading-4 tracking-[0.02em] text-ink sag-num ${className}`}>
-      <span className="font-semibold text-sale">You save {inr(totalSavings)}</span> on this order
+      <span className="font-semibold text-sale">You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span></span> on this order
     </p>
   );
 };
@@ -120,12 +120,12 @@ export const PriceDetails: React.FC<{ totalLabel?: string }> = ({ totalLabel = '
             <span className="block text-[17px] leading-6 font-semibold text-ink">{totalLabel}</span>
             <span className="block text-[11.5px] leading-4 text-ink-muted">Inclusive of all taxes{shippingFee > 0 ? ' and delivery' : ''}{freeShippingThreshold > 0 && shippingFee > 0 ? ` · free delivery above ${inr(freeShippingThreshold)}` : ''}</span>
           </dt>
-          <dd className="text-[17px] leading-6 font-semibold text-ink">{inr(total)}</dd>
+          <dd className="text-[17px] leading-6 font-semibold text-ink"><span key={total} className="sag-settle">{inr(total)}</span></dd>
         </div>
       </dl>
       {totalSavings > 0 && (
         <p className="mt-2 text-xs leading-4 font-semibold text-sale sag-num">
-          You save {inr(totalSavings)} on this order
+          You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span> on this order
         </p>
       )}
     </div>
@@ -146,7 +146,7 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
   };
   const stepButton = 'w-9 h-full flex items-center justify-center text-ink hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer';
   return (
-    <ul className="divide-y divide-line">
+    <ul className="sag-stagger divide-y divide-line">
       {cart.map((item) => {
         const stock = Number(item.product.stockQuantity ?? 0);
         const accessory = isAccessory(item.product) && item.lookParentId;

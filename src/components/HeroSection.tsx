@@ -23,7 +23,8 @@ const ownerBadge = (badge?: string) => {
   const text = (badge || '').trim();
   return text && !AUTO_BADGES.has(text) ? text : '';
 };
-const HERO_CATEGORY_LINKS = ['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
+const SLIDE_MS = 6000;
+const HERO_CATEGORY_LINKS =['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
 
 /**
  * Hero. Per slide: the photo with square corners (edge to edge and about 1:1 on phones), and the words on white:
@@ -100,11 +101,22 @@ export const HeroSection: React.FC = () => {
   const ignoreScrollUntil = useRef(0);
   const idxRef = useRef(0);
   idxRef.current = currentSlideIdx;
+  // curtain: the slide whose photo opens like a curtain (changes by button or timer, not by swipe);
+  // leaving: the slide just left, which keeps its drift so it does not jump while it glides away
+  const [fx, setFx] = useState({ curtain: -1, leaving: -1 });
+  const [hold, setHold] = useState(() => ({
+    hover: false,
+    touch: false,
+    focus: false,
+    hidden: typeof document !== 'undefined' && document.visibilityState === 'hidden',
+  }));
+  const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches));
 
   /** Shows slide `index`: the photo strip scrolls to it and the text follows. */
   const goTo = useCallback((index: number) => {
     const total = slides.length || 1;
     const target = ((index % total) + total) % total;
+    if (target !== idxRef.current) setFx({ curtain: target, leaving: idxRef.current });
     setCurrentSlideIdx(target);
     const strip = stripRef.current;
     const slide = strip?.children[target] as HTMLElement | undefined;
@@ -115,7 +127,26 @@ export const HeroSection: React.FC = () => {
     strip.scrollTo({ left: slide.offsetLeft - (strip.children[0] as HTMLElement).offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
   }, [slides.length]);
 
-  // Slides never change by themselves: only a swipe, an arrow or a thumbnail moves them.
+  // Slides change by themselves every 6 seconds, except while the shopper is pointing at, touching or
+  // tabbing through the hero, while the tab is hidden, and never under reduced motion.
+  const running = slides.length > 1 && !reduced && !hold.hover && !hold.touch && !hold.focus && !hold.hidden;
+  useEffect(() => {
+    const onVisibility = () => setHold((h) => ({ ...h, hidden: document.visibilityState === 'hidden' }));
+    document.addEventListener('visibilitychange', onVisibility);
+    const query = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    const onMotion = () => setReduced(Boolean(query?.matches));
+    query?.addEventListener?.('change', onMotion);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      query?.removeEventListener?.('change', onMotion);
+    };
+  }, []);
+  // Any change of slide (swipe, marks, arrows, thumbnails) starts the 6 seconds again
+  useEffect(() => {
+    if (!running) return;
+    const timer = window.setTimeout(() => goTo(idxRef.current + 1), SLIDE_MS);
+    return () => window.clearTimeout(timer);
+  }, [running, currentSlideIdx, goTo]);
 
   useEffect(() => {
     if (currentSlideIdx >= slides.length) {
@@ -142,7 +173,10 @@ export const HeroSection: React.FC = () => {
         const distance = Math.abs((child as HTMLElement).offsetLeft - origin - strip.scrollLeft);
         if (distance < best) { best = distance; nearest = index; }
       });
-      if (nearest !== idxRef.current) setCurrentSlideIdx(nearest);
+      if (nearest !== idxRef.current) {
+        setFx({ curtain: -1, leaving: idxRef.current });
+        setCurrentSlideIdx(nearest);
+      }
     });
   };
 
@@ -197,7 +231,18 @@ export const HeroSection: React.FC = () => {
   const arrow = 'flex h-11 w-11 items-center justify-center border border-line bg-surface text-ink hover:border-ink transition-colors cursor-pointer';
 
   return (
-    <section id="haute-couture-hero" aria-label="Featured collection" className="w-full md:py-8 lg:py-10">
+    <section
+      id="haute-couture-hero"
+      aria-label="Featured collection"
+      className="w-full md:py-8 lg:py-10"
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHold((h) => ({ ...h, hover: true })); }}
+      onPointerLeave={() => setHold((h) => (h.hover ? { ...h, hover: false } : h))}
+      onTouchStart={() => setHold((h) => ({ ...h, touch: true }))}
+      onTouchEnd={() => setHold((h) => ({ ...h, touch: false }))}
+      onTouchCancel={() => setHold((h) => ({ ...h, touch: false }))}
+      onFocus={(event) => { if ((event.target as HTMLElement).matches?.(':focus-visible')) setHold((h) => ({ ...h, focus: true })); }}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHold((h) => (h.focus ? { ...h, focus: false } : h)); }}
+    >
       <div className="mx-auto max-w-7xl md:grid md:grid-cols-2 md:items-center md:gap-8 md:px-6 lg:gap-12 lg:px-8">
         {/* Photos: a swipeable strip, edge to edge on phones. Nothing is ever drawn on a photo. */}
         <div className="min-w-0">
@@ -218,12 +263,13 @@ export const HeroSection: React.FC = () => {
                   className="block aspect-square w-full shrink-0 cursor-pointer overflow-hidden bg-sunken md:aspect-[4/5]"
                   aria-label={`View ${slide.title}`}
                 >
+                  <span className={`block h-full w-full overflow-hidden ${index === fx.curtain && index === currentSlideIdx ? 'sag-curtain' : ''}`}>
                   <img
                     src={small || ELEGANT_PLACEHOLDER_SVG}
                     srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
                     sizes="(min-width: 1280px) 600px, (min-width: 768px) 46vw, 100vw"
                     alt={slide.title || 'Featured Suit Aura Girls design'}
-                    className="h-full w-full object-cover object-top"
+                    className={`h-full w-full object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
                     loading={index === 0 ? 'eager' : 'lazy'}
                     fetchPriority={index === 0 ? 'high' : 'auto'}
                     decoding="async"
@@ -231,28 +277,59 @@ export const HeroSection: React.FC = () => {
                       if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
                     }}
                   />
+                  </span>
                 </button>
               );
             })}
           </div>
 
-          {/* Place marks under the photo on phones (swipe); from tablets up the thumbnails and arrows do this */}
+          {/* Place marks: thin lines, the current one fills while its slide is shown; then the slide number */}
           {count > 1 && (
-            <div className="mt-3 flex h-0.5 items-center justify-center gap-1.5 px-4 md:hidden" aria-hidden="true">
-              {slides.map((slide, index) => (
-                <span key={slide.id || index} className={`h-px transition-[width] ${index === currentSlideIdx ? 'w-6 bg-ink' : 'w-3 bg-control'}`} />
-              ))}
+            <div className="mt-1 flex items-center gap-3 px-4 md:px-0">
+              <div className="flex min-w-0 flex-1 gap-1.5">
+                {slides.map((slide, index) => (
+                  <button
+                    key={slide.id || index}
+                    type="button"
+                    onClick={() => goTo(index)}
+                    aria-label={`Show design ${index + 1} of ${count}: ${slide.title}`}
+                    aria-current={index === currentSlideIdx ? 'true' : undefined}
+                    className="flex h-8 min-w-0 flex-1 cursor-pointer items-center"
+                  >
+                    <span className="relative block h-px w-full overflow-hidden bg-line">
+                      {index === currentSlideIdx && (
+                        <span
+                          key={`${currentSlideIdx}-${running}`}
+                          className={`absolute inset-0 bg-ink ${running ? 'sag-progress' : ''}`}
+                          style={{ '--sag-progress-time': `${SLIDE_MS / 1000}s` } as React.CSSProperties}
+                        />
+                      )}
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <span className="sag-num shrink-0 text-[11px] leading-4 tracking-[0.08em] text-ink-muted" aria-hidden="true">
+                {String(currentSlideIdx + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+              </span>
             </div>
           )}
         </div>
 
         {/* Words: under the photo and centred on phones, beside it from tablets up */}
         <div className="min-w-0 px-4 pt-[22px] pb-[26px] text-center md:p-0 md:text-left">
-          {eyebrow && <p className="truncate text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale">{eyebrow}</p>}
+          {/* Re-made per slide, so the rule, title, price and buttons arrive one after another */}
+          <div key={currentSlide.id || currentSlideIdx} className="sag-stagger">
+          <div className="flex h-4 items-center justify-center gap-2.5 md:justify-start">
+            <span className="h-px w-8 shrink-0 bg-star" aria-hidden="true" />
+            {eyebrow && <p className="min-w-0 truncate text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale">{eyebrow}</p>}
+          </div>
 
           {/* Two lines are reserved on phones so a change of slide never moves the buttons */}
-          <h1 className={`font-display font-medium text-[23px] leading-[1.18] text-ink line-clamp-2 min-h-[2.36em] md:min-h-0 md:text-[30px] md:line-clamp-3 lg:text-[40px] lg:leading-[1.12] ${eyebrow ? 'mt-2' : ''}`}>
-            <span className="sr-only">Suit Aura Girls: </span>{currentSlide.title}
+          <h1 className="sag-lines mt-2 font-display font-medium text-[23px] leading-[1.18] text-ink min-h-[2.36em] md:min-h-0 md:text-[30px] lg:text-[40px] lg:leading-[1.12]">
+            <span className="sr-only">Suit Aura Girls: </span>
+            <span className="sag-line-up" style={{ '--sag-line-delay': '120ms' } as React.CSSProperties}>
+              <span className="line-clamp-2 md:line-clamp-3">{currentSlide.title}</span>
+            </span>
           </h1>
           {currentSlide.subtitle && (
             <p className="mt-3 max-w-xl text-sm leading-5 text-ink-muted line-clamp-2 max-md:hidden lg:text-[15px] lg:leading-[22px]">
@@ -287,6 +364,7 @@ export const HeroSection: React.FC = () => {
             >
               Explore
             </button>
+          </div>
           </div>
 
           {count > 1 && (
