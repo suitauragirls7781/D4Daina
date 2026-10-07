@@ -12,6 +12,7 @@ import { CustomerReviews } from './CustomerReviews';
 import { ShopByCategory } from './ShopByCategory';
 import { PersonalRails } from './PersonalRails';
 import { BagReminder } from './BagReminder';
+import { FestiveBanner } from './FestiveBanner';
 import { OccasionSection } from './OccasionSection';
 import { AuraReelsSection } from './AuraReels';
 import { AskAssistantRow, FeaturedCollection,HomeAssuranceBand, KidsCorner, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
@@ -76,6 +77,7 @@ export const HomePage: React.FC = () => {
     <div id="dynamic-storefront-homepage" className="flex flex-col relative gap-0 bg-page">
       {/* Only for a shopper with something in the bag; the wrapper adds no space when it is empty */}
       <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <FestiveBanner className="mt-3" />
         <BagReminder className="mt-3 mb-1" />
       </div>
       {visibleSections.map((section, index) => (
