@@ -115,6 +115,9 @@ export const ReturnRequestForm: React.FC<{
   ));
   const [reason, setReason] = useState('');
   const [details, setDetails] = useState('');
+  // A cash-on-delivery order was paid in cash: its refund goes to the UPI ID the customer gives here
+  const [refundUpi, setRefundUpi] = useState('');
+  const needsUpi = order.payMode === 'cod' && kind === 'return';
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -228,6 +231,7 @@ export const ReturnRequestForm: React.FC<{
     if (!selected.length) return 'Please choose at least one item.';
     if (kind === 'return' && selectedClearance) return 'Clearance pieces (50% or more off) can only be exchanged for another size. Choose Exchange, or untick them.';
     if (!reason) return 'Please choose a reason.';
+    if (needsUpi && !/^[A-Za-z0-9._-]{2,80}@[A-Za-z][A-Za-z0-9]{1,30}$/.test(refundUpi.trim())) return 'Please enter the UPI ID your refund should be sent to (for example name@upi).';
     const note = details.trim();
     if (reason === 'Other' && note.length < 5) return 'Please tell us a little more about the problem.';
     if (kind === 'exchange') {
@@ -264,6 +268,7 @@ export const ReturnRequestForm: React.FC<{
         items: selected.map((line) => ({ line: line.index, qty: Math.min(line.qty, leftOf(line.index)), ...(kind === 'exchange' ? { exchangeSize: line.exchangeSize } : {}) })),
         reason,
         details: details.trim(),
+        ...(needsUpi ? { refundUpi: refundUpi.trim() } : {}),
         photos: photos.filter((photo) => photo.status === 'done' && photo.url).map((photo) => photo.url),
       });
       onDone(result.message || 'Your request has been sent. Our team will email you.', result.order);
@@ -440,6 +445,26 @@ export const ReturnRequestForm: React.FC<{
               className="sag-input resize-none"
             />
           </div>
+
+          {needsUpi && (
+            <div>
+              <label htmlFor="return-refund-upi" className="sag-label">UPI ID for your refund</label>
+              <input
+                id="return-refund-upi"
+                type="text"
+                inputMode="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                maxLength={100}
+                placeholder="name@upi"
+                value={refundUpi}
+                onChange={(e) => { setRefundUpi(e.target.value); setError(''); }}
+                className="sag-input"
+              />
+              <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">This order was cash on delivery, so the refund is sent to this UPI ID after our quality check.</p>
+            </div>
+          )}
 
           <div>
             <p className={legendClass}>

@@ -266,7 +266,7 @@ export const ShippingPolicyPage: React.FC = () => {
         {
           id: 'charges',
           title: 'Shipping charges',
-          body: <p className={P}>{shippingText}</p>,
+          body: <><p className={P}>{shippingText}</p><p className={P}>Where cash on delivery is offered, the cash on delivery charge shown at checkout is paid online to confirm the order, and the rest is paid in cash when the parcel arrives. Orders paid in full online do not carry this charge.</p></>,
         },
         {
           id: 'dispatch',
@@ -357,7 +357,7 @@ export const ReturnPolicyPage: React.FC = () => {
         {
           id: 'refunds',
           title: 'Refunds and exchanges',
-          body: <p className={P}>Once the returned item reaches us and passes our quality check, the refund is made to your original payment method, or your exchange piece is sent to you. You can follow every step of your request in My account.</p>,
+          body: <p className={P}>Once the returned item reaches us and passes our quality check, the refund is made to your original payment method, or your exchange piece is sent to you. For a cash on delivery order, the refund is sent to the UPI ID you give in the return request. You can follow every step of your request in My account.</p>,
         },
       ]}
     />
@@ -474,7 +474,7 @@ export const CancellationPolicyPage: React.FC = () => {
       {
         id: 'refund',
         title: 'Full refund for cancelled orders',
-        body: <p className={P}>For orders cancelled before dispatch, the full amount you paid is refunded to your original payment method. We start the refund as soon as the cancellation is processed; banks usually take 5–7 working days to show it.</p>,
+        body: <p className={P}>For orders cancelled before dispatch, the full amount you paid is refunded to your original payment method. We start the refund as soon as the cancellation is processed; banks usually take 5–7 working days to show it. For a cash on delivery order this is the charge you paid online. That charge is not refunded if the parcel is refused at delivery.</p>,
       },
     ]}
   />

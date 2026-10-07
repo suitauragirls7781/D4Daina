@@ -237,6 +237,8 @@ export interface ReturnRequest {
   items?: ReturnRequestItem[];
   reason: string;
   details?: string;
+  /** Cash-on-delivery orders: the UPI ID the customer gave for the refund. */
+  refundUpi?: string;
   photos?: string[];
   at: string;
   updatedAt?: string;

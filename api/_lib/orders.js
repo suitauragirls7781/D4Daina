@@ -800,6 +800,8 @@ const lineName = (item) => cleanText(item?.product?.name, 120) || 'Item';
  * Pieces already returned or exchanged in earlier requests cannot be asked for again.
  * Returns the clean request fields, or throws a UserError the customer can act on.
  */
+const UPI_ID = /^[A-Za-z0-9._-]{2,80}@[A-Za-z][A-Za-z0-9]{1,30}$/;
+
 export const validateReturnInput = (order, input, { products = new Map(), isPhotoUrl = () => false } = {}) => {
   const type = input?.type === 'exchange' ? 'exchange' : input?.type === 'return' ? 'return' : '';
   if (!type) throw new UserError('Please choose return or exchange.');
@@ -861,6 +863,12 @@ export const validateReturnInput = (order, input, { products = new Map(), isPhot
   if (photos.length > RETURN_MAX_PHOTOS) throw new UserError(`Please add at most ${RETURN_MAX_PHOTOS} photos.`);
   if (photos.some((url) => !isPhotoUrl(url))) throw new UserError('One of the photos could not be used. Please remove it and upload it again.');
   if (RETURN_PHOTO_REASONS.includes(reason) && !photos.length) throw new UserError('Please add at least one photo that shows the problem.');
+  // A cash-on-delivery order was paid in cash, so a refund needs somewhere to go: the customer's UPI ID
+  const refundUpi = String(input?.refundUpi || '').trim().slice(0, 100);
+  if (order?.payMode === 'cod' && type === 'return') {
+    if (!UPI_ID.test(refundUpi)) throw new UserError('Please enter the UPI ID your refund should be sent to (for example name@upi).');
+    return { type, reason, details, items, photos, refundUpi };
+  }
   return { type, reason, details, items, photos };
 };
 
@@ -1014,6 +1022,7 @@ const requestView = (request, owner) => {
     details: request.details || '',
     photos: request.photos,
     adminNote: request.adminNote || '',
+    ...(request.refundUpi ? { refundUpi: request.refundUpi } : {}),
   };
 };
 

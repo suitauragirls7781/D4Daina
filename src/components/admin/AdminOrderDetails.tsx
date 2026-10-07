@@ -537,6 +537,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               {(returnRequest.details || (!returnRequest.status && returnRequest.reason)) && (
                 <p className="text-ink-muted whitespace-pre-line break-words">{returnRequest.details || returnRequest.reason}</p>
               )}
+              {returnRequest.refundUpi && <p className="font-semibold text-ink break-all">Refund to UPI ID (cash on delivery order): {returnRequest.refundUpi}</p>}
               {(returnRequest.photos || []).length > 0 && (
                 <div className="pt-1">
                   <p className={`${ui.eyebrow} mb-1.5`}>Customer photos (tap to enlarge)</p>

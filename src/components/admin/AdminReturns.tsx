@@ -239,6 +239,7 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
           <p className={ui.eyebrow}>Reason</p>
           <p className="font-semibold text-ink">{request.reason || 'Not given'}</p>
           {request.details && <p className="text-ink-muted whitespace-pre-line break-words">{request.details}</p>}
+          {request.refundUpi && <p className="font-semibold text-ink break-all">Refund to UPI ID (cash on delivery order): {request.refundUpi}</p>}
           {(request.photos || []).length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
               {(request.photos || []).map((url, i) => (
