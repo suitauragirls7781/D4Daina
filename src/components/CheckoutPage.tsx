@@ -1020,6 +1020,8 @@ export const CheckoutPage: React.FC = () => {
   const codOn = storeOffers.codEnabled && Boolean(gateways?.razorpay);
   const codChosen = payMode === 'cod' && codOn;
   const prepaidSaving = Math.max(0, codTotal - finalCartTotal);
+  // A cash-on-delivery order does not get the online payment discount, so it is not counted as saved
+  const summarySavings = codChosen ? Math.max(0, totalSavings - prepaidDiscount) : totalSavings;
   const payButtonContent = isProcessing ? (
     <>
       <Loader2 className="w-[18px] h-[18px] animate-spin shrink-0" />
@@ -1569,10 +1571,10 @@ export const CheckoutPage: React.FC = () => {
                   ))}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm leading-5 font-bold text-ink sag-num">{itemsText} · {rupees(finalCartTotal)}</span>
+                  <span className="block text-sm leading-5 font-bold text-ink sag-num">{itemsText} · {rupees(codChosen ? codTotal : finalCartTotal)}</span>
                   <span className="block text-[13px] leading-[18px] text-ink-muted">
-                    {totalSavings > 0 && <span className="sag-num font-bold text-sale">You save {rupees(Math.round(totalSavings))}</span>}
-                    {totalSavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
+                    {summarySavings > 0 && <span className="sag-num font-bold text-sale">You save {rupees(Math.round(summarySavings))}</span>}
+                    {summarySavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
                   </span>
                 </span>
                 <span className="shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-brand">
