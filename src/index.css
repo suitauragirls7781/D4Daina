@@ -843,3 +843,94 @@
 .sag-link { color: var(--sag-ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; }
 .sag-input { border-width: 1px; }
 .sag-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sag-ink-muted); }
+
+/* ------------------------------------------------------------------
+   Motion (owner, 2026-10-08): calm and one-time, like a fashion house's site.
+   Things arrive once and then rest; nothing spins, bounces or blinks.
+   The only slow continuous movement is the hero photo's drift and the festive scene.
+------------------------------------------------------------------- */
+:root { --sag-ease: cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Page change: the new page rises in a little further and a little slower */
+.sag-page { animation: sag-enter 420ms var(--sag-ease) both; --sag-enter-opacity: 0; --sag-enter-y: 14px; }
+@keyframes sag-vt-out { to { opacity: 0; transform: translate3d(0, -8px, 0); } }
+@keyframes sag-vt-in { from { opacity: 0; transform: translate3d(0, 14px, 0); } }
+::view-transition-old(root) { animation: 180ms ease-in both sag-vt-out; }
+::view-transition-new(root) { animation: 420ms var(--sag-ease) 60ms both sag-vt-in; }
+
+/* Scroll reveal (src/utils/reveal.ts adds sag-reveal, then is-in when the section comes into view) */
+.sag-reveal { opacity: 0; transform: translate3d(0, 22px, 0); transition: opacity 700ms var(--sag-ease), transform 700ms var(--sag-ease); transition-delay: var(--sag-reveal-delay, 0ms); will-change: opacity, transform; }
+.sag-reveal.is-in { opacity: 1; transform: none; will-change: auto; }
+
+/* Section titles: a thin champagne rule draws in under the title when its section arrives */
+#main-content section h2.font-display { position: relative; }
+#main-content section.sag-reveal h2.font-display::after { content: ""; position: absolute; left: 0; bottom: -6px; height: 1px; width: 0; background: var(--sag-star); transition: width 900ms var(--sag-ease) 250ms; }
+#main-content section.sag-reveal.is-in h2.font-display::after { width: 36px; }
+#main-content section.sag-reveal .text-center h2.font-display::after, #main-content section.sag-reveal h2.font-display.text-center::after { left: 50%; transform: translateX(-50%); }
+
+/* Buttons: the black primary fills with a lighter black from the left on hover; the outline one fills black */
+.sag-btn-primary, .sag-btn-outline { position: relative; overflow: hidden; isolation: isolate; transition: color 300ms var(--sag-ease), background-color 300ms var(--sag-ease), border-color 300ms var(--sag-ease), transform 150ms ease-out; }
+.sag-btn-primary::before, .sag-btn-outline::before { content: ""; position: absolute; inset: 0; z-index: -1; transform: scaleX(0); transform-origin: left; transition: transform 420ms var(--sag-ease); }
+.sag-btn-primary::before { background: var(--sag-brand-dark); }
+.sag-btn-outline::before { background: var(--sag-ink); }
+@media (hover: hover) {
+  .sag-btn-primary:not(:disabled):hover::before, .sag-btn-outline:not(:disabled):hover::before { transform: scaleX(1); }
+  .sag-btn-outline:not(:disabled):hover { color: #FFFFFF; background: transparent; }
+  /* Product photos: a slow zoom under the pointer */
+  .sag-zoom { overflow: hidden; }
+  .sag-zoom img { transition: transform 900ms var(--sag-ease); }
+  .sag-zoom:hover img { transform: scale(1.045); }
+  /* Text links and menu items: the underline draws in */
+  .sag-underline { background-image: linear-gradient(currentColor, currentColor); background-size: 0 1px; background-position: 0 100%; background-repeat: no-repeat; transition: background-size 350ms var(--sag-ease); }
+  .sag-underline:hover { background-size: 100% 1px; }
+}
+
+/* Photos fade in when they have loaded (class set by the component, or any lazy photo in a card) */
+@keyframes sag-photo-in { from { opacity: 0; } }
+#main-content img[loading="lazy"] { animation: sag-photo-in 500ms ease-out both; }
+
+/* One-time accents the components switch on: a heart beat, a bag bump, a light sweep, a number that settles */
+@keyframes sag-beat { 0% { transform: scale(1); } 35% { transform: scale(1.28); } 70% { transform: scale(0.94); } 100% { transform: scale(1); } }
+.sag-beat { animation: sag-beat 420ms var(--sag-ease); }
+@keyframes sag-bump { 0% { transform: translateY(0); } 30% { transform: translateY(-5px); } 60% { transform: translateY(1px); } 100% { transform: translateY(0); } }
+.sag-bump { animation: sag-bump 480ms var(--sag-ease); }
+@keyframes sag-sheen { from { transform: translateX(-120%) skewX(-18deg); } to { transform: translateX(320%) skewX(-18deg); } }
+.sag-sheen { position: relative; overflow: hidden; }
+.sag-sheen::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 34%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent); animation: sag-sheen 1400ms var(--sag-ease) 600ms both; pointer-events: none; }
+@keyframes sag-settle { from { opacity: 0; transform: translateY(0.5em); } }
+.sag-settle { display: inline-block; animation: sag-settle 420ms var(--sag-ease) both; }
+
+/* Hero: the photo drifts very slowly; each line of the title rises out of its own line box */
+@keyframes sag-drift { from { transform: scale(1); } to { transform: scale(1.07); } }
+.sag-drift { animation: sag-drift 9s ease-out both; transform-origin: 50% 30%; }
+.sag-lines { overflow: hidden; }
+@keyframes sag-line-up { from { transform: translateY(105%); } }
+.sag-line-up { display: block; animation: sag-line-up 800ms var(--sag-ease) both; animation-delay: var(--sag-line-delay, 0ms); }
+@keyframes sag-curtain { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0 0 0 0); } }
+.sag-curtain { animation: sag-curtain 900ms var(--sag-ease) both; }
+@keyframes sag-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.sag-progress { transform-origin: left; animation: sag-progress var(--sag-progress-time, 6s) linear both; }
+
+/* Stagger for lists the components mark (offers, menu rows): children follow one another */
+.sag-stagger > * { animation: sag-enter 520ms var(--sag-ease) both; --sag-enter-opacity: 0; --sag-enter-y: 10px; }
+.sag-stagger > *:nth-child(2) { animation-delay: 70ms; } .sag-stagger > *:nth-child(3) { animation-delay: 140ms; }
+.sag-stagger > *:nth-child(4) { animation-delay: 210ms; } .sag-stagger > *:nth-child(5) { animation-delay: 280ms; }
+.sag-stagger > *:nth-child(6) { animation-delay: 350ms; } .sag-stagger > *:nth-child(n+7) { animation-delay: 420ms; }
+
+/* Festive scene and countdown pieces (FestiveBanner.tsx) */
+@keyframes sag-flame { 0%, 100% { transform: scaleY(1) translateY(0); opacity: 0.92; } 50% { transform: scaleY(1.12) translateY(-1px); opacity: 1; } }
+.sag-flame { transform-origin: 50% 100%; transform-box: fill-box; animation: sag-flame 1.6s ease-in-out infinite; }
+@keyframes sag-arrow { 0%, 12% { transform: translateX(0); opacity: 0; } 16% { opacity: 1; } 46% { transform: translateX(var(--sag-arrow-travel, 150px)); opacity: 1; } 52%, 100% { transform: translateX(var(--sag-arrow-travel, 150px)); opacity: 0; } }
+.sag-arrow { animation: sag-arrow 7s var(--sag-ease) infinite; }
+@keyframes sag-ember { 0%, 46% { opacity: 0; transform: scale(0.6); } 56% { opacity: 1; transform: scale(1); } 88% { opacity: 1; } 100% { opacity: 0; transform: scale(1.05); } }
+.sag-ember { transform-origin: 50% 100%; transform-box: fill-box; animation: sag-ember 7s ease-out infinite; }
+.sag-digit { display: inline-block; min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums lining-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sag-reveal { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .sag-beat, .sag-bump, .sag-settle, .sag-drift, .sag-line-up, .sag-curtain, .sag-progress, .sag-stagger > *, .sag-flame, .sag-arrow, .sag-ember, #main-content img[loading="lazy"] { animation: none !important; }
+  .sag-sheen::after { display: none; }
+  .sag-btn-primary::before, .sag-btn-outline::before { transition: none; }
+  #main-content section.sag-reveal h2.font-display::after { transition: none; width: 36px; }
+  .sag-arrow { opacity: 0; }
+}
