@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { instagramProfile } from '../utils/instagram';
-import { CheckCircle2, ChevronRight, Clock, Phone, Send } from 'lucide-react';
+import { Check, ChevronRight, Clock, Phone } from 'lucide-react';
 import { GmailIcon, InstagramIcon, WhatsAppIcon } from './BrandIcons';
 import { PinIcon, TruckIcon } from './StoreIcons';
 import { InfoPageHeader } from './PolicyPages';
@@ -56,10 +56,13 @@ export const ContactUsPage: React.FC = () => {
   };
 
   const telHref = `tel:+91${SUPPORT_PHONE_DISPLAY.replace(/\D/g, '').replace(/^91/, '')}`;
-  const optional = <span className="font-normal text-ink-muted">(optional)</span>;
-  const darkBtn = 'inline-flex items-center justify-center gap-2 h-12 px-4 rounded-full text-[15px] font-bold transition-colors';
-  const rowTitle = 'block font-sans text-sm leading-5 font-semibold text-ink';
-  const rowSub = 'block text-[13px] leading-[18px] font-normal text-ink-muted mt-0.5';
+  const optional = <span className="normal-case tracking-normal">(optional)</span>;
+  const row = 'flex items-start gap-3 border-b border-line py-[15px]';
+  const rowIcon = 'shrink-0 flex text-sale mt-0.5';
+  const rowTitle = 'block font-sans text-sm leading-5 font-normal text-ink';
+  const rowSub = 'block text-[11.5px] leading-4 font-normal text-ink-muted mt-0.5';
+  const chevron = <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-0.5" strokeWidth={1.5} aria-hidden="true" />;
+  const label = 'sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted';
 
   return (
     <div id="contact-us-page" className="bg-page pb-12 lg:pb-16">
@@ -69,95 +72,99 @@ export const ContactUsPage: React.FC = () => {
         title="We are here to help"
         subtitle="Questions about sizing, styling or an order? Message us and our team will get back to you during support hours."
       >
-        <p className="mt-3 flex items-center gap-2 text-sm leading-5 font-semibold text-ink">
-          <Clock className="w-[18px] h-[18px] shrink-0 text-ink-muted" aria-hidden="true" /> Monday to Saturday · 10:00 AM – 7:00 PM IST
+        <p className="mt-3 flex items-center gap-2 text-[13px] leading-[18px] text-ink">
+          <Clock className="w-4 h-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> Monday to Saturday · 10:00 AM – 7:00 PM IST
         </p>
       </InfoPageHeader>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-10 items-start">
         {/* Ways to reach us */}
-        <div className="lg:col-span-5 space-y-4 min-w-0">
-          {/* WhatsApp & call: the dark card comes first */}
-          <section className="rounded-sheet bg-dark text-on-dark p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
-            <h2 id="contact-whatsapp-title" className="font-display text-[22px] leading-7 font-semibold text-on-dark">WhatsApp &amp; call</h2>
-            <p className="mt-1 text-sm leading-5 text-on-dark-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
+        <div className="lg:col-span-5 min-w-0">
+          {/* WhatsApp & call come first */}
+          <section className="border border-line bg-surface p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
+            <div className="flex items-start gap-3">
+              <span className="shrink-0 flex text-sale mt-0.5"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
+              <div className="min-w-0 flex-1">
+                <h2 id="contact-whatsapp-title" className="font-sans text-sm leading-5 font-semibold text-ink">WhatsApp &amp; call</h2>
+                <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
+              </div>
+            </div>
             <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               <a
                 href={createSupportWhatsAppUrl('Hi Suit Aura Girls! I have a question regarding suits and orders.')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`${darkBtn} bg-sun text-ink`}
+                className="sag-btn-primary h-12 px-4"
               >
-                <WhatsAppIcon className="w-5 h-5" />
                 <span>Chat on WhatsApp</span>
               </a>
-              <a className={`${darkBtn} sag-num bg-white/10 text-on-dark hover:bg-white/20`} href={telHref} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
-                <Phone className="w-[18px] h-[18px]" aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
+              <a className="sag-btn-outline sag-num h-12 px-4 gap-2" href={telHref} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
+                <Phone className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
               </a>
             </div>
-            <p className="mt-3 text-[13px] leading-[18px] text-on-dark-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
+            <p className="mt-3 text-[11.5px] leading-4 text-ink-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
           </section>
 
           {/* Email */}
-          <section className="sag-card px-4 sm:px-5" aria-label="Email us">
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="sag-row border-t-0 items-start py-3.5">
-              <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-lilac text-ink"><GmailIcon mono className="w-5 h-5" /></span>
+          <section className="mt-2" aria-label="Email us">
+            <a href={`mailto:${SUPPORT_EMAIL}`} className={row}>
+              <span className={rowIcon}><GmailIcon mono className="w-5 h-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>Email</span>
-                <span className="block text-[15px] leading-[22px] font-semibold text-brand underline underline-offset-[3px] break-all">{SUPPORT_EMAIL}</span>
+                <span className="block text-[13px] leading-[18px] text-ink underline decoration-1 underline-offset-4 break-all">{SUPPORT_EMAIL}</span>
                 <span className={rowSub}>Customer Support: Monday to Saturday, 10:00 AM - 7:00 PM IST</span>
               </span>
-              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-1" aria-hidden="true" />
+              {chevron}
             </a>
           </section>
 
           {/* Track order */}
-          <section className="sag-card px-4 sm:px-5" aria-label="Track your order">
-            <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="sag-row border-t-0 w-full items-start py-3.5 text-left cursor-pointer">
-              <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-peach text-ink"><TruckIcon mono live={false} className="w-5 h-5" /></span>
+          <section aria-label="Track your order">
+            <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className={`${row} w-full text-left cursor-pointer`}>
+              <span className={rowIcon}><TruckIcon mono live={false} className="w-5 h-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>Track order</span>
                 <span className={rowSub}>Enter the order number from your confirmation email.</span>
               </span>
-              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-1" aria-hidden="true" />
+              {chevron}
             </button>
           </section>
 
           {/* Store, Instagram */}
-          <section className="sag-card px-4 sm:px-5" aria-label="Other ways to reach us">
-            <div className="sag-row items-start py-3.5">
-              <span className="shrink-0 flex mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
+          <section aria-label="Other ways to reach us">
+            <div className={row}>
+              <span className={rowIcon}><PinIcon mono className="w-5 h-5" /></span>
               <div className="min-w-0 flex-1">
                 <h2 className={rowTitle}>Our store</h2>
-                <p className="mt-0.5 text-sm leading-5 font-normal text-ink-muted">
+                <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
                   {STORE_ADDRESS_LINES.map((line) => <React.Fragment key={line}>{line}<br /></React.Fragment>)}
                 </p>
-                <a className="sag-link" href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer">
+                <a className="sag-link text-[12.5px]" href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer">
                   View on Google Maps
                 </a>
               </div>
             </div>
 
-            <a href={instagram.url} target="_blank" rel="noopener noreferrer" className="sag-row items-start py-3.5">
-              <span className="shrink-0 flex mt-0.5"><InstagramIcon mono className="w-5 h-5" /></span>
+            <a href={instagram.url} target="_blank" rel="noopener noreferrer" className={row}>
+              <span className={rowIcon}><InstagramIcon mono className="w-5 h-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>Instagram</span>
-                <span className={rowSub}>New styles first · <span className="font-semibold text-ink">{instagram.handle}</span></span>
+                <span className={rowSub}>New styles first · <span className="font-medium text-ink">{instagram.handle}</span></span>
               </span>
-              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-1" aria-hidden="true" />
+              {chevron}
             </a>
           </section>
         </div>
 
         {/* Contact form */}
-        <div className="lg:col-span-7 sag-card p-4 sm:p-6 min-w-0">
+        <div className="lg:col-span-7 border border-line bg-surface p-4 sm:p-6 min-w-0">
           {submitted ? (
             <div className="py-8 sm:py-12 text-center" role="status">
-              <div className="w-14 h-14 rounded-full bg-ok-tint border border-ok-line flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-7 h-7 text-ok" aria-hidden="true" />
+              <div className="w-[54px] h-[54px] rounded-full border border-ink text-ink flex items-center justify-center mx-auto">
+                <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
               </div>
-              <h2 className="mt-4 font-display text-[22px] leading-7 text-ink">Thank you!</h2>
-              <p className="mt-2 text-[15px] leading-[22px] text-ink-muted max-w-sm mx-auto">
+              <h2 className="mt-4 font-display text-[22px] leading-7 font-medium text-ink">Thank you!</h2>
+              <p className="mt-2 text-[13px] leading-[18px] text-ink-muted max-w-sm mx-auto">
                 We have received your message. Our team will reach out to you during support hours.
               </p>
               <button
@@ -168,7 +175,7 @@ export const ContactUsPage: React.FC = () => {
                   setEmail('');
                   setMessage('');
                 }}
-                className="sag-btn-outline mt-5 h-12 text-[15px]"
+                className="sag-btn-outline mt-5 h-12"
               >
                 Send another message
               </button>
@@ -176,13 +183,13 @@ export const ContactUsPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <h2 className="text-[17px] leading-6 font-semibold text-ink">Send us a message</h2>
-                <p className="text-[13px] leading-[18px] text-ink-muted mt-1">Fields marked * are required.</p>
+                <h2 className="font-display text-[19px] leading-6 font-medium text-ink">Send us a message</h2>
+                <p className="text-[11.5px] leading-4 text-ink-muted mt-1">Fields marked * are required.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="contact-name-input" className="sag-label">Your name *</label>
+                  <label htmlFor="contact-name-input" className={label}>Your name *</label>
                   <input
                     id="contact-name-input"
                     type="text"
@@ -198,7 +205,7 @@ export const ContactUsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="contact-email-input" className="sag-label">Email address *</label>
+                  <label htmlFor="contact-email-input" className={label}>Email address *</label>
                   <input
                     id="contact-email-input"
                     type="email"
@@ -219,7 +226,7 @@ export const ContactUsPage: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="contact-phone-input" className="sag-label">Phone <span className="font-normal text-ink-muted">(optional, for WhatsApp)</span></label>
+                  <label htmlFor="contact-phone-input" className={label}>Phone <span className="normal-case tracking-normal">(optional, for WhatsApp)</span></label>
                   <input
                     id="contact-phone-input"
                     type="tel"
@@ -234,7 +241,7 @@ export const ContactUsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="contact-order-input" className="sag-label">Order number {optional}</label>
+                  <label htmlFor="contact-order-input" className={label}>Order number {optional}</label>
                   <input
                     id="contact-order-input"
                     type="text"
@@ -248,7 +255,7 @@ export const ContactUsPage: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="contact-message-input" className="sag-label">Your message *</label>
+                <label htmlFor="contact-message-input" className={label}>Your message *</label>
                 <textarea
                   id="contact-message-input"
                   rows={5}
@@ -265,7 +272,6 @@ export const ContactUsPage: React.FC = () => {
                 type="submit"
                 className="sag-btn-primary w-full gap-2"
               >
-                <Send className="w-[18px] h-[18px]" aria-hidden="true" />
                 <span>Send message</span>
               </button>
             </form>

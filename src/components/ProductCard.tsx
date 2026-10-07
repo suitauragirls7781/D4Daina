@@ -76,8 +76,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   };
 
   return (
-    <article id={`product-card-${product.id}`} className="group relative flex flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
-      {/* Photo on top at every width (two columns on phones); the heart sits on the photo's top-right corner (the watermark is top-left). */}
+    <article id={`product-card-${product.id}`} className="group relative flex h-full min-w-0 flex-col">
+      {/* No card chrome: the photo, then the text under it. The heart sits on the photo's top-right corner (the watermark is top-left). */}
       <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, 480)}
@@ -111,49 +111,43 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
         aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         aria-pressed={fav}
-        className="absolute top-0.5 right-0.5 w-11 h-11 flex items-center justify-center cursor-pointer"
+        className="absolute top-px right-px w-11 h-11 flex items-center justify-center cursor-pointer"
       >
-        <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-accent shadow-[0_1px_4px_rgba(10,10,10,0.16)]">
-          <Heart className={`w-4 h-4 sm:w-[18px] sm:h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
+        <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/90 text-ink">
+          <Heart className={`w-[15px] h-[15px] ${fav ? 'fill-current' : ''}`} strokeWidth={1.5} aria-hidden="true" />
         </span>
       </button>
 
-      <div className="flex flex-col flex-1 min-w-0 px-2.5 pt-2 pb-2.5">
-        <h3 className="text-[13px] leading-[17px] font-semibold text-ink line-clamp-2 min-h-[34px]" title={product.name}>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 pt-[9px]">
+        {/* A real status only (new, bestseller, trending, sold out): a small label, never a filled pill */}
+        {badge && (
+          <span className={`text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em] ${soldOut ? 'text-ink-muted' : 'text-sale'}`}>{badge}</span>
+        )}
+
+        <h3 className="text-[13px] leading-[1.35] font-normal text-ink line-clamp-2" title={product.name}>
           <a href={href} onClick={openProduct} className="hover:underline underline-offset-2 focus-visible:underline">{product.name}</a>
         </h3>
 
-        {/* Rating (approved reviews only) and the status badge share one line; nothing is shown when neither is real */}
-        {(rating || badge) && (
-          <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
-            {rating && (
-              <span className="inline-flex items-center gap-1 text-xs leading-5 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
-                <span className="inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">
-                  {rating.avg.toFixed(1)} <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
-                </span>
-                <span className="sag-num">({rating.count})</span>
-              </span>
-            )}
-            {badge && (
-              <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : 'bg-ink text-white'}`}>
-                {badge}
-              </span>
-            )}
-          </div>
+        {/* Rating from approved reviews only; nothing is shown when there is none */}
+        {rating && (
+          <span className="sag-num inline-flex items-center gap-1 text-[12px] leading-4 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
+            <Star className="w-3 h-3 fill-star text-star" strokeWidth={0} aria-hidden="true" />
+            {rating.avg.toFixed(1)} ({rating.count})
+          </span>
         )}
 
-        <div className="sag-num flex items-baseline gap-x-1.5 gap-y-0 flex-wrap mt-auto pt-1.5">
-          <span className={`text-[15px] sm:text-[16px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
-          {mrp > price && <span className="text-xs sm:text-[13px] text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span>}
-          {discount > 0 && <span className="text-xs sm:text-[13px] font-bold text-sale whitespace-nowrap">{discount}% off</span>}
+        <div className="sag-num flex flex-wrap items-baseline gap-x-[7px] gap-y-0">
+          <span className={`text-[14.5px] leading-5 font-semibold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
+          {mrp > price && <span className="text-[12.5px] text-ink-muted line-through">₹{mrp.toLocaleString('en-IN')}</span>}
+          {discount > 0 && <span className="text-[12.5px] font-medium text-sale whitespace-nowrap">{discount}% off</span>}
         </div>
 
         {picking ? (
-          <div className="mt-2 rounded-control bg-page border border-line p-1.5 sm:p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
+          <div className="mt-1 border border-line bg-surface p-1.5 sm:p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
             <div className="flex items-center justify-between pl-1">
-              <span className="min-w-0 truncate text-[13px] font-semibold text-ink">Choose a size</span>
-              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
-                <X className="w-4 h-4" />
+              <span className="min-w-0 truncate text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ink-muted">Choose a size</span>
+              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 -my-1 -mr-1 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+                <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
             <div className={`grid gap-1.5 ${compact ? 'grid-cols-3' : 'grid-cols-3 sm:grid-cols-4'}`}>
@@ -162,7 +156,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
                   key={size}
                   type="button"
                   onClick={() => add(size)}
-                  className="sag-chip min-w-0 h-11 px-1 text-[13px] whitespace-nowrap overflow-hidden text-ellipsis hover:bg-ink hover:border-ink hover:text-white"
+                  className="sag-chip min-w-0 h-10 px-1 border border-line text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis hover:border-ink"
                 >
                   {size}
                 </button>
@@ -170,21 +164,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             </div>
           </div>
         ) : (
+          // A quiet text control under the price (same handler, id and label as before), 36-40px tall so it is easy to tap
           <button
             id={`add-to-bag-${product.id}`}
             type="button"
             disabled={soldOut}
             onClick={onQuickAdd}
             aria-label={soldOut ? `${product.name} is sold out` : justAdded ? `${product.name} is in your bag. Open bag` : `Add ${product.name} to bag`}
-            className={`mt-2 w-full h-9 sm:h-10 px-1 rounded-full text-[13px] font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors ${
-              soldOut
-                ? 'bg-sunken-deep text-ink-muted cursor-not-allowed'
-                : justAdded
-                ? 'bg-ok-tint text-ok border border-ok-line cursor-pointer'
-                : 'bg-white text-brand border-[1.5px] border-brand hover:bg-brand-wash cursor-pointer'
-            }`}
+            // Sold out is already said by the label above the name, so the disabled control is kept for screen readers only
+            className={soldOut ? 'sr-only' : 'mt-auto -mb-1 self-start min-h-9 sm:min-h-10 inline-flex items-center gap-1.5 whitespace-nowrap text-[11.5px] leading-4 font-medium uppercase tracking-[0.1em] text-ink hover:text-ink-muted transition-colors cursor-pointer'}
           >
-            {soldOut ? 'Sold out' : justAdded ? <><Check className="w-4 h-4" /> In bag · View</> : <><BagIcon mono className="w-4 h-4" /> Add to bag</>}
+            {soldOut ? 'Sold out' : justAdded ? (
+              <><Check className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /><span className="underline decoration-1 underline-offset-4">In bag · View</span></>
+            ) : (
+              <><BagIcon mono className="w-3.5 h-3.5" /><span className="underline decoration-1 underline-offset-4">Add to bag</span></>
+            )}
           </button>
         )}
       </div>

@@ -18,26 +18,25 @@ import { productOccasions } from '../utils/smartQuery';
 import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from './ProductCard';
-import { ProductReviews, Stars } from './ProductReviews';
+import { ProductReviews } from './ProductReviews';
 import { ShimmerPDP } from './ShimmerPDP';
 import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { useBackToClose } from '../utils/backClose';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Eye, GitCompare, Heart, Minus, Plus, Share2, Tag, X } from 'lucide-react';
+import { Baby, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, Eye, GitCompare, Heart, Lock, MessageCircle, Minus, Plus, RotateCcw, Share2, Star, Truck, X } from 'lucide-react';
 import { WhatsAppIcon } from './BrandIcons';
-import { LockIcon, ReturnIcon, TruckIcon } from './StoreIcons';
 import { Assurance, assuranceFacts } from './Assurance';
 
 const MAX_QTY = 10;
 
-type InfoRow = 'shipping' | 'returns';
+type InfoRow = 'details' | 'shipping' | 'returns';
 type BuyAction = 'add' | 'buy';
 
 const inr = (value: number) => `₹${value.toLocaleString('en-IN')}`;
 
 /**
- * Bottom sheet: white, rounded top corners, grab handle, title row with a close button.
+ * Bottom sheet: white, square, a hairline on top, title row with a close button.
  * Closes on scrim tap and Escape, keeps keyboard focus inside. It is rendered only while open.
  */
 const BottomSheet: React.FC<{ title: string; onClose: () => void; children: React.ReactNode }> = ({ title, onClose, children }) => {
@@ -75,13 +74,12 @@ const BottomSheet: React.FC<{ title: string; onClose: () => void; children: Reac
         aria-label={title}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[85dvh] overflow-y-auto bg-white rounded-t-[20px] shadow-[var(--sag-shadow-bar)] px-4 pb-[calc(16px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
+        className="w-full max-w-lg max-h-[85dvh] overflow-y-auto bg-surface border-t border-line px-4 pt-1 pb-[calc(16px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
       >
-        <div className="mx-auto mt-2 h-1 w-9 rounded-full bg-sunken-deep" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-base leading-[22px] font-semibold text-ink">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
-            <X className="w-5 h-5" />
+          <h2 className="font-display text-[19px] leading-6 font-medium text-ink">{title}</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="-mr-2 w-11 h-11 shrink-0 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
+            <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
         {children}
@@ -127,7 +125,7 @@ export const ProductDetailPage: React.FC = () => {
   const [restockEmail, setRestockEmail] = useState('');
   const { features } = useDiscovery();
   const { compare: compareIds } = useShopperMemory();
-  const [open, setOpen] = useState<InfoRow | null>(null);
+  const [open, setOpen] = useState<InfoRow | null>('details');
   const [lightbox, setLightbox] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   // Display only: the size / colour / quantity that was last added, so the button can offer "View bag" for it
@@ -139,7 +137,6 @@ export const ProductDetailPage: React.FC = () => {
   useBackToClose(lightbox, () => setLightbox(false));
   useBackToClose(sheetAction !== null, () => setSheetAction(null));
   const [sheetError, setSheetError] = useState(false);
-  const [moreOffers, setMoreOffers] = useState(false);
   const [descOpen, setDescOpen] = useState(false);
   // Photo strip: native scroll-snap; the active photo is read from the scroll position
   const strip = useRef<HTMLDivElement>(null);
@@ -154,6 +151,9 @@ export const ProductDetailPage: React.FC = () => {
   // picked stay as the small picture the row below already has.
   const [viewedImages, setViewedImages] = useState<Record<string, boolean>>({});
   const switchTimer = useRef(0);
+  // Phones and tablets: a sideways swipe on the large photo shows the next or the previous one
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const swipedAt = useRef(0);
 
   useEffect(() => {
     setImageIdx(0);
@@ -162,7 +162,6 @@ export const ProductDetailPage: React.FC = () => {
     setAddedKey('');
     setJustAdded(false);
     setSheetAction(null);
-    setMoreOffers(false);
     setDescOpen(false);
     setSize(product?.sizes?.length === 1 ? product.sizes[0] : null);
     setColor(product?.colors?.[0] || null);
@@ -317,8 +316,8 @@ export const ProductDetailPage: React.FC = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Phones and tablets show two photos and an information card; desktop keeps the photo strip and the buy
-  // box. Only one of the two is ever rendered, so no photo is downloaded for a layout that is not on screen.
+  // Phones and tablets show one large photo (swipe, or tap a small photo, to change it); desktop keeps the
+  // photo strip. Only one of the two is ever rendered, so no photo is downloaded for a layout that is not on screen.
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
   useEffect(() => {
     const query = window.matchMedia('(min-width: 1024px)');
@@ -340,7 +339,7 @@ export const ProductDetailPage: React.FC = () => {
   if (!product) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center bg-surface">
-        <h1 className="font-display text-[28px] leading-8 text-ink">This style is no longer available</h1>
+        <h1 className="font-display text-[26px] leading-8 font-medium text-ink">This style is no longer available</h1>
         <p className="text-sm text-ink-muted">It may have sold out or been removed. Explore what is in stock now.</p>
         <button onClick={() => navigateToCategory('All')} className="sag-btn-primary px-8 cursor-pointer">Shop all styles</button>
       </div>
@@ -351,8 +350,6 @@ export const ProductDetailPage: React.FC = () => {
     ? product.images.filter(Boolean)
     : [product.image || ELEGANT_PLACEHOLDER_SVG];
   const colors = (product.colors || []).filter((c) => c && c.name);
-  // Colours that have their own photo in the gallery (the colour picker beside the photo jumps to it)
-  const colourPhotos = colors.map((c) => ({ name: c.name, index: c.imageUrl ? images.indexOf(c.imageUrl) : -1 })).filter((c) => c.index >= 0);
   // Accessories are sold only through "Complete the look": no size finder, size chart, compare or similar outfits
   const accessoryPage = isAccessory(product);
   // Kids wear is sized by age and toys are one size: the women's size finder and size chart don't apply
@@ -393,15 +390,14 @@ export const ProductDetailPage: React.FC = () => {
     product.washCare && ['Care', product.washCare],
   ].filter(Boolean) as Array<[string, string]>);
   const description = String(product.description || '').trim();
-  // Offers: the pay-online lines are shown; the combo and the best coupon sit behind a disclosure
+  // Offers: only the ones that are live, as plain lines in one quiet box
   const prepaidLines = [
     prepaidDiscount > 0 && `₹${prepaidDiscount} off at checkout when you pay online`,
     prepaidPercentHere && `${storeOffers.prepaidPercent}% off this style at checkout when you pay online`,
     storeOffers.codEnabled && `Cash on delivery available: pay ₹${storeOffers.codCharge} online to confirm, the rest in cash at delivery`,
   ].filter(Boolean) as string[];
   const comboHere = comboOffer && !accessoryPage ? comboOffer : null;
-  const extraOffers = (comboHere ? 1 : 0) + (bestCoupon ? 1 : 0);
-  const showExtraOffers = extraOffers > 0 && (moreOffers || prepaidLines.length === 0);
+  const hasOffers = prepaidLines.length > 0 || Boolean(comboHere) || Boolean(bestCoupon);
   const assurance = assuranceFacts();
 
   const shareWhatsApp = () => {
@@ -456,15 +452,24 @@ export const ProductDetailPage: React.FC = () => {
     });
   };
   const go = (delta: number) => showImage((imageIdx + delta + images.length) % images.length, false);
+  const onPhotoTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStart.current = e.touches.length === 1 && t ? { x: t.clientX, y: t.clientY } : null;
+  };
+  const onPhotoTouchEnd = (e: React.TouchEvent) => {
+    const from = touchStart.current;
+    const t = e.changedTouches[0];
+    touchStart.current = null;
+    if (!from || !t || images.length < 2) return;
+    const dx = t.clientX - from.x;
+    const dy = t.clientY - from.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    // A swipe is not a tap: the viewer must not open on the touch that changed the photo
+    swipedAt.current = Date.now();
+    go(dx < 0 ? 1 : -1);
+  };
+  const openViewer = () => { if (Date.now() - swipedAt.current > 450) setLightbox(true); };
 
-  // Phones and tablets: the photo on screen and, beside it, the next photo that is not another colour's own
-  // photo (so choosing a colour never downloads a different colour). -1 = this photo stands alone, full width.
-  const otherColourPhotos = new Set(colourPhotos.map((c) => c.index));
-  let pairIdx = -1;
-  for (let step = 1; step < images.length && pairIdx < 0; step += 1) {
-    const idx = (imageIdx + step) % images.length;
-    if (colourPhotos.length <= 1 || !otherColourPhotos.has(idx)) pairIdx = idx;
-  }
   const mainImage = images[imageIdx] || images[0];
   const swatches = colors.filter((c) => c.name !== 'Default');
   const pickColour = (c: ProductColor) => {
@@ -546,7 +551,42 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const infoRows: Array<{ key: InfoRow; title: string; body: React.ReactNode }> = [
+
+  // Small label above a title, and the quiet underlined link (Size guide, Read more)
+  const eyebrow = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
+  const quietLink = 'sag-link text-[12.5px] underline-offset-4 decoration-1';
+  const sectionTitle = 'font-display text-[19px] leading-6 font-medium text-ink';
+  const badgeText = (product.isNewArrival || product.isBestSeller) && !soldOut ? (product.isNewArrival ? 'New' : 'Bestseller') : '';
+  const toReviews = () => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' });
+
+  const detailRows: Array<{ key: InfoRow; title: string; body: React.ReactNode }> = [
+    {
+      key: 'details',
+      title: toyPage ? 'About this toy' : 'Product details',
+      body: (
+        <>
+          {facts.length > 0 && (
+            <dl className="grid grid-cols-[104px_minmax(0,1fr)] gap-y-1.5 text-[13.5px] leading-5">
+              {facts.map(([label, value]) => (
+                <React.Fragment key={label}>
+                  <dt className="pr-3 text-ink-muted">{label}</dt>
+                  <dd className="text-ink break-words">{value}</dd>
+                </React.Fragment>
+              ))}
+            </dl>
+          )}
+          {description && (
+            <div className={facts.length > 0 ? 'mt-4' : ''}>
+              <p className={`text-sm leading-[22px] text-ink whitespace-pre-line break-words ${descOpen ? '' : 'line-clamp-5'}`}>{description}</p>
+              {description.length > 220 && (
+                <button type="button" onClick={() => setDescOpen((v) => !v)} aria-expanded={descOpen} className={quietLink}>{descOpen ? 'Show less' : 'Read more'}</button>
+              )}
+            </div>
+          )}
+          {facts.length === 0 && !description && <p>Details on request — ask us on WhatsApp.</p>}
+        </>
+      ),
+    },
     {
       key: 'shipping',
       title: 'Shipping',
@@ -554,7 +594,7 @@ export const ProductDetailPage: React.FC = () => {
         <div className="space-y-2">
           <p>We ship across India. Every order is prepaid online and a tracking number is emailed when it ships.</p>
           {freeShippingThreshold > 0 && <p>Free shipping on orders above ₹{freeShippingThreshold.toLocaleString('en-IN')}.</p>}
-          <button onClick={() => setActivePage('shipping-policy')} className="sag-link">Read the shipping policy</button>
+          <button onClick={() => setActivePage('shipping-policy')} className={quietLink}>Read the shipping policy</button>
         </div>
       ),
     },
@@ -564,38 +604,55 @@ export const ProductDetailPage: React.FC = () => {
       body: (
         <div className="space-y-2">
           <p>Once your order is delivered you can request a return from your account. Our team will contact you to arrange it.</p>
-          <button onClick={() => setActivePage('return-policy')} className="sag-link">Read the return policy</button>
+          <button onClick={() => setActivePage('return-policy')} className={quietLink}>Read the return policy</button>
         </div>
       ),
     },
   ];
 
-  // The red border appears only after the shopper tried to go on without a size
+  // Square outline boxes; the chosen one has an ink border. The red border appears only after the shopper
+  // tried to go on without a size.
   const sizeChips = (error: boolean) => (
     <div className="flex flex-wrap gap-2">
       {sizes.map((s) => (
-        <button key={s} type="button" onClick={() => pickSize(s)} aria-pressed={size === s} className={`sag-chip ${error && !size ? 'is-error' : ''}`}>{s}</button>
+        <button
+          key={s}
+          type="button"
+          onClick={() => pickSize(s)}
+          aria-pressed={size === s}
+          className={`sag-num h-[38px] sm:h-11 min-w-11 px-3 inline-flex items-center justify-center border bg-surface text-[13px] leading-5 text-ink cursor-pointer transition-colors ${size === s ? 'border-ink shadow-[inset_0_0_0_1px_var(--sag-ink)] font-semibold' : error && !size ? 'border-danger' : 'border-line hover:border-control'}`}
+        >
+          {s}
+        </button>
       ))}
     </div>
   );
 
   const sizeLinks = womenSizing && (
     <span className="flex items-center gap-4 shrink-0">
-      {features.findMySize && <button type="button" onClick={() => setFindSizeOpen((v) => !v)} aria-expanded={findSizeOpen} className="sag-link">Find my size</button>}
-      <button type="button" onClick={() => setIsSizeGuideOpen(true)} className="sag-link">Size guide</button>
+      {features.findMySize && <button type="button" onClick={() => setFindSizeOpen((v) => !v)} aria-expanded={findSizeOpen} className={quietLink}>Find my size</button>}
+      <button type="button" onClick={() => setIsSizeGuideOpen(true)} className={quietLink}>Size guide</button>
     </span>
   );
 
   const rail = (title: string, items: Product[]) => (
-    <section className="mt-8 lg:mt-12">
-      <h2 className="text-xl leading-7 font-semibold text-ink">{title}</h2>
-      <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-3 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
+    <section className="mt-10 border-t border-line pt-7 lg:mt-14 lg:pt-10">
+      <h2 className={sectionTitle}>{title}</h2>
+      <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-4 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
         {items.map((p) => (
           <div key={p.id} className="w-[86%] sm:w-52 shrink-0 lg:w-auto min-w-0"><ProductCard product={p} compact /></div>
         ))}
       </div>
     </section>
   );
+
+  // The four facts the store stands behind (worded once in Assurance.tsx)
+  const factRows: Array<{ key: string; icon: React.ReactNode; text: string; page?: 'return-policy' | 'shipping-policy'; href?: string }> = [
+    { key: 'payment', icon: <Lock className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" />, text: assurance.payment },
+    { key: 'returns', icon: <RotateCcw className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" />, text: assurance.returns, page: 'return-policy' },
+    { key: 'delivery', icon: <Truck className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" />, text: assurance.delivery, page: 'shipping-policy' },
+    { key: 'help', icon: <MessageCircle className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" />, text: 'Chat with us on WhatsApp', href: createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about "${product.name}".`) },
+  ];
 
   return (
     <div id="product-detail-page" className="bg-surface pb-4 md:pb-16">
@@ -615,13 +672,14 @@ export const ProductDetailPage: React.FC = () => {
           <span className="text-ink truncate">{product.name}</span>
         </nav>
 
-        {/* One grid, every block once. Phone: photos, buy box, reviews, details. Desktop: photos left; buy box and details right; reviews across. */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-12">
+        {/* One grid, every block once. Phone and tablet: photo, buy box, details, reviews in one column (a centred
+            column on tablets). Desktop: photos left; buy box and details right; reviews across. */}
+        <div className="grid grid-cols-1 sm:mx-auto sm:w-full sm:max-w-xl lg:mx-0 lg:max-w-none lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-12">
           {/* Photos */}
-          <div className="min-w-0 pt-2 md:pt-0 lg:col-start-1 lg:row-start-1 lg:row-span-2">
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-2">
             <div style={{ top: stickyTop }} className="lg:sticky lg:flex lg:gap-3 min-w-0">
               {images.length > 1 && (
-                <div className="sag-scroll-x hidden lg:flex flex-col gap-2 overflow-y-auto max-h-[640px] w-20 shrink-0">
+                <div className="sag-scroll-x hidden lg:flex flex-col gap-3 overflow-y-auto max-h-[640px] w-[86px] p-[3px] shrink-0">
                   {images.map((img, idx) => (
                     <button
                       key={img + idx}
@@ -629,7 +687,7 @@ export const ProductDetailPage: React.FC = () => {
                       onClick={() => showImage(idx)}
                       aria-label={`Show image ${idx + 1}`}
                       aria-current={idx === imageIdx}
-                      className={`shrink-0 w-20 aspect-[4/5] rounded-chip overflow-hidden border-2 cursor-pointer ${idx === imageIdx ? 'border-ink' : 'border-transparent hover:border-control'}`}
+                      className={`shrink-0 w-20 aspect-[4/5] overflow-hidden bg-sunken cursor-pointer transition-opacity ${idx === imageIdx ? 'outline outline-ink outline-offset-2' : 'opacity-75 hover:opacity-100'}`}
                     >
                       <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />
                     </button>
@@ -649,7 +707,7 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => { setImageIdx(idx); setLightbox(true); }}
                       aria-label={images.length > 1 ? `Open photo ${idx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className="relative shrink-0 w-full aspect-[4/5] rounded-control overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!"
+                      className="relative shrink-0 w-full aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!"
                     >
                       {idx === 0 ? (
                         <img {...productPhoto(img)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
@@ -670,25 +728,29 @@ export const ProductDetailPage: React.FC = () => {
                   ))}
                 </div>
                 ) : (
-                  /* Phones and tablets: two photos side by side; a photo with no companion takes the full width */
-                  <div className={`flex gap-1.5 ${pairIdx < 0 ? 'mx-auto max-w-md' : ''}`}>
+                  /* Phones and tablets: one large photo, edge to edge on phones. Swipe sideways or tap a small photo
+                     to change it; a tap opens the viewer. Only the photo on screen is downloaded at full size. */
+                  <div className="relative -mx-4 sm:mx-0">
                     <button
                       key={mainImage}
                       type="button"
-                      onClick={() => setLightbox(true)}
+                      onClick={openViewer}
+                      onTouchStart={onPhotoTouchStart}
+                      onTouchEnd={onPhotoTouchEnd}
                       aria-label={images.length > 1 ? `Open photo ${imageIdx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className={`relative min-w-0 flex-1 aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]! ${pairIdx < 0 ? 'rounded-control' : 'rounded-l-control rounded-r-[4px]'}`}
+                      className="relative block w-full aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in touch-pan-y active:[transform:none]!"
                     >
                       {/* Until the photo arrives, its place holds the small picture the row below already downloaded */}
                       {images.length > 1 && <img src={getCleanImageUrl(mainImage, 160)} alt="" aria-hidden="true" className="w-full h-full object-cover object-top" decoding="async" />}
                       <img
                         {...productPhoto(mainImage)}
-                        {...(pairIdx < 0 ? { sizes: '92vw' } : {})}
+                        sizes="(min-width: 640px) 576px, 100vw"
                         alt={imageIdx === 0 ? product.name : `${product.name}, photo ${imageIdx + 1}`}
                         {...(imageIdx === 0 ? { 'data-vt-hero': '', style: { viewTransitionName: 'pdp-hero' } as React.CSSProperties } : {})}
                         className="absolute inset-0 w-full h-full object-cover object-top"
                         fetchPriority="high"
                         decoding="async"
+                        draggable={false}
                         onLoad={() => markLoaded(mainImage)}
                         onError={() => markLoaded(mainImage)}
                       />
@@ -696,22 +758,13 @@ export const ProductDetailPage: React.FC = () => {
                         <span className="sag-photo-loading" role="status" aria-label="Loading photo"><span className="sag-photo-spinner" /></span>
                       )}
                     </button>
-                    {pairIdx >= 0 && (
-                      <button
-                        key={images[pairIdx]}
-                        type="button"
-                        onClick={() => { setImageIdx(pairIdx); setLightbox(true); }}
-                        aria-label={`Open photo ${pairIdx + 1} of ${images.length} full size`}
-                        className="relative min-w-0 flex-1 aspect-[4/5] overflow-hidden rounded-r-control rounded-l-[4px] bg-sunken cursor-zoom-in active:[transform:none]!"
-                      >
-                        <img src={getCleanImageUrl(images[pairIdx], 160)} alt="" aria-hidden="true" className="w-full h-full object-cover object-top" decoding="async" />
-                        <img {...productPhoto(images[pairIdx])} alt={`${product.name}, photo ${pairIdx + 1}`} className="absolute inset-0 w-full h-full object-cover object-top" decoding="async" />
-                      </button>
+                    {images.length > 1 && (
+                      <span aria-hidden="true" className="sag-num pointer-events-none absolute bottom-3 right-3 bg-surface/90 px-2 py-[3px] text-[11px] leading-4 tracking-[0.04em] text-ink">{imageIdx + 1} / {images.length}</span>
                     )}
                   </div>
                 )}
                 {images.length > 1 && (
-                  <div ref={thumbs} className="sag-scroll-x lg:hidden mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto overscroll-x-contain">
+                  <div ref={thumbs} className="sag-scroll-x lg:hidden mt-[7px] -mx-4 px-4 py-[3px] sm:mx-0 sm:px-[3px] flex gap-3 overflow-x-auto overscroll-x-contain">
                     {images.map((img, idx) => (
                       <button
                         key={img + idx}
@@ -719,7 +772,7 @@ export const ProductDetailPage: React.FC = () => {
                         onClick={() => showImage(idx)}
                         aria-label={`Show photo ${idx + 1}`}
                         aria-current={idx === imageIdx}
-                        className={`shrink-0 w-14 aspect-[4/5] rounded-chip overflow-hidden bg-sunken border-2 cursor-pointer ${idx === imageIdx ? 'border-ink' : 'border-transparent'}`}
+                        className={`shrink-0 w-14 aspect-[4/5] overflow-hidden bg-sunken cursor-pointer ${idx === imageIdx ? 'outline outline-ink outline-offset-2' : 'opacity-75'}`}
                       >
                         <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
                       </button>
@@ -727,260 +780,186 @@ export const ProductDetailPage: React.FC = () => {
                   </div>
                 )}
                 {images.length > 1 && (
-                  <div className="mt-2 h-5 hidden lg:flex items-center gap-3">
-                    {colors.length > 1 && color?.name && color.name !== 'Default' && (
-                      <span className="shrink-0 text-[13px] leading-5 text-ink-muted">Colour: <span className="font-semibold text-ink">{color.name}</span></span>
-                    )}
+                  <div className="mt-3 h-5 hidden lg:flex items-center gap-3">
                     <span className="flex flex-1 gap-1">
-                      {images.map((_, idx) => <span key={idx} className={`h-[3px] flex-1 max-w-8 rounded-full ${idx === imageIdx ? 'bg-ink' : 'bg-line'}`} />)}
+                      {images.map((_, idx) => <span key={idx} className={`h-px flex-1 max-w-8 ${idx === imageIdx ? 'bg-ink' : 'bg-line'}`} />)}
                     </span>
-                    <span className="sag-num text-xs leading-4 text-ink-muted">{imageIdx + 1} / {images.length}</span>
-                  </div>
-                )}
-                {/* Phones and tablets: one card with the name, the price, the colours and the sizes */}
-                {!isDesktop && (
-                  <div className="sag-card mt-3 p-4">
-                    {(product.isNewArrival || product.isBestSeller) && !soldOut && (
-                      <span className={`sag-badge mb-2 ${product.isNewArrival ? 'bg-ink text-white' : 'bg-accent-tint text-accent'}`}>{product.isNewArrival ? 'New' : 'Bestseller'}</span>
-                    )}
-                    <div className="flex items-start gap-2">
-                      <h1 className="flex-1 min-w-0 font-sans text-[16px] leading-[21px] font-bold text-ink break-words">{product.name}</h1>
-                      <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer ${fav ? 'bg-accent-tint text-accent' : 'bg-sunken text-ink'}`}>
-                        <Heart className={`w-5 h-5 ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.75} />
-                      </button>
-                      <button type="button" onClick={share} aria-label="Share this style" className="w-10 h-10 shrink-0 rounded-full bg-sunken flex items-center justify-center text-ink cursor-pointer">
-                        <Share2 className="w-5 h-5" strokeWidth={1.75} />
-                      </button>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-3">
-                      <p className="sag-num min-w-0 flex flex-wrap items-baseline gap-x-2">
-                        <span className="text-[24px] leading-8 font-extrabold text-ink">₹{price.toLocaleString('en-IN')}</span>
-                        {mrp > price && <span className="text-sm leading-5 text-ink-faint"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
-                        {discount > 0 && <span className="text-sm leading-5 font-extrabold text-sale">{discount}% off</span>}
-                      </p>
-                      {reviews.length > 0 && (
-                        <button type="button" onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="-my-2 py-2 shrink-0 inline-flex items-center gap-1.5 text-xs text-ink-muted cursor-pointer" aria-label={`Rated ${avgRating.toFixed(1)} out of 5 from ${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`}>
-                          <span className="sag-num inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">{avgRating.toFixed(1)} ★</span>
-                          <span className="sag-num">({reviews.length})</span>
-                        </button>
-                      )}
-                    </div>
-                    {swatches.length > 0 && (
-                      <div className="mt-3 border-t border-line pt-3 flex items-center justify-between gap-3">
-                        <p className="shrink-0 max-w-[45%] text-[13px] leading-5 font-bold text-ink">Colour{color?.name && color.name !== 'Default' && <span className="font-normal text-ink-muted">: {color.name}</span>}</p>
-                        <div role="group" aria-label="Colour" className="sag-scroll-x min-w-0 flex gap-1 overflow-x-auto overscroll-x-contain py-1">
-                          {swatches.map((c) => (
-                            <button key={c.name} type="button" onClick={() => pickColour(c)} aria-label={c.name} title={c.name} aria-pressed={color?.name === c.name} className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center cursor-pointer">
-                              <span style={{ backgroundColor: c.hex || undefined }} className={`block w-6 h-6 rounded-full border border-line bg-sunken ${color?.name === c.name ? 'ring-2 ring-brand ring-offset-2 ring-offset-surface' : ''}`} />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {sizes.length > 0 && !oneSize && (
-                      <div id="pdp-size-selector" className="mt-3 border-t border-line pt-2 scroll-mt-24">
-                        <div className="flex items-center justify-between gap-3 min-h-10">
-                          <p className={`text-[13px] leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
-                            {needSize && !size ? chooseSizeText : <><span className="font-bold">{sizeWord}</span><span className="text-ink-muted">: {size || 'Select'}</span></>}
-                          </p>
-                          {sizeLinks}
-                        </div>
-                        {sizeChips(needSize)}
-                        {kidsPage && (
-                          <p className="mt-2.5 flex items-start gap-2 text-[13px] leading-[18px] text-ink-muted">
-                            <Baby className="w-4 h-4 shrink-0 text-ink" aria-hidden="true" />
-                            <span><span className="font-semibold text-ink">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}.</span> If your child is between two sizes, pick the bigger one.</span>
-                          </p>
-                        )}
-                        {findSizeOpen && womenSizing && (
-                          <FindMySize sizes={sizes} onPick={(sz) => { pickSize(sz as ProductSize); setFindSizeOpen(false); }} onClose={() => setFindSizeOpen(false)} onOpenChart={() => setIsSizeGuideOpen(true)} />
-                        )}
-                      </div>
-                    )}
+                    <span className="sag-num text-xs leading-4 tracking-[0.04em] text-ink-muted">{imageIdx + 1} / {images.length}</span>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Buy box */}
-          <div className="min-w-0 lg:col-start-2 lg:row-start-1">
-            <div className="hidden lg:flex items-start gap-1">
-              <p role="heading" aria-level={1} className="flex-1 min-w-0 pt-2.5 font-sans text-[22px] leading-7 font-semibold text-ink line-clamp-2">{product.name}</p>
-              <button
-                type="button"
-                onClick={() => toggleWishlist(product)}
-                aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'}
-                aria-pressed={fav}
-                className={`w-11 h-11 shrink-0 rounded-full flex items-center justify-center cursor-pointer ${fav ? 'bg-accent-tint text-accent' : 'text-ink hover:bg-sunken'}`}
-              >
-                <Heart className={`w-[22px] h-[22px] ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.75} />
-              </button>
-              <button type="button" onClick={share} aria-label="Share this style" className="-mr-2 w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
-                <Share2 className="w-[22px] h-[22px]" strokeWidth={1.75} />
-              </button>
-            </div>
-
-            {/* Rating: only with real approved reviews. The row keeps its height either way. */}
-            <div className="min-h-5 hidden lg:flex items-center">
-              {reviews.length > 0 && (
-                <button onClick={() => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' })} className="-my-3 py-3 inline-flex items-center gap-1.5 text-sm leading-5 text-ink cursor-pointer">
-                  <Stars rating={avgRating} />
-                  <span className="sag-num underline underline-offset-2 decoration-line">{avgRating.toFixed(1)} · {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+          {/* Buy box: the same at every width */}
+          <div className="min-w-0 pt-[18px] lg:pt-1 lg:col-start-2 lg:row-start-1">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 min-w-0">
+                {badgeText && <p className={eyebrow}>{badgeText}</p>}
+                <h1 className={`font-sans text-[17px] leading-[23px] lg:text-[21px] lg:leading-[29px] font-normal text-ink break-words ${badgeText ? 'mt-1.5' : ''}`}>{product.name}</h1>
+              </div>
+              <div className="flex shrink-0 -mr-2.5 -mt-1.5">
+                <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className="w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
+                  <Heart className={`w-[21px] h-[21px] ${fav ? 'fill-ink' : ''}`} strokeWidth={1.5} />
                 </button>
-              )}
+                <button type="button" onClick={share} aria-label="Share this style" className="w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
+                  <Share2 className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
             </div>
 
-            <div className="sag-num mt-2 hidden lg:flex flex-wrap items-baseline gap-x-2.5">
-              <span className="text-[28px] leading-8 font-bold text-ink">₹{price.toLocaleString('en-IN')}</span>
-              {mrp > price && <span className="text-[15px] leading-5 text-ink-faint"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
-              {discount > 0 && <span className="text-[15px] leading-5 font-bold text-sale">{discount}% off</span>}
-            </div>
-            <p className="sag-num mt-3 lg:mt-0.5 text-[13px] leading-[18px] text-ink-muted">
-              {mrp > price && <span className="font-semibold text-sale">You save ₹{(mrp - price).toLocaleString('en-IN')} · </span>}Inclusive of all taxes
+            <p className="sag-num mt-2.5 flex flex-wrap items-baseline gap-x-[7px]">
+              <span className="text-[22px] leading-7 font-semibold text-ink">₹{price.toLocaleString('en-IN')}</span>
+              {mrp > price && <span className="text-[13px] leading-5 text-ink-muted"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
+              {discount > 0 && <span className="text-[13px] leading-5 font-semibold text-sale">{discount}% off</span>}
+            </p>
+            {/* Rating: only with real approved reviews */}
+            <p className="sag-num mt-1 flex flex-wrap items-center gap-x-1.5 text-xs leading-5 text-ink-muted">
+              {reviews.length > 0 && (
+                <>
+                  <button type="button" onClick={toReviews} className="-my-3 py-3 inline-flex items-center gap-1 text-ink-muted hover:text-ink cursor-pointer" aria-label={`Rated ${avgRating.toFixed(1)} out of 5 from ${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`}>
+                    <Star className="w-3 h-3 fill-star text-star" aria-hidden="true" />
+                    <span>{avgRating.toFixed(1)} ({reviews.length})</span>
+                  </button>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
+              {mrp > price && (
+                <>
+                  <span className="font-medium text-sale">You save ₹{(mrp - price).toLocaleString('en-IN')}</span>
+                  <span aria-hidden="true">·</span>
+                </>
+              )}
+              <span>Inclusive of all taxes</span>
             </p>
             {toyPage && product.ageRange && (
-              <p className="mt-2 flex items-center gap-1.5 text-sm leading-5 text-ink"><Baby className="w-4 h-4 shrink-0" aria-hidden="true" /> Suitable for {product.ageRange}</p>
+              <p className="mt-2 flex items-center gap-1.5 text-[13px] leading-5 text-ink"><Baby className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Suitable for {product.ageRange}</p>
             )}
 
-            {/* Offers: only the ones that are live */}
-            {(prepaidLines.length > 0 || extraOffers > 0) && (
-              <div className="mt-4">
-                {prepaidLines.length > 0 && (
-                  <div className="rounded-control bg-sale-tint px-3 py-2.5 flex items-start gap-2.5 text-sm leading-5 font-semibold text-sale">
-                    <Tag className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
-                    <span className="min-w-0">{prepaidLines.map((line) => <span key={line} className="block">{line}</span>)}</span>
-                  </div>
-                )}
-                {extraOffers > 0 && prepaidLines.length > 0 && (
-                  <button type="button" onClick={() => setMoreOffers((v) => !v)} aria-expanded={moreOffers} className="sag-link gap-1">
-                    {extraOffers} more {extraOffers === 1 ? 'offer' : 'offers'} <ChevronDown className={`w-4 h-4 transition-transform ${moreOffers ? 'rotate-180' : ''}`} aria-hidden="true" />
-                  </button>
-                )}
-                {showExtraOffers && (
-                  <ul className={`space-y-2 text-sm leading-5 text-ink ${prepaidLines.length > 0 ? 'sag-drop' : ''}`}>
-                    {comboHere && (
-                      <li className="rounded-control bg-sale-tint px-3 py-2.5 flex items-start gap-2.5 font-semibold text-sale">
-                        <Tag className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" /> Buy {comboHere.minItems} or more outfits and save {comboHere.percent}%
-                      </li>
-                    )}
-                    {bestCoupon && (
-                      <li className="flex items-center justify-between gap-3 rounded-control border-[1.5px] border-dashed border-sale-line bg-sale-tint pl-3 pr-1.5 py-1.5">
-                        <span className="min-w-0">
-                          <span className="block text-[13px] leading-[18px] font-bold text-ink break-all">{bestCoupon.code}</span>
-                          <span className="sag-num block text-[13px] leading-[18px] text-sale">{bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off{bestCoupon.minOrderValue ? ` on orders above ₹${bestCoupon.minOrderValue.toLocaleString('en-IN')}` : ''}</span>
-                        </span>
-                        <button type="button" onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
-                          aria-label={`Copy code ${bestCoupon.code}`}
-                          className="shrink-0 h-11 px-3 rounded-chip text-sm font-semibold text-ink inline-flex items-center gap-1.5 hover:bg-white cursor-pointer">
-                          <Copy className="w-4 h-4" aria-hidden="true" /> Copy
-                        </button>
-                      </li>
-                    )}
-                  </ul>
+            {/* Offers: only the ones that are live, as plain lines in one quiet box */}
+            {hasOffers && (
+              <div className="sag-num mt-3.5 bg-sunken px-[13px] py-[11px] text-[13px] leading-5 text-ink">
+                {prepaidLines.map((line) => <p key={line}>{line}</p>)}
+                {comboHere && <p>Buy {comboHere.minItems} or more outfits and save {comboHere.percent}%</p>}
+                {bestCoupon && (
+                  <p className="flex flex-wrap items-baseline gap-x-2.5">
+                    <span className="min-w-0">
+                      {bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off with code <span className="font-semibold break-all">{bestCoupon.code}</span>
+                      {bestCoupon.minOrderValue ? ` on orders above ₹${bestCoupon.minOrderValue.toLocaleString('en-IN')}` : ''}
+                    </span>
+                    <button type="button" onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
+                      aria-label={`Copy code ${bestCoupon.code}`}
+                      className="-my-3 py-3 shrink-0 text-[12.5px] font-semibold text-ink underline underline-offset-4 decoration-1 cursor-pointer">
+                      Copy
+                    </button>
+                  </p>
                 )}
               </div>
             )}
 
             {/* Real counts for today, same thresholds as before. No line (and no empty band) when there is nothing to say. */}
             {todayStats && (todayStats.wishlists >= 2 || todayStats.views >= 5) && (
-              <p className="mt-3 flex items-center gap-1.5 text-[13px] leading-[18px] text-ink-muted">
+              <p className="mt-3 flex items-center gap-1.5 text-xs leading-[18px] text-ink-muted">
                 {todayStats.wishlists >= 2
-                  ? <><Heart className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.wishlists} people saved this today</>
-                  : <><Eye className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> {todayStats.views} people viewed this today</>}
+                  ? <><Heart className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" /> {todayStats.wishlists} people saved this today</>
+                  : <><Eye className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" /> {todayStats.views} people viewed this today</>}
               </p>
             )}
 
-            {isDesktop && sizes.length > 0 && !oneSize && (
+            {swatches.length > 0 && (
+              <div className="mt-5">
+                <p className="text-[13px] leading-5 text-ink"><span className="font-semibold">Colour</span>{color?.name && color.name !== 'Default' && <> · {color.name}</>}</p>
+                <div role="group" aria-label="Colour" className="mt-1 -ml-[5px] flex flex-wrap gap-x-0.5">
+                  {swatches.map((c) => (
+                    <button key={c.name} type="button" onClick={() => pickColour(c)} aria-label={c.name} title={c.name} aria-pressed={color?.name === c.name} className="w-9 h-9 lg:w-10 lg:h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer">
+                      <span style={{ backgroundColor: c.hex || undefined }} className={`block w-[26px] h-[26px] rounded-full border border-ink/10 bg-sunken ${color?.name === c.name ? 'ring-1 ring-ink ring-offset-2 ring-offset-surface' : ''}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {sizes.length > 0 && !oneSize && (
               <div id="pdp-size-selector" className="mt-3 scroll-mt-24">
                 <div className="flex items-center justify-between gap-3 min-h-11">
-                  <p className={`text-sm leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
-                    {needSize && !size ? chooseSizeText : <><span className="text-ink-muted">{sizeWord}:</span> <span className="font-semibold">{size || 'Select'}</span></>}
+                  <p className={`text-[13px] leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
+                    {needSize && !size ? chooseSizeText : <><span className="font-semibold">{sizeWord}</span>{size && <> · {size}</>}</>}
                   </p>
                   {sizeLinks}
                 </div>
                 {sizeChips(needSize)}
                 {kidsPage && (
                   <p className="mt-2.5 flex items-start gap-2 text-[13px] leading-[18px] text-ink-muted">
-                    <Baby className="w-4 h-4 shrink-0 text-ink" aria-hidden="true" />
-                    <span><span className="font-semibold text-ink">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}.</span> If your child is between two sizes, pick the bigger one.</span>
+                    <Baby className="w-4 h-4 shrink-0 text-ink" strokeWidth={1.5} aria-hidden="true" />
+                    <span><span className="font-medium text-ink">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}.</span> If your child is between two sizes, pick the bigger one.</span>
                   </p>
+                )}
+                {findSizeOpen && womenSizing && (
+                  <FindMySize sizes={sizes} onPick={(sz) => { pickSize(sz as ProductSize); setFindSizeOpen(false); }} onClose={() => setFindSizeOpen(false)} onOpenChart={() => setIsSizeGuideOpen(true)} />
                 )}
               </div>
             )}
 
-            {isDesktop && findSizeOpen && sizes.length > 0 && womenSizing && (
-              <FindMySize sizes={sizes} onPick={(sz) => { pickSize(sz as ProductSize); setFindSizeOpen(false); }} onClose={() => setFindSizeOpen(false)} onOpenChart={() => setIsSizeGuideOpen(true)} />
-            )}
-
             {!soldOut && (
-              <div className="mt-4 flex items-center gap-4">
-                <div className="inline-flex items-center rounded-control border-[1.5px] border-control bg-white" role="group" aria-label="Quantity">
-                  <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
-                    <Minus className="w-4 h-4" />
+              <div className="mt-5 flex items-center gap-4">
+                <div className="inline-flex items-center border border-line bg-surface" role="group" aria-label="Quantity">
+                  <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
+                    <Minus className="w-4 h-4" strokeWidth={1.5} />
                   </button>
-                  <span className="sag-num w-8 text-center text-[15px] font-semibold text-ink" aria-live="polite">{qty}</span>
-                  <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
-                    <Plus className="w-4 h-4" />
+                  <span className="sag-num w-8 text-center text-sm font-medium text-ink" aria-live="polite">{qty}</span>
+                  <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity" className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
+                    <Plus className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 </div>
-                <div className="sag-num text-sm leading-5 min-w-0">
+                <div className="sag-num text-[13px] leading-5 min-w-0">
                   {qty > 1 && (
                     <p className="text-ink">₹{price.toLocaleString('en-IN')} × {qty} = <span className="font-semibold">₹{(price * qty).toLocaleString('en-IN')}</span></p>
                   )}
-                  {stock <= 5 && <p className="font-semibold text-sale">Only {stock} left</p>}
+                  {stock <= 5 && <p className="font-medium text-sale">Only {stock} left</p>}
                 </div>
               </div>
             )}
 
-            {soldOut && <p className="mt-4 text-sm leading-5 font-semibold text-danger">This style is sold out right now.</p>}
+            {soldOut && <p className="mt-5 text-sm leading-5 font-medium text-danger">This style is sold out right now.</p>}
             {soldOut && restockAsk && !user?.email && (
               <form onSubmit={(e) => { e.preventDefault(); notifyRestock(); }} className="mt-3 sag-drop">
                 <label htmlFor="pdp-restock-email" className="sag-label">Email for the restock alert</label>
                 <div className="flex gap-2">
                   <input id="pdp-restock-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" required autoFocus value={restockEmail} onChange={(e) => setRestockEmail(e.target.value)} placeholder="you@example.com"
-                    className="sag-input flex-1 min-w-0" />
-                  <button type="submit" className="sag-btn-outline shrink-0 px-4 text-sm cursor-pointer">Notify me</button>
+                    className="sag-input flex-1 min-w-0 border border-line focus:border-ink" />
+                  <button type="submit" className="sag-btn-outline shrink-0 px-4 cursor-pointer">Notify me</button>
                 </div>
               </form>
             )}
 
-            {/* "Buy now" over "Add to bag" on phones and tablets, side by side on desktop (phones also keep the fixed bar) */}
-            <div className="mt-4 lg:mt-6">
-              <div className="flex flex-col-reverse gap-2.5 lg:flex-row lg:gap-3">
-                {soldOut ? (
-                  <button type="button" onClick={notifyRestock} className="sag-btn-primary lg:flex-1 gap-2 cursor-pointer">
-                    <Bell className="w-[18px] h-[18px]" aria-hidden="true" /> Notify me when back
+            {/* "Buy now" over "Add to bag", full width (phones also keep the fixed bar) */}
+            <div className="mt-[22px] grid gap-2.5">
+              {soldOut ? (
+                <button type="button" onClick={notifyRestock} className="sag-btn-primary h-[52px] w-full gap-2 cursor-pointer">
+                  <Bell className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Notify me when back
+                </button>
+              ) : (
+                <>
+                  <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary sag-btn-buy sag-num h-[52px] w-full cursor-pointer">Buy now · ₹{(price * qty).toLocaleString('en-IN')}</button>
+                  <button id="pdp-add-to-bag" type="button" onClick={() => (inBagNow ? openBag() : onAdd())} className="sag-btn-outline h-[52px] w-full gap-2 cursor-pointer">
+                    {justAdded ? <><Check className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Added to bag</> : inBagNow ? 'View bag' : 'Add to bag'}
                   </button>
-                ) : (
-                  <>
-                    <button id="pdp-add-to-bag" type="button" onClick={() => (inBagNow ? openBag() : onAdd())} className="sag-btn-outline lg:flex-1 gap-2 cursor-pointer">
-                      {justAdded ? <><Check className="w-[18px] h-[18px]" aria-hidden="true" /> Added to bag</> : inBagNow ? 'View bag' : 'Add to bag'}
-                    </button>
-                    <button id="pdp-buy-now" type="button" onClick={() => onBuy()} className="sag-btn-primary sag-btn-buy lg:flex-[1.3] cursor-pointer">Buy now</button>
-                  </>
-                )}
-              </div>
-              <Assurance variant="line" className="mt-3" />
+                </>
+              )}
             </div>
 
-            {/* What the store stands behind, and the PIN code check, in one block */}
-            <ul className="mt-5 grid grid-cols-2 gap-x-2 gap-y-1 rounded-sheet bg-dark p-3 text-xs font-bold leading-[1.25] text-on-dark lg:grid-cols-4 lg:gap-x-1 lg:gap-y-0 lg:rounded-[20px] lg:px-1 lg:py-3 lg:text-center lg:text-[11px]">
-              {([
-                { key: 'payment', icon: <LockIcon className="w-[17px] h-[17px]" mono />, text: assurance.payment },
-                { key: 'returns', icon: <ReturnIcon className="w-[17px] h-[17px]" mono />, text: assurance.returns, page: 'return-policy' as const },
-                { key: 'delivery', icon: <TruckIcon className="w-[17px] h-[17px]" mono />, text: assurance.delivery, page: 'shipping-policy' as const },
-                { key: 'help', icon: <WhatsAppIcon className="w-[17px] h-[17px]" />, text: 'Chat with us on WhatsApp', href: createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about "${product.name}".`) },
-              ]).map((fact) => {
+            {/* What the store stands behind: four plain facts between hairlines */}
+            <ul className="mt-[22px] border-t border-line pt-[18px] grid grid-cols-2 gap-x-2.5 gap-y-3.5">
+              {factRows.map((fact) => {
                 const inner = (
                   <>
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sun text-ink lg:mb-1.5 lg:h-[34px] lg:w-[34px]">{fact.icon}</span>
+                    <span className="shrink-0 text-sale">{fact.icon}</span>
                     <span className="min-w-0">{fact.text}</span>
                   </>
                 );
-                const cls = 'flex w-full items-center gap-2 rounded-chip px-1 py-1.5 text-left text-on-dark lg:flex-col lg:gap-0 lg:px-0.5 lg:py-1 lg:text-center';
+                const cls = 'flex w-full items-center gap-[9px] text-left text-[12.5px] leading-[1.3] text-ink';
                 return (
-                  <li key={fact.key} className="flex">
+                  <li key={fact.key} className="flex min-w-0">
                     {fact.href ? <a href={fact.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
                       : fact.page ? <button type="button" onClick={() => { setActivePage(fact.page!); window.scrollTo(0, 0); }} className={`${cls} cursor-pointer`}>{inner}</button>
                       : <span className={cls}>{inner}</span>}
@@ -988,57 +967,44 @@ export const ProductDetailPage: React.FC = () => {
                 );
               })}
             </ul>
-            <div className="mt-3 rounded-sheet bg-lilac px-4 lg:rounded-card lg:bg-sky">
-              <DeliveryCheck product={product} quantity={qty} className="py-3" />
+
+            {/* PIN code check: a plain bordered area */}
+            <div className="mt-[18px] border border-line px-4">
+              <DeliveryCheck product={product} quantity={qty} className="py-4" />
             </div>
           </div>
 
-          {/* Reviews: before the details on phones, full width under both columns on desktop */}
-          <div className="min-w-0 lg:col-span-2 lg:row-start-3">
-            <ProductReviews key={product.id} product={product} />
-          </div>
-
-          {/* Details */}
+          {/* Details: plain rows between hairlines, one open at a time */}
           <div className="min-w-0 lg:col-start-2 lg:row-start-2">
-            <section aria-labelledby="pdp-details-title" className="mt-8">
-              <h2 id="pdp-details-title" className="text-xl leading-7 font-semibold text-ink">{toyPage ? 'About this toy' : 'Product details'}</h2>
-              {facts.length > 0 && (
-                <dl className="mt-3 grid grid-cols-[104px_minmax(0,1fr)] text-sm leading-5 border-b border-line">
-                  {facts.map(([label, value]) => (
-                    <React.Fragment key={label}>
-                      <dt className="border-t border-line py-2.5 pr-3 text-ink-muted">{label}</dt>
-                      <dd className="border-t border-line py-2.5 text-ink break-words">{value}</dd>
-                    </React.Fragment>
-                  ))}
-                </dl>
-              )}
-              {description && (
-                <div className="mt-3">
-                  <p className={`text-[15px] leading-[22px] text-ink whitespace-pre-line break-words ${descOpen ? '' : 'line-clamp-5'}`}>{description}</p>
-                  {description.length > 220 && (
-                    <button type="button" onClick={() => setDescOpen((v) => !v)} aria-expanded={descOpen} className="sag-link">{descOpen ? 'Show less' : 'Read more'}</button>
-                  )}
-                </div>
-              )}
-              {facts.length === 0 && !description && (
-                <p className="mt-3 text-sm leading-5 text-ink-muted">Details on request — ask us on WhatsApp.</p>
-              )}
-            </section>
-
-            <div className="mt-4 border-b border-line">
-              {infoRows.map((item) => {
+            <div className="mt-[18px] border-t border-line">
+              {detailRows.map((item) => {
                 const isOpen = open === item.key;
                 return (
-                  <div key={item.key} className="border-t border-line">
-                    <button type="button" onClick={() => setOpen(isOpen ? null : item.key)} aria-expanded={isOpen} className="w-full min-h-14 flex items-center justify-between gap-3 text-left cursor-pointer">
-                      <span className="text-base leading-[22px] font-semibold text-ink">{item.title}</span>
-                      <ChevronDown className={`w-5 h-5 shrink-0 text-ink transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
-                    </button>
-                    {isOpen && <div className="pb-3 text-sm leading-5 text-ink-muted sag-drop">{item.body}</div>}
+                  <div key={item.key} className="border-b border-line">
+                    <h2 id={item.key === 'details' ? 'pdp-details-title' : undefined} className="font-sans">
+                      <button type="button" onClick={() => setOpen(isOpen ? null : item.key)} aria-expanded={isOpen} className="w-full min-h-[52px] flex items-center justify-between gap-3 text-left text-sm leading-5 font-normal text-ink cursor-pointer">
+                        <span className="flex-1 min-w-0">{item.title}</span>
+                        {isOpen
+                          ? <Minus className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                          : <Plus className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />}
+                      </button>
+                    </h2>
+                    {isOpen && <div className="pb-4 text-[13.5px] leading-[21px] text-ink-muted sag-drop">{item.body}</div>}
                   </div>
                 );
               })}
+              <div className="border-b border-line">
+                <button type="button" onClick={toReviews} className="sag-num w-full min-h-[52px] flex items-center justify-between gap-3 text-left text-sm leading-5 font-normal text-ink cursor-pointer">
+                  <span className="flex-1 min-w-0">Reviews{reviews.length > 0 ? ` (${reviews.length})` : ''}</span>
+                  <ChevronDown className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                </button>
+              </div>
             </div>
+          </div>
+
+          {/* Reviews: after the details on phones, full width under both columns on desktop */}
+          <div className="min-w-0 lg:col-span-2 lg:row-start-3">
+            <ProductReviews key={product.id} product={product} />
           </div>
         </div>
 
@@ -1050,34 +1016,32 @@ export const ProductDetailPage: React.FC = () => {
 
         <div className="mt-6 flex flex-wrap items-center gap-x-6">
           {features.compare && !accessoryPage && (
-            <button type="button" onClick={onCompare} aria-pressed={inCompare} className="sag-link gap-1.5">
-              {inCompare ? <Check className="w-4 h-4" aria-hidden="true" /> : <GitCompare className="w-4 h-4" aria-hidden="true" />} {inCompare ? 'In compare' : 'Compare'}
+            <button type="button" onClick={onCompare} aria-pressed={inCompare} className={`${quietLink} gap-1.5`}>
+              {inCompare ? <Check className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> : <GitCompare className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />} {inCompare ? 'In compare' : 'Compare'}
             </button>
           )}
-          <button type="button" onClick={shareWhatsApp} className="sag-link gap-1.5">
+          <button type="button" onClick={shareWhatsApp} className={`${quietLink} gap-1.5`}>
             <WhatsAppIcon className="w-4 h-4" /> Share on WhatsApp
           </button>
         </div>
       </div>
 
-      {/* Phone buy bar: the price and both buttons stay on screen */}
-      <div className="sag-bar md:hidden fixed left-0 right-0 bottom-0 z-40">
+      {/* Phone buy bar: white with a hairline on top; the total and both buttons stay on screen */}
+      <div className="sag-bar shadow-none md:hidden fixed left-0 right-0 bottom-0 z-40">
         {soldOut ? (
           <button type="button" onClick={notifyRestock} className="sag-btn-primary w-full gap-2 cursor-pointer">
-            <Bell className="w-[18px] h-[18px]" aria-hidden="true" /> Notify me when back
+            <Bell className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Notify me when back
           </button>
         ) : (
-          <div className="flex items-center gap-2">
-            <p className="sag-num shrink-0 min-w-[60px] pr-1">
-              <span className="block text-base leading-5 font-bold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
-              {discount > 0
-                ? <span className="block text-xs leading-4 font-semibold text-sale">{discount}% off</span>
-                : <span className="block text-xs leading-4 text-ink-muted">incl. taxes</span>}
+          <div className="flex items-center gap-2.5">
+            <p className="sag-num shrink-0 min-w-[58px]">
+              <span className="block text-[11.5px] leading-4 text-ink-muted">Total</span>
+              <span className="block text-[17px] leading-[22px] font-semibold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
             </p>
-            <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="sag-btn-outline flex-1 min-w-0 px-2 text-[15px] gap-1.5 whitespace-nowrap cursor-pointer">
-              {justAdded ? <><Check className="w-4 h-4" aria-hidden="true" /> Added</> : inBagNow ? 'View bag' : 'Add to bag'}
+            <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="sag-btn-outline h-[46px] flex-1 min-w-0 px-2 gap-1.5 whitespace-nowrap cursor-pointer">
+              {justAdded ? <><Check className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Added</> : inBagNow ? 'View bag' : 'Add to bag'}
             </button>
-            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary sag-btn-buy flex-[1.3] min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
+            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary sag-btn-buy h-[46px] flex-1 min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
           </div>
         )}
       </div>
@@ -1086,39 +1050,40 @@ export const ProductDetailPage: React.FC = () => {
       {sheetAction && (
         <BottomSheet title={kidsPage ? "Choose your child's age" : 'Choose your size'} onClose={() => setSheetAction(null)}>
           <div className="flex items-center gap-3">
-            <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 rounded-chip object-cover object-top bg-sunken" />
+            <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 object-cover object-top bg-sunken" />
             <div className="min-w-0">
-              <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{product.name}</p>
-              <p className="sag-num mt-0.5 flex items-baseline gap-1.5">
-                <span className="text-base leading-5 font-bold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
-                {discount > 0 && <span className="text-[13px] font-bold text-sale">{discount}% off</span>}
-                {qty > 1 && <span className="text-[13px] text-ink-muted">for {qty}</span>}
+              <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{product.name}</p>
+              <p className="sag-num mt-1 flex items-baseline gap-1.5">
+                <span className="text-base leading-5 font-semibold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
+                {discount > 0 && <span className="text-[12.5px] font-semibold text-sale">{discount}% off</span>}
+                {qty > 1 && <span className="text-[12.5px] text-ink-muted">for {qty}</span>}
               </p>
             </div>
           </div>
           <div className="mt-3 flex items-center justify-between gap-3 min-h-11">
-            <p className={`text-sm leading-5 ${sheetError && !size ? 'text-danger font-semibold' : 'text-ink'}`} role={sheetError && !size ? 'alert' : undefined}>
-              {sheetError && !size ? chooseSizeText : <><span className="text-ink-muted">{sizeWord}:</span> <span className="font-semibold">{size || 'Select'}</span></>}
+            <p className={`text-[13px] leading-5 ${sheetError && !size ? 'text-danger font-semibold' : 'text-ink'}`} role={sheetError && !size ? 'alert' : undefined}>
+              {sheetError && !size ? chooseSizeText : <><span className="font-semibold">{sizeWord}</span>{size && <> · {size}</>}</>}
             </p>
-            {womenSizing && <button type="button" onClick={() => setIsSizeGuideOpen(true)} className="sag-link shrink-0">Size guide</button>}
+            {womenSizing && <button type="button" onClick={() => setIsSizeGuideOpen(true)} className={`${quietLink} shrink-0`}>Size guide</button>}
           </div>
           {sizeChips(sheetError)}
           {kidsPage && <p className="mt-2.5 text-[13px] leading-[18px] text-ink-muted">If your child is between two sizes, pick the bigger one.</p>}
-          <button type="button" onClick={confirmSheet} className={`sag-btn-primary ${sheetAction === 'add' ? '' : 'sag-btn-buy'} mt-4 w-full cursor-pointer`}>{sheetAction === 'add' ? 'Add to bag' : 'Buy now'}</button>
+          <button type="button" onClick={confirmSheet} className={`sag-btn-primary ${sheetAction === 'add' ? '' : 'sag-btn-buy'} mt-5 h-[52px] w-full cursor-pointer`}>{sheetAction === 'add' ? 'Add to bag' : 'Buy now'}</button>
           <Assurance variant="line" className="mt-3" />
         </BottomSheet>
       )}
 
+      {/* Photo viewer: the photo on a white page, plain icons */}
       {lightbox && (
-        <div className="fixed inset-0 z-[80] bg-dark/95 flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
-          <button type="button" onClick={() => setLightbox(false)} aria-label="Close" autoFocus className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center cursor-pointer">
-            <X className="w-5 h-5 text-white" />
+        <div className="fixed inset-0 z-[80] bg-surface flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
+          <button type="button" onClick={() => setLightbox(false)} aria-label="Close" autoFocus className="absolute top-3 right-3 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer">
+            <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
           </button>
           {images.length > 1 && (
             <>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className="absolute left-3 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center cursor-pointer"><ChevronLeft className="w-5 h-5 text-white" /></button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className="absolute right-3 w-11 h-11 rounded-full bg-white/10 flex items-center justify-center cursor-pointer"><ChevronRight className="w-5 h-5 text-white" /></button>
-              <span className="sag-num absolute bottom-5 left-1/2 -translate-x-1/2 text-[13px] text-on-dark-muted" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className="absolute left-2 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer"><ChevronLeft className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className="absolute right-2 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer"><ChevronRight className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+              <span className="sag-num absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-surface/90 px-2 py-[3px] text-[11px] leading-4 tracking-[0.04em] text-ink" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
             </>
           )}
           <img src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} className="max-h-[92vh] max-w-[94vw] object-contain" onClick={(e) => e.stopPropagation()} />

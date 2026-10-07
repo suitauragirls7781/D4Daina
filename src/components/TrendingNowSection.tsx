@@ -1,7 +1,7 @@
 import React from 'react';
 import { ProductCard } from './ProductCard';
 import { useShop } from '../context/ShopContext';
-import { HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
+import { HOME_GRID, HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
 
 export const TrendingNowSection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
@@ -17,15 +17,14 @@ export const TrendingNowSection: React.FC = () => {
   if (trendingProducts.length === 0) return null;
 
   return (
-    <section id="trending-now-section" aria-labelledby="trending-now-title" className={`${HOME_SECTION} bg-page`}>
+    <section id="trending-now-section" aria-labelledby="trending-now-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="trending-now-title"
           title="Trending now"
-          text="Suits, kurtis and co-ord sets shoppers are looking at this week."
           action={{ id: 'view-all-trending-btn', label: 'View all', onClick: () => navigateToCategory('Trending') }}
         />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
+        <div className={HOME_GRID}>
           {trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

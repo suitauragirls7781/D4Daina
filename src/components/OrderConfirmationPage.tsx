@@ -87,10 +87,10 @@ export const OrderConfirmationPage: React.FC = () => {
   if (!confirmedOrder) {
     return (
       <div className="bg-page px-4 py-16">
-        <div className="sag-card max-w-md mx-auto px-4 py-10 text-center">
-          <span className="mx-auto w-14 h-14 rounded-full bg-sunken text-ink-muted flex items-center justify-center"><OrdersIcon className="w-7 h-7" mono /></span>
-          <h1 className="mt-4 font-display text-[28px] leading-8 text-ink">No recent order</h1>
-          <p className="mt-1.5 text-sm leading-5 text-ink-muted">You can look up any order from the Track Order page.</p>
+        <div className="max-w-md mx-auto px-4 py-10 text-center">
+          <span className="mx-auto flex justify-center text-sale"><OrdersIcon className="w-7 h-7" mono /></span>
+          <h1 className="mt-4 font-display font-medium text-[23px] leading-7 text-ink">No recent order</h1>
+          <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">You can look up any order from the Track Order page.</p>
           <div className="mt-5 grid gap-2 sm:grid-cols-2">
             <button type="button" onClick={() => setActivePage('shop')} className="sag-btn-primary h-12 sm:order-2">Shop now</button>
             <button type="button" onClick={() => setActivePage('track-order')} className="sag-btn-outline h-12">Track an order</button>
@@ -138,67 +138,46 @@ export const OrderConfirmationPage: React.FC = () => {
 
   const firstName = order.customerName ? order.customerName.split(' ')[0] : '';
   const moneyRow = 'flex justify-between gap-3';
-  const blockTitle = 'text-base leading-[22px] font-semibold text-ink';
+  const blockTitle = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
   const trackOrder = () => { setTrackOrderNumber(order.orderNumber); setActivePage('track-order'); };
   // A paid order that has not been shipped can still be cancelled, but only from My account (sign-in needed)
   const canCancel = canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0);
 
   return (
-    <div id="order-confirmation-page" className="bg-page pb-10 lg:px-4 lg:py-12">
-      {/* Phones and tablets (owner's pick 3): one dark block with round bottom corners says it all */}
-      <div className="lg:hidden bg-dark text-on-dark rounded-b-sheet px-4 pt-7 pb-6 text-center sag-fade">
-        <span className="sag-placed-pop mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sun text-ink">
-          {paid ? <Check className="w-7 h-7" strokeWidth={2.5} aria-hidden="true" /> : <Clock className="w-7 h-7" aria-hidden="true" />}
-        </span>
-        {!paid && <p className="mt-3 text-sm leading-5 font-semibold text-highlight">Order received</p>}
-        <h1 className={`font-display text-[28px] leading-8 font-semibold text-on-dark ${paid ? 'mt-3' : 'mt-1'}`}>
-          {paid ? "It's yours!" : `Thank you${firstName ? `, ${firstName}` : ''}!`}
-        </h1>
-        <p className="mt-1.5 text-sm leading-5 text-on-dark-muted max-w-md mx-auto">
-          {paid
-            ? <>Order <span className="sag-num font-semibold text-on-dark break-all">#{order.orderNumber}</span> is confirmed{order.payMode === 'cod' ? <>. Keep <span className="sag-num font-semibold text-on-dark">{inr(order.codDue || 0)}</span> ready in cash for the delivery.</> : ' and paid.'}</>
-            : 'We are confirming your payment. This page will update once it is verified.'}
-        </p>
-        {paid && (
-          <p className="mt-1 text-[13px] leading-[18px] text-on-dark-muted max-w-md mx-auto">
-            {order.customerEmail
-              ? <>A confirmation email has been sent to <span className="font-medium text-on-dark break-all">{order.customerEmail}</span>.</>
-              : 'A confirmation email has been sent to you.'}
-          </p>
-        )}
-        <button type="button" onClick={trackOrder} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-sun px-6 text-[15px] font-bold text-ink cursor-pointer">
-          <TruckIcon className="w-[18px] h-[18px]" mono live={false} /> Track order
-        </button>
-      </div>
-
-      <div className="max-w-xl mx-auto space-y-4 px-4 pt-4 lg:px-0 lg:pt-0">
-        {/* Confirmation (desktop) */}
-        <div className="hidden lg:block text-center sag-fade">
-          <span className={`sag-placed-pop mx-auto w-14 h-14 rounded-full flex items-center justify-center ${paid ? 'bg-ok text-white' : 'bg-sale-tint text-sale'}`}>
-            {paid ? <Check className="w-7 h-7" strokeWidth={2.5} aria-hidden="true" /> : <Clock className="w-7 h-7" aria-hidden="true" />}
+    <div id="order-confirmation-page" className="bg-page px-4 pb-10 lg:py-12">
+      <div className="max-w-xl mx-auto space-y-4">
+        {/* Confirmation, centred on white at every width */}
+        <div className="pt-[34px] pb-2.5 text-center sag-fade lg:pt-0">
+          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full border border-ink text-ink">
+            {paid ? <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" /> : <Clock className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />}
           </span>
-          <p className={`mt-3 text-sm leading-5 font-semibold ${paid ? 'text-ok' : 'text-sale'}`}>{paid ? 'Payment successful' : 'Order received'}</p>
-          <h1 className="mt-1 font-display text-[28px] leading-8 text-ink">
-            Thank you{firstName ? `, ${firstName}` : ''}!
+          <p className="mt-4 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{paid ? 'Order confirmed' : 'Order received'}</p>
+          <h1 className="mt-2 font-display font-medium text-[23px] leading-7 lg:text-[32px] lg:leading-10 text-ink">
+            {paid ? `Thank you${firstName ? `, ${firstName}` : ''}, it's yours` : `Thank you${firstName ? `, ${firstName}` : ''}!`}
           </h1>
-          <p className="mt-2 text-sm leading-5 text-ink-muted max-w-md mx-auto">
+          <p className="mt-2 text-[13px] leading-[18px] text-ink-muted max-w-md mx-auto">
             {paid
-              ? order.customerEmail
-                ? <>Your order is confirmed. A confirmation email has been sent to <span className="font-medium text-ink break-all">{order.customerEmail}</span>.</>
-                : 'Your order is confirmed. A confirmation email has been sent to you.'
+              ? <>Order <span className="sag-num font-medium text-ink break-all">#{order.orderNumber}</span> is confirmed{order.payMode === 'cod' ? <>. Keep <span className="sag-num font-medium text-ink">{inr(order.codDue || 0)}</span> ready in cash for the delivery.</> : ' and paid.'}</>
               : 'We are confirming your payment. This page will update once it is verified.'}
           </p>
+          {paid && (
+            <p className="mt-1 text-[13px] leading-[18px] text-ink-muted max-w-md mx-auto">
+              {order.customerEmail
+                ? <>A confirmation email has been sent to <span className="text-ink break-all">{order.customerEmail}</span>.</>
+                : 'A confirmation email has been sent to you.'}
+            </p>
+          )}
         </div>
 
         {/* Receipt */}
         <section className="sag-card overflow-hidden" aria-label="Order receipt">
           <div className="p-4 sm:p-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="sag-eyebrow">Order number</p>
-              <p className="sag-num mt-0.5 text-[22px] leading-7 font-bold text-ink break-all">#{order.orderNumber}</p>
-              {placedAt && <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Placed on {placedAt}</p>}
+              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Order number</p>
+              <p className="sag-num mt-1 text-[17px] leading-6 font-semibold text-ink break-all">#{order.orderNumber}</p>
+              {placedAt && <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Placed on {placedAt}</p>}
             </div>
-            <span className={`sag-badge shrink-0 mt-1 ${paid ? 'bg-ok-tint text-ok' : 'bg-sale-tint text-sale'}`}>
+            <span className={`sag-badge shrink-0 mt-1 border bg-surface font-semibold ${paid ? 'border-ink text-ink' : 'border-sale-line text-sale'}`}>
               {paid ? 'Paid online' : order.paymentStatus || 'Payment pending'}
             </span>
           </div>
@@ -207,13 +186,13 @@ export const OrderConfirmationPage: React.FC = () => {
             <OrderProgress order={order} compact />
 
             {expectedText && (
-              <p className="flex items-center gap-2.5 rounded-control bg-sunken px-3.5 py-3 text-sm leading-5 text-ink">
-                <TruckIcon className="h-5 w-5 shrink-0" mono live={false} /> <span>Expected delivery by <span className="font-semibold">{expectedText}</span></span>
+              <p className="flex items-center gap-2.5 text-[13px] leading-[18px] text-ink">
+                <span className="flex shrink-0 text-sale"><TruckIcon className="h-5 w-5" mono live={false} /></span> <span>Expected delivery by <span className="font-medium">{expectedText}</span></span>
               </p>
             )}
             {estimatedText && (
-              <p className="flex items-center gap-2.5 rounded-control bg-sunken px-3.5 py-3 text-sm leading-5 text-ink">
-                <TruckIcon className="h-5 w-5 shrink-0" mono live={false} /> <span>Estimated delivery by <span className="font-semibold">{estimatedText}</span></span>
+              <p className="flex items-center gap-2.5 text-[13px] leading-[18px] text-ink">
+                <span className="flex shrink-0 text-sale"><TruckIcon className="h-5 w-5" mono live={false} /></span> <span>Estimated delivery by <span className="font-medium">{estimatedText}</span></span>
               </p>
             )}
           </div>
@@ -223,53 +202,53 @@ export const OrderConfirmationPage: React.FC = () => {
             <p className={blockTitle}>{pieces} {pieces === 1 ? 'item' : 'items'} in this order</p>
             <ul className="mt-3 divide-y divide-line">
               {order.items.map((item) => (
-                <li key={item.id} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                  <div className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-chip bg-sunken">
+                <li key={item.id} className="flex items-start gap-[13px] py-3 first:pt-0 last:pb-0">
+                  <div className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden bg-sunken">
                     {item.product?.images?.[0] && (
                       <img src={getCleanImageUrl(item.product.images[0], 160)} alt={item.product.name} className="w-full h-full object-cover object-top" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{item.product?.name}</p>
-                    <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
+                    <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{item.product?.name}</p>
+                    <p className="mt-1 text-[11.5px] leading-4 text-ink-muted">
                       {item.selectedSize && !/^free ?size$/i.test(String(item.selectedSize)) ? `Size ${item.selectedSize}` : 'One size'}{item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : ''} · Qty {item.quantity}
                     </p>
                   </div>
-                  <p className="sag-num text-sm leading-5 font-semibold text-ink shrink-0">{inr(item.product.price * item.quantity)}</p>
+                  <p className="sag-num text-sm leading-5 font-medium text-ink shrink-0">{inr(item.product.price * item.quantity)}</p>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Bill */}
-          <div className="sag-num px-4 sm:px-5 py-4 border-t border-line space-y-2 text-sm leading-5 text-ink-muted">
-            <p className={blockTitle}>Price details</p>
+          <div className="sag-num px-4 sm:px-5 py-4 border-t border-line space-y-2 text-[13.5px] leading-5 text-ink-muted">
+            <p className={`${blockTitle} pb-1`}>Price details</p>
             <div className={moneyRow}><span>Subtotal</span><span className="text-ink">{inr(order.subtotal)}</span></div>
             {(order.comboDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Combo discount</span><span>−{inr(order.comboDiscount || 0)}</span></div>}
             {(order.couponDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Coupon {order.couponCode}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
             {(order.prepaidDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Prepaid discount</span><span>−{inr(order.prepaidDiscount || 0)}</span></div>}
-            <div className={moneyRow}><span>Delivery</span>{order.shippingCharge === 0 ? <span className="font-semibold text-sale">Free</span> : <span className="text-ink">{inr(order.shippingCharge)}</span>}</div>
+            <div className={moneyRow}><span>Delivery</span>{order.shippingCharge === 0 ? <span className="text-sale">Free</span> : <span className="text-ink">{inr(order.shippingCharge)}</span>}</div>
             {order.payMode === 'cod' ? (
               <>
-                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-medium">Order total</span><span className="font-semibold">{inr(order.finalTotal)}</span></div>
                 <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
-                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-[22px] leading-7 font-bold">{inr(order.codDue || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-[15px] leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-[17px] leading-6 font-semibold">{inr(order.codDue || 0)}</span></div>
               </>
             ) : (
             <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
-              <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Total'}</span>
-              <span className="text-[22px] leading-7 font-bold">{inr(order.finalTotal)}</span>
+              <span className="text-[15px] leading-[22px] font-semibold">{paid ? 'Total paid' : 'Total'}</span>
+              <span className="text-[17px] leading-6 font-semibold">{inr(order.finalTotal)}</span>
             </div>
             )}
-            {paid && order.paymentRef && <p className="text-[13px] leading-[18px] break-all">Payment ID: {order.paymentRef}</p>}
+            {paid && order.paymentRef && <p className="text-[11.5px] leading-4 break-all">Payment ID: {order.paymentRef}</p>}
           </div>
 
           {/* Address (not included when the order was looked up without signing in) */}
           {(address.fullName || address.city) && (
-            <div className="px-4 sm:px-5 py-4 border-t border-line flex gap-3 text-sm leading-5">
-              <span className="shrink-0 flex mt-0.5 text-ink-muted"><PinIcon className="w-5 h-5" mono live={false} /></span>
+            <div className="px-4 sm:px-5 py-4 border-t border-line flex gap-3 text-[13px] leading-[18px]">
+              <span className="shrink-0 flex mt-0.5 text-sale"><PinIcon className="w-5 h-5" mono live={false} /></span>
               <div className="text-ink-muted min-w-0">
-                <p className="font-semibold text-ink">Delivering to {address.fullName}</p>
+                <p className="font-medium text-ink">Delivering to {address.fullName}</p>
                 {address.houseFlat && <p className="break-words">{[address.houseFlat, address.street, String(address.area || '').trim().toLowerCase() === String(address.street || '').trim().toLowerCase() ? '' : address.area].filter(Boolean).join(', ')}</p>}
                 <p>{[address.city, address.state].filter(Boolean).join(', ')} {address.pincode}</p>
                 {address.mobile && <p>Phone: {address.mobile}</p>}
@@ -278,14 +257,14 @@ export const OrderConfirmationPage: React.FC = () => {
           )}
 
           {order.giftNote && (
-            <p className="px-4 sm:px-5 py-4 border-t border-line text-sm leading-5 text-ink break-words"><span className="text-ink-muted">Gift note:</span> {order.giftNote}</p>
+            <p className="px-4 sm:px-5 py-4 border-t border-line text-[13px] leading-[18px] text-ink break-words"><span className="text-ink-muted">Gift note:</span> {order.giftNote}</p>
           )}
         </section>
 
         {/* Main actions */}
         <div className="grid gap-2 sm:grid-cols-2">
-          <button id="confirm-track-order-btn" type="button" onClick={trackOrder} className="sag-btn-primary w-full gap-2">
-            <TruckIcon className="w-[18px] h-[18px]" mono live={false} /> Track this order
+          <button id="confirm-track-order-btn" type="button" onClick={trackOrder} className="sag-btn-primary w-full">
+            Track order
           </button>
           <button id="confirm-continue-shopping-btn" type="button" onClick={() => navigateToCategory('All')} className="sag-btn-outline w-full">
             Continue shopping
@@ -294,59 +273,59 @@ export const OrderConfirmationPage: React.FC = () => {
 
         {/* What happens next */}
         <section className="sag-card px-4 sm:px-5" aria-labelledby="next-steps-title">
-          <h2 id="next-steps-title" className={`${blockTitle} pt-4 pb-1`}>What happens next</h2>
+          <h2 id="next-steps-title" className={`font-sans ${blockTitle} pt-4 pb-1`}>What happens next</h2>
           {paid && (
-            <div className="sag-row border-t-0 items-start py-3">
-              <Mail className="w-5 h-5 shrink-0 mt-0.5 text-ink-muted" aria-hidden="true" />
+            <div className="sag-row font-normal border-t-0 items-start py-3">
+              <Mail className="w-5 h-5 shrink-0 mt-0.5 text-sale" strokeWidth={1.5} aria-hidden="true" />
               <span className="min-w-0">
                 <span className="block">Check your email</span>
-                <span className="block font-normal text-[13px] leading-[18px] text-ink-muted break-words">
+                <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted break-words">
                   Your order confirmation{order.customerEmail ? <> was sent to <span className="break-all">{order.customerEmail}</span></> : ' was sent to you'}. Look in spam if you cannot see it.
                 </span>
               </span>
             </div>
           )}
-          <button type="button" onClick={trackOrder} className={`sag-row w-full items-start py-3 text-left cursor-pointer ${paid ? '' : 'border-t-0'}`}>
-            <span className="shrink-0 flex mt-0.5 text-ink-muted"><TruckIcon className="w-5 h-5" mono live={false} /></span>
+          <button type="button" onClick={trackOrder} className={`sag-row font-normal w-full items-start py-3 text-left cursor-pointer ${paid ? '' : 'border-t-0'}`}>
+            <span className="shrink-0 flex mt-0.5 text-sale"><TruckIcon className="w-5 h-5" mono live={false} /></span>
             <span className="min-w-0 flex-1">
               <span className="block">Follow your order</span>
-              <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">Every update shows on the tracking page. Keep your order number handy.</span>
+              <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted">Every update shows on the tracking page. Keep your order number handy.</span>
             </span>
-            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" aria-hidden="true" />
+            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => { setActivePage('return-policy'); window.scrollTo(0, 0); }} className="sag-row w-full items-start py-3 text-left cursor-pointer">
-            <span className="shrink-0 flex mt-0.5 text-ink-muted"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
+          <button type="button" onClick={() => { setActivePage('return-policy'); window.scrollTo(0, 0); }} className="sag-row font-normal w-full items-start py-3 text-left cursor-pointer">
+            <span className="shrink-0 flex mt-0.5 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
             <span className="min-w-0 flex-1">
               <span className="block">7-day returns & exchange</span>
-              <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">If something is not right after delivery, ask for a return or a size exchange.</span>
+              <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted">If something is not right after delivery, ask for a return or a size exchange.</span>
             </span>
-            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" aria-hidden="true" />
+            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
           </button>
-          <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about my order #${order.orderNumber}.`)} target="_blank" rel="noopener noreferrer" className="sag-row items-start py-3">
-            <WhatsAppIcon className="w-5 h-5 shrink-0 mt-0.5" />
+          <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I have a question about my order #${order.orderNumber}.`)} target="_blank" rel="noopener noreferrer" className="sag-row font-normal items-start py-3">
+            <WhatsAppIcon mono className="w-5 h-5 shrink-0 mt-0.5 text-sale" />
             <span className="min-w-0 flex-1">
               <span className="block">Need help? Chat on WhatsApp</span>
-              <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">Send us your order number and we will take it from there.</span>
+              <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted">Send us your order number and we will take it from there.</span>
             </span>
-            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" aria-hidden="true" />
+            <ChevronRight className="w-4 h-4 shrink-0 mt-1 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
           </a>
         </section>
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <button type="button" onClick={shareOrder} className="sag-btn-outline w-full h-12 gap-2 text-[15px] sm:last:col-span-2">
-            <Send className="w-[18px] h-[18px]" aria-hidden="true" /> Send order details
+          <button type="button" onClick={shareOrder} className="sag-btn-outline w-full h-12 gap-2 sm:last:col-span-2">
+            <Send className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Send order details
           </button>
           {(paid || order.paymentStatus === 'Refunded') && Boolean(address.fullName) && (
-            <button type="button" onClick={() => setShowReceipt(true)} className="sag-btn-outline w-full h-12 gap-2 text-[15px]">
-              <FileText className="w-[18px] h-[18px]" aria-hidden="true" /> View / print receipt
+            <button type="button" onClick={() => setShowReceipt(true)} className="sag-btn-outline w-full h-12 gap-2">
+              <FileText className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> View / print receipt
             </button>
           )}
         </div>
 
         {canCancel && (
           <div className="text-center">
-            <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link">Need to cancel this order?</button>
-            <p className="text-[13px] leading-[18px] text-ink-muted">
+            <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link text-[12.5px]">Need to cancel this order?</button>
+            <p className="text-[11.5px] leading-4 text-ink-muted">
               {user ? 'You can ask to cancel it from My account → Orders.' : 'Sign in with the email used for this order, then open My account → Orders.'}
             </p>
           </div>
@@ -354,12 +333,12 @@ export const OrderConfirmationPage: React.FC = () => {
 
         {paid && nextCoupons.length > 0 && (
           <section className="sag-card p-4 sm:p-5 space-y-3" aria-label="Coupons for your next order">
-            <h2 className={blockTitle}>For your next order</h2>
+            <h2 className={`font-sans ${blockTitle}`}>For your next order</h2>
             <ul className="space-y-2">
               {nextCoupons.map((coupon) => (
-                <li key={coupon.id} className="flex items-center justify-between gap-3 rounded-control border-[1.5px] border-dashed border-sale-line bg-sale-tint pl-3.5 pr-2 py-2">
+                <li key={coupon.id} className="flex items-center justify-between gap-3 border border-dashed border-sale-line bg-surface pl-3.5 pr-2 py-2">
                   <div className="min-w-0">
-                    <p className="sag-caps text-[13px] leading-[18px] font-bold tracking-wide text-ink break-all">{String(coupon.code).toUpperCase()}</p>
+                    <p className="sag-caps text-[13px] leading-[18px] font-semibold tracking-[0.12em] text-ink break-all">{String(coupon.code).toUpperCase()}</p>
                     <p className="sag-num text-[13px] leading-[18px] text-sale">
                       {coupon.discountType === 'fixed' ? `₹${coupon.discountValue} off` : `${coupon.discountValue}% off`}
                       {coupon.minOrderValue ? ` on orders above ₹${coupon.minOrderValue.toLocaleString('en-IN')}` : ''}
@@ -369,7 +348,7 @@ export const OrderConfirmationPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => navigator.clipboard?.writeText(String(coupon.code).toUpperCase()).then(() => showToast(`Copied ${String(coupon.code).toUpperCase()}`, 'success')).catch(() => {})}
-                    className="sag-link shrink-0 gap-1.5 px-2"
+                    className="sag-link shrink-0 gap-1.5 px-2 text-[12.5px]"
                     aria-label={`Copy coupon ${coupon.code}`}
                   >
                     <Copy className="h-4 w-4" aria-hidden="true" /> Copy
@@ -382,7 +361,7 @@ export const OrderConfirmationPage: React.FC = () => {
 
         {suggestions.length > 0 && (
           <section className="pt-6 space-y-4" aria-labelledby="also-like-title">
-            <h2 id="also-like-title" className="font-display text-[22px] leading-7 text-ink">You may also like</h2>
+            <h2 id="also-like-title" className="font-display font-medium text-[22px] leading-7 text-ink">You may also like</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-4 lg:gap-y-6">
               {suggestions.map((p) => (
                 <div key={p.id} onClickCapture={() => trackItem('feature_use', 'reco_click')}>

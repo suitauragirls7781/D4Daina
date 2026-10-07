@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BadgeCheck, Check, CheckCircle2, ChevronDown, ClipboardCheck, Copy, ExternalLink, Home, MapPin, Package, Phone, Route, Truck, XCircle } from 'lucide-react';
+import { Check, CheckCircle2, ChevronDown, Copy, ExternalLink, Phone, XCircle } from 'lucide-react';
 import { PackageIcon, ReturnIcon, TruckIcon, UserIcon } from './StoreIcons';
 import { Order, ReturnRequest, ReturnRequestStatus } from '../types';
 import { trackingLinkFor, findCourier } from '../utils/courier';
@@ -52,6 +52,9 @@ export const cancelClosedNote = (order: OrderWithRequests, windowHours = 0) => {
   }
   return '';
 };
+
+/** Small champagne label above a title (Noir & Champagne). */
+const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
 
 // ---- Dates (only real timestamps from the order; nothing is estimated) ----
 
@@ -177,29 +180,29 @@ export const latestUpdate = (order: Order): { label: string; at: string } | null
 /** The status pill for an order: customer wording in the brand colours. */
 export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ order, className = '' }) => {
   let text: string = order.status;
-  // Placed and confirmed are neutral; on the way is marigold; delivered is green; cancelled is red.
-  let tone = 'bg-sunken text-ink';
+  // Outline badges: placed and confirmed are hairline; on the way is champagne; delivered is ink; cancelled is red.
+  let tone = 'border-line text-ink';
   if (awaitingPayment(order) && order.status !== 'Cancelled') {
     text = paymentFailed(order) ? 'Payment failed' : 'Awaiting payment';
-    tone = 'bg-sale-tint text-sale';
+    tone = 'border-sale-line text-sale';
   } else if (order.status === 'Processing') {
     text = 'Confirmed';
   } else if (order.status === 'Packed' || order.status === 'Shipped' || order.status === 'In Transit' || order.status === 'Out for Delivery') {
-    tone = 'bg-sale-tint text-sale';
+    tone = 'border-sale-line text-sale';
   } else if (order.status === 'Delivered') {
-    tone = 'bg-ok-tint text-ok';
+    tone = 'border-ink text-ink';
   } else if (order.status === 'Returned') {
-    tone = 'bg-sunken text-ink-muted';
+    tone = 'border-line text-ink-muted';
   } else if (order.status === 'Cancelled') {
-    tone = 'bg-danger-tint text-danger';
+    tone = 'border-danger-line text-danger';
   } else if (order.status === 'Refund Requested') {
     text = 'Return requested';
-    tone = 'bg-sale-tint text-sale';
+    tone = 'border-sale-line text-sale';
   } else if (order.status === 'Refunded') {
-    tone = 'bg-sunken text-ink-muted';
+    tone = 'border-line text-ink-muted';
   }
   return (
-    <span className={`sag-badge ${tone} ${className}`}>
+    <span className={`sag-badge border bg-surface font-semibold ${tone} ${className}`}>
       <span className="sr-only">Order status: </span>{text}
     </span>
   );
@@ -212,8 +215,6 @@ const DELIVERED_STEP = STEPS.length - 1;
 // The four names under the phone progress strip, and the current stage said in words (in the order of STEPS)
 const STRIP = ['Placed', 'Packed', 'Shipped', 'Delivered'] as const;
 const STATE_HEADING = ['Your order is placed', 'Your order is confirmed', 'Your order is packed', 'Your order is shipped', 'Your order is in transit', 'Your order is out for delivery', 'Your order is delivered'] as const;
-// One icon per stage, in the order of STEPS
-const STEP_ICONS = [ClipboardCheck, BadgeCheck, Package, Truck, Route, MapPin, Home];
 
 /** Where each order status sits on the tracker (an older 'Refund Requested' order, and a 'Returned' one, had been delivered). */
 const STATUS_STEP: Record<string, number> = { Pending: 0, Processing: 1, Packed: 2, Shipped: 3, 'In Transit': 4, 'Out for Delivery': 5, Delivered: 6, 'Refund Requested': 6, Returned: 6 };
@@ -272,7 +273,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
       <div>
         <div className="flex gap-1" aria-hidden="true">
           {STEPS.map((item, index) => (
-            <span key={item.label} className={`h-1 flex-1 rounded-full ${index < current ? 'bg-ink' : index === current ? 'bg-brand' : 'bg-line'}`} />
+            <span key={item.label} className={`h-[3px] flex-1 ${index <= current ? 'bg-ink' : 'bg-line'}`} />
           ))}
         </div>
         <p className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm leading-5" aria-hidden="true">
@@ -290,8 +291,8 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
     );
   }
 
-  // Phones and tablets (owner's pick 3): one dark block with the state in words, a strip of four segments and
-  // the real time of every stage reached. The seven stages fold into the four names under the strip.
+  // One hairline box at every width: the state in words, a thin strip of four parts (reached parts ink) with the
+  // stage names under it, then the real time of every stage reached as a plain timeline.
   const group = current >= DELIVERED_STEP ? 3 : current >= 3 ? 2 : current >= 2 ? 1 : current >= 0 ? 0 : -1;
   const eyebrow = waiting ? 'Order placed' : STEPS[Math.max(0, current)].label;
   const heading = waiting
@@ -302,79 +303,50 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
   const reachedList = STEPS.map((step, index) => ({ label: step.label, index, when: formatDateTime(times[index]) })).filter((item) => item.index <= current);
 
   return (
-    <>
-    <div className="lg:hidden rounded-sheet bg-dark text-on-dark p-4 space-y-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="text-xs leading-4 font-bold text-highlight">{eyebrow}</span>
-        <span className="sag-num min-w-0 text-xs leading-4 text-on-dark-muted break-all">#{order.orderNumber}</span>
-      </div>
-      <p className="font-display text-[22px] leading-7 font-semibold text-on-dark">{heading}</p>
-      <div aria-hidden="true">
-        <div className="flex gap-1">
-          {STRIP.map((name, index) => (
-            <span key={name} className={`h-1.5 flex-1 rounded-full ${index <= group ? 'bg-sun' : 'bg-white/10'}`} />
-          ))}
+    <div className="space-y-3">
+      <div className="border border-line bg-surface p-4 sm:p-5">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className={EYEBROW}>{eyebrow}</span>
+          <span className="sag-num min-w-0 text-xs leading-4 text-ink-muted break-all">#{order.orderNumber}</span>
         </div>
-        <div className="mt-2 flex gap-1 text-xs leading-4">
-          {STRIP.map((name, index) => (
-            <span
-              key={name}
-              className={`flex-1 ${index === 0 ? 'text-left' : index === STRIP.length - 1 ? 'text-right' : 'text-center'} ${index === group ? 'font-bold text-on-dark' : 'text-on-dark-muted'}`}
-            >
-              {name}
-            </span>
-          ))}
+        <p className="mt-1.5 font-display text-[19px] leading-6 font-medium text-ink sm:text-[22px] sm:leading-7">{heading}</p>
+        <div className="mt-4" aria-hidden="true">
+          <div className="flex gap-1">
+            {STRIP.map((name, index) => (
+              <span key={name} className={`h-[3px] flex-1 ${index <= group ? 'bg-ink' : 'bg-line'}`} />
+            ))}
+          </div>
+          <div className="mt-2 flex gap-1 text-[11.5px] leading-4">
+            {STRIP.map((name, index) => (
+              <span
+                key={name}
+                className={`flex-1 ${index === 0 ? 'text-left' : index === STRIP.length - 1 ? 'text-right' : 'text-center'} ${index === group ? 'font-semibold text-ink' : 'text-ink-muted'}`}
+              >
+                {name}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
       {reachedList.length > 0 && (
-        <ol className="border-t border-white/10 pt-3 space-y-1.5 text-[13px] leading-[18px]" aria-label="Order progress">
-          {reachedList.map((item) => (
-            <li key={item.label} className="flex items-baseline justify-between gap-3" aria-current={item.index === current ? 'step' : undefined}>
-              <span className={`inline-flex items-center gap-2 ${item.index === current ? 'font-bold text-on-dark' : 'text-on-dark-muted'}`}>
-                <Check className="w-3.5 h-3.5 shrink-0 text-highlight" strokeWidth={3} aria-hidden="true" />
-                {item.label}<span className="sr-only"> (done)</span>
-              </span>
-              {item.when && <span className="sag-num shrink-0 text-on-dark-muted">{item.when}</span>}
-            </li>
-          ))}
+        <ol className="grid gap-x-8 sm:grid-cols-2" aria-label="Order progress">
+          {reachedList.map((item) => {
+            const isCurrent = item.index === current;
+            return (
+              <li key={item.label} className="flex items-start gap-3 py-2.5" aria-current={isCurrent ? 'step' : undefined}>
+                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${isCurrent ? 'border border-ink' : 'bg-ink text-white'}`} aria-hidden="true">
+                  {isCurrent ? <span className="block h-2 w-2 rounded-full bg-ink" /> : <Check className="h-[11px] w-[11px]" strokeWidth={2} />}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className={`text-sm leading-5 text-ink ${isCurrent ? 'font-semibold' : ''}`}>{item.label}<span className="sr-only"> (done)</span></p>
+                  {item.when && <p className="sag-num text-[11.5px] leading-4 text-ink-muted">{item.when}</p>}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>
-    {/* Desktop: step cards. Every stage is a card with a round icon; reached stages carry a tick. */}
-    <ol className="hidden lg:grid gap-2 lg:grid-cols-4" aria-label="Order progress">
-      {STEPS.map((step, index) => {
-        const isCurrent = index === current;
-        const done = index < current;
-        const reached = index <= current;
-        const when = reached ? formatDateTime(times[index]) : '';
-        const StepIcon = STEP_ICONS[index];
-        return (
-          <li
-            key={step.label}
-            className={`flex items-center gap-3 rounded-[18px] px-3 py-2.5 ${isCurrent ? 'bg-butter' : done ? 'bg-mint' : 'bg-sunken'}`}
-            aria-current={isCurrent ? 'step' : undefined}
-          >
-            <span className={`${isCurrent ? 'sag-ring' : ''} flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white ${isCurrent ? 'text-accent' : done ? 'text-ok' : 'text-ink-muted'}`}>
-              {done ? <Check className="w-[18px] h-[18px]" strokeWidth={2.5} aria-hidden="true" /> : <StepIcon className="w-[18px] h-[18px]" aria-hidden="true" />}
-            </span>
-            <div className="min-w-0">
-              <p className={`text-sm leading-5 font-bold ${reached ? 'text-ink' : 'text-ink-muted'}`}>
-                {step.label}
-                <span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span>
-              </p>
-              {when ? (
-                <p className={`sag-num text-xs leading-[18px] ${isCurrent ? 'text-butter-ink' : 'text-mint-ink'}`}>{when}</p>
-              ) : isCurrent ? (
-                <p className="text-xs leading-[18px] text-butter-ink">Happening now</p>
-              ) : !reached && index === current + 1 && !waiting ? (
-                <p className="text-xs leading-[18px] text-ink-muted">Next</p>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
-    </>
   );
 };
 
@@ -427,18 +399,18 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
   const steps = status === 'closed' ? [] : returnSteps(request, status);
   const earlier = (order.pastReturnRequests || []).filter((past) => past?.status);
   const settled = status === 'refunded' || status === 'exchanged';
-  const tone = status === 'rejected' ? 'border-danger-line bg-danger-tint' : settled ? 'border-ok-line bg-ok-tint' : 'border-line bg-page';
+  const tone = status === 'rejected' ? 'border-danger-line' : settled ? 'border-ink' : 'border-line';
   return (
-    <section className={`rounded-control border ${tone} p-3.5 space-y-3`} aria-label={`${title} request`}>
+    <section className={`border bg-surface ${tone} p-3.5 space-y-3`} aria-label={`${title} request`}>
       <div className="flex items-start gap-3">
         <span className="shrink-0 flex mt-0.5 text-ink"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
           <p className="text-sm leading-5 font-semibold text-ink">
-            {title} request · <span className={status === 'rejected' ? 'text-danger' : settled ? 'text-ok' : 'text-ink'}>{RETURN_STATUS_LABEL[status]}</span>
+            {title} request · <span className={status === 'rejected' ? 'text-danger' : settled ? 'text-ink' : 'text-sale'}>{RETURN_STATUS_LABEL[status]}</span>
           </p>
           <p className="mt-0.5 text-sm leading-5 text-ink-muted">{RETURN_MESSAGE[status](kind)}</p>
           {request.adminNote && (status === 'approved' || status === 'rejected' || status === 'received' || status === 'refunded' || status === 'exchanged') && (
-            <p className="mt-2 rounded-chip bg-white border border-line px-3 py-2 text-sm leading-5 text-ink break-words">
+            <p className="mt-2 border border-line bg-surface px-3 py-2 text-sm leading-5 text-ink break-words">
               <span className="text-ink-muted">{status === 'rejected' ? 'Reason: ' : 'From our team: '}</span>{request.adminNote}
             </p>
           )}
@@ -450,7 +422,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
             const when = done ? formatDay(timeOf(state)) : '';
             return (
               <li key={state} className={`inline-flex items-center gap-1.5 ${done ? 'text-ink' : 'text-ink-muted'}`}>
-                <span className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger' : 'bg-ink') : 'border-[1.5px] border-control bg-white'}`}>
+                <span className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger' : 'bg-ink') : 'border border-control bg-surface'}`}>
                   {done && (state === 'rejected' ? <XCircle className="w-3 h-3 text-white" aria-hidden="true" /> : <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} aria-hidden="true" />)}
                 </span>
                 {RETURN_STATUS_LABEL[state]}{when ? ` · ${when}` : ''}
@@ -475,7 +447,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
       {(request.photos || []).length > 0 && (
         <div className="flex gap-2" aria-label="Photos you sent">
           {(request.photos || []).map((url) => (
-            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] rounded-chip overflow-hidden border border-line bg-sunken">
+            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] overflow-hidden border border-line bg-sunken">
               <img src={getCleanImageUrl(url, 160)} alt="Photo you sent" className="w-full h-full object-cover" loading="lazy" />
             </a>
           ))}
@@ -483,7 +455,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
       )}
       {earlier.length > 0 && (
         <div className="border-t border-line pt-3 space-y-1.5">
-          <p className="sag-eyebrow">Earlier requests on this order</p>
+          <p className={EYEBROW}>Earlier requests on this order</p>
           <ul className="space-y-1.5 text-sm leading-5 text-ink-muted">
             {earlier.map((past, index) => {
               const pastStatus = past.status as ReturnRequestStatus;
@@ -553,17 +525,17 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
   const link = trackingLinkFor(order);
   const delivery = deliveryDateOf(order);
   return (
-    <section className="rounded-control border border-line bg-white p-3.5 space-y-3" aria-label="Shipment">
+    <section className="border border-line bg-surface p-3.5 space-y-3" aria-label="Shipment">
       <div className="flex items-center gap-3">
-        <span className="shrink-0 flex text-ink"><TruckIcon className="w-5 h-5" mono live={false} /></span>
+        <span className="shrink-0 flex text-sale"><TruckIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
-          <p className="sag-eyebrow">{order.courierPartner || awb ? 'Courier partner' : 'Delivery'}</p>
-          {(order.courierPartner || awb) && <p className="text-base leading-[22px] font-semibold text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
-          {!order.courierPartner && !awb && delivery && <p className="text-base leading-[22px] font-semibold text-ink">On its way to you</p>}
+          <p className={EYEBROW}>{order.courierPartner || awb ? 'Courier partner' : 'Delivery'}</p>
+          {(order.courierPartner || awb) && <p className="text-[15px] leading-[22px] font-medium text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
+          {!order.courierPartner && !awb && delivery && <p className="text-[15px] leading-[22px] font-medium text-ink">On its way to you</p>}
         </div>
       </div>
       {awb && (
-        <div className="flex items-center justify-between gap-2 rounded-chip bg-sunken pl-3 pr-1">
+        <div className="flex items-center justify-between gap-2 border-y border-line">
           <p className="min-w-0 py-2 text-sm leading-5 text-ink-muted">
             <span className="mr-2">Tracking no. (AWB)</span>
             <span className="sag-num font-semibold text-ink break-all select-all">{awb}</span>
@@ -653,7 +625,7 @@ export const StatusHistory: React.FC<{ order: Order }> = ({ order }) => {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={listId}
-        className="w-full min-h-14 py-2 flex items-center justify-between gap-3 text-left text-base leading-[22px] font-semibold text-ink cursor-pointer"
+        className="w-full min-h-14 py-2 flex items-center justify-between gap-3 text-left text-sm leading-5 font-medium text-ink cursor-pointer"
       >
         <span>{open ? 'Hide updates' : `See all updates (${entries.length})`}</span>
         <ChevronDown className={`w-5 h-5 shrink-0 text-ink-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -663,7 +635,7 @@ export const StatusHistory: React.FC<{ order: Order }> = ({ order }) => {
           {entries.map((entry, index) => (
             <li key={`${entry.status}-${entry.at}-${index}`} className="relative flex gap-3">
               {index < entries.length - 1 && <span aria-hidden="true" className="absolute left-[4.5px] top-4 -bottom-3.5 w-px bg-line" />}
-              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-brand' : 'bg-ink'}`} aria-hidden="true" />
+              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-ink' : 'bg-control'}`} aria-hidden="true" />
               <div className="min-w-0 text-sm leading-5">
                 <p className={index === 0 ? 'font-semibold text-ink' : 'text-ink'}>{timelineLabel(entry.status)}</p>
                 <p className="text-[13px] leading-[18px] text-ink-muted">{formatDateTime(entry.at)}</p>
@@ -684,11 +656,11 @@ export const DeliveryAgentCard: React.FC<{ order: Order }> = ({ order }) => {
   const phone = String(order.deliveryAgentPhone || '').replace(/[^\d+]/g, '');
   if (!isOutForDelivery(order) || (!name && !phone)) return null;
   return (
-    <section className="rounded-control border border-brand-line bg-brand-wash p-3.5 flex items-center gap-3" aria-label="Delivery executive">
-      <span className="shrink-0 flex text-brand"><UserIcon className="w-5 h-5" mono live={false} /></span>
+    <section className="border border-line bg-surface p-3.5 flex items-center gap-3" aria-label="Delivery executive">
+      <span className="shrink-0 flex text-sale"><UserIcon className="w-5 h-5" mono live={false} /></span>
       <div className="min-w-0 flex-1">
-        <p className="sag-eyebrow">Delivery executive</p>
-        {name ? <p className="text-base leading-[22px] font-semibold text-ink break-words">{name}</p> : <p className="text-sm leading-5 text-ink-muted">Out for delivery today</p>}
+        <p className={EYEBROW}>Delivery executive</p>
+        {name ? <p className="text-[15px] leading-[22px] font-medium text-ink break-words">{name}</p> : <p className="text-sm leading-5 text-ink-muted">Out for delivery today</p>}
       </div>
       {phone && (
         <a href={`tel:${phone}`} aria-label={`Call ${name || 'the delivery executive'}`} className="sag-btn-outline shrink-0 h-11 px-4 gap-2 text-sm">
@@ -706,13 +678,13 @@ export const OrderProgress: React.FC<{ order: OrderWithRequests; compact?: boole
   const delivered = wasDelivered(order);
   const paidOrRefunded = order.paymentStatus === 'Paid' || order.paymentStatus === 'Refunded';
 
-  const note = 'rounded-control px-3.5 py-3 text-sm leading-5';
+  const note = 'px-3.5 py-3 text-sm leading-5';
 
   if (order.status === 'Cancelled') {
     const at = latestUpdate(order)?.at;
     return (
       <div className="space-y-3">
-        <div className={`${note} bg-danger-tint border border-danger-line flex items-start gap-2.5`}>
+        <div className={`${note} border border-danger-line bg-surface flex items-start gap-2.5`}>
           <XCircle className="w-[18px] h-[18px] shrink-0 text-danger mt-px" aria-hidden="true" />
           <div className="text-ink space-y-0.5">
             <p className="font-semibold text-danger">This order was cancelled{at ? ` · ${formatDateTime(at)}` : ''}</p>
@@ -727,28 +699,28 @@ export const OrderProgress: React.FC<{ order: OrderWithRequests; compact?: boole
   return (
     <div className="space-y-3">
       {awaitingPayment(order) && (
-        <p className={`${note} bg-sale-tint border-l-4 border-sale-line text-ink`}>
+        <p className={`${note} border border-sale-line bg-surface text-ink`}>
           {paymentFailed(order) ? 'Your last payment attempt for this order failed. ' : ''}We have not received payment for this order yet. If money was deducted, it is usually confirmed within a few minutes — or contact us and we will check it for you.
         </p>
       )}
       {order.status === 'Returned' && (
-        <p className={`${note} bg-sunken text-ink-muted`}>
+        <p className={`${note} border border-line bg-surface text-ink-muted`}>
           This order was returned to us{latestUpdate(order) ? ` · ${formatDateTime(latestUpdate(order)?.at)}` : ''}.
         </p>
       )}
       {(order.status !== 'Refunded' || delivered) && <Stepper order={order} compact={compact} />}
       {order.status === 'Refunded' && !order.returnRequest && (
-        <p className={`${note} bg-sunken text-ink-muted`}>
+        <p className={`${note} border border-line bg-surface text-ink-muted`}>
           This order was refunded to your original payment method{paidOrRefunded && latestUpdate(order) ? ` · ${formatDateTime(latestUpdate(order)?.at)}` : ''}.
         </p>
       )}
       {request && !request.handledAt && CANCELLABLE_STATUSES.includes(order.status) && (
-        <p className={`${note} bg-sale-tint border-l-4 border-sale-line text-ink`}>
+        <p className={`${note} border border-sale-line bg-surface text-ink`}>
           You asked to cancel this order{formatDay(request.at) ? ` on ${formatDay(request.at)}` : ''}. Our team is reviewing it and will email you.
         </p>
       )}
       {request?.handledAt && request.outcome === 'kept' && !delivered && (
-        <p className={`${note} bg-sunken text-ink-muted`}>
+        <p className={`${note} border border-line bg-surface text-ink-muted`}>
           Your cancellation request was reviewed and this order is going ahead. Contact us on WhatsApp if you still need help.
         </p>
       )}

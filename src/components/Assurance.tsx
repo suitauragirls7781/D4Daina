@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, ChevronRight, Lock } from 'lucide-react';
+import { ChevronRight, Lock } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { WhatsAppIcon } from './BrandIcons';
@@ -37,14 +37,14 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
     ['Track it here', 'Every step shows in My orders.'],
   ];
   return (
-    <div className={`sag-card p-4 ${className}`}>
-      <h3 className="font-sans text-[15px] font-bold leading-5 text-ink">How your order works</h3>
-      <ol className="mt-2">
+    <div className={`border border-line bg-surface p-4 lg:p-5 ${className}`}>
+      <h3 className="font-display text-[17px] leading-6 text-ink">How your order works</h3>
+      <ol className="mt-1.5">
         {steps.map(([title, text], index) => (
-          <li key={title} className="flex items-start gap-2.5 py-1.5">
-            <span aria-hidden="true" className="sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-peach text-[13px] font-bold text-sale">{index + 1}</span>
+          <li key={title} className="flex items-start gap-3 border-t border-line py-2.5 first:border-t-0 last:pb-0">
+            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12px] leading-[18px] text-ink-muted">{index + 1}</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-bold leading-[18px] text-ink">{title}</span>
+              <span className="block text-[13.5px] font-medium leading-[18px] text-ink">{title}</span>
               <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
             </span>
           </li>
@@ -55,7 +55,7 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
 };
 
 interface AssuranceProps {
-  /** full = the four rows in a tinted block; line = one small line with a lock; grid = the home trust block (dark rows on phones and tablets, round badges on desktop). */
+  /** full = the four facts as plain rows between hairlines; line = one small line with a lock; grid = the home trust grid (two columns, four in a row on desktop: a thin icon and the fact). */
   variant?: 'full' | 'line' | 'grid';
   gateway?: AssuranceGateway;
   /** Text for the WhatsApp message, so the store knows which page the shopper wrote from. */
@@ -80,76 +80,54 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
 
   const open = (page: 'return-policy' | 'shipping-policy') => { setActivePage(page); window.scrollTo(0, 0); };
   const rows: Array<{ key: string; icon: React.ReactNode; text: string; onClick?: () => void; href?: string }> = [
-    { key: 'payment', icon: <LockIcon className="w-5 h-5" mono />, text: facts.payment },
-    { key: 'returns', icon: <ReturnIcon className="w-5 h-5" mono />, text: facts.returns, onClick: () => open('return-policy') },
-    { key: 'delivery', icon: <TruckIcon className="w-5 h-5" mono />, text: facts.delivery, onClick: () => open('shipping-policy') },
-    { key: 'help', icon: <WhatsAppIcon className="w-5 h-5" />, text: facts.help, href: createSupportWhatsAppUrl(whatsappMessage) },
+    { key: 'payment', icon: <LockIcon className="w-[19px] h-[19px]" mono />, text: facts.payment },
+    { key: 'returns', icon: <ReturnIcon className="w-[19px] h-[19px]" mono />, text: facts.returns, onClick: () => open('return-policy') },
+    { key: 'delivery', icon: <TruckIcon className="w-[19px] h-[19px]" mono />, text: facts.delivery, onClick: () => open('shipping-policy') },
+    { key: 'help', icon: <WhatsAppIcon className="w-[18px] h-[18px]" mono />, text: facts.help, href: createSupportWhatsAppUrl(whatsappMessage) },
   ];
+  const iconColour = onDark ? 'text-highlight' : 'text-sale';
 
   if (variant === 'grid') {
-    // Desktop: round badges, four white circles on a pale block, each with a thin ring that turns slowly
-    const badge = `flex w-full flex-col items-center rounded-control px-0.5 text-center ${onDark ? 'text-on-dark' : 'text-ink'}`;
-    const body = (row: (typeof rows)[number], index: number) => (
+    // A plain grid: a thin champagne icon and the fact in normal text. No block, no circles, no ticks.
+    const cell = `flex w-full items-center gap-2.5 text-left ${onDark ? 'text-on-dark' : 'text-ink'}`;
+    const body = (row: (typeof rows)[number]) => (
       <>
-        <span className={`sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mb-1.5 flex h-[42px] w-[42px] sm:h-[52px] sm:w-[52px] shrink-0 items-center justify-center rounded-full bg-white text-brand`}>{row.icon}</span>
-        <span className="block text-[11px] sm:text-[13px] font-bold leading-[1.25]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
-      </>
-    );
-    // Phones and tablets (owner's pick 2): one dark block, each fact a row with a gold icon circle and a tick.
-    // Desktop keeps the round badges above.
-    const line = 'flex w-full items-center gap-2.5 rounded-control py-1.5 text-left text-on-dark';
-    const lineBody = (row: (typeof rows)[number]) => (
-      <>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sun text-ink">{row.icon}</span>
-        <span className="min-w-0 flex-1 text-[13.5px] font-bold leading-[18px]">{row.text}</span>
-        <Check className="h-[17px] w-[17px] shrink-0 text-highlight" strokeWidth={2.25} aria-hidden="true" />
+        <span className={`flex shrink-0 ${iconColour}`}>{row.icon}</span>
+        <span className="min-w-0 text-[12.5px] leading-[1.3] lg:text-[13px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
       </>
     );
     return (
-      <>
-        <ul className={`rounded-[28px] bg-dark px-4 py-2.5 text-on-dark lg:hidden ${className}`}>
-          {rows.map((row) => (
-            <li key={row.key}>
-              {row.href ? (
-                <a href={row.href} target="_blank" rel="noopener noreferrer" className={line}>{lineBody(row)}</a>
-              ) : row.onClick ? (
-                <button type="button" onClick={row.onClick} className={`${line} cursor-pointer`}>{lineBody(row)}</button>
-              ) : (
-                <div className={line}>{lineBody(row)}</div>
-              )}
-            </li>
-          ))}
-        </ul>
-        <ul className={`hidden lg:grid grid-cols-4 gap-x-1 rounded-[24px] px-2 pt-5 pb-4 ${onDark ? 'bg-white/10' : 'bg-lilac'} ${className}`}>
-          {rows.map((row, index) => (
-            <li key={row.key} className="flex">
-              {row.href ? (
-                <a href={row.href} target="_blank" rel="noopener noreferrer" className={badge}>{body(row, index)}</a>
-              ) : row.onClick ? (
-                <button type="button" onClick={row.onClick} className={`${badge} cursor-pointer`}>{body(row, index)}</button>
-              ) : (
-                <span className={badge}>{body(row, index)}</span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </>
+      <ul className={`grid grid-cols-2 gap-x-2.5 gap-y-3.5 lg:grid-cols-4 lg:gap-x-8 ${className}`}>
+        {rows.map((row) => (
+          <li key={row.key} className="flex min-w-0">
+            {row.href ? (
+              <a href={row.href} target="_blank" rel="noopener noreferrer" className={cell}>{body(row)}</a>
+            ) : row.onClick ? (
+              <button type="button" onClick={row.onClick} className={`${cell} cursor-pointer`}>{body(row)}</button>
+            ) : (
+              <span className={cell}>{body(row)}</span>
+            )}
+          </li>
+        ))}
+      </ul>
     );
   }
 
+  // full: plain rows between hairlines
+  const rowLine = `sag-row font-normal ${onDark ? 'border-white/20 text-on-dark' : ''}`;
   return (
-    <div className={`rounded-card border border-brand-line bg-brand-wash px-4 ${className}`}>
+    <div className={`border-y ${onDark ? 'border-white/20' : 'border-line'} ${className}`}>
       {rows.map((row) => {
         const inner = (
           <>
-            <span className="shrink-0 flex text-brand">{row.icon}</span>
+            <span className={`shrink-0 flex ${iconColour}`}>{row.icon}</span>
             <span className="flex-1 min-w-0">{row.text}</span>
-            {(row.onClick || row.href) && <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />}
+            {(row.onClick || row.href) && <ChevronRight className={`w-4 h-4 shrink-0 ${onDark ? 'text-on-dark-muted' : 'text-ink-muted'}`} strokeWidth={1.5} aria-hidden="true" />}
           </>
         );
-        if (row.href) return <a key={row.key} href={row.href} target="_blank" rel="noopener noreferrer" className="sag-row border-brand-line">{inner}</a>;
-        if (row.onClick) return <button key={row.key} type="button" onClick={row.onClick} className="sag-row border-brand-line w-full text-left cursor-pointer">{inner}</button>;
-        return <div key={row.key} className="sag-row border-brand-line">{inner}</div>;
+        if (row.href) return <a key={row.key} href={row.href} target="_blank" rel="noopener noreferrer" className={rowLine}>{inner}</a>;
+        if (row.onClick) return <button key={row.key} type="button" onClick={row.onClick} className={`${rowLine} w-full text-left cursor-pointer`}>{inner}</button>;
+        return <div key={row.key} className={rowLine}>{inner}</div>;
       })}
     </div>
   );

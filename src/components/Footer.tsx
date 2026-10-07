@@ -3,13 +3,14 @@ import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
 import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPLAY } from '../utils/storeContact';
-import { Mail, MapPin } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
+import { assuranceFacts } from './Assurance';
 
 /**
- * The "slim" footer (owner's pick 4): one dark block with the round logo and the name, three round buttons
- * (Instagram, WhatsApp, email), every help and policy link as a chip, and one line of small print.
- * It takes little room on a phone; the catalogue is reached from the header menu and the bottom navigation.
+ * The footer (Noir & Champagne): the only dark block of the store. The wordmark and one muted line, the help
+ * and policy links in plain columns, the social marks as bare icons, a hairline, then the address and one
+ * line of small print built from the store's own facts.
  */
 export const Footer: React.FC = () => {
   const { setActivePage, activePage } = useShop();
@@ -18,20 +19,20 @@ export const Footer: React.FC = () => {
   const whatsappNumber = whatsappDigits.length === 10 ? `91${whatsappDigits}` : whatsappDigits;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hi Suit Aura Girls! I have a question.')}`;
   const email = storeSettings?.storeEmail || 'contact.suitauragirls@gmail.com';
+  const facts = assuranceFacts();
 
   const go = (page: ActivePage) => {
     setActivePage(page);
     window.scrollTo(0, 0);
   };
 
-  const round = 'w-[42px] h-[42px] shrink-0 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-on-dark transition-colors';
+  const plainIcon = 'flex h-10 w-8 shrink-0 items-center justify-center text-on-dark hover:text-on-dark-muted transition-colors';
   const socials = [
     { icon: InstagramIcon, href: storeSettings?.instagramUrl || STORE_INSTAGRAM_URL, label: 'Instagram' },
     { icon: FacebookIcon, href: storeSettings?.facebookUrl || '', label: 'Facebook' },
     { icon: XIcon, href: storeSettings?.twitterUrl || '', label: 'X (Twitter)' },
   ].filter((s) => s.href);
 
-  // The first chip (Track order) is the mint one
   const links: Array<[ActivePage, string]> = [
     ['track-order', 'Track order'],
     ['return-policy', 'Returns & exchange'],
@@ -49,50 +50,42 @@ export const Footer: React.FC = () => {
   const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]';
 
   return (
-    <footer id="main-footer" className={`w-full rounded-t-[28px] bg-dark text-on-dark pt-[18px] md:pb-6 ${bottomRoom}`}>
-      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-3">
-          <button type="button" onClick={() => go('home')} className="flex min-w-0 items-center gap-2.5 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
-            <img src="/suit-aura-mark-132.webp" alt="" width="44" height="44" loading="lazy" className="h-11 w-11 shrink-0 rounded-full bg-white object-cover" />
-            <span className="truncate text-base font-extrabold tracking-[0.04em] text-on-dark">SUIT AURA <span className="text-highlight">GIRLS</span></span>
-          </button>
-          <div className="flex shrink-0 gap-2">
-            {socials.slice(0, 1).map(({ icon: Icon, href, label }) => (
-              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={round}><Icon className="w-5 h-5" /></a>
-            ))}
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={round}><WhatsAppIcon className="w-5 h-5" /></a>
-            <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={round}><Mail className="w-5 h-5" aria-hidden="true" /></a>
+    <footer id="main-footer" className={`w-full bg-dark text-on-dark pt-[26px] md:pt-10 md:pb-8 ${bottomRoom}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-12">
+          <div>
+            <button type="button" onClick={() => go('home')} className="sag-caps block max-w-full truncate font-display text-[18px] font-medium uppercase leading-6 tracking-[0.14em] text-on-dark text-left cursor-pointer lg:text-[20px]" aria-label="Suit Aura Girls home">
+              Suit Aura Girls
+            </button>
+            <p className="mt-1.5 text-[13px] leading-5 text-on-dark-muted">Ethnic wear · {facts.delivery}</p>
           </div>
+
+          <nav aria-label="Help and policies" className="mt-5 lg:mt-0">
+            <ul className="grid grid-cols-2 gap-x-2.5 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
+              {links.map(([page, label]) => (
+                <li key={page}>
+                  <button type="button" onClick={() => go(page)} className="min-h-9 py-1 text-left text-[13px] leading-5 text-on-dark hover:text-on-dark-muted cursor-pointer transition-colors">
+                    {label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
 
-        <nav aria-label="Help and policies" className="mt-3.5">
-          <ul className="flex flex-wrap gap-[7px]">
-            {links.map(([page, label], index) => (
-              <li key={page}>
-                <button
-                  type="button"
-                  onClick={() => go(page)}
-                  className={`h-9 px-3.5 rounded-full text-[12.5px] font-bold inline-flex items-center cursor-pointer transition-colors ${index === 0 ? 'bg-highlight text-ink' : 'bg-white/10 text-on-dark hover:bg-white/20'}`}
-                >
-                  {label}
-                </button>
-              </li>
-            ))}
-            {socials.slice(1).map(({ icon: Icon, href, label }) => (
-              <li key={label}>
-                <a href={href} target="_blank" rel="noopener noreferrer" className="h-9 px-3.5 rounded-full bg-white/10 text-[12.5px] font-bold text-on-dark inline-flex items-center gap-1.5 hover:bg-white/20"><Icon className="w-4 h-4" /> {label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="mt-4 -ml-1.5 flex items-center gap-1.5">
+          {socials.map(({ icon: Icon, href, label }) => (
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[19px] h-[19px]" mono /></a>
+          ))}
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[19px] h-[19px]" mono /></a>
+          <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" /></a>
+        </div>
 
-        <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="mt-3.5 flex items-start gap-1.5 text-xs leading-[18px] text-on-dark-muted hover:text-on-dark">
-          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
-          <span>{storeSettings?.address?.trim() || STORE_ADDRESS}</span>
-        </a>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs leading-[18px] text-on-dark-muted">
-          <p>© {new Date().getFullYear()} Suit Aura Girls</p>
-          <p>UPI · Secure online payment</p>
+        <div className="mt-4 border-t border-white/20 pt-3.5 text-[11.5px] leading-[18px] text-on-dark-muted md:flex md:items-start md:justify-between md:gap-8">
+          <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block hover:text-on-dark md:max-w-[60%]">
+            {storeSettings?.address?.trim() || STORE_ADDRESS}
+          </a>
+          <p className="mt-1.5 md:mt-0 md:shrink-0 md:text-right">{facts.payment} · {facts.returns} · © {new Date().getFullYear()} Suit Aura Girls</p>
         </div>
       </div>
     </footer>

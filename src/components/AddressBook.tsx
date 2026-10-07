@@ -23,9 +23,9 @@ import {
   syncAddressBook,
 } from '../lib/addressBook';
 
-const errorText = 'mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger';
-const helpText = 'mt-1.5 block text-[13px] leading-[18px] text-ink-muted';
-const groupTitle = 'sm:col-span-2 text-base leading-[22px] font-semibold text-ink';
+const errorText = 'mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] text-danger';
+const helpText = 'mt-1.5 block text-[11.5px] leading-4 text-ink-muted';
+const groupTitle = 'sm:col-span-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
 
 /** Home / Work / Other mark, drawn in the colour of the text around it. */
 const TypeIcon: React.FC<{ type: AddressType; className: string; mono?: boolean }> = ({ type, className }) => {
@@ -187,7 +187,7 @@ const AddressSheet: React.FC<{
     const id = `adr-${name}`;
     return (
       <div className={span}>
-        <label htmlFor={id} className="sag-label">{label}{optional ? <span className="font-normal text-ink-muted"> (optional)</span> : null}</label>
+        <label htmlFor={id} className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">{label}{optional ? <span className="normal-case tracking-normal"> (optional)</span> : null}</label>
         <input
           id={id}
           name={name}
@@ -213,31 +213,31 @@ const AddressSheet: React.FC<{
         aria-modal="true"
         aria-labelledby="address-sheet-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-white text-ink w-full sm:max-w-xl max-h-[92dvh] flex flex-col rounded-t-sheet sm:rounded-card shadow-[var(--sag-shadow-pop)] animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-xl max-h-[92dvh] flex flex-col border border-line animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-sunken-deep" aria-hidden="true" />
+        <span className="sm:hidden mx-auto mt-2 h-px w-9 bg-control" aria-hidden="true" />
         <div className="px-2 sm:px-4 pt-2 sm:pt-4 pb-3 border-b border-line">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 min-w-0">
               {step === 'details' ? (
-                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-                  <ArrowLeft className="w-[22px] h-[22px]" />
+                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+                  <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               ) : <span className="w-2 shrink-0" aria-hidden="true" />}
               <div className="min-w-0">
-                <h2 id="address-sheet-title" className="text-base leading-[22px] font-semibold text-ink">
+                <h2 id="address-sheet-title" className="font-display text-[19px] leading-6 font-medium text-ink">
                   {step === 'location' ? 'Find your location' : initial ? 'Edit address' : 'Address details'}
                 </h2>
-                <p className="text-[13px] leading-[18px] text-ink-muted">Step {step === 'location' ? '1' : '2'} of 2</p>
+                <p className="text-[11.5px] leading-4 text-ink-muted">Step {step === 'location' ? '1' : '2'} of 2</p>
               </div>
             </div>
-            <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-              <X className="w-[22px] h-[22px]" />
+            <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+              <X className="w-5 h-5" strokeWidth={1.5} />
             </button>
           </div>
           <div className="mt-2 mx-2 grid grid-cols-2 gap-1" aria-hidden="true">
-            <span className={`h-[3px] rounded-full ${step === 'details' ? 'bg-ink' : 'bg-brand'}`} />
-            <span className={`h-[3px] rounded-full ${step === 'details' ? 'bg-brand' : 'bg-line'}`} />
+            <span className="h-[3px] bg-ink" />
+            <span className={`h-[3px] ${step === 'details' ? 'bg-ink' : 'bg-line'}`} />
           </div>
         </div>
 
@@ -258,7 +258,7 @@ const AddressSheet: React.FC<{
               {input('street', 'Street / road', { optional: true, maxLength: 200 })}
               {input('landmark', 'Landmark', { optional: true, maxLength: 120, placeholder: 'e.g. City Hospital' }, 'sm:col-span-2')}
               <div>
-                <label htmlFor="adr-pincode" className="sag-label">PIN code</label>
+                <label htmlFor="adr-pincode" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">PIN code</label>
                 <span className="relative block">
                   <input
                     id="adr-pincode"
@@ -285,7 +285,7 @@ const AddressSheet: React.FC<{
               {input('tehsil', 'Tehsil', { optional: true, maxLength: 80 })}
               {input('district', 'District', { optional: true, maxLength: 80 })}
               <div className="sm:col-span-2">
-                <label htmlFor="adr-state" className="sag-label">State</label>
+                <label htmlFor="adr-state" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">State</label>
                 <span className="relative block">
                   <select
                     id="adr-state"
@@ -307,7 +307,7 @@ const AddressSheet: React.FC<{
               </div>
 
               <fieldset className="sm:col-span-2">
-                <legend className="sag-label">Address type</legend>
+                <legend className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Address type</legend>
                 <div className="flex flex-wrap gap-2">
                   {(['Home', 'Work', 'Other'] as const).map((t) => (
                     <button
@@ -324,10 +324,10 @@ const AddressSheet: React.FC<{
               </fieldset>
 
               <label className="sm:col-span-2 flex items-center gap-3 min-h-11 text-sm leading-5 text-ink cursor-pointer has-[:disabled]:cursor-default">
-                <input type="checkbox" checked={draft.isDefault} disabled={firstAddress || Boolean(initial?.isDefault)} onChange={(e) => set('isDefault', e.target.checked)} className="w-[22px] h-[22px] shrink-0 rounded-badge accent-brand" />
+                <input type="checkbox" checked={draft.isDefault} disabled={firstAddress || Boolean(initial?.isDefault)} onChange={(e) => set('isDefault', e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand" />
                 <span className="min-w-0">
-                  <span className="block font-semibold">Make this my default address</span>
-                  <span className="block text-[13px] leading-[18px] text-ink-muted">Used first at checkout</span>
+                  <span className="block">Make this my default address</span>
+                  <span className="block text-[11.5px] leading-4 text-ink-muted">Used first at checkout</span>
                 </span>
               </label>
             </div>
@@ -398,15 +398,15 @@ export const AddressBook: React.FC<{
     }
   };
 
-  const linkBtn = 'sag-link gap-1.5 px-2 disabled:opacity-50';
+  const linkBtn = 'sag-link gap-1.5 px-2 text-[12.5px] disabled:opacity-50';
 
   return (
     <section className="space-y-4" aria-label="Saved addresses">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           {/* As a picker (checkout) the card around it already carries the heading, so only one title shows */}
-          {!onSelect && <h2 className="text-[20px] leading-7 text-ink">Saved addresses</h2>}
-          <p className={`${onSelect ? '' : 'mt-1 '}text-sm leading-5 text-ink-muted`}>Your default address fills in checkout automatically.</p>
+          {!onSelect && <h2 className="font-display font-medium text-[20px] leading-7 text-ink">Saved addresses</h2>}
+          <p className={`${onSelect ? '' : 'mt-1 '}text-[13px] leading-[18px] text-ink-muted`}>Your default address fills in checkout automatically.</p>
         </div>
         {addresses.length > 0 && (
           <button type="button" onClick={() => setSheet({ editing: null })} className="sag-btn-outline w-full sm:w-auto h-11 px-4 gap-2 text-sm">
@@ -418,10 +418,10 @@ export const AddressBook: React.FC<{
       {loading && addresses.length === 0 ? (
         <div className="py-12 flex justify-center" role="status" aria-label="Loading your addresses"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
       ) : addresses.length === 0 ? (
-        <div className="sag-card px-4 py-10 text-center">
-          <span className="w-14 h-14 mx-auto rounded-full bg-sunken text-ink-muted flex items-center justify-center"><PinIcon className="w-7 h-7" mono /></span>
-          <p className="mt-4 font-display text-[17px] leading-6 font-semibold text-ink">No saved addresses yet</p>
-          <p className="mt-1 text-sm leading-5 text-ink-muted">Add your home or work address to check out faster.</p>
+        <div className="border border-line bg-surface px-4 py-10 text-center">
+          <span className="mx-auto flex justify-center text-sale"><PinIcon className="w-7 h-7" mono /></span>
+          <p className="mt-4 font-display text-[19px] leading-6 font-medium text-ink">No saved addresses yet</p>
+          <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">Add your home or work address to check out faster.</p>
           <button type="button" onClick={() => setSheet({ editing: null })} className={`${onSelect ? 'sag-btn-outline' : 'sag-btn-primary'} mt-5 h-12 px-6 gap-2`}>
             <Plus className="w-[18px] h-[18px]" aria-hidden="true" /> Add address
           </button>
@@ -433,25 +433,25 @@ export const AddressBook: React.FC<{
             return (
               <li key={a.id} data-selected={selected} className="sag-card p-4 flex flex-col gap-2.5">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="sag-badge gap-1.5 bg-sunken text-ink">
+                  <span className="sag-badge gap-1.5 border bg-surface font-semibold border-line text-ink">
                     <TypeIcon type={a.type} className="w-3.5 h-3.5" /> {a.type}
                   </span>
                   {a.isDefault && (
-                    <span className="sag-badge gap-1 bg-ok-tint text-ok">
-                      <Check className="w-3 h-3" strokeWidth={3} aria-hidden="true" /> Default
+                    <span className="sag-badge gap-1 border bg-surface font-semibold border-ink text-ink">
+                      <Check className="w-3 h-3" strokeWidth={2} aria-hidden="true" /> Default
                     </span>
                   )}
                 </div>
-                <div className="text-sm leading-5 text-ink-muted min-w-0">
-                  <p className="text-[15px] leading-[22px] font-semibold text-ink">{a.fullName}</p>
+                <div className="text-[13px] leading-[18px] text-ink-muted min-w-0">
+                  <p className="text-sm leading-5 font-medium text-ink">{a.fullName}</p>
                   <p className="break-words">{formatAddressLine(a)}</p>
-                  <p className="sag-num mt-1 text-[13px] leading-[18px]">Mobile {a.mobile}{a.altMobile ? ` · Alt ${a.altMobile}` : ''}</p>
+                  <p className="sag-num mt-1 text-[11.5px] leading-4">Mobile {a.mobile}{a.altMobile ? ` · Alt ${a.altMobile}` : ''}</p>
                 </div>
                 {confirmDelete === a.id ? (
-                  <div className="mt-auto rounded-control bg-danger-tint border border-danger-line p-3 space-y-2" role="alert">
-                    <p className="text-sm leading-5 font-medium text-danger">Delete this address?</p>
+                  <div className="mt-auto border border-danger-line bg-surface p-3 space-y-2" role="alert">
+                    <p className="text-sm leading-5 text-danger">Delete this address?</p>
                     <div className="flex gap-2">
-                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-11 px-4 rounded-control bg-danger text-white text-sm font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-11 px-4 bg-danger text-white text-[12.5px] font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
                         {busy === a.id && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />} Delete
                       </button>
                       <button type="button" onClick={() => setConfirmDelete('')} className="sag-btn-outline h-11 px-4 text-sm">Keep</button>

@@ -29,7 +29,7 @@ export const OccasionSection: React.FC = () => {
   if (!list.length && !discovery.features.giftMode) return null;
 
   return (
-    <section id="shop-by-occasion" aria-labelledby="shop-by-occasion-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="shop-by-occasion" aria-labelledby="shop-by-occasion-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
           <HomeSectionHeader
@@ -40,7 +40,7 @@ export const OccasionSection: React.FC = () => {
           />
         </div>
         {list.length > 0 && (
-          <ul className="sag-scroll-x flex gap-3 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+          <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
             {list.map(({ occasion, items }) => {
               const cover = items.find(isAvailable) || items[0];
               const count = items.filter(isAvailable).length;
@@ -49,13 +49,13 @@ export const OccasionSection: React.FC = () => {
                 <li key={occasion.id} className="shrink-0">
                   {/* Nothing is drawn on the photo: the name and the real in-stock count sit below it */}
                   <button type="button" onClick={() => openOccasion(occasion.id, { setSelectedCategory, setActivePage, navigate })}
-                    className="block w-[128px] sm:w-[160px] lg:w-[190px] text-left cursor-pointer rounded-control">
-                    <span className="block aspect-[4/5] w-full overflow-hidden rounded-control bg-sunken">
+                    className="block w-[108px] sm:w-[140px] lg:w-[180px] text-center cursor-pointer">
+                    <span className="block aspect-[3/4] w-full overflow-hidden bg-sunken">
                       <img src={photoUrl ? getCleanImageUrl(photoUrl, 400) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="lazy" decoding="async"
                         className="w-full h-full object-cover object-top" />
                     </span>
-                    <span className="mt-2 block text-sm leading-5 font-medium text-ink line-clamp-1">{occasion.name}</span>
-                    <span className="sag-num block text-xs leading-4 text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
+                    <span className="mt-2 block text-[13px] leading-[18px] text-ink line-clamp-1">{occasion.name}</span>
+                    <span className="sag-num block text-[11.5px] leading-4 text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
                   </button>
                 </li>
               );

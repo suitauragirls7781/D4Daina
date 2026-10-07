@@ -1,9 +1,7 @@
 import React from 'react';
 import { ProductCard } from './ProductCard';
 import { useShop } from '../context/ShopContext';
-import { HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
-
-const GRID = 'grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6';
+import { HOME_GRID, HOME_SECTION, HOME_WRAP, HomeSectionHeader, HomeViewAllButton } from './HomeSections';
 
 export const BestSellersSection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
@@ -19,19 +17,19 @@ export const BestSellersSection: React.FC = () => {
   if (bestSellers.length === 0) return null;
 
   return (
-    <section id="best-sellers-section" aria-labelledby="best-sellers-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="best-sellers-section" aria-labelledby="best-sellers-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="best-sellers-title"
           title="Best sellers"
-          text="The styles our customers pick most."
           action={{ id: 'view-all-bestsellers-btn', label: 'View all', onClick: () => navigateToCategory('Best Sellers') }}
         />
-        <div className={GRID}>
+        <div className={HOME_GRID}>
           {bestSellers.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        <HomeViewAllButton onClick={() => navigateToCategory('Best Sellers')} />
       </div>
     </section>
   );
@@ -49,15 +47,14 @@ export const FestiveCollectionSection: React.FC = () => {
   if (festiveItems.length === 0) return null;
 
   return (
-    <section id="festive-collection-section" aria-labelledby="festive-collection-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="festive-collection-section" aria-labelledby="festive-collection-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="festive-collection-title"
           title="Festive collection"
-          text="Outfits for festivals, weddings and family functions."
           action={{ id: 'view-all-festive-btn', label: 'View all', onClick: () => navigateToCategory('Festive Wear') }}
         />
-        <div className={GRID}>
+        <div className={HOME_GRID}>
           {festiveItems.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

@@ -54,7 +54,7 @@ export const FestiveComboOffers: React.FC = () => {
   };
 
   return (
-    <section id="festive-combo-offers-section" aria-labelledby="combo-offer-title" className={`${HOME_SECTION} bg-page`}>
+    <section id="festive-combo-offers-section" aria-labelledby="combo-offer-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="combo-offer-title"
@@ -64,18 +64,18 @@ export const FestiveComboOffers: React.FC = () => {
         />
 
         <div className="grid lg:grid-cols-12 gap-5 lg:gap-8">
-          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-6">
+          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-[18px] lg:gap-x-5 lg:gap-y-8">
             {available.map((product) => {
               const selected = Boolean(picked[product.id]);
               const sizes = product.sizes?.length ? product.sizes : (['Free Size'] as unknown as ProductSize[]);
               return (
                 <div key={product.id} className="flex flex-col min-w-0">
-                  <button type="button" onClick={() => navigateToProduct(product)} className="block overflow-hidden rounded-control bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
+                  <button type="button" onClick={() => navigateToProduct(product)} className="block overflow-hidden bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
                     <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] object-cover object-top" loading="lazy" decoding="async" />
                   </button>
-                  <div className="pt-2 flex-1 flex flex-col gap-2">
-                    <p className="text-sm leading-5 font-medium text-ink line-clamp-2 min-h-10">{product.name}</p>
-                    <p className="sag-num text-base leading-5 font-bold text-ink">₹{product.price.toLocaleString('en-IN')}</p>
+                  <div className="pt-[9px] flex-1 flex flex-col gap-1.5">
+                    <p className="text-[13px] leading-[18px] text-ink line-clamp-2 min-h-9">{product.name}</p>
+                    <p className="sag-num text-[14.5px] leading-5 font-semibold text-ink">₹{product.price.toLocaleString('en-IN')}</p>
                     {selected && (
                       <select
                         aria-label={`Size for ${product.name}`}
@@ -90,9 +90,9 @@ export const FestiveComboOffers: React.FC = () => {
                       type="button"
                       onClick={() => toggle(product.id, sizes[0])}
                       aria-pressed={selected}
-                      className="sag-chip mt-auto w-full h-11 min-w-0 px-2 gap-1.5 text-sm font-semibold"
+                      className="sag-chip mt-auto w-full h-10 min-w-0 border border-ink px-2 gap-1.5 text-[13px] font-medium"
                     >
-                      {selected && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}
+                      {selected && <Check className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />}
                       {selected ? 'Added to combo' : 'Add to combo'}
                     </button>
                   </div>
@@ -101,17 +101,17 @@ export const FestiveComboOffers: React.FC = () => {
             })}
           </div>
 
-          <aside className="lg:col-span-4 sag-card p-4 sm:p-5 h-fit lg:sticky lg:top-24">
-            <h3 className="font-display text-[17px] leading-6 font-semibold text-ink">Your combo</h3>
-            <p className={`mt-1 text-sm leading-5 ${qualifies ? 'text-ok font-semibold' : 'text-ink-muted'}`} role="status">
+          <aside className="lg:col-span-4 border border-line bg-surface p-4 sm:p-5 h-fit lg:sticky lg:top-24">
+            <h3 className="font-display text-[17px] leading-6 text-ink">Your combo</h3>
+            <p className={`mt-1 text-[13px] leading-5 ${qualifies ? 'text-ink font-medium' : 'text-ink-muted'}`} role="status">
               {pickedProducts.length} of {minItems} pieces picked{qualifies ? '. Offer unlocked.' : ''}
             </p>
             <div className="sag-num mt-3 space-y-2 text-sm leading-5">
               <div className="flex justify-between text-ink-muted"><span>Items</span><span>₹{rawTotal.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-sale font-semibold"><span>Combo {comboOffer.percent}% off</span><span>{discount ? `−₹${discount.toLocaleString('en-IN')}` : '—'}</span></div>
+              <div className="flex justify-between text-sale"><span>Combo {comboOffer.percent}% off</span><span>{discount ? `−₹${discount.toLocaleString('en-IN')}` : '—'}</span></div>
               <div className="flex items-baseline justify-between text-ink pt-3 border-t border-line">
-                <span className="font-semibold">Combo price</span>
-                <span className="text-lg leading-[22px] font-bold">₹{(rawTotal - discount).toLocaleString('en-IN')}</span>
+                <span className="font-medium">Combo price</span>
+                <span className="text-[17px] leading-[22px] font-semibold">₹{(rawTotal - discount).toLocaleString('en-IN')}</span>
               </div>
             </div>
             <div className="mt-4 space-y-2.5">
@@ -119,7 +119,7 @@ export const FestiveComboOffers: React.FC = () => {
                 <BagIcon mono className="w-[18px] h-[18px]" />
                 Add combo to bag
               </button>
-              <button type="button" onClick={() => addAll(true)} disabled={!qualifies} className="sag-btn-outline w-full h-12 text-[15px]">
+              <button type="button" onClick={() => addAll(true)} disabled={!qualifies} className="sag-btn-outline w-full h-12">
                 Buy combo now
               </button>
             </div>

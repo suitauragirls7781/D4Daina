@@ -7,20 +7,17 @@ import { pickedForYou } from '../utils/recommend';
 import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
 import { recommendedForYou, useStylePrefs } from './StyleProfile';
+import { HOME_RAIL, HOME_RAIL_ITEM, HOME_SECTION, HomeSectionHeader } from './HomeSections';
 
-const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: React.ReactNode }> = ({ title, note, items, action }) => (
-  <section className="w-full py-8 lg:py-12" aria-label={title}>
+const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: { label: string; onClick: () => void } }> = ({ title, note, items, action }) => (
+  <section className={HOME_SECTION} aria-label={title}>
     <div className="max-w-7xl mx-auto">
-      <div className="px-4 sm:px-6 lg:px-8 mb-3 flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="font-display text-[22px] leading-7 lg:text-[28px] lg:leading-8 text-ink">{title}</h2>
-          {note && <p className="mt-0.5 text-sm leading-5 text-ink-muted">{note}</p>}
-        </div>
-        {action}
+      <div className="px-4 sm:px-6 lg:px-8">
+        <HomeSectionHeader title={title} text={note} action={action} />
       </div>
-      <ul className="sag-scroll-x flex gap-2.5 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+      <ul className={HOME_RAIL}>
         {items.map((p) => (
-          <li key={p.id} className="shrink-0 w-[158px] sm:w-[220px]"><ProductCard product={p} compact /></li>
+          <li key={p.id} className={HOME_RAIL_ITEM}><ProductCard product={p} compact /></li>
         ))}
       </ul>
     </div>
@@ -55,25 +52,17 @@ export const PersonalRails: React.FC = () => {
   const showActivity = features.personalRails && (recent.length > 0 || picked.length > 0);
   if (!forYou.length && !showActivity) return null;
   return (
-    <div className="bg-page divide-y divide-line">
+    <>
       {forYou.length > 0 && (
         <Rail
           title="Recommended for you"
           note="Based on your saved style profile"
           items={forYou}
-          action={(
-            <button
-              type="button"
-              onClick={() => { navigate('/account?tab=style'); window.scrollTo(0, 0); }}
-              className="sag-link shrink-0 whitespace-nowrap"
-            >
-              Edit my style
-            </button>
-          )}
+          action={{ label: 'Edit my style', onClick: () => { navigate('/account?tab=style'); window.scrollTo(0, 0); } }}
         />
       )}
       {features.personalRails && picked.length > 0 && <Rail title="Similar to what you viewed" items={picked} />}
       {features.personalRails && recent.length > 0 && <Rail title="Recently viewed" items={recent} />}
-    </div>
+    </>
   );
 };

@@ -4,10 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
 import { useRouter } from '../context/RouterContext';
 import { ordersApi } from '../lib/api';
-import { AlertCircle, ChevronRight, ExternalLink, Loader2, Phone, Search, Share2 } from 'lucide-react';
+import { AlertCircle, ChevronRight, ExternalLink, Loader2, Phone, Share2 } from 'lucide-react';
 import { trackingLinkFor } from '../utils/courier';
 import { PinIcon, ReturnIcon } from './StoreIcons';
-import { WhatsAppIcon } from './BrandIcons';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { CourierCard, DeliveryAgentCard, OrderProgress, OrderWithRequests, StatusHistory, StatusPill, canRequestCancel, formatDateTime, formatWindowEnd, latestUpdate } from './OrderProgress';
@@ -122,15 +121,15 @@ export const TrackOrderPage: React.FC = () => {
     }
   };
 
-  const cardTitle = 'text-[17px] leading-6 font-semibold text-ink';
+  const cardTitle = 'font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
   const moneyRow = 'flex justify-between gap-3';
 
   return (
     <div className="bg-page min-h-[70vh] px-4 pt-5 pb-10 sm:py-12">
       <div className="max-w-2xl mx-auto space-y-4">
         <div>
-          <h1 className="font-display text-[28px] leading-8 text-ink">Track your order</h1>
-          <p className="mt-1.5 text-sm leading-5 text-ink-muted">Enter the order number from your confirmation email.</p>
+          <h1 className="font-display font-medium text-[23px] leading-7 lg:text-[32px] lg:leading-10 text-ink">Track your order</h1>
+          <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">Enter the order number from your confirmation email.</p>
         </div>
 
         <form
@@ -138,7 +137,7 @@ export const TrackOrderPage: React.FC = () => {
           className="sag-card p-4 sm:p-5 grid gap-4 sm:grid-cols-2"
         >
           <div>
-            <label htmlFor="track-order-number" className="sag-label">Order number</label>
+            <label htmlFor="track-order-number" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Order number</label>
             <input
               id="track-order-number"
               name="orderNumber"
@@ -154,7 +153,7 @@ export const TrackOrderPage: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="track-order-contact" className="sag-label">Email or mobile{user ? ' (optional)' : ''}</label>
+            <label htmlFor="track-order-contact" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Email or mobile{user ? ' (optional)' : ''}</label>
             <input
               id="track-order-contact"
               name="contact"
@@ -168,50 +167,50 @@ export const TrackOrderPage: React.FC = () => {
               enterKeyHint="search"
               className="sag-input"
             />
-            {!user && <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">The one you used when ordering.</p>}
+            {!user && <p className="mt-1.5 text-[11.5px] leading-4 text-ink-muted">The one you used when ordering.</p>}
           </div>
           <button type="submit" disabled={isSearching} className="sag-btn-primary w-full gap-2 sm:col-span-2">
-            {isSearching ? <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" /> : <Search className="w-[18px] h-[18px]" aria-hidden="true" />}
+            {isSearching && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
             <span>{isSearching ? 'Looking up your order…' : 'Track order'}</span>
           </button>
         </form>
 
         {error && (
-          <div role="alert" className="rounded-control border border-danger-line bg-danger-tint px-3.5 py-3 text-sm leading-5 font-medium text-danger flex items-start gap-2">
-            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />
+          <div role="alert" className="border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
+            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />
             <span>{error}</span>
           </div>
         )}
 
         {!order && !isSearching && (
-          <div className="sag-card px-4">
-            <div className="sag-row min-h-14 items-start py-3">
+          <div className="border-y border-line">
+            <div className="sag-row font-normal min-h-14 items-start py-3">
               <span className="min-w-0">
                 <span className="block">Where is my order number?</span>
-                <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">It starts with “SAG-” and is in your order confirmation email.</span>
+                <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted">It starts with “SAG-” and is in your order confirmation email.</span>
               </span>
             </div>
-            <button type="button" onClick={() => setActivePage(user ? 'account' : 'login')} className="sag-row min-h-14 w-full py-3 text-left cursor-pointer">
+            <button type="button" onClick={() => setActivePage(user ? 'account' : 'login')} className="sag-row font-normal min-h-14 w-full py-3 text-left cursor-pointer">
               <span className="min-w-0 flex-1">
                 <span className="block">{user ? 'See all your orders' : 'Have an account?'}</span>
-                <span className="block font-normal text-[13px] leading-[18px] text-ink-muted">
+                <span className="block font-normal text-[11.5px] leading-4 mt-0.5 text-ink-muted">
                   {user ? 'Every order you placed is in My account.' : 'Sign in to see every order in My account.'}
                 </span>
               </span>
-              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
+              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
             </button>
           </div>
         )}
 
         {order && (
           <div className="flex flex-col gap-4">
-            {/* Phones and tablets: the dark status block, the items, then the two buttons. Desktop keeps its order. */}
-            <section className="order-1 space-y-3 sag-fade lg:rounded-card lg:bg-surface lg:p-5 lg:shadow-[var(--sag-shadow)]" aria-labelledby="tracked-order-title">
+            {/* At every width: the status box and timeline, the items, the two buttons, then updates and help */}
+            <section className="order-1 space-y-3 sag-fade" aria-labelledby="tracked-order-title">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs leading-4 font-bold text-sale">Order</p>
-                  <h2 id="tracked-order-title" className="font-sans text-lg leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
-                  <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
+                  <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Order</p>
+                  <h2 id="tracked-order-title" className="sag-num mt-1 font-sans text-[17px] leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
+                  <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
                   </p>
                   <StatusPill order={order} className="mt-2" />
@@ -220,16 +219,16 @@ export const TrackOrderPage: React.FC = () => {
                   type="button"
                   onClick={share}
                   aria-label="Share tracking link"
-                  className="sag-btn-outline shrink-0 h-11 px-3.5 gap-1.5 text-sm"
+                  className="sag-link shrink-0 gap-1.5 text-[12.5px]"
                 >
-                  <Share2 className="w-4 h-4" aria-hidden="true" /> Share
+                  <Share2 className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Share
                 </button>
               </div>
 
               <OrderProgress order={order} />
             </section>
 
-            <div className="order-3 lg:hidden flex gap-2">
+            <div className="order-3 flex gap-2.5">
               {courierLink && (
                 <a
                   href={courierLink.url}
@@ -237,9 +236,9 @@ export const TrackOrderPage: React.FC = () => {
                   rel="noopener noreferrer"
                   aria-label={courierLink.label}
                   onClick={copyAwbForCourier}
-                  className="sag-btn-primary flex-1 min-w-0 px-3 gap-2 text-[15px]"
+                  className="sag-btn-primary flex-1 min-w-0 px-3 gap-2"
                 >
-                  Courier tracking <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  Courier tracking <ExternalLink className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
                 </a>
               )}
               <a
@@ -247,18 +246,18 @@ export const TrackOrderPage: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Help on WhatsApp"
-                className="sag-btn-outline flex-1 min-w-0 px-3 gap-2 text-[15px]"
+                className="sag-btn-outline flex-1 min-w-0 px-3 gap-2"
               >
-                <WhatsAppIcon className="w-[18px] h-[18px]" aria-hidden="true" /> Help
+                Help
               </a>
             </div>
 
-            <section className="order-4 lg:order-2 sag-card p-4 sm:p-5 space-y-4" aria-label="Order updates">
+            <section className="order-4 space-y-3 empty:hidden" aria-label="Order updates">
               {latest && (
-                <div className="rounded-control border border-brand-line bg-brand-wash px-3.5 py-3 text-sm leading-5">
-                  <p className="sag-eyebrow">Latest update</p>
-                  <p className="mt-0.5 text-ink">
-                    <span className="font-semibold">{latest.label}</span>
+                <div className="bg-sunken px-3.5 py-3 text-[13px] leading-[18px]">
+                  <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Latest update</p>
+                  <p className="mt-1 text-ink">
+                    <span className="font-medium">{latest.label}</span>
                     <span className="text-ink-muted"> · {formatDateTime(latest.at)}</span>
                   </p>
                   {order.customerNote && <p className="mt-1 text-ink break-words">{order.customerNote}</p>}
@@ -273,41 +272,41 @@ export const TrackOrderPage: React.FC = () => {
             </section>
 
             {isOwner && canStartReturn(order) && (
-              <section className="order-5 lg:order-3 sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-                <span className="hidden sm:flex shrink-0 text-ink-muted"><ReturnIcon className="w-6 h-6" mono live={false} /></span>
+              <section className="order-5 sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <span className="hidden sm:flex shrink-0 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-base leading-[22px] font-semibold text-ink">Not the right fit?</p>
-                  <p className="text-sm leading-5 text-ink-muted">
+                  <p className="text-sm leading-5 font-semibold text-ink">Not the right fit?</p>
+                  <p className="text-[13px] leading-[18px] text-ink-muted">
                     Ask for a return or a size exchange{formatWindowEnd(order.returnEligibility?.windowEndsAt) ? ` by ${formatWindowEnd(order.returnEligibility?.windowEndsAt)}` : ' within 7 days of delivery'}.
                   </p>
                 </div>
-                <button type="button" onClick={() => setReturnOpen(true)} className="sag-btn-outline h-11 px-4 text-sm">
+                <button type="button" onClick={() => setReturnOpen(true)} className="sag-btn-outline h-11 px-4">
                   Return / exchange
                 </button>
               </section>
             )}
 
-            <section className="order-2 lg:order-4 sag-card p-4 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
+            <section className="order-2 sag-card p-3.5 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
               <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
               <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {
                   const image = item.product?.images?.[0] || (item.product as { image?: string })?.image || '';
                   const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                   return (
-                    <li key={item.id || index} className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-                      <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-chip bg-sunken">
+                    <li key={item.id || index} className="flex items-start gap-[13px] py-3 first:pt-0 last:pb-0">
+                      <span className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden bg-sunken">
                         {image && <img src={getCleanImageUrl(image, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm leading-5 font-medium text-ink line-clamp-2">{item.product?.name}</p>
-                        <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">{item.selectedSize && !/^free ?size$/i.test(item.selectedSize) ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {item.quantity}</p>
+                        <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{item.product?.name}</p>
+                        <p className="mt-1 text-[11.5px] leading-4 text-ink-muted">{item.selectedSize && !/^free ?size$/i.test(item.selectedSize) ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {item.quantity}</p>
                       </div>
-                      <p className="sag-num text-sm leading-5 font-semibold text-ink shrink-0">{inr((Number(item.product?.price) || 0) * (Number(item.quantity) || 1))}</p>
+                      <p className="sag-num text-sm leading-5 font-medium text-ink shrink-0">{inr((Number(item.product?.price) || 0) * (Number(item.quantity) || 1))}</p>
                     </li>
                   );
                 })}
               </ul>
-              <div className="sag-num pt-4 border-t border-line space-y-2 text-sm leading-5 text-ink-muted" aria-label="Price details">
+              <div className="sag-num pt-4 border-t border-line space-y-2 text-[13.5px] leading-5 text-ink-muted" aria-label="Price details">
                 {Number(order.subtotal) > 0 && <div className={moneyRow}><span>Subtotal</span><span className="text-ink">{inr(order.subtotal)}</span></div>}
                 {(order.comboDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Combo discount</span><span>−{inr(order.comboDiscount || 0)}</span></div>}
                 {(order.couponDiscount || 0) > 0 && <div className={`${moneyRow} text-sale`}><span>Coupon{order.couponCode ? ` ${order.couponCode}` : ''}</span><span>−{inr(order.couponDiscount || 0)}</span></div>}
@@ -316,21 +315,21 @@ export const TrackOrderPage: React.FC = () => {
                   <div className={`${moneyRow} text-sale`}><span>Discount</span><span>−{inr(order.discountAmount)}</span></div>
                 )}
                 {Number(order.subtotal) > 0 && (
-                  <div className={moneyRow}><span>Shipping</span>{Number(order.shippingCharge) > 0 ? <span className="text-ink">{inr(order.shippingCharge)}</span> : <span className="font-semibold text-sale">Free</span>}</div>
+                  <div className={moneyRow}><span>Shipping</span>{Number(order.shippingCharge) > 0 ? <span className="text-ink">{inr(order.shippingCharge)}</span> : <span className="text-sale">Free</span>}</div>
                 )}
                 {order.payMode === 'cod' ? (
               <>
-                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 pt-3 mt-1 border-t border-line text-ink"><span className="font-medium">Order total</span><span className="font-semibold">{inr(order.finalTotal)}</span></div>
                 <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
-                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-lg leading-[22px] font-bold">{inr(order.codDue || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-[15px] leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-[17px] leading-6 font-semibold">{inr(order.codDue || 0)}</span></div>
               </>
             ) : (
                 <div className={`${moneyRow} items-baseline pt-3 mt-1 border-t border-line text-ink`}>
-                  <span className="text-base leading-[22px] font-semibold">{paid ? 'Total paid' : 'Order total'}</span>
-                  <span className="text-lg leading-[22px] font-bold">{inr(order.finalTotal)}</span>
+                  <span className="text-[15px] leading-[22px] font-semibold">{paid ? 'Total paid' : 'Order total'}</span>
+                  <span className="text-[17px] leading-6 font-semibold">{inr(order.finalTotal)}</span>
                 </div>
                 )}
-                <div className={`${moneyRow} text-[13px] leading-[18px]`}>
+                <div className={`${moneyRow} text-[11.5px] leading-4`}>
                   <span>Payment</span>
                   <span className="text-right text-ink">
                     {order.paymentMethod ? `${PAYMENT_METHOD_LABEL[order.paymentMethod] || order.paymentMethod} · ` : ''}
@@ -339,10 +338,10 @@ export const TrackOrderPage: React.FC = () => {
                 </div>
               </div>
               {address && (address.fullName || address.city) && (
-                <div className="flex gap-3 pt-4 border-t border-line text-sm leading-5">
-                  <span className="shrink-0 flex mt-0.5 text-ink-muted"><PinIcon className="w-5 h-5" mono live={false} /></span>
+                <div className="flex gap-3 pt-4 border-t border-line text-[13px] leading-[18px]">
+                  <span className="shrink-0 flex mt-0.5 text-sale"><PinIcon className="w-5 h-5" mono live={false} /></span>
                   <div className="min-w-0 text-ink-muted">
-                    <p className="font-semibold text-ink">Delivering to {address.fullName}</p>
+                    <p className="font-medium text-ink">Delivering to {address.fullName}</p>
                     {[address.houseFlat, address.street, address.area].filter(Boolean).length > 0 && <p className="break-words">{[address.houseFlat, address.street, address.area].filter(Boolean).join(', ')}</p>}
                     <p>{`${[address.city, address.state].filter(Boolean).join(', ')} ${address.pincode || ''}`.trim()}</p>
                   </div>
@@ -352,20 +351,20 @@ export const TrackOrderPage: React.FC = () => {
 
             <section className="order-6 sag-card p-4 sm:p-5 space-y-3" aria-label="Help with this order">
               <div>
-                <p className={cardTitle}>Need help with this order?</p>
-                <p className="mt-0.5 text-sm leading-5 text-ink-muted">Share your order number and we will take it from there.</p>
+                <p className="text-sm leading-5 font-semibold text-ink">Need help with this order?</p>
+                <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Share your order number and we will take it from there.</p>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 <a
                   href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with order ${order.orderNumber}.`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="sag-btn-outline h-12 px-3 gap-2 text-sm border-control"
+                  className="sag-btn-outline h-12 px-3 gap-2"
                 >
-                  <WhatsAppIcon className="w-[18px] h-[18px]" aria-hidden="true" /> Chat on WhatsApp
+                  Chat on WhatsApp
                 </a>
-                <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-btn-outline sag-num h-12 px-3 gap-2 text-sm">
-                  <Phone className="w-4 h-4" aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
+                <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-btn-outline sag-num h-12 px-3 gap-2">
+                  <Phone className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
                 </a>
                 {user ? (
                   <button type="button" onClick={() => setActivePage('account')} className="sag-btn-outline h-12 px-3 text-sm">
@@ -379,8 +378,8 @@ export const TrackOrderPage: React.FC = () => {
               </div>
               {canCancel && (
                 <div>
-                  <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link">Need to cancel this order?</button>
-                  <p className="text-[13px] leading-[18px] text-ink-muted">
+                  <button type="button" onClick={() => { navigate('/account?tab=orders'); window.scrollTo(0, 0); }} className="sag-link text-[12.5px]">Need to cancel this order?</button>
+                  <p className="text-[11.5px] leading-4 text-ink-muted">
                     {user ? 'You can ask to cancel it from My account → Orders.' : 'Sign in with the email used for this order, then open My account → Orders.'}
                   </p>
                 </div>

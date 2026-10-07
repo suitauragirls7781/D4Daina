@@ -161,9 +161,9 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
   primeStylePrefs(key, value);
 };
 
-// Selected chips are ink-filled (sag-chip reads aria-pressed); teal stays for the Save button
-const chipClass = 'sag-chip h-11 min-w-0 gap-1.5 text-sm';
-const legendClass = 'text-[13px] leading-[18px] font-semibold text-ink';
+// Square outline chips; the selected one carries an ink border and a small tick (never a fill)
+const chipClass = 'sag-chip h-[38px] min-w-[44px] gap-1.5 px-3 border border-line bg-surface text-[13px] font-normal text-ink hover:bg-surface hover:border-ink aria-pressed:bg-surface aria-pressed:text-ink aria-pressed:border-ink aria-pressed:font-medium aria-pressed:shadow-[inset_0_0_0_1px_var(--color-ink)]';
+const legendClass = 'text-[11px] leading-4 font-semibold uppercase tracking-[0.14em] text-ink';
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
   <fieldset className="space-y-2">
@@ -174,7 +174,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
         const on = selected.includes(value);
         return (
           <button key={value} type="button" aria-pressed={on} onClick={() => onToggle(value)} className={chipClass}>
-            {on && <Check className="w-4 h-4 text-current" aria-hidden="true" />}
+            {on && <Check className="w-3.5 h-3.5 text-current" strokeWidth={1.5} aria-hidden="true" />}
             {label}
           </button>
         );
@@ -183,7 +183,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'sag-input sag-num';
+const inputClass = 'sag-input sag-num h-[46px] border border-line focus:border-ink';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -275,9 +275,9 @@ export const StyleProfile: React.FC = () => {
 
   if (failed) {
     return (
-      <div className="sag-card p-4 sm:p-6 text-center space-y-3" role="alert">
+      <div className="border-y border-line px-2 py-8 text-center space-y-3" role="alert">
         <p className="text-sm leading-5 text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
-        <button type="button" onClick={retry} className="sag-btn-outline h-11 px-5 text-sm">Try again</button>
+        <button type="button" onClick={retry} className="sag-btn-outline h-11 px-5">Try again</button>
       </div>
     );
   }
@@ -294,12 +294,12 @@ export const StyleProfile: React.FC = () => {
 
   return (
     <section className="space-y-6" aria-labelledby="style-profile-title">
-      <form onSubmit={handleSave} className="sag-card p-4 sm:p-6 space-y-6">
-        <div className="flex gap-3">
-          <span className="w-11 h-11 shrink-0 rounded-control bg-sunken text-ink flex items-center justify-center" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
+      <form onSubmit={handleSave} className="space-y-6">
+        <div className="flex gap-3 border-b border-line pb-5">
+          <span className="mt-0.5 shrink-0 text-sale" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
           <div className="min-w-0">
-            <h2 id="style-profile-title" className="font-display text-[22px] leading-7 text-ink">Your style profile</h2>
-            <p className="mt-1 text-sm leading-5 text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
+            <h2 id="style-profile-title" className="font-display text-[19px] leading-6 lg:text-[23px] lg:leading-7 text-ink">Your style profile</h2>
+            <p className="mt-1 text-[13px] leading-[19px] text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
           </div>
         </div>
 
@@ -325,11 +325,11 @@ export const StyleProfile: React.FC = () => {
           )}
           <div className="grid grid-cols-2 gap-3 max-w-md">
             <label className="block">
-              <span className="sag-label font-medium text-ink-muted">Minimum (₹)</span>
+              <span className="block mb-1.5 text-[12.5px] leading-[18px] text-ink-muted">Minimum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={minText} onChange={(e) => { setError(''); setMinText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
             <label className="block">
-              <span className="sag-label font-medium text-ink-muted">Maximum (₹)</span>
+              <span className="block mb-1.5 text-[12.5px] leading-[18px] text-ink-muted">Maximum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={maxText} onChange={(e) => { setError(''); setMaxText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
           </div>
@@ -350,12 +350,12 @@ export const StyleProfile: React.FC = () => {
         )}
 
         {error && (
-          <p role="alert" className="flex items-start gap-2 rounded-control bg-danger-tint border border-danger-line px-3.5 py-3 text-sm leading-5 font-medium text-danger">
-            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />{error}
+          <p role="alert" className="flex items-start gap-2 border border-danger px-3.5 py-3 text-[13px] leading-5 text-danger">
+            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />{error}
           </p>
         )}
 
-        <p className="sag-num rounded-control bg-page border border-line px-3.5 py-3 text-sm leading-5 text-ink-muted" aria-live="polite">
+        <p className="sag-num border-y border-line py-3 text-[13px] leading-5 text-ink-muted" aria-live="polite">
           {!anySelected
             ? 'Nothing selected yet. Saving with nothing selected removes your style profile.'
             : matches.length === 0
@@ -368,7 +368,7 @@ export const StyleProfile: React.FC = () => {
             {saving && <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" />}
             {saving ? 'Saving…' : 'Save style profile'}
           </button>
-          <button type="button" onClick={reset} disabled={saving} className="sag-btn-outline h-12 px-6 text-[15px]">
+          <button type="button" onClick={reset} disabled={saving} className="sag-btn-outline h-12 px-6">
             Clear selections
           </button>
         </div>
@@ -376,8 +376,8 @@ export const StyleProfile: React.FC = () => {
 
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-[17px] leading-6 font-semibold text-ink">Matching styles</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
+          <h3 className="font-display text-[19px] leading-6 text-ink">Matching styles</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-[12px] gap-y-[18px] sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>

@@ -2,9 +2,8 @@ import React, { useMemo } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
-import { LayoutGrid } from 'lucide-react';
 import { KIDS_TOYS, departmentOf } from '../utils/kids';
-import { HomeSectionHeader } from './HomeSections';
+import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
 
 /** Category rail at the top of the homepage, built only from categories that have products. */
 export const ShopByCategory: React.FC = () => {
@@ -37,42 +36,31 @@ export const ShopByCategory: React.FC = () => {
 
   if (cards.length === 0 && kidsToys.count === 0) return null;
 
-  const tile = 'group block w-[66px] sm:w-[92px] lg:w-[112px] pt-1 text-center cursor-pointer rounded-[22px]';
-  // Each tile sits on the next pastel block colour
-  const TILES = ['bg-peach', 'bg-mint', 'bg-sky', 'bg-lilac', 'bg-butter'];
-  // Story circles (owner's pick 2): a round photo inside the thin ring that turns slowly; every other ring turns the other way
-  const photoOn = (index: number) => `sag-ring ${index % 2 ? 'sag-ring-reverse' : ''} mx-auto block h-[58px] w-[58px] sm:h-[84px] sm:w-[84px] lg:h-[100px] lg:w-[100px] rounded-full ${TILES[index % TILES.length]}`;
-  const name = 'mt-1.5 block text-[11.5px] sm:text-[13px] leading-[14px] sm:leading-4 font-bold text-ink line-clamp-2';
+  // A swipe row of plain 3:4 photos with the name centred under each. "All styles" is the "View all" link in the title row.
+  const tile = 'group block w-[108px] sm:w-[140px] lg:w-[180px] text-center cursor-pointer';
+  const photo = 'block aspect-[3/4] w-full overflow-hidden bg-sunken';
+  const name = 'mt-2 block text-[13px] leading-[18px] text-ink line-clamp-2';
   const count = 'sr-only';
   const designs = (n: number) => `${n} ${n === 1 ? 'design' : 'designs'}`;
 
   return (
-    <section id="shop-by-category" aria-labelledby="shop-by-category-title" className="w-full pt-4 pb-3 lg:pt-8 lg:pb-6">
+    <section id="shop-by-category" aria-labelledby="shop-by-category-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
-          <HomeSectionHeader titleId="shop-by-category-title" title="Shop by category" className="mb-3 lg:mb-5" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
+          <HomeSectionHeader titleId="shop-by-category-title" title="Shop by category" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
         </div>
 
-        <ul className="sag-scroll-x flex gap-2.5 lg:gap-4 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
-          <li className="shrink-0">
-            <button type="button" onClick={() => navigateToCategory('All')} className={tile}>
-              <span className={`${photoOn(3)} flex items-center justify-center`}>
-                <LayoutGrid className="w-7 h-7 text-ink" strokeWidth={1.75} aria-hidden="true" />
-              </span>
-              <span className={name}>All styles</span>
-              <span className={count}>{designs(women.length)}</span>
-            </button>
-          </li>
-          {cards.map((card, index) => (
+        <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+          {cards.map((card) => (
             <li key={card.name} className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(card.name as any)} className={tile}>
-                <span className={photoOn(index)}>
+                <span className={photo}>
                   <img
                     src={card.image ? getCleanImageUrl(card.image, 320) : ELEGANT_PLACEHOLDER_SVG}
                     alt=""
                     loading="eager"
                     decoding="async"
-                    className="w-full h-full rounded-full object-cover object-top"
+                    className="w-full h-full object-cover object-top"
                   />
                 </span>
                 <span className={name}>{card.name}</span>
@@ -83,8 +71,8 @@ export const ShopByCategory: React.FC = () => {
           {kidsToys.count > 0 && (
             <li className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(KIDS_TOYS as any)} className={tile}>
-                <span className={photoOn(cards.length)}>
-                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full rounded-full object-cover object-top" />
+                <span className={photo}>
+                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full object-cover object-top" />
                 </span>
                 <span className={name}>{KIDS_TOYS}</span>
                 <span className={count}>{designs(kidsToys.count)}</span>

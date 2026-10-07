@@ -8,24 +8,9 @@ import { AuraReel, isReelVideoUrl, reelPosterSrc, reelVideoSrc, useAuraReels } f
 import { isAvailable } from '../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
 import { trackItem } from '../utils/visitorTracker';
-import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
+import { HOME_SECTION } from './HomeSections';
 import { useAdmin } from '../context/AdminContext';
 import { STORE_INSTAGRAM_URL } from '../utils/storeContact';
-import { InstagramIcon } from './BrandIcons';
-
-/** True from Tailwind's `lg` width up: the desktop keeps the rail of posters. */
-const useIsDesktop = () => {
-  const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 1024px)').matches));
-  useEffect(() => {
-    const query = window.matchMedia?.('(min-width: 1024px)');
-    if (!query) return;
-    const update = () => setDesktop(query.matches);
-    update();
-    query.addEventListener?.('change', update);
-    return () => query.removeEventListener?.('change', update);
-  }, []);
-  return desktop;
-};
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 const PLACEHOLDER_COLOURS = new Set(['default', 'standard']);
@@ -56,7 +41,6 @@ export const AuraReelsSection: React.FC = () => {
   const { allProducts = [] } = useShop();
   const { storeSettings } = useAdmin();
   const instagramUrl = storeSettings?.instagramUrl || STORE_INSTAGRAM_URL;
-  const isDesktop = useIsDesktop();
   const [viewer, setViewer] = useState<{ reels: AuraReel[]; start: number } | null>(null);
   const tokenRef = useRef<string | null>(null);
   const closingRef = useRef(false);
@@ -144,79 +128,43 @@ export const AuraReelsSection: React.FC = () => {
     document.body,
   );
 
-  if (!isDesktop) {
-    // Phones and tablets (owner's pick 3): three reels side by side on a pale block; the rest are a swipe away.
-    // Only the still poster is shown here; a video loads when a reel is opened.
-    return (
-      <section id="aura-reels" aria-labelledby="aura-reels-title" className="w-full pt-5 pb-1">
-        <div className="mx-auto max-w-2xl px-3.5 sm:px-6">
-          <div className="flex flex-col gap-3 rounded-[28px] bg-lilac p-4 sm:p-6">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="aura-reels-title" className="font-display text-[20px] font-bold leading-7 text-ink sm:text-2xl">Reels</h2>
-              {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-bold text-ink">
-                  <InstagramIcon className="h-[15px] w-[15px]" /> Instagram
-                </a>
-              )}
-            </div>
-            <ul className="sag-scroll-x scroll-px-0! flex gap-2 overflow-x-auto sm:gap-3">
-              {live.map((reel, i) => {
-                const product = reel.productId ? productById.get(reel.productId) : undefined;
-                return (
-                  <li key={`${reel.id}-${i}`} className="w-[calc((100%-1rem)/3)] shrink-0 sm:w-[calc((100%-1.5rem)/3)]">
-                    <button
-                      type="button"
-                      onClick={(e) => open(i, e.currentTarget)}
-                      aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
-                      className="relative block aspect-[9/16] w-full cursor-pointer overflow-hidden rounded-control bg-mint"
-                    >
-                      <img
-                        src={reelPosterSrc(reel, 400)}
-                        alt=""
-                        loading="lazy"
-                        decoding="async"
-                        onError={onPosterError}
-                        className="h-full w-full object-cover object-top"
-                      />
-                      <span aria-hidden="true" className="absolute inset-0 m-auto flex h-[42px] w-[42px] items-center justify-center rounded-full bg-surface text-ink">
-                        <Play className="h-[18px] w-[18px] translate-x-px fill-current" />
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        </div>
-        {viewerPortal}
-      </section>
-    );
-  }
-
+  // The same plain white section at every width: three tiles side by side on phones, a rail of fixed tiles from
+  // tablets up; the rest are a swipe away. Only the still poster is shown here; a video loads when a reel is opened.
   return (
-    <section id="aura-reels" aria-labelledby="aura-reels-title" className={`${HOME_SECTION} bg-white`}>
+    <section id="aura-reels" aria-labelledby="aura-reels-title" className={`${HOME_SECTION} border-t border-line bg-surface`}>
       <div className="max-w-7xl mx-auto">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <HomeSectionHeader
-            titleId="aura-reels-title"
-            eyebrow="Aura Reels"
-            title="See the styles move"
-            text={`Tap a reel to watch${anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}`}
-          />
+        <div className="mb-4 flex items-end justify-between gap-4 px-4 sm:px-6 lg:mb-6 lg:px-8">
+          <div className="min-w-0">
+            <h2 id="aura-reels-title" className="font-display text-[19px] font-medium leading-[1.18] text-ink lg:text-[26px]">Reels</h2>
+            <p className="mt-1 hidden text-[13px] leading-[18px] text-ink-muted sm:block">
+              Tap a reel to watch{anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}
+            </p>
+          </div>
+          {instagramUrl && (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="View all reels on Instagram"
+              className="shrink-0 whitespace-nowrap text-[12.5px] font-semibold text-ink underline decoration-1 underline-offset-4"
+            >
+              View all
+            </a>
+          )}
         </div>
-        <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+        <ul className="sag-scroll-x flex gap-2 overflow-x-auto px-4 pb-1 sm:gap-3 sm:px-6 lg:gap-5 lg:px-8">
           {live.map((reel, i) => {
             const product = reel.productId ? productById.get(reel.productId) : undefined;
             return (
-              <li key={`${reel.id}-${i}`} className="shrink-0 w-[40vw] max-w-[190px] sm:w-[190px]">
+              <li key={`${reel.id}-${i}`} className="w-[calc((100vw-3rem)/3)] shrink-0 sm:w-[190px]">
                 <button
                   type="button"
                   onClick={(e) => open(i, e.currentTarget)}
                   aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
-                  className="block w-full text-left cursor-pointer rounded-control"
+                  className="block w-full cursor-pointer text-left"
                 >
-                  {/* Nothing is drawn on the poster: the "Watch" label, caption and product sit below it */}
-                  <span className="block aspect-[9/16] rounded-control overflow-hidden bg-sunken">
+                  {/* The only mark on the poster is the thin play ring; caption and product sit below it */}
+                  <span className="relative block aspect-[9/16] overflow-hidden bg-sunken">
                     <img
                       src={reelPosterSrc(reel, 400)}
                       alt=""
@@ -225,13 +173,13 @@ export const AuraReelsSection: React.FC = () => {
                       onError={onPosterError}
                       className="h-full w-full object-cover object-top"
                     />
+                    <span aria-hidden="true" className="absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-full border border-white text-white">
+                      <Play className="h-3.5 w-3.5 translate-x-px" strokeWidth={1.25} />
+                    </span>
                   </span>
-                  <span className="mt-2 flex items-center gap-1.5 text-[13px] leading-[18px] font-semibold text-ink">
-                    <Play className="w-3.5 h-3.5 fill-current" aria-hidden="true" /> Watch
-                  </span>
-                  {reel.caption && <span className="mt-1 block text-sm leading-5 text-ink line-clamp-2">{reel.caption}</span>}
+                  {reel.caption && <span className="mt-2 text-[13px] leading-[18px] text-ink line-clamp-2 max-sm:hidden">{reel.caption}</span>}
                   {product && (
-                    <span className="sag-num mt-0.5 block text-[13px] leading-[18px] text-ink-muted line-clamp-1">
+                    <span className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted line-clamp-1 max-sm:hidden">
                       {product.name} · {inr(Number(product.price) || 0)}
                     </span>
                   )}

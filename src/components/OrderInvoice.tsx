@@ -133,7 +133,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
   ].filter(([, value]) => Boolean(value)) as Array<[string, string]>;
 
   const cell = 'py-2.5 align-top border-b border-line';
-  const boxTitle = 'mb-1.5 text-xs leading-4 font-semibold text-ink-muted';
+  const boxTitle = 'mb-1.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
 
   // "Download invoice": a real PDF file (the same document the store sends from the admin panel)
   const [downloading, setDownloading] = React.useState(false);
@@ -160,9 +160,9 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
         aria-labelledby="sag-invoice-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="sag-invoice-panel bg-white text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-sheet sm:rounded-card shadow-[var(--sag-shadow-pop)] focus:outline-none animate-in fade-in slide-in-from-bottom-5"
+        className="sag-invoice-panel bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto border border-line focus:outline-none animate-in fade-in slide-in-from-bottom-5"
       >
-        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-white border-b border-line">
+        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-surface border-b border-line">
           <button
             type="button"
             onClick={() => window.print()}
@@ -179,15 +179,15 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             <Download className="w-4 h-4" aria-hidden="true" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
           </button>
           <span className="flex-1" aria-hidden="true" />
-          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-            <X className="w-[22px] h-[22px]" />
+          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+            <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
 
         <article className="sag-invoice-body sag-num p-4 sm:p-8 text-ink space-y-6">
           <header className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-line">
             <div className="min-w-0 text-sm leading-5 text-ink-muted">
-              <p className="text-lg leading-6 font-semibold text-ink">{storeName}</p>
+              <p className="font-display text-lg leading-6 font-medium text-ink">{storeName}</p>
               <p className="mt-1">{storeAddress}</p>
               <p>Phone: {storePhone}</p>
               {storeEmail && <p className="break-all">Email: {storeEmail}</p>}
@@ -196,12 +196,12 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
               {gstin && <p>GSTIN: {gstin}</p>}
             </div>
             <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2">
-              <h2 id="sag-invoice-title" className="font-display text-[28px] leading-8 text-ink">{title}</h2>
-              <span className={`sag-badge ${paid ? 'bg-ok-tint text-ok' : refunded ? 'bg-sunken text-ink' : 'bg-sale-tint text-sale'}`}>{paymentStatus}</span>
+              <h2 id="sag-invoice-title" className="font-display font-medium text-[26px] leading-8 text-ink">{title}</h2>
+              <span className={`sag-badge border bg-surface font-semibold ${paid ? 'border-ink text-ink' : refunded ? 'border-line text-ink-muted' : 'border-sale-line text-sale'}`}>{paymentStatus}</span>
             </div>
           </header>
 
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 rounded-control bg-page p-4 print:bg-transparent print:p-0">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 bg-sunken p-4 print:bg-transparent print:p-0">
             {meta.map(([label, value]) => (
               <div key={label} className="flex justify-between sm:block gap-3">
                 <dt className="text-ink-muted shrink-0">{label}</dt>
@@ -211,16 +211,16 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
           </dl>
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm leading-5">
-            <section className="rounded-control border border-line p-4">
+            <section className="border border-line p-4">
               <p className={boxTitle}>Billed to</p>
-              <p className="font-semibold">{order.customerName || address.fullName}</p>
+              <p className="font-medium">{order.customerName || address.fullName}</p>
               {order.customerEmail && <p className="text-ink-muted break-all">{order.customerEmail}</p>}
               {phone && <p className="text-ink-muted">{phone}</p>}
               {shipLines.map((line) => <p key={`bill-${line}`} className="text-ink-muted">{line}</p>)}
             </section>
-            <section className="rounded-control border border-line p-4">
+            <section className="border border-line p-4">
               <p className={boxTitle}>Shipped to</p>
-              <p className="font-semibold">{address.fullName || order.customerName}</p>
+              <p className="font-medium">{address.fullName || order.customerName}</p>
               {shipLines.map((line) => <p key={line} className="text-ink-muted">{line}</p>)}
             </section>
           </div>
@@ -228,13 +228,13 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
           <table className="w-full text-sm leading-5 border-collapse">
             <caption className="sr-only">Items in order {order.orderNumber}</caption>
             <thead>
-              <tr className="text-xs leading-4 text-ink-muted text-left border-b border-control">
-                <th scope="col" className="pb-2 font-semibold">Item</th>
-                <th scope="col" className="pb-2 font-semibold text-right px-2 hidden sm:table-cell print:table-cell">MRP</th>
-                <th scope="col" className="pb-2 font-semibold text-right px-2">Price</th>
-                <th scope="col" className="pb-2 font-semibold text-right px-2 hidden sm:table-cell print:table-cell">Discount</th>
-                <th scope="col" className="pb-2 font-semibold text-center px-2">Qty</th>
-                <th scope="col" className="pb-2 font-semibold text-right">Amount</th>
+              <tr className="text-[10.5px] leading-4 uppercase tracking-[0.08em] text-ink-muted text-left border-b border-ink">
+                <th scope="col" className="pb-2 font-medium">Item</th>
+                <th scope="col" className="pb-2 font-medium text-right px-2 hidden sm:table-cell print:table-cell">MRP</th>
+                <th scope="col" className="pb-2 font-medium text-right px-2">Price</th>
+                <th scope="col" className="pb-2 font-medium text-right px-2 hidden sm:table-cell print:table-cell">Discount</th>
+                <th scope="col" className="pb-2 font-medium text-center px-2">Qty</th>
+                <th scope="col" className="pb-2 font-medium text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -261,7 +261,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             </tbody>
           </table>
 
-          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 rounded-control border border-line p-4 print:border-0 print:p-0">
+          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 border border-line p-4 print:border-0 print:p-0">
             {totals.map(([label, value, kind]) => (
               <div key={label} className={`flex justify-between gap-4 ${kind === 'discount' ? 'text-sale' : 'text-ink-muted'}`}>
                 <span>{label}</span>
@@ -270,18 +270,18 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             ))}
             {order.payMode === 'cod' ? (
               <>
-                <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-bold">{inr(order.finalTotal)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink"><span className="font-semibold">Order total</span><span className="font-semibold">{inr(order.finalTotal)}</span></div>
                 <div className="flex justify-between gap-4 text-sm leading-5 text-ink-muted"><span>Paid online</span><span>{inr(order.codAdvance || 0)}</span></div>
-                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-lg leading-[22px] whitespace-nowrap font-bold">{inr(order.codDue || 0)}</span></div>
+                <div className="flex justify-between items-baseline gap-4 text-ink"><span className="text-base leading-[22px] font-semibold">Pay in cash on delivery</span><span className="text-lg leading-[22px] whitespace-nowrap font-semibold">{inr(order.codDue || 0)}</span></div>
               </>
             ) : (
             <div className="flex justify-between items-baseline gap-4 pt-2.5 mt-1 border-t border-line text-ink">
               <span className="font-semibold">{paid || refunded ? 'Total paid' : 'Order total'}</span>
-              <span className="font-bold text-lg leading-[22px] whitespace-nowrap">{inr(order.finalTotal)}</span>
+              <span className="font-semibold text-lg leading-[22px] whitespace-nowrap">{inr(order.finalTotal)}</span>
             </div>
             )}
             {refunded && <p className="text-[13px] leading-[18px] text-ink-muted">This order has been refunded to the original payment method.</p>}
-            {mrpSavings > 0 && <p className="text-[13px] leading-[18px] font-semibold text-sale">You saved {inr(mrpSavings)} on MRP.</p>}
+            {mrpSavings > 0 && <p className="text-[13px] leading-[18px] text-sale">You saved {inr(mrpSavings)} on MRP.</p>}
           </div>
 
           <footer className="pt-5 border-t border-line text-[13px] leading-[18px] text-ink-muted space-y-1">

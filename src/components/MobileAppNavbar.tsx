@@ -1,17 +1,15 @@
 import React from 'react';
+import { Heart, Home, LayoutGrid, ShoppingBag, User, type LucideIcon } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
-import { BagIcon } from './BrandIcons';
-import { HeartIcon, HomeIcon, ShopIcon, UserIcon } from './StoreIcons';
 
 type Tab = 'home' | 'shop' | 'wishlist' | 'cart' | 'account';
-type NavIcon = React.FC<{ className?: string; mono?: boolean; live?: boolean }>;
 
 /**
- * Phone navigation (owner's pick 3): a dark bar flush with the bottom edge of the screen. Four tabs
- * (Home, Shop, Wishlist, Account), the current one in gold, and in the middle a raised round gold
- * "Bag" button that carries the real number of items in the bag.
+ * Phone navigation (Noir & Champagne): a white bar with a hairline on top, flush with the bottom edge.
+ * Five items with thin icons and small labels: Home, Shop, Wishlist, Bag, Account. The current one is ink
+ * in a medium weight, the others muted. The bag and the wishlist carry their real counts.
  */
 export const MobileAppNavbar: React.FC = () => {
   const {
@@ -41,63 +39,43 @@ export const MobileAppNavbar: React.FC = () => {
 
   const idle = !isSearchOpen && !isCartDrawerOpen;
   const bagActive = !isSearchOpen && isCartDrawerOpen;
-  const tabs: Array<{ id: Exclude<Tab, 'cart'>; label: string; icon: NavIcon; active: boolean; count?: number; dot?: boolean }> = [
-    { id: 'home', label: 'Home', icon: HomeIcon, active: idle && activePage === 'home' },
-    { id: 'shop', label: 'Shop', icon: ShopIcon, active: idle && activePage === 'shop' },
-    { id: 'wishlist', label: 'Wishlist', icon: HeartIcon, active: idle && activePage === 'wishlist', count: wishlist.length },
-    { id: 'account', label: user ? 'Account' : 'Sign in', icon: UserIcon, active: idle && (activePage === 'account' || activePage === 'login'), dot: Boolean(user) },
+  const tabs: Array<{ id: Tab; label: string; icon: LucideIcon; active: boolean; count?: number; dot?: boolean }> = [
+    { id: 'home', label: 'Home', icon: Home, active: idle && activePage === 'home' },
+    { id: 'shop', label: 'Shop', icon: LayoutGrid, active: idle && activePage === 'shop' },
+    { id: 'wishlist', label: 'Wishlist', icon: Heart, active: idle && activePage === 'wishlist', count: wishlist.length },
+    { id: 'cart', label: 'Bag', icon: ShoppingBag, active: bagActive, count: cartCount },
+    { id: 'account', label: user ? 'Account' : 'Sign in', icon: User, active: idle && (activePage === 'account' || activePage === 'login'), dot: Boolean(user) },
   ];
-
-  const tabButton = ({ id, label, icon: Icon, active, count, dot }: (typeof tabs)[number]) => (
-    <button
-      key={id}
-      type="button"
-      id={`mobile-nav-${id === 'shop' ? 'categories' : id}`}
-      onClick={() => go(id)}
-      aria-current={active ? 'page' : undefined}
-      aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
-      className={`relative h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-2xl cursor-pointer ${active ? 'text-highlight' : 'text-on-dark-muted'}`}
-    >
-      <span className="relative flex">
-        <Icon className="w-[20px] h-[20px]" mono />
-        {Boolean(count) && (
-          <span className="absolute -top-1.5 -right-2.5 min-w-[17px] h-[17px] px-1 rounded-full bg-highlight text-ink text-[10.5px] font-extrabold tabular-nums leading-none flex items-center justify-center ring-2 ring-dark">
-            {count! > 99 ? '99+' : count}
-          </span>
-        )}
-        {dot && <span className="absolute -bottom-0.5 -right-1 w-2 h-2 rounded-full bg-highlight ring-2 ring-dark" />}
-      </span>
-      <span className={`text-[10.5px] leading-3 whitespace-nowrap ${active ? 'font-extrabold' : 'font-semibold'}`}>{label}</span>
-    </button>
-  );
 
   return (
     <nav
       id="mobile-app-bottom-navbar"
       aria-label="Mobile navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] bg-dark pb-[env(safe-area-inset-bottom)] select-none"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] select-none"
     >
-      <div className="relative max-w-md mx-auto grid grid-cols-[1fr_1fr_66px_1fr_1fr] gap-0.5 px-1.5 py-1">
-        {tabs.slice(0, 2).map(tabButton)}
-        {/* The middle of the bar: the round gold Bag button, raised above the bar with a ring in the page colour */}
-        <span className="relative">
+      <div className="max-w-md mx-auto grid grid-cols-5 px-1 pt-[5px] pb-[6px]">
+        {tabs.map(({ id, label, icon: Icon, active, count, dot }) => (
           <button
+            key={id}
             type="button"
-            id="mobile-nav-cart"
-            onClick={() => go('cart')}
-            aria-current={bagActive ? 'page' : undefined}
-            aria-label={cartCount ? `Bag, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}` : 'Bag'}
-            className="absolute left-1/2 -top-[22px] -translate-x-1/2 flex h-[56px] w-[56px] items-center justify-center rounded-full bg-sun text-ink ring-[5px] ring-page cursor-pointer"
+            id={`mobile-nav-${id === 'shop' ? 'categories' : id}`}
+            onClick={() => go(id)}
+            aria-current={active ? 'page' : undefined}
+            aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
+            className={`h-[44px] flex flex-col items-center justify-center gap-[3px] cursor-pointer transition-colors ${active ? 'text-ink' : 'text-ink-muted'}`}
           >
-            <BagIcon className="w-[23px] h-[23px]" mono />
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[19px] h-[19px] px-1 rounded-full bg-dark text-on-dark text-[11px] font-extrabold tabular-nums leading-none flex items-center justify-center ring-2 ring-sun">
-                {cartCount > 99 ? '99+' : cartCount}
-              </span>
-            )}
+            <span className="relative flex">
+              <Icon className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
+              {Boolean(count) && (
+                <span className="sag-num absolute -top-[5px] -right-[8px] min-w-[15px] h-[15px] px-[3px] rounded-full bg-ink text-white text-[10px] font-semibold leading-none flex items-center justify-center">
+                  {count! > 99 ? '99+' : count}
+                </span>
+              )}
+              {dot && <span className="absolute -bottom-0.5 -right-1 w-[7px] h-[7px] rounded-full bg-ink ring-2 ring-surface" />}
+            </span>
+            <span className={`text-[10.5px] leading-3 tracking-[0.03em] whitespace-nowrap ${active ? 'font-semibold' : 'font-normal'}`}>{label}</span>
           </button>
-        </span>
-        {tabs.slice(2).map(tabButton)}
+        ))}
       </div>
     </nav>
   );

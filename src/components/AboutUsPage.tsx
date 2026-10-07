@@ -35,33 +35,33 @@ export const AboutUsPage: React.FC = () => {
         subtitle="Suit Aura Girls celebrates modern Indian women with ethnic wear that brings together traditional style and everyday comfort."
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 space-y-4 lg:space-y-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 space-y-8 lg:space-y-12">
         {/* Story */}
-        <section className="sag-card p-4 sm:p-6 lg:p-8 grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 md:gap-8 lg:gap-12 md:items-center" aria-labelledby="about-story-title">
+        <section className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 md:gap-8 lg:gap-12 md:items-center" aria-labelledby="about-story-title">
           <div className="w-full max-w-[320px] md:max-w-none mx-auto">
             {storyImage ? (
-              <div className="aspect-[4/5] overflow-hidden rounded-control bg-sunken">
+              <div className="aspect-[4/5] overflow-hidden bg-sunken">
                 <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
               </div>
             ) : (
-              <div className="aspect-[4/5] rounded-control bg-surface border border-line flex items-center justify-center p-8">
+              <div className="aspect-[4/5] bg-surface border border-line flex items-center justify-center p-8">
                 <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" width={480} height={240} className="w-3/4 h-auto" />
               </div>
             )}
           </div>
 
           <div className="min-w-0">
-            <p className="sag-eyebrow">Who we are</p>
-            <h2 id="about-story-title" className="font-display text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1">A boutique from Asansol, for women across India</h2>
-            <p className="mt-3 text-[15px] leading-[24px] text-ink">
+            <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Who we are</p>
+            <h2 id="about-story-title" className="font-display font-medium text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1.5">A boutique from Asansol, for women across India</h2>
+            <p className="mt-3 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
               We bring together suits, kurtis, anarkalis and co-ord sets chosen for how they look, feel and move, from easy everyday pieces to festive favourites.
             </p>
-            <p className="mt-3 text-[15px] leading-[24px] text-ink">
+            <p className="mt-3 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
               We believe dressing well should never be uncomfortable. Our silhouettes are designed to flatter all Indian body shapes in sizes from S to 5XL, with graceful drapes that move easily with you.
             </p>
             <div className="mt-5 flex flex-col min-[420px]:flex-row gap-2.5">
               <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-primary gap-2">
-                Shop the collection <ArrowRight className="w-[18px] h-[18px]" aria-hidden="true" />
+                Shop the collection <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
               </button>
               <button type="button" onClick={() => setActivePage('size-guide')} className="sag-btn-outline">
                 Size guide
@@ -71,18 +71,18 @@ export const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Promises (all backed by the store's policies) */}
-        <section aria-labelledby="about-promises-title" className="pt-4 lg:pt-6">
-          <p className="sag-eyebrow">Shopping with us</p>
-          <h2 id="about-promises-title" className="font-display text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1">What you can count on</h2>
-          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <section aria-labelledby="about-promises-title">
+          <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Shopping with us</p>
+          <h2 id="about-promises-title" className="font-display font-medium text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1.5">What you can count on</h2>
+          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-10 border-t border-line">
             {PROMISES.map(({ icon: Icon, title, text, page, link }) => (
-              <li key={title} className="sag-card p-4 sm:p-5 flex gap-3">
-                <span className="shrink-0 flex text-brand mt-0.5"><Icon mono className="w-6 h-6" /></span>
+              <li key={title} className="flex gap-3 border-b border-line py-4">
+                <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-base leading-[22px] font-semibold text-ink">{title}</h3>
-                  <p className="mt-1 text-sm leading-5 text-ink-muted">{text}</p>
-                  <button type="button" onClick={() => setActivePage(page)} className="sag-link gap-0.5">
-                    {link} <ChevronRight className="w-4 h-4" aria-hidden="true" />
+                  <h3 className="text-sm leading-5 font-medium text-ink">{title}</h3>
+                  <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{text}</p>
+                  <button type="button" onClick={() => setActivePage(page)} className="sag-link gap-0.5 text-[12.5px]">
+                    {link} <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -91,19 +91,19 @@ export const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Visit */}
-        <section className="sag-card p-4 sm:p-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
+        <section className="border border-line bg-surface p-4 sm:p-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
           <div className="flex items-start gap-3">
-            <span className="shrink-0 flex text-brand mt-0.5"><PinIcon mono className="w-6 h-6" /></span>
+            <span className="shrink-0 flex text-sale mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
             <div className="min-w-0">
-              <h2 id="about-visit-title" className="text-[17px] leading-6 font-semibold text-ink">Find our store</h2>
-              <p className="mt-1 text-[15px] leading-[22px] text-ink-muted">{STORE_ADDRESS_LINES.join(' ')}</p>
+              <h2 id="about-visit-title" className="font-sans text-sm leading-5 font-semibold text-ink">Find our store</h2>
+              <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{STORE_ADDRESS_LINES.join(' ')}</p>
             </div>
           </div>
           <div className="flex flex-col min-[420px]:flex-row gap-2.5">
-            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="sag-btn-outline h-12 text-[15px]">
+            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="sag-btn-outline h-12">
               Open in Google Maps
             </a>
-            <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12 text-[15px]">
+            <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12">
               Contact us
             </button>
           </div>

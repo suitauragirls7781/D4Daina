@@ -170,11 +170,11 @@ const PhotoViewer: React.FC<{ url: string; name: string; onClose: () => void }> 
     };
   }, []);
   return (
-    <div className="fixed inset-0 z-[80] bg-dark/95 flex items-center justify-center p-4 sag-fade" role="dialog" aria-modal="true" aria-label={`Photo from ${name}'s review`} onClick={onClose}>
-      <button ref={closeRef} type="button" onClick={onClose} aria-label="Close photo" className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center cursor-pointer">
-        <X className="w-5 h-5" />
+    <div className="fixed inset-0 z-[80] bg-surface flex items-center justify-center p-4 sag-fade" role="dialog" aria-modal="true" aria-label={`Photo from ${name}'s review`} onClick={onClose}>
+      <button ref={closeRef} type="button" onClick={onClose} aria-label="Close photo" className="absolute top-3 right-3 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer">
+        <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
       </button>
-      <img src={getCleanImageUrl(url, 1400)} alt={`Photo shared by ${name}`} className="max-h-[88vh] max-w-full rounded-control object-contain" onClick={(e) => e.stopPropagation()} />
+      <img src={getCleanImageUrl(url, 1400)} alt={`Photo shared by ${name}`} className="max-h-[88vh] max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
     </div>
   );
 };
@@ -368,19 +368,19 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   const photoRows = rows.filter((r) => r.imageUrl && !brokenPhotos.includes(r.imageUrl));
 
   return (
-    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-8 lg:mt-12 scroll-mt-20 lg:scroll-mt-36 lg:border-t lg:border-line lg:pt-8">
+    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-7 lg:mt-14 scroll-mt-20 lg:scroll-mt-36 lg:border-t lg:border-line lg:pt-10">
       <div className="flex items-center justify-between gap-4 min-h-11">
-        <h2 id="pdp-reviews-title" className="text-xl leading-7 font-semibold text-ink">Customer reviews</h2>
+        <h2 id="pdp-reviews-title" className="font-display text-[19px] leading-6 font-medium text-ink">Reviews</h2>
         {(summary.count > 0 || formOpen) && (
-          <button type="button" onClick={openForm} aria-expanded={formOpen} aria-controls="pdp-review-form" className="sag-link shrink-0">
+          <button type="button" onClick={openForm} aria-expanded={formOpen} aria-controls="pdp-review-form" className="sag-link text-[12.5px] underline-offset-4 decoration-1 shrink-0">
             {formOpen ? 'Close' : 'Write a review'}
           </button>
         )}
       </div>
 
       {done && (
-        <div role="status" className="mt-2 mb-4 max-w-2xl rounded-control border border-ok-line bg-ok-tint p-3 text-sm leading-5 text-ok sag-drop">
-          <p className="font-semibold">Thanks — your review will appear after approval.</p>
+        <div role="status" className="mt-2 mb-4 max-w-2xl border border-line p-3 text-[13.5px] leading-5 text-ink sag-drop">
+          <p className="font-medium">Thanks — your review will appear after approval.</p>
           {done.updated && <p className="mt-1">It replaces your earlier review of this style.</p>}
           {done.verified && <p className="mt-1">It will carry a “Verified purchase” badge — this style is in your paid orders.</p>}
         </div>
@@ -392,10 +392,10 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
             <legend className="sag-label">Your rating</legend>
             <div className="flex items-center gap-1 -ml-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <label key={i} className="w-11 h-11 rounded-full flex items-center justify-center cursor-pointer hover:bg-sunken has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
+                <label key={i} className="w-10 h-11 flex items-center justify-center cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
                   <input type="radio" name="review-rating" value={i} checked={rating === i} onChange={() => setRating(i)} className="sr-only" />
                   <span className="sr-only">{i} {i === 1 ? 'star' : 'stars'}</span>
-                  <Star aria-hidden="true" className={`w-7 h-7 ${i <= rating ? 'fill-star text-star' : 'text-control'}`} strokeWidth={1.5} />
+                  <Star aria-hidden="true" className={`w-6 h-6 ${i <= rating ? 'fill-star text-star' : 'text-control'}`} strokeWidth={1.25} />
                 </label>
               ))}
             </div>
@@ -419,13 +419,13 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
               <span className="sag-label">Add a photo <span className="font-normal text-ink-muted">(optional, up to 8 MB)</span></span>
               {file ? (
                 <div className="flex items-center gap-3">
-                  {preview && <img src={preview} alt="Selected photo" className="w-16 aspect-[4/5] rounded-chip object-cover object-top bg-sunken" onError={() => setPreview('')} />}
+                  {preview && <img src={preview} alt="Selected photo" className="w-16 aspect-[4/5] object-cover object-top bg-sunken" onError={() => setPreview('')} />}
                   <span className="min-w-0 flex-1 text-sm text-ink-muted break-all">{file.name}</span>
-                  <button type="button" onClick={removeFile} disabled={busy} className="sag-link disabled:opacity-50">Remove</button>
+                  <button type="button" onClick={removeFile} disabled={busy} className="sag-link text-[12.5px] underline-offset-4 decoration-1 disabled:opacity-50">Remove</button>
                 </div>
               ) : (
-                <label className="inline-flex w-fit items-center gap-2 h-11 px-4 rounded-control border-[1.5px] border-dashed border-control text-sm font-semibold text-ink hover:bg-sunken cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
-                  <Camera className="w-4 h-4" aria-hidden="true" /> Choose a photo
+                <label className="inline-flex w-fit items-center gap-2 h-11 px-4 border border-dashed border-control text-[13px] font-medium text-ink hover:border-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
+                  <Camera className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Choose a photo
                   <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="sr-only" onChange={(e) => pickFile(e.target.files?.[0])} />
                 </label>
               )}
@@ -434,7 +434,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
           {!user && features.reviewPhotos && (
             <p className="text-sm leading-5 text-ink-muted">
               Want to add a photo?{' '}
-              <button type="button" onClick={() => setActivePage('login')} className="sag-link">Sign in</button>{' '}
+              <button type="button" onClick={() => setActivePage('login')} className="sag-link text-[12.5px] underline-offset-4 decoration-1">Sign in</button>{' '}
               first.
             </p>
           )}
@@ -445,12 +445,12 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
           </p>
 
           {error && (
-            <p role="alert" className="flex items-start gap-2 rounded-control border border-danger-line bg-danger-tint px-3 py-2.5 text-sm leading-5 font-medium text-danger">
-              <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" /> {error}
+            <p role="alert" className="flex items-start gap-2 border border-danger-line px-3 py-2.5 text-[13.5px] leading-5 text-danger">
+              <CircleAlert className="w-4 h-4 mt-0.5 shrink-0" strokeWidth={1.5} aria-hidden="true" /> {error}
             </p>
           )}
 
-          <button type="submit" disabled={busy} className="sag-btn-primary h-12 w-full sm:w-auto sm:justify-self-end px-6 gap-2">
+          <button type="submit" disabled={busy} className="sag-btn-primary h-12 w-full sm:w-auto sm:justify-self-end px-7 gap-2">
             {busy && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />}
             {stage === 'uploading' ? 'Uploading photo…' : stage === 'sending' ? 'Sending…' : 'Submit review'}
           </button>
@@ -458,26 +458,26 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
       )}
 
       {summary.count === 0 ? (
-        <p className="text-sm leading-5 text-ink-muted">
+        <p className="mt-1 text-[13.5px] leading-5 text-ink-muted">
           No reviews yet. Bought this?{' '}
-          {formOpen ? 'Write the first review.' : <button type="button" onClick={openForm} aria-controls="pdp-review-form" className="sag-link">Write the first review.</button>}
+          {formOpen ? 'Write the first review.' : <button type="button" onClick={openForm} aria-controls="pdp-review-form" className="sag-link text-[12.5px] underline-offset-4 decoration-1">Write the first review.</button>}
         </p>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-10">
-          <aside className="grid gap-4 content-start min-w-0">
+        <div className="mt-2 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-12">
+          <aside className="grid gap-5 content-start min-w-0">
             <div className="flex items-center gap-4">
               <div className="shrink-0">
-                <p className="sag-num text-[28px] leading-8 font-bold text-ink">{summary.average.toFixed(1)}</p>
-                <Stars rating={summary.average} size="w-3.5 h-3.5" />
-                <p className="sag-num mt-1 text-[13px] leading-[18px] text-ink-muted">{summary.count} {summary.count === 1 ? 'review' : 'reviews'}</p>
+                <p className="sag-num text-[28px] leading-8 font-medium text-ink">{summary.average.toFixed(1)}</p>
+                <Stars rating={summary.average} size="w-3 h-3" />
+                <p className="sag-num mt-1.5 text-xs leading-[18px] text-ink-muted">{summary.count} {summary.count === 1 ? 'review' : 'reviews'}</p>
               </div>
-              <ul className="flex-1 min-w-0 grid gap-1">
+              <ul className="flex-1 min-w-0 grid gap-1.5">
                 {summary.byStar.map(({ star, count }) => (
                   <li key={star} className="sag-num flex items-center gap-2 text-xs leading-4 text-ink-muted">
                     <span className="sr-only">{star} {star === 1 ? 'star' : 'stars'}: {count} {count === 1 ? 'review' : 'reviews'}</span>
                     <span aria-hidden="true" className="w-3 shrink-0 text-right">{star}</span>
-                    <span aria-hidden="true" className="flex-1 h-1.5 rounded-full bg-sunken overflow-hidden">
-                      <span className="block h-full rounded-full bg-ink" style={{ width: `${(count / summary.count) * 100}%` }} />
+                    <span aria-hidden="true" className="flex-1 h-[2px] bg-line overflow-hidden">
+                      <span className="block h-full bg-ink" style={{ width: `${(count / summary.count) * 100}%` }} />
                     </span>
                     <span aria-hidden="true" className="w-5 shrink-0 text-right">{count}</span>
                   </li>
@@ -487,11 +487,11 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
 
             {photoRows.length > 0 && (
               <div className="min-w-0">
-                <p className="sag-eyebrow">Customer photos</p>
+                <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Customer photos</p>
                 <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto">
                   {photoRows.map((r) => (
                     <button key={r.id} type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                      className="shrink-0 w-[72px] aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-zoom-in">
+                      className="shrink-0 w-[72px] aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in">
                       <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                         className="w-full h-full object-cover object-top" />
                     </button>
@@ -502,14 +502,14 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
 
             {summary.mentions.length > 0 && (
               <div className="min-w-0">
-                <p className="sag-eyebrow">What customers mention</p>
-                <p className="text-[13px] leading-[18px] text-ink-muted">Counted from the words used in approved reviews. Tap one to read those reviews.</p>
-                <ul className="mt-2 flex flex-wrap gap-2">
+                <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">What customers mention</p>
+                <p className="mt-1.5 text-[12.5px] leading-[18px] text-ink-muted">Counted from the words used in approved reviews. Tap one to read those reviews.</p>
+                <ul className="mt-2.5 flex flex-wrap gap-2">
                   {summary.mentions.map((m) => (
                     <li key={m.key}>
                       <button type="button" onClick={() => { setAspect(aspect === m.key ? null : m.key); setVisible(PAGE_SIZE); }} aria-pressed={aspect === m.key}
                         aria-label={`${m.label}: mentioned in ${m.count} of ${summary.count} reviews`}
-                        className="sag-chip sag-num h-11 px-3 text-sm">
+                        className="sag-num h-[38px] sm:h-11 px-3 text-[13px] leading-5 inline-flex items-center justify-center border border-line bg-surface text-ink cursor-pointer transition-colors hover:border-control aria-pressed:border-ink aria-pressed:font-semibold aria-pressed:shadow-[inset_0_0_0_1px_var(--sag-ink)]">
                         {m.label} · {m.count}
                       </button>
                     </li>
@@ -521,50 +521,50 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
 
           <div className="min-w-0">
             {activeAspect && (
-              <p className="flex flex-wrap items-center gap-x-3 text-sm leading-5 text-ink-muted" aria-live="polite">
+              <p className="flex flex-wrap items-center gap-x-3 text-[13px] leading-5 text-ink-muted" aria-live="polite">
                 <span>{listed.length} {listed.length === 1 ? 'review mentions' : 'reviews mention'} {activeAspect.label.toLowerCase()}</span>
-                <button type="button" onClick={() => setAspect(null)} className="sag-link">Show all reviews</button>
+                <button type="button" onClick={() => setAspect(null)} className="sag-link text-[12.5px] underline-offset-4 decoration-1">Show all reviews</button>
               </p>
             )}
-            <div className="grid md:grid-cols-2 md:gap-x-8 border-b border-line">
+            <div className="grid lg:grid-cols-2 lg:gap-x-10 border-b border-line">
               {listed.slice(0, visible).map((r) => {
                 const hasVoted = voted.includes(r.id);
                 const helpful = counts[r.id] !== undefined ? Math.max(counts[r.id], r.helpfulCount ?? 0) : r.helpfulCount;
                 return (
-                  <article key={r.id} className="border-t border-line py-4 flex flex-col min-w-0">
+                  <article key={r.id} className="border-t border-line py-5 flex flex-col min-w-0">
                     <div className="flex items-center justify-between gap-3">
                       <span className="flex items-center gap-1.5">
-                        <Stars rating={r.rating} size="w-3.5 h-3.5" />
-                        <span className="sag-num text-[13px] leading-[18px] font-semibold text-ink" aria-hidden="true">{r.rating}.0</span>
+                        <Stars rating={r.rating} size="w-3 h-3" />
+                        <span className="sag-num text-xs leading-[18px] text-ink-muted" aria-hidden="true">{r.rating}.0</span>
                       </span>
-                      {r.dateLabel && <p className="text-[13px] leading-[18px] text-ink-muted">{r.dateLabel}</p>}
+                      {r.dateLabel && <p className="text-xs leading-[18px] text-ink-muted">{r.dateLabel}</p>}
                     </div>
-                    <p className="mt-2 text-[15px] leading-[22px] text-ink whitespace-pre-line break-words">{r.comment}</p>
+                    <p className="mt-2.5 text-sm leading-[22px] text-ink whitespace-pre-line break-words">{r.comment}</p>
                     {r.imageUrl && !brokenPhotos.includes(r.imageUrl) && (
                       <button type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                        className="mt-3 block w-20 aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-zoom-in">
+                        className="mt-3 block w-20 aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in">
                         <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                           className="w-full h-full object-cover object-top" />
                       </button>
                     )}
-                    <p className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] text-ink-muted">
-                      <span className="font-semibold text-ink break-words">{r.userName}</span>
+                    <p className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] leading-[18px] text-ink-muted">
+                      <span className="font-medium text-ink break-words">{r.userName}</span>
                       {r.verifiedPurchase && (
-                        <span className="inline-flex items-center gap-1 font-semibold text-ok">
-                          <BadgeCheck className="w-3.5 h-3.5" aria-hidden="true" /> Verified purchase
+                        <span className="inline-flex items-center gap-1 text-ink-muted">
+                          <BadgeCheck className="w-3.5 h-3.5 text-sale" strokeWidth={1.5} aria-hidden="true" /> Verified purchase
                         </span>
                       )}
                       {r.verifiedPurchase && r.sizePurchased && <span>Size bought: {r.sizePurchased}</span>}
                     </p>
                     {r.adminReply && (
-                      <p className="mt-3 rounded-control bg-sunken p-3 text-sm leading-5 text-ink whitespace-pre-line break-words">
-                        <span className="font-semibold">Suit Aura Girls:</span> {r.adminReply}
+                      <p className="mt-3 border-l border-ink pl-3 text-[13.5px] leading-5 text-ink-muted whitespace-pre-line break-words">
+                        <span className="font-medium text-ink">Suit Aura Girls:</span> {r.adminReply}
                       </p>
                     )}
                     <div className="mt-auto pt-2">
                       <button type="button" onClick={() => markHelpful(r)} disabled={hasVoted || voting === r.id} aria-pressed={hasVoted}
-                        className={`sag-num -ml-2 h-11 px-2 rounded-chip text-sm inline-flex items-center gap-2 cursor-pointer disabled:cursor-default ${hasVoted ? 'font-semibold text-ink' : 'text-ink-muted hover:bg-sunken'}`}>
-                        {voting === r.id ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ThumbsUp className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} aria-hidden="true" />}
+                        className={`sag-num h-11 text-[12.5px] inline-flex items-center gap-2 cursor-pointer disabled:cursor-default ${hasVoted ? 'font-medium text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                        {voting === r.id ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ThumbsUp className={`w-[15px] h-[15px] ${hasVoted ? 'fill-current' : ''}`} strokeWidth={1.5} aria-hidden="true" />}
                         Helpful{helpful !== null ? ` (${helpful})` : ''}
                       </button>
                     </div>
@@ -573,7 +573,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
               })}
             </div>
             {listed.length > visible && (
-              <button type="button" onClick={() => setVisible((v) => v + PAGE_SIZE)} className="sag-btn-outline sag-num mt-4 h-11 w-full sm:w-auto px-5 text-sm">
+              <button type="button" onClick={() => setVisible((v) => v + PAGE_SIZE)} className="sag-btn-outline sag-num mt-5 h-12 w-full sm:w-auto px-6">
                 Show more reviews ({listed.length - visible})
               </button>
             )}

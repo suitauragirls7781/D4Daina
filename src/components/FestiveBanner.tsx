@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, Copy, Sparkles } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 
 // Festive month (owner, 2026-10-07): one sale in two rounds, Dussehra (till 20 Oct) and Diwali (21 Oct to 8 Nov).
@@ -43,7 +43,8 @@ export const useFestiveRound = () => {
 };
 
 /**
- * `full` is the dark block on the homepage; `strip` is one slim pale gold row for the shop page and the bag.
+ * `full` is a white box with a hairline border on the homepage; `strip` is one slim hairline row on the quiet
+ * tint for the shop page and the bag. (The thin dark line above the header reads the same round, in Header.)
  */
 export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: string }> = ({ variant = 'full', className = '' }) => {
   const { setActivePage } = useShop();
@@ -61,14 +62,13 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
 
   if (variant === 'strip') {
     return (
-      <aside id="festive-strip" aria-label={round.title} className={`flex items-center gap-2.5 rounded-card bg-peach p-2.5 text-ink ${className}`}>
-        <Sparkles className="h-5 w-5 shrink-0 text-peach-ink" aria-hidden="true" />
-        <p className="min-w-0 flex-1 text-[13px] leading-[18px]">
-          <span className="block text-sm leading-5 font-bold">{round.title}: {round.offer.toLowerCase()} with code {round.code}</span>
-          <span className="sag-num block text-peach-ink">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
+      <aside id="festive-strip" aria-label={round.title} className={`flex items-center gap-3 border border-line bg-sunken px-3 py-2.5 text-ink ${className}`}>
+        <p className="min-w-0 flex-1 text-[12.5px] leading-[18px]">
+          <span className="block text-[13.5px] leading-5 font-medium">{round.title}: {round.offer.toLowerCase()} with code {round.code}</span>
+          <span className="sag-num block text-ink-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
         </p>
-        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-num inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-full bg-dark px-3.5 text-[13px] font-bold tracking-wide text-on-dark cursor-pointer">
-          {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num h-10 shrink-0 gap-1.5 px-3">
+          {copied ? <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
           {copyLabel}
         </button>
       </aside>
@@ -76,27 +76,25 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
   }
 
   return (
-    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`rounded-sheet bg-dark p-4 text-on-dark sm:p-6 lg:flex lg:items-center lg:gap-8 lg:p-8 ${className}`}>
+    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`border border-line bg-surface p-4 text-ink sm:p-6 lg:flex lg:items-center lg:gap-10 lg:p-8 ${className}`}>
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-[11px] leading-4 font-extrabold uppercase tracking-[0.1em] text-highlight">
-          <Sparkles className="h-4 w-4" aria-hidden="true" /> Festive month
+        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Festive month</p>
+        <h2 id="festive-banner-title" className="mt-2 font-display text-[23px] leading-[1.18] font-medium text-ink sm:text-[28px]">{round.title}</h2>
+        <p className="sag-num mt-2 text-[15px] leading-6 text-ink">
+          {round.offer} with code <span className="font-semibold">{round.code}</span>
         </p>
-        <h2 id="festive-banner-title" className="mt-1.5 font-display text-[26px] leading-[1.15] font-bold text-on-dark sm:text-[32px]">{round.title}</h2>
-        <p className="sag-num mt-2 text-[17px] leading-6 font-bold text-on-dark">
-          {round.offer} with code <span className="text-highlight">{round.code}</span>
-        </p>
-        <ul className="sag-num mt-1.5 space-y-0.5 text-sm leading-5 text-on-dark-muted">
+        <ul className="sag-num mt-1 space-y-0.5 text-[13px] leading-5 text-ink-muted">
           {round.terms && <li className="first-letter:uppercase">{round.terms}</li>}
           {round.prepaidPercent > 0 && <li>Plus {round.prepaidPercent}% off when you pay online</li>}
-          <li className="font-bold text-highlight">{ends}</li>
+          <li className="font-semibold text-sale">{ends}</li>
         </ul>
       </div>
-      <div className="mt-4 flex gap-2.5 lg:mt-0 lg:w-[320px] lg:shrink-0 lg:flex-col">
-        <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-sun px-4 text-[15px] font-bold text-ink cursor-pointer lg:flex-none focus-visible:outline-white">
+      <div className="mt-4 flex gap-2.5 lg:mt-0 lg:w-[300px] lg:shrink-0 lg:flex-col">
+        <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="sag-btn-primary h-12 flex-1 px-4 lg:flex-none">
           Shop the sale
         </button>
-        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-num inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] border-dashed border-highlight px-4 text-[15px] font-bold tracking-wide text-on-dark cursor-pointer lg:flex-none focus-visible:outline-white">
-          {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
+        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num h-12 flex-1 gap-2 px-4 lg:flex-none">
+          {copied ? <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />}
           {copyLabel}
         </button>
       </div>

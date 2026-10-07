@@ -5,10 +5,13 @@ import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper'
 import { SharedWishlistView, ShareWishlistButton, sharedWishlistId } from './SharedWishlist';
 import { defaultSizeFor, sizesOf } from '../utils/looks';
 import { Product, ProductSize } from '../types';
-import { BagIcon } from './BrandIcons';
 import { PackageIcon } from './StoreIcons';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
+
+const label = 'text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em]';
+const quietLink = 'inline-flex items-center gap-1.5 min-h-11 text-[12.5px] font-medium text-ink underline decoration-1 underline-offset-4 hover:text-ink-muted cursor-pointer';
+const grid = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-[12px] gap-y-[18px] sm:gap-x-5 sm:gap-y-9';
 
 /** "Move to bag" under a wishlist card; styles with several sizes show the size chips first. */
 const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: ProductSize) => void }> = ({ product, onMove }) => {
@@ -17,7 +20,7 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
   const single = defaultSizeFor(product);
   if (!product.inStock) {
     return (
-      <p className="h-11 rounded-control bg-sunken-deep text-sm font-semibold text-ink-muted flex items-center justify-center">
+      <p className="h-[38px] border border-line text-[11.5px] font-medium uppercase tracking-[0.12em] text-ink-muted flex items-center justify-center">
         Sold out
       </p>
     );
@@ -27,18 +30,18 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
       <button
         type="button"
         onClick={() => (single ? onMove(product, single) : setChoosing(true))}
-        className="sag-btn-outline w-full h-11 px-2 text-sm gap-1.5"
+        className="sag-btn-outline w-full h-[38px] px-2"
       >
-        <BagIcon className="w-4 h-4" mono live={false} /> Move to bag
+        Move to bag
       </button>
     );
   }
   return (
-    <div className="rounded-control border border-line bg-page p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
+    <div className="border border-line bg-surface p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
       <div className="flex items-center justify-between pl-1">
-        <span className="text-[13px] font-semibold text-ink">Choose a size</span>
-        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
-          <X className="w-4 h-4" />
+        <span className={`${label} text-ink-muted`}>Choose a size</span>
+        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+          <X className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
@@ -48,7 +51,7 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
             type="button"
             onClick={() => onMove(product, size)}
             aria-label={`Move to bag in size ${size}`}
-            className="sag-chip min-w-0 h-11 px-1 text-[13px] whitespace-nowrap overflow-hidden text-ellipsis hover:bg-ink hover:border-ink hover:text-white"
+            className="sag-chip min-w-0 h-10 px-1 border border-line text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis hover:border-ink"
           >
             {size}
           </button>
@@ -58,65 +61,60 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
   );
 };
 
-/** One saved style: the live product (current price and stock), with nothing laid over its photo. */
+/** One saved style: the live product (current price and stock). Only the heart (remove) sits on its photo. */
 const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
   const { navigateToProduct, toggleWishlist, moveToCartFromWishlist } = useShop();
   const image = product.images?.[0] || (product as { image?: string }).image || ELEGANT_PLACEHOLDER_SVG;
   const mrp = Math.max(product.price, Number(product.originalPrice) || product.price);
   const off = mrp > product.price ? Math.round((1 - product.price / mrp) * 100) : 0;
   return (
-    // Phones and tablets: a white card with a small photo beside the name and price, then a hairline and "Move to bag".
-    // Desktop: the photo-on-top column as before.
-    <article className="relative flex flex-col h-full rounded-card bg-surface p-3 shadow-[var(--sag-shadow)] lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
-      <div className="flex flex-1 gap-2.5 lg:flex-col lg:gap-0">
-        <button
-          type="button"
-          onClick={() => navigateToProduct(product.id)}
-          className="block aspect-[4/5] w-[58px] shrink-0 self-start rounded-chip bg-sunken overflow-hidden cursor-pointer lg:w-full lg:rounded-control"
-          aria-label={`View ${product.name}`}
-        >
-          {image && (
-            <img
-              src={getCleanImageUrl(image, 480)}
-              srcSet={getCleanImageUrl(image, 160) !== getCleanImageUrl(image, 480) ? `${getCleanImageUrl(image, 160)} 160w, ${getCleanImageUrl(image, 320)} 320w, ${getCleanImageUrl(image, 480)} 480w, ${getCleanImageUrl(image, 640)} 640w` : undefined}
-              sizes="(min-width: 1024px) 24vw, 58px"
-              alt={product.name}
-              loading="lazy"
-              decoding="async"
-              onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-              className={`w-full h-full object-cover object-top ${product.inStock ? '' : 'opacity-60 grayscale-[35%]'}`}
-            />
-          )}
+    // No card chrome at any width: the photo, the name, the price and a small outline "Move to bag"
+    <article className="relative flex h-full min-w-0 flex-col">
+      <button
+        type="button"
+        onClick={() => navigateToProduct(product.id)}
+        className="block aspect-[4/5] w-full shrink-0 bg-sunken overflow-hidden cursor-pointer"
+        aria-label={`View ${product.name}`}
+      >
+        {image && (
+          <img
+            src={getCleanImageUrl(image, 480)}
+            srcSet={getCleanImageUrl(image, 160) !== getCleanImageUrl(image, 480) ? `${getCleanImageUrl(image, 160)} 160w, ${getCleanImageUrl(image, 320)} 320w, ${getCleanImageUrl(image, 480)} 480w, ${getCleanImageUrl(image, 640)} 640w` : undefined}
+            // Two columns on phones, three on tablets, four on a desktop (the phone value is kept a little under the
+            // real width, like the product card, so a phone takes the 480px file)
+            sizes="(min-width: 1024px) 24vw, (min-width: 640px) 30vw, 34vw"
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
+            className={`w-full h-full object-cover object-top ${product.inStock ? '' : 'opacity-60 grayscale-[35%]'}`}
+          />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => toggleWishlist(product)}
+        aria-label={`Remove ${product.name} from wishlist`}
+        title="Remove from wishlist"
+        className="absolute top-px right-px w-11 h-11 flex items-center justify-center cursor-pointer"
+      >
+        <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/90 text-ink">
+          <Heart className="w-[15px] h-[15px] fill-current" strokeWidth={1.5} aria-hidden="true" />
+        </span>
+      </button>
+      <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-[9px]">
+        {!product.inStock && <span className={`${label} text-ink-muted`}>Sold out</span>}
+        <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-[13px] leading-[1.35] font-normal text-ink line-clamp-2 hover:underline underline-offset-2 cursor-pointer">
+          {product.name}
         </button>
-        <div className="flex-1 min-w-0 flex flex-col pr-9 lg:pr-0 lg:pt-1">
-          <div className="flex items-center justify-between gap-2 lg:min-h-11">
-            {!product.inStock ? (
-              <span className="sag-badge mb-1 lg:mb-0 text-ink-muted">Sold out</span>
-            ) : (
-              <span className="hidden lg:block min-w-0 truncate text-xs text-ink-muted">{product.category}</span>
-            )}
-            <button
-              type="button"
-              onClick={() => toggleWishlist(product)}
-              aria-label={`Remove ${product.name} from wishlist`}
-              title="Remove from wishlist"
-              className="absolute top-1 right-1 lg:static lg:-mr-2 w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-accent hover:bg-accent-tint transition-colors cursor-pointer"
-            >
-              <Heart className="w-5 h-5 lg:w-[22px] lg:h-[22px] fill-accent" strokeWidth={1.75} aria-hidden="true" />
-            </button>
-          </div>
-          <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-[13px] leading-[17px] font-semibold lg:text-sm lg:leading-5 lg:font-medium text-ink line-clamp-2 lg:min-h-10 hover:underline underline-offset-2 cursor-pointer">
-            {product.name}
-          </button>
-          <p className="sag-num pt-1 lg:mt-auto flex flex-wrap items-baseline gap-x-1.5">
-            <span className={`text-[15px] lg:text-base leading-5 font-extrabold lg:font-bold ${product.inStock ? 'text-ink' : 'text-ink-muted'}`}>{inr(product.price)}</span>
-            {off > 0 && <span className="text-xs lg:text-[13px] text-ink-faint line-through">{inr(mrp)}</span>}
-            {off > 0 && <span className="text-xs lg:text-[13px] font-bold text-sale whitespace-nowrap">{off}% off</span>}
-          </p>
+        <p className="sag-num flex flex-wrap items-baseline gap-x-[7px]">
+          <span className={`text-[14.5px] leading-5 font-semibold ${product.inStock ? 'text-ink' : 'text-ink-muted'}`}>{inr(product.price)}</span>
+          {off > 0 && <span className="text-[12.5px] text-ink-muted line-through">{inr(mrp)}</span>}
+          {off > 0 && <span className="text-[12.5px] font-medium text-sale whitespace-nowrap">{off}% off</span>}
+        </p>
+        <div className="mt-auto pt-1">
+          <MoveToBag product={product} onMove={moveToCartFromWishlist} />
         </div>
-      </div>
-      <div className="mt-2.5 border-t border-line pt-2.5 lg:mt-0 lg:border-0 lg:pt-2">
-        <MoveToBag product={product} onMove={moveToCartFromWishlist} />
       </div>
     </article>
   );
@@ -165,11 +163,11 @@ export const WishlistPage: React.FC = () => {
     return (
       <div id="wishlist-empty-state" className="py-12 sm:py-20 px-4 bg-surface">
         <div className="max-w-md mx-auto text-center">
-          <span className="mx-auto w-16 h-16 rounded-full bg-sunken flex items-center justify-center text-ink" aria-hidden="true">
-            <Heart className="w-7 h-7" strokeWidth={1.75} />
+          <span className="mx-auto flex w-fit text-ink-muted" aria-hidden="true">
+            <Heart className="w-7 h-7" strokeWidth={1.25} />
           </span>
-          <h1 className="mt-5 font-display text-[28px] leading-8 text-ink">Your wishlist is empty</h1>
-          <p className="mt-2 text-[15px] leading-[22px] text-ink-muted">Tap the heart on any style to save it here. Saved styles stay on every device you sign in to.</p>
+          <h1 className="mt-5 font-display text-[23px] leading-[1.18] lg:text-[32px] text-ink">Your wishlist is empty</h1>
+          <p className="mt-2 text-[14px] leading-[21px] text-ink-muted">Tap the heart on any style to save it here. Saved styles stay on every device you sign in to.</p>
           <button
             id="empty-wishlist-shop-btn"
             onClick={() => navigateToCategory('All')}
@@ -180,17 +178,17 @@ export const WishlistPage: React.FC = () => {
 
           {collections.length > 0 && (
             <div className="mt-10 text-left">
-              <p className="sag-eyebrow mb-1">Browse collections</p>
-              <div>
+              <p className={`${label} mb-1 text-sale`}>Browse collections</p>
+              <div className="border-t border-line">
                 {collections.map(([name, count]) => (
                   <button
                     key={name}
                     onClick={() => navigateToCategory(name as any)}
-                    className="sag-row w-full text-left cursor-pointer hover:bg-sunken"
+                    className="sag-row w-full text-left font-normal cursor-pointer"
                   >
                     <span className="flex-1 min-w-0 truncate">{name}</span>
                     <span className="sag-num text-[13px] font-normal text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
-                    <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" aria-hidden="true" />
+                    <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" strokeWidth={1.5} aria-hidden="true" />
                   </button>
                 ))}
               </div>
@@ -202,65 +200,59 @@ export const WishlistPage: React.FC = () => {
   }
 
   return (
-    <div id="wishlist-page-container" className="pt-4 pb-14 sm:pt-6 lg:pt-8 lg:pb-20 bg-page lg:bg-surface">
+    <div id="wishlist-page-container" className="pt-4 pb-14 sm:pt-6 lg:pt-8 lg:pb-20 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumbs (tablet and desktop) */}
         <nav className="hidden sm:flex items-center gap-1.5 text-[13px] text-ink-muted mb-3 w-fit" aria-label="Breadcrumb">
           <button onClick={() => setActivePage('home')} className="min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">Home</button>
           <ChevronRight className="w-3.5 h-3.5 text-ink-faint" aria-hidden="true" />
-          <span className="text-ink font-medium" aria-current="page">My wishlist</span>
+          <span className="text-ink" aria-current="page">My wishlist</span>
         </nav>
 
-        {/* Title */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-x-4 gap-y-1 mb-3 sm:mb-5">
-          <h1 className="font-display text-[28px] leading-8 lg:text-4xl lg:leading-[1.15] text-ink">
-            My wishlist <span className="sag-num font-sans text-sm font-normal tracking-normal text-ink-muted">({wishlist.length} {wishlist.length === 1 ? 'style' : 'styles'})</span>
-          </h1>
+        {/* Title with the real count; what the saved styles cost together today sits under it in quiet text */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-x-6 gap-y-3 border-b border-line pb-4 mb-4 sm:mb-6">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+              <h1 className="font-display text-[23px] leading-[1.18] lg:text-[32px] text-ink">My wishlist</h1>
+              <p className="sag-num text-[13px] text-ink-muted">{wishlist.length} saved {wishlist.length === 1 ? 'style' : 'styles'}</p>
+            </div>
+            {liveSaved.length > 0 && (
+              <p className="sag-num mt-1 text-[13px] leading-[18px] text-ink-muted">
+                Total {inr(savedTotal)}{liveSaved.length < wishlist.length ? ` for the ${liveSaved.length} still available` : ''}
+              </p>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+            {canMove.length > 0 && (
+              <button type="button" onClick={moveAll} className="sag-btn-outline h-[38px] px-4 w-full sm:w-auto">
+                Move all to bag
+              </button>
+            )}
             <ShareWishlistButton />
-            <button onClick={() => navigateToCategory('All')} className="sag-link">
+            <button onClick={() => navigateToCategory('All')} className={quietLink}>
               Continue shopping
             </button>
           </div>
         </div>
 
-        {/* The dark block: how many styles are saved, what they cost together today, and one tap to move them to the bag */}
-        <div className="mb-3 lg:mb-7 flex flex-wrap items-center gap-x-3 gap-y-2.5 rounded-sheet bg-dark text-on-dark px-4 py-3.5">
-          <div className="flex-1 min-w-[8rem]">
-            <p className="sag-num text-[15px] leading-5 font-bold">{wishlist.length} saved {wishlist.length === 1 ? 'style' : 'styles'}</p>
-            {liveSaved.length > 0 && (
-              <p className="sag-num mt-0.5 text-[13px] leading-[18px] text-on-dark-muted">
-                Total {inr(savedTotal)}{liveSaved.length < wishlist.length ? ` for the ${liveSaved.length} still available` : ''}
-              </p>
-            )}
-          </div>
-          {canMove.length > 0 && (
-            <button type="button" onClick={moveAll} className="shrink-0 h-10 px-4 rounded-full bg-sun text-ink text-[13px] font-bold inline-flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer transition-transform active:scale-[0.98]">
-              <BagIcon className="w-4 h-4" mono live={false} /> Move all to bag
-            </button>
-          )}
-        </div>
-
         {/* Wishlist items always show the live product (current price and stock) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-x-5 lg:gap-y-9">
+        <div className={grid}>
           {wishlist.map((saved) => {
             const live = allProducts.find((p) => String(p.id) === String(saved.id));
             if (live) return <WishlistCard key={saved.id} product={live} />;
             return (
-              <article key={saved.id} className="flex flex-col h-full rounded-card bg-surface p-3 shadow-[var(--sag-shadow)] lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none">
-                <div className="flex flex-1 gap-2.5 lg:flex-col lg:gap-0">
-                  <div className="aspect-[4/5] w-[58px] shrink-0 self-start rounded-chip bg-sunken flex flex-col items-center justify-center gap-2 text-center text-ink-muted lg:w-full lg:rounded-control lg:px-4">
-                    <PackageIcon className="w-6 h-6 lg:w-7 lg:h-7" mono live={false} />
-                    <p className="hidden lg:block text-[13px] font-semibold">No longer available</p>
-                  </div>
-                  <div className="flex-1 min-w-0 flex flex-col lg:pt-3">
-                    <p className="text-[13px] leading-[17px] font-semibold lg:text-sm lg:leading-5 lg:font-medium text-ink line-clamp-2">{saved.name}</p>
-                    <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">This style has left our collection.</p>
-                  </div>
+              <article key={saved.id} className="flex h-full min-w-0 flex-col">
+                <div className="aspect-[4/5] w-full shrink-0 bg-sunken flex flex-col items-center justify-center gap-2 px-3 text-center text-ink-muted">
+                  <PackageIcon className="w-6 h-6" mono live={false} />
+                  <p className="text-[12.5px] leading-4">No longer available</p>
                 </div>
-                <div className="mt-2.5 border-t border-line pt-2.5 lg:mt-0 lg:border-0 lg:pt-2">
-                  <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-11 text-sm">Remove</button>
+                <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-[9px]">
+                  <p className="text-[13px] leading-[1.35] text-ink line-clamp-2">{saved.name}</p>
+                  <p className="text-[12.5px] leading-[17px] text-ink-muted">This style has left our collection.</p>
+                  <div className="mt-auto pt-1">
+                    <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-[38px] px-2">Remove</button>
+                  </div>
                 </div>
               </article>
             );
