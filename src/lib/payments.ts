@@ -90,7 +90,7 @@ export const payPendingOrder = async (
       image: '/suit-aura-logo-512.png',
       prefill: prefill || {},
       notes: { order_number: orderNumber },
-      theme: { color: '#0A0A0A' },
+      theme: { color: '#0E4A36' },
       config: razorpayDisplayConfig(methods),
       retry: { enabled: true },
       handler: async (response: any) => {

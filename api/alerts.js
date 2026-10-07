@@ -28,7 +28,7 @@ const productBlock = (p, line) => {
   return `${img ? `<p style="margin:0 0 16px"><img src="${escapeHtml(img)}" alt="" width="220" style="border-radius:12px;max-width:100%"></p>` : ''}
 <p style="margin:0 0 8px;font-size:16px"><strong>${escapeHtml(p.name)}</strong></p>
 <p style="margin:0 0 20px;font-size:15px">${line}</p>
-<p style="margin:0 0 8px"><a href="${SITE_URL}/product/${encodeURIComponent(p.id)}" style="display:inline-block;background:#0A0A0A;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">VIEW PRODUCT</a></p>`;
+<p style="margin:0 0 8px"><a href="${SITE_URL}/product/${encodeURIComponent(p.id)}" style="display:inline-block;background:#0E4A36;color:#fff;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">VIEW PRODUCT</a></p>`;
 };
 
 /** Compares the live product with what was last recorded and sends the alerts that are due. */

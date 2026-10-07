@@ -31,22 +31,22 @@ export const sendEmail = async ({ to, name, subject, html, text }) => {
   }
 };
 
-export const layout = (heading, body) => `<!doctype html><html><body style="margin:0;background:#FAFAFA;font-family:Arial,Helvetica,sans-serif;color:#0A0A0A">
+export const layout = (heading, body) => `<!doctype html><html><body style="margin:0;background:#FBFBF8;font-family:Arial,Helvetica,sans-serif;color:#0E4A36">
 <main style="max-width:560px;margin:0 auto;padding:24px 16px">
-<div style="background:#0A0A0A;padding:20px 24px;text-align:center;border-radius:16px 16px 0 0">
-<p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:2px;color:#FAFAFA">SUIT AURA GIRLS</p>
-<p style="margin:6px 0 0;font-size:11px;letter-spacing:3px;color:#F5A300">ETHNIC WEAR FOR EVERY YOU</p>
+<div style="background:#0E4A36;padding:20px 24px;text-align:center;border-radius:16px 16px 0 0">
+<p style="margin:0;font-family:Georgia,serif;font-size:22px;letter-spacing:2px;color:#FBFBF8">SUIT AURA GIRLS</p>
+<p style="margin:6px 0 0;font-size:11px;letter-spacing:3px;color:#E9B23A">ETHNIC WEAR FOR EVERY YOU</p>
 </div>
 <div style="background:#FFFFFF;border:1px solid rgba(75,29,63,0.14);border-top:0;border-radius:0 0 16px 16px;padding:28px 24px">
-<h1 style="margin:0 0 16px;font-family:Georgia,serif;font-weight:normal;font-size:24px;color:#0A0A0A">${heading}</h1>
+<h1 style="margin:0 0 16px;font-family:Georgia,serif;font-weight:normal;font-size:24px;color:#0E4A36">${heading}</h1>
 ${body}
 </div>
-<p style="text-align:center;font-size:11px;color:#555555;margin:16px 0 0">Suit Aura Girls · Asansol, West Bengal · <a href="${SITE_URL}" style="color:#555555">suitauragirls.in</a></p>
+<p style="text-align:center;font-size:11px;color:#55635D;margin:16px 0 0">Suit Aura Girls · Asansol, West Bengal · <a href="${SITE_URL}" style="color:#55635D">suitauragirls.in</a></p>
 </main></body></html>`;
 
 const itemsTable = (order) => {
   const rows = (order.items || []).map((item) => `<tr>
-<td style="padding:10px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.product?.name)}<br><span style="font-size:12px;color:#555555">Size ${escapeHtml(item.selectedSize)} · Qty ${Number(item.quantity) || 1}</span></td>
+<td style="padding:10px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.product?.name)}<br><span style="font-size:12px;color:#55635D">Size ${escapeHtml(item.selectedSize)} · Qty ${Number(item.quantity) || 1}</span></td>
 <td style="padding:10px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px;text-align:right;white-space:nowrap">${inr((item.product?.price || 0) * (item.quantity || 1))}</td>
 </tr>`).join('');
   const line = (label, value, bold = false) => `<tr><td style="padding:6px 0;font-size:13px;${bold ? 'font-weight:bold;font-size:15px' : 'color:#3A3A3A'}">${label}</td><td style="padding:6px 0;text-align:right;font-size:13px;${bold ? 'font-weight:bold;font-size:15px' : ''}">${value}</td></tr>`;
@@ -66,10 +66,10 @@ const addressBlock = (order) => {
     .map((part) => String(part || '').trim())
     .filter(Boolean)
     .map(escapeHtml);
-  return `<p style="font-size:13px;line-height:1.6;color:#3A3A3A;margin:0 0 16px"><strong style="color:#0A0A0A">Delivering to</strong><br>${parts.join('<br>')}</p>`;
+  return `<p style="font-size:13px;line-height:1.6;color:#3A3A3A;margin:0 0 16px"><strong style="color:#0E4A36">Delivering to</strong><br>${parts.join('<br>')}</p>`;
 };
 
-export const button = (href, label) => `<p style="margin:20px 0 4px"><a href="${escapeHtml(href)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">${escapeHtml(label)}</a></p>`;
+export const button = (href, label) => `<p style="margin:20px 0 4px"><a href="${escapeHtml(href)}" style="display:inline-block;background:#0E4A36;color:#FFFFFF;text-decoration:none;padding:12px 22px;border-radius:999px;font-size:13px;letter-spacing:1px">${escapeHtml(label)}</a></p>`;
 
 const trackButton = (order) => button(`${SITE_URL}/track-order?order=${encodeURIComponent(order.orderNumber)}`, 'TRACK YOUR ORDER');
 
@@ -116,7 +116,7 @@ const TEMPLATES = {
   Shipped: (order) => ({
     subject: `Order ${order.orderNumber} has shipped`,
     heading: 'Your order is on its way',
-    intro: `Your order has been shipped${order.courierPartner ? ` with <strong>${escapeHtml(order.courierPartner)}</strong>` : ''}.${order.trackingNumber ? ` Tracking number: <strong>${escapeHtml(order.trackingNumber)}</strong>.` : ''}${expectedDate(order.expectedDeliveryDate) ? ` Expected delivery by <strong>${expectedDate(order.expectedDeliveryDate)}</strong>.` : ''}${/^https:\/\//.test(order.trackingUrl || '') ? ` <a href="${escapeHtml(order.trackingUrl)}" style="color:#0A0A0A">Track it on the courier's website</a>.` : ''}`,
+    intro: `Your order has been shipped${order.courierPartner ? ` with <strong>${escapeHtml(order.courierPartner)}</strong>` : ''}.${order.trackingNumber ? ` Tracking number: <strong>${escapeHtml(order.trackingNumber)}</strong>.` : ''}${expectedDate(order.expectedDeliveryDate) ? ` Expected delivery by <strong>${expectedDate(order.expectedDeliveryDate)}</strong>.` : ''}${/^https:\/\//.test(order.trackingUrl || '') ? ` <a href="${escapeHtml(order.trackingUrl)}" style="color:#0E4A36">Track it on the courier's website</a>.` : ''}`,
   }),
   'Out for Delivery': (order) => ({
     subject: `Order ${order.orderNumber} is out for delivery`,
@@ -148,11 +148,11 @@ export const sendOrderEmail = async (kind, order) => {
   const template = TEMPLATES[kind];
   if (!template || !order.customerEmail) return false;
   const t = template(order);
-  const note = order.customerNote ? `<p style="font-size:13px;color:#3A3A3A;margin:0 0 12px"><strong style="color:#0A0A0A">Note from our team:</strong> ${escapeHtml(order.customerNote)}</p>` : '';
+  const note = order.customerNote ? `<p style="font-size:13px;color:#3A3A3A;margin:0 0 12px"><strong style="color:#0E4A36">Note from our team:</strong> ${escapeHtml(order.customerNote)}</p>` : '';
   const body = `<p style="font-size:14px;line-height:1.6;margin:0 0 12px">Dear ${escapeHtml(order.customerName || 'Customer')},</p>
 <p style="font-size:14px;line-height:1.6;margin:0 0 16px">${t.intro}</p>
 ${note}
-<p style="font-size:12px;letter-spacing:1px;color:#555555;margin:0">ORDER ${escapeHtml(order.orderNumber)}</p>
+<p style="font-size:12px;letter-spacing:1px;color:#55635D;margin:0">ORDER ${escapeHtml(order.orderNumber)}</p>
 ${t.full ? itemsTable(order) + addressBlock(order) : ''}
 ${trackButton(order)}`;
   await sendEmail({
@@ -199,7 +199,7 @@ export const sendOtpEmail = async ({ email, name, code, purpose }) => {
     name,
     subject: `${code} is your Suit Aura Girls verification code`,
     html: layout(escapeHtml(labels[purpose] || 'Verify your email'), `<p style="font-size:14px;margin:0 0 8px">Your one-time code is:</p>
-<p style="font-size:32px;font-weight:bold;letter-spacing:8px;margin:0 0 16px;color:#0A0A0A">${code}</p>
+<p style="font-size:32px;font-weight:bold;letter-spacing:8px;margin:0 0 16px;color:#0E4A36">${code}</p>
 <p style="font-size:13px;line-height:1.6;color:#3A3A3A;margin:0">This code expires in 10 minutes and can be used only once. If you did not request it, you can ignore this email.</p>`),
     text: `Your Suit Aura Girls code is ${code}. It expires in 10 minutes. If you did not request it, ignore this email.`,
   });
@@ -216,7 +216,7 @@ const returnItemsTable = (request) => {
   const rows = (request.items || []).map((item) => {
     const size = item.size ? `Size ${escapeHtml(item.size)}` : 'One size';
     const change = item.exchangeSize ? ` → <strong>${escapeHtml(item.exchangeSize)}</strong>` : '';
-    return `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.name || 'Item')}<br><span style="font-size:12px;color:#555555">${size}${change} · Qty ${Number(item.qty) || 1}${item.clearance ? ' · clearance' : ''}</span></td></tr>`;
+    return `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.name || 'Item')}<br><span style="font-size:12px;color:#55635D">${size}${change} · Qty ${Number(item.qty) || 1}${item.clearance ? ' · clearance' : ''}</span></td></tr>`;
   }).join('');
   return rows ? `<table style="width:100%;border-collapse:collapse;margin:4px 0 16px">${rows}</table>` : '';
 };
@@ -298,10 +298,10 @@ export const sendReturnUpdateEmail = async (order) => {
     html: layout(escapeHtml(t.heading), [
       p(`Dear ${escapeHtml(order.customerName || 'Customer')},`),
       p(`${t.intro}`),
-      note ? p(`<strong style="color:#0A0A0A">${t.noteLabel}:</strong> ${escapeHtml(note)}`) : (t.noNote ? p(t.noNote) : ''),
-      `<p style="font-size:12px;letter-spacing:1px;color:#555555;margin:0">ORDER ${escapeHtml(order.orderNumber)} · ${kind.toUpperCase()}</p>`,
+      note ? p(`<strong style="color:#0E4A36">${t.noteLabel}:</strong> ${escapeHtml(note)}`) : (t.noNote ? p(t.noNote) : ''),
+      `<p style="font-size:12px;letter-spacing:1px;color:#55635D;margin:0">ORDER ${escapeHtml(order.orderNumber)} · ${kind.toUpperCase()}</p>`,
       returnItemsTable(request),
-      p(`Questions? <a href="${SITE_URL}/contact" style="color:#0A0A0A">Contact us</a> with your order number.`),
+      p(`Questions? <a href="${SITE_URL}/contact" style="color:#0E4A36">Contact us</a> with your order number.`),
       button(ordersUrl, 'VIEW YOUR ORDER'),
     ].join('\n')),
     text: `${t.heading}. Order ${order.orderNumber}. ${t.intro}${note ? ` ${t.noteLabel}: ${note}` : ''} See it at ${ordersUrl}`,
