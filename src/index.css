@@ -11,65 +11,65 @@
 ------------------------------------------------------------------- */
 @theme {
   /* Surfaces */
-  --color-page: #FBFBF8;
+  --color-page: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-sunken: #EDF3EF;
-  --color-sunken-deep: #D5E3DB;
+  --color-sunken: #F6F4F0;
+  --color-sunken-deep: #E9E5DE;
   /* Text and lines */
-  --color-ink: #10231C;
-  --color-ink-muted: #55635D;
-  --color-ink-faint: #66736D;
-  --color-line: #DCE5E0;
-  --color-control: #7F8F87;
+  --color-ink: #161514;
+  --color-ink-muted: #6B6762;
+  --color-ink-faint: #7A756F;
+  --color-line: #E4E0DA;
+  --color-control: #9A948C;
   /* Brand (peacock teal): buy, continue, pay, links, active nav */
-  --color-brand: #0E4A36;
-  --color-brand-dark: #0A382A;
-  --color-brand-wash: #E8F2ED;
-  --color-brand-line: #BFD6CA;
+  --color-brand: #161514;
+  --color-brand-dark: #2E2C2A;
+  --color-brand-wash: #F6F4F0;
+  --color-brand-line: #D8D2C8;
   /* Accent (rani): filled wishlist heart and count badges only */
-  --color-accent: #7D5200;
-  --color-accent-tint: #FFF3D2;
+  --color-accent: #8A6A36;
+  --color-accent-tint: #F6F1E7;
   /* Sale: "% off", "You save", "Free" */
-  --color-sale: #7D5200;
-  --color-sale-tint: #FFF3D2;
-  --color-sale-line: #EBCB7A;
-  --color-star: #E9B23A;
+  --color-sale: #8A6A36;
+  --color-sale-tint: #F6F1E7;
+  --color-sale-line: #DCCFB6;
+  --color-star: #A6824A;
   /* Confirmed states */
-  --color-ok: #0E4A36;
-  --color-ok-tint: #E8F2ED;
-  --color-ok-line: #BFD6CA;
+  --color-ok: #161514;
+  --color-ok-tint: #F6F4F0;
+  --color-ok-line: #D8D2C8;
   /* Errors */
   --color-danger: #B3261E;
   --color-danger-tint: #FCEDEA;
   --color-danger-line: #F0B8B2;
   /* Dark surfaces: footer, announcement bar, lightbox */
-  --color-dark: #0E4A36;
+  --color-dark: #161514;
   --color-on-dark: #FFFFFF;
-  --color-on-dark-muted: #CDE2D9;
-  --color-highlight: #E9B23A;
+  --color-on-dark-muted: #B9B4AC;
+  --color-highlight: #C9A66B;
   /* Pastel blocks: section backgrounds and tiles. Each has an ink for text placed on it. */
-  --color-lilac: #E8F2ED;
-  --color-lilac-ink: #0E4A36;
-  --color-peach: #FFF3D2;
-  --color-peach-ink: #7D5200;
-  --color-mint: #DCEBE3;
-  --color-mint-ink: #0E4A36;
-  --color-sky: #EEF4F0;
-  --color-sky-ink: #0E4A36;
-  --color-butter: #FFF8E3;
-  --color-butter-ink: #7D5200;
-  --color-sun: #E9B23A;
+  --color-lilac: #F6F4F0;
+  --color-lilac-ink: #161514;
+  --color-peach: #F6F1E7;
+  --color-peach-ink: #8A6A36;
+  --color-mint: #EFECE6;
+  --color-mint-ink: #161514;
+  --color-sky: #F8F6F2;
+  --color-sky-ink: #161514;
+  --color-butter: #FAF7F0;
+  --color-butter-ink: #8A6A36;
+  --color-sun: #A6824A;
 
   /* Old palette names kept for one release as aliases of the new values */
-  --color-bottle-maroon: #0E4A36;
-  --color-brand-maroon: #0E4A36;
-  --color-plum: #0E4A36;
-  --color-antique-gold: #E9B23A;
-  --color-ivory: #FBFBF8;
-  --color-dusty-rose: #FFF3D2;
-  --color-blush: #FFF3D2;
-  --color-charcoal: #0E4A36;
-  --color-lavender: #EDF3EF;
+  --color-bottle-maroon: #161514;
+  --color-brand-maroon: #161514;
+  --color-plum: #161514;
+  --color-antique-gold: #A6824A;
+  --color-ivory: #FFFFFF;
+  --color-dusty-rose: #F6F1E7;
+  --color-blush: #F6F1E7;
+  --color-charcoal: #161514;
+  --color-lavender: #F6F4F0;
 
   /* Two families only: Inter for text, Playfair Display for main headings.
      Why Playfair Display: compared in the browser on this site's real headings at 390px against
@@ -86,11 +86,11 @@
   --font-display: 'Fraunces', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 
   /* Soft, round shapes. Buttons and chips are pills through their helper classes (sag-btn-*, sag-chip). */
-  --radius-badge: 8px;
-  --radius-chip: 14px;
-  --radius-control: 16px;
-  --radius-card: 22px;
-  --radius-sheet: 28px;
+  --radius-badge: 0px;
+  --radius-chip: 0px;
+  --radius-control: 0px;
+  --radius-card: 0px;
+  --radius-sheet: 0px;
 }
 
 /* Fallback faces sized to the web fonts, so the swap does not move the layout */
@@ -113,47 +113,47 @@
 }
 
 :root {
-  --sag-page: #FBFBF8;
+  --sag-page: #FFFFFF;
   --sag-surface: #FFFFFF;
-  --sag-sunken: #EDF3EF;
-  --sag-sunken-deep: #D5E3DB;
-  --sag-ink: #10231C;
-  --sag-ink-muted: #55635D;
-  --sag-ink-faint: #66736D;
-  --sag-line: #DCE5E0;
-  --sag-control: #7F8F87;
-  --sag-brand: #0E4A36;
-  --sag-brand-dark: #0A382A;
-  --sag-brand-wash: #E8F2ED;
-  --sag-brand-line: #BFD6CA;
-  --sag-accent: #7D5200;
-  --sag-accent-tint: #FFF3D2;
-  --sag-sale: #7D5200;
-  --sag-sale-tint: #FFF3D2;
-  --sag-sale-line: #EBCB7A;
-  --sag-star: #E9B23A;
-  --sag-ok: #0E4A36;
-  --sag-ok-tint: #E8F2ED;
-  --sag-ok-line: #BFD6CA;
+  --sag-sunken: #F6F4F0;
+  --sag-sunken-deep: #E9E5DE;
+  --sag-ink: #161514;
+  --sag-ink-muted: #6B6762;
+  --sag-ink-faint: #7A756F;
+  --sag-line: #E4E0DA;
+  --sag-control: #9A948C;
+  --sag-brand: #161514;
+  --sag-brand-dark: #2E2C2A;
+  --sag-brand-wash: #F6F4F0;
+  --sag-brand-line: #D8D2C8;
+  --sag-accent: #8A6A36;
+  --sag-accent-tint: #F6F1E7;
+  --sag-sale: #8A6A36;
+  --sag-sale-tint: #F6F1E7;
+  --sag-sale-line: #DCCFB6;
+  --sag-star: #A6824A;
+  --sag-ok: #161514;
+  --sag-ok-tint: #F6F4F0;
+  --sag-ok-line: #D8D2C8;
   --sag-danger: #B3261E;
   --sag-danger-tint: #FCEDEA;
   --sag-danger-line: #F0B8B2;
-  --sag-dark: #0E4A36;
+  --sag-dark: #161514;
   --sag-on-dark: #FFFFFF;
-  --sag-on-dark-muted: #CDE2D9;
-  --sag-highlight: #E9B23A;
-  --sag-lilac: #E8F2ED;
-  --sag-peach: #FFF3D2;
-  --sag-mint: #DCEBE3;
-  --sag-sky: #EEF4F0;
-  --sag-butter: #FFF8E3;
-  --sag-sun: #E9B23A;
-  --sag-scrim: rgba(16, 35, 28, 0.5);
+  --sag-on-dark-muted: #B9B4AC;
+  --sag-highlight: #C9A66B;
+  --sag-lilac: #F6F4F0;
+  --sag-peach: #F6F1E7;
+  --sag-mint: #EFECE6;
+  --sag-sky: #F8F6F2;
+  --sag-butter: #FAF7F0;
+  --sag-sun: #A6824A;
+  --sag-scrim: rgba(22, 21, 20, 0.5);
 
   /* Cards carry no shadow. --sag-shadow stays defined so older references keep working. */
-  --sag-shadow: 0 2px 10px rgba(16, 35, 28, 0.07);
-  --sag-shadow-bar: 0 -4px 16px rgba(16, 35, 28, 0.08);
-  --sag-shadow-pop: 0 8px 24px -12px rgba(16, 35, 28, 0.18);
+  --sag-shadow: 0 2px 10px rgba(22, 21, 20, 0.07);
+  --sag-shadow-bar: 0 -4px 16px rgba(22, 21, 20, 0.08);
+  --sag-shadow-pop: 0 8px 24px -12px rgba(22, 21, 20, 0.18);
 
   /* Old variable names, aliased for one release */
   --sag-lavender: var(--sag-sunken);
@@ -172,12 +172,12 @@
   html, body, #root {
     font-family: var(--font-sans);
     scroll-behavior: smooth;
-    background-color: #FBFBF8;
+    background-color: #FFFFFF;
     color-scheme: light;
     max-width: 100vw;
     overflow-x: hidden;
     width: 100%;
-    color: #0E4A36;
+    color: #161514;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
   }
@@ -220,12 +220,12 @@
   :is(h1, h2).font-sans { letter-spacing: 0; }
 
   ::selection {
-    background: #E8F2ED;
-    color: #0E4A36;
+    background: #F6F4F0;
+    color: #161514;
   }
 
   input, select, textarea {
-    color: #0E4A36;
+    color: #161514;
     background-color: #FFFFFF;
     /* Sticky buy / pay bars stay on screen while typing; keep the focused field clear of them */
     scroll-margin-bottom: 96px;
@@ -238,15 +238,15 @@
 
   select option {
     background-color: #FFFFFF;
-    color: #0E4A36;
+    color: #161514;
   }
 
   input[type="checkbox"], input[type="radio"] {
-    accent-color: #0E4A36;
+    accent-color: #161514;
   }
 
   :focus-visible {
-    outline: 2px solid #0E4A36;
+    outline: 2px solid #161514;
     outline-offset: 2px;
   }
 
@@ -409,15 +409,15 @@
 .sag-btn-primary svg.lucide { color: inherit; }
 
 /* "Buy now" on the product page: yellow with dark text (owner's choice, 2026-10-03). Only this button. */
-.sag-btn-primary.sag-btn-buy { background: #E9B23A; color: var(--sag-ink); }
-.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: #E09500; }
+.sag-btn-primary.sag-btn-buy { background: #A6824A; color: var(--sag-ink); }
+.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: #8F6E3C; }
 
 /* Product photo while it loads or right after the shopper picks another one: a small spinner, gone once it shows */
 .sag-photo-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .sag-photo-spinner {
   width: 28px; height: 28px; border-radius: 9999px;
   border: 3px solid rgba(255, 255, 255, 0.85); border-top-color: var(--sag-brand);
-  box-shadow: 0 0 0 1px rgba(16, 35, 28, 0.08);
+  box-shadow: 0 0 0 1px rgba(22, 21, 20, 0.08);
   animation: sag-photo-spin 700ms linear infinite;
 }
 @keyframes sag-photo-spin { to { transform: rotate(360deg); } }
@@ -783,7 +783,7 @@
   animation: sag-spin 4s linear infinite;
   pointer-events: none;
 }
-@keyframes sag-glow { 50% { box-shadow: 0 0 0 5px rgba(233, 178, 58, 0.22); } }
+@keyframes sag-glow { 50% { box-shadow: 0 0 0 5px rgba(166, 130, 74, 0.22); } }
 .sag-glow { animation: sag-glow 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
   .sag-ring-amber::before, .sag-glow { animation: none; }
@@ -812,3 +812,26 @@
     .sag-row { min-height: 46px; }
   }
 }
+
+/* ------------------------------------------------------------------
+   Noir & Champagne (owner's pick, 2026-10-08): the shared shapes.
+   Unlayered on purpose, so these win over the component and utility layers above.
+------------------------------------------------------------------- */
+:root { --sag-shadow: none; --sag-shadow-pop: 0 6px 18px -10px rgba(22, 21, 20, 0.18); }
+.sag-card { border-radius: 0; box-shadow: none; border: 1px solid var(--sag-line); }
+.sag-btn-primary, .sag-btn-outline { border-radius: 0; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12.5px; font-weight: 600; }
+.sag-btn-outline { border-width: 1px; }
+/* "Buy now" and pay are the black primary button in this look */
+.sag-btn-primary.sag-btn-buy { background: var(--sag-ink); color: #FFFFFF; }
+.sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: var(--sag-brand-dark); }
+.sag-input, .sag-chip { border-radius: 0; }
+.sag-badge { border-radius: 0; text-transform: uppercase; letter-spacing: 0.08em; }
+.sag-co-blocks > div > section.sag-card { border-radius: 0; }
+/* Pills written with rounded-full and side padding become square; round icon buttons and swatches stay round */
+:where(button, a, label, span, p, div).rounded-full[class*="px-"] { border-radius: 0; }
+/* Main headings: the serif at a calm weight */
+.font-display { font-weight: 500; letter-spacing: -0.005em; }
+/* No decorative loops: floating logo, bobbing sticker, turning rings, waving letters, pulsing button */
+.sag-float, .sag-bob, .sag-glow { animation: none; transform: none; }
+.sag-ring::before, .sag-ring-amber::before { display: none; }
+.sag-wave span[style] { animation: none; }

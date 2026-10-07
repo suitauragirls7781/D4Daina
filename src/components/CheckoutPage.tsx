@@ -662,7 +662,7 @@ export const CheckoutPage: React.FC = () => {
     setPaymentReturn(null);
     // Short "Order placed" moment, then the full confirmation page
     setCelebrating(true);
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#0E4A36', '#E9B23A', '#FFF3D2', '#10B981'], zIndex: 10001 });
+    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#161514', '#A6824A', '#F6F1E7', '#10B981'], zIndex: 10001 });
     window.setTimeout(() => {
       setActivePage('order-confirmation');
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -827,7 +827,7 @@ export const CheckoutPage: React.FC = () => {
         image: '/suit-aura-logo-512.png',
         prefill: { name: fullName, email: address.email, contact: address.mobile },
         notes: { order_number: created.orderNumber },
-        theme: { color: '#0E4A36' },
+        theme: { color: '#161514' },
         config: razorpayDisplayConfig(paymentSettings),
         retry: { enabled: true },
         handler: async (response: any) => {

@@ -27,7 +27,7 @@ const MapPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
       className={`block transition-transform duration-200 ${lifted ? '-translate-y-2' : ''}`}
       style={{ filter: 'drop-shadow(0 2px 3px rgba(27, 26, 23, 0.35))' }}
     >
-      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" fill="#0E4A36" stroke="#FFFFFF" strokeWidth="2" />
+      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" fill="#161514" stroke="#FFFFFF" strokeWidth="2" />
       <circle cx="18" cy="17.5" r="6" fill="#FFFFFF" />
     </svg>
     <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-ink/50" />
