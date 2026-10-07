@@ -5,6 +5,7 @@ import { useShop } from '../context/ShopContext';
 import { useRouter } from '../context/RouterContext';
 import { useAdmin } from '../context/AdminContext';
 import { ProductCard } from './ProductCard';
+import { BagReminder } from './BagReminder';
 import { Product, ProductSize } from '../types';
 import { fuzzyMatchProduct } from '../utils/fuzzySearch';
 import { hasStructure, isAvailable, matchesSmartQuery, parseSmartQuery } from '../utils/smartQuery';
@@ -611,6 +612,7 @@ export const ShopPage: React.FC = () => {
   return (
     <div id="shop-catalog-page" className="bg-surface pt-4 pb-12 sm:pt-6 lg:pt-8 lg:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <BagReminder className="mb-3" />
         <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-1.5 text-[13px] text-ink-muted mb-3 min-w-0">
           <button onClick={() => setActivePage('home')} className="shrink-0 min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">Home</button>
           <ChevronRight className="w-3.5 h-3.5 shrink-0 text-ink-faint" aria-hidden="true" />

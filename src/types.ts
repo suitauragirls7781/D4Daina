@@ -382,6 +382,10 @@ export interface StoreSettings {
   codEnabled?: boolean;
   /** ₹ paid online for a cash-on-delivery order (its shipping charge). */
   codCharge?: number;
+  /** One reminder email to a shopper who left the checkout (sent by the server's hourly run; default on). */
+  abandonedReminders?: boolean;
+  /** One email asking for a review, a few days after an order is delivered (default on). */
+  reviewRequests?: boolean;
   announcementText?: string;
   announcementActive?: boolean;
   // ---- Checkout rules (Admin → Settings → Checkout; the server enforces them again) ----

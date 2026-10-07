@@ -47,7 +47,7 @@ const INDIAN_STATES = [
   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
 ];
 
-export type CheckoutField = 'firstName' | 'lastName' | 'mobile' | 'email' | 'houseFlat' | 'street' | 'city' | 'state' | 'pincode';
+export type CheckoutField = 'firstName' | 'mobile' | 'email' | 'houseFlat' | 'street' | 'city' | 'state' | 'pincode';
 
 /**
  * Display only: every address-step problem, in the same order, with the same conditions and the same messages
@@ -57,7 +57,8 @@ export type CheckoutField = 'firstName' | 'lastName' | 'mobile' | 'email' | 'hou
 export const getCheckoutFieldErrors = (values: { firstName: string; lastName: string; address: DeliveryAddress; pincodeError: string }): Array<{ field: CheckoutField; message: string }> => {
   const { firstName, lastName, address, pincodeError } = values;
   const errors: Array<{ field: CheckoutField; message: string }> = [];
-  if (!firstName.trim() || !lastName.trim()) errors.push({ field: !firstName.trim() ? 'firstName' : 'lastName', message: 'Please provide both your First and Last Name.' });
+  // One "Full name" box (its two halves are split at the first space): at least two characters
+  if (`${firstName} ${lastName}`.trim().length < 2) errors.push({ field: 'firstName', message: 'Please enter your full name.' });
   if (!address.mobile.trim() || !/^[6-9]\d{9}$/.test(address.mobile)) errors.push({ field: 'mobile', message: 'Please provide a valid 10-digit Indian mobile number.' });
   if (!address.email.trim() || !address.email.includes('@')) errors.push({ field: 'email', message: 'Please provide a valid email address.' });
   if (!address.houseFlat.trim()) errors.push({ field: 'houseFlat', message: 'Please enter your House/Flat/Apartment number.' });
@@ -70,12 +71,12 @@ export const getCheckoutFieldErrors = (values: { firstName: string; lastName: st
 };
 
 const FIELD_INPUT_ID: Record<CheckoutField, string> = {
-  firstName: 'co-first-name', lastName: 'co-last-name', mobile: 'co-mobile', email: 'co-email',
+  firstName: 'co-first-name', mobile: 'co-mobile', email: 'co-email',
   houseFlat: 'co-house', street: 'co-street', city: 'co-city', state: 'co-state', pincode: 'co-pincode',
 };
 
 // The fields in the order they appear on the screen (mobile comes before the name in this layout)
-const FIELD_SCREEN_ORDER: CheckoutField[] = ['mobile', 'firstName', 'lastName', 'email', 'pincode', 'city', 'state', 'houseFlat', 'street'];
+const FIELD_SCREEN_ORDER: CheckoutField[] = ['mobile', 'firstName', 'email', 'pincode', 'city', 'state', 'houseFlat', 'street'];
 
 /** Display only: the same problems as getCheckoutFieldErrors(), one per field, in on-screen order. */
 const inScreenOrder = (errors: Array<{ field: CheckoutField; message: string }>) =>
@@ -127,9 +128,9 @@ export const CheckoutPage: React.FC = () => {
   const { user } = useAuth();
   const { storeSettings, paymentSettings } = useAdmin();
 
-  // 3-step flow: Address → Order summary → Payment (going back never loses the bag or the form)
-  const [checkoutStep, setCheckoutStepState] = useState<'details' | 'summary' | 'payment'>('details');
-  const setCheckoutStep = (step: 'details' | 'summary' | 'payment') => {
+  // 2-step flow: Address → Payment (going back never loses the bag or the form)
+  const [checkoutStep, setCheckoutStepState] = useState<'details' | 'payment'>('details');
+  const setCheckoutStep = (step: 'details' | 'payment') => {
     setCheckoutStepState(step);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -149,8 +150,15 @@ export const CheckoutPage: React.FC = () => {
     pincode: '',
   });
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  // One "Full name" box. The rest of the page still works with a first and a last name: the text is split
+  // at the first space, so the full name sent with the order is the same string as before.
+  const [nameInput, setNameInput] = useState('');
+  const splitName = (value: string) => {
+    const clean = value.trim();
+    const gap = clean.search(/\s/);
+    return gap < 0 ? { first: clean, last: '' } : { first: clean.slice(0, gap), last: clean.slice(gap).trim() };
+  };
+  const { first: firstName, last: lastName } = splitName(nameInput);
   const [saveAddressOption, setSaveAddressOption] = useState(true);
 
 
@@ -213,9 +221,7 @@ export const CheckoutPage: React.FC = () => {
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const applySavedAddress = (saved: SavedAddress) => {
     setSelectedAddressId(saved.id);
-    const parts = String(saved.fullName || '').trim().split(/\s+/);
-    setFirstName(parts[0] || '');
-    setLastName(parts.slice(1).join(' '));
+    setNameInput(String(saved.fullName || '').trim());
     setAddress((current) => ({
       ...current,
       fullName: saved.fullName,
@@ -306,17 +312,12 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const handleFieldChangeDebounced = (field: string, val: string) => {
-    if (field === 'firstName') {
-      setFirstName(val);
+    if (field === 'fullName') {
+      setNameInput(val);
+      const typed = splitName(val);
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       debounceTimerRef.current = setTimeout(() => {
-        savePartialToDb(val, lastName, address.mobile, address.email);
-      }, 1000);
-    } else if (field === 'lastName') {
-      setLastName(val);
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = setTimeout(() => {
-        savePartialToDb(firstName, val, address.mobile, address.email);
+        savePartialToDb(typed.first, typed.last, address.mobile, address.email);
       }, 1000);
     } else if (field === 'mobile') {
       const cleanMob = val.replace(/\D/g, '').slice(0, 10);
@@ -377,11 +378,7 @@ export const CheckoutPage: React.FC = () => {
           } catch {}
         }
 
-        if (loadedName) {
-          const parts = loadedName.split(' ');
-          setFirstName(parts[0] || '');
-          setLastName(parts.slice(1).join(' ') || '');
-        }
+        if (loadedName) setNameInput(String(loadedName).trim());
 
         setAddress(prev => ({
           ...prev,
@@ -536,7 +533,7 @@ export const CheckoutPage: React.FC = () => {
 
   const handleSaveAddressToDb = async (currentAddr: DeliveryAddress) => {
     try {
-      const combinedFullName = `${firstName.trim()} ${lastName.trim()}`;
+      const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
       if (user?.email) {
         saveDoc(COLLECTIONS.profiles, emailKey(user.email), {
@@ -569,8 +566,8 @@ export const CheckoutPage: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    if (!firstName.trim() || !lastName.trim()) {
-      setErrorMessage('Please provide both your First and Last Name.');
+    if (`${firstName} ${lastName}`.trim().length < 2) {
+      setErrorMessage('Please enter your full name.');
       return false;
     }
     const mobilePattern = /^[6-9]\d{9}$/;
@@ -614,7 +611,7 @@ export const CheckoutPage: React.FC = () => {
   const handleProceedToPaymentStep = () => {
     if (validateForm()) {
       if (saveAddressOption) handleSaveAddressToDb(address);
-      setCheckoutStep('summary');
+      setCheckoutStep('payment');
     } else {
       // Show every field message and take the shopper to the first field on the screen that needs fixing
       setShowAllErrors(true);
@@ -630,7 +627,7 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  const goToStep = (step: 'details' | 'summary' | 'payment') => {
+  const goToStep = (step: 'details' | 'payment') => {
     if (step === 'details' || validateForm()) setCheckoutStep(step);
     else {
       setShowAllErrors(true);
@@ -939,11 +936,10 @@ export const CheckoutPage: React.FC = () => {
   const itemCount = cart.reduce((a, c) => a + c.quantity, 0);
   const itemsText = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`;
   const fullNameText = `${firstName} ${lastName}`.trim();
-  const stepIndex = ['details', 'summary', 'payment'].indexOf(checkoutStep);
-  // The three steps as blocks: what each is called, and the one line a closed block shows
+  const stepIndex = ['details', 'payment'].indexOf(checkoutStep);
+  // The two steps as blocks: what each is called, and the one line a closed block shows
   const stepBlocks = [
     { step: 'details' as const, title: 'Contact and address', done: [fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', '), next: 'Name, mobile, email and where to deliver' },
-    { step: 'summary' as const, title: 'Review your order', done: `${itemsText} checked`, next: `${itemsText} · check before you pay` },
     { step: 'payment' as const, title: 'Payment', done: '', next: storeOffers.codEnabled ? `Pay online ${rupees(finalCartTotal)}, or cash on delivery` : `Pay online · ${rupees(finalCartTotal)}` },
   ];
   const stepRow = (index: number) => {
@@ -968,8 +964,7 @@ export const CheckoutPage: React.FC = () => {
     );
   };
   const goBack = () => {
-    if (checkoutStep === 'payment') setCheckoutStep('summary');
-    else if (checkoutStep === 'summary') setCheckoutStep('details');
+    if (checkoutStep === 'payment') setCheckoutStep('details');
     else setActivePage('cart');
   };
   const helpUrl = createSupportWhatsAppUrl('Hi Suit Aura Girls, I need help with my order checkout.');
@@ -986,7 +981,7 @@ export const CheckoutPage: React.FC = () => {
   const addressLine = [address.houseFlat, address.street, sameText(address.area, address.street) ? '' : address.area, address.landmark, address.city, address.state]
     .map((part) => String(part || '').trim()).filter(Boolean).join(', ');
   const errFor = (field: CheckoutField) => (showAllErrors || touched[field] ? fieldErrors.find((entry) => entry.field === field)?.message || '' : '');
-  const nameError = errFor('firstName') || errFor('lastName');
+  const nameError = errFor('firstName');
   const mobileError = errFor('mobile');
   const emailError = errFor('email');
   const pinError = pincodeError || errFor('pincode');
@@ -996,6 +991,11 @@ export const CheckoutPage: React.FC = () => {
   const streetError = errFor('street');
   const mobileValid = Boolean(touched.mobile) && /^[6-9]\d{9}$/.test(address.mobile);
   const pinFound = !pincodeLoading && !pincodeError && address.pincode.length === 6 && availablePostOffices.length > 0;
+  // Display only: the line under the PIN code box (what the lookup is doing, then what it found)
+  const pinPlace = pinFound ? [availablePostOffices[0]?.District || availablePostOffices[0]?.Taluk, availablePostOffices[0]?.State].filter(Boolean).join(', ') : '';
+  const pinHelp = pincodeLoading ? 'Filling city and state…'
+    : pinPlace ? `City and state filled: ${pinPlace}`
+    : pincodeHint || 'Your city and state are filled from the PIN code.';
 
   const payDisabled = isProcessing || gateways === null || (!gateways.razorpay && !gateways.payu);
   const gatewayKnown = gateways !== null && (gateways.razorpay || gateways.payu);
@@ -1038,7 +1038,7 @@ export const CheckoutPage: React.FC = () => {
   const securePaymentText = assuranceLine(gatewayKnown ? gateway : undefined).split(' · ')[0];
 
 
-  // Compact bag lines: shown in the Review step, and inside the order summary on the other steps
+  // Compact bag lines, shown inside the order summary
   const itemLines = (
     <ul className="divide-y divide-line">
       {cart.map((item) => {
@@ -1068,9 +1068,9 @@ export const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <div className={`sag-checkout min-h-screen bg-page text-ink font-sans text-left ${checkoutStep === 'summary' ? 'pb-32 lg:pb-10' : 'pb-10'}`}>
+    <div className={`sag-checkout min-h-screen bg-page text-ink font-sans text-left pb-10`}>
 
-      {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the three steps, always visible.
+      {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the two steps, always visible.
           The site header is hidden while this page is open (".sag-checkout" rule at the end of index.css). */}
       <div className="bg-white border-b border-line">
         <div className="max-w-6xl mx-auto flex items-center h-11 pl-1 pr-2 sm:px-4">
@@ -1144,44 +1144,22 @@ export const CheckoutPage: React.FC = () => {
                   </Field>
 
                   <div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label htmlFor="co-first-name" className="sag-label">First name</label>
-                        <input
-                          id="co-first-name"
-                          name="given-name"
-                          type="text"
-                          autoComplete="given-name"
-                          autoCapitalize="words"
-                          enterKeyHint="next"
-                          value={firstName}
-                          onChange={(e) => handleFieldChangeDebounced('firstName', e.target.value)}
-                          onBlur={() => { handleFieldBlur(); touch('firstName'); }}
-                          placeholder="First name"
-                          aria-invalid={nameError && !firstName.trim() ? true : undefined}
-                          aria-describedby={nameError ? 'co-name-error' : undefined}
-                          className="sag-input"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="co-last-name" className="sag-label">Last name</label>
-                        <input
-                          id="co-last-name"
-                          name="family-name"
-                          type="text"
-                          autoComplete="family-name"
-                          autoCapitalize="words"
-                          enterKeyHint="next"
-                          value={lastName}
-                          onChange={(e) => handleFieldChangeDebounced('lastName', e.target.value)}
-                          onBlur={() => { handleFieldBlur(); touch('lastName'); }}
-                          placeholder="Last name"
-                          aria-invalid={nameError && !lastName.trim() ? true : undefined}
-                          aria-describedby={nameError ? 'co-name-error' : undefined}
-                          className="sag-input"
-                        />
-                      </div>
-                    </div>
+                    <label htmlFor="co-first-name" className="sag-label">Full name</label>
+                    <input
+                      id="co-first-name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      value={nameInput}
+                      onChange={(e) => handleFieldChangeDebounced('fullName', e.target.value)}
+                      onBlur={() => { handleFieldBlur(); touch('firstName'); }}
+                      placeholder="Your full name"
+                      aria-invalid={nameError ? true : undefined}
+                      aria-describedby={nameError ? 'co-name-error' : undefined}
+                      className="sag-input"
+                    />
                     {nameError && (
                       <p id="co-name-error" role="alert" className="mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger">
                         <AlertCircle className="w-4 h-4 shrink-0 mt-px" aria-hidden="true" /><span>{nameError}</span>
@@ -1229,7 +1207,7 @@ export const CheckoutPage: React.FC = () => {
                 </div>
 
                 <div className="mt-3.5 space-y-4">
-                  <Field id="co-pincode" label="PIN code" error={pinError} helper={!pinError && pincodeHint ? <span role="status">{pincodeHint}</span> : undefined}>
+                  <Field id="co-pincode" label="PIN code" error={pinError} helper={<span role="status">{pinHelp}</span>}>
                     <div className="relative">
                       <input
                         id="co-pincode"
@@ -1244,7 +1222,7 @@ export const CheckoutPage: React.FC = () => {
                         onBlur={() => touch('pincode')}
                         placeholder="6-digit PIN code (e.g. 110001)"
                         aria-invalid={pinError ? true : undefined}
-                        aria-describedby={pinError ? 'co-pincode-error' : pincodeHint ? 'co-pincode-help' : undefined}
+                        aria-describedby={pinError ? 'co-pincode-error' : 'co-pincode-help'}
                         className="sag-input pr-10"
                       />
                       {pincodeLoading && <Loader2 className="absolute right-3.5 top-1/2 -mt-[9px] w-[18px] h-[18px] animate-spin text-ink-muted" aria-label="Checking PIN code" />}
@@ -1360,42 +1338,21 @@ export const CheckoutPage: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 2: REVIEW */}
-          {checkoutStep === 'summary' && (
+          {/* STEP 2: PAY. One dark block (owner's pick 3, 2026-10-07): who takes the payment and the step, the
+              amount very large, what is being paid for, the payment choice, the gold pay button and WhatsApp help.
+              Every number is the page's own preview; the pay button is the one existing pay action. */}
+          {checkoutStep === 'payment' && (
             <div className="space-y-3">
-              <section className="sag-card p-4 sm:p-6" aria-label="Delivery address">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h2 className="text-xl leading-7 font-semibold text-ink">Deliver to</h2>
-                    <p className="mt-2 text-sm leading-5 font-semibold text-ink">
-                      {fullNameText}
-                      {address.type && <span className="sag-badge ml-2 align-middle">{address.type}</span>}
-                    </p>
-                    <p className="mt-0.5 text-sm leading-5 text-ink-muted">
-                      {addressLine} – {address.pincode}
-                    </p>
-                    <p className="mt-0.5 text-sm leading-5 text-ink-muted">Mobile: {address.mobile}{address.altMobile ? ` · Alt: ${address.altMobile}` : ''}</p>
-                    {address.email && <p className="text-sm leading-5 text-ink-muted break-all">{address.email}</p>}
-                  </div>
-                  <button type="button" onClick={() => setCheckoutStep('details')} className="sag-link shrink-0 -my-2.5">
-                    Change
-                  </button>
-                </div>
-              </section>
 
-              <section className="sag-card p-4 sm:p-6 space-y-3" aria-label="Items">
-                <h2 className="text-xl leading-7 font-semibold text-ink">Your order <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
-                {itemLines}
-                <p className="flex items-start gap-2 pt-3 border-t border-line text-sm leading-5 text-ink-muted">
-                  <Truck className="h-[18px] w-[18px] shrink-0 mt-px text-ink" aria-hidden="true" />
-                  <span>
-                    {shippingFee === 0 ? <span className="font-semibold text-sale">Free delivery</span> : `Delivery ${rupees(shippingFee)}`}
-                    {deliveryEstimateText ? <> · <span className="font-semibold text-ink">Estimated delivery by {deliveryEstimateText}</span></> : null}
-                  </span>
-                </p>
-              </section>
-
-              <section className="sag-card px-4 sm:px-6">
+              {/* What the old Review step added: when the parcel comes (only when the owner has set delivery days)
+                  and the gift note. Nothing here has to be touched to pay. */}
+              <section className="sag-card px-4 sm:px-6" aria-label="Delivery and gift note">
+                {deliveryEstimateText && (
+                  <p className="flex items-start gap-2 pt-3.5 text-sm leading-5 text-ink-muted">
+                    <Truck className="h-[18px] w-[18px] shrink-0 mt-px text-ink" aria-hidden="true" />
+                    <span className="font-semibold text-ink">Estimated delivery by {deliveryEstimateText}</span>
+                  </p>
+                )}
                 <label className="flex items-center gap-3 min-h-[52px] text-sm leading-5 font-semibold text-ink cursor-pointer">
                   <input type="checkbox" checked={addGiftNote} onChange={(e) => setAddGiftNote(e.target.checked)} className="w-[22px] h-[22px] shrink-0 rounded-badge accent-brand cursor-pointer" />
                   <Gift className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> Add a gift note to the parcel
@@ -1406,18 +1363,6 @@ export const CheckoutPage: React.FC = () => {
                     className="sag-input mb-4" />
                 )}
               </section>
-
-              <button type="button" onClick={() => goToStep('payment')} className="sag-btn-primary hidden lg:flex w-full">
-                Continue to payment
-              </button>
-            </div>
-          )}
-
-          {/* STEP 3: PAY. One dark block (owner's pick 3, 2026-10-07): who takes the payment and the step, the
-              amount very large, what is being paid for, the payment choice, the gold pay button and WhatsApp help.
-              Every number is the page's own preview; the pay button is the one existing pay action. */}
-          {checkoutStep === 'payment' && (
-            <div className="space-y-3">
 
               <section className="rounded-sheet bg-dark text-on-dark p-4 sm:p-6 space-y-3.5" aria-labelledby="co-pay-title">
                 <div className="flex items-center justify-between gap-3">
@@ -1556,11 +1501,10 @@ export const CheckoutPage: React.FC = () => {
 
         </div>
 
-        {/* Order summary. Phones: one collapsed strip under the stepper that opens in place (always open on the
-            Review step, where it sits under the items). Desktop: the right column. It holds no <select>. */}
-        <aside className={`lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 ${checkoutStep === 'summary' ? '' : 'order-first'}`} aria-label="Order summary">
+        {/* Order summary (items, coupon, price details). Phones: one collapsed strip on top that opens in place,
+            on both steps. Desktop: the right column. It holds no <select>. */}
+        <aside className="lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 order-first" aria-label="Order summary">
           <div className="sag-card overflow-hidden">
-            {checkoutStep !== 'summary' && (
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
                 className="lg:hidden w-full flex items-center gap-3 px-3.5 py-2.5 min-h-[60px] text-left cursor-pointer">
                 {/* Small order card (owner's pick 3, 2026-10-07): the first photos overlapping, the count and total, the real saving */}
@@ -1582,18 +1526,15 @@ export const CheckoutPage: React.FC = () => {
                   <ChevronDown className={`w-[18px] h-[18px] transition-transform ${summaryOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </span>
               </button>
-            )}
 
-            <div id="co-order-summary" className={`${summaryOpen || checkoutStep === 'summary' ? 'block' : 'hidden'} lg:block ${checkoutStep === 'summary' ? '' : 'border-t border-line lg:border-t-0'} p-4 sm:p-6 space-y-4`}>
-              {checkoutStep !== 'summary' && (
+            <div id="co-order-summary" className={`${summaryOpen ? 'block' : 'hidden'} lg:block border-t border-line lg:border-t-0 p-4 sm:p-6 space-y-4`}>
                 <div>
                   <h2 className="hidden lg:block mb-3 text-xl leading-7 font-semibold text-ink">Order summary <span className="font-sans text-sm font-normal text-ink-muted">({itemsText})</span></h2>
                   <div className="max-h-80 overflow-y-auto">{itemLines}</div>
                 </div>
-              )}
 
               {/* Coupon */}
-              <div className={checkoutStep === 'summary' ? '' : 'pt-4 border-t border-line'}>
+              <div className="pt-4 border-t border-line">
                 {appliedCoupon ? (
                   <div className="flex items-center justify-between gap-3 rounded-control border border-ok-line bg-ok-tint pl-3.5 pr-2 min-h-[52px] text-ok">
                     <span className="flex items-center gap-2.5 min-w-0">
@@ -1650,11 +1591,10 @@ export const CheckoutPage: React.FC = () => {
           </div>
         </aside>
 
-        {/* Always last on Address and Review: the short assurance line and WhatsApp help.
-            The Pay step says both once, in its own card above ("Secure … checkout", "Payment stuck?"). */}
-        {checkoutStep !== 'payment' && (
-          // On the Address step phones and tablets already have the two facts under the button
-          <div className={`lg:col-span-7 space-y-3 pt-1 ${checkoutStep === 'details' ? 'hidden lg:block' : ''}`}>
+        {/* Last on the Address step, desktop only (phones and tablets already have the two facts under the button):
+            the short assurance line and WhatsApp help. The Pay step says both once, in its own block above. */}
+        {checkoutStep === 'details' && (
+          <div className="hidden lg:block lg:col-span-7 space-y-3 pt-1">
             <Assurance variant="line" />
             <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 h-12 rounded-control border-[1.5px] border-control bg-white text-sm font-semibold text-ink hover:bg-sunken">
               <WhatsAppIcon className="w-5 h-5" /> Need help? Chat with us on WhatsApp
@@ -1663,22 +1603,6 @@ export const CheckoutPage: React.FC = () => {
         )}
 
       </div>
-
-      {/* Phones and tablets: the Review step keeps its fixed bar with the amount and the next action.
-          The Address and Pay steps carry their one button inside the page (owner's pick 3), so they have no bar. */}
-      {checkoutStep === 'summary' && (
-        <div className="sag-bar lg:hidden fixed inset-x-0 bottom-0 z-40">
-          <div className="max-w-md mx-auto flex items-center gap-3">
-            <div className="shrink-0">
-              <p className="text-lg leading-[22px] font-bold text-ink sag-num">{rupees(finalCartTotal)}</p>
-              <p className="text-[11px] leading-[14px] text-ink-muted">{itemsText}</p>
-            </div>
-            <button type="button" onClick={() => goToStep('payment')} className="sag-btn-primary flex-1 min-w-0 px-3">
-              Continue to payment
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Available coupons: a sheet on phones, a dialog on wider screens */}
       {showCouponsModal && (

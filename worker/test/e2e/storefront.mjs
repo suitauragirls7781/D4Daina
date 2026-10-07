@@ -88,10 +88,10 @@ try {
     json: [{ Status: 'Success', PostOffice: [{ Name: 'Asansol', District: 'Paschim Bardhaman', State: 'West Bengal' }] }],
   }));
   await page.goto('/checkout', { waitUntil: 'load' });
-  await page.getByPlaceholder('First name').waitFor();
+  await page.locator('#co-first-name').waitFor();
   const shopperEmail = `e2e-${Date.now()}@example.com`;
-  await page.getByPlaceholder('First name').fill('Local');
-  await page.getByPlaceholder('Last name').fill('Tester');
+  // One "Full name" field (it keeps the id of the old first-name box)
+  await page.locator('#co-first-name').fill('Local Tester');
   await page.getByPlaceholder('10-digit mobile number').fill('9876543210');
   await page.getByPlaceholder('you@example.com').fill(shopperEmail);
   await page.getByPlaceholder(/6-digit PIN code/).fill('713301');
@@ -106,11 +106,9 @@ try {
   if (abandoned) cleanup.push(['abandoned_checkouts', abandoned.id]);
 
   await page.getByRole('button', { name: /deliver here/i }).click();
+  // Two steps: "Deliver here" opens the payment step directly (there is no review step in between)
   await sleep(800);
-  await screenshot(page, 'storefront-checkout-summary');
   check('checkout: payment options came from /api/orders', await until(() => watch.api.find((call) => call.path === '/api/orders' && call.status === 200), { timeout: 10000 }));
-  await page.getByRole('button', { name: /continue to payment/i }).click();
-  await sleep(800);
   await screenshot(page, 'storefront-checkout-payment');
   check('checkout: the payment step offers Razorpay (UPI, cards & net banking)', await until(async () => /UPI, cards & net banking/i.test(await bodyText()), { timeout: 8000 }));
   check('checkout: no order was created', d1All("SELECT id FROM docs WHERE collection = 'orders' AND json_extract(data, '$.customerEmail') = ?", shopperEmail).length === 0);

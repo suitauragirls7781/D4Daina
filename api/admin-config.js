@@ -154,6 +154,9 @@ const sanitizePublicStoreSettings = (value) => {
   // Cash on delivery: the shopper pays codCharge online to confirm, the rest in cash at delivery
   safe.codEnabled = settings.codEnabled === true;
   safe.codCharge = Math.min(2000, Math.max(0, Math.floor(Number(settings.codCharge) || 0))) || 99;
+  // Automatic emails from the hourly run (api/_lib/reminders.js): both are on unless the owner switched them off
+  safe.abandonedReminders = settings.abandonedReminders !== false;
+  safe.reviewRequests = settings.reviewRequests !== false;
   safe.announcementActive = settings.announcementActive ?? true;
   // Checkout rules (enforced again in api/_lib/orders.js) and invoice details. 0 = no limit / not shown.
   const whole = (raw, max) => Math.min(max, Math.max(0, Math.floor(Number(raw) || 0)));

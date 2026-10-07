@@ -81,9 +81,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, 480)}
-          // Two columns on phones (about 170px wide), about 280px on a desktop: the browser takes the stored size that fits
+          // Two columns on phones (about 170px wide), about 280px on a desktop. The phone value is kept a little
+          // under the real width on purpose, so a 360-430px phone takes the 480px file (still about 2.8x sharp
+          // there) instead of the 640px one, and the shop page is lighter.
           srcSet={getCleanImageUrl(primary, 480) !== getCleanImageUrl(primary, 640) ? `${getCleanImageUrl(primary, 480)} 480w, ${getCleanImageUrl(primary, 640)} 640w, ${getCleanImageUrl(primary, 828)} 828w` : undefined}
-          sizes="(min-width: 1024px) 24vw, 46vw"
+          sizes="(min-width: 1024px) 24vw, (min-width: 640px) 30vw, 34vw"
           alt={product.name}
           className={`w-full h-full object-cover object-top ${soldOut ? 'opacity-60 grayscale-[35%]' : ''}`}
           loading="lazy"

@@ -13,6 +13,8 @@ import * as track from '../../api/track.js';
 import * as alerts from '../../api/alerts.js';
 import * as sitemap from '../../api/sitemap.js';
 import * as razorpayWebhook from '../../api/webhooks/razorpay.js';
+import { firestore } from '../../api/_lib/firebaseAdmin.js';
+import { runReminders } from '../../api/_lib/reminders.js';
 
 /**
  * Worker entry. The handlers in api/** are plain Node-style (req, res) handlers; this file only decides which one
@@ -133,7 +135,33 @@ const answerApi = async (apiModule, path, request, env, ctx) => {
   return withSecurityHeaders(response);
 };
 
+/**
+ * The hourly run (wrangler.jsonc "triggers"): abandoned-checkout reminders and review requests
+ * (api/_lib/reminders.js). Never rejects: a failure is logged and the next hour tries again.
+ */
+const runScheduled = async (event, env) => {
+  const startedAt = Date.now();
+  try {
+    exposeEnv(env);
+    setEnv(env);
+    if (env.MEDIA) setMediaBucket(env.MEDIA);
+    const result = await runReminders(firestore(), { now: startedAt });
+    console.log(JSON.stringify({ level: 'info', message: 'scheduled', cron: event?.cron || '', ms: Date.now() - startedAt, result }));
+  } catch (error) {
+    try {
+      console.error(JSON.stringify({ level: 'error', message: 'Scheduled run failed', cron: event?.cron || '', error: error?.message || String(error), stack: error?.stack }));
+    } catch { /* nothing more can be done */ }
+  }
+};
+
 export default {
+  async scheduled(event, env, ctx) {
+    // Held with waitUntil like a request, so the run is not cut off before its last write
+    const work = runScheduled(event, env);
+    try { ctx?.waitUntil?.(work); } catch { /* the run still finishes below */ }
+    await work;
+  },
+
   async fetch(request, env, ctx) {
     const { pathname } = new URL(request.url);
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;

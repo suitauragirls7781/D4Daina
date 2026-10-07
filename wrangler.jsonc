@@ -52,6 +52,9 @@
     "CLOUDFLARE_PLAN": "free"
   },
 
+  // Once an hour: abandoned-checkout reminders and review requests (api/_lib/reminders.js, at most 25 emails a run)
+  "triggers": { "crons": ["17 * * * *"] },
+
   // Secrets set on the Worker are kept when the Git build deploys
   "keep_vars": true,
 

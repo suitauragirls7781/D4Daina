@@ -562,6 +562,26 @@ export const AdminSettings: React.FC = () => {
                     className={`${input} sag-num`}
                   />
                 </Field>
+
+                <Field
+                  label="Checkout reminder email"
+                  hint="One email, about an hour after a shopper types their email at checkout and leaves without paying. Never more than one in 7 days to the same address."
+                >
+                  <label className="flex min-h-11 items-center gap-3 text-sm text-ink">
+                    <input id="admin-abandoned-reminders" type="checkbox" checked={storeForm.abandonedReminders !== false} onChange={(e) => setStoreForm({ ...storeForm, abandonedReminders: e.target.checked })} className="h-5 w-5 accent-brand" />
+                    Send checkout reminders
+                  </label>
+                </Field>
+
+                <Field
+                  label="Review request email"
+                  hint="One email per order, 3 days after it is marked Delivered, asking for an honest review. Not sent while a return is open."
+                >
+                  <label className="flex min-h-11 items-center gap-3 text-sm text-ink">
+                    <input id="admin-review-requests" type="checkbox" checked={storeForm.reviewRequests !== false} onChange={(e) => setStoreForm({ ...storeForm, reviewRequests: e.target.checked })} className="h-5 w-5 accent-brand" />
+                    Ask for a review after delivery
+                  </label>
+                </Field>
               </div>
             </div>
 

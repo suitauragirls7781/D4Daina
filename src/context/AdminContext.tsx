@@ -326,6 +326,8 @@ const toPublicStoreSettings = (settings: Partial<StoreSettings>): StoreSettings 
   prepaidMinPrice: Math.max(0, Math.floor(Number(settings.prepaidMinPrice) || 0)),
   codEnabled: settings.codEnabled === true,
   codCharge: Math.max(0, Math.floor(Number(settings.codCharge) || 0)) || 99,
+  abandonedReminders: settings.abandonedReminders !== false,
+  reviewRequests: settings.reviewRequests !== false,
   announcementText: settings.announcementText?.trim().slice(0, 500),
   announcementActive: settings.announcementActive ?? true,
   minOrderAmount: Math.max(0, Math.floor(Number(settings.minOrderAmount) || 0)),

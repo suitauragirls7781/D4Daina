@@ -210,7 +210,10 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
     const source = live ?? reviewsList
       .filter((r) => String(r.productId) === productId && r.status === 'approved')
       .map((r) => toRow(r.id, r as unknown as Record<string, any>, false));
-    return source.filter((r) => r.comment).sort((a, b) => b.time - a.time);
+    // Order of the list: reviews with a customer photo first, then verified purchases, then the rest;
+    // newest first inside each group. Which reviews are shown does not change.
+    const group = (r: ReviewRow) => (r.imageUrl ? 0 : r.verifiedPurchase ? 1 : 2);
+    return source.filter((r) => r.comment).sort((a, b) => group(a) - group(b) || b.time - a.time);
   }, [live, reviewsList, productId]);
 
   const summary = useMemo(() => {
