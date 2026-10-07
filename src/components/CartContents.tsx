@@ -19,6 +19,33 @@ export const useBagTotal = () => {
 };
 
 /**
+ * Display only: what the bag saves against MRP, from the shop's own numbers (catalogue discount, combo,
+ * coupon and online-payment discount). The same sum the price details show; nothing is priced here.
+ */
+export const useBagSavings = () => {
+  const { cart, cartSubtotal, discountAmount, prepaidDiscount, comboDiscount } = useShop();
+  const totalMRP = cart.reduce((sum, item) => {
+    const price = Number(item.product?.price) || 0;
+    return sum + Math.max(price, Number(item.product?.originalPrice) || price) * item.quantity;
+  }, 0);
+  const catalogDiscount = Math.max(0, totalMRP - cartSubtotal);
+  const totalSavings = catalogDiscount + comboDiscount + discountAmount + prepaidDiscount;
+  return { totalMRP, catalogDiscount, totalSavings };
+};
+
+/** The pale gold strip on top of the bag: "You save ₹X on this order". Not shown when nothing is saved. */
+export const SavingsStrip: React.FC<{ className?: string }> = ({ className = '' }) => {
+  const { totalSavings } = useBagSavings();
+  if (!(totalSavings > 0)) return null;
+  return (
+    <p className={`flex items-center justify-center gap-1.5 bg-peach px-3 py-2 text-[13px] leading-[18px] font-extrabold text-peach-ink sag-num ${className}`}>
+      <TagIcon className="h-[15px] w-[15px] shrink-0" mono live={false} />
+      You save {inr(totalSavings)} on this order
+    </p>
+  );
+};
+
+/**
  * Display only: applies a coupon through the shop's own applyCoupon() and keeps the reason it was refused,
  * so the bag, the offers sheet and checkout show it once, next to the coupon field (no error toast as well).
  * The reason is the exact text applyCoupon() gives; nothing is validated here.
@@ -69,15 +96,10 @@ export const CouponError: React.FC<{ id?: string; message: string; className?: s
  */
 export const PriceDetails: React.FC = () => {
   const {
-    cart, cartSubtotal, shippingFee, discountAmount, appliedCoupon, prepaidDiscount, comboDiscount, comboOffer, freeShippingThreshold,
+    cartSubtotal, shippingFee, discountAmount, appliedCoupon, prepaidDiscount, comboDiscount, comboOffer, freeShippingThreshold,
   } = useShop();
   const total = useBagTotal();
-  const totalMRP = cart.reduce((sum, item) => {
-    const price = Number(item.product?.price) || 0;
-    return sum + Math.max(price, Number(item.product?.originalPrice) || price) * item.quantity;
-  }, 0);
-  const catalogDiscount = Math.max(0, totalMRP - cartSubtotal);
-  const totalSavings = catalogDiscount + comboDiscount + discountAmount + prepaidDiscount;
+  const { totalMRP, catalogDiscount, totalSavings } = useBagSavings();
   return (
     <div>
       <h3 className="font-display text-base leading-[22px] font-semibold text-ink">Price details</h3>
@@ -106,8 +128,15 @@ export const PriceDetails: React.FC = () => {
   );
 };
 
-/** Bag lines with quantity controls. Used by the cart drawer and the cart page. */
-export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
+/**
+ * Bag lines with quantity controls. Used by the cart drawer and the cart page.
+ * Each line is its own white card (owner's pick 2, 2026-10-07). layout "responsive" keeps the one
+ * divided list from desktop width (the page wraps it in a card there); "cards" is cards at every width.
+ */
+export const CartLines: React.FC<{ onNavigate?: () => void; layout?: 'cards' | 'responsive' }> = ({ onNavigate, layout = 'responsive' }) => {
+  const card = 'rounded-card bg-surface p-3 shadow-[var(--sag-shadow)]';
+  const listClass = layout === 'cards' ? 'space-y-2.5' : 'space-y-2.5 lg:space-y-0 lg:divide-y lg:divide-line';
+  const lineClass = layout === 'cards' ? card : `${card} lg:rounded-none lg:bg-transparent lg:px-0 lg:py-4 lg:shadow-none`;
   const { cart, removeFromCart, updateCartQuantity, navigateToProduct, maxQtyPerItem, toggleWishlist, isInWishlist, showToast } = useShop();
   // Saves the style to the wishlist and takes this line out of the bag (look accessories stay with their outfit)
   const moveToWishlist = (itemId: string, product: (typeof cart)[number]['product']) => {
@@ -116,7 +145,7 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
     else toggleWishlist(product);
   };
   return (
-    <ul className="divide-y divide-line">
+    <ul className={listClass}>
       {cart.map((item) => {
         const stock = Number(item.product.stockQuantity ?? 0);
         const accessory = isAccessory(item.product) && item.lookParentId;
@@ -140,11 +169,11 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
           : '';
         const canMove = !item.lookParentId && !isAccessory(item.product);
         return (
-          <li key={item.id} className="py-4">
+          <li key={item.id} className={lineClass}>
             <div className="flex gap-3">
               <button
                 onClick={() => { navigateToProduct(openId); onNavigate?.(); }}
-                className="shrink-0 w-[84px] aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-pointer"
+                className="shrink-0 self-start w-[76px] sm:w-[84px] aspect-[4/5] rounded-chip overflow-hidden bg-sunken cursor-pointer"
                 aria-label={`View ${item.product.name}`}
               >
                 <img src={getCleanImageUrl(lineImage(item), 240)} alt="" width={84} height={105} className="w-full h-full object-cover object-top" loading="lazy" />
@@ -166,31 +195,32 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
                   {mrp > item.product.price && <span className="text-[13px] text-ink-faint line-through">{inr(mrp * item.quantity)}</span>}
                   {off > 0 && <span className="text-[13px] font-bold text-sale">{off}% off</span>}
                 </p>
+                {/* Quantity pill and "Remove" sit under the price, beside the photo */}
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
+                  <div className="inline-flex items-center h-10 rounded-full border-[1.5px] border-line bg-surface" role="group" aria-label={`Quantity of ${item.product.name}`}>
+                    {/* At quantity 1 the "Remove" link beside the stepper is the one way to take the line out */}
+                    <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className="w-10 h-10 flex items-center justify-center text-ink rounded-l-full hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-7 text-center text-[15px] font-bold text-ink sag-num" aria-live="polite">{item.quantity}</span>
+                    <button onClick={() => updateCartQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= cap} aria-label="Increase quantity" className="w-10 h-10 flex items-center justify-center text-ink rounded-r-full hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3.5">
+                    {canMove && (
+                      <button type="button" onClick={() => moveToWishlist(item.id, item.product)} className="sag-link text-[13px]">
+                        Move to wishlist
+                      </button>
+                    )}
+                    <button type="button" onClick={() => removeFromCart(item.id)} className="sag-link text-[13px]" aria-label={`Remove ${item.product.name} from bag`}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                {capNote && <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{capNote}</p>}
               </div>
             </div>
-            <div className="mt-3 flex items-center justify-between gap-2">
-              <div className="inline-flex items-center h-11 rounded-control border-[1.5px] border-control bg-white" role="group" aria-label={`Quantity of ${item.product.name}`}>
-                {/* At quantity 1 the "Remove" link beside the stepper is the one way to take the line out */}
-                <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className="w-11 h-11 flex items-center justify-center text-ink rounded-l-control hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
-                  <Minus className="w-4 h-4" />
-                </button>
-                <span className="w-8 text-center text-[15px] font-semibold text-ink sag-num" aria-live="polite">{item.quantity}</span>
-                <button onClick={() => updateCartQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= cap} aria-label="Increase quantity" className="w-11 h-11 flex items-center justify-center text-ink rounded-r-control hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer">
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex items-center gap-4">
-                {canMove && (
-                  <button type="button" onClick={() => moveToWishlist(item.id, item.product)} className="sag-link text-[13px]">
-                    Move to wishlist
-                  </button>
-                )}
-                <button type="button" onClick={() => removeFromCart(item.id)} className="sag-link text-[13px]" aria-label={`Remove ${item.product.name} from bag`}>
-                  Remove
-                </button>
-              </div>
-            </div>
-            {capNote && <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">{capNote}</p>}
           </li>
         );
       })}

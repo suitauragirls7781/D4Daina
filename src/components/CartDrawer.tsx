@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { useBackToClose } from '../utils/backClose';
 import { useShop } from '../context/ShopContext';
-import { CartLines, CartTotals, EmptyBag, useBagTotal } from './CartContents';
+import { CartLines, CartTotals, EmptyBag, SavingsStrip, useBagTotal } from './CartContents';
 import { Assurance } from './Assurance';
-import { Lock, X } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
-  const { cart, cartCount, isCartDrawerOpen, setIsCartDrawerOpen, setActivePage, activePage } = useShop();
+  const { cart, cartCount, shippingFee, isCartDrawerOpen, setIsCartDrawerOpen, setActivePage, activePage } = useShop();
   const total = useBagTotal();
   const close = () => setIsCartDrawerOpen(false);
 
@@ -51,10 +51,10 @@ export const CartDrawer: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* What the bag saves, on a pale gold strip; each line is its own white card (owner's pick 2, 2026-10-07) */}
+            <SavingsStrip className="shrink-0" />
             <div className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-3">
-              <div className="sag-card px-4">
-                <CartLines onNavigate={close} />
-              </div>
+              <CartLines onNavigate={close} layout="cards" />
               <div className="sag-card p-4 space-y-4">
                 {/* On the bag page the page's own coupon field owns id="bag-coupon" */}
                 <CartTotals idPrefix={activePage === 'cart' ? 'drawer' : 'bag'} />
@@ -66,16 +66,16 @@ export const CartDrawer: React.FC = () => {
             </div>
             <footer className="sag-bar shrink-0">
               <div className="flex items-center gap-3">
-                <div className="shrink-0">
-                  <p className="text-lg leading-[22px] font-bold text-ink sag-num">₹{total.toLocaleString('en-IN')}</p>
-                  <p className="text-[11px] leading-[14px] text-ink-muted">Total, incl. taxes</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs leading-4 text-ink-muted">Total{shippingFee === 0 && <> · <span className="font-semibold text-sale">Free delivery</span></>}</p>
+                  <p className="text-[19px] leading-6 font-extrabold text-ink sag-num">₹{total.toLocaleString('en-IN')}</p>
                 </div>
                 <button
                   id="drawer-checkout-btn"
                   onClick={() => { close(); setActivePage('checkout'); }}
-                  className="sag-btn-primary flex-1 min-w-0 px-3 gap-2"
+                  className="sag-btn-primary sag-btn-buy shrink-0 px-6 gap-1.5"
                 >
-                  <Lock className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> Checkout securely
+                  Checkout <ChevronRight className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
                 </button>
               </div>
             </footer>

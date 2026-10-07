@@ -18,9 +18,9 @@ const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: 
         </div>
         {action}
       </div>
-      <ul className="sag-scroll-x flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+      <ul className="sag-scroll-x flex gap-2.5 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
         {items.map((p) => (
-          <li key={p.id} className="shrink-0 w-[86vw] max-w-[360px] sm:w-[220px] sm:max-w-[220px]"><ProductCard product={p} compact /></li>
+          <li key={p.id} className="shrink-0 w-[158px] sm:w-[220px]"><ProductCard product={p} compact /></li>
         ))}
       </ul>
     </div>

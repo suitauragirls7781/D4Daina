@@ -209,6 +209,9 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
 
 const STEPS = [{ label: 'Ordered' }, { label: 'Confirmed' }, { label: 'Packed' }, { label: 'Shipped' }, { label: 'In transit' }, { label: 'Out for delivery' }, { label: 'Delivered' }] as const;
 const DELIVERED_STEP = STEPS.length - 1;
+// The four names under the phone progress strip, and the current stage said in words (in the order of STEPS)
+const STRIP = ['Placed', 'Packed', 'Shipped', 'Delivered'] as const;
+const STATE_HEADING = ['Your order is placed', 'Your order is confirmed', 'Your order is packed', 'Your order is shipped', 'Your order is in transit', 'Your order is out for delivery', 'Your order is delivered'] as const;
 // One icon per stage, in the order of STEPS
 const STEP_ICONS = [ClipboardCheck, BadgeCheck, Package, Truck, Route, MapPin, Home];
 
@@ -287,10 +290,58 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
     );
   }
 
+  // Phones and tablets (owner's pick 3): one dark block with the state in words, a strip of four segments and
+  // the real time of every stage reached. The seven stages fold into the four names under the strip.
+  const group = current >= DELIVERED_STEP ? 3 : current >= 3 ? 2 : current >= 2 ? 1 : current >= 0 ? 0 : -1;
+  const eyebrow = waiting ? 'Order placed' : STEPS[Math.max(0, current)].label;
+  const heading = waiting
+    ? (paymentFailed(order) ? 'Payment failed' : 'Awaiting payment')
+    : ['Refund Requested', 'Returned', 'Refunded'].includes(order.status)
+      ? timelineLabel(order.status)
+      : STATE_HEADING[Math.max(0, current)];
+  const reachedList = STEPS.map((step, index) => ({ label: step.label, index, when: formatDateTime(times[index]) })).filter((item) => item.index <= current);
+
   return (
-    // Step cards (owner's pick 4): every stage is a card with a round icon. Reached stages are mint with a tick,
-    // the stage the order is at is lilac with the slow ring, the stages still to come are quiet.
-    <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4" aria-label="Order progress">
+    <>
+    <div className="lg:hidden rounded-sheet bg-dark text-on-dark p-4 space-y-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-xs leading-4 font-bold text-highlight">{eyebrow}</span>
+        <span className="sag-num min-w-0 text-xs leading-4 text-on-dark-muted break-all">#{order.orderNumber}</span>
+      </div>
+      <p className="font-display text-[22px] leading-7 font-semibold text-on-dark">{heading}</p>
+      <div aria-hidden="true">
+        <div className="flex gap-1">
+          {STRIP.map((name, index) => (
+            <span key={name} className={`h-1.5 flex-1 rounded-full ${index <= group ? 'bg-sun' : 'bg-white/10'}`} />
+          ))}
+        </div>
+        <div className="mt-2 flex gap-1 text-xs leading-4">
+          {STRIP.map((name, index) => (
+            <span
+              key={name}
+              className={`flex-1 ${index === 0 ? 'text-left' : index === STRIP.length - 1 ? 'text-right' : 'text-center'} ${index === group ? 'font-bold text-on-dark' : 'text-on-dark-muted'}`}
+            >
+              {name}
+            </span>
+          ))}
+        </div>
+      </div>
+      {reachedList.length > 0 && (
+        <ol className="border-t border-white/10 pt-3 space-y-1.5 text-[13px] leading-[18px]" aria-label="Order progress">
+          {reachedList.map((item) => (
+            <li key={item.label} className="flex items-baseline justify-between gap-3" aria-current={item.index === current ? 'step' : undefined}>
+              <span className={`inline-flex items-center gap-2 ${item.index === current ? 'font-bold text-on-dark' : 'text-on-dark-muted'}`}>
+                <Check className="w-3.5 h-3.5 shrink-0 text-highlight" strokeWidth={3} aria-hidden="true" />
+                {item.label}<span className="sr-only"> (done)</span>
+              </span>
+              {item.when && <span className="sag-num shrink-0 text-on-dark-muted">{item.when}</span>}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+    {/* Desktop: step cards. Every stage is a card with a round icon; reached stages carry a tick. */}
+    <ol className="hidden lg:grid gap-2 lg:grid-cols-4" aria-label="Order progress">
       {STEPS.map((step, index) => {
         const isCurrent = index === current;
         const done = index < current;
@@ -323,6 +374,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
         );
       })}
     </ol>
+    </>
   );
 };
 

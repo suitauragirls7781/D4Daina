@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useShop } from '../context/ShopContext';
-import { ChevronRight } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 import { SIZE_CHART } from '../utils/sizeChart';
 import { DEFAULT_SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { useAdmin } from '../context/AdminContext';
@@ -29,6 +29,10 @@ interface PolicyWrapperProps {
   title: string;
   subtitle: string;
   facts?: KeyFact[];
+  /** "In short": two to four points, each one a statement the policy text below already makes. */
+  short?: string[];
+  /** Small gold label above the title. */
+  eyebrow?: string;
   sections: PolicySection[];
   intro?: React.ReactNode;
 }
@@ -79,7 +83,7 @@ export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: 
           <ChevronRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
           <span aria-current="page" className="text-ink font-medium truncate px-2">{crumb}</span>
         </nav>
-        {eyebrow && <p className="sag-eyebrow mt-2">{eyebrow}</p>}
+        {eyebrow && <p className="mt-2 text-xs leading-4 font-bold text-sale">{eyebrow}</p>}
         <h1 className={`font-display text-[28px] leading-8 lg:text-[40px] lg:leading-[46px] text-ink ${eyebrow ? 'mt-1' : 'mt-2'}`}>{title}</h1>
         {subtitle && <p className="mt-2 text-[15px] leading-[22px] text-ink-muted max-w-2xl">{subtitle}</p>}
         {children}
@@ -112,7 +116,7 @@ export const HelpCard: React.FC<{ topic: string; showContactLink?: boolean }> = 
   );
 };
 
-const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, facts = [], sections, intro }) => {
+const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, facts = [], short = [], eyebrow = 'Policy', sections, intro }) => {
   const { setActivePage } = useShop();
   const [activeId, setActiveId] = useState(sections[0]?.id || '');
 
@@ -135,7 +139,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
 
   return (
     <div id={`${page}-page`} className="bg-page pb-12 lg:pb-16">
-      <InfoPageHeader crumb={title} eyebrow="Suit Aura Girls policy" title={title} subtitle={subtitle} />
+      <InfoPageHeader crumb={title} eyebrow={eyebrow} title={title} subtitle={subtitle} />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 lg:grid lg:grid-cols-12 lg:gap-10">
         {/* Contents: chips on phones, sticky list on desktop */}
@@ -168,9 +172,22 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
         )}
 
         <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-4 min-w-0`}>
-          {/* The short answers first */}
+          {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
+          {short.length > 0 && (
+            <section aria-labelledby={`${page}-short-title`} className={`rounded-sheet bg-lilac p-4 sm:p-5 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
+              <h2 id={`${page}-short-title`} className="font-sans text-[15px] leading-[22px] font-bold text-ink">In short</h2>
+              <ul className="mt-2.5 space-y-2">
+                {short.map((point) => (
+                  <li key={point} className="flex items-start gap-2.5 text-sm leading-5 font-semibold text-ink">
+                    <span aria-hidden="true" className="mt-px flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-dark text-on-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                    <span className="min-w-0">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {facts.length > 0 && (
-            <section aria-label="Key facts" className="rounded-card border border-brand-line bg-brand-wash px-4 sm:px-6">
+            <section aria-label="Key facts" className={`rounded-card border border-brand-line bg-brand-wash px-4 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
               <dl>
                 {facts.map(({ icon: Icon, label, value }) => (
                   <div key={label} className="sag-row border-brand-line items-start py-3">
@@ -229,6 +246,11 @@ export const ShippingPolicyPage: React.FC = () => {
       page="shipping-policy"
       title="Shipping & delivery policy"
       subtitle="Prepaid shipping across India, tracked from dispatch to your door"
+      short={[
+        "We deliver across India through our courier partners",
+        "Most orders are dispatched within 24 to 48 business hours",
+        "Your courier name and AWB tracking number are emailed at dispatch",
+      ]}
       facts={[
         { icon: TruckIcon, label: 'Shipping charges', value: shippingValue },
         { icon: PackageIcon, label: 'Dispatch', value: 'Within 24–48 business hours' },
@@ -291,6 +313,12 @@ export const ReturnPolicyPage: React.FC = () => {
       page="return-policy"
       title="Returns & exchanges policy"
       subtitle="Request a return or an exchange within 7 days of delivery"
+      short={[
+        "Request a return or exchange within 7 days of delivery",
+        "The garment must be unused, unwashed and unstained, with tags intact",
+        "Request it from My account → Orders",
+        "Refund to your original payment method after our quality check",
+      ]}
       facts={[
         { icon: ReturnIcon, label: 'Return window', value: '7 days from delivery' },
         { icon: TagIcon, label: 'Condition', value: 'Unused, tags intact' },
@@ -341,6 +369,11 @@ export const PrivacyPolicyPage: React.FC = () => (
     page="privacy-policy"
     title="Privacy policy"
     subtitle="What we collect, how payments are handled and how your details are used"
+      short={[
+        "We never see or store your card numbers, UPI PINs or net banking passwords",
+        "We never sell, lease or rent your contact information",
+        "Your data is used only for fulfilling orders and communicating updates",
+      ]}
     facts={[
       { icon: LockIcon, label: 'Payment details', value: 'Never stored on our servers' },
       { icon: QualityIcon, label: 'Your data', value: 'Never sold or rented' },
@@ -371,6 +404,11 @@ export const TermsPage: React.FC = () => (
     page="terms-policy"
     title="Terms & conditions"
     subtitle="The terms that apply when you use this website and place an order"
+      short={[
+        "All prices are in Indian Rupees (INR) and inclusive of GST",
+        "Colours can look slightly different on different screens",
+        "Photographs and designs are the intellectual property of Suit Aura Girls",
+      ]}
     facts={[
       { icon: TagIcon, label: 'Pricing', value: 'In INR, inclusive of GST' },
       { icon: LockIcon, label: 'Orders', value: 'Prepaid store policies apply' },
@@ -403,6 +441,12 @@ export const CancellationPolicyPage: React.FC = () => {
     page="cancellation-policy"
     title="Cancellation policy"
     subtitle="How to cancel an order that has not been dispatched yet"
+      short={[
+        "Cancel free of cost before the order is handed to the courier",
+        "Cancel from My account → Orders, or email or WhatsApp us with your Order ID",
+        "The full amount is refunded to your original payment method",
+        "Banks usually take 5–7 working days to show the refund",
+      ]}
     facts={[
       { icon: PackageIcon, label: 'Cancel for free', value: 'Any time before dispatch' },
       { icon: SupportIcon, label: 'How', value: 'My account → Orders, or message us' },
@@ -447,6 +491,7 @@ export const SizeGuidePage: React.FC = () => (
     page="size-guide"
     title="Size guide"
     subtitle="Garment measurements in inches for every size we make"
+    eyebrow="Guide"
     facts={[
       { icon: TagIcon, label: 'Units', value: 'All measurements in inches' },
       { icon: HelpIcon, label: 'Between two sizes?', value: 'Choose the larger size' },

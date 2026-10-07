@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
 import { useRouter } from '../context/RouterContext';
 import { ordersApi } from '../lib/api';
-import { AlertCircle, ChevronRight, Loader2, Phone, Search, Share2 } from 'lucide-react';
+import { AlertCircle, ChevronRight, ExternalLink, Loader2, Phone, Search, Share2 } from 'lucide-react';
+import { trackingLinkFor } from '../utils/courier';
 import { PinIcon, ReturnIcon } from './StoreIcons';
 import { WhatsAppIcon } from './BrandIcons';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
@@ -91,6 +92,15 @@ export const TrackOrderPage: React.FC = () => {
   const paid = order?.paymentStatus === 'Paid';
   // A paid order that has not been shipped can still be cancelled, but only from My account (sign-in needed)
   const canCancel = order ? canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0) : false;
+
+  // The courier's own tracking page, only when the order really has one
+  const courierLink = order ? trackingLinkFor(order) : null;
+  const copyAwbForCourier = () => {
+    const awb = String(order?.trackingNumber || '').trim();
+    // The courier's page takes no number in its link: copy it so the customer can paste it there
+    if (!courierLink || courierLink.hasAwb || !awb || !navigator.clipboard) return;
+    navigator.clipboard.writeText(awb).then(() => showToast('AWB number copied. Paste it on the courier page.', 'success')).catch(() => {});
+  };
 
   const share = async () => {
     if (!order) return;
@@ -194,11 +204,12 @@ export const TrackOrderPage: React.FC = () => {
         )}
 
         {order && (
-          <>
-            <section className="sag-card p-4 sm:p-5 space-y-4 sag-fade" aria-labelledby="tracked-order-title">
+          <div className="flex flex-col gap-4">
+            {/* Phones and tablets: the dark status block, the items, then the two buttons. Desktop keeps its order. */}
+            <section className="order-1 space-y-3 sag-fade lg:rounded-card lg:bg-surface lg:p-5 lg:shadow-[var(--sag-shadow)]" aria-labelledby="tracked-order-title">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="sag-eyebrow">Order</p>
+                  <p className="text-xs leading-4 font-bold text-sale">Order</p>
                   <h2 id="tracked-order-title" className="font-sans text-lg leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
                   <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
@@ -215,6 +226,34 @@ export const TrackOrderPage: React.FC = () => {
                 </button>
               </div>
 
+              <OrderProgress order={order} />
+            </section>
+
+            <div className="order-3 lg:hidden flex gap-2">
+              {courierLink && (
+                <a
+                  href={courierLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={courierLink.label}
+                  onClick={copyAwbForCourier}
+                  className="sag-btn-primary flex-1 min-w-0 px-3 gap-2 text-[15px]"
+                >
+                  Courier tracking <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
+                </a>
+              )}
+              <a
+                href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with order ${order.orderNumber}.`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Help on WhatsApp"
+                className="sag-btn-outline flex-1 min-w-0 px-3 gap-2 text-[15px]"
+              >
+                <WhatsAppIcon className="w-[18px] h-[18px]" aria-hidden="true" /> Help
+              </a>
+            </div>
+
+            <section className="order-4 lg:order-2 sag-card p-4 sm:p-5 space-y-4" aria-label="Order updates">
               {latest && (
                 <div className="rounded-control border border-brand-line bg-brand-wash px-3.5 py-3 text-sm leading-5">
                   <p className="sag-eyebrow">Latest update</p>
@@ -226,8 +265,6 @@ export const TrackOrderPage: React.FC = () => {
                 </div>
               )}
 
-              <OrderProgress order={order} />
-
               <CourierCard order={order} />
 
               <DeliveryAgentCard order={order} />
@@ -236,7 +273,7 @@ export const TrackOrderPage: React.FC = () => {
             </section>
 
             {isOwner && canStartReturn(order) && (
-              <section className="sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+              <section className="order-5 lg:order-3 sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
                 <span className="hidden sm:flex shrink-0 text-ink-muted"><ReturnIcon className="w-6 h-6" mono live={false} /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-base leading-[22px] font-semibold text-ink">Not the right fit?</p>
@@ -250,7 +287,7 @@ export const TrackOrderPage: React.FC = () => {
               </section>
             )}
 
-            <section className="sag-card p-4 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
+            <section className="order-2 lg:order-4 sag-card p-4 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
               <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
               <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {
@@ -305,7 +342,7 @@ export const TrackOrderPage: React.FC = () => {
               )}
             </section>
 
-            <section className="sag-card p-4 sm:p-5 space-y-3" aria-label="Help with this order">
+            <section className="order-6 sag-card p-4 sm:p-5 space-y-3" aria-label="Help with this order">
               <div>
                 <p className={cardTitle}>Need help with this order?</p>
                 <p className="mt-0.5 text-sm leading-5 text-ink-muted">Share your order number and we will take it from there.</p>
@@ -341,7 +378,7 @@ export const TrackOrderPage: React.FC = () => {
                 </div>
               )}
             </section>
-          </>
+          </div>
         )}
       </div>
 

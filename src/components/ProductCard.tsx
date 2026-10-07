@@ -76,15 +76,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   };
 
   return (
-    <article id={`product-card-${product.id}`} className="group relative grid grid-cols-[42%_minmax(0,1fr)] sm:flex sm:flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
-      {/* Phones: a row, photo left and details right, with the heart at the row's top-right corner.
-          From tablet width: photo on top, and the heart sits on the photo's top-right corner (the watermark is top-left). */}
-      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full overflow-hidden bg-sunken">
+    <article id={`product-card-${product.id}`} className="group relative flex flex-col h-full overflow-hidden rounded-[20px] bg-white shadow-[var(--sag-shadow)]">
+      {/* Photo on top at every width (two columns on phones); the heart sits on the photo's top-right corner (the watermark is top-left). */}
+      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="relative block aspect-[4/5] w-full shrink-0 overflow-hidden bg-sunken">
         <img
           src={getCleanImageUrl(primary, 480)}
-          // A phone's row card shows the photo about 150px wide, a desktop card about 280px: the browser takes the stored size that fits
+          // Two columns on phones (about 170px wide), about 280px on a desktop: the browser takes the stored size that fits
           srcSet={getCleanImageUrl(primary, 480) !== getCleanImageUrl(primary, 640) ? `${getCleanImageUrl(primary, 480)} 480w, ${getCleanImageUrl(primary, 640)} 640w, ${getCleanImageUrl(primary, 828)} 828w` : undefined}
-          sizes="(min-width: 1024px) 24vw, (min-width: 640px) 46vw, 36vw"
+          sizes="(min-width: 1024px) 24vw, 46vw"
           alt={product.name}
           className={`w-full h-full object-cover object-top ${soldOut ? 'opacity-60 grayscale-[35%]' : ''}`}
           loading="lazy"
@@ -110,48 +109,48 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         onClick={(e) => { e.stopPropagation(); toggleWishlist(product); }}
         aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         aria-pressed={fav}
-        className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center cursor-pointer"
+        className="absolute top-0.5 right-0.5 w-11 h-11 flex items-center justify-center cursor-pointer"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-sunken sm:bg-white text-accent sm:shadow-[0_1px_4px_rgba(10,10,10,0.16)]">
-          <Heart className={`w-[18px] h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
+        <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white text-accent shadow-[0_1px_4px_rgba(10,10,10,0.16)]">
+          <Heart className={`w-4 h-4 sm:w-[18px] sm:h-[18px] ${fav ? 'fill-accent' : ''}`} strokeWidth={2} aria-hidden="true" />
         </span>
       </button>
 
-      <div className="flex flex-col flex-1 min-w-0 py-3 pr-3 pl-3 sm:px-2.5 sm:pt-2.5 sm:pb-2.5">
-        <div className="flex items-center min-h-[22px] mb-1 pr-10 sm:pr-0">
-          {badge ? (
-            <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : 'bg-ink text-white'}`}>
-              {badge}
-            </span>
-          ) : (
-            <span className="min-w-0 truncate text-xs text-ink-muted">{product.category}</span>
-          )}
-        </div>
-
-        <h3 className="text-[13px] leading-[17px] font-bold sm:font-semibold text-ink sm:line-clamp-2 sm:min-h-[34px]" title={product.name}>
+      <div className="flex flex-col flex-1 min-w-0 px-2.5 pt-2 pb-2.5">
+        <h3 className="text-[13px] leading-[17px] font-semibold text-ink line-clamp-2 min-h-[34px]" title={product.name}>
           <a href={href} onClick={openProduct} className="hover:underline underline-offset-2 focus-visible:underline">{product.name}</a>
         </h3>
 
-        {rating && (
-          <div className="mt-1 flex items-center gap-1.5 text-xs leading-5 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
-            <span className="inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">
-              {rating.avg.toFixed(1)} <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
-            </span>
-            <span>({rating.count})</span>
+        {/* Rating (approved reviews only) and the status badge share one line; nothing is shown when neither is real */}
+        {(rating || badge) && (
+          <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            {rating && (
+              <span className="inline-flex items-center gap-1 text-xs leading-5 text-ink-muted" aria-label={`Rated ${rating.avg.toFixed(1)} out of 5 from ${rating.count} ${rating.count === 1 ? 'review' : 'reviews'}`}>
+                <span className="inline-flex items-center gap-0.5 rounded-md bg-ok px-1.5 text-[11px] font-bold leading-[18px] text-white">
+                  {rating.avg.toFixed(1)} <Star className="w-2.5 h-2.5 fill-white text-white" aria-hidden="true" />
+                </span>
+                <span className="sag-num">({rating.count})</span>
+              </span>
+            )}
+            {badge && (
+              <span className={`sag-badge ${soldOut ? 'text-ink-muted' : product.isBestSeller && !product.isNewArrival ? 'bg-accent-tint text-accent' : 'bg-ink text-white'}`}>
+                {badge}
+              </span>
+            )}
           </div>
         )}
 
-        <div className="sag-num flex items-baseline gap-x-1.5 gap-y-0 flex-wrap mt-auto pt-1">
-          <span className={`text-[16px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
-          {mrp > price && <span className="text-[13px] text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span>}
-          {discount > 0 && <span className="text-[13px] font-bold text-sale whitespace-nowrap">{discount}% off</span>}
+        <div className="sag-num flex items-baseline gap-x-1.5 gap-y-0 flex-wrap mt-auto pt-1.5">
+          <span className={`text-[15px] sm:text-[16px] leading-5 font-extrabold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
+          {mrp > price && <span className="text-xs sm:text-[13px] text-ink-faint line-through">₹{mrp.toLocaleString('en-IN')}</span>}
+          {discount > 0 && <span className="text-xs sm:text-[13px] font-bold text-sale whitespace-nowrap">{discount}% off</span>}
         </div>
 
         {picking ? (
-          <div className="mt-2 rounded-control bg-page border border-line p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
+          <div className="mt-2 rounded-control bg-page border border-line p-1.5 sm:p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
             <div className="flex items-center justify-between pl-1">
-              <span className="text-[13px] font-semibold text-ink">Choose a size</span>
-              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
+              <span className="min-w-0 truncate text-[13px] font-semibold text-ink">Choose a size</span>
+              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -175,7 +174,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             disabled={soldOut}
             onClick={onQuickAdd}
             aria-label={soldOut ? `${product.name} is sold out` : justAdded ? `${product.name} is in your bag. Open bag` : `Add ${product.name} to bag`}
-            className={`mt-2 w-full h-10 rounded-full text-[13px] font-bold flex items-center justify-center gap-1.5 transition-colors ${
+            className={`mt-2 w-full h-9 sm:h-10 px-1 rounded-full text-[13px] font-bold flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors ${
               soldOut
                 ? 'bg-sunken-deep text-ink-muted cursor-not-allowed'
                 : justAdded

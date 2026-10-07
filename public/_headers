@@ -34,8 +34,3 @@
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
-
-# Design previews for the owner: kept out of search engines and caches.
-/looks/*
-  X-Robots-Tag: noindex, nofollow
-  Cache-Control: no-store

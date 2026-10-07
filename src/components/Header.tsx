@@ -14,7 +14,8 @@ import { ChevronDown, ChevronRight, CircleAlert, CircleCheck, Clock, Loader2, Me
 import { PIN_KEY, PIN_RE, lookupPincode } from './DeliveryCheck';
 import { BagIcon } from './BrandIcons';
 import { useBackToClose } from '../utils/backClose';
-import { HeartIcon, PinIcon, SearchIcon, TagIcon, UserIcon } from './StoreIcons';
+import { HeartIcon, LockIcon, PinIcon, ReturnIcon, SearchIcon, TagIcon, TruckIcon, UserIcon } from './StoreIcons';
+import { assuranceFacts } from './Assurance';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
 
@@ -254,6 +255,14 @@ export const Header: React.FC = () => {
     return [...found.filter(isAvailable), ...found.filter((p) => !isAvailable(p))];
   }, [products, searchTrimmed]);
   const results = matches.slice(0, 6);
+  // The empty search panel leads with photos: the styles the owner marked trending or best seller. When none
+  // is marked, the newest arrivals are shown under their own name, so the title is always true.
+  const suggested = useMemo(() => {
+    const live = products.filter((p) => departmentOf(p) === 'women' && isAvailable(p));
+    const marked = live.filter((p) => p.isTrending || p.isBestSeller);
+    if (marked.length > 0) return { title: 'Trending now', items: marked.slice(0, 8) };
+    return { title: 'New arrivals', items: live.filter((p) => p.isNewArrival).slice(0, 8) };
+  }, [products]);
 
   const navItems: Array<{ label: string; action: () => void; active: boolean }> = [
     { label: 'Home', action: () => setActivePage('home'), active: activePage === 'home' },
@@ -271,7 +280,11 @@ export const Header: React.FC = () => {
   const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-0 h-0.5 bg-brand ${active ? '' : 'hidden'}`;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
-  const chip = 'h-11 px-3.5 rounded-chip bg-sunken text-sm font-medium text-ink hover:bg-sunken-deep inline-flex items-center gap-1.5 transition-colors cursor-pointer';
+  // Three of the store's facts as small chips under the phone header (worded in Assurance, shortened to fit)
+  const facts = assuranceFacts();
+  const chipsHidden = searchRowHidden || isSearchOpen || isMobileMenuOpen;
+  const trustChip = 'inline-flex h-[28px] shrink-0 items-center gap-1 rounded-full border border-line bg-surface px-2.5 text-[11.5px] font-bold leading-none text-ink';
+  const tile = 'flex min-h-11 w-full min-w-0 items-center justify-between gap-2 rounded-chip bg-lilac px-3 py-2.5 text-left text-[13px] font-bold text-lilac-ink cursor-pointer';
   const searchLabel = 'Search suits, kurtis & more';
   const rowHidden = searchRowHidden && !isSearchOpen && !isMobileMenuOpen;
   // What the search hint types: the store's biggest collections, in the words a shopper would use
@@ -279,10 +292,11 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full rounded-b-[18px] bg-dark lg:rounded-none lg:bg-white lg:border-b lg:border-line select-none">
-        {/* Phones and tablets: the all-black header. Logo in a turning amber ring, the name, wishlist and bag;
-            under them the menu, the dark search field and the amber search button. */}
-        <div className={`lg:hidden max-w-2xl mx-auto px-2.5 pt-2 transition-[padding] duration-200 ${rowHidden ? 'pb-2' : 'pb-2.5'}`}>
+      <header className="sticky top-0 z-50 w-full lg:bg-white lg:border-b lg:border-line select-none">
+        {/* Phones and tablets: the all-dark header. Logo in a turning gold ring, the name, wishlist and bag;
+            under them the menu, the dark search field and the gold search button. */}
+        <div className="lg:hidden rounded-b-[18px] bg-dark">
+        <div className={`max-w-2xl mx-auto px-2.5 pt-2 transition-[padding] duration-200 ${rowHidden ? 'pb-2' : 'pb-2.5'}`}>
           <div className="flex items-center gap-2">
             <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 flex-1 items-center gap-2 rounded-full text-left cursor-pointer" aria-label="Suit Aura Girls home">
               <span className="sag-ring-amber flex h-[40px] w-[40px] shrink-0 items-center justify-center">
@@ -342,6 +356,27 @@ export const Header: React.FC = () => {
               <SearchIcon className="w-[17px] h-[17px]" mono />
             </button>
           </div>
+          </div>
+        </div>
+        </div>
+
+        {/* Under the header, on the page: three store facts as chips. They slide away with the search row. */}
+        <div
+          className={`lg:hidden grid transition-[grid-template-rows,opacity] duration-200 ease-out ${chipsHidden ? 'grid-rows-[0fr] opacity-0 pointer-events-none' : 'grid-rows-[1fr] opacity-100'}`}
+          {...(chipsHidden ? { inert: true } : {})}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <ul id="header-trust-chips" aria-label="Why shop with us" className="mx-auto flex max-w-2xl items-center justify-center gap-1.5 overflow-x-auto bg-page px-2.5 py-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <li className="flex shrink-0">
+                <span className={trustChip}><LockIcon className="w-[13px] h-[13px]" mono /><span aria-hidden="true">Secure UPI</span><span className="sr-only">{facts.payment}</span></span>
+              </li>
+              <li className="flex shrink-0">
+                <button type="button" onClick={() => setActivePage('return-policy')} aria-label={facts.returns} className={`${trustChip} cursor-pointer`}><ReturnIcon className="w-[13px] h-[13px]" mono />7-day returns</button>
+              </li>
+              <li className="flex shrink-0">
+                <button type="button" onClick={() => setActivePage('shipping-policy')} aria-label={facts.delivery} className={`${trustChip} cursor-pointer`}><TruckIcon className="w-[13px] h-[13px]" mono />All India</button>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -571,19 +606,41 @@ export const Header: React.FC = () => {
                     </div>
                   </div>
                 )}
-                {/* Quick ways in: only collections that have products */}
-                {(collections.length > 0 || hasKidsToys) && (
-                  <div id="trending-searches-container">
-                    <span className="sag-eyebrow block mb-2">Shop collections</span>
-                    <div className="flex flex-wrap gap-2">
-                      <button onClick={() => { navigateToCategory('New Arrivals'); setIsSearchOpen(false); }} className={chip}>New arrivals</button>
-                      <button onClick={() => { navigateToCategory('Sale'); setIsSearchOpen(false); }} className="h-11 px-3.5 rounded-chip bg-sale-tint text-sm font-semibold text-sale inline-flex items-center gap-1.5 cursor-pointer"><TagIcon className="w-4 h-4" mono /> Offers</button>
-                      {collections.map(([name, count]) => (
-                        <button key={name} onClick={() => { navigateToCategory(name as any); setIsSearchOpen(false); }} className={chip}>
-                          {name} <span className="text-[13px] font-normal text-ink-muted tabular-nums">{count}</span>
+                {/* Empty field: real product photos with their price, in one swipeable row */}
+                {searchTrimmed.length < 2 && suggested.items.length > 0 && (
+                  <div id="search-trending-container">
+                    <p className="mb-2 text-sm font-extrabold leading-5 text-ink">{suggested.title}</p>
+                    <div className="sag-scroll-x -mx-4 flex gap-2.5 overflow-x-auto px-4 sm:-mx-8 sm:px-8">
+                      {suggested.items.map((prod) => (
+                        <button
+                          key={prod.id}
+                          type="button"
+                          id={`search-trending-${prod.id}`}
+                          onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
+                          aria-label={`${prod.name}, ₹${prod.price.toLocaleString('en-IN')}`}
+                          className="flex w-[104px] shrink-0 flex-col gap-1.5 rounded-chip text-left cursor-pointer"
+                        >
+                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-chip bg-sunken object-cover object-top" />
+                          <span className="sag-num px-0.5 text-[13px] font-bold leading-4 text-ink">₹{prod.price.toLocaleString('en-IN')}</span>
                         </button>
                       ))}
-                      {hasKidsToys && <button onClick={() => { navigateToCategory(KIDS_TOYS as any); setIsSearchOpen(false); }} className={chip}>{KIDS_TOYS}</button>}
+                    </div>
+                  </div>
+                )}
+                {/* Quick ways in: only collections that have products, each with its real count */}
+                {(collections.length > 0 || hasKidsToys) && (
+                  <div id="trending-searches-container">
+                    <p className="mb-2 text-sm font-extrabold leading-5 text-ink">Collections</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {collections.map(([name, count]) => (
+                        <button key={name} type="button" onClick={() => { navigateToCategory(name as any); setIsSearchOpen(false); }} className={tile}>
+                          <span className="min-w-0 break-words">{name}</span>
+                          <span className="sag-num shrink-0 text-xs font-semibold text-ink-muted">{count}</span>
+                        </button>
+                      ))}
+                      {hasKidsToys && <button type="button" onClick={() => { navigateToCategory(KIDS_TOYS as any); setIsSearchOpen(false); }} className={tile}><span className="min-w-0 break-words">{KIDS_TOYS}</span></button>}
+                      <button type="button" onClick={() => { navigateToCategory('New Arrivals'); setIsSearchOpen(false); }} className={tile}><span className="min-w-0 break-words">New arrivals</span></button>
+                      <button type="button" onClick={() => { navigateToCategory('Sale'); setIsSearchOpen(false); }} className="flex min-h-11 w-full min-w-0 items-center gap-1.5 rounded-chip bg-peach px-3 py-2.5 text-left text-[13px] font-bold text-peach-ink cursor-pointer"><TagIcon className="w-4 h-4 shrink-0" mono /> Offers</button>
                     </div>
                   </div>
                 )}

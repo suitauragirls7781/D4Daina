@@ -64,8 +64,8 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 : `No exact match — closest in-stock styles within your budget and size:`}
           </p>
           {size === '' && result.products.length > 0 && <p className="text-[13px] leading-[18px] text-ink-muted mt-1">Not sure of the size? Every product page has a size chart and “Find my size”.</p>}
-          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-7 sm:gap-x-5">
-            {result.products.map((p) => <div key={p.id} onClickCapture={onClose}><ProductCard product={p} compact /></div>)}
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-y-7 sm:gap-x-5">
+            {result.products.map((p) => <div key={p.id} className="min-w-0" onClickCapture={onClose}><ProductCard product={p} compact /></div>)}
           </div>
         </div>
       </div>

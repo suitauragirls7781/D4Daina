@@ -4,7 +4,7 @@ import { useAdmin } from '../context/AdminContext';
 import { instagramProfile } from '../utils/instagram';
 import { CheckCircle2, ChevronRight, Clock, Phone, Send } from 'lucide-react';
 import { GmailIcon, InstagramIcon, WhatsAppIcon } from './BrandIcons';
-import { PinIcon } from './StoreIcons';
+import { PinIcon, TruckIcon } from './StoreIcons';
 import { InfoPageHeader } from './PolicyPages';
 import { db } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
@@ -16,7 +16,7 @@ export const ContactUsPage: React.FC = () => {
   const { storeSettings } = useAdmin();
   const SUPPORT_EMAIL = storeSettings?.storeEmail || DEFAULT_SUPPORT_EMAIL;
   const instagram = instagramProfile(storeSettings?.instagramUrl || STORE_INSTAGRAM_URL);
-  const { showToast } = useShop();
+  const { showToast, setActivePage } = useShop();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -57,7 +57,7 @@ export const ContactUsPage: React.FC = () => {
 
   const telHref = `tel:+91${SUPPORT_PHONE_DISPLAY.replace(/\D/g, '').replace(/^91/, '')}`;
   const optional = <span className="font-normal text-ink-muted">(optional)</span>;
-  const helpBtn = 'inline-flex items-center justify-center gap-2 h-12 px-4 rounded-control bg-surface border-[1.5px] border-control text-[15px] font-semibold text-ink hover:bg-sunken transition-colors';
+  const darkBtn = 'inline-flex items-center justify-center gap-2 h-12 px-4 rounded-full text-[15px] font-bold transition-colors';
   const rowTitle = 'block font-sans text-sm leading-5 font-semibold text-ink';
   const rowSub = 'block text-[13px] leading-[18px] font-normal text-ink-muted mt-0.5';
 
@@ -77,31 +77,31 @@ export const ContactUsPage: React.FC = () => {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-8 items-start">
         {/* Ways to reach us */}
         <div className="lg:col-span-5 space-y-4 min-w-0">
-          {/* WhatsApp & call */}
-          <section className="sag-card p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
-            <h2 id="contact-whatsapp-title" className="text-[17px] leading-6 font-semibold text-ink">WhatsApp &amp; call</h2>
-            <p className="mt-1 text-sm leading-5 text-ink-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
+          {/* WhatsApp & call: the dark card comes first */}
+          <section className="rounded-sheet bg-dark text-on-dark p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
+            <h2 id="contact-whatsapp-title" className="font-display text-[22px] leading-7 font-semibold text-on-dark">WhatsApp &amp; call</h2>
+            <p className="mt-1 text-sm leading-5 text-on-dark-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
             <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
               <a
                 href={createSupportWhatsAppUrl('Hi Suit Aura Girls! I have a question regarding suits and orders.')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={helpBtn}
+                className={`${darkBtn} bg-sun text-ink`}
               >
                 <WhatsAppIcon className="w-5 h-5" />
                 <span>Chat on WhatsApp</span>
               </a>
-              <a className={`${helpBtn} sag-num`} href={telHref} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
+              <a className={`${darkBtn} sag-num bg-white/10 text-on-dark hover:bg-white/20`} href={telHref} aria-label={`Call ${SUPPORT_PHONE_DISPLAY}`}>
                 <Phone className="w-[18px] h-[18px]" aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
               </a>
             </div>
-            <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
+            <p className="mt-3 text-[13px] leading-[18px] text-on-dark-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
           </section>
 
-          {/* Email, store, Instagram */}
-          <section className="sag-card px-4 sm:px-5" aria-label="Other ways to reach us">
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="sag-row items-start py-3.5">
-              <span className="shrink-0 flex mt-0.5"><GmailIcon mono className="w-5 h-5" /></span>
+          {/* Email */}
+          <section className="sag-card px-4 sm:px-5" aria-label="Email us">
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="sag-row border-t-0 items-start py-3.5">
+              <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-lilac text-ink"><GmailIcon mono className="w-5 h-5" /></span>
               <span className="min-w-0 flex-1">
                 <span className={rowTitle}>Email</span>
                 <span className="block text-[15px] leading-[22px] font-semibold text-brand underline underline-offset-[3px] break-all">{SUPPORT_EMAIL}</span>
@@ -109,7 +109,22 @@ export const ContactUsPage: React.FC = () => {
               </span>
               <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-1" aria-hidden="true" />
             </a>
+          </section>
 
+          {/* Track order */}
+          <section className="sag-card px-4 sm:px-5" aria-label="Track your order">
+            <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="sag-row border-t-0 w-full items-start py-3.5 text-left cursor-pointer">
+              <span className="shrink-0 flex h-10 w-10 items-center justify-center rounded-full bg-peach text-ink"><TruckIcon mono live={false} className="w-5 h-5" /></span>
+              <span className="min-w-0 flex-1">
+                <span className={rowTitle}>Track order</span>
+                <span className={rowSub}>Enter the order number from your confirmation email.</span>
+              </span>
+              <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-1" aria-hidden="true" />
+            </button>
+          </section>
+
+          {/* Store, Instagram */}
+          <section className="sag-card px-4 sm:px-5" aria-label="Other ways to reach us">
             <div className="sag-row items-start py-3.5">
               <span className="shrink-0 flex mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
               <div className="min-w-0 flex-1">

@@ -9,6 +9,23 @@ import { isAvailable } from '../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
 import { trackItem } from '../utils/visitorTracker';
 import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
+import { useAdmin } from '../context/AdminContext';
+import { STORE_INSTAGRAM_URL } from '../utils/storeContact';
+import { InstagramIcon } from './BrandIcons';
+
+/** True from Tailwind's `lg` width up: the desktop keeps the rail of posters. */
+const useIsDesktop = () => {
+  const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 1024px)').matches));
+  useEffect(() => {
+    const query = window.matchMedia?.('(min-width: 1024px)');
+    if (!query) return;
+    const update = () => setDesktop(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
+  return desktop;
+};
 
 const inr = (n: number) => `₹${Math.round(n).toLocaleString('en-IN')}`;
 const PLACEHOLDER_COLOURS = new Set(['default', 'standard']);
@@ -37,6 +54,9 @@ export const AuraReelsSection: React.FC = () => {
   const { features } = useDiscovery();
   const { reels } = useAuraReels();
   const { allProducts = [] } = useShop();
+  const { storeSettings } = useAdmin();
+  const instagramUrl = storeSettings?.instagramUrl || STORE_INSTAGRAM_URL;
+  const isDesktop = useIsDesktop();
   const [viewer, setViewer] = useState<{ reels: AuraReel[]; start: number } | null>(null);
   const tokenRef = useRef<string | null>(null);
   const closingRef = useRef(false);
@@ -119,6 +139,60 @@ export const AuraReelsSection: React.FC = () => {
   if (!visible) return null;
   const anyProduct = live.some((r) => r.productId && productById.has(r.productId));
 
+  const viewerPortal = viewer && createPortal(
+    <ReelsViewer reels={viewer.reels} start={viewer.start} productById={productById} onClose={close} />,
+    document.body,
+  );
+
+  if (!isDesktop) {
+    // Phones and tablets (owner's pick 3): three reels side by side on a pale block; the rest are a swipe away.
+    // Only the still poster is shown here; a video loads when a reel is opened.
+    return (
+      <section id="aura-reels" aria-labelledby="aura-reels-title" className="w-full pt-5 pb-1">
+        <div className="mx-auto max-w-2xl px-3.5 sm:px-6">
+          <div className="flex flex-col gap-3 rounded-[28px] bg-lilac p-4 sm:p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="aura-reels-title" className="font-display text-[20px] font-bold leading-7 text-ink sm:text-2xl">Reels</h2>
+              {instagramUrl && (
+                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 text-[13px] font-bold text-ink">
+                  <InstagramIcon className="h-[15px] w-[15px]" /> Instagram
+                </a>
+              )}
+            </div>
+            <ul className="sag-scroll-x scroll-px-0! flex gap-2 overflow-x-auto sm:gap-3">
+              {live.map((reel, i) => {
+                const product = reel.productId ? productById.get(reel.productId) : undefined;
+                return (
+                  <li key={`${reel.id}-${i}`} className="w-[calc((100%-1rem)/3)] shrink-0 sm:w-[calc((100%-1.5rem)/3)]">
+                    <button
+                      type="button"
+                      onClick={(e) => open(i, e.currentTarget)}
+                      aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
+                      className="relative block aspect-[9/16] w-full cursor-pointer overflow-hidden rounded-control bg-mint"
+                    >
+                      <img
+                        src={reelPosterSrc(reel, 400)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        onError={onPosterError}
+                        className="h-full w-full object-cover object-top"
+                      />
+                      <span aria-hidden="true" className="absolute inset-0 m-auto flex h-[42px] w-[42px] items-center justify-center rounded-full bg-surface text-ink">
+                        <Play className="h-[18px] w-[18px] translate-x-px fill-current" />
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+        {viewerPortal}
+      </section>
+    );
+  }
+
   return (
     <section id="aura-reels" aria-labelledby="aura-reels-title" className={`${HOME_SECTION} bg-white`}>
       <div className="max-w-7xl mx-auto">
@@ -167,10 +241,7 @@ export const AuraReelsSection: React.FC = () => {
           })}
         </ul>
       </div>
-      {viewer && createPortal(
-        <ReelsViewer reels={viewer.reels} start={viewer.start} productById={productById} onClose={close} />,
-        document.body,
-      )}
+      {viewerPortal}
     </section>
   );
 };

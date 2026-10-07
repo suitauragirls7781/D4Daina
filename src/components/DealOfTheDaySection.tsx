@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useShop } from '../context/ShopContext';
+import { ChevronRight } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+
+/** True from Tailwind's `lg` width up: the desktop keeps the ticket. */
+const useIsDesktop = () => {
+  const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(min-width: 1024px)').matches));
+  useEffect(() => {
+    const query = window.matchMedia?.('(min-width: 1024px)');
+    if (!query) return;
+    const update = () => setDesktop(query.matches);
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
+  return desktop;
+};
 
 type TimeLeft = { days: number; hours: number; minutes: number; seconds: number };
 
@@ -21,14 +36,16 @@ const readTimeLeft = (endTime?: string): TimeLeft | null => {
 const two = (value: number) => String(value).padStart(2, '0');
 
 /**
- * Deal of the day as a small coupon ticket (owner's pick 1): photo, name and price on a butter strip, and a
- * torn-off end with the time left and "Grab it". The whole ticket opens the product, where the size is chosen.
+ * Deal of the day. Phones and tablets (owner's pick 2): one dark block, the photo on the left and beside it the
+ * label, name, price, the real saving and a gold "Grab it". Desktop keeps the small coupon ticket.
+ * The whole block opens the product, where the size is chosen.
  * The price is the product's own price (what the bag charges), and the clock runs only to the end time the
  * store set in Admin; it never resets.
  */
 export const DealOfTheDaySection: React.FC = () => {
   const { dealOfTheDay } = useAdmin();
   const { products = [], navigateToProduct } = useShop();
+  const isDesktop = useIsDesktop();
 
   const targetProductId = dealOfTheDay?.productId || (products[0]?.id || '');
   const product = products.find((p) => p.id === targetProductId) || products[0];
@@ -56,20 +73,63 @@ export const DealOfTheDaySection: React.FC = () => {
   const soldOut = !product.inStock || Math.max(0, Number(product.stockQuantity) || 0) <= 0;
   const image = dealOfTheDay?.bannerImage || product.images?.find(Boolean) || product.image || '';
   const showClock = Boolean(timeLeft && timerOn);
+  const saving = originalPrice > dealPrice ? originalPrice - dealPrice : 0;
   const clock = timeLeft
     ? `${timeLeft.days > 0 ? `${timeLeft.days}d ` : ''}${two(timeLeft.hours)}:${two(timeLeft.minutes)}:${two(timeLeft.seconds)}`
     : '';
+
+  const openProduct = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    navigateToProduct(product.id);
+  };
+
+  if (!isDesktop) {
+    return (
+      <section id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full pt-5 pb-1">
+        <div className="mx-auto max-w-2xl px-3.5 sm:px-6">
+          <a href={`/product/${product.id}`} onClick={openProduct} className="flex items-stretch gap-3 rounded-[28px] bg-dark p-3.5 text-on-dark sm:gap-5 sm:p-5">
+            <span className="block w-[44%] shrink-0 overflow-hidden rounded-control bg-white/10">
+              <img
+                src={image ? getCleanImageUrl(image, 480) : ELEGANT_PLACEHOLDER_SVG}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/5] h-full w-full object-cover object-top"
+                onError={(event) => { if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
+              />
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col justify-center gap-[7px]">
+              <span className="text-[11px] font-extrabold leading-[14px] tracking-[0.08em] text-highlight">DEAL OF THE DAY</span>
+              <span id="deal-of-the-day-title" role="heading" aria-level={2} className="text-[14.5px] font-bold leading-[1.3] text-on-dark line-clamp-3 sm:text-lg">{product.name}</span>
+              <span className="sag-num flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                <span className="text-[20px] font-extrabold leading-6 text-on-dark sm:text-2xl">₹{dealPrice.toLocaleString('en-IN')}</span>
+                {originalPrice > dealPrice && <span className="text-[13px] text-on-dark-muted line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
+                {discountPercent > 0 && <span className="text-[13px] font-extrabold text-highlight">{discountPercent}% off</span>}
+              </span>
+              {saving > 0 && <span className="sag-num text-[13px] font-bold leading-[18px] text-highlight">You save ₹{saving.toLocaleString('en-IN')}</span>}
+              {showClock && (
+                <span className="flex flex-wrap items-baseline gap-x-1.5" role="timer" aria-live="off" aria-label="Offer ends in">
+                  <span className="text-xs font-semibold leading-4 text-on-dark-muted">Ends in</span>
+                  <span className="sag-num text-[15px] font-extrabold leading-5 text-on-dark">{clock}</span>
+                </span>
+              )}
+              <span className={`mt-0.5 inline-flex h-[42px] items-center justify-center gap-1 whitespace-nowrap rounded-full px-4 text-sm font-bold ${soldOut ? 'bg-white/10 text-on-dark-muted' : 'bg-sun text-ink'}`}>
+                {soldOut ? 'Sold out' : <>Grab it <ChevronRight className="h-4 w-4" aria-hidden="true" /></>}
+              </span>
+            </span>
+          </a>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full pt-5 pb-1 lg:py-8">
       <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8">
         <a
           href={`/product/${product.id}`}
-          onClick={(event) => {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-            event.preventDefault();
-            navigateToProduct(product.id);
-          }}
+          onClick={openProduct}
           className="relative mx-auto grid max-w-2xl grid-cols-[84px_minmax(0,1fr)_auto] items-stretch overflow-hidden rounded-[22px] bg-butter text-ink sm:grid-cols-[112px_minmax(0,1fr)_auto]"
         >
           <img

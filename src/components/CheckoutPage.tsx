@@ -34,8 +34,9 @@ import { AlertCircle, ArrowLeft, Check, ChevronDown, Gift, Info, Loader2, Lock, 
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { BagIcon } from './BrandIcons';
-import { Assurance } from './Assurance';
-import { CouponError, PriceDetails, useCouponApply } from './CartContents';
+import { Assurance, assuranceFacts, assuranceLine } from './Assurance';
+import { CouponError, PriceDetails, useBagSavings, useCouponApply } from './CartContents';
+import { ReturnIcon } from './StoreIcons';
 
 const INDIAN_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 
@@ -171,6 +172,8 @@ export const CheckoutPage: React.FC = () => {
   const [showCouponsModal, setShowCouponsModal] = useState(false);
   // Display only: the reason a coupon was refused, shown under the coupon field
   const { apply: applyCouponCode, error: couponError, clearError: clearCouponError } = useCouponApply();
+  // Display only: what the bag saves against MRP (the same sum the price details show)
+  const { totalSavings } = useBagSavings();
 
   // Display only: which fields may show their message (after blur, or all of them after a failed Continue),
   // and whether the order strip under the stepper is open on a phone.
@@ -985,7 +988,6 @@ export const CheckoutPage: React.FC = () => {
 
   const payDisabled = isProcessing || gateways === null || (!gateways.razorpay && !gateways.payu);
   const gatewayKnown = gateways !== null && (gateways.razorpay || gateways.payu);
-  const gatewayName = gateway === 'payu' ? 'PayU' : 'Razorpay';
   // What the Razorpay window will really offer: the same admin switches razorpayDisplayConfig() reads
   const noMethodSwitch = !paymentSettings?.enableUpi && !paymentSettings?.enableCards && !paymentSettings?.enableNetBanking;
   const razorpayDetail = [
@@ -1011,9 +1013,12 @@ export const CheckoutPage: React.FC = () => {
   ) : (
     <>
       <Lock className="w-[18px] h-[18px] shrink-0" aria-hidden="true" />
-      <span className="sag-num">Pay {rupees(finalCartTotal)} securely</span>
+      {/* "Pay by UPI" only when UPI is the one method the chosen gateway offers; otherwise the wording as before */}
+      <span className="sag-num">{gateway === 'razorpay' && upiOnly ? 'Pay by UPI' : `Pay ${rupees(finalCartTotal)} securely`}</span>
     </>
   );
+  // "Secure payment by <gateway>": the store's own wording (Assurance), with the name only once the gateway is known
+  const securePaymentText = assuranceLine(gatewayKnown ? gateway : undefined).split(' · ')[0];
 
 
   // Compact bag lines: shown in the Review step, and inside the order summary on the other steps
@@ -1046,7 +1051,7 @@ export const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <div className="sag-checkout min-h-screen bg-page text-ink font-sans text-left pb-32 lg:pb-10">
+    <div className={`sag-checkout min-h-screen bg-page text-ink font-sans text-left ${checkoutStep === 'summary' ? 'pb-32 lg:pb-10' : 'pb-10'}`}>
 
       {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the three steps, always visible.
           The site header is hidden while this page is open (".sag-checkout" rule at the end of index.css). */}
@@ -1082,18 +1087,21 @@ export const CheckoutPage: React.FC = () => {
           {/* Finished steps: closed mint rows. Then the name of the step that is open. */}
           <nav aria-label="Checkout steps" className="space-y-3">
             {stepBlocks.slice(0, stepIndex).map((_, index) => stepRow(index))}
-            <p aria-current="step" className="flex items-center gap-2.5 px-1 pt-1">
+            <p aria-current="step" className={`${checkoutStep === 'details' ? 'hidden lg:flex' : 'flex'} items-center gap-2.5 px-1 pt-1`}>
               <span className="sag-num flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink text-[13px] font-extrabold text-white">{stepIndex + 1}</span>
               <span className="text-base leading-6 font-extrabold text-ink">{stepBlocks[stepIndex]?.title}</span>
             </p>
           </nav>
 
-          {/* STEP 1: ADDRESS */}
+          {/* STEP 1: ADDRESS. Phones and tablets (owner's pick 3, 2026-10-07): the small order card on top (the
+              summary below, placed first), this title, the fields straight on the page, one dark button and
+              two facts. Desktop keeps the lilac blocks. */}
           {checkoutStep === 'details' && (
-            <div className="space-y-3">
+            <div className="space-y-5 lg:space-y-3">
+              <h1 className="lg:hidden px-1 pt-1 font-display text-[21px] leading-7 font-semibold text-ink">Where should we deliver?</h1>
 
-              <section className="sag-card p-4 sm:p-6" aria-labelledby="co-contact-title">
-                <h2 id="co-contact-title" className="text-xl leading-7 font-semibold text-ink">Contact</h2>
+              <section className="px-1 lg:rounded-[24px] lg:bg-lilac lg:p-6" aria-labelledby="co-contact-title">
+                <h2 id="co-contact-title" className="text-[17px] leading-6 lg:text-xl lg:leading-7 font-semibold text-ink">Contact</h2>
                 <div className="mt-3.5 space-y-4">
                   <Field id="co-mobile" label="Mobile number" error={mobileError}>
                     <div className={`relative flex h-[52px] rounded-control border-[1.5px] overflow-hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink ${mobileError ? 'border-danger bg-danger-tint' : 'border-control bg-white focus-within:border-brand'}`}>
@@ -1188,15 +1196,15 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               {hasSavedAddresses && (
-                <section className="sag-card p-4 sm:p-6 space-y-3" aria-labelledby="co-saved-title">
-                  <h2 id="co-saved-title" className="text-xl leading-7 font-semibold text-ink">Deliver to a saved address</h2>
+                <section className="px-1 lg:rounded-[24px] lg:bg-lilac lg:p-6 space-y-3" aria-labelledby="co-saved-title">
+                  <h2 id="co-saved-title" className="text-[17px] leading-6 lg:text-xl lg:leading-7 font-semibold text-ink">Deliver to a saved address</h2>
                   <AddressBook onSelect={applySavedAddress} selectedId={selectedAddressId} />
                 </section>
               )}
 
-              <section className="sag-card p-4 sm:p-6" aria-labelledby="co-address-title">
+              <section className="px-1 lg:rounded-[24px] lg:bg-lilac lg:p-6" aria-labelledby="co-address-title">
                 <div className="flex items-center justify-between gap-2 -my-2.5">
-                  <h2 id="co-address-title" className="text-xl leading-7 font-semibold text-ink">Delivery address</h2>
+                  <h2 id="co-address-title" className="text-[17px] leading-6 lg:text-xl lg:leading-7 font-semibold text-ink">Delivery address</h2>
                   <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="sag-link gap-1.5 text-[13px] disabled:opacity-60">
                     {isDetectingLocation ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" aria-hidden="true" />}
                     Use my location
@@ -1320,10 +1328,17 @@ export const CheckoutPage: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Desktop: inline button. Phones use the bar at the bottom of the screen. */}
-                <button type="button" onClick={handleProceedToPaymentStep} className="sag-btn-primary hidden lg:flex w-full mt-4">
-                  Deliver here · Continue
+                {/* One dark button at the end of the form at every width (this step has no fixed bar), then two store facts.
+                    Its accessible name keeps "Deliver here" (the e2e test in worker/test/e2e finds the button by it). */}
+                <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="sag-btn-primary flex w-full mt-4 gap-2 px-3">
+                  <Lock className="w-[18px] h-[18px] shrink-0" aria-hidden="true" /> Continue to secure payment
                 </button>
+                <p className="lg:hidden mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs leading-4 text-ink-muted">
+                  <span className="inline-flex items-center gap-1.5"><ReturnIcon className="w-3.5 h-3.5 shrink-0" mono live={false} />{assuranceFacts().returns}</span>
+                  <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 min-h-9 font-semibold text-ink underline underline-offset-2">
+                    <WhatsAppIcon className="w-3.5 h-3.5 shrink-0" />WhatsApp help
+                  </a>
+                </p>
               </section>
             </div>
           )}
@@ -1381,24 +1396,47 @@ export const CheckoutPage: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 3: PAY */}
+          {/* STEP 3: PAY. One dark block (owner's pick 3, 2026-10-07): who takes the payment and the step, the
+              amount very large, what is being paid for, the payment choice, the gold pay button and WhatsApp help.
+              Every number is the page's own preview; the pay button is the one existing pay action. */}
           {checkoutStep === 'payment' && (
             <div className="space-y-3">
 
-              <section className="sag-card p-4 sm:p-6" aria-label="Amount to pay">
-                <p className="text-sm leading-5 text-ink-muted">Amount to pay</p>
-                <p className="mt-0.5 text-[28px] leading-8 font-bold text-ink sag-num">{rupees(finalCartTotal)}</p>
-                <div className="mt-2 pt-2 border-t border-line flex items-center justify-between gap-3">
-                  <p className="min-w-0 text-sm leading-5 text-ink-muted">Deliver to {fullNameText}, {address.city} {address.pincode}</p>
-                  <button type="button" onClick={() => setCheckoutStep('details')} className="sag-link shrink-0 text-[13px]">Change address</button>
+              <section className="rounded-sheet bg-dark text-on-dark p-4 sm:p-6 space-y-3.5" aria-labelledby="co-pay-title">
+                <div className="flex items-center justify-between gap-3">
+                  <p id="co-pay-title" className="flex min-w-0 items-center gap-1.5 text-[13px] leading-[18px] font-bold text-on-dark">
+                    <Lock className="w-[15px] h-[15px] shrink-0" aria-hidden="true" />
+                    <span>{securePaymentText}</span>
+                  </p>
+                  <p className="sag-num shrink-0 text-xs leading-4 text-on-dark-muted">Step {stepIndex + 1} of {stepBlocks.length}</p>
                 </div>
-              </section>
 
-              <section className="sag-card p-4 sm:p-6 space-y-3" aria-labelledby="co-pay-title">
-                <h2 id="co-pay-title" className="text-xl leading-7 font-semibold text-ink">Payment method</h2>
+                <div className="py-1.5 text-center">
+                  <p className="text-sm leading-5 text-on-dark-muted">Amount to pay</p>
+                  <p className="sag-num text-[36px] leading-[1.15] font-extrabold text-on-dark">{rupees(finalCartTotal)}</p>
+                  {totalSavings > 0 && (
+                    <p className="sag-num mt-0.5 text-[13px] leading-[18px] font-bold text-highlight">You saved {rupees(Math.round(totalSavings))}</p>
+                  )}
+                </div>
+
+                <ul className="space-y-2 rounded-control bg-white/10 p-3 text-[13px] leading-[18px] font-semibold text-on-dark">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-[15px] h-[15px] shrink-0 mt-px" aria-hidden="true" />
+                    <span className="sag-num min-w-0 flex-1">{itemsText} to {address.city} {address.pincode}</span>
+                    <button type="button" onClick={() => setCheckoutStep('details')} className="-my-2.5 inline-flex min-h-9 shrink-0 items-center text-xs font-bold text-highlight underline underline-offset-2 cursor-pointer focus-visible:outline-white">Change address</button>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-[15px] h-[15px] shrink-0 mt-px" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">Receipt on your email</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-[15px] h-[15px] shrink-0 mt-px" aria-hidden="true" />
+                    <span className="min-w-0 flex-1">{assuranceFacts().returns}</span>
+                  </li>
+                </ul>
 
                 {gateways === null ? (
-                  <div className="min-h-[76px] rounded-control bg-sunken flex items-center justify-center gap-2 text-sm text-ink-muted" aria-busy="true" aria-label="Loading payment options">
+                  <div className="min-h-[60px] rounded-control bg-white/10 flex items-center justify-center gap-2 text-sm text-on-dark-muted" aria-busy="true" aria-label="Loading payment options">
                     <Loader2 className="h-4 w-4 animate-spin" /> Loading payment options…
                   </div>
                 ) : !gateways.razorpay && !gateways.payu ? (
@@ -1408,13 +1446,10 @@ export const CheckoutPage: React.FC = () => {
                 ) : (
                   <>
                     {paymentOptions.length === 1 ? (
-                      <div className="sag-card p-3.5 flex items-start gap-3" data-selected="true">
-                        <Check className="h-5 w-5 shrink-0 mt-0.5 text-brand" aria-hidden="true" />
-                        <span className="flex-1 min-w-0">
-                          <span className="block text-[15px] leading-[22px] font-semibold text-ink">{paymentOptions[0][1]}</span>
-                          <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted">{paymentOptions[0][2]}</span>
-                        </span>
-                      </div>
+                      // One way to pay: named in a quiet line (the gold button below is the action)
+                      <p className="text-center text-[13px] leading-[18px] text-on-dark-muted">
+                        <span className="font-bold text-on-dark">{paymentOptions[0][1]}</span> · {paymentOptions[0][2]}
+                      </p>
                     ) : (
                       <div className="space-y-2.5" role="radiogroup" aria-label="Payment method">
                         {paymentOptions.map(([id, title, detail]) => (
@@ -1429,7 +1464,7 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                     )}
                     {prepaidDiscount > 0 && (
-                      <p className="text-[13px] leading-[18px] font-semibold text-sale sag-num">
+                      <p className="text-center text-[13px] leading-[18px] font-semibold text-highlight sag-num">
                         Online payment discount of ₹{prepaidDiscount.toLocaleString('en-IN')} applied.
                       </p>
                     )}
@@ -1443,23 +1478,13 @@ export const CheckoutPage: React.FC = () => {
                   </p>
                 )}
 
-                <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary hidden lg:flex w-full gap-2">
+                {/* The one pay button at every width (this step has no fixed bar): gold with dark text */}
+                <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary sag-btn-buy flex w-full gap-2 px-3 disabled:opacity-60 focus-visible:outline-white">
                   {payButtonContent}
                 </button>
-              </section>
-
-              <section className="sag-card px-4 sm:px-6" aria-label="Why it is safe to pay">
-                <div className="sag-row">
-                  <Lock className="w-5 h-5 shrink-0 text-brand" aria-hidden="true" />
-                  <span className="flex-1 min-w-0 font-medium">Secure {gatewayKnown ? `${gatewayName} ` : ''}checkout. Your order is confirmed only after the payment is verified.</span>
-                </div>
-                <div className="sag-row">
-                  <Check className="w-5 h-5 shrink-0 text-brand" aria-hidden="true" />
-                  <span className="flex-1 min-w-0">7-day returns &amp; exchange</span>
-                </div>
-                <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="sag-row">
-                  <WhatsAppIcon className="w-5 h-5 shrink-0" />
-                  <span className="flex-1 min-w-0">Payment stuck? Chat on WhatsApp</span>
+                <p className="text-center text-xs leading-4 text-on-dark-muted">Your order is confirmed only after the payment is verified.</p>
+                <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-white/40 px-3 text-sm font-bold text-on-dark hover:bg-white/10 focus-visible:outline-white">
+                  <WhatsAppIcon className="w-[18px] h-[18px] shrink-0" /> Trouble paying? Chat with us
                 </a>
               </section>
             </div>
@@ -1481,11 +1506,18 @@ export const CheckoutPage: React.FC = () => {
             {checkoutStep !== 'summary' && (
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
                 className="lg:hidden w-full flex items-center gap-3 px-3.5 py-2.5 min-h-[60px] text-left cursor-pointer">
-                <img src={getCleanImageUrl(lineImage(cart[0]), 200)} alt="" width={40} height={50} className="h-[50px] w-10 shrink-0 rounded-badge object-cover object-top bg-sunken" />
+                {/* Small order card (owner's pick 3, 2026-10-07): the first photos overlapping, the count and total, the real saving */}
+                <span className="flex shrink-0 items-center" aria-hidden="true">
+                  {cart.slice(0, 3).map((item, index) => (
+                    <img key={item.id} src={getCleanImageUrl(lineImage(item), 200)} alt="" width={40} height={50}
+                      className={`h-[50px] w-10 rounded-badge object-cover object-top bg-sunken ${index > 0 ? '-ml-3.5 ring-2 ring-surface' : ''}`} />
+                  ))}
+                </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-sm leading-5 font-semibold text-ink sag-num">{itemsText} · {rupees(finalCartTotal)}</span>
+                  <span className="block text-sm leading-5 font-bold text-ink sag-num">{itemsText} · {rupees(finalCartTotal)}</span>
                   <span className="block text-[13px] leading-[18px] text-ink-muted">
-                    {appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
+                    {totalSavings > 0 && <span className="sag-num font-bold text-sale">You save {rupees(Math.round(totalSavings))}</span>}
+                    {totalSavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
                   </span>
                 </span>
                 <span className="shrink-0 inline-flex items-center gap-1 text-[13px] font-semibold text-brand">
@@ -1564,7 +1596,8 @@ export const CheckoutPage: React.FC = () => {
         {/* Always last on Address and Review: the short assurance line and WhatsApp help.
             The Pay step says both once, in its own card above ("Secure … checkout", "Payment stuck?"). */}
         {checkoutStep !== 'payment' && (
-          <div className="lg:col-span-7 space-y-3 pt-1">
+          // On the Address step phones and tablets already have the two facts under the button
+          <div className={`lg:col-span-7 space-y-3 pt-1 ${checkoutStep === 'details' ? 'hidden lg:block' : ''}`}>
             <Assurance variant="line" />
             <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 h-12 rounded-control border-[1.5px] border-control bg-white text-sm font-semibold text-ink hover:bg-sunken">
               <WhatsAppIcon className="w-5 h-5" /> Need help? Chat with us on WhatsApp
@@ -1574,32 +1607,21 @@ export const CheckoutPage: React.FC = () => {
 
       </div>
 
-      {/* Phones: one fixed bar per step, always showing the amount and the next action */}
-      <div className="sag-bar lg:hidden fixed inset-x-0 bottom-0 z-40">
-        {checkoutStep === 'payment' ? (
-          <div className="max-w-md mx-auto">
-            <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary w-full gap-2">
-              {payButtonContent}
-            </button>
-          </div>
-        ) : (
+      {/* Phones and tablets: the Review step keeps its fixed bar with the amount and the next action.
+          The Address and Pay steps carry their one button inside the page (owner's pick 3), so they have no bar. */}
+      {checkoutStep === 'summary' && (
+        <div className="sag-bar lg:hidden fixed inset-x-0 bottom-0 z-40">
           <div className="max-w-md mx-auto flex items-center gap-3">
             <div className="shrink-0">
               <p className="text-lg leading-[22px] font-bold text-ink sag-num">{rupees(finalCartTotal)}</p>
               <p className="text-[11px] leading-[14px] text-ink-muted">{itemsText}</p>
             </div>
-            {checkoutStep === 'details' ? (
-              <button type="button" onClick={handleProceedToPaymentStep} className="sag-btn-primary flex-1 min-w-0 px-3">
-                Deliver here · Continue
-              </button>
-            ) : (
-              <button type="button" onClick={() => goToStep('payment')} className="sag-btn-primary flex-1 min-w-0 px-3">
-                Continue to payment
-              </button>
-            )}
+            <button type="button" onClick={() => goToStep('payment')} className="sag-btn-primary flex-1 min-w-0 px-3">
+              Continue to payment
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Available coupons: a sheet on phones, a dialog on wider screens */}
       {showCouponsModal && (

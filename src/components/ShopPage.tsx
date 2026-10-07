@@ -591,8 +591,8 @@ export const ShopPage: React.FC = () => {
   const sortLabel = SORTS.find((s) => s.key === activeSort)?.label || 'Featured';
   const sortChoices = SORTS.filter((s) => s.key !== 'top-rated' || hasRatings);
   const tool = 'shrink-0 whitespace-nowrap h-11 px-3.5 rounded-chip border-[1.5px] border-control bg-white text-sm font-medium text-ink inline-flex items-center gap-1.5 hover:bg-sunken transition-colors cursor-pointer';
-  const barButton = 'flex-1 min-w-0 h-11 px-3 rounded-control border-[1.5px] border-ink bg-white text-sm font-semibold text-ink inline-flex items-center justify-center gap-2 hover:bg-sunken transition-colors cursor-pointer';
-  const grid = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-3 gap-y-3 sm:gap-x-5 sm:gap-y-9';
+  const barButton = 'flex-1 min-w-0 h-11 px-3 bg-surface text-sm font-bold text-ink inline-flex items-center justify-center gap-2 hover:bg-sunken transition-colors cursor-pointer';
+  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-x-5 sm:gap-y-9';
   // Collections that really have products, offered when a listing comes up empty
   const suggestions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -698,8 +698,9 @@ export const ShopPage: React.FC = () => {
           </div>
         )}
 
-        {/* Phones and tablets: Filter and Sort stay in reach under the header while the grid scrolls */}
-        <div className="lg:hidden sticky top-[52px] z-30 mt-3 -mx-4 px-4 sm:-mx-6 sm:px-6 py-1.5 bg-surface border-y border-line flex items-center gap-2">
+        {/* Phones and tablets: one bar with two halves, Filter and Sort. It sticks under the header while the grid scrolls
+            (the bottom edge already holds the app's navigation, and a screen has one fixed bottom bar at most). */}
+        <div className="lg:hidden sticky top-[52px] z-30 mt-3 -mx-4 sm:-mx-6 bg-surface border-y border-line flex items-center">
           <button
             ref={filtersButtonRef}
             type="button"
@@ -711,6 +712,7 @@ export const ShopPage: React.FC = () => {
             <SlidersHorizontal className="w-[18px] h-[18px] shrink-0" /> Filter
             {activeCount > 0 && <span className="sag-num min-w-5 h-5 px-1.5 rounded-full bg-ink text-white text-[11px] font-bold inline-flex items-center justify-center" aria-label={`${activeCount} selected`}>{activeCount}</span>}
           </button>
+          <span className="w-px h-[22px] shrink-0 bg-line" aria-hidden="true" />
           <button
             ref={sortButtonRef}
             type="button"
@@ -721,7 +723,8 @@ export const ShopPage: React.FC = () => {
             className={barButton}
           >
             <ArrowUpDown className="w-[18px] h-[18px] shrink-0" />
-            <span className="truncate">{activeSort === 'featured' ? 'Sort' : sortLabel}</span>
+            <span className="truncate">Sort: {sortLabel}</span>
+            <ChevronDown className="w-4 h-4 shrink-0" aria-hidden="true" />
           </button>
         </div>
 
@@ -780,7 +783,7 @@ export const ShopPage: React.FC = () => {
                     <div className="pt-3 space-y-2">
                       <div className="h-4 w-11/12 rounded-badge bg-sunken-deep" />
                       <div className="h-4 w-1/2 rounded-badge bg-sunken-deep" />
-                      <div className="h-11 w-full rounded-control bg-sunken" />
+                      <div className="h-9 sm:h-10 w-full rounded-full bg-sunken" />
                     </div>
                   </div>
                 ))}

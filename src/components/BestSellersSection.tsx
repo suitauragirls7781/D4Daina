@@ -3,7 +3,7 @@ import { ProductCard } from './ProductCard';
 import { useShop } from '../context/ShopContext';
 import { HOME_SECTION, HOME_WRAP, HomeSectionHeader } from './HomeSections';
 
-const GRID = 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6 lg:gap-x-6';
+const GRID = 'grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6';
 
 export const BestSellersSection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();

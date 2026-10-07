@@ -25,7 +25,7 @@ export const TrendingNowSection: React.FC = () => {
           text="Suits, kurtis and co-ord sets shoppers are looking at this week."
           action={{ id: 'view-all-trending-btn', label: 'View all', onClick: () => navigateToCategory('Trending') }}
         />
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6 lg:gap-x-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
           {trendingProducts.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}

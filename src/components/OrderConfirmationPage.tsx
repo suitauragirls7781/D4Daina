@@ -144,10 +144,36 @@ export const OrderConfirmationPage: React.FC = () => {
   const canCancel = canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0);
 
   return (
-    <div id="order-confirmation-page" className="bg-page px-4 pt-6 pb-10 sm:py-12">
-      <div className="max-w-xl mx-auto space-y-4">
-        {/* Confirmation */}
-        <div className="text-center sag-fade">
+    <div id="order-confirmation-page" className="bg-page pb-10 lg:px-4 lg:py-12">
+      {/* Phones and tablets (owner's pick 3): one dark block with round bottom corners says it all */}
+      <div className="lg:hidden bg-dark text-on-dark rounded-b-sheet px-4 pt-7 pb-6 text-center sag-fade">
+        <span className="sag-placed-pop mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sun text-ink">
+          {paid ? <Check className="w-7 h-7" strokeWidth={2.5} aria-hidden="true" /> : <Clock className="w-7 h-7" aria-hidden="true" />}
+        </span>
+        {!paid && <p className="mt-3 text-sm leading-5 font-semibold text-highlight">Order received</p>}
+        <h1 className={`font-display text-[28px] leading-8 font-semibold text-on-dark ${paid ? 'mt-3' : 'mt-1'}`}>
+          {paid ? "It's yours!" : `Thank you${firstName ? `, ${firstName}` : ''}!`}
+        </h1>
+        <p className="mt-1.5 text-sm leading-5 text-on-dark-muted max-w-md mx-auto">
+          {paid
+            ? <>Order <span className="sag-num font-semibold text-on-dark break-all">#{order.orderNumber}</span> is confirmed and paid.</>
+            : 'We are confirming your payment. This page will update once it is verified.'}
+        </p>
+        {paid && (
+          <p className="mt-1 text-[13px] leading-[18px] text-on-dark-muted max-w-md mx-auto">
+            {order.customerEmail
+              ? <>A confirmation email has been sent to <span className="font-medium text-on-dark break-all">{order.customerEmail}</span>.</>
+              : 'A confirmation email has been sent to you.'}
+          </p>
+        )}
+        <button type="button" onClick={trackOrder} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-full bg-sun px-6 text-[15px] font-bold text-ink cursor-pointer">
+          <TruckIcon className="w-[18px] h-[18px]" mono live={false} /> Track order
+        </button>
+      </div>
+
+      <div className="max-w-xl mx-auto space-y-4 px-4 pt-4 lg:px-0 lg:pt-0">
+        {/* Confirmation (desktop) */}
+        <div className="hidden lg:block text-center sag-fade">
           <span className={`sag-placed-pop mx-auto w-14 h-14 rounded-full flex items-center justify-center ${paid ? 'bg-ok text-white' : 'bg-sale-tint text-sale'}`}>
             {paid ? <Check className="w-7 h-7" strokeWidth={2.5} aria-hidden="true" /> : <Clock className="w-7 h-7" aria-hidden="true" />}
           </span>
@@ -349,7 +375,7 @@ export const OrderConfirmationPage: React.FC = () => {
         {suggestions.length > 0 && (
           <section className="pt-6 space-y-4" aria-labelledby="also-like-title">
             <h2 id="also-like-title" className="font-display text-[22px] leading-7 text-ink">You may also like</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-4 lg:gap-y-6">
               {suggestions.map((p) => (
                 <div key={p.id} onClickCapture={() => trackItem('feature_use', 'reco_click')}>
                   <ProductCard product={p} compact />

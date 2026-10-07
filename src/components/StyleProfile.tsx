@@ -377,7 +377,7 @@ export const StyleProfile: React.FC = () => {
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-[17px] leading-6 font-semibold text-ink">Matching styles</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-3 sm:gap-y-6 lg:gap-x-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>
