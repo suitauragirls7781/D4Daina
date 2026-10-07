@@ -276,6 +276,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         data
           .map(mapCouponFromDb)
           .filter((coupon) => coupon.isActive && coupon.code)
+          // Not shown before its first day (the server refuses it until then too)
+          .filter((coupon) => !coupon.startDate || !Number.isFinite(new Date(coupon.startDate).getTime()) || new Date(coupon.startDate).getTime() <= now)
           .filter((coupon) => {
             if (!coupon.expiryDate) return true;
             const end = new Date(coupon.expiryDate);
