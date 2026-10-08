@@ -11,65 +11,65 @@
 ------------------------------------------------------------------- */
 @theme {
   /* Surfaces */
-  --color-page: #FFFFFF;
-  --color-surface: #FFFFFF;
-  --color-sunken: #F6F4F0;
-  --color-sunken-deep: #E9E5DE;
+  --color-page: #0F0D12;
+  --color-surface: rgba(255, 255, 255, 0.07);
+  --color-sunken: rgba(255, 255, 255, 0.05);
+  --color-sunken-deep: rgba(255, 255, 255, 0.12);
   /* Text and lines */
-  --color-ink: #161514;
-  --color-ink-muted: #6B6762;
-  --color-ink-faint: #7A756F;
-  --color-line: #E4E0DA;
-  --color-control: #9A948C;
+  --color-ink: #F6F1EA;
+  --color-ink-muted: #B9AFA6;
+  --color-ink-faint: #9A9088;
+  --color-line: rgba(255, 255, 255, 0.14);
+  --color-control: rgba(255, 255, 255, 0.32);
   /* Brand (peacock teal): buy, continue, pay, links, active nav */
-  --color-brand: #161514;
-  --color-brand-dark: #2E2C2A;
-  --color-brand-wash: #F6F4F0;
-  --color-brand-line: #D8D2C8;
+  --color-brand: #E0BB7C;
+  --color-brand-dark: #EBCB95;
+  --color-brand-wash: rgba(224, 187, 124, 0.12);
+  --color-brand-line: rgba(224, 187, 124, 0.40);
   /* Accent (rani): filled wishlist heart and count badges only */
-  --color-accent: #8A6A36;
-  --color-accent-tint: #F6F1E7;
+  --color-accent: #E0BB7C;
+  --color-accent-tint: rgba(224, 187, 124, 0.12);
   /* Sale: "% off", "You save", "Free" */
-  --color-sale: #8A6A36;
-  --color-sale-tint: #F6F1E7;
-  --color-sale-line: #DCCFB6;
-  --color-star: #A6824A;
+  --color-sale: #E0BB7C;
+  --color-sale-tint: rgba(224, 187, 124, 0.12);
+  --color-sale-line: rgba(224, 187, 124, 0.40);
+  --color-star: #D2A961;
   /* Confirmed states */
-  --color-ok: #161514;
-  --color-ok-tint: #F6F4F0;
-  --color-ok-line: #D8D2C8;
+  --color-ok: #E0BB7C;
+  --color-ok-tint: rgba(224, 187, 124, 0.12);
+  --color-ok-line: rgba(224, 187, 124, 0.40);
   /* Errors */
-  --color-danger: #B3261E;
-  --color-danger-tint: #FCEDEA;
-  --color-danger-line: #F0B8B2;
+  --color-danger: #FF8A80;
+  --color-danger-tint: rgba(255, 138, 128, 0.12);
+  --color-danger-line: rgba(255, 138, 128, 0.45);
   /* Dark surfaces: footer, announcement bar, lightbox */
-  --color-dark: #161514;
-  --color-on-dark: #FFFFFF;
-  --color-on-dark-muted: #B9B4AC;
-  --color-highlight: #C9A66B;
+  --color-dark: #09080B;
+  --color-on-dark: #F6F1EA;
+  --color-on-dark-muted: #B9AFA6;
+  --color-highlight: #E0BB7C;
   /* Pastel blocks: section backgrounds and tiles. Each has an ink for text placed on it. */
-  --color-lilac: #F6F4F0;
-  --color-lilac-ink: #161514;
-  --color-peach: #F6F1E7;
-  --color-peach-ink: #8A6A36;
-  --color-mint: #EFECE6;
-  --color-mint-ink: #161514;
-  --color-sky: #F8F6F2;
-  --color-sky-ink: #161514;
-  --color-butter: #FAF7F0;
-  --color-butter-ink: #8A6A36;
-  --color-sun: #A6824A;
+  --color-lilac: rgba(255, 255, 255, 0.06);
+  --color-lilac-ink: #F6F1EA;
+  --color-peach: rgba(224, 187, 124, 0.12);
+  --color-peach-ink: #E0BB7C;
+  --color-mint: rgba(255, 255, 255, 0.09);
+  --color-mint-ink: #F6F1EA;
+  --color-sky: rgba(255, 255, 255, 0.05);
+  --color-sky-ink: #F6F1EA;
+  --color-butter: rgba(224, 187, 124, 0.08);
+  --color-butter-ink: #E0BB7C;
+  --color-sun: #D2A961;
 
   /* Old palette names kept for one release as aliases of the new values */
-  --color-bottle-maroon: #161514;
-  --color-brand-maroon: #161514;
-  --color-plum: #161514;
-  --color-antique-gold: #A6824A;
-  --color-ivory: #FFFFFF;
-  --color-dusty-rose: #F6F1E7;
-  --color-blush: #F6F1E7;
-  --color-charcoal: #161514;
-  --color-lavender: #F6F4F0;
+  --color-bottle-maroon: #E0BB7C;
+  --color-brand-maroon: #E0BB7C;
+  --color-plum: #E0BB7C;
+  --color-antique-gold: #D2A961;
+  --color-ivory: #0F0D12;
+  --color-dusty-rose: rgba(224, 187, 124, 0.12);
+  --color-blush: rgba(224, 187, 124, 0.12);
+  --color-charcoal: #F6F1EA;
+  --color-lavender: rgba(255, 255, 255, 0.05);
 
   /* Two families only: Inter for text, Playfair Display for main headings.
      Why Playfair Display: compared in the browser on this site's real headings at 390px against
@@ -86,11 +86,11 @@
   --font-display: 'Fraunces', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 
   /* Soft, round shapes. Buttons and chips are pills through their helper classes (sag-btn-*, sag-chip). */
-  --radius-badge: 0px;
-  --radius-chip: 0px;
-  --radius-control: 0px;
-  --radius-card: 0px;
-  --radius-sheet: 0px;
+  --radius-badge: 8px;
+  --radius-chip: 14px;
+  --radius-control: 16px;
+  --radius-card: 22px;
+  --radius-sheet: 28px;
 }
 
 /* Fallback faces sized to the web fonts, so the swap does not move the layout */
@@ -113,41 +113,41 @@
 }
 
 :root {
-  --sag-page: #FFFFFF;
-  --sag-surface: #FFFFFF;
-  --sag-sunken: #F6F4F0;
-  --sag-sunken-deep: #E9E5DE;
-  --sag-ink: #161514;
-  --sag-ink-muted: #6B6762;
-  --sag-ink-faint: #7A756F;
-  --sag-line: #E4E0DA;
-  --sag-control: #9A948C;
-  --sag-brand: #161514;
-  --sag-brand-dark: #2E2C2A;
-  --sag-brand-wash: #F6F4F0;
-  --sag-brand-line: #D8D2C8;
-  --sag-accent: #8A6A36;
-  --sag-accent-tint: #F6F1E7;
-  --sag-sale: #8A6A36;
-  --sag-sale-tint: #F6F1E7;
-  --sag-sale-line: #DCCFB6;
-  --sag-star: #A6824A;
-  --sag-ok: #161514;
-  --sag-ok-tint: #F6F4F0;
-  --sag-ok-line: #D8D2C8;
-  --sag-danger: #B3261E;
-  --sag-danger-tint: #FCEDEA;
-  --sag-danger-line: #F0B8B2;
-  --sag-dark: #161514;
-  --sag-on-dark: #FFFFFF;
-  --sag-on-dark-muted: #B9B4AC;
-  --sag-highlight: #C9A66B;
-  --sag-lilac: #F6F4F0;
-  --sag-peach: #F6F1E7;
-  --sag-mint: #EFECE6;
-  --sag-sky: #F8F6F2;
-  --sag-butter: #FAF7F0;
-  --sag-sun: #A6824A;
+  --sag-page: #0F0D12;
+  --sag-surface: rgba(255, 255, 255, 0.07);
+  --sag-sunken: rgba(255, 255, 255, 0.05);
+  --sag-sunken-deep: rgba(255, 255, 255, 0.12);
+  --sag-ink: #F6F1EA;
+  --sag-ink-muted: #B9AFA6;
+  --sag-ink-faint: #9A9088;
+  --sag-line: rgba(255, 255, 255, 0.14);
+  --sag-control: rgba(255, 255, 255, 0.32);
+  --sag-brand: #E0BB7C;
+  --sag-brand-dark: #EBCB95;
+  --sag-brand-wash: rgba(224, 187, 124, 0.12);
+  --sag-brand-line: rgba(224, 187, 124, 0.40);
+  --sag-accent: #E0BB7C;
+  --sag-accent-tint: rgba(224, 187, 124, 0.12);
+  --sag-sale: #E0BB7C;
+  --sag-sale-tint: rgba(224, 187, 124, 0.12);
+  --sag-sale-line: rgba(224, 187, 124, 0.40);
+  --sag-star: #D2A961;
+  --sag-ok: #E0BB7C;
+  --sag-ok-tint: rgba(224, 187, 124, 0.12);
+  --sag-ok-line: rgba(224, 187, 124, 0.40);
+  --sag-danger: #FF8A80;
+  --sag-danger-tint: rgba(255, 138, 128, 0.12);
+  --sag-danger-line: rgba(255, 138, 128, 0.45);
+  --sag-dark: #09080B;
+  --sag-on-dark: #F6F1EA;
+  --sag-on-dark-muted: #B9AFA6;
+  --sag-highlight: #E0BB7C;
+  --sag-lilac: rgba(255, 255, 255, 0.06);
+  --sag-peach: rgba(224, 187, 124, 0.12);
+  --sag-mint: rgba(255, 255, 255, 0.09);
+  --sag-sky: rgba(255, 255, 255, 0.05);
+  --sag-butter: rgba(224, 187, 124, 0.08);
+  --sag-sun: #D2A961;
   --sag-scrim: rgba(22, 21, 20, 0.5);
 
   /* Cards carry no shadow. --sag-shadow stays defined so older references keep working. */
@@ -156,10 +156,10 @@
   --sag-shadow-pop: 0 8px 24px -12px rgba(22, 21, 20, 0.18);
 
   /* Old variable names, aliased for one release */
-  --sag-lavender: var(--sag-sunken);
+  --sag-lavender: rgba(255, 255, 255, 0.05);
   --sag-lavender-deep: var(--sag-sunken-deep);
-  --sag-blush: var(--sag-sale-tint);
-  --sag-plum: var(--sag-brand);
+  --sag-blush: rgba(224, 187, 124, 0.12);
+  --sag-plum: #E0BB7C;
   --sag-plum-dark: var(--sag-brand-dark);
   --sag-gold: var(--sag-star);
   --marketplace-surface: #FFFFFF;
@@ -933,4 +933,100 @@
   .sag-btn-primary::before, .sag-btn-outline::before { transition: none; }
   #main-content section.sag-reveal h2.font-display::after { transition: none; width: 36px; }
   .sag-arrow { opacity: 0; }
+}
+
+/* ------------------------------------------------------------------
+   Midnight glass (owner's pick, 2026-10-08, replaces Noir & Champagne).
+   Unlayered and last on purpose: these rules win over everything above.
+------------------------------------------------------------------- */
+:root {
+  color-scheme: dark;
+  --sag-glass: rgba(255, 255, 255, 0.07);
+  --sag-glass-strong: rgba(255, 255, 255, 0.11);
+  --sag-glass-bar: rgba(20, 17, 25, 0.72);
+  --sag-glass-sheet: rgba(24, 20, 30, 0.9);
+  --sag-edge: rgba(255, 255, 255, 0.16);
+  --sag-on-gold: #16110B;
+  --sag-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+  --sag-shadow-bar: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  --sag-shadow-pop: 0 18px 40px rgba(0, 0, 0, 0.5);
+  --sag-scrim: rgba(5, 4, 8, 0.66);
+}
+html, body, #root { background-color: #0F0D12; color: var(--sag-ink); }
+/* The backdrop: three soft lights that stay in place while the page scrolls */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(520px 520px at -8% 12%, rgba(184, 137, 74, 0.34), transparent 70%),
+    radial-gradient(560px 560px at 108% 48%, rgba(122, 39, 66, 0.42), transparent 70%),
+    radial-gradient(520px 520px at 20% 96%, rgba(39, 51, 90, 0.42), transparent 70%),
+    #0F0D12;
+}
+#app-main-content, #app-main-content.bg-page { background-color: transparent; }
+
+/* Glass pieces the components use */
+.sag-glass { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 22px; box-shadow: var(--sag-shadow); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); }
+.sag-glass-strong { background: var(--sag-glass-strong); }
+/* Floating bars (header, bottom navigation, buy bar): darker so what scrolls under them never fights the text */
+.sag-glass-bar { background: var(--sag-glass-bar); border: 1px solid var(--sag-edge); border-radius: 9999px; box-shadow: var(--sag-shadow); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
+.sag-card { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 22px; box-shadow: none; }
+.sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) { border-color: var(--sag-brand); box-shadow: 0 0 0 1px var(--sag-brand); }
+
+/* Anything that floats over the page (sticky / fixed bars, drawers, sheets, dialogs, menus) is a darker, blurred glass */
+:is(.sticky, .fixed):is(.bg-surface, .bg-page, .bg-white), .fixed :is(.bg-surface, .bg-page, .bg-white), [role="dialog"] :is(.bg-surface, .bg-page, .bg-white), [role="menu"], [role="listbox"] {
+  background-color: var(--sag-glass-sheet); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+}
+.fixed .fixed :is(.bg-surface, .bg-page, .bg-white), .fixed .bg-surface .bg-surface { -webkit-backdrop-filter: none; backdrop-filter: none; background-color: rgba(255, 255, 255, 0.06); }
+.bg-white { background-color: var(--sag-glass-strong); }
+
+/* Round corners again: boxes with a full border, tinted boxes, photos in boxes */
+#app-main-content :where([class~="border"], .bg-sunken, .bg-lilac, .bg-peach, .bg-mint, .bg-sky, .bg-butter):where(div, section, aside, article, li, label, a, p, ul, details, fieldset, form) { border-radius: 18px; }
+#app-main-content :where(img):where(.object-cover) { border-radius: 14px; }
+#app-main-content :where(.rounded-none) { border-radius: 0; }
+
+/* Buttons: gold pill with dark text; the quiet one is a glass pill */
+.sag-btn-primary, .sag-btn-outline { border-radius: 9999px; text-transform: none; letter-spacing: 0; font-size: 14.5px; font-weight: 600; }
+.sag-btn-primary, .sag-btn-primary.sag-btn-buy { background: var(--sag-brand); color: var(--sag-on-gold); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3); }
+.sag-btn-primary:hover, .sag-btn-primary:active, .sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: var(--sag-brand); }
+.sag-btn-primary::before { background: var(--sag-brand-dark); }
+.sag-btn-primary:is(:disabled, [aria-disabled="true"]) { background: rgba(255, 255, 255, 0.14); color: var(--sag-ink-faint); box-shadow: none; }
+.sag-btn-outline { background: var(--sag-glass); border: 1px solid var(--sag-edge); color: var(--sag-ink); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.sag-btn-outline::before { background: rgba(255, 255, 255, 0.12); }
+@media (hover: hover) { .sag-btn-outline:not(:disabled):hover { color: var(--sag-ink); background: var(--sag-glass); } }
+/* Pills written with rounded-full are pills again */
+:where(button, a, label, span, p, div).rounded-full[class*="px-"] { border-radius: 9999px; }
+/* Light-on-gold never: any filled gold, cream or red control carries dark text */
+:is(.bg-brand, .bg-ink, .bg-sun, .bg-star, .bg-highlight, .bg-ok, .bg-accent, .bg-sale, .bg-danger):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) { color: var(--sag-on-gold); }
+:is(.bg-brand, .bg-ink, .bg-sun, .bg-star, .bg-highlight, .bg-ok):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) svg { color: inherit; }
+
+/* Fields and chips */
+.sag-input { background: rgba(255, 255, 255, 0.06); color: var(--sag-ink); border: 1px solid var(--sag-edge); border-radius: 16px; }
+.sag-input::placeholder { color: var(--sag-ink-faint); }
+.sag-input:focus { border-color: var(--sag-brand); box-shadow: 0 0 0 1px var(--sag-brand); }
+.sag-input:disabled { background: rgba(255, 255, 255, 0.03); color: var(--sag-ink-faint); }
+select.sag-input option, select option { background: #1B1721; color: #F6F1EA; }
+.sag-label { color: var(--sag-ink-muted); }
+.sag-chip { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--sag-edge); border-radius: 9999px; color: var(--sag-ink); }
+.sag-chip:hover { background: rgba(255, 255, 255, 0.13); }
+.sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: var(--sag-brand); color: var(--sag-on-gold); border-color: transparent; box-shadow: none; font-weight: 600; }
+.sag-badge { border-radius: 8px; }
+.sag-bar { background: var(--sag-glass-bar); border-top: 1px solid var(--sag-edge); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); box-shadow: var(--sag-shadow-bar); }
+.sag-link { color: var(--sag-brand); text-decoration-color: rgba(224, 187, 124, 0.5); }
+.sag-link:hover { color: var(--sag-brand-dark); }
+.sag-eyebrow { color: var(--sag-brand); }
+.font-display { font-weight: 500; }
+#main-content section.sag-reveal h2.font-display::after { background: var(--sag-brand); }
+.sag-sheen::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent); }
+.sag-photo-spinner { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2); }
+/* Focus: a gold ring reads on the dark backdrop */
+:focus-visible { outline-color: var(--sag-brand); }
+
+/* Phones that ask for less transparency, and browsers without backdrop blur, get solid dark panels */
+@media (prefers-reduced-transparency: reduce) {
+  .sag-glass, .sag-glass-bar, .sag-card, .sag-bar, .sag-btn-outline { -webkit-backdrop-filter: none; backdrop-filter: none; background: #1B1721; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sag-glass, .sag-card { background: #1B1721; }
+  .sag-glass-bar, .sag-bar { background: #17141C; }
+  :is(.sticky, .fixed):is(.bg-surface, .bg-page, .bg-white), .fixed :is(.bg-surface, .bg-page, .bg-white) { background-color: #17141C; }
 }
