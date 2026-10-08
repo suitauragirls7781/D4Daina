@@ -30,7 +30,7 @@ const MapPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
       <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" fill="#161514" stroke="#FFFFFF" strokeWidth="2" />
       <circle cx="18" cy="17.5" r="6" fill="#FFFFFF" />
     </svg>
-    <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-ink/50" />
+    <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-[color:var(--sag-scrim)]" />
   </div>
 );
 
@@ -202,8 +202,8 @@ export const MapPinPicker: React.FC<{
     ? 'Search or use your current location, then drag the map so the pin sits on your door.'
     : '';
 
-  // Caution note: sale-tint fill with a sale-line left rule, ink text
-  const note = 'rounded-control border-l-4 border-sale-line bg-sale-tint px-3.5 py-3 text-sm leading-5 text-ink';
+  // Caution note: a glass panel, light text
+  const note = 'sag-glass px-3.5 py-3 text-sm leading-5 text-ink';
 
   return (
     <div className="space-y-4">
@@ -224,11 +224,11 @@ export const MapPinPicker: React.FC<{
       </label>
 
       {results.length > 0 && (
-        <ul className="rounded-control border border-line bg-white divide-y divide-line overflow-hidden" aria-label="Places found">
+        <ul className="sag-glass divide-y divide-line overflow-hidden" aria-label="Places found">
           {results.map((place) => (
             <li key={place.id}>
-              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-sunken cursor-pointer transition-colors">
-                <PinIcon className="w-5 h-5 shrink-0" live={false} />
+              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-[color:var(--sag-glass-strong)] cursor-pointer transition-colors">
+                <PinIcon className="w-5 h-5 shrink-0 text-sale" live={false} />
                 <span className="min-w-0 text-sm leading-5 text-ink break-words">{place.label}</span>
               </button>
             </li>
@@ -248,7 +248,7 @@ export const MapPinPicker: React.FC<{
           The map could not load right now. You can still search above, use your current location, or enter the address manually.
         </p>
       ) : (
-        <div className="relative isolate h-[260px] sm:h-[320px] rounded-card overflow-hidden border border-line bg-sunken">
+        <div className="relative isolate h-[260px] sm:h-[320px] rounded-[22px] overflow-hidden border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)]">
           <div ref={mapEl} className="absolute inset-0 z-0" role="application" aria-label="Map. Drag to move the pin to your delivery spot." />
           {mapState === 'loading' && (
             <div className="absolute inset-0 z-[600] flex items-center justify-center gap-2 text-sm text-ink-muted">
@@ -257,7 +257,7 @@ export const MapPinPicker: React.FC<{
           )}
           {mapState === 'ready' && <MapPin lifted={moving} />}
           {tilesBlocked && (
-            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-control bg-white px-3 py-2 text-[13px] leading-[18px] text-ink border border-line">
+            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-[14px] bg-[color:var(--sag-glass-sheet)] backdrop-blur-md px-3 py-2 text-[13px] leading-[18px] text-ink border border-[color:var(--sag-edge)]">
               Map images could not load on this network. You can still search, use your location, or enter the address manually.
             </p>
           )}
@@ -268,7 +268,7 @@ export const MapPinPicker: React.FC<{
 
       {(detected || detecting || detectError) && (
         <div className="sag-card p-4 space-y-3" aria-live="polite">
-          <p className="flex items-center gap-2 text-sm leading-5 font-semibold text-ink"><PinIcon className="w-5 h-5 shrink-0" live={false} /> Deliver to</p>
+          <p className="flex items-center gap-2 text-sm leading-5 font-semibold text-ink"><PinIcon className="w-5 h-5 shrink-0 text-sale" live={false} /> Deliver to</p>
           {detecting ? (
             <p className="flex items-center gap-2 text-sm leading-5 text-ink-muted"><Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted" aria-hidden="true" /> Finding the address at the pin…</p>
           ) : detectError ? (

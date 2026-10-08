@@ -69,13 +69,11 @@ const useTimeLeft = (endsAt: number | null) => {
 };
 const two = (value: number) => String(value).padStart(2, '0');
 
-// Focus ring that reads on the dark panel
-const ON_DARK_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-dark';
-
 /**
- * `full` is a dark panel with a thin champagne double frame on the homepage: the offer, a live countdown to the
- * coupon's real last day, the two buttons and a real festive photo (nothing is written on the photo). `strip` is one slim dark row for the shop page
- * and the bag. (The thin dark line above the header reads the same round, in Header.)
+ * `full` is one glass panel on the homepage: the real festive photo on top, edge to edge (nothing is written on
+ * it), then the offer, a live countdown to the coupon's real last day as four small glass tiles and the two
+ * pills. On desktop the photo sits at the right. `strip` is one slim glass row for the shop page and the bag.
+ * (The announcement line under the header reads the same round, in Header.)
  */
 export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: string }> = ({ variant = 'full', className = '' }) => {
   const { setActivePage } = useShop();
@@ -91,22 +89,22 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
   };
   const ends = round.daysLeft <= 0 ? 'Ends today' : round.daysLeft === 1 ? `Ends tomorrow, ${round.lastDay}` : `Till ${round.lastDay}`;
   const copyLabel = copied ? 'Copied' : round.code;
-  const copyIcon = copied ? <Check className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />;
+  const copyIcon = copied ? <Check className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />;
   const spoken = left ? `Offer ends in ${left.days} days, ${left.hours} hours and ${left.minutes} minutes` : undefined;
 
   if (variant === 'strip') {
     return (
-      <aside id="festive-strip" aria-label={round.title} className={`flex items-center gap-3 bg-dark px-3 py-2.5 text-on-dark ${className}`}>
+      <aside id="festive-strip" aria-label={round.title} className={`sag-glass flex items-center gap-3 py-2 pl-4 pr-2 text-ink ${className}`}>
         <p className="min-w-0 flex-1 text-[12.5px] leading-[18px]">
-          <span className="block text-[13.5px] leading-5 font-medium">{round.title}: {round.offer.toLowerCase()} with code <span className="text-highlight">{round.code}</span></span>
-          <span className="sag-num block text-on-dark-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
+          <span className="block text-[13.5px] leading-5 font-medium">{round.title}: {round.offer.toLowerCase()} with code <span className="font-semibold text-sale">{round.code}</span></span>
+          <span className="sag-num block text-ink-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
           {left && (
-            <span role="timer" aria-label={spoken} className="sag-num block font-semibold text-highlight">
+            <span role="timer" aria-label={spoken} className="sag-num block font-semibold text-sale">
               {left.days}d {two(left.hours)}h {two(left.minutes)}m {two(left.seconds)}s
             </span>
           )}
         </p>
-        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className={`sag-sheen sag-num inline-flex h-10 shrink-0 cursor-pointer items-center justify-center gap-1.5 border border-highlight px-3 text-[13px] font-semibold tracking-[0.04em] text-highlight ${ON_DARK_FOCUS}`}>
+        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-sheen sag-num h-10 shrink-0 gap-1.5 px-3.5 text-[13px]">
           {copyIcon}
           {copyLabel}
         </button>
@@ -119,49 +117,47 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
     : [];
 
   return (
-    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`relative border border-highlight/60 bg-dark p-5 text-on-dark sm:p-8 lg:flex lg:items-center lg:gap-10 lg:p-10 ${className}`}>
-      <div className="pointer-events-none absolute inset-1.5 border border-highlight/60" aria-hidden="true" />
-
-      <div className="relative mb-5 overflow-hidden lg:order-2 lg:mb-0 lg:w-[440px] lg:shrink-0">
+    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass rounded-[26px]! overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
+      <div className="overflow-hidden lg:order-2 lg:w-[46%] lg:shrink-0">
         <img
           src={PHOTO.src}
           srcSet={`${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
-          sizes="(min-width: 1024px) 440px, 92vw"
+          sizes="(min-width: 1024px) 560px, 96vw"
           alt={PHOTO.alt}
           width={1000}
           height={544}
           decoding="async"
-          className="sag-drift h-[170px] w-full object-cover sm:h-[230px] lg:h-[300px]"
+          className="sag-drift h-[150px] w-full rounded-none object-cover sm:h-[230px] lg:h-full lg:min-h-[360px]"
         />
       </div>
 
-      <div className="relative min-w-0 flex-1">
-        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-highlight">Festive month</p>
-        <h2 id="festive-banner-title" className="mt-2 font-display text-[23px] leading-[1.18] font-medium text-on-dark sm:text-[30px]">{round.title}</h2>
-        <p className="sag-num mt-2 text-[15px] leading-6 text-on-dark">
-          {round.offer} with code <span className="font-semibold text-highlight">{round.code}</span>
+      <div className="min-w-0 flex-1 p-4 sm:p-7 lg:self-center lg:p-10">
+        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Festive month</p>
+        <h2 id="festive-banner-title" className="mt-1.5 font-display text-[23px] leading-[1.18] font-medium text-ink sm:text-[30px] lg:text-[36px]">{round.title}</h2>
+        <p className="sag-num mt-1.5 text-[15px] leading-6 text-ink lg:text-[17px]">
+          {round.offer} with code <span className="font-semibold text-sale">{round.code}</span>
         </p>
-        <ul className="sag-num mt-1 space-y-0.5 text-[13px] leading-5 text-on-dark-muted">
+        <ul className="sag-num mt-0.5 space-y-0.5 text-[13px] leading-5 text-ink-muted">
           {round.terms && <li className="first-letter:uppercase">{round.terms}</li>}
           {round.prepaidPercent > 0 && <li>Plus {round.prepaidPercent}% off when you pay online</li>}
         </ul>
 
-        <p className="sag-num mt-4 text-[11px] leading-4 font-semibold uppercase tracking-[0.14em] text-highlight">{left ? `Offer ends ${round.lastDay}` : ends}</p>
+        <p className="sag-num mt-3.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.14em] text-sale">{left ? `Offer ends ${round.lastDay}` : ends}</p>
         {/* The clock is drawn only in the browser, after mounting; its space is kept so the panel does not jump */}
-        <div role="timer" aria-label={spoken} className="mt-2 flex min-h-[58px] gap-2">
+        <div role="timer" aria-label={spoken} className="mt-2 flex min-h-[56px] gap-[7px] lg:max-w-[340px]">
           {boxes.map(([label, value]) => (
-            <div key={label} aria-hidden="true" className="flex w-[58px] flex-col items-center border border-highlight/40 py-2">
-              <span className="sag-digit text-[20px] leading-6 font-semibold text-on-dark">{value}</span>
-              <span className="mt-0.5 text-[9.5px] leading-3 font-semibold uppercase tracking-[0.14em] text-on-dark-muted">{label}</span>
+            <div key={label} aria-hidden="true" className="flex min-w-0 flex-1 flex-col items-center rounded-[14px]! border border-line bg-white/[0.08] pt-[9px] pb-[7px]">
+              <span className="sag-digit text-[20px] leading-6 font-semibold text-ink">{value}</span>
+              <span className="mt-0.5 text-[9.5px] leading-3 uppercase tracking-[0.14em] text-ink-muted">{label}</span>
             </div>
           ))}
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2.5">
-          <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className={`inline-flex h-12 min-w-0 flex-1 cursor-pointer items-center justify-center bg-surface px-5 text-[14px] font-semibold tracking-[0.04em] text-ink sm:flex-none ${ON_DARK_FOCUS}`}>
+        <div className="mt-3.5 flex gap-2.5 lg:mt-5">
+          <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="sag-btn-primary min-w-0 flex-1 px-5 whitespace-nowrap sm:flex-none sm:px-8">
             Shop the sale
           </button>
-          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className={`sag-sheen sag-num inline-flex h-12 min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 border border-highlight px-5 text-[14px] font-semibold tracking-[0.04em] text-highlight ${ON_DARK_FOCUS} sm:flex-none`}>
+          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-sheen sag-num min-w-0 flex-1 gap-2 px-5 whitespace-nowrap sm:flex-none sm:px-7">
             {copyIcon}
             {copyLabel}
           </button>

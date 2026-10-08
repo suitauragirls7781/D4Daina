@@ -20,9 +20,9 @@ export const NotFoundPage: React.FC = () => {
   ];
 
   return (
-    <div id="not-found-page" className="bg-page px-4 sm:px-6 py-8 lg:py-16">
+    <div id="not-found-page" className="px-4 sm:px-6 py-8 lg:py-16">
       <div className="max-w-xl mx-auto">
-        <div className="text-center sm:py-4">
+        <div className="text-center sag-glass px-5 py-8 sm:py-10">
           <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Error 404</p>
           <h1 className="font-display font-medium text-[23px] leading-7 lg:text-[36px] lg:leading-[44px] text-ink mt-2">This page does not exist</h1>
           <p className="mt-2 text-[13px] leading-[18px] lg:text-[15px] lg:leading-[22px] text-ink-muted">The link may be old or mistyped. Try the shop or go back to the homepage.</p>
@@ -40,7 +40,7 @@ export const NotFoundPage: React.FC = () => {
             <div className="mt-3 flex flex-wrap gap-2">
               {collections.map((name) => (
                 <button key={name} type="button" onClick={() => navigateToCategory(name as any)}
-                  className="inline-flex items-center h-[38px] px-3 bg-surface border border-line text-[13px] text-ink hover:bg-sunken transition-colors cursor-pointer">
+                  className="inline-flex items-center h-[38px] px-4 rounded-full bg-surface border border-line text-[13px] text-ink hover:bg-sunken transition-colors cursor-pointer">
                   {name}
                 </button>
               ))}
@@ -48,9 +48,9 @@ export const NotFoundPage: React.FC = () => {
           </section>
         )}
 
-        <nav className="mt-8 border-t border-line" aria-label="Help">
+        <nav className="mt-8 sag-glass px-4" aria-label="Help">
           {help.map(({ icon: Icon, label, action }) => (
-            <button key={label} type="button" onClick={action} className="sag-row !border-t-0 border-b border-line w-full text-left font-normal cursor-pointer">
+            <button key={label} type="button" onClick={action} className="sag-row !border-t-0 border-b border-line last:border-b-0 w-full text-left font-normal cursor-pointer">
               <span className="shrink-0 flex text-sale"><Icon mono className="w-5 h-5" /></span>
               <span className="flex-1 min-w-0">{label}</span>
               <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />

@@ -21,9 +21,9 @@ const readTimeLeft = (endTime?: string): TimeLeft | null => {
 const two = (value: number) => String(value).padStart(2, '0');
 
 /**
- * Deal of the day (pick 3-3): one card with an ink border in two parts. Left, a dark block with the label and
- * the real discount percent very large (the price when there is no discount) and the countdown when a real end
- * time is set; right, on white, a small photo, the name, price, the real saving and a black "View deal".
+ * Deal of the day (pick 3-3): one glass panel in two parts. Left, a brighter glass area with the label and
+ * the real discount percent very large in gold serif (the price when there is no discount) and the countdown
+ * when a real end time is set; right, a rounded photo, the name, price, the real saving and a gold "View deal".
  * The selling price counts once from the MRP to the real price when the section first comes into view.
  * The whole box opens the product, where the size is chosen.
  * The price is the product's own price (what the bag charges), and the clock runs only to the end time the
@@ -104,50 +104,50 @@ export const DealOfTheDaySection: React.FC = () => {
   };
 
   return (
-    <section ref={sectionRef} id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full py-[26px] lg:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full py-[18px] lg:py-10">
+      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
         <a
           href={`/product/${product.id}`}
           onClick={openProduct}
-          className="mx-auto flex max-w-2xl items-stretch border border-ink bg-surface text-ink"
+          className="sag-glass rounded-[26px]! mx-auto flex max-w-2xl items-stretch overflow-hidden text-ink lg:max-w-4xl"
         >
-          {/* Left: the dark block with the real discount (or the price when there is no discount) */}
-          <span className="flex w-[38%] shrink-0 flex-col items-center justify-center gap-1.5 bg-dark px-2 py-4 text-center text-on-dark sm:px-4 sm:py-6 lg:w-[260px]">
-            <span className="text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-highlight sm:text-[11px]">Deal of the day</span>
+          {/* Left: the brighter glass area with the real discount (or the price when there is no discount) */}
+          <span className="flex w-[38%] shrink-0 flex-col items-center justify-center gap-1.5 border-r border-line bg-white/[0.08] px-2 py-4 text-center text-ink sm:px-4 sm:py-6 lg:w-[300px]">
+            <span className="text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale sm:text-[11px]">Deal of the day</span>
             {discountPercent > 0 ? (
               <>
-                <span className="font-display text-[46px] font-semibold leading-[0.95] text-highlight sm:text-[64px] lg:text-[76px]">
+                <span className="font-display text-[46px] font-medium leading-[0.95] text-sale sm:text-[64px] lg:text-[84px]">
                   {discountPercent}<span className="text-[22px] sm:text-[30px] lg:text-[34px]">%</span>
                 </span>
-                <span className="text-[11px] font-semibold uppercase leading-4 tracking-[0.2em] text-on-dark">Off</span>
+                <span className="text-[11px] font-semibold uppercase leading-4 tracking-[0.2em] text-ink">Off</span>
               </>
             ) : (
-              <span className="sag-num text-[26px] font-semibold leading-8 text-highlight sm:text-[36px] sm:leading-10">₹{dealPrice.toLocaleString('en-IN')}</span>
+              <span className="sag-num text-[26px] font-semibold leading-8 text-sale sm:text-[36px] sm:leading-10">₹{dealPrice.toLocaleString('en-IN')}</span>
             )}
             {showClock && (
               <span className="mt-1.5 block w-full" role="timer" aria-live="off" aria-label={clockText}>
-                <span aria-hidden="true" className="block text-[11px] leading-4 text-on-dark-muted">Ends in</span>
-                <span aria-hidden="true" className="mx-auto mt-1 grid max-w-[200px] grid-cols-4 gap-0.5 sm:gap-1.5">
+                <span aria-hidden="true" className="block text-[11px] leading-4 text-ink-muted">Ends in</span>
+                <span aria-hidden="true" className="mx-auto mt-1 grid max-w-[220px] grid-cols-4 gap-1 sm:gap-1.5">
                   {clockParts.map(([label, value]) => (
-                    <span key={label} className="flex min-w-0 flex-col items-center border border-white/20 py-1">
-                      <span className="sag-digit sag-num text-[12px] font-semibold leading-4 text-on-dark sm:text-[15px] sm:leading-5">{two(value)}</span>
-                      <span className="text-[9px] leading-3 text-on-dark-muted sm:text-[10.5px]">{label}</span>
+                    <span key={label} className="flex min-w-0 flex-col items-center rounded-[10px] border border-line bg-white/[0.08] py-1 sm:rounded-[14px] sm:py-1.5">
+                      <span className="sag-digit sag-num text-[12px] font-semibold leading-4 text-ink sm:text-[15px] sm:leading-5">{two(value)}</span>
+                      <span className="text-[9px] leading-3 text-ink-muted sm:text-[10.5px]">{label}</span>
                     </span>
                   ))}
                 </span>
               </span>
             )}
           </span>
-          {/* Right: the small photo, name, price and the button */}
-          <span className="flex min-w-0 flex-1 flex-col justify-center gap-2 p-3 sm:gap-4 sm:p-5">
+          {/* Right: the rounded photo, name, price and the gold pill */}
+          <span className="flex min-w-0 flex-1 flex-col justify-center gap-2.5 p-2.5 sm:gap-4 sm:p-5">
             <span className="flex items-start gap-2.5 sm:gap-4">
-              <span className="sag-zoom block w-[74px] shrink-0 overflow-hidden bg-sunken sm:w-[120px] lg:w-[140px]">
+              <span className="sag-zoom block w-[74px] shrink-0 overflow-hidden rounded-[14px] bg-sunken sm:w-[120px] sm:rounded-[18px] lg:w-[150px]">
                 <img
                   src={image ? getCleanImageUrl(image, 320) : ELEGANT_PLACEHOLDER_SVG}
                   alt=""
                   loading="lazy"
                   decoding="async"
-                  className="aspect-[4/5] w-full object-cover object-top"
+                  className="aspect-[4/5] w-full rounded-none object-cover object-top"
                   onError={(event) => { if (!event.currentTarget.src.includes('data:image/svg+xml')) event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
                 />
               </span>
@@ -164,7 +164,7 @@ export const DealOfTheDaySection: React.FC = () => {
             </span>
             <span
               aria-disabled={soldOut || undefined}
-              className={`sag-btn-primary w-full whitespace-nowrap ${soldOut ? '' : 'sag-sheen'}`}
+              className={`sag-btn-primary h-10 w-full whitespace-nowrap sm:h-12 ${soldOut ? '' : 'sag-sheen'}`}
             >
               {soldOut ? 'Sold out' : 'View deal'}
             </span>

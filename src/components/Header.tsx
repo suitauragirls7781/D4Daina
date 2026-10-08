@@ -24,8 +24,8 @@ const WORDMARK = 'sag-caps font-display font-medium uppercase whitespace-nowrap 
 
 /**
  * The one announcement line. It shows the festive round that is live right now (a real coupon inside its dates,
- * read by useFestiveRound) and nothing at all when no round is live. Desktop: a thin dark line above the header.
- * Phones and tablets: a soft line with champagne text under the search row.
+ * read by useFestiveRound) and nothing at all when no round is live. A small glass line with gold text:
+ * above the header on desktop, under the search row on phones and tablets.
  */
 const AnnouncementLine: React.FC<{ soft?: boolean }> = ({ soft = false }) => {
   const round = useFestiveRound();
@@ -55,9 +55,9 @@ const AnnouncementLine: React.FC<{ soft?: boolean }> = ({ soft = false }) => {
   if (!round || count === 0) return null;
   const current = still ? 0 : turn % count;
   return (
-    <div id="festive-announcement" role="region" aria-label="Store announcement" className={`w-full ${soft ? 'bg-sunken text-sale font-semibold' : 'bg-dark text-on-dark'}`}>
+    <div id="festive-announcement" role="region" aria-label="Store announcement" className={`w-full ${soft ? 'pt-2' : 'px-6 pt-3'}`}>
       {/* Every message sits in the same cell, so the line keeps the height of the longest one and never jumps */}
-      <div className="sag-num mx-auto grid max-w-7xl px-3 py-2 text-center text-[11.5px] leading-4 tracking-[0.06em]">
+      <div className={`sag-glass sag-num mx-auto grid max-w-full rounded-[18px]! px-4 py-1.5 text-center text-[11.5px] font-medium leading-4 tracking-[0.06em] text-sale shadow-none! ${soft ? 'w-full max-w-2xl' : 'w-fit'}`}>
         {(still ? messages.slice(0, 1) : messages).map((message, index) => (
           index === current
             ? <p key={`${index}-${turn}`} className="sag-settle col-start-1 row-start-1 min-w-0">{message}</p>
@@ -103,12 +103,12 @@ const HeaderPinCheck: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   };
 
   return (
-    <div id="header-pin-panel" className="sag-drop relative">
-      <div className="absolute left-0 right-0 top-full h-screen bg-ink/50 sag-fade" onClick={onClose} aria-hidden="true" />
-      <div className="relative border-b border-line bg-surface p-4">
+    <div id="header-pin-panel" className="sag-drop relative mt-2">
+      <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={onClose} aria-hidden="true" />
+      <div className="relative mx-auto max-w-2xl rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl p-4">
         <div className="flex items-start justify-between gap-2">
           <p className="text-base font-medium leading-6 text-ink">Check delivery to your PIN code</p>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 -mt-2 -mr-2 shrink-0 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 -mt-1.5 -mr-1.5 shrink-0 flex items-center justify-center rounded-full border border-line bg-white/10 text-ink-muted hover:text-ink cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
         <form onSubmit={check} className="mt-2 flex gap-2">
           <input
@@ -291,18 +291,18 @@ export const Header: React.FC = () => {
     ...(hasKidsToys ? [{ label: KIDS_TOYS, action: () => navigateToCategory(KIDS_TOYS as any), active: activePage === 'shop' && isKidsToysListing(selectedCategory) }] : []),
   ];
 
-  // One look for every header control: a bare thin icon in the text colour, no fill behind it
-  const iconButton = 'relative shrink-0 items-center justify-center text-ink hover:text-ink-muted cursor-pointer transition-colors';
-  const phoneIcon = `${iconButton} h-10 w-9`;
+  // One look for every header control: a thin icon in a round glass circle
+  const iconButton = 'relative shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-ink hover:bg-white/15 cursor-pointer transition-colors';
+  const phoneIcon = `${iconButton} h-[38px] w-[38px]`;
   const deskIcon = `${iconButton} h-11 w-11`;
-  // The real count as a small black dot with white figures
-  const badge = 'sag-num absolute min-w-[15px] h-[15px] px-[3px] rounded-full bg-ink text-white text-[10px] font-semibold leading-none flex items-center justify-center';
-  const navLink = (active: boolean) => `sag-caps relative h-11 inline-flex items-center text-[12px] uppercase tracking-[0.12em] cursor-pointer transition-colors ${active ? 'text-ink font-medium' : 'text-ink-muted hover:text-ink'}`;
-  const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-0 h-px bg-ink ${active ? '' : 'hidden'}`;
+  // The real count as a small gold dot with dark figures
+  const badge = 'sag-num absolute min-w-[16px] h-[16px] px-[3px] rounded-full bg-brand text-[color:var(--sag-on-gold)] text-[10px] font-semibold leading-none flex items-center justify-center';
+  const navLink = (active: boolean) => `sag-caps relative h-11 inline-flex items-center text-[12px] uppercase tracking-[0.12em] cursor-pointer transition-colors ${active ? 'text-brand font-medium' : 'text-ink-muted hover:text-ink'}`;
+  const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-1.5 h-px bg-brand ${active ? '' : 'hidden'}`;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
   // A collection in the search panel: one plain row with its real count and a chevron
-  const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-ink-muted';
+  const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-brand';
   const searchLabel = 'Search suits, kurtis & more';
   const closeSearch = () => setIsSearchOpen(false);
   // Never tucked away while the menu is open
@@ -312,22 +312,28 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* Desktop: the thin dark line sits above the header and scrolls away; checkout stays free of offers */}
+      {/* Desktop: the small glass line sits above the header and scrolls away; checkout stays free of offers */}
       {showAnnouncement && isDesktop && <AnnouncementLine />}
-      <header className="sticky top-0 z-50 w-full bg-surface border-b border-line select-none">
-        {/* Phones and tablets: one white bar. The round mark and the wordmark on the left, wishlist and bag on the right. */}
-        <div className="lg:hidden mx-auto flex h-[52px] max-w-2xl items-center justify-between gap-2 px-3">
-          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 items-center gap-2.5 text-left cursor-pointer" aria-label="Suit Aura Girls home">
-            <img src="/suit-aura-mark-132.webp" width={36} height={36} alt="" className="h-9 w-9 shrink-0 rounded-full border border-line object-cover" />
+      <header className="sticky top-0 z-50 w-full select-none px-2.5 pt-2 lg:px-6 lg:pt-3">
+        {/* Phones and tablets: one floating glass pill. The round mark and the wordmark on the left; search (while the
+            search row is tucked away), wishlist and bag as round glass buttons on the right. */}
+        <div className="sag-glass-bar lg:hidden mx-auto flex h-[54px] max-w-2xl items-center justify-between gap-2 px-2">
+          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 items-center gap-2 text-left cursor-pointer" aria-label="Suit Aura Girls home">
+            <img src="/suit-aura-mark-132.webp" width={36} height={36} alt="" className="h-9 w-9 shrink-0 rounded-full! border border-line object-cover" />
             <span className="min-w-0">
-              <span className={`${WORDMARK} block text-[16px] leading-5 tracking-[0.12em]`}>Suit Aura Girls</span>
+              <span className={`${WORDMARK} block truncate text-[15px] leading-5 tracking-[0.1em] sm:text-[16px] sm:tracking-[0.12em]`}>Suit Aura Girls</span>
               <span className="sag-caps block truncate text-[9.5px] leading-[14px] uppercase tracking-[0.04em] text-ink-muted sm:text-[10.5px] sm:tracking-[0.12em]">Ethnic wear · Delivery across India</span>
             </span>
           </button>
-          <div className="flex shrink-0 items-center">
+          <div className="flex shrink-0 items-center gap-1.5">
+            {tucked && !isSearchOpen && (
+              <button type="button" id="header-search-icon-btn" onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }} className={`${phoneIcon} flex`} aria-label="Search">
+                <Search className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              </button>
+            )}
             <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-[21px] h-[21px]" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={`${badge} top-1 right-0`}>{count(wishlist.length)}</span>}
+              <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className={`${badge} -top-1 -right-1`}>{count(wishlist.length)}</span>}
             </button>
             <button
               id="header-cart-btn-mobile"
@@ -335,8 +341,8 @@ export const Header: React.FC = () => {
               className={`${phoneIcon} flex`}
               aria-label={`Bag, ${cartCount} items`}
             >
-              <ShoppingBag className="w-[21px] h-[21px]" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={`${badge} top-1 right-0`}>{count(cartCount)}</span>}
+              <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              {cartCount > 0 && <span className={`${badge} -top-1 -right-1`}>{count(cartCount)}</span>}
             </button>
           </div>
         </div>
@@ -346,11 +352,11 @@ export const Header: React.FC = () => {
         {!isDesktop && !isSearchOpen && (
           <div className={`lg:hidden grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${tucked ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}>
             <div className={`min-h-0 overflow-hidden transition-[visibility] duration-200 ${tucked ? 'invisible' : ''}`} aria-hidden={tucked || undefined}>
-              <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 pb-3 pt-0.5">
+              <div className="mx-auto flex max-w-2xl items-center gap-2 pt-2">
                 <button
                   id="mobile-menu-trigger"
                   onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-                  className={`${iconButton} flex h-11 w-11 border border-line hover:border-control`}
+                  className={`${iconButton} sag-glass-bar flex h-11 w-11 shadow-none!`}
                   aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={isMobileMenuOpen}
                 >
@@ -362,16 +368,16 @@ export const Header: React.FC = () => {
                     type="button"
                     id="header-search-btn"
                     onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                    className="h-11 w-full truncate border border-line bg-surface pl-10 pr-12 text-left text-sm text-ink-muted hover:border-control cursor-pointer transition-colors"
+                    className="sag-glass-bar h-11 w-full truncate pl-10 pr-12 text-left text-sm text-ink-muted shadow-none! hover:text-ink cursor-pointer transition-colors"
                     aria-label={searchLabel}
                     aria-expanded={isSearchOpen}
                   >
                     Search suits, dresses…
                   </button>
-                  <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 text-ink-muted">
+                  <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-ink-muted">
                     <Search className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />
                   </span>
-                  <VoiceSearchButton onResult={executeSearch} className="absolute right-0.5 top-1/2 -translate-y-1/2" />
+                  <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
               {showAnnouncement && <AnnouncementLine soft />}
@@ -379,8 +385,9 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        {/* Desktop: the wordmark, a square search field with a hairline, and the icons */}
-        <div className="hidden lg:flex max-w-7xl mx-auto px-8 h-[68px] items-center justify-between gap-3">
+        {/* Desktop: one wide glass bar: the mark and wordmark, a glass pill search field, the icons, then the menu row */}
+        <div className="sag-glass-bar hidden lg:block max-w-7xl mx-auto rounded-[26px]!">
+        <div className="flex px-6 h-[66px] items-center justify-between gap-3">
           <div className="flex items-center min-w-0">
             <button
               id="header-brand-logo"
@@ -388,7 +395,7 @@ export const Header: React.FC = () => {
               className="flex shrink-0 items-center gap-3 cursor-pointer"
               aria-label="Suit Aura Girls home"
             >
-              <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full border border-line object-cover" />
+              <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full! border border-line object-cover" />
               <span className={`${WORDMARK} text-[22px] leading-7 tracking-[0.14em]`}>Suit Aura Girls</span>
             </button>
           </div>
@@ -398,7 +405,7 @@ export const Header: React.FC = () => {
               type="button"
               id="desktop-search-field"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="w-full h-11 pl-11 pr-12 border border-line bg-surface hover:border-control text-left text-sm text-ink-muted truncate cursor-pointer transition-colors"
+              className="w-full h-11 pl-11 pr-12 rounded-full border border-line bg-white/[0.08] hover:bg-white/[0.12] text-left text-sm text-ink-muted truncate cursor-pointer transition-colors"
             >
               {searchLabel}
             </button>
@@ -408,14 +415,14 @@ export const Header: React.FC = () => {
             <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className={`${deskIcon} hidden md:flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={`${badge} top-1.5 right-1`}>{count(wishlist.length)}</span>}
+              <Heart className="w-5 h-5" strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className={`${badge} -top-0.5 -right-0.5`}>{count(wishlist.length)}</span>}
             </button>
             <button id="header-account-btn" onClick={() => setActivePage('account')} className={`${deskIcon} hidden md:flex`} aria-label={user ? 'My account' : 'Sign in'}>
-              <User className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {user && <span className="absolute bottom-2 right-2 w-2 h-2 rounded-full bg-ink ring-2 ring-white" />}
+              <User className="w-5 h-5" strokeWidth={1.5} />
+              {user && <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-brand" />}
             </button>
             <button
               id="header-cart-btn"
@@ -423,15 +430,15 @@ export const Header: React.FC = () => {
               className={`${deskIcon} flex`}
               aria-label={`Bag, ${cartCount} items`}
             >
-              <ShoppingBag className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={`${badge} top-1.5 right-1`}>{count(cartCount)}</span>}
+              <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
+              {cartCount > 0 && <span className={`${badge} -top-0.5 -right-0.5`}>{count(cartCount)}</span>}
             </button>
           </div>
         </div>
 
-        {/* Desktop: the menu on its own row, in small letter-spaced capitals */}
-        <div className="hidden lg:block border-t border-line">
-          <nav className="max-w-7xl mx-auto px-8 h-11 flex items-center justify-center gap-9 xl:gap-11" aria-label="Main">
+        {/* Desktop: the menu on its own row, in small letter-spaced capitals; the current one in gold */}
+        <div className="border-t border-line">
+          <nav className="px-6 h-11 flex items-center justify-center gap-9 xl:gap-11" aria-label="Main">
             {navItems.map((item) => (
               <button
                 key={item.label}
@@ -457,7 +464,7 @@ export const Header: React.FC = () => {
                 <span aria-hidden="true" className={navUnderline(collectionActive)} />
               </button>
               {collectionsOpen && (
-                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-full w-[460px] bg-surface border border-line p-5 z-50 sag-pop">
+                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] w-[460px] rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl p-5 z-50 sag-pop">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className={EYEBROW}>Shop by collection</p>
                     {collections.length > 0 && <span className="sag-num text-[12px] text-ink-muted">{collections.length} {collections.length === 1 ? 'collection' : 'collections'}</span>}
@@ -471,7 +478,7 @@ export const Header: React.FC = () => {
                           key={name}
                           onClick={() => { navigateToCategory(name as any); setCollectionsOpen(false); }}
                           aria-current={current ? 'page' : undefined}
-                          className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left text-sm transition-colors cursor-pointer ${current ? 'text-ink font-medium' : 'text-ink hover:text-ink-muted'}`}
+                          className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left text-sm transition-colors cursor-pointer ${current ? 'text-brand font-medium' : 'text-ink hover:text-brand'}`}
                         >
                           <span className="truncate">{name}</span>
                           <span className="sag-num shrink-0 text-[12px] text-ink-muted">{count}</span>
@@ -501,15 +508,16 @@ export const Header: React.FC = () => {
             </button>
           </nav>
         </div>
+        </div>
 
         {isSearchOpen && (
-          <div id="search-drawer-overlay" className="sag-drop relative border-t border-line bg-surface">
+          <div id="search-drawer-overlay" className="sag-drop relative mt-2">
             {/* Dim the page under the panel; a tap outside closes it */}
-            <div className="absolute left-0 right-0 top-full h-screen bg-ink/50 sag-fade" onClick={closeSearch} aria-hidden="true" />
-            <div className="relative max-w-3xl mx-auto px-4 sm:px-8 pb-6 max-h-[calc(100vh-5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-5rem)] overflow-y-auto overscroll-contain">
-              {/* The field: a bare line of text over a hairline that turns ink while typing */}
-              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="-mx-4 flex items-center gap-2 border-b border-line px-4 focus-within:border-ink sm:-mx-8 sm:px-8">
-                <Search className="w-5 h-5 shrink-0 text-ink" strokeWidth={1.5} aria-hidden="true" />
+            <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={closeSearch} aria-hidden="true" />
+            <div className="relative max-w-3xl mx-auto rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl px-4 sm:px-8 pt-3 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
+              {/* The field: a glass pill whose edge turns gold while typing */}
+              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="flex items-center gap-2 rounded-full border border-line bg-white/[0.08] pl-4 pr-3 focus-within:border-brand">
+                <Search className="w-5 h-5 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
                 <input
                   ref={searchInputRef}
                   id="search-input-field"
@@ -523,7 +531,7 @@ export const Header: React.FC = () => {
                   className="h-[52px] min-w-0 flex-1 border-0 bg-transparent text-[16px] text-ink outline-none focus:outline-none focus-visible:outline-none [&::-webkit-search-cancel-button]:appearance-none"
                 />
                 {searchInput && (
-                  <button type="button" onClick={() => { setSearchInput(''); searchInputRef.current?.focus(); }} aria-label="Clear search" className="w-9 h-10 shrink-0 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+                  <button type="button" onClick={() => { setSearchInput(''); searchInputRef.current?.focus(); }} aria-label="Clear search" className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-ink-muted hover:bg-white/10 hover:text-ink cursor-pointer">
                     <X className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 )}
@@ -532,7 +540,7 @@ export const Header: React.FC = () => {
                 <button type="submit" id="search-submit-btn" className={`sag-btn-primary h-10 shrink-0 px-4 text-sm ${searchInput ? '' : 'hidden sm:inline-flex'}`}>
                   Search
                 </button>
-                <button type="button" onClick={closeSearch} className={`h-10 shrink-0 text-[12.5px] font-medium text-ink underline underline-offset-4 decoration-1 cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
+                <button type="button" onClick={closeSearch} className={`h-10 shrink-0 pr-1 text-[12.5px] font-medium text-brand underline underline-offset-4 decoration-1 cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
                   Cancel
                 </button>
               </form>
@@ -554,7 +562,7 @@ export const Header: React.FC = () => {
                               onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
                               className="w-full min-w-0 flex items-center gap-3 border-b border-line py-2.5 text-left cursor-pointer"
                             >
-                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 object-cover object-top bg-sunken" />
+                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 rounded-[12px]! object-cover object-top bg-sunken" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm leading-5 text-ink truncate">{prod.name}</p>
                                 <p className="text-[12px] text-ink-muted truncate">{prod.category}</p>
@@ -564,7 +572,7 @@ export const Header: React.FC = () => {
                                   {off > 0 && <span className="font-semibold text-sale">{off}% off</span>}
                                 </p>
                               </div>
-                              <ChevronRight className="w-4 h-4 shrink-0 text-ink" strokeWidth={1.5} />
+                              <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} />
                             </button>
                           );
                         })}
@@ -574,7 +582,7 @@ export const Header: React.FC = () => {
                       </button>
                     </>
                   ) : (
-                    <div className="border border-line px-4 py-6 text-center">
+                    <div className="sag-glass px-4 py-6 text-center shadow-none!">
                       <p className="font-display text-[19px] font-medium leading-7 text-ink break-words">No styles match “{searchTrimmed}”</p>
                       <p className="mt-1 text-[13px] text-ink-muted">Check the spelling or pick a collection below.</p>
                     </div>
@@ -593,7 +601,7 @@ export const Header: React.FC = () => {
                     </div>
                     <div className="mt-1 flex flex-wrap gap-2">
                       {recentSearches.map((term) => (
-                        <button key={term} onClick={() => executeSearch(term)} className="h-[38px] max-w-full px-3 border border-line bg-surface text-[13px] text-ink hover:border-ink inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                        <button key={term} onClick={() => executeSearch(term)} className="sag-chip h-[38px] max-w-full px-3.5 text-[13px] font-normal inline-flex items-center gap-1.5 transition-colors cursor-pointer">
                           <Clock className="w-3.5 h-3.5 shrink-0 text-ink-muted" strokeWidth={1.5} />
                           <span className="truncate">{term}</span>
                         </button>
@@ -615,7 +623,7 @@ export const Header: React.FC = () => {
                           aria-label={`${prod.name}, ₹${prod.price.toLocaleString('en-IN')}`}
                           className="flex w-[112px] shrink-0 flex-col gap-[7px] text-left cursor-pointer"
                         >
-                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full bg-sunken object-cover object-top" />
+                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-[18px]! bg-sunken object-cover object-top" />
                           <span className="sag-num text-[13px] font-semibold leading-4 text-ink">₹{prod.price.toLocaleString('en-IN')}</span>
                         </button>
                       ))}

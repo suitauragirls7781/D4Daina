@@ -8,9 +8,9 @@ import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
 import { assuranceFacts } from './Assurance';
 
 /**
- * The footer (Noir & Champagne): the only dark block of the store. The wordmark and one muted line, the help
- * and policy links in plain columns, the social marks as bare icons, a hairline, then the address and one
- * line of small print built from the store's own facts.
+ * The footer (Midnight glass): one glass panel with round corners, not an opaque block. The wordmark and one
+ * muted line, the help and policy links in plain columns, the social marks as round glass buttons, a hairline,
+ * then the address and one line of small print built from the store's own facts.
  */
 export const Footer: React.FC = () => {
   const { setActivePage, activePage } = useShop();
@@ -26,7 +26,7 @@ export const Footer: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const plainIcon = 'flex h-10 w-8 shrink-0 items-center justify-center text-on-dark hover:text-on-dark-muted transition-colors';
+  const plainIcon = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full! border border-line bg-white/10 text-ink hover:bg-white/15 hover:text-brand transition-colors';
   const socials = [
     { icon: InstagramIcon, href: storeSettings?.instagramUrl || STORE_INSTAGRAM_URL, label: 'Instagram' },
     { icon: FacebookIcon, href: storeSettings?.facebookUrl || '', label: 'Facebook' },
@@ -47,24 +47,24 @@ export const Footer: React.FC = () => {
   ];
 
   // Phones: room under the footer for whichever fixed bar the page shows (bottom navigation, bag bar or buy bar)
-  const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]';
+  const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(5.75rem+env(safe-area-inset-bottom))]';
 
   return (
-    <footer id="main-footer" className={`w-full bg-dark text-on-dark pt-[26px] md:pt-10 md:pb-8 ${bottomRoom}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer id="main-footer" className={`w-full px-3 pt-6 text-ink md:px-6 md:pt-10 md:pb-6 ${bottomRoom}`}>
+      <div className="sag-glass max-w-7xl mx-auto rounded-[26px]! px-4 pt-6 pb-5 sm:px-6 md:pt-8 lg:px-8">
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-12">
           <div>
-            <button type="button" onClick={() => go('home')} className="sag-caps block max-w-full truncate font-display text-[18px] font-medium uppercase leading-6 tracking-[0.14em] text-on-dark text-left cursor-pointer lg:text-[20px]" aria-label="Suit Aura Girls home">
+            <button type="button" onClick={() => go('home')} className="sag-caps block max-w-full truncate font-display text-[18px] font-medium uppercase leading-6 tracking-[0.14em] text-ink text-left cursor-pointer lg:text-[20px]" aria-label="Suit Aura Girls home">
               Suit Aura Girls
             </button>
-            <p className="mt-1.5 text-[13px] leading-5 text-on-dark-muted">Ethnic wear · {facts.delivery}</p>
+            <p className="mt-1.5 text-[13px] leading-5 text-ink-muted">Ethnic wear · {facts.delivery}</p>
           </div>
 
           <nav aria-label="Help and policies" className="mt-5 lg:mt-0">
             <ul className="grid grid-cols-2 gap-x-2.5 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
               {links.map(([page, label]) => (
                 <li key={page}>
-                  <button type="button" onClick={() => go(page)} className="min-h-9 py-1 text-left text-[13px] leading-5 text-on-dark hover:text-on-dark-muted cursor-pointer transition-colors">
+                  <button type="button" onClick={() => go(page)} className="min-h-9 py-1 text-left text-[13px] leading-5 text-ink hover:text-brand cursor-pointer transition-colors">
                     {label}
                   </button>
                 </li>
@@ -73,16 +73,16 @@ export const Footer: React.FC = () => {
           </nav>
         </div>
 
-        <div className="mt-4 -ml-1.5 flex items-center gap-1.5">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           {socials.map(({ icon: Icon, href, label }) => (
-            <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[19px] h-[19px]" mono /></a>
+            <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[18px] h-[18px]" mono /></a>
           ))}
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[19px] h-[19px]" mono /></a>
-          <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" /></a>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[18px] h-[18px]" mono /></a>
+          <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" /></a>
         </div>
 
-        <div className="mt-4 border-t border-white/20 pt-3.5 text-[11.5px] leading-[18px] text-on-dark-muted md:flex md:items-start md:justify-between md:gap-8">
-          <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block hover:text-on-dark md:max-w-[60%]">
+        <div className="mt-5 border-t border-line pt-3.5 text-[11.5px] leading-[18px] text-ink-muted md:flex md:items-start md:justify-between md:gap-8">
+          <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block hover:text-ink md:max-w-[60%]">
             {storeSettings?.address?.trim() || STORE_ADDRESS}
           </a>
           <p className="mt-1.5 md:mt-0 md:shrink-0 md:text-right">{facts.payment} · {facts.returns} · © {new Date().getFullYear()} Suit Aura Girls</p>

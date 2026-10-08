@@ -41,9 +41,9 @@ export class ErrorBoundary extends Component<Props, State> {
   public override render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="min-h-[60vh] bg-page flex items-center justify-center px-4 sm:px-6 py-10 lg:py-16" role="alert">
-        <div className="max-w-md w-full sag-card p-5 sm:p-8">
-          <span className="flex text-ink-muted"><HelpIcon mono className="w-7 h-7" /></span>
+      <div className="min-h-[60vh] flex items-center justify-center px-4 sm:px-6 py-10 lg:py-16" role="alert">
+        <div className="max-w-md w-full sag-glass p-5 sm:p-8">
+          <span className="flex text-sale"><HelpIcon mono className="w-7 h-7" /></span>
           <h1 className="font-display text-[28px] leading-8 text-ink mt-3">Something went wrong</h1>
           <p className="text-[15px] leading-[22px] text-ink-muted mt-2">This page could not be shown. Your bag and account are safe.</p>
           <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-5">

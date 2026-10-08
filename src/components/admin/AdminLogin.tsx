@@ -60,12 +60,12 @@ export const AdminLogin: React.FC = () => {
   const iconClass = 'absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-muted';
 
   return (
-    <div id="admin-login-page" className="min-h-screen bg-page flex flex-col">
+    <div id="admin-login-page" className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-white border-b border-line">
+      <div className="bg-[color:var(--sag-glass-bar)] backdrop-blur-xl border-b border-line">
         <div className="max-w-5xl mx-auto h-14 pl-4 pr-2 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 shrink-0 rounded-[10px] bg-brand text-white flex items-center justify-center text-sm font-bold" aria-hidden="true">SA</div>
+            <div className="w-9 h-9 shrink-0 rounded-full bg-brand text-[color:var(--sag-on-gold)] flex items-center justify-center text-sm font-semibold" aria-hidden="true">SA</div>
             <span className="text-base font-semibold text-ink truncate">Suit Aura Girls</span>
           </div>
           <button
@@ -81,13 +81,13 @@ export const AdminLogin: React.FC = () => {
 
       <div className="flex-1 flex flex-col sm:justify-center px-4 py-6 sm:py-10">
         <div className="w-full max-w-md mx-auto">
-          <div className="sag-card p-5 sm:p-7">
+          <div className="sag-glass p-5 sm:p-7">
             <div className="flex items-start gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-[10px] bg-brand-wash text-brand flex items-center justify-center" aria-hidden="true">
+              <span className="w-10 h-10 shrink-0 rounded-full bg-brand-wash text-sale flex items-center justify-center" aria-hidden="true">
                 <ShieldCheck className="w-5 h-5" />
               </span>
               <div className="min-w-0">
-                <h2 className="text-[22px] leading-7 text-ink">Admin sign in</h2>
+                <h2 className="font-display font-medium text-[22px] leading-7 text-ink">Admin sign in</h2>
                 <p className="mt-0.5 text-sm leading-5 text-ink-muted">
                   For store staff. Manage products, orders, customers and store settings.
                 </p>
@@ -95,7 +95,7 @@ export const AdminLogin: React.FC = () => {
             </div>
 
             {errorMessage && (
-              <div role="alert" className="mt-5 px-3.5 py-3 rounded-xl bg-danger-tint border border-danger-line text-sm leading-5 text-danger font-medium flex items-start gap-2">
+              <div role="alert" className="mt-5 px-3.5 py-3 rounded-[14px] bg-danger-tint border border-danger-line text-sm leading-5 text-danger font-medium flex items-start gap-2">
                 <Lock className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{errorMessage}</span>
               </div>
@@ -192,7 +192,7 @@ export const AdminLogin: React.FC = () => {
                 role="switch"
                 aria-checked={remember}
                 onClick={toggleRemember}
-                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-white'}`}
+                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-surface'}`}
               >
                 <span className="min-w-0">
                   <span className="block text-sm leading-5 font-semibold text-ink">Save login on this phone</span>
@@ -201,7 +201,7 @@ export const AdminLogin: React.FC = () => {
                   </span>
                 </span>
                 <span aria-hidden="true" className={`relative w-12 h-7 shrink-0 rounded-full transition-colors ${remember ? 'bg-brand' : 'bg-control'}`}>
-                  <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white transition-transform ${remember ? 'translate-x-5' : ''}`} />
+                  <span className={`absolute top-1 left-1 w-5 h-5 rounded-full transition-transform ${remember ? 'translate-x-5 bg-[color:var(--sag-on-gold)]' : 'bg-ink'}`} />
                 </span>
               </button>
 

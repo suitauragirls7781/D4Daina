@@ -31,8 +31,8 @@ const plainWords = (text: string) => text.replace(/[\p{Extended_Pictographic}\uF
 
 /**
  * Hero, "magazine" composition (owner's pick 4-2). Per slide a collage: a narrow vertical caption, the main
- * photo and a second real photo framed in white over its bottom-right corner; the words sit on white under
- * the collage (beside it on desktop). Nothing is drawn on a photo.
+ * photo and a second real photo in a thin translucent frame over its bottom-right corner; the words sit under
+ * the collage (beside it on desktop), all inside one glass panel. Nothing is drawn on a photo.
  */
 export const HeroSection: React.FC = () => {
   const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
@@ -201,15 +201,15 @@ export const HeroSection: React.FC = () => {
 
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="w-full px-4 pt-[18px] pb-[22px] md:px-6 lg:px-8 lg:py-10" aria-hidden="true">
-        <div className="mx-auto max-w-2xl lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12">
+      <div className="w-full px-3 pt-3 pb-[18px] sm:px-6 lg:px-8 lg:py-10" aria-hidden="true">
+        <div className="sag-glass rounded-[28px]! mx-auto max-w-2xl p-2.5 sm:p-4 lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12 lg:p-8">
           <div className="pb-[22%] pl-7">
-            <div className="aspect-[4/5] w-[78%] bg-sunken" />
+            <div className="aspect-[4/5] w-[78%] rounded-[20px]! bg-sunken" />
           </div>
-          <div className="mt-4 flex flex-col items-start gap-3 lg:mt-0">
+          <div className="mt-4 flex flex-col items-start gap-3 px-1.5 pb-1.5 lg:mt-0 lg:p-0">
             <div className="h-8 w-3/4 bg-sunken" />
             <div className="h-6 w-1/3 bg-sunken" />
-            <div className="h-12 w-40 bg-sunken" />
+            <div className="h-12 w-40 rounded-full! bg-sunken" />
           </div>
         </div>
       </div>
@@ -233,7 +233,7 @@ export const HeroSection: React.FC = () => {
     : storeOffers.prepaidDiscount > 0
     ? `Extra ₹${storeOffers.prepaidDiscount} off on online payment`
     : '';
-  const arrow = 'flex h-11 w-11 items-center justify-center border border-line bg-surface text-ink hover:border-ink transition-colors cursor-pointer';
+  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white/[0.08] text-ink hover:bg-white/[0.16] transition-colors cursor-pointer';
 
   /** The second picture of a slide's collage, always a real one: another photo of the same product, else the next slide's photo. */
   const secondPhoto = (slide: LiveHeroSlide, index: number): string => {
@@ -248,7 +248,7 @@ export const HeroSection: React.FC = () => {
     <section
       id="haute-couture-hero"
       aria-label="Featured collection"
-      className="w-full px-4 pt-[18px] pb-[22px] md:px-6 lg:px-8 lg:py-10"
+      className="w-full px-3 pt-3 pb-[18px] sm:px-6 lg:px-8 lg:py-10"
       onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHold((h) => ({ ...h, hover: true })); }}
       onPointerLeave={() => setHold((h) => (h.hover ? { ...h, hover: false } : h))}
       onTouchStart={() => setHold((h) => ({ ...h, touch: true }))}
@@ -257,7 +257,7 @@ export const HeroSection: React.FC = () => {
       onFocus={(event) => { if ((event.target as HTMLElement).matches?.(':focus-visible')) setHold((h) => ({ ...h, focus: true })); }}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHold((h) => (h.focus ? { ...h, focus: false } : h)); }}
     >
-      <div className="mx-auto max-w-2xl lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12">
+      <div className="sag-glass rounded-[28px]! mx-auto max-w-2xl p-2.5 sm:p-4 lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12 lg:p-8">
         {/* Collage: the vertical caption, then a swipeable strip of two-photo compositions. Nothing is drawn on a photo. */}
         <div className="flex min-w-0 items-stretch gap-3 lg:gap-4">
           <div className="relative w-4 shrink-0" aria-hidden="true">
@@ -286,14 +286,14 @@ export const HeroSection: React.FC = () => {
                   className={`relative block w-full shrink-0 cursor-pointer text-left ${second ? 'pb-[22%]' : ''}`}
                   aria-label={`View ${slide.title}`}
                 >
-                  <span className={`block aspect-[4/5] overflow-hidden bg-sunken ${second ? 'w-[78%]' : 'w-full'}`}>
+                  <span className={`block aspect-[4/5] overflow-hidden rounded-[20px] bg-sunken ${second ? 'w-[78%]' : 'w-full'}`}>
                     <span className={`block h-full w-full overflow-hidden ${index === fx.curtain && index === currentSlideIdx ? 'sag-curtain' : ''}`}>
                       <img
                         src={small || ELEGANT_PLACEHOLDER_SVG}
                         srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
                         sizes="(min-width: 1280px) 520px, (min-width: 1024px) 40vw, (min-width: 768px) 500px, 70vw"
                         alt={slide.title || 'Featured Suit Aura Girls design'}
-                        className={`h-full w-full object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
+                        className={`h-full w-full rounded-none object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
                         loading={index === 0 ? 'eager' : 'lazy'}
                         fetchPriority={index === 0 ? 'high' : 'auto'}
                         decoding="async"
@@ -304,13 +304,13 @@ export const HeroSection: React.FC = () => {
                     </span>
                   </span>
                   {second && (
-                    <span className="absolute bottom-0 right-0 block aspect-[4/5] w-[46%] overflow-hidden border-[6px] border-surface bg-sunken lg:border-8">
+                    <span className="absolute bottom-0 right-0 block aspect-[4/5] w-[46%] overflow-hidden rounded-[16px] border border-white/45 bg-page lg:rounded-[20px]">
                       <img
                         src={secondMid || ELEGANT_PLACEHOLDER_SVG}
                         srcSet={secondSmall && secondSmall !== secondWide ? `${secondSmall} 320w, ${secondMid} 480w, ${secondWide} 640w` : undefined}
                         sizes="(min-width: 1280px) 310px, (min-width: 1024px) 24vw, (min-width: 768px) 300px, 42vw"
                         alt=""
-                        className="h-full w-full object-cover object-top"
+                        className="h-full w-full rounded-none object-cover object-top"
                         loading={index === 0 ? 'eager' : 'lazy'}
                         decoding="async"
                         onError={(event) => {
@@ -326,7 +326,7 @@ export const HeroSection: React.FC = () => {
         </div>
 
         {/* Words: left-aligned under the collage; beside it and vertically centred on desktop */}
-        <div className="mt-4 min-w-0 lg:mt-0">
+        <div className="mt-3.5 min-w-0 px-1.5 pb-1.5 lg:mt-0 lg:p-0">
           {/* Re-made per slide, so the title, price and buttons arrive one after another */}
           <div key={currentSlide.id || currentSlideIdx} className="sag-stagger">
           {/* Three lines are reserved below desktop so a change of slide never moves the buttons */}
@@ -351,12 +351,12 @@ export const HeroSection: React.FC = () => {
           )}
           {onlineOffer && <p className="mt-1 text-xs leading-[18px] text-sale">{onlineOffer}</p>}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 lg:mt-7">
+          <div className="mt-4 flex items-center gap-2.5 lg:mt-7">
             <button
               type="button"
               id="hero-view-style-btn"
               onClick={() => handleSlideClick(currentSlide)}
-              className="sag-btn-primary gap-2 px-6 whitespace-nowrap"
+              className="sag-btn-primary min-w-0 flex-1 gap-2 px-6 whitespace-nowrap sm:flex-none"
             >
               Shop now
               <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.25} aria-hidden="true" />
@@ -366,7 +366,7 @@ export const HeroSection: React.FC = () => {
               id="hero-explore-btn"
               onClick={() => navigateToCategory('All')}
               aria-label="Explore collection"
-              className="sag-link cursor-pointer text-sm font-medium whitespace-nowrap"
+              className="sag-btn-outline shrink-0 px-6 whitespace-nowrap"
             >
               Explore
             </button>
@@ -386,11 +386,11 @@ export const HeroSection: React.FC = () => {
                     aria-current={index === currentSlideIdx ? 'true' : undefined}
                     className="flex h-8 min-w-0 flex-1 cursor-pointer items-center"
                   >
-                    <span className="relative block h-px w-full overflow-hidden bg-line">
+                    <span className="relative block h-0.5 w-full overflow-hidden rounded-full bg-line">
                       {index === currentSlideIdx && (
                         <span
                           key={`${currentSlideIdx}-${running}`}
-                          className={`absolute inset-0 bg-ink ${running ? 'sag-progress' : ''}`}
+                          className={`absolute inset-0 rounded-full bg-brand ${running ? 'sag-progress' : ''}`}
                           style={{ '--sag-progress-time': `${SLIDE_MS / 1000}s` } as React.CSSProperties}
                         />
                       )}
@@ -415,9 +415,9 @@ export const HeroSection: React.FC = () => {
                     aria-selected={index === currentSlideIdx}
                     aria-label={`Show ${slide.title}`}
                     onClick={() => goTo(index)}
-                    className={`h-20 w-16 cursor-pointer overflow-hidden border bg-sunken transition-opacity ${index === currentSlideIdx ? 'border-ink' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`h-20 w-16 cursor-pointer overflow-hidden rounded-[12px] border bg-sunken transition-opacity ${index === currentSlideIdx ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
-                    <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" decoding="async" />
+                    <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full rounded-none object-cover object-top" loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>

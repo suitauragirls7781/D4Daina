@@ -67,8 +67,11 @@ export const useDialogA11y = (ref: React.RefObject<HTMLElement | null>, onClose:
 const PRINT_CSS = `
 @media print {
   @page { margin: 14mm; }
-  html, body { background: #fff !important; overflow: visible !important; }
+  :root { color-scheme: light !important; }
+  html, body, #root { background: #fff !important; overflow: visible !important; }
+  body::before { display: none !important; }
   body > *:not(.sag-invoice-root) { display: none !important; }
+  .sag-invoice-root, .sag-invoice-root * { color: #000 !important; background: transparent !important; border-color: #9a9a9a !important; box-shadow: none !important; text-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
   .sag-invoice-root { position: static !important; inset: auto !important; display: block !important; background: #fff !important; padding: 0 !important; animation: none !important; }
   .sag-invoice-panel { max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; width: 100% !important; max-width: none !important; animation: none !important; }
   .sag-invoice-panel * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -151,7 +154,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
   };
 
   return createPortal(
-    <div className="sag-invoice-root fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={onClose}>
+    <div className="sag-invoice-root fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={onClose}>
       <style>{PRINT_CSS}</style>
       <div
         ref={panelRef}
@@ -160,9 +163,9 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
         aria-labelledby="sag-invoice-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="sag-invoice-panel bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto border border-line focus:outline-none animate-in fade-in slide-in-from-bottom-5"
+        className="sag-invoice-panel bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto border border-line rounded-t-[22px] sm:rounded-[22px] focus:outline-none animate-in fade-in slide-in-from-bottom-5"
       >
-        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-surface border-b border-line">
+        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl border-b border-line">
           <button
             type="button"
             onClick={() => window.print()}
@@ -179,7 +182,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             <Download className="w-4 h-4" aria-hidden="true" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
           </button>
           <span className="flex-1" aria-hidden="true" />
-          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
@@ -197,11 +200,11 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             </div>
             <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2">
               <h2 id="sag-invoice-title" className="font-display font-medium text-[26px] leading-8 text-ink">{title}</h2>
-              <span className={`sag-badge border bg-surface font-semibold ${paid ? 'border-ink text-ink' : refunded ? 'border-line text-ink-muted' : 'border-sale-line text-sale'}`}>{paymentStatus}</span>
+              <span className={`sag-badge !rounded-full border bg-surface font-semibold ${paid ? 'border-brand-line text-sale' : refunded ? 'border-line text-ink-muted' : 'border-sale-line text-sale'}`}>{paymentStatus}</span>
             </div>
           </header>
 
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 bg-sunken p-4 print:bg-transparent print:p-0">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 rounded-[16px] bg-sunken p-4 print:bg-transparent print:p-0">
             {meta.map(([label, value]) => (
               <div key={label} className="flex justify-between sm:block gap-3">
                 <dt className="text-ink-muted shrink-0">{label}</dt>
@@ -211,14 +214,14 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
           </dl>
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm leading-5">
-            <section className="border border-line p-4">
+            <section className="rounded-[16px] border border-line p-4">
               <p className={boxTitle}>Billed to</p>
               <p className="font-medium">{order.customerName || address.fullName}</p>
               {order.customerEmail && <p className="text-ink-muted break-all">{order.customerEmail}</p>}
               {phone && <p className="text-ink-muted">{phone}</p>}
               {shipLines.map((line) => <p key={`bill-${line}`} className="text-ink-muted">{line}</p>)}
             </section>
-            <section className="border border-line p-4">
+            <section className="rounded-[16px] border border-line p-4">
               <p className={boxTitle}>Shipped to</p>
               <p className="font-medium">{address.fullName || order.customerName}</p>
               {shipLines.map((line) => <p key={line} className="text-ink-muted">{line}</p>)}
@@ -228,7 +231,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
           <table className="w-full text-sm leading-5 border-collapse">
             <caption className="sr-only">Items in order {order.orderNumber}</caption>
             <thead>
-              <tr className="text-[10.5px] leading-4 uppercase tracking-[0.08em] text-ink-muted text-left border-b border-ink">
+              <tr className="text-[10.5px] leading-4 uppercase tracking-[0.08em] text-ink-muted text-left border-b border-line">
                 <th scope="col" className="pb-2 font-medium">Item</th>
                 <th scope="col" className="pb-2 font-medium text-right px-2 hidden sm:table-cell print:table-cell">MRP</th>
                 <th scope="col" className="pb-2 font-medium text-right px-2">Price</th>
@@ -261,7 +264,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             </tbody>
           </table>
 
-          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 border border-line p-4 print:border-0 print:p-0">
+          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 rounded-[16px] border border-line p-4 print:border-0 print:p-0">
             {totals.map(([label, value, kind]) => (
               <div key={label} className={`flex justify-between gap-4 ${kind === 'discount' ? 'text-sale' : 'text-ink-muted'}`}>
                 <span>{label}</span>

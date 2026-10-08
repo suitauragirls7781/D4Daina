@@ -452,8 +452,8 @@ export const ShopPage: React.FC = () => {
     setHead('meta[property="og:url"]', 'content', `${SITE}/`);
   }, []);
 
-  // Filter / category chip: a square outline box; the selected one carries an ink border (never a fill)
-  const chip = (active: boolean, small = false) => `sag-chip ${small ? 'h-[36px] text-[12.5px]' : 'h-[38px] text-[13px]'} min-w-[44px] gap-1.5 px-3 border bg-surface text-ink hover:bg-surface hover:border-ink ${active ? 'border-ink shadow-[inset_0_0_0_1px_var(--color-ink)] font-medium' : 'border-line font-normal'}`;
+  // Filter / category chip: a glass pill; the selected one is gold with dark text
+  const chip = (active: boolean, small = false) => `sag-chip ${small ? 'h-[36px] text-[12.5px]' : 'h-[38px] text-[13px]'} min-w-[44px] gap-1.5 px-3.5 ${active ? 'is-selected' : 'font-normal'}`;
   // float + w-full keeps the legend inside the fieldset's padding (a plain legend sits on the top edge)
   const legend = 'float-left w-full mb-3 text-[11px] leading-4 font-semibold uppercase tracking-[0.14em] text-ink';
   // Real colour swatches, taken from the products' own colour data
@@ -463,8 +463,8 @@ export const ShopPage: React.FC = () => {
     return map;
   }, [inCategory]);
   const thumb = 'absolute inset-0 w-full h-11 appearance-none bg-transparent pointer-events-none focus:outline-none '
-    + '[&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border [&::-webkit-slider-thumb]:border-ink [&::-webkit-slider-thumb]:cursor-pointer focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ink '
-    + '[&::-moz-range-track]:bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border [&::-moz-range-thumb]:border-ink [&::-moz-range-thumb]:cursor-pointer focus-visible:[&::-moz-range-thumb]:ring-2 focus-visible:[&::-moz-range-thumb]:ring-ink';
+    + '[&::-webkit-slider-runnable-track]:bg-transparent [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-brand [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-page [&::-webkit-slider-thumb]:cursor-pointer focus-visible:[&::-webkit-slider-thumb]:ring-2 focus-visible:[&::-webkit-slider-thumb]:ring-ink '
+    + '[&::-moz-range-track]:bg-transparent [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:box-border [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-brand [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-page [&::-moz-range-thumb]:cursor-pointer focus-visible:[&::-moz-range-thumb]:ring-2 focus-visible:[&::-moz-range-thumb]:ring-ink';
   // When both handles meet, the one that can still move is kept on top.
   const minOnTop = lo >= hi - PRICE_STEP && lo > (lowBound + highBound) / 2;
 
@@ -499,9 +499,9 @@ export const ShopPage: React.FC = () => {
           <legend className={legend}>Price</legend>
           <p className="clear-both sag-num text-sm text-ink">{inr(minPrice ?? lowBound)} – {inr(maxPrice ?? highBound)}</p>
           <div className="relative mt-1 h-11">
-            <div className="absolute inset-x-3.5 top-1/2 -translate-y-1/2 h-px bg-line" aria-hidden="true" />
+            <div className="absolute inset-x-3.5 top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-line" aria-hidden="true" />
             <div
-              className="absolute top-1/2 -translate-y-1/2 h-px bg-ink"
+              className="absolute top-1/2 -translate-y-1/2 h-[3px] rounded-full bg-brand"
               style={{ left: `calc(${pct(lo)} * (100% - 28px) + 14px)`, right: `calc(${1 - pct(hi)} * (100% - 28px) + 14px)` }}
               aria-hidden="true"
             />
@@ -542,7 +542,7 @@ export const ShopPage: React.FC = () => {
                   onChange={(e) => (which === 'min' ? setMinDraft : setMaxDraft)(e.target.value)}
                   onBlur={(e) => commitPrice(which, e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commitPrice(which, e.currentTarget.value); } }}
-                  className="sag-input sag-num mt-1.5 h-[46px] border border-line font-normal focus:border-ink"
+                  className="sag-input sag-num mt-1.5 h-[46px] font-normal"
                 />
               </label>
             ))}
@@ -580,7 +580,7 @@ export const ShopPage: React.FC = () => {
             <span className="block text-[13px] text-ink-muted">Hide sold-out styles</span>
           </span>
           <input type="checkbox" role="switch" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="peer sr-only" />
-          <span aria-hidden="true" className="w-5 h-5 shrink-0 border border-control bg-surface text-white flex items-center justify-center transition-colors peer-checked:bg-ink peer-checked:border-ink peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink">
+          <span aria-hidden="true" className="w-5 h-5 shrink-0 rounded-[6px] border border-control bg-transparent text-transparent flex items-center justify-center transition-colors peer-checked:bg-brand peer-checked:border-brand peer-checked:text-[color:var(--sag-on-gold)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand">
             <Check className="w-3.5 h-3.5" strokeWidth={2} />
           </span>
         </label>
@@ -594,11 +594,11 @@ export const ShopPage: React.FC = () => {
   const countLabel = isLoading ? 'Loading styles…' : `${results.length} ${results.length === 1 ? 'style' : 'styles'}`;
   const sortLabel = SORTS.find((s) => s.key === activeSort)?.label || 'Featured';
   const sortChoices = SORTS.filter((s) => s.key !== 'top-rated' || hasRatings);
-  // Quiet text link: small, thin underline
-  const link = 'inline-flex items-center min-h-11 text-[12.5px] font-medium text-ink underline decoration-1 underline-offset-4 hover:text-ink-muted cursor-pointer';
-  const tool = 'shrink-0 whitespace-nowrap h-[38px] px-3 border border-line bg-surface text-[12.5px] font-normal text-ink inline-flex items-center gap-1.5 hover:border-ink transition-colors cursor-pointer';
-  const barButton = 'flex-1 min-w-0 h-11 px-3 bg-surface text-[12.5px] font-normal uppercase tracking-[0.08em] text-ink inline-flex items-center justify-center gap-2 cursor-pointer';
-  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-x-[12px] gap-y-[18px] sm:gap-x-5 sm:gap-y-9';
+  // Quiet text link: small, gold, thin underline
+  const link = 'inline-flex items-center min-h-11 text-[12.5px] font-medium text-sale underline decoration-1 underline-offset-4 hover:text-ink cursor-pointer';
+  const tool = 'shrink-0 whitespace-nowrap h-[38px] px-3.5 rounded-full border border-line bg-[rgba(255,255,255,0.08)] backdrop-blur-md text-[12.5px] font-medium text-ink inline-flex items-center gap-1.5 hover:bg-[rgba(255,255,255,0.14)] transition-colors cursor-pointer';
+  const barButton = 'flex-1 min-w-0 h-11 px-3 rounded-full text-[13px] font-medium text-ink inline-flex items-center justify-center gap-2 cursor-pointer';
+  const grid = 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5';
   // Collections that really have products, offered when a listing comes up empty
   const suggestions = useMemo(() => {
     const counts = new Map<string, number>();
@@ -615,7 +615,7 @@ export const ShopPage: React.FC = () => {
   ];
 
   return (
-    <div id="shop-catalog-page" className="bg-surface pt-4 pb-12 sm:pt-6 lg:pt-8 lg:pb-16">
+    <div id="shop-catalog-page" className="pt-4 pb-12 sm:pt-6 lg:pt-8 lg:pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <FestiveBanner variant="strip" className="mb-3" />
         <BagReminder className="mb-3" />
@@ -640,13 +640,13 @@ export const ShopPage: React.FC = () => {
             {activeOccasion && (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
                 {activeOccasion.description && <span className="max-w-xl">{activeOccasion.description}</span>}
-                <button onClick={leaveOccasion} aria-label={`Leave the ${activeOccasion.name} collection`} className="h-[38px] px-3 inline-flex items-center gap-1.5 border border-ink text-[13px] text-ink cursor-pointer">{activeOccasion.name} <X className="w-4 h-4" strokeWidth={1.5} /></button>
+                <button onClick={leaveOccasion} aria-label={`Leave the ${activeOccasion.name} collection`} className="sag-chip is-selected h-[38px] px-3.5 inline-flex items-center gap-1.5 text-[13px] cursor-pointer">{activeOccasion.name} <X className="w-4 h-4" strokeWidth={1.5} /></button>
               </div>
             )}
             {smartOn && smart.understood.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5" aria-label="Search understood as">
                 <span className="inline-flex items-center gap-1 text-[13px] text-ink-muted mr-0.5"><Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Showing</span>
-                {smart.understood.map((u) => <span key={u} className="inline-flex items-center h-[22px] px-2 border border-line text-[10.5px] font-semibold uppercase tracking-[0.12em] text-ink whitespace-nowrap">{u}</span>)}
+                {smart.understood.map((u) => <span key={u} className="inline-flex items-center h-[24px] px-2.5 rounded-full border border-line bg-sunken text-[10.5px] font-semibold uppercase tracking-[0.12em] text-sale whitespace-nowrap">{u}</span>)}
               </div>
             )}
           </div>
@@ -660,11 +660,11 @@ export const ShopPage: React.FC = () => {
                 placeholder={kidsPage ? 'Try “frock” or “car”' : 'Try “pink suit under 999”'}
                 aria-label="Search products"
                 enterKeyHint="search"
-                className="sag-input h-[46px] pl-11 pr-24 border border-line focus:border-ink [&::-webkit-search-cancel-button]:appearance-none"
+                className="sag-input h-[46px] pl-11 pr-24 !rounded-full [&::-webkit-search-cancel-button]:appearance-none"
               />
               <span className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 {query && (
-                  <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="w-10 h-10 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+                  <button type="button" onClick={() => setQuery('')} aria-label="Clear search" className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
                     <X className="w-[18px] h-[18px]" strokeWidth={1.5} />
                   </button>
                 )}
@@ -679,7 +679,7 @@ export const ShopPage: React.FC = () => {
               )}
               {/* Outfit builder is for women's styles only */}
               {!kidsPage && <BuildYourLookButton className={tool} />}
-              {discovery.features.visualSearch && <React.Suspense fallback={null}><FindThisLookButton className="shrink-0 whitespace-nowrap !h-[38px] !px-3 !text-[12.5px] hover:!bg-surface hover:border-ink" /></React.Suspense>}
+              {discovery.features.visualSearch && <React.Suspense fallback={null}><FindThisLookButton className="shrink-0 whitespace-nowrap !h-[38px] !px-3.5 !text-[12.5px]" /></React.Suspense>}
             </div>
           </div>
         </div>
@@ -700,15 +700,15 @@ export const ShopPage: React.FC = () => {
             <button onClick={() => setKind('')} aria-pressed={kind === ''} className={`shrink-0 whitespace-nowrap ${chip(kind === '', true)}`}>All types</button>
             {kinds.map(([k, n]) => (
               <button key={k} onClick={() => setKind(kind === k ? '' : k)} aria-pressed={kind === k} className={`shrink-0 whitespace-nowrap ${chip(kind === k, true)}`}>
-                {k} <span className="sag-num font-normal text-ink-muted">({n})</span>
+                {k} <span className="sag-num font-normal opacity-70">({n})</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* Phones and tablets: one bar with two halves, Filter and Sort. It sticks under the header while the grid scrolls
+        {/* Phones and tablets: one floating glass pill with two halves, Filter and Sort. It sticks under the floating header while the grid scrolls
             (the bottom edge already holds the app's navigation, and a screen has one fixed bottom bar at most). */}
-        <div className="lg:hidden sticky top-[52px] z-30 mt-3 -mx-4 sm:-mx-6 bg-surface border-y border-line flex items-center">
+        <div className="sag-glass-bar lg:hidden sticky top-[76px] z-30 mt-3 px-1 flex items-center">
           <button
             ref={filtersButtonRef}
             type="button"
@@ -718,7 +718,7 @@ export const ShopPage: React.FC = () => {
             className={barButton}
           >
             <SlidersHorizontal className="w-4 h-4 shrink-0" strokeWidth={1.5} /> Filter
-            {activeCount > 0 && <span className="sag-num text-ink-muted" aria-label={`${activeCount} selected`}>({activeCount})</span>}
+            {activeCount > 0 && <span className="sag-num text-sale" aria-label={`${activeCount} selected`}>({activeCount})</span>}
           </button>
           <span className="w-px h-[18px] shrink-0 bg-line" aria-hidden="true" />
           <button
@@ -738,7 +738,7 @@ export const ShopPage: React.FC = () => {
 
         <div className="mt-4 lg:mt-8 grid gap-8 lg:grid-cols-[264px_minmax(0,1fr)]">
           <aside className="hidden lg:block" aria-label="Filters">
-            <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain pr-3">
+            <div className="sag-glass lg:sticky lg:top-28 max-h-[calc(100vh-8.5rem)] overflow-y-auto overscroll-contain px-4 pt-1">
               <div className="flex items-center justify-between min-h-11 border-b border-line">
                 <p className="font-display text-[19px] leading-6 text-ink inline-flex items-baseline gap-2">
                   Filters
@@ -758,7 +758,7 @@ export const ShopPage: React.FC = () => {
               <label htmlFor="shop-sort" className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted">Sort by</label>
               <div className="relative w-56">
                 <select id="shop-sort" value={activeSort} onChange={(e) => setSort(e.target.value as SortKey)}
-                  className="sag-input h-11 pl-3.5 pr-9 border border-line focus:border-ink appearance-none truncate text-sm font-normal cursor-pointer">
+                  className="sag-input h-11 pl-4 pr-9 !rounded-full appearance-none truncate text-sm font-normal cursor-pointer">
                   {sortChoices.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                 </select>
                 <ChevronDown className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
@@ -773,7 +773,7 @@ export const ShopPage: React.FC = () => {
                     type="button"
                     onClick={() => removeChip(i)}
                     aria-label={`Remove filter: ${c.label}`}
-                    className="h-[36px] max-w-full pl-3 pr-2 inline-flex items-center gap-1 border border-line text-[12.5px] text-ink hover:border-ink transition-colors cursor-pointer"
+                    className="h-[36px] max-w-full pl-3.5 pr-2.5 inline-flex items-center gap-1 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-[12.5px] text-ink hover:bg-[rgba(255,255,255,0.14)] transition-colors cursor-pointer"
                   >
                     <span className="truncate">{c.label}</span>
                     <X className="w-3.5 h-3.5 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
@@ -786,19 +786,19 @@ export const ShopPage: React.FC = () => {
             {isLoading ? (
               <div className={grid} aria-hidden="true">
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className={i >= 6 ? 'hidden xl:block' : ''}>
-                    <div className="aspect-[4/5] bg-sunken" />
-                    <div className="pt-[9px] space-y-2">
-                      <div className="h-3.5 w-11/12 bg-sunken" />
-                      <div className="h-3.5 w-1/2 bg-sunken" />
-                      <div className="h-3.5 w-1/3 bg-sunken" />
+                  <div key={i} className={`sag-glass p-2 !rounded-[24px] ${i >= 6 ? 'hidden xl:block' : ''}`}>
+                    <div className="aspect-[4/5] rounded-[18px] bg-sunken" />
+                    <div className="px-1 pt-[9px] pb-1 space-y-2">
+                      <div className="h-3.5 w-11/12 rounded-full bg-sunken" />
+                      <div className="h-3.5 w-1/2 rounded-full bg-sunken" />
+                      <div className="h-3.5 w-1/3 rounded-full bg-sunken" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : results.length === 0 ? (
               <>
-                <div className="border-y border-line px-2 py-10 sm:p-12 text-center">
+                <div className="sag-glass px-4 py-10 sm:p-12 text-center">
                   <span className="mx-auto flex w-fit text-ink-muted" aria-hidden="true">
                     <SearchIcon className="w-6 h-6" mono live={false} />
                   </span>
@@ -845,8 +845,8 @@ export const ShopPage: React.FC = () => {
                 {results.length > visible ? (
                   <div className="mt-10 flex flex-col items-center gap-3">
                     <p className="sag-num text-[13px] text-ink-muted">Showing <span className="text-ink">{visible}</span> of {results.length} styles</p>
-                    <div className="w-40 h-px bg-line overflow-hidden" aria-hidden="true">
-                      <div className="h-full bg-ink" style={{ width: `${Math.round((visible / results.length) * 100)}%` }} />
+                    <div className="w-40 h-[3px] rounded-full bg-line overflow-hidden" aria-hidden="true">
+                      <div className="h-full rounded-full bg-brand" style={{ width: `${Math.round((visible / results.length) * 100)}%` }} />
                     </div>
                     <button onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline mt-1 w-full sm:w-auto sm:px-12">Load more styles</button>
                   </div>
@@ -863,21 +863,21 @@ export const ShopPage: React.FC = () => {
           A closed sheet is not rendered. */}
       {filtersOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[70]">
-          <div className="absolute inset-0 bg-ink/50 sag-fade" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-[color:var(--sag-scrim)] sag-fade" onClick={() => setFiltersOpen(false)} aria-hidden="true" />
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="shop-filters-title"
-            className="absolute inset-x-0 bottom-0 max-h-[85dvh] bg-surface text-ink border-t border-line flex flex-col animate-in slide-in-from-bottom-5 fade-in"
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x border-line rounded-t-[26px] flex flex-col animate-in slide-in-from-bottom-5 fade-in"
           >
-            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-px bg-control" /></div>
+            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-control" /></div>
             <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
               <h2 id="shop-filters-title" className="font-display text-[19px] leading-6 text-ink inline-flex items-baseline gap-2">
                 Filter
                 {activeCount > 0 && <span className="font-sans text-[13px] font-normal tracking-normal text-ink-muted">{activeCount} selected</span>}
               </h2>
-              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="w-11 h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
+              <button ref={drawerCloseRef} type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
                 <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
               </button>
             </div>
@@ -895,18 +895,18 @@ export const ShopPage: React.FC = () => {
 
       {sortOpen && createPortal(
         <div className="lg:hidden fixed inset-0 z-[70]">
-          <div className="absolute inset-0 bg-ink/50 sag-fade" onClick={() => setSortOpen(false)} aria-hidden="true" />
+          <div className="absolute inset-0 bg-[color:var(--sag-scrim)] sag-fade" onClick={() => setSortOpen(false)} aria-hidden="true" />
           <div
             ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="shop-sort-title"
-            className="absolute inset-x-0 bottom-0 max-h-[85dvh] bg-surface text-ink border-t border-line flex flex-col animate-in slide-in-from-bottom-5 fade-in"
+            className="absolute inset-x-0 bottom-0 max-h-[85dvh] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x border-line rounded-t-[26px] flex flex-col animate-in slide-in-from-bottom-5 fade-in"
           >
-            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-px bg-control" /></div>
+            <div className="shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-control" /></div>
             <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
               <h2 id="shop-sort-title" className="font-display text-[19px] leading-6 text-ink">Sort by</h2>
-              <button ref={drawerCloseRef} type="button" onClick={() => setSortOpen(false)} aria-label="Close sort options" className="w-11 h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
+              <button ref={drawerCloseRef} type="button" onClick={() => setSortOpen(false)} aria-label="Close sort options" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
                 <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
               </button>
             </div>
@@ -920,10 +920,10 @@ export const ShopPage: React.FC = () => {
                     role="radio"
                     aria-checked={on}
                     onClick={() => { setSort(s.key); setSortOpen(false); }}
-                    className={`sag-row w-full text-left cursor-pointer ${on ? 'font-medium' : 'font-normal'}`}
+                    className={`sag-row w-full text-left cursor-pointer ${on ? 'font-medium text-sale' : 'font-normal'}`}
                   >
                     <span className="flex-1">{s.label}</span>
-                    {on && <Check className="w-[18px] h-[18px] shrink-0 text-ink" strokeWidth={1.5} aria-hidden="true" />}
+                    {on && <Check className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />}
                   </button>
                 );
               })}

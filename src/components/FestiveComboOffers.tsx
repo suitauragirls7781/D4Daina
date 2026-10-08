@@ -64,14 +64,14 @@ export const FestiveComboOffers: React.FC = () => {
         />
 
         <div className="grid lg:grid-cols-12 gap-5 lg:gap-8">
-          <div className="lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-[18px] lg:gap-x-5 lg:gap-y-8">
+          <div className="sag-glass rounded-[26px]! lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-[18px] p-3 sm:p-4 lg:gap-x-5 lg:gap-y-8 lg:p-5">
             {available.map((product) => {
               const selected = Boolean(picked[product.id]);
               const sizes = product.sizes?.length ? product.sizes : (['Free Size'] as unknown as ProductSize[]);
               return (
                 <div key={product.id} className="flex flex-col min-w-0">
-                  <button type="button" onClick={() => navigateToProduct(product)} className="block overflow-hidden bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
-                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] object-cover object-top" loading="lazy" decoding="async" />
+                  <button type="button" onClick={() => navigateToProduct(product)} className="block overflow-hidden rounded-[18px] bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
+                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] rounded-none object-cover object-top" loading="lazy" decoding="async" />
                   </button>
                   <div className="pt-[9px] flex-1 flex flex-col gap-1.5">
                     <p className="text-[13px] leading-[18px] text-ink line-clamp-2 min-h-9">{product.name}</p>
@@ -90,7 +90,7 @@ export const FestiveComboOffers: React.FC = () => {
                       type="button"
                       onClick={() => toggle(product.id, sizes[0])}
                       aria-pressed={selected}
-                      className="sag-chip mt-auto w-full h-10 min-w-0 border border-ink px-2 gap-1.5 text-[13px] font-medium"
+                      className="sag-chip mt-auto w-full h-10 min-w-0 px-2 gap-1.5 text-[13px] font-medium"
                     >
                       {selected && <Check className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />}
                       {selected ? 'Added to combo' : 'Add to combo'}
@@ -101,7 +101,7 @@ export const FestiveComboOffers: React.FC = () => {
             })}
           </div>
 
-          <aside className="lg:col-span-4 border border-line bg-surface p-4 sm:p-5 h-fit lg:sticky lg:top-24">
+          <aside className="sag-glass sag-glass-strong lg:col-span-4 p-4 sm:p-5 h-fit lg:sticky lg:top-24">
             <h3 className="font-display text-[17px] leading-6 text-ink">Your combo</h3>
             <p className={`mt-1 text-[13px] leading-5 ${qualifies ? 'text-ink font-medium' : 'text-ink-muted'}`} role="status">
               {pickedProducts.length} of {minItems} pieces picked{qualifies ? '. Offer unlocked.' : ''}

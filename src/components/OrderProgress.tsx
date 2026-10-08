@@ -190,7 +190,7 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
   } else if (order.status === 'Packed' || order.status === 'Shipped' || order.status === 'In Transit' || order.status === 'Out for Delivery') {
     tone = 'border-sale-line text-sale';
   } else if (order.status === 'Delivered') {
-    tone = 'border-ink text-ink';
+    tone = 'border-brand-line text-sale';
   } else if (order.status === 'Returned') {
     tone = 'border-line text-ink-muted';
   } else if (order.status === 'Cancelled') {
@@ -202,7 +202,7 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
     tone = 'border-line text-ink-muted';
   }
   return (
-    <span className={`sag-badge border bg-surface font-semibold ${tone} ${className}`}>
+    <span className={`sag-badge !rounded-full border bg-surface font-semibold ${tone} ${className}`}>
       <span className="sr-only">Order status: </span>{text}
     </span>
   );
@@ -273,7 +273,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
       <div>
         <div className="flex gap-1" aria-hidden="true">
           {STEPS.map((item, index) => (
-            <span key={item.label} className={`h-[3px] flex-1 ${index <= current ? 'bg-ink' : 'bg-line'}`} />
+            <span key={item.label} className={`h-[3px] flex-1 rounded-full ${index <= current ? 'bg-brand' : 'bg-line'}`} />
           ))}
         </div>
         <p className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm leading-5" aria-hidden="true">
@@ -304,7 +304,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
 
   return (
     <div className="space-y-3">
-      <div className="border border-line bg-surface p-4 sm:p-5">
+      <div className="sag-glass p-4 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
           <span className={EYEBROW}>{eyebrow}</span>
           <span className="sag-num min-w-0 text-xs leading-4 text-ink-muted break-all">#{order.orderNumber}</span>
@@ -313,7 +313,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
         <div className="mt-4" aria-hidden="true">
           <div className="flex gap-1">
             {STRIP.map((name, index) => (
-              <span key={name} className={`h-[3px] flex-1 ${index <= group ? 'bg-ink' : 'bg-line'}`} />
+              <span key={name} className={`h-[3px] flex-1 rounded-full ${index <= group ? 'bg-brand' : 'bg-line'}`} />
             ))}
           </div>
           <div className="mt-2 flex gap-1 text-[11.5px] leading-4">
@@ -334,8 +334,8 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
             const isCurrent = item.index === current;
             return (
               <li key={item.label} className="flex items-start gap-3 py-2.5" aria-current={isCurrent ? 'step' : undefined}>
-                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${isCurrent ? 'border border-ink' : 'bg-ink text-white'}`} aria-hidden="true">
-                  {isCurrent ? <span className="block h-2 w-2 rounded-full bg-ink" /> : <Check className="h-[11px] w-[11px]" strokeWidth={2} />}
+                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${isCurrent ? 'border border-brand' : 'bg-brand text-[color:var(--sag-on-gold)]'}`} aria-hidden="true">
+                  {isCurrent ? <span className="block h-2 w-2 rounded-full bg-brand" /> : <Check className="h-[11px] w-[11px]" strokeWidth={2} />}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className={`text-sm leading-5 text-ink ${isCurrent ? 'font-semibold' : ''}`}>{item.label}<span className="sr-only"> (done)</span></p>
@@ -399,7 +399,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
   const steps = status === 'closed' ? [] : returnSteps(request, status);
   const earlier = (order.pastReturnRequests || []).filter((past) => past?.status);
   const settled = status === 'refunded' || status === 'exchanged';
-  const tone = status === 'rejected' ? 'border-danger-line' : settled ? 'border-ink' : 'border-line';
+  const tone = status === 'rejected' ? 'border-danger-line' : settled ? 'border-brand-line' : 'border-line';
   return (
     <section className={`border bg-surface ${tone} p-3.5 space-y-3`} aria-label={`${title} request`}>
       <div className="flex items-start gap-3">
@@ -410,7 +410,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
           </p>
           <p className="mt-0.5 text-sm leading-5 text-ink-muted">{RETURN_MESSAGE[status](kind)}</p>
           {request.adminNote && (status === 'approved' || status === 'rejected' || status === 'received' || status === 'refunded' || status === 'exchanged') && (
-            <p className="mt-2 border border-line bg-surface px-3 py-2 text-sm leading-5 text-ink break-words">
+            <p className="mt-2 sag-glass px-3 py-2 text-sm leading-5 text-ink break-words">
               <span className="text-ink-muted">{status === 'rejected' ? 'Reason: ' : 'From our team: '}</span>{request.adminNote}
             </p>
           )}
@@ -422,8 +422,8 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
             const when = done ? formatDay(timeOf(state)) : '';
             return (
               <li key={state} className={`inline-flex items-center gap-1.5 ${done ? 'text-ink' : 'text-ink-muted'}`}>
-                <span className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger' : 'bg-ink') : 'border border-control bg-surface'}`}>
-                  {done && (state === 'rejected' ? <XCircle className="w-3 h-3 text-white" aria-hidden="true" /> : <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} aria-hidden="true" />)}
+                <span className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger' : 'bg-brand') : 'border border-control bg-surface'}`}>
+                  {done && (state === 'rejected' ? <XCircle className="w-3 h-3 text-[color:var(--sag-on-gold)]" aria-hidden="true" /> : <Check className="w-2.5 h-2.5 text-[color:var(--sag-on-gold)]" strokeWidth={3} aria-hidden="true" />)}
                 </span>
                 {RETURN_STATUS_LABEL[state]}{when ? ` · ${when}` : ''}
                 <span className="sr-only">{done ? ' (done)' : ' (not yet)'}</span>
@@ -525,7 +525,7 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
   const link = trackingLinkFor(order);
   const delivery = deliveryDateOf(order);
   return (
-    <section className="border border-line bg-surface p-3.5 space-y-3" aria-label="Shipment">
+    <section className="sag-glass p-3.5 space-y-3" aria-label="Shipment">
       <div className="flex items-center gap-3">
         <span className="shrink-0 flex text-sale"><TruckIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
@@ -635,7 +635,7 @@ export const StatusHistory: React.FC<{ order: Order }> = ({ order }) => {
           {entries.map((entry, index) => (
             <li key={`${entry.status}-${entry.at}-${index}`} className="relative flex gap-3">
               {index < entries.length - 1 && <span aria-hidden="true" className="absolute left-[4.5px] top-4 -bottom-3.5 w-px bg-line" />}
-              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-ink' : 'bg-control'}`} aria-hidden="true" />
+              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-brand' : 'bg-control'}`} aria-hidden="true" />
               <div className="min-w-0 text-sm leading-5">
                 <p className={index === 0 ? 'font-semibold text-ink' : 'text-ink'}>{timelineLabel(entry.status)}</p>
                 <p className="text-[13px] leading-[18px] text-ink-muted">{formatDateTime(entry.at)}</p>
@@ -656,7 +656,7 @@ export const DeliveryAgentCard: React.FC<{ order: Order }> = ({ order }) => {
   const phone = String(order.deliveryAgentPhone || '').replace(/[^\d+]/g, '');
   if (!isOutForDelivery(order) || (!name && !phone)) return null;
   return (
-    <section className="border border-line bg-surface p-3.5 flex items-center gap-3" aria-label="Delivery executive">
+    <section className="sag-glass p-3.5 flex items-center gap-3" aria-label="Delivery executive">
       <span className="shrink-0 flex text-sale"><UserIcon className="w-5 h-5" mono live={false} /></span>
       <div className="min-w-0 flex-1">
         <p className={EYEBROW}>Delivery executive</p>

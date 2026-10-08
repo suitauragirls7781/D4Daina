@@ -8,14 +8,14 @@ import { HOME_SECTION } from './HomeSections';
 export const InstagramGallery: React.FC = () => {
   const { instagramReels = [], storeSettings } = useAdmin();
   const profile = instagramProfile(storeSettings?.instagramUrl);
-  const textLink = 'text-ink underline decoration-1 underline-offset-4';
+  const textLink = 'text-sale hover:text-brand-dark transition-colors';
 
   return (
-    <section id="instagram-gallery-section" aria-labelledby="instagram-gallery-title" className={`${HOME_SECTION} border-t border-line bg-surface`}>
+    <section id="instagram-gallery-section" aria-labelledby="instagram-gallery-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-end justify-between gap-4 px-4 sm:px-6 lg:mb-6 lg:px-8">
           <div className="min-w-0 max-w-xl">
-            <h2 id="instagram-gallery-title" className="font-display text-[19px] font-medium leading-[1.18] text-ink lg:text-[26px]">On Instagram</h2>
+            <h2 id="instagram-gallery-title" className="font-display text-[20px] font-medium leading-[1.18] text-ink lg:text-[28px]">On Instagram</h2>
             <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">
               New looks and styling reels from{' '}
               <a href={profile.url} target="_blank" rel="noopener noreferrer" className={textLink}>{profile.handle}</a>.
@@ -28,7 +28,7 @@ export const InstagramGallery: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`View all on Instagram: follow ${profile.handle}`}
-              className={`shrink-0 whitespace-nowrap text-[12.5px] font-semibold ${textLink}`}
+              className={`shrink-0 whitespace-nowrap text-[13px] font-semibold ${textLink}`}
             >
               View all
             </a>
@@ -37,8 +37,8 @@ export const InstagramGallery: React.FC = () => {
 
         {instagramReels.length === 0 ? (
           <div className="px-4 sm:px-6 lg:px-8">
-            <div className="border border-line bg-surface px-5 py-8 text-center">
-              <InstagramIcon className="mx-auto h-6 w-6 text-ink" />
+            <div className="sag-glass rounded-[26px]! px-5 py-8 text-center">
+              <InstagramIcon className="mx-auto h-6 w-6 text-sale" />
               <p className="mt-3 text-[15px] leading-[22px] font-medium text-ink">New reels are on their way</p>
               <p className="mt-1 mb-4 text-[13px] leading-[18px] text-ink-muted">See our latest styles and styling videos on Instagram.</p>
               <a
@@ -54,11 +54,11 @@ export const InstagramGallery: React.FC = () => {
           </div>
         ) : (
           /* Swipe row on mobile, grid from large screens */
-          <div className="sag-scroll-x flex lg:grid lg:grid-cols-4 gap-3 lg:gap-5 overflow-x-auto lg:overflow-visible px-4 sm:px-6 lg:px-8 pb-1">
+          <div className="sag-scroll-x flex lg:grid lg:grid-cols-4 gap-3 lg:gap-5 overflow-x-auto lg:overflow-visible px-4 sm:px-6 lg:px-8 pb-6 -mb-5">
             {instagramReels.map((reel, index) => (
               <figure
                 key={reel.url}
-                className="shrink-0 w-[78%] max-w-[320px] lg:w-auto lg:max-w-none overflow-hidden bg-surface border border-line"
+                className="sag-glass shrink-0 w-[78%] max-w-[320px] lg:w-auto lg:max-w-none overflow-hidden"
               >
                 <iframe
                   src={instagramEmbedUrl(reel)}

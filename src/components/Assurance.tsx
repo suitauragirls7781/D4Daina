@@ -26,7 +26,7 @@ export const assuranceLine = (gateway?: AssuranceGateway) =>
   gateway ? `Secure payment by ${GATEWAY_NAME[gateway]} · 7-day returns & exchange` : 'Secure online payment · 7-day returns & exchange';
 
 /**
- * "How your order works": three numbered steps on a white card. All three are true today: payment is online
+ * "How your order works": three numbered steps on a glass panel. All three are true today: payment is online
  * only (UPI), the order email goes out once the payment is verified, and every order is tracked in the account.
  * The gateway is named only when the caller knows which one is active.
  */
@@ -37,12 +37,12 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
     ['Track it here', 'Every step shows in My orders.'],
   ];
   return (
-    <div className={`border border-line bg-surface p-4 lg:p-5 ${className}`}>
+    <div className={`sag-glass p-4 lg:p-5 ${className}`}>
       <h3 className="font-display text-[17px] leading-6 text-ink">How your order works</h3>
       <ol className="mt-1.5">
         {steps.map(([title, text], index) => (
           <li key={title} className="flex items-start gap-3 border-t border-line py-2.5 first:border-t-0 last:pb-0">
-            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12px] leading-[18px] text-ink-muted">{index + 1}</span>
+            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12.5px] font-semibold leading-[18px] text-sale">{index + 1}</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[13.5px] font-medium leading-[18px] text-ink">{title}</span>
               <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
@@ -88,16 +88,16 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
   const iconColour = onDark ? 'text-highlight' : 'text-sale';
 
   if (variant === 'grid') {
-    // A plain grid: a thin champagne icon and the fact in normal text. No block, no circles, no ticks.
-    const cell = `flex w-full items-center gap-2.5 text-left ${onDark ? 'text-on-dark' : 'text-ink'}`;
+    // Four small glass tiles: a thin gold icon and the fact in normal text. No circles, no ticks.
+    const cell = `sag-glass rounded-[16px]! flex min-h-[52px] w-full items-center gap-2 px-[11px] py-2.5 text-left ${onDark ? 'text-on-dark' : 'text-ink'}`;
     const body = (row: (typeof rows)[number]) => (
       <>
         <span className={`flex shrink-0 ${iconColour}`}>{row.icon}</span>
-        <span className="min-w-0 text-[12.5px] leading-[1.3] lg:text-[13px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
+        <span className="min-w-0 text-[12px] leading-[1.3] lg:text-[13px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
       </>
     );
     return (
-      <ul className={`grid grid-cols-2 gap-x-2.5 gap-y-3.5 lg:grid-cols-4 lg:gap-x-8 ${className}`}>
+      <ul className={`grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4 ${className}`}>
         {rows.map((row) => (
           <li key={row.key} className="flex min-w-0">
             {row.href ? (
@@ -114,9 +114,9 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
   }
 
   // full: plain rows between hairlines
-  const rowLine = `sag-row font-normal ${onDark ? 'border-white/20 text-on-dark' : ''}`;
+  const rowLine = `sag-row font-normal ${onDark ? 'border-line text-on-dark' : ''}`;
   return (
-    <div className={`border-y ${onDark ? 'border-white/20' : 'border-line'} ${className}`}>
+    <div className={`border-y border-line ${className}`}>
       {rows.map((row) => {
         const inner = (
           <>

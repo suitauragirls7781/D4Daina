@@ -125,7 +125,7 @@ export const TrackOrderPage: React.FC = () => {
   const moneyRow = 'flex justify-between gap-3';
 
   return (
-    <div className="bg-page min-h-[70vh] px-4 pt-5 pb-10 sm:py-12">
+    <div className="min-h-[70vh] px-4 pt-5 pb-10 sm:py-12">
       <div className="max-w-2xl mx-auto space-y-4">
         <div>
           <h1 className="font-display font-medium text-[23px] leading-7 lg:text-[32px] lg:leading-10 text-ink">Track your order</h1>
@@ -134,7 +134,7 @@ export const TrackOrderPage: React.FC = () => {
 
         <form
           onSubmit={(e) => { e.preventDefault(); search(orderQuery, contactQuery); }}
-          className="sag-card p-4 sm:p-5 grid gap-4 sm:grid-cols-2"
+          className="sag-glass p-4 sm:p-5 grid gap-4 sm:grid-cols-2"
         >
           <div>
             <label htmlFor="track-order-number" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Order number</label>
@@ -183,7 +183,7 @@ export const TrackOrderPage: React.FC = () => {
         )}
 
         {!order && !isSearching && (
-          <div className="border-y border-line">
+          <div className="sag-glass px-4">
             <div className="sag-row font-normal min-h-14 items-start py-3">
               <span className="min-w-0">
                 <span className="block">Where is my order number?</span>
@@ -254,7 +254,7 @@ export const TrackOrderPage: React.FC = () => {
 
             <section className="order-4 space-y-3 empty:hidden" aria-label="Order updates">
               {latest && (
-                <div className="bg-sunken px-3.5 py-3 text-[13px] leading-[18px]">
+                <div className="sag-glass sag-glass-strong px-4 py-3 text-[13px] leading-[18px]">
                   <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Latest update</p>
                   <p className="mt-1 text-ink">
                     <span className="font-medium">{latest.label}</span>
@@ -272,7 +272,7 @@ export const TrackOrderPage: React.FC = () => {
             </section>
 
             {isOwner && canStartReturn(order) && (
-              <section className="order-5 sag-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+              <section className="order-5 sag-glass p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
                 <span className="hidden sm:flex shrink-0 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm leading-5 font-semibold text-ink">Not the right fit?</p>
@@ -286,7 +286,7 @@ export const TrackOrderPage: React.FC = () => {
               </section>
             )}
 
-            <section className="order-2 sag-card p-3.5 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
+            <section className="order-2 sag-glass p-3.5 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
               <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
               <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {
@@ -294,7 +294,7 @@ export const TrackOrderPage: React.FC = () => {
                   const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                   return (
                     <li key={item.id || index} className="flex items-start gap-[13px] py-3 first:pt-0 last:pb-0">
-                      <span className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden bg-sunken">
+                      <span className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken">
                         {image && <img src={getCleanImageUrl(image, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -349,7 +349,7 @@ export const TrackOrderPage: React.FC = () => {
               )}
             </section>
 
-            <section className="order-6 sag-card p-4 sm:p-5 space-y-3" aria-label="Help with this order">
+            <section className="order-6 sag-glass p-4 sm:p-5 space-y-3" aria-label="Help with this order">
               <div>
                 <p className="text-sm leading-5 font-semibold text-ink">Need help with this order?</p>
                 <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Share your order number and we will take it from there.</p>

@@ -78,7 +78,7 @@ export const OrderConfirmationPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-24 flex justify-center bg-page" role="status" aria-label="Loading your order">
+      <div className="py-24 flex justify-center" role="status" aria-label="Loading your order">
         <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
       </div>
     );
@@ -86,7 +86,7 @@ export const OrderConfirmationPage: React.FC = () => {
 
   if (!confirmedOrder) {
     return (
-      <div className="bg-page px-4 py-16">
+      <div className="px-4 py-16">
         <div className="max-w-md mx-auto px-4 py-10 text-center">
           <span className="mx-auto flex justify-center text-sale"><OrdersIcon className="w-7 h-7" mono /></span>
           <h1 className="mt-4 font-display font-medium text-[23px] leading-7 text-ink">No recent order</h1>
@@ -144,11 +144,11 @@ export const OrderConfirmationPage: React.FC = () => {
   const canCancel = canRequestCancel(order, storeSettings?.cancellationWindowHours ?? 0);
 
   return (
-    <div id="order-confirmation-page" className="bg-page px-4 pb-10 lg:py-12">
+    <div id="order-confirmation-page" className="px-4 pb-10 lg:py-12">
       <div className="max-w-xl mx-auto space-y-4">
         {/* Confirmation, centred on white at every width */}
         <div className="pt-[34px] pb-2.5 text-center sag-fade lg:pt-0">
-          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full border border-ink text-ink">
+          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center !rounded-full sag-glass text-sale">
             {paid ? <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" /> : <Clock className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />}
           </span>
           <p className="mt-4 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{paid ? 'Order confirmed' : 'Order received'}</p>
@@ -170,14 +170,14 @@ export const OrderConfirmationPage: React.FC = () => {
         </div>
 
         {/* Receipt */}
-        <section className="sag-card overflow-hidden" aria-label="Order receipt">
+        <section className="sag-glass overflow-hidden" aria-label="Order receipt">
           <div className="p-4 sm:p-5 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Order number</p>
               <p className="sag-num mt-1 text-[17px] leading-6 font-semibold text-ink break-all">#{order.orderNumber}</p>
               {placedAt && <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Placed on {placedAt}</p>}
             </div>
-            <span className={`sag-badge shrink-0 mt-1 border bg-surface font-semibold ${paid ? 'border-ink text-ink' : 'border-sale-line text-sale'}`}>
+            <span className={`sag-badge !rounded-full shrink-0 mt-1 border bg-surface font-semibold ${paid ? 'border-brand-line text-sale' : 'border-sale-line text-sale'}`}>
               {paid ? 'Paid online' : order.paymentStatus || 'Payment pending'}
             </span>
           </div>
@@ -203,7 +203,7 @@ export const OrderConfirmationPage: React.FC = () => {
             <ul className="mt-3 divide-y divide-line">
               {order.items.map((item) => (
                 <li key={item.id} className="flex items-start gap-[13px] py-3 first:pt-0 last:pb-0">
-                  <div className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden bg-sunken">
+                  <div className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken">
                     {item.product?.images?.[0] && (
                       <img src={getCleanImageUrl(item.product.images[0], 160)} alt={item.product.name} className="w-full h-full object-cover object-top" />
                     )}
@@ -272,7 +272,7 @@ export const OrderConfirmationPage: React.FC = () => {
         </div>
 
         {/* What happens next */}
-        <section className="sag-card px-4 sm:px-5" aria-labelledby="next-steps-title">
+        <section className="sag-glass px-4 sm:px-5" aria-labelledby="next-steps-title">
           <h2 id="next-steps-title" className={`font-sans ${blockTitle} pt-4 pb-1`}>What happens next</h2>
           {paid && (
             <div className="sag-row font-normal border-t-0 items-start py-3">
@@ -332,7 +332,7 @@ export const OrderConfirmationPage: React.FC = () => {
         )}
 
         {paid && nextCoupons.length > 0 && (
-          <section className="sag-card p-4 sm:p-5 space-y-3" aria-label="Coupons for your next order">
+          <section className="sag-glass p-4 sm:p-5 space-y-3" aria-label="Coupons for your next order">
             <h2 className={`font-sans ${blockTitle}`}>For your next order</h2>
             <ul className="space-y-2">
               {nextCoupons.map((coupon) => (

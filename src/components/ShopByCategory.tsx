@@ -36,10 +36,10 @@ export const ShopByCategory: React.FC = () => {
 
   if (cards.length === 0 && kidsToys.count === 0) return null;
 
-  // A swipe row of plain 3:4 photos with the name centred under each. "All styles" is the "View all" link in the title row.
-  const tile = 'group block w-[108px] sm:w-[140px] lg:w-[180px] text-center cursor-pointer';
-  const photo = 'block aspect-[3/4] w-full overflow-hidden bg-sunken';
-  const name = 'mt-2 block text-[13px] leading-[18px] text-ink line-clamp-2';
+  // A swipe row of glass tiles: a rounded photo with the name centred under it. "All styles" is the "View all" link in the title row.
+  const tile = 'sag-glass group block h-full w-[108px] sm:w-[140px] lg:w-[180px] p-1.5 lg:p-2 text-center cursor-pointer';
+  const photo = 'block aspect-square w-full overflow-hidden rounded-[16px] bg-sunken';
+  const name = 'block px-0.5 pt-[7px] pb-[3px] text-[12.5px] font-medium leading-[18px] text-ink line-clamp-2';
   const count = 'sr-only';
   const designs = (n: number) => `${n} ${n === 1 ? 'design' : 'designs'}`;
 
@@ -50,7 +50,7 @@ export const ShopByCategory: React.FC = () => {
           <HomeSectionHeader titleId="shop-by-category-title" title="Shop by category" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
         </div>
 
-        <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+        <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pt-1 pb-6 -mb-5">
           {cards.map((card) => (
             <li key={card.name} className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(card.name as any)} className={tile}>
@@ -60,7 +60,7 @@ export const ShopByCategory: React.FC = () => {
                     alt=""
                     loading="eager"
                     decoding="async"
-                    className="w-full h-full object-cover object-top"
+                    className="w-full h-full rounded-none object-cover object-top"
                   />
                 </span>
                 <span className={name}>{card.name}</span>
@@ -72,7 +72,7 @@ export const ShopByCategory: React.FC = () => {
             <li className="shrink-0">
               <button type="button" onClick={() => navigateToCategory(KIDS_TOYS as any)} className={tile}>
                 <span className={photo}>
-                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full object-cover object-top" />
+                  <img src={kidsToys.image ? getCleanImageUrl(kidsToys.image, 320) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="eager" decoding="async" className="w-full h-full rounded-none object-cover object-top" />
                 </span>
                 <span className={name}>{KIDS_TOYS}</span>
                 <span className={count}>{designs(kidsToys.count)}</span>

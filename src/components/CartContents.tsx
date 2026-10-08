@@ -12,8 +12,8 @@ const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleStri
 /** "Size M", or "One size" for free-size pieces. */
 const sizeLabel = (size?: string) => (!size || /^(free ?size|one ?size|standard)$/i.test(String(size)) ? 'One size' : `Size ${size}`);
 
-// Noir & Champagne: a small text link with a thin underline
-const LINK = 'sag-link text-[12.5px] decoration-1 underline-offset-4';
+// Midnight glass: a small gold text link
+const LINK = 'sag-link text-[12.5px] font-semibold decoration-1 underline-offset-4';
 
 /** The bag's estimated total (a preview; the server recalculates at checkout). */
 export const useBagTotal = () => {
@@ -41,7 +41,7 @@ export const SavingsStrip: React.FC<{ className?: string }> = ({ className = '' 
   const { totalSavings } = useBagSavings();
   if (!(totalSavings > 0)) return null;
   return (
-    <p className={`bg-sunken px-3 py-2.5 text-xs leading-4 tracking-[0.02em] text-ink sag-num ${className}`}>
+    <p className={`sag-glass rounded-full px-4 py-2.5 text-xs leading-4 tracking-[0.02em] text-ink sag-num ${className}`}>
       <span className="font-semibold text-sale">You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span></span> on this order
     </p>
   );
@@ -134,7 +134,7 @@ export const PriceDetails: React.FC<{ totalLabel?: string }> = ({ totalLabel = '
 
 /**
  * Bag lines with quantity controls. Used by the cart drawer and the cart page.
- * Noir & Champagne (owner's pick): one plain list, the lines separated by hairlines, at every width.
+ * Midnight glass (owner's pick): each line is its own glass card, at every width.
  */
 export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
   const { cart, removeFromCart, updateCartQuantity, navigateToProduct, maxQtyPerItem, toggleWishlist, isInWishlist, showToast } = useShop();
@@ -144,9 +144,9 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
     if (isInWishlist(product.id)) showToast(`Moved to wishlist\n${product.name}`, 'success');
     else toggleWishlist(product);
   };
-  const stepButton = 'w-9 h-full flex items-center justify-center text-ink hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer';
+  const stepButton = 'w-9 h-full flex items-center justify-center rounded-full text-ink hover:bg-[color:var(--sag-glass-strong)] transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer';
   return (
-    <ul className="sag-stagger divide-y divide-line">
+    <ul className="sag-stagger space-y-3">
       {cart.map((item) => {
         const stock = Number(item.product.stockQuantity ?? 0);
         const accessory = isAccessory(item.product) && item.lookParentId;
@@ -170,11 +170,11 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
           : '';
         const canMove = !item.lookParentId && !isAccessory(item.product);
         return (
-          <li key={item.id} className="py-[18px] first:pt-0 last:pb-0">
+          <li key={item.id} className="sag-glass p-3">
             <div className="flex gap-[13px]">
               <button
                 onClick={() => { navigateToProduct(openId); onNavigate?.(); }}
-                className="shrink-0 self-start w-[78px] sm:w-[84px] aspect-[4/5] overflow-hidden bg-sunken cursor-pointer"
+                className="shrink-0 self-start w-[78px] sm:w-[84px] aspect-[4/5] overflow-hidden rounded-[14px] bg-[color:var(--sag-glass)] cursor-pointer"
                 aria-label={`View ${item.product.name}`}
               >
                 <img src={getCleanImageUrl(lineImage(item), 240)} alt="" width={84} height={105} className="w-full h-full object-cover object-top" loading="lazy" />
@@ -196,9 +196,9 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
                   {mrp > item.product.price && <span className="text-[12.5px] text-ink-muted line-through">{inr(mrp * item.quantity)}</span>}
                   {off > 0 && <span className="text-[12.5px] font-semibold text-sale">{off}% off</span>}
                 </p>
-                {/* The small bordered quantity stepper and "Remove" sit under the price, beside the photo */}
+                {/* The glass pill quantity stepper and "Remove" sit under the price, beside the photo */}
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
-                  <div className="inline-flex items-center h-9 border border-line bg-surface" role="group" aria-label={`Quantity of ${item.product.name}`}>
+                  <div className="inline-flex items-center h-9 rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)]" role="group" aria-label={`Quantity of ${item.product.name}`}>
                     {/* At quantity 1 the "Remove" link beside the stepper is the one way to take the line out */}
                     <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className={stepButton}>
                       <Minus className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -260,33 +260,33 @@ const BagNudges: React.FC = () => {
   const progress = freeShippingThreshold > 0 ? Math.min(100, Math.round((cartSubtotal / freeShippingThreshold) * 100)) : 0;
   const divider = toFreeShipping > 0 || unlocked ? 'pt-2.5 border-t border-line' : '';
   return (
-    <div className="bg-sunken px-3 py-2.5 space-y-2.5 text-[13px] leading-[18px] text-ink">
+    <div className="sag-glass px-3.5 py-3 space-y-2.5 text-[13px] leading-[18px] text-ink">
       {toFreeShipping > 0 && (
         <div>
           <p className="flex items-center gap-2.5">
-            <TruckIcon className="w-[18px] h-[18px] shrink-0" mono live={false} />
+            <TruckIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
             <span>Add <span className="font-semibold sag-num">{inr(toFreeShipping)}</span> more for free delivery</span>
           </p>
-          <div className="mt-2 h-0.5 bg-sunken-deep overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free delivery">
-            <div className="h-full bg-ink" style={{ width: `${progress}%` }} />
+          <div className="mt-2 h-1 rounded-full bg-[color:var(--sag-glass-strong)] overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free delivery">
+            <div className="h-full rounded-full bg-brand" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
       {unlocked && (
         <p className="flex items-center gap-2.5 font-medium">
-          <TruckIcon className="w-[18px] h-[18px] shrink-0" mono live={false} />
+          <TruckIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
           <span>You have unlocked free delivery</span>
         </p>
       )}
       {comboLeft > 0 && comboOffer && (
         <p className={`flex items-center gap-2.5 ${divider}`}>
-          <TagIcon className="w-[18px] h-[18px] shrink-0" mono live={false} />
+          <TagIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
           <span>Add {comboLeft} more {comboLeft === 1 ? 'outfit' : 'outfits'} to save <span className="font-semibold">{comboOffer.percent}%</span> on your bag</span>
         </p>
       )}
       {comboOffer && comboDiscount > 0 && (
         <p className={`flex items-center gap-2.5 font-medium ${divider}`}>
-          <TagIcon className="w-[18px] h-[18px] shrink-0" mono live={false} />
+          <TagIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
           <span>Combo offer applied · <span className="text-sale">{comboOffer.percent}% off</span></span>
         </p>
       )}
@@ -315,7 +315,7 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
   const couponValue = (c: (typeof coupons)[number]) => (c.discountType === 'fixed' ? `₹${c.discountValue} off` : `${c.discountValue}% off`);
   const chip = (c: (typeof coupons)[number]) => (
     <button key={c.id} type="button" onClick={() => apply(c.code)} disabled={applying}
-      className="inline-flex items-center gap-1.5 min-h-10 px-3 border border-line bg-surface text-[12.5px] leading-[18px] cursor-pointer hover:border-ink transition-colors disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 min-h-10 px-3.5 rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-[12.5px] leading-[18px] cursor-pointer hover:border-brand transition-colors disabled:opacity-60"
       aria-label={`Apply coupon ${c.code}, ${couponValue(c)}`}>
       <span className="font-semibold tracking-[0.04em] text-ink">{c.code}</span>
       <span className="font-medium text-sale">{couponValue(c)}</span>
@@ -323,11 +323,11 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3">
       <BagNudges />
 
       {appliedCoupon ? (
-        <div className="flex items-center justify-between gap-3 border border-line bg-surface px-3.5 min-h-[52px] text-[13.5px] leading-5 text-ink">
+        <div className="sag-glass flex items-center justify-between gap-3 px-3.5 min-h-[52px] text-[13.5px] leading-5 text-ink">
           <span className="inline-flex items-center gap-2.5 min-w-0">
             <Check className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
             <span className="min-w-0">
@@ -338,7 +338,7 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
           <button onClick={removeCoupon} aria-label="Remove coupon" className={`${LINK} shrink-0`}>Remove</button>
         </div>
       ) : (
-        <div className="border border-line bg-surface">
+        <div className="sag-glass">
           <div className="flex items-center gap-2 pr-3.5">
             <button type="button" onClick={() => setCouponOpen((open) => !open)} aria-expanded={couponOpen} aria-controls={panelId}
               className="flex-1 min-w-0 flex items-center gap-2.5 min-h-[48px] pl-3.5 text-left text-[13.5px] leading-5 text-ink cursor-pointer">
@@ -354,7 +354,7 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
             <form onSubmit={(e) => { e.preventDefault(); apply(code); }} className="flex gap-2">
               <label htmlFor={couponId} className="sr-only">Coupon code</label>
               <input id={couponId} value={code} onChange={(e) => { setCode(e.target.value.toUpperCase()); if (couponError) clearError(); }} aria-invalid={couponError ? true : undefined} aria-describedby={couponError ? errorId : undefined} placeholder="Enter coupon code" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} enterKeyHint="done"
-                className="sag-input sag-caps flex-1 min-w-0 h-12 border border-line focus:border-ink aria-[invalid=true]:border-danger uppercase placeholder:normal-case" />
+                className="sag-input sag-caps flex-1 min-w-0 h-12 aria-[invalid=true]:border-danger! uppercase placeholder:normal-case" />
               <button type="submit" disabled={applying || !code.trim()} className="sag-btn-outline h-12 min-w-[84px] px-4">
                 {applying ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} aria-label="Applying" /> : 'Apply'}
               </button>
@@ -373,7 +373,9 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
         </div>
       )}
 
-      <PriceDetails />
+      <div className="sag-glass p-4">
+        <PriceDetails />
+      </div>
     </div>
   );
 };

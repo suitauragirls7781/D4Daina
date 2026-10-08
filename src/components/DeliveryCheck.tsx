@@ -169,7 +169,7 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
           placeholder="6-digit PIN code"
           aria-describedby={status === 'idle' ? undefined : resultId}
           aria-invalid={failed}
-          className="sag-input sag-num flex-1 min-w-0 h-[46px] border border-line focus:border-ink aria-invalid:border-danger"
+          className="sag-input sag-num flex-1 min-w-0 h-[46px] rounded-full! px-4 aria-invalid:border-danger!"
         />
         <button type="submit" disabled={status === 'loading'} className="sag-btn-primary shrink-0 h-[46px] min-w-[88px] px-5 cursor-pointer disabled:cursor-wait">
           {status === 'loading' ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} aria-hidden="true" /><span className="sr-only">Checking</span></> : 'Check'}

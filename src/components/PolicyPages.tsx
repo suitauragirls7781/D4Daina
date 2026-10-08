@@ -56,7 +56,7 @@ const List: React.FC<{ items: React.ReactNode[] }> = ({ items }) => (
   <ul className="space-y-2">
     {items.map((item, i) => (
       <li key={i} className={`${P} flex gap-3`}>
-        <span aria-hidden="true" className="mt-[11px] h-px w-2.5 bg-ink-muted shrink-0" />
+        <span aria-hidden="true" className="mt-[11px] h-px w-2.5 bg-brand shrink-0" />
         <span className="min-w-0">{item}</span>
       </li>
     ))}
@@ -76,7 +76,7 @@ const ActionLink: React.FC<{ onClick?: () => void; href?: string; children: Reac
 export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: string; subtitle?: React.ReactNode; children?: React.ReactNode }> = ({ crumb, eyebrow, title, subtitle, children }) => {
   const { setActivePage } = useShop();
   return (
-    <div className="bg-page">
+    <div className="">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-2 lg:pt-3 lg:pb-4">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] leading-[18px] text-ink-muted -ml-2">
           <button type="button" onClick={() => setActivePage('home')} className="inline-flex items-center min-h-11 px-2 hover:text-ink cursor-pointer">Home</button>
@@ -97,7 +97,7 @@ export const HelpCard: React.FC<{ topic: string; showContactLink?: boolean }> = 
   const { setActivePage } = useShop();
   const SUPPORT_EMAIL = useSupportEmail();
   return (
-    <section aria-labelledby="info-help-title" className="border border-line bg-surface p-4 sm:p-5">
+    <section aria-labelledby="info-help-title" className="sag-glass p-4 sm:p-5">
       <div className="flex items-center gap-3">
         <span className="shrink-0 flex text-sale"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
         <div className="min-w-0 flex-1">
@@ -142,7 +142,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
   };
 
   return (
-    <div id={`${page}-page`} className="bg-page pb-12 lg:pb-16">
+    <div id={`${page}-page`} className="pb-12 lg:pb-16">
       <InfoPageHeader crumb={title} eyebrow={eyebrow} title={title} subtitle={subtitle} />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 lg:grid lg:grid-cols-12 lg:gap-10">
@@ -160,9 +160,9 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
                       type="button"
                       onClick={() => jump(s.id)}
                       aria-current={active ? 'true' : undefined}
-                      className={`shrink-0 text-left cursor-pointer transition-colors inline-flex items-center h-[34px] px-3 border text-[12.5px] whitespace-nowrap lg:h-auto lg:min-h-11 lg:py-2 lg:pl-4 lg:pr-2 lg:border-0 lg:border-l lg:-ml-px lg:text-sm lg:whitespace-normal ${
+                      className={`shrink-0 text-left cursor-pointer transition-colors inline-flex items-center h-[34px] px-3.5 max-lg:rounded-full border text-[12.5px] whitespace-nowrap lg:h-auto lg:min-h-11 lg:py-2 lg:pl-4 lg:pr-2 lg:border-0 lg:border-l lg:-ml-px lg:text-sm lg:whitespace-normal ${
                         active
-                          ? 'max-lg:shadow-[inset_0_0_0_1px_var(--sag-ink)] bg-surface border-ink font-semibold text-ink lg:border-ink'
+                          ? 'bg-brand-wash border-brand font-semibold text-sale lg:bg-transparent lg:border-brand'
                           : 'bg-surface border-line text-ink lg:text-ink-muted lg:border-transparent hover:text-ink'
                       }`}
                     >
@@ -178,7 +178,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
         <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-5 min-w-0`}>
           {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
           {short.length > 0 && (
-            <section aria-labelledby={`${page}-short-title`} className={`bg-sunken p-4 sm:p-5 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
+            <section aria-labelledby={`${page}-short-title`} className={`sag-glass sag-glass-strong p-4 sm:p-5 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
               <h2 id={`${page}-short-title`} className="font-sans text-[13.5px] leading-5 font-semibold text-ink">In short</h2>
               <ul className="mt-2 space-y-2">
                 {short.map((point) => (
@@ -191,10 +191,10 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
             </section>
           )}
           {facts.length > 0 && (
-            <section aria-label="Key facts" className={`bg-sunken px-4 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
+            <section aria-label="Key facts" className={`sag-glass sag-glass-strong px-4 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
               <dl>
                 {facts.map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="sag-row border-sunken-deep items-start py-3">
+                  <div key={label} className="sag-row border-line items-start py-3">
                     <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
                     <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
                       <dt className="text-[13px] leading-[18px] font-normal text-ink-muted">{label}</dt>
@@ -206,7 +206,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
             </section>
           )}
 
-          {intro && <div className="border border-line bg-surface p-4 sm:p-6">{intro}</div>}
+          {intro && <div className="sag-glass p-4 sm:p-6">{intro}</div>}
 
           <div className="border-b border-line">
             {sections.map((s, i) => (
@@ -221,10 +221,10 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
 
           <HelpCard topic={title} />
 
-          <nav aria-labelledby={`${page}-more-title`} className="pt-3">
+          <nav aria-labelledby={`${page}-more-title`} className="sag-glass px-4 pt-4 pb-1">
             <h2 id={`${page}-more-title`} className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale pb-1">More policies</h2>
             {POLICY_LINKS.filter(([p]) => p !== page).map(([p, label]) => (
-              <button key={p} type="button" onClick={() => setActivePage(p)} className="sag-row w-full text-left font-normal cursor-pointer !border-t-0 border-b border-line">
+              <button key={p} type="button" onClick={() => setActivePage(p)} className="sag-row w-full text-left font-normal cursor-pointer !border-t-0 border-b border-line last:border-b-0">
                 <span className="flex-1 min-w-0">{label}</span>
                 <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
               </button>
@@ -513,7 +513,7 @@ export const SizeGuidePage: React.FC = () => (
                 <thead>
                   <tr className="bg-sunken">
                     {['Size', 'Bust', 'Waist', 'Hip', 'Kurta length', 'Bottom length'].map((h, i) => (
-                      <th key={h} scope="col" className={`px-3.5 py-3 text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-sunken border-r border-line' : ''}`}>{h}</th>
+                      <th key={h} scope="col" className={`px-3.5 py-3 text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-[color:var(--sag-glass-sheet)] border-r border-line' : ''}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -541,7 +541,7 @@ export const SizeGuidePage: React.FC = () => (
               ['Waist', 'Measure around your natural waistline, typically an inch above the belly button.'],
               ['Hips', 'Measure around the fullest part of your hips and seat area.'],
             ].map(([k, v]) => (
-              <div key={k} className="border border-line bg-surface p-4">
+              <div key={k} className="sag-glass p-4">
                 <dt className="text-sm leading-5 font-semibold text-ink">{k}</dt>
                 <dd className="mt-1 text-sm leading-5 text-ink-muted">{v}</dd>
               </div>

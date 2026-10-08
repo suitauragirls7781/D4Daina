@@ -82,11 +82,13 @@ const inScreenOrder = (errors: Array<{ field: CheckoutField; message: string }>)
     .filter((entry, index) => errors.findIndex((other) => other.field === entry.field) === index)
     .sort((a, b) => FIELD_SCREEN_ORDER.indexOf(a.field) - FIELD_SCREEN_ORDER.indexOf(b.field));
 
-// Noir & Champagne (owner's pick): the shared pieces of this page. Small capital muted labels above square
-// hairline fields, a small link with a thin underline, and the champagne eyebrow label.
+// Midnight glass (owner's pick): the shared pieces of this page. Small muted labels above glass fields,
+// a small gold link, and the gold eyebrow label.
 const LABEL = 'sag-label mb-[5px] text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted';
-const INPUT = 'sag-input border border-line focus:border-ink aria-[invalid=true]:border-danger';
-const LINK = 'sag-link text-[12.5px] decoration-1 underline-offset-4';
+const INPUT = 'sag-input aria-[invalid=true]:border-danger!';
+// Round glass icon button (back, close)
+const ROUND_BTN = 'rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-ink hover:bg-[color:var(--sag-glass-strong)] transition-colors cursor-pointer';
+const LINK = 'sag-link text-[12.5px] font-semibold decoration-1 underline-offset-4';
 const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
 const FIELD_ERROR = 'mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger';
 
@@ -876,11 +878,11 @@ export const CheckoutPage: React.FC = () => {
 
   if (paymentReturn) {
     return (
-      <div className="min-h-[80vh] bg-page flex items-center justify-center p-4">
-        <div className="w-full max-w-md border border-line bg-surface p-6 text-center">
+      <div className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="sag-glass w-full max-w-md p-6 text-center">
           {paymentReturn.state === 'checking' ? (
             <>
-              <Loader2 className="mx-auto h-7 w-7 animate-spin text-ink" strokeWidth={1.5} />
+              <Loader2 className="mx-auto h-7 w-7 animate-spin text-sale" strokeWidth={1.5} />
               <h2 className="mt-4 font-display text-[19px] leading-6 text-ink">Confirming your payment…</h2>
               <p className="mt-2 text-[13px] leading-5 text-ink-muted">Please keep this page open. This takes a few seconds.</p>
             </>
@@ -924,7 +926,7 @@ export const CheckoutPage: React.FC = () => {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="min-h-[70vh] bg-page flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 py-16 text-center">
         <BagIcon className="w-8 h-8 text-ink" />
         <h1 className="mt-5 font-display text-[23px] leading-7 text-ink">Your bag is empty</h1>
         <p className="mt-2 max-w-sm text-[13px] leading-5 text-ink-muted">Add a style to your bag and come back here to check out.</p>
@@ -1022,8 +1024,8 @@ export const CheckoutPage: React.FC = () => {
   const securedByText = assuranceLine(gatewayKnown ? (codChosen ? 'razorpay' : gateway) : undefined);
   // Display only: the online-payment option's detail line, the same words whether or not cash on delivery is offered
   const prepaidDetail = [storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off` : '', shippingFee === 0 ? 'Free delivery' : ''].filter(Boolean).join(' · ');
-  // A way to pay: a hairline box (ink border when chosen) with the radio dot, title, detail and amount
-  const optionBox = (on: boolean) => `flex items-start gap-2.5 border bg-surface p-3.5 ${on ? 'border-ink ring-1 ring-inset ring-ink' : 'border-line'}`;
+  // A way to pay: a glass panel (gold edge when chosen) with the radio dot, title, detail and amount
+  const optionBox = (on: boolean) => `flex items-start gap-2.5 rounded-[20px] border bg-[color:var(--sag-glass)] backdrop-blur-[18px] p-3.5 transition-colors ${on ? 'border-brand ring-1 ring-brand' : 'border-[color:var(--sag-edge)]'}`;
   const kvRow = 'flex justify-between gap-3 py-[5px]';
 
   // Compact bag lines, shown inside the order summary
@@ -1036,7 +1038,7 @@ export const CheckoutPage: React.FC = () => {
         const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? item.selectedColor.name : '';
         return (
           <li key={`${item.id}-${item.selectedSize}-${colour}`} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-            <img src={getCleanImageUrl(lineImage(item), 200)} alt="" width={54} height={68} className="aspect-[4/5] w-[54px] shrink-0 self-start object-cover object-top bg-sunken" loading="lazy" />
+            <img src={getCleanImageUrl(lineImage(item), 200)} alt="" width={54} height={68} className="aspect-[4/5] w-[54px] shrink-0 self-start rounded-[12px] object-cover object-top bg-[color:var(--sag-glass)]" loading="lazy" />
             <div className="min-w-0 flex-1">
               <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{item.product?.name}</p>
               {item.lookParentName && <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Complete the look · with {item.lookParentName}</p>}
@@ -1056,34 +1058,34 @@ export const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <div className={`sag-checkout min-h-screen bg-page text-ink font-sans text-left pb-12`}>
+    <div className={`sag-checkout min-h-screen text-ink font-sans text-left pb-12`}>
 
-      {/* Checkout bar: back, "Secure checkout", WhatsApp help. Then the two steps, always visible.
+      {/* Checkout bar, a floating glass pill: round back button, "Secure checkout", gold WhatsApp help. Then the two steps, always visible.
           The site header is hidden while this page is open (".sag-checkout" rule at the end of index.css). */}
-      <div className="bg-surface border-b border-line">
-        <div className="max-w-6xl mx-auto flex items-center h-12 pl-1 pr-4 sm:pl-3 sm:pr-6">
-          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className="w-11 h-11 flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
-            <ArrowLeft className="w-[22px] h-[22px]" strokeWidth={1.5} />
+      <div className="px-3 pt-2.5 sm:px-6 sm:pt-4">
+        <div className="sag-glass-bar max-w-6xl mx-auto flex items-center gap-2 py-2 pl-2 pr-4 sm:pr-5">
+          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className={`w-9 h-9 sm:w-11 sm:h-11 shrink-0 flex items-center justify-center ${ROUND_BTN}`}>
+            <ArrowLeft className="w-[18px] h-[18px]" strokeWidth={1.5} />
           </button>
-          <p className="flex-1 flex items-center justify-center gap-[7px] text-[13px] leading-[18px] uppercase tracking-[0.08em] text-ink">
+          <p className="flex-1 flex items-center justify-center gap-[7px] text-[12.5px] leading-[18px] font-semibold uppercase tracking-[0.1em] text-ink">
             <Lock className="w-[15px] h-[15px]" strokeWidth={1.5} aria-hidden="true" /> Secure checkout
           </p>
-          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className={LINK}>
+          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className={`${LINK} min-h-9 no-underline`}>
             Help
           </a>
         </div>
       </div>
 
-      {/* The two steps as small capital text, the current one in ink. A step that is not open is a button
+      {/* The two steps as glass chips, the current one gold. A step that is not open is a button
           (back to the address, or on to payment once the address is complete). */}
-      <nav aria-label="Checkout steps" className="max-w-6xl mx-auto flex items-center justify-center gap-2.5 px-4 pt-1.5 text-[11.5px] leading-4 uppercase tracking-[0.1em] sag-num">
+      <nav aria-label="Checkout steps" className="max-w-6xl mx-auto flex items-center justify-center gap-2 px-4 pt-3.5 text-[11.5px] leading-4 sag-num">
         {stepBlocks.map((block, index) => (
           <React.Fragment key={block.step}>
-            {index > 0 && <span aria-hidden="true" className="h-px w-[26px] bg-line" />}
+            {index > 0 && <span aria-hidden="true" className="h-px w-[22px] bg-line" />}
             {index === stepIndex ? (
-              <span aria-current="step" className="inline-flex min-h-9 items-center font-semibold text-ink">{index + 1} {block.label}</span>
+              <span aria-current="step" className="inline-flex h-[30px] items-center rounded-full bg-brand px-3.5 font-semibold text-[color:var(--sag-on-gold)]">{index + 1} {block.label}</span>
             ) : (
-              <button type="button" onClick={() => goToStep(block.step)} className="inline-flex min-h-9 items-center uppercase tracking-[0.1em] text-ink-muted hover:text-ink cursor-pointer">
+              <button type="button" onClick={() => goToStep(block.step)} className={`relative inline-flex h-[30px] items-center px-3.5 font-medium before:absolute before:inset-x-0 before:-inset-y-2 before:content-[''] ${ROUND_BTN}`}>
                 {index + 1} {block.label}{index < stepIndex && <span className="sr-only"> (done)</span>}
               </button>
             )}
@@ -1091,13 +1093,13 @@ export const CheckoutPage: React.FC = () => {
         ))}
       </nav>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-3 sm:pt-5 grid grid-cols-1 lg:grid-cols-12 gap-[18px] lg:gap-12 items-start">
+      <div className="max-w-6xl mx-auto px-3 sm:px-6 pt-3.5 sm:pt-6 grid grid-cols-1 lg:grid-cols-12 gap-3.5 lg:gap-12 items-start">
 
         {/* Left column: the current step */}
         <div className="lg:col-span-7 min-w-0">
 
           {errorMessage && (
-            <div role="alert" className="mb-[18px] border border-danger bg-surface p-3.5 text-[13px] leading-5 text-danger flex items-start gap-2.5">
+            <div role="alert" className="mb-3.5 rounded-[18px] border border-danger bg-[color:var(--sag-glass)] backdrop-blur-[18px] p-3.5 text-[13px] leading-5 text-danger flex items-start gap-2.5">
               <AlertCircle className="w-[18px] h-[18px] shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" />
               <div>
                 <p className="font-semibold">{bannerTitle}</p>
@@ -1106,17 +1108,17 @@ export const CheckoutPage: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 1: ADDRESS. The serif title, the fields with small capital labels straight on the white page,
-              one black button and a small facts line. The same at every width. */}
+          {/* STEP 1: ADDRESS. The serif title, glass fields with small muted labels straight on the night backdrop,
+              one gold pill and a small facts line. The same at every width. */}
           {checkoutStep === 'details' && (
-            <div>
-              <h1 className="font-display text-[23px] leading-7 text-ink">Where should we deliver?</h1>
+            <div className="px-1">
+              <h1 className="font-display text-[26px] leading-8 text-ink">Where should we deliver?</h1>
 
               <section className="mt-[18px]" aria-labelledby="co-contact-title">
                 <h2 id="co-contact-title" className={`font-sans ${EYEBROW}`}>Contact</h2>
                 <div className="mt-3 space-y-3.5">
                   <Field id="co-mobile" label="Mobile number" error={mobileError}>
-                    <div className={`relative flex h-[46px] sm:h-[52px] border overflow-hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink ${mobileError ? 'border-danger bg-danger-tint' : 'border-line bg-surface focus-within:border-ink'}`}>
+                    <div className={`relative flex h-[46px] sm:h-[52px] border overflow-hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand rounded-2xl ${mobileError ? 'border-danger bg-danger-tint' : 'border-[color:var(--sag-edge)] bg-[rgba(255,255,255,0.06)] focus-within:border-brand'}`}>
                       <span className="flex items-center px-3.5 border-r border-line text-base text-ink-muted shrink-0" aria-hidden="true">+91</span>
                       <input
                         id="co-mobile"
@@ -1134,7 +1136,7 @@ export const CheckoutPage: React.FC = () => {
                         aria-describedby={mobileError ? 'co-mobile-error' : undefined}
                         className="flex-1 min-w-0 h-full pl-3.5 pr-10 bg-transparent text-base text-ink placeholder:text-ink-faint outline-none focus:outline-none focus-visible:outline-none"
                       />
-                      {mobileValid && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink" strokeWidth={1.5} aria-hidden="true" />}
+                      {mobileValid && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" />}
                     </div>
                   </Field>
 
@@ -1223,7 +1225,7 @@ export const CheckoutPage: React.FC = () => {
                           className={`${INPUT} pr-10`}
                         />
                         {pincodeLoading && <Loader2 className="absolute right-3.5 top-1/2 -mt-2 w-4 h-4 animate-spin text-ink-muted" strokeWidth={1.5} aria-label="Checking PIN code" />}
-                        {pinFound && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink" strokeWidth={1.5} aria-hidden="true" />}
+                        {pinFound && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" />}
                       </div>
                     </Field>
 
@@ -1319,29 +1321,29 @@ export const CheckoutPage: React.FC = () => {
                   </label>
                 </div>
 
-                {/* One black button at the end of the form at every width (this step has no fixed bar), then a small facts line.
+                {/* One gold pill at the end of the form at every width (this step has no fixed bar), then a small facts line.
                     Its accessible name keeps "Deliver here" (the e2e test in worker/test/e2e finds the button by it). */}
-                <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="sag-btn-primary flex w-full mt-3 h-[52px] gap-2 px-3">
+                <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="sag-btn-primary flex w-full mt-3 h-[54px] gap-2 px-3">
                   <Lock className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Continue to secure payment
                 </button>
                 <p className="mt-2.5 text-center text-[11.5px] leading-4 text-ink-muted">
-                  {assuranceFacts().returns} · <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center underline decoration-1 underline-offset-4 hover:text-ink">Help on WhatsApp</a>
+                  {assuranceFacts().returns} · <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center font-semibold text-sale hover:text-brand-dark">Help on WhatsApp</a>
                 </p>
               </section>
             </div>
           )}
 
-          {/* STEP 2: PAY. White, hairline boxes: where it goes, the ways to pay, the price rows, one black pay
-              button and WhatsApp help. Every number is the page's own preview; the pay button is the one
+          {/* STEP 2: PAY. Glass panels: where it goes, the ways to pay, the price rows ending in one gold pay
+              pill, and WhatsApp help. Every number is the page's own preview; the pay button is the one
               existing pay action. */}
           {checkoutStep === 'payment' && (
             <div>
 
-              {/* The finished address step: a plain hairline box with its summary and "Change".
+              {/* The finished address step: a glass row with a gold tick, its summary and a gold "Change".
                   The delivery date shows only when the owner has set delivery days. */}
-              <div className="border border-line bg-surface px-3.5 py-3">
+              <div className="sag-glass px-3.5 py-3">
                 <div className="flex items-center justify-between gap-3 -my-2">
-                  <p className={EYEBROW}>Deliver to</p>
+                  <p className={`flex items-center gap-1.5 ${EYEBROW}`}><Check className="w-[15px] h-[15px] shrink-0" strokeWidth={1.75} aria-hidden="true" /> Deliver to</p>
                   <button type="button" onClick={() => setCheckoutStep('details')} aria-label="Change address" className={`${LINK} shrink-0`}>Change</button>
                 </div>
                 <p className="sag-num mt-1.5 text-[13.5px] leading-5 text-ink">{[fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</p>
@@ -1349,8 +1351,8 @@ export const CheckoutPage: React.FC = () => {
                 {deliveryEstimateText && <p className="mt-1.5 text-[11.5px] leading-4 text-ink-muted">Estimated delivery by <span className="text-ink">{deliveryEstimateText}</span></p>}
               </div>
 
-              <section className="mt-6" aria-labelledby="co-pay-title">
-                <h2 id="co-pay-title" className="font-display text-[19px] leading-6 text-ink">How would you like to pay?</h2>
+              <section className="mt-5" aria-labelledby="co-pay-title">
+                <h2 id="co-pay-title" className="mx-1 font-display text-[21px] leading-7 text-ink">How would you like to pay?</h2>
 
                 {codOn ? (
                   <div id="co-pay-mode" className="mt-3.5 grid gap-2.5" role="radiogroup" aria-label="How would you like to pay?">
@@ -1361,9 +1363,9 @@ export const CheckoutPage: React.FC = () => {
                       <label key={id} className={`cursor-pointer ${optionBox(payMode === id)}`}>
                         <input type="radio" name="payMode" value={id} checked={payMode === id} onChange={() => setPayMode(id)} disabled={isProcessing} className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-brand" />
                         <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[14.5px] leading-5 font-semibold text-ink">
+                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14.5px] leading-5 font-semibold text-ink">
                             {title}
-                            {id === 'prepaid' && prepaidSaving > 0 && <span className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.06em] text-sale sag-num">Save {rupees(prepaidSaving)}</span>}
+                            {id === 'prepaid' && prepaidSaving > 0 && <span className="inline-flex h-[22px] items-center rounded-full border border-brand px-2 text-[10px] leading-4 font-semibold uppercase tracking-[0.06em] text-sale sag-num">Save {rupees(prepaidSaving)}</span>}
                           </span>
                           {detail && <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted sag-num">{detail}</span>}
                         </span>
@@ -1374,8 +1376,8 @@ export const CheckoutPage: React.FC = () => {
                 ) : (
                   // Online payment is the one way to pay: the same box, already chosen
                   <div className={`mt-3.5 ${optionBox(true)}`}>
-                    <span aria-hidden="true" className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-ink">
-                      <span className="h-2.5 w-2.5 rounded-full bg-ink" />
+                    <span aria-hidden="true" className="mt-0.5 flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-brand">
+                      <span className="h-2.5 w-2.5 rounded-full bg-brand" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14.5px] leading-5 font-semibold text-ink">Pay online now</span>
@@ -1386,30 +1388,30 @@ export const CheckoutPage: React.FC = () => {
                 )}
 
                 {codChosen && prepaidSaving > 0 && (
-                  <div id="co-prepaid-nudge" className="mt-2.5 bg-sunken p-3.5 text-ink">
+                  <div id="co-prepaid-nudge" className="sag-glass sag-glass-strong mt-2.5 p-3.5 text-ink">
                     <p className="text-[13.5px] leading-5 font-semibold sag-num">{storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off on prepaid orders` : 'Pay online and save'}</p>
                     <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted sag-num">Pay {rupees(finalCartTotal)} online instead of {rupees(codTotal)} and save <span className="font-semibold text-sale">{rupees(prepaidSaving)}</span>.</p>
-                    <button type="button" onClick={() => setPayMode('prepaid')} className="sag-btn-outline mt-2.5 h-10 px-4 sag-num">Pay online and save {rupees(prepaidSaving)}</button>
+                    <button type="button" onClick={() => setPayMode('prepaid')} className="sag-btn-primary mt-2.5 h-10 px-4 sag-num">Pay online and save {rupees(prepaidSaving)}</button>
                   </div>
                 )}
 
                 <div className="mt-3.5 space-y-2.5">
                   {gateways === null ? (
-                    <div className="min-h-[52px] border border-line flex items-center justify-center gap-2 text-[13px] text-ink-muted" aria-busy="true" aria-label="Loading payment options">
+                    <div className="sag-glass min-h-[52px] flex items-center justify-center gap-2 text-[13px] text-ink-muted" aria-busy="true" aria-label="Loading payment options">
                       <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> Loading payment options…
                     </div>
                   ) : !gateways.razorpay && !gateways.payu ? (
-                    <p className="flex items-start gap-2 bg-sunken px-3.5 py-3 text-[13px] leading-5 text-ink">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="sag-glass flex items-start gap-2 px-3.5 py-3 text-[13px] leading-5 text-ink">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
                       <span>Online payment is paused for a few minutes. Please try again shortly or message us on WhatsApp.</span>
                     </p>
                   ) : (
                     <>
                       {codChosen ? (
-                        <p className="text-[11.5px] leading-4 text-ink-muted sag-num">The {rupees(codCharge)} is paid by UPI through Razorpay. It is not refunded if the parcel is refused at delivery.</p>
+                        <p className="px-1 text-[11.5px] leading-4 text-ink-muted sag-num">The {rupees(codCharge)} is paid by UPI through Razorpay. It is not refunded if the parcel is refused at delivery.</p>
                       ) : paymentOptions.length === 1 ? (
-                        // One way to pay: named in a quiet line (the black button below is the action)
-                        <p className="text-[11.5px] leading-4 text-ink-muted">
+                        // One way to pay: named in a quiet line (the gold button below is the action)
+                        <p className="px-1 text-[11.5px] leading-4 text-ink-muted">
                           <span className="font-semibold text-ink">{paymentOptions[0][1]}</span> · {paymentOptions[0][2]}
                         </p>
                       ) : (
@@ -1426,7 +1428,7 @@ export const CheckoutPage: React.FC = () => {
                         </div>
                       )}
                       {prepaidDiscount > 0 && !codChosen && (
-                        <p className="text-[11.5px] leading-4 font-semibold text-sale sag-num">
+                        <p className="px-1 text-[11.5px] leading-4 font-semibold text-sale sag-num">
                           Online payment discount of ₹{prepaidDiscount.toLocaleString('en-IN')} applied.
                         </p>
                       )}
@@ -1434,8 +1436,8 @@ export const CheckoutPage: React.FC = () => {
                   )}
 
                   {inAppBrowser && (
-                    <p className="flex items-start gap-2 bg-sunken px-3.5 py-3 text-[13px] leading-5 text-ink">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="sag-glass flex items-start gap-2 px-3.5 py-3 text-[13px] leading-5 text-ink">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
                       <span>
                         You are inside the {inAppBrowser} app. UPI apps (Google Pay, PhonePe, Paytm) open best in your phone's browser:
                         tap <span className="font-semibold">⋮</span> (top right) → <span className="font-semibold">Open in browser / Chrome</span>, then pay.
@@ -1444,23 +1446,23 @@ export const CheckoutPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* The gift note: a plain checkbox row between hairlines. Nothing here has to be touched to pay. */}
-                <div className="mt-5 border-t border-line">
+                {/* The gift note: a glass checkbox row. Nothing here has to be touched to pay. */}
+                <div className="sag-glass mt-3.5 px-3.5">
                   <label className="flex items-center gap-2.5 min-h-[48px] text-[13.5px] leading-5 text-ink cursor-pointer">
                     <input type="checkbox" checked={addGiftNote} onChange={(e) => setAddGiftNote(e.target.checked)} className="w-[18px] h-[18px] shrink-0 accent-brand cursor-pointer" />
-                    <Gift className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Add a gift note to the parcel
+                    <Gift className="w-4 h-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> Add a gift note to the parcel
                   </label>
                   {addGiftNote && (
                     <textarea aria-label="Gift note" rows={2} maxLength={300} value={giftNoteText} onChange={(e) => setGiftNoteText(e.target.value)}
                       placeholder="Write a short message for the recipient"
-                      className={`${INPUT} mb-4`} />
+                      className={`${INPUT} mb-3.5`} />
                   )}
                 </div>
 
-                {/* Price rows with a hairline above what is paid now. Cash on delivery: the advance is "Pay now"
+                {/* Price rows in a glass panel that ends in the gold pay pill, with a hairline above what is paid now. Cash on delivery: the advance is "Pay now"
                     and the cash amount is stated under it. Online: the bag's own price details (phones and tablets;
                     on desktop they are in the order summary beside this column, so only the amount is repeated). */}
-                <div className="border-t border-line pt-4">
+                <div className="sag-glass mt-3.5 p-4">
                   {codChosen ? (
                     <>
                       <dl className="text-[13.5px] leading-5 text-ink sag-num">
@@ -1482,16 +1484,17 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                     </>
                   )}
+
+                  {/* The one pay button at every width (this step has no fixed bar): the gold pill, with a thin lock */}
+                  <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary flex w-full mt-3.5 h-[54px] gap-2 px-3 text-[15px] disabled:opacity-60">
+                    {payButtonContent}
+                  </button>
+                  <p className="mt-2.5 text-center text-[11.5px] leading-4 text-ink-muted">{securedByText}</p>
                 </div>
 
-                {/* The one pay button at every width (this step has no fixed bar): black, with a thin lock */}
-                <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary flex w-full mt-[18px] h-[52px] gap-2 px-3 disabled:opacity-60">
-                  {payButtonContent}
-                </button>
-                <p className="mt-2.5 text-center text-[11.5px] leading-4 text-ink-muted">{securedByText}</p>
-                <p className="mt-1 text-center text-[11.5px] leading-4 text-ink-muted">Your order is confirmed only after the payment is verified. Receipt on your email.</p>
-                <p className="mt-2 text-center">
-                  <a href={helpUrl} target="_blank" rel="noopener noreferrer" className={LINK}>
+                <p className="mt-3 text-center text-[11.5px] leading-4 text-ink-muted">Your order is confirmed only after the payment is verified. Receipt on your email.</p>
+                <p className="mt-1 text-center">
+                  <a href={helpUrl} target="_blank" rel="noopener noreferrer" className={`${LINK} text-[13px] no-underline`}>
                     Trouble paying? Chat with us on WhatsApp
                   </a>
                 </p>
@@ -1501,17 +1504,17 @@ export const CheckoutPage: React.FC = () => {
 
         </div>
 
-        {/* Order summary (items, coupon, price details). Phones: one collapsed hairline box on top that opens in
+        {/* Order summary (items, coupon, price details). Phones: one collapsed glass row on top that opens in
             place, on both steps. Desktop: the right column. It holds no <select>. */}
         <aside className="lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 order-first" aria-label="Order summary">
-          <div className="border border-line bg-surface overflow-hidden">
+          <div className="sag-glass overflow-hidden">
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
-                className="lg:hidden w-full flex items-center gap-3 p-3 text-left cursor-pointer">
+                className="lg:hidden w-full flex items-center gap-3 p-2.5 pr-3.5 text-left cursor-pointer">
                 {/* The first photos, the count and total, the real saving */}
                 <span className="flex shrink-0 items-center gap-1" aria-hidden="true">
                   {cart.slice(0, 3).map((item) => (
                     <img key={item.id} src={getCleanImageUrl(lineImage(item), 200)} alt="" width={44} height={55}
-                      className="aspect-[4/5] w-11 object-cover object-top bg-sunken" />
+                      className="aspect-[4/5] w-11 rounded-[12px] object-cover object-top bg-[color:var(--sag-glass)]" />
                   ))}
                 </span>
                 <span className="flex-1 min-w-0">
@@ -1521,7 +1524,7 @@ export const CheckoutPage: React.FC = () => {
                     {summarySavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
                   </span>
                 </span>
-                <span className="shrink-0 text-[12.5px] font-semibold text-ink underline decoration-1 underline-offset-4">
+                <span className="shrink-0 text-[12.5px] font-semibold text-sale">
                   {summaryOpen ? 'Hide' : 'View'}
                 </span>
               </button>
@@ -1538,7 +1541,7 @@ export const CheckoutPage: React.FC = () => {
               {/* Coupon */}
               <div className="pt-4 border-t border-line">
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between gap-3 border border-line bg-surface px-3.5 min-h-[52px] text-ink">
+                  <div className="flex items-center justify-between gap-3 rounded-[18px] border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] px-3.5 min-h-[52px] text-ink">
                     <span className="flex items-center gap-2.5 min-w-0">
                       <Check className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
                       <span className="min-w-0">
@@ -1597,15 +1600,15 @@ export const CheckoutPage: React.FC = () => {
 
       {/* Available coupons: a sheet on phones, a dialog on wider screens */}
       {showCouponsModal && (
-        <div className="fixed inset-0 z-[60] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn" onClick={() => setShowCouponsModal(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Available coupons" onClick={(e) => e.stopPropagation()} className="bg-surface w-full sm:max-w-lg max-h-[85dvh] overflow-hidden flex flex-col">
+        <div className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn" onClick={() => setShowCouponsModal(false)}>
+          <div role="dialog" aria-modal="true" aria-label="Available coupons" onClick={(e) => e.stopPropagation()} className="bg-surface w-full sm:max-w-lg max-h-[85dvh] overflow-hidden rounded-t-[26px] sm:rounded-[26px] border-t sm:border border-[color:var(--sag-edge)] flex flex-col">
 
             <div className="flex items-center justify-between gap-3 pl-4 pr-1.5 min-h-14 border-b border-line">
               <div className="py-2.5">
                 <h2 className="font-display text-[19px] leading-6 text-ink">Available coupons</h2>
                 <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Tap Apply to use a coupon on this order</p>
               </div>
-              <button type="button" onClick={() => setShowCouponsModal(false)} aria-label="Close coupons" className="w-11 h-11 shrink-0 flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
+              <button type="button" onClick={() => setShowCouponsModal(false)} aria-label="Close coupons" className={`w-10 h-10 mr-1.5 shrink-0 flex items-center justify-center ${ROUND_BTN}`}>
                 <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
               </button>
             </div>
@@ -1620,11 +1623,11 @@ export const CheckoutPage: React.FC = () => {
                     : `₹${cp.discountValue} off`;
 
                   return (
-                    <div key={cp.id} className={`border bg-surface p-3.5 space-y-2 ${isApplied ? 'border-ink ring-1 ring-inset ring-ink' : 'border-line'}`}>
+                    <div key={cp.id} className={`rounded-[18px] border bg-[color:var(--sag-glass)] p-3.5 space-y-2 ${isApplied ? 'border-brand ring-1 ring-inset ring-brand' : 'border-[color:var(--sag-edge)]'}`}>
                       <div className="flex items-center justify-between gap-2">
                         <p className="min-w-0 text-[13.5px] leading-5">
                           <span className="font-semibold tracking-[0.04em] text-ink">{cp.code}</span>
-                          <span className="ml-2 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-sale">{discountLabel}</span>
+                          <span className="ml-2 inline-flex h-[22px] items-center rounded-full border border-brand px-2 align-middle text-[10px] font-semibold uppercase tracking-[0.06em] text-sale whitespace-nowrap">{discountLabel}</span>
                         </p>
 
                         {isApplied ? (

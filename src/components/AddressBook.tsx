@@ -206,21 +206,21 @@ const AddressSheet: React.FC<{
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="address-sheet-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface text-ink w-full sm:max-w-xl max-h-[92dvh] flex flex-col border border-line animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-xl max-h-[92dvh] flex flex-col border border-line !rounded-t-[22px] !rounded-b-none sm:!rounded-[22px] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2 h-px w-9 bg-control" aria-hidden="true" />
+        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
         <div className="px-2 sm:px-4 pt-2 sm:pt-4 pb-3 border-b border-line">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1 min-w-0">
               {step === 'details' ? (
-                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+                <button type="button" onClick={() => setStep('location')} aria-label="Back to location" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
                   <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               ) : <span className="w-2 shrink-0" aria-hidden="true" />}
@@ -231,13 +231,13 @@ const AddressSheet: React.FC<{
                 <p className="text-[11.5px] leading-4 text-ink-muted">Step {step === 'location' ? '1' : '2'} of 2</p>
               </div>
             </div>
-            <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+            <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
               <X className="w-5 h-5" strokeWidth={1.5} />
             </button>
           </div>
           <div className="mt-2 mx-2 grid grid-cols-2 gap-1" aria-hidden="true">
-            <span className="h-[3px] bg-ink" />
-            <span className={`h-[3px] ${step === 'details' ? 'bg-ink' : 'bg-line'}`} />
+            <span className="h-[3px] rounded-full bg-brand" />
+            <span className={`h-[3px] rounded-full ${step === 'details' ? 'bg-brand' : 'bg-line'}`} />
           </div>
         </div>
 
@@ -418,7 +418,7 @@ export const AddressBook: React.FC<{
       {loading && addresses.length === 0 ? (
         <div className="py-12 flex justify-center" role="status" aria-label="Loading your addresses"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
       ) : addresses.length === 0 ? (
-        <div className="border border-line bg-surface px-4 py-10 text-center">
+        <div className="sag-glass px-4 py-10 text-center">
           <span className="mx-auto flex justify-center text-sale"><PinIcon className="w-7 h-7" mono /></span>
           <p className="mt-4 font-display text-[19px] leading-6 font-medium text-ink">No saved addresses yet</p>
           <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">Add your home or work address to check out faster.</p>
@@ -433,11 +433,11 @@ export const AddressBook: React.FC<{
             return (
               <li key={a.id} data-selected={selected} className="sag-card p-4 flex flex-col gap-2.5">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="sag-badge gap-1.5 border bg-surface font-semibold border-line text-ink">
+                  <span className="sag-badge !rounded-full gap-1.5 border bg-surface font-semibold border-line text-ink">
                     <TypeIcon type={a.type} className="w-3.5 h-3.5" /> {a.type}
                   </span>
                   {a.isDefault && (
-                    <span className="sag-badge gap-1 border bg-surface font-semibold border-ink text-ink">
+                    <span className="sag-badge !rounded-full gap-1 border bg-surface font-semibold border-brand-line text-sale">
                       <Check className="w-3 h-3" strokeWidth={2} aria-hidden="true" /> Default
                     </span>
                   )}
@@ -448,10 +448,10 @@ export const AddressBook: React.FC<{
                   <p className="sag-num mt-1 text-[11.5px] leading-4">Mobile {a.mobile}{a.altMobile ? ` · Alt ${a.altMobile}` : ''}</p>
                 </div>
                 {confirmDelete === a.id ? (
-                  <div className="mt-auto border border-danger-line bg-surface p-3 space-y-2" role="alert">
+                  <div className="mt-auto rounded-[14px] border border-danger-line bg-surface p-3 space-y-2" role="alert">
                     <p className="text-sm leading-5 text-danger">Delete this address?</p>
                     <div className="flex gap-2">
-                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-11 px-4 bg-danger text-white text-[12.5px] font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
+                      <button type="button" disabled={busy === a.id} onClick={() => run(a.id, () => deleteAddress(a.id), 'Address deleted.')} className="h-11 px-4 rounded-full bg-danger text-[color:var(--sag-on-gold)] text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer disabled:opacity-60">
                         {busy === a.id && <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />} Delete
                       </button>
                       <button type="button" onClick={() => setConfirmDelete('')} className="sag-btn-outline h-11 px-4 text-sm">Keep</button>

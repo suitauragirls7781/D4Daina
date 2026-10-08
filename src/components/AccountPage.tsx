@@ -62,7 +62,7 @@ const initialMobileView = (): 'menu' | 'panel' => {
 
 /** Empty / "nothing here" card used across the tabs, so every one looks the same. */
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, text, children }) => (
-  <div className="border border-line bg-surface px-4 py-10 text-center">
+  <div className="sag-glass px-4 py-10 text-center">
     <span className="mx-auto flex justify-center text-sale">{icon}</span>
     <p className="mt-4 font-display text-[19px] leading-6 font-medium text-ink">{title}</p>
     <p className="mt-1 text-[13px] leading-[18px] text-ink-muted max-w-sm mx-auto">{text}</p>
@@ -139,7 +139,7 @@ const CancelOrderDialog: React.FC<{
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
       <form
         ref={panelRef}
         role="dialog"
@@ -148,15 +148,15 @@ const CancelOrderDialog: React.FC<{
         aria-describedby="cancel-order-desc"
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface text-ink w-full sm:max-w-lg max-h-[85dvh] flex flex-col border border-line animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-lg max-h-[85dvh] flex flex-col border border-line !rounded-t-[22px] !rounded-b-none sm:!rounded-[22px] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2 h-px w-9 bg-control" aria-hidden="true" />
+        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
         <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line">
           <div className="min-w-0 pt-2">
             <h2 id="cancel-order-title" className="font-display text-[19px] leading-6 font-medium text-ink">Cancel this order?</h2>
             <p className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted break-words">#{order.orderNumber} · {order.payMode === 'cod' ? `${inr(order.codAdvance || 0)} paid, ${inr(order.codDue || 0)} cash on delivery` : `${inr(order.finalTotal)} paid`}</p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
@@ -168,7 +168,7 @@ const CancelOrderDialog: React.FC<{
           <fieldset className="space-y-2">
             <legend className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted mb-2">Why do you want to cancel?</legend>
             {CANCEL_REASONS.map((reason, index) => (
-              <label key={reason} data-selected={choice === reason} className="sag-card flex items-center gap-3 min-h-12 px-3.5 py-2.5 text-sm leading-5 text-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
+              <label key={reason} data-selected={choice === reason} className="sag-card flex items-center gap-3 min-h-12 px-3.5 py-2.5 text-sm leading-5 text-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
                 <input
                   type="radio"
                   name="cancel-reason"
@@ -196,7 +196,7 @@ const CancelOrderDialog: React.FC<{
             <span className={`sag-num block mt-1 text-right ${noteClass}`}>{details.length}/250</span>
           </div>
           {error && (
-            <p role="alert" className="border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger">{error}</p>
+            <p role="alert" className="rounded-[14px] border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger">{error}</p>
           )}
         </div>
         <div className="grid grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line">
@@ -295,7 +295,7 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
   return (
     <section className="space-y-4" aria-label="Help Center">
       <SectionIntro title="How can we help?" text="Reach our team directly, or find answers in our store policies." />
-      <div className="sag-card px-4">
+      <div className="sag-glass px-4">
         <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need some help.')} target="_blank" rel="noopener noreferrer" className="sag-row font-normal min-h-14">
           <WhatsAppIcon mono className="w-5 h-5 shrink-0 text-sale" aria-hidden="true" />
           {rowText('Chat on WhatsApp', 'Chat with our team')}
@@ -312,7 +312,7 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
           {chevron}
         </a>
       </div>
-      <div className="sag-card px-4">
+      <div className="sag-glass px-4">
         <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale pt-4 pb-1">Common questions</p>
         <ul>
           {links.map((link) => (
@@ -357,12 +357,12 @@ const OrderCard: React.FC<{
   const awaitingPay = order.paymentStatus === 'Unpaid' && order.status === 'Pending';
   const latest = latestUpdate(order);
   const failed = paymentFailed(order);
-  const paymentTone = paid ? 'border-ink text-ink' : order.paymentStatus === 'Refunded' ? 'border-line text-ink-muted' : 'border-sale-line text-sale';
+  const paymentTone = paid ? 'border-brand-line text-sale' : order.paymentStatus === 'Refunded' ? 'border-line text-ink-muted' : 'border-sale-line text-sale';
   // Two per row on a phone; a button left alone on its row stretches to fill it.
   const action = `sag-btn-outline ${smallBtn} px-3 flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto sm:px-4`;
 
   return (
-    <article className="sag-card overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
+    <article className="sag-glass overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
       <header className="px-4 sm:px-5 pt-4 pb-3.5 border-b border-line space-y-2">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -381,7 +381,7 @@ const OrderCard: React.FC<{
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusPill order={order} />
           {!awaitingPay && (
-            <span className={`sag-badge border bg-surface font-semibold ${paymentTone}`}>
+            <span className={`sag-badge !rounded-full border bg-surface font-semibold ${paymentTone}`}>
               <span className="sr-only">Payment: </span>{paid ? 'Paid online' : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
             </span>
           )}
@@ -404,7 +404,7 @@ const OrderCard: React.FC<{
         <DeliveryAgentCard order={order} />
 
         {order.customerNote && (
-          <p className="bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
+          <p className="rounded-[14px] bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
             <span className="font-medium">Note from our team:</span> {order.customerNote}
           </p>
         )}
@@ -418,7 +418,7 @@ const OrderCard: React.FC<{
                 <button
                   type="button"
                   onClick={() => item.product?.id && onOpenProduct(String(item.product.id))}
-                  className="w-14 aspect-[4/5] shrink-0 overflow-hidden bg-sunken cursor-pointer"
+                  className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken cursor-pointer"
                   aria-label={`View ${item.product?.name || 'product'}`}
                 >
                   {item.product?.images?.[0] && (
@@ -622,7 +622,7 @@ export const AccountPage: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center bg-page">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
       </div>
     );
@@ -725,7 +725,7 @@ export const AccountPage: React.FC = () => {
   const tabLabel = tabs.find((t) => t.key === tab)?.label || 'My account';
 
   return (
-    <div className="bg-page min-h-[70vh] px-4 pt-4 pb-10 sm:px-6 lg:px-8 lg:py-10">
+    <div className="min-h-[70vh] px-4 pt-4 pb-10 sm:px-6 lg:px-8 lg:py-10">
       <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-8 lg:items-start">
         <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-4 lg:sticky lg:top-20`}>
           <div>
@@ -740,22 +740,22 @@ export const AccountPage: React.FC = () => {
             const photo = first?.product?.images?.[0] || first?.product?.image || '';
             const more = (newestOrder.items?.length || 0) - 1;
             return (
-              <section aria-labelledby="account-latest-order" className="border border-line bg-surface p-3.5">
+              <section aria-labelledby="account-latest-order" className="sag-glass p-3.5">
                 <div className="flex items-center justify-between gap-3">
                   <h2 id="account-latest-order" className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Latest order</h2>
                   <StatusPill order={newestOrder} />
                 </div>
                 <button type="button" onClick={() => openTab('orders')} className="mt-3 grid w-full grid-cols-[62px_minmax(0,1fr)] items-start gap-3 text-left cursor-pointer">
                   {photo
-                    ? <img src={getCleanImageUrl(photo, 160)} alt="" loading="lazy" className="w-[62px] aspect-[4/5] object-cover object-top bg-sunken" />
-                    : <span className="w-[62px] aspect-[4/5] bg-sunken" />}
+                    ? <img src={getCleanImageUrl(photo, 160)} alt="" loading="lazy" className="w-[62px] aspect-[4/5] rounded-[12px] object-cover object-top bg-sunken" />
+                    : <span className="w-[62px] aspect-[4/5] rounded-[12px] bg-sunken" />}
                   <span className="min-w-0">
                     <span className="sag-num block truncate text-[11.5px] leading-4 text-ink-muted">#{newestOrder.orderNumber}</span>
                     {first?.product?.name && <span className="mt-1 block text-[13px] leading-[18px] text-ink line-clamp-2">{first.product.name}{more > 0 ? ` + ${more} more` : ''}</span>}
                     {newestUpdate && <span className="mt-1 block text-[11.5px] leading-4 text-ink-muted">{newestUpdate.label} · {formatDateTime(newestUpdate.at)}</span>}
                     {stage >= 0 && (
                       <span className="mt-2.5 flex gap-1" aria-hidden="true">
-                        {[0, 1, 2, 3, 4, 5, 6].map((index) => <span key={index} className={`h-[3px] flex-1 ${index <= stage ? 'bg-ink' : 'bg-line'}`} />)}
+                        {[0, 1, 2, 3, 4, 5, 6].map((index) => <span key={index} className={`h-[3px] flex-1 rounded-full ${index <= stage ? 'bg-brand' : 'bg-line'}`} />)}
                       </span>
                     )}
                   </span>
@@ -768,7 +768,7 @@ export const AccountPage: React.FC = () => {
             );
           })()}
 
-          <div className="border-t border-line" role="tablist" aria-label="My account" aria-orientation="vertical">
+          <div className="sag-glass overflow-hidden" role="tablist" aria-label="My account" aria-orientation="vertical">
             {tabs.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -778,7 +778,7 @@ export const AccountPage: React.FC = () => {
                 aria-selected={tab === key}
                 aria-controls="account-panel"
                 onClick={() => openTab(key)}
-                className={`flex w-full items-center gap-3 border-b border-line py-[15px] text-left text-sm leading-5 text-ink cursor-pointer transition-colors lg:px-3 lg:hover:bg-sunken ${tab === key ? 'lg:bg-sunken lg:font-semibold' : ''}`}
+                className={`flex w-full items-center gap-3 border-b border-line last:border-b-0 px-4 py-[15px] text-left text-sm leading-5 text-ink cursor-pointer transition-colors hover:bg-sunken ${tab === key ? 'lg:bg-sunken-deep lg:font-semibold lg:text-sale' : ''}`}
               >
                 <span className="flex shrink-0 text-sale">
                   <Icon className="w-5 h-5" mono live={false} />
@@ -920,7 +920,7 @@ export const AccountPage: React.FC = () => {
                         const live = allProducts.find((p) => String(p.id) === String(saved.id));
                         return live ? <ProductCard key={saved.id} product={live} /> : (
                           <div key={saved.id} className="flex flex-col gap-2">
-                            <div className="aspect-[4/5] bg-sunken flex items-center justify-center px-3 text-center">
+                            <div className="aspect-[4/5] rounded-[14px] bg-sunken flex items-center justify-center px-3 text-center">
                               <span className="text-sm leading-5 text-ink-muted">No longer available</span>
                             </div>
                             <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{saved.name}</p>
@@ -938,9 +938,9 @@ export const AccountPage: React.FC = () => {
               <section className="space-y-4">
                 <SectionIntro title="Profile" text="Your contact details, used to fill in checkout faster." />
                 <form onSubmit={handleSaveProfile} className="space-y-4">
-                  <div className="sag-card p-4 sm:p-5 space-y-4">
+                  <div className="sag-glass p-4 sm:p-5 space-y-4">
                     <h3 className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Contact</h3>
-                    <p className="bg-sunken px-3.5 py-2.5 text-[13px] leading-[18px] text-ink-muted">
+                    <p className="rounded-[14px] bg-sunken px-3.5 py-2.5 text-[13px] leading-[18px] text-ink-muted">
                       Signed in with <span className="font-medium text-ink break-all">{user.email}</span>
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -955,7 +955,7 @@ export const AccountPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <fieldset className="sag-card p-4 sm:p-5 min-w-0">
+                  <fieldset className="sag-glass p-4 sm:p-5 min-w-0">
                     <legend className="sr-only">Address</legend>
                     <div className="flex flex-wrap items-center justify-between gap-x-3">
                       <h3 className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Address</h3>
@@ -998,7 +998,7 @@ export const AccountPage: React.FC = () => {
             {tab === 'returns' && (
               <section className="space-y-4">
                 <SectionIntro title="Returns & exchanges" />
-                <div className="bg-sunken p-4 flex gap-3">
+                <div className="sag-glass sag-glass-strong p-4 flex gap-3">
                   <span className="shrink-0 flex mt-0.5 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                   <p className="min-w-0 text-[13px] leading-[18px] text-ink">
                     You can ask for a return or a size exchange within 7 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
@@ -1007,13 +1007,13 @@ export const AccountPage: React.FC = () => {
                 </div>
 
                 {returnable.length > 0 && (
-                  <div className="sag-card px-4 sm:px-5">
+                  <div className="sag-glass px-4 sm:px-5">
                     <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale pt-4">Ready to return or exchange</p>
                     <ul className="divide-y divide-line">
                       {returnable.map((order) => (
                         <li key={order.orderNumber} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="min-w-0 flex items-center gap-3">
-                            <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden bg-sunken">
+                            <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken">
                               {order.items[0]?.product?.images?.[0] && <img src={getCleanImageUrl(order.items[0].product.images[0], 140)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                             </span>
                             <div className="min-w-0">
@@ -1022,7 +1022,7 @@ export const AccountPage: React.FC = () => {
                                 {order.items.length} {order.items.length === 1 ? 'item' : 'items'} · {inr(order.finalTotal)}
                               </p>
                               {formatWindowEnd(order.returnEligibility?.windowEndsAt) && (
-                                <p className="sag-badge mt-1 border bg-surface font-semibold border-sale-line text-sale">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
+                                <p className="sag-badge !rounded-full mt-1 border bg-surface font-semibold border-sale-line text-sale">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
                               )}
                             </div>
                           </div>
@@ -1036,7 +1036,7 @@ export const AccountPage: React.FC = () => {
                 )}
 
                 {withRequests.map((order) => (
-                  <div key={order.orderNumber} className="sag-card p-4 sm:p-5 space-y-2">
+                  <div key={order.orderNumber} className="sag-glass p-4 sm:p-5 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <p className="min-w-0 text-sm leading-5 font-semibold text-ink break-all"><span className="sr-only">Order </span>#{order.orderNumber}</p>
                       <button type="button" onClick={() => openTrack(order)} className="sag-link shrink-0 gap-1 text-[12.5px]">

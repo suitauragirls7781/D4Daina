@@ -7,9 +7,9 @@ import { useRouter } from '../context/RouterContext';
 type Tab = 'home' | 'shop' | 'wishlist' | 'cart' | 'account';
 
 /**
- * Phone navigation (Noir & Champagne): a white bar with a hairline on top, flush with the bottom edge.
- * Five items with thin icons and small labels: Home, Shop, Wishlist, Bag, Account. The current one is ink
- * in a medium weight, the others muted. The bag and the wishlist carry their real counts.
+ * Phone navigation (Midnight glass): a floating dark glass bar with round corners, a little above the bottom
+ * edge. Five items with thin icons and small labels: Home, Shop, Wishlist, Bag, Account. The current one is
+ * a gold pill with dark text, the others muted. The bag and the wishlist carry their real counts.
  */
 export const MobileAppNavbar: React.FC = () => {
   const {
@@ -63,9 +63,9 @@ export const MobileAppNavbar: React.FC = () => {
     <nav
       id="mobile-app-bottom-navbar"
       aria-label="Mobile navigation"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-[45] border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] select-none"
+      className="sag-glass-bar md:hidden fixed bottom-[calc(10px+env(safe-area-inset-bottom))] left-3 right-3 z-[45] mx-auto max-w-md rounded-[26px]! select-none"
     >
-      <div className="max-w-md mx-auto grid grid-cols-5 px-1 pt-[5px] pb-[6px]">
+      <div className="grid grid-cols-5 gap-0.5 px-1.5 py-[7px]">
         {tabs.map(({ id, label, icon: Icon, active, count, dot }) => (
           <button
             key={id}
@@ -74,16 +74,16 @@ export const MobileAppNavbar: React.FC = () => {
             onClick={() => go(id)}
             aria-current={active ? 'page' : undefined}
             aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
-            className={`h-[44px] flex flex-col items-center justify-center gap-[3px] cursor-pointer transition-colors ${active ? 'text-ink' : 'text-ink-muted'}`}
+            className={`h-[46px] min-w-0 rounded-[16px] flex flex-col items-center justify-center gap-[3px] cursor-pointer transition-colors ${active ? 'bg-brand text-[color:var(--sag-on-gold)]' : 'text-ink-muted'}`}
           >
             <span className="relative flex">
               <Icon className={`w-5 h-5 ${id === 'cart' && bumped ? 'sag-bump' : ''}`} strokeWidth={1.5} aria-hidden="true" />
               {Boolean(count) && (
-                <span className="sag-num absolute -top-[5px] -right-[8px] min-w-[15px] h-[15px] px-[3px] rounded-full bg-ink text-white text-[10px] font-semibold leading-none flex items-center justify-center">
+                <span className={`sag-num absolute -top-[5px] -right-[8px] min-w-[15px] h-[15px] px-[3px] rounded-full text-[10px] font-semibold leading-none flex items-center justify-center ${active ? 'bg-[color:var(--sag-on-gold)] text-brand' : 'bg-brand text-[color:var(--sag-on-gold)]'}`}>
                   <span key={count} className={id === 'cart' && bumped ? 'sag-settle' : undefined}>{count! > 99 ? '99+' : count}</span>
                 </span>
               )}
-              {dot && <span className="absolute -bottom-0.5 -right-1 w-[7px] h-[7px] rounded-full bg-ink ring-2 ring-surface" />}
+              {dot && <span className={`absolute -bottom-0.5 -right-1 w-[7px] h-[7px] rounded-full ${active ? 'bg-[color:var(--sag-on-gold)]' : 'bg-brand'}`} />}
             </span>
             <span className={`text-[10.5px] leading-3 tracking-[0.03em] whitespace-nowrap ${active ? 'font-semibold' : 'font-normal'}`}>{label}</span>
           </button>

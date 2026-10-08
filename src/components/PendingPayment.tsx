@@ -59,7 +59,7 @@ export const PendingPayment: React.FC<{ order: Order }> = ({ order }) => {
   };
 
   return (
-    <div className="border border-line bg-surface p-3.5 space-y-3.5" role="region" aria-label="Payment pending">
+    <div className="sag-glass p-4 space-y-3.5" role="region" aria-label="Payment pending">
       <div className="min-w-0">
         <p className="flex items-center gap-1.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">
           <LockIcon className="w-[15px] h-[15px] shrink-0" mono live={false} /> Payment pending

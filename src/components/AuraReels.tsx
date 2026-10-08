@@ -131,11 +131,11 @@ export const AuraReelsSection: React.FC = () => {
   // The same plain white section at every width: three tiles side by side on phones, a rail of fixed tiles from
   // tablets up; the rest are a swipe away. Only the still poster is shown here; a video loads when a reel is opened.
   return (
-    <section id="aura-reels" aria-labelledby="aura-reels-title" className={`${HOME_SECTION} border-t border-line bg-surface`}>
+    <section id="aura-reels" aria-labelledby="aura-reels-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
         <div className="mb-4 flex items-end justify-between gap-4 px-4 sm:px-6 lg:mb-6 lg:px-8">
           <div className="min-w-0">
-            <h2 id="aura-reels-title" className="font-display text-[19px] font-medium leading-[1.18] text-ink lg:text-[26px]">Reels</h2>
+            <h2 id="aura-reels-title" className="font-display text-[20px] font-medium leading-[1.18] text-ink lg:text-[28px]">Reels</h2>
             <p className="mt-1 hidden text-[13px] leading-[18px] text-ink-muted sm:block">
               Tap a reel to watch{anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}
             </p>
@@ -146,7 +146,7 @@ export const AuraReelsSection: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View all reels on Instagram"
-              className="shrink-0 whitespace-nowrap text-[12.5px] font-semibold text-ink underline decoration-1 underline-offset-4"
+              className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-sale hover:text-brand-dark transition-colors"
             >
               View all
             </a>
@@ -164,16 +164,16 @@ export const AuraReelsSection: React.FC = () => {
                   className="block w-full cursor-pointer text-left"
                 >
                   {/* The only mark on the poster is the thin play ring; caption and product sit below it */}
-                  <span className="relative block aspect-[9/16] overflow-hidden bg-sunken">
+                  <span className="relative block aspect-[9/16] overflow-hidden rounded-[18px] border border-line bg-sunken">
                     <img
                       src={reelPosterSrc(reel, 400)}
                       alt=""
                       loading="lazy"
                       decoding="async"
                       onError={onPosterError}
-                      className="h-full w-full object-cover object-top"
+                      className="h-full w-full rounded-none object-cover object-top"
                     />
-                    <span aria-hidden="true" className="absolute inset-0 m-auto flex h-9 w-9 items-center justify-center rounded-full border border-white text-white">
+                    <span aria-hidden="true" className="absolute inset-0 m-auto flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-[color:var(--sag-scrim)] text-white backdrop-blur-md">
                       <Play className="h-3.5 w-3.5 translate-x-px" strokeWidth={1.25} />
                     </span>
                   </span>
@@ -305,7 +305,7 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
   };
 
   // Viewer controls sit on the dark frame around the video
-  const iconButton = 'w-11 h-11 rounded-full bg-ink/50 hover:bg-ink text-white flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  const iconButton = 'w-11 h-11 rounded-full border border-white/20 bg-[color:var(--sag-scrim)] hover:bg-dark text-white backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Aura Reels" className="fixed inset-0 z-[1000] bg-dark sag-fade">
@@ -337,7 +337,7 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
           <button type="button" onClick={toggleMute} aria-label={muted ? 'Turn sound on' : 'Turn sound off'} className={iconButton}>
             {muted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
           </button>
-          <span className="sag-num rounded-full bg-ink/50 px-3 py-1 text-xs leading-4 font-medium text-white">
+          <span className="sag-num rounded-full border border-white/20 bg-[color:var(--sag-scrim)] px-3 py-1 text-xs leading-4 font-medium text-white backdrop-blur-md">
             {active + 1} / {reels.length}
           </span>
         </div>
@@ -483,7 +483,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
   const showSpinner = isActive && wantPlay && !failed && (!playing || buffering);
   const showPlayButton = isActive && !wantPlay && !failed;
   const fav = product ? isInWishlist(product.id) : false;
-  const roundButton = 'w-11 h-11 shrink-0 rounded-full text-ink flex items-center justify-center hover:bg-sunken transition-colors cursor-pointer';
+  const roundButton = 'w-11 h-11 shrink-0 rounded-full border border-line bg-white/[0.08] text-ink flex items-center justify-center hover:bg-white/[0.16] transition-colors cursor-pointer';
   const legend = 'mb-2 text-[13px] leading-[18px] font-semibold text-ink';
 
   return (
@@ -530,19 +530,19 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
           )}
           {showPlayButton && (
             <span className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-              <span className="w-16 h-16 rounded-full bg-ink/50 text-white flex items-center justify-center">
+              <span className="w-16 h-16 rounded-full border border-white/30 bg-[color:var(--sag-scrim)] text-white flex items-center justify-center backdrop-blur-md">
                 <Play className="w-7 h-7 text-white fill-current translate-x-0.5" />
               </span>
             </span>
           )}
           {failed && (
-            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-control bg-ink px-4 py-3 text-sm leading-5 text-white text-center">
+            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-control border border-line bg-[color:var(--sag-glass-sheet)] px-4 py-3 text-sm leading-5 text-ink text-center">
               This video can’t play right now. Please try again later.
             </span>
           )}
         </button>
 
-        <div className="shrink-0 bg-white text-ink rounded-t-sheet px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
+        <div className="shrink-0 border-t border-line bg-[color:var(--sag-glass-sheet)] text-ink rounded-t-sheet px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
           {reel.caption && <p className="text-sm leading-5 text-ink-muted line-clamp-3">{reel.caption}</p>}
 
           {product && facts ? (
@@ -558,9 +558,9 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                 <div className="min-w-0 flex-1">
                   <p className="text-sm leading-5 font-medium text-ink line-clamp-1">{product.name}</p>
                   <p className="sag-num mt-0.5 flex flex-wrap items-baseline gap-x-2">
-                    <span className="text-base leading-5 font-bold text-ink">{inr(facts.price)}</span>
+                    <span className="text-base leading-5 font-semibold text-ink">{inr(facts.price)}</span>
                     {facts.mrp > facts.price && <span className="text-[13px] text-ink-faint line-through">{inr(facts.mrp)}</span>}
-                    {facts.discount > 0 && <span className="text-[13px] font-bold text-sale">{facts.discount}% off</span>}
+                    {facts.discount > 0 && <span className="text-[13px] font-semibold text-sale">{facts.discount}% off</span>}
                   </p>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs leading-4 text-ink-muted">
                     {facts.colours.length > 0 && (
@@ -580,7 +580,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
               </div>
 
               {pickerOpen && (
-                <div id={`reel-options-${index}`} className="rounded-control border border-line bg-white p-3 space-y-3 sag-pop">
+                <div id={`reel-options-${index}`} className="rounded-control border border-line bg-white/[0.06] p-3 space-y-3 sag-pop">
                   {facts.colours.length > 1 && (
                     <fieldset>
                       <legend className={legend}>Colour: {colour?.name}</legend>

@@ -170,11 +170,11 @@ const PhotoViewer: React.FC<{ url: string; name: string; onClose: () => void }> 
     };
   }, []);
   return (
-    <div className="fixed inset-0 z-[80] bg-surface flex items-center justify-center p-4 sag-fade" role="dialog" aria-modal="true" aria-label={`Photo from ${name}'s review`} onClick={onClose}>
-      <button ref={closeRef} type="button" onClick={onClose} aria-label="Close photo" className="absolute top-3 right-3 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer">
+    <div className="fixed inset-0 z-[80] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl flex items-center justify-center p-4 sag-fade" role="dialog" aria-modal="true" aria-label={`Photo from ${name}'s review`} onClick={onClose}>
+      <button ref={closeRef} type="button" onClick={onClose} aria-label="Close photo" className="absolute top-3 right-3 z-10 w-11 h-11 rounded-full border border-[color:var(--sag-edge)] bg-white/[0.08] text-ink hover:bg-white/[0.14] flex items-center justify-center cursor-pointer transition-colors">
         <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
       </button>
-      <img src={getCleanImageUrl(url, 1400)} alt={`Photo shared by ${name}`} className="max-h-[88vh] max-w-full object-contain" onClick={(e) => e.stopPropagation()} />
+      <img src={getCleanImageUrl(url, 1400)} alt={`Photo shared by ${name}`} className="max-h-[88vh] max-w-full rounded-[22px] object-contain" onClick={(e) => e.stopPropagation()} />
     </div>
   );
 };
@@ -368,7 +368,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   const photoRows = rows.filter((r) => r.imageUrl && !brokenPhotos.includes(r.imageUrl));
 
   return (
-    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="mt-7 lg:mt-14 scroll-mt-20 lg:scroll-mt-36 lg:border-t lg:border-line lg:pt-10">
+    <section id="pdp-reviews" aria-labelledby="pdp-reviews-title" className="sag-glass mt-3 lg:mt-8 p-4 lg:p-6 scroll-mt-20 lg:scroll-mt-36">
       <div className="flex items-center justify-between gap-4 min-h-11">
         <h2 id="pdp-reviews-title" className="font-display text-[19px] leading-6 font-medium text-ink">Reviews</h2>
         {(summary.count > 0 || formOpen) && (
@@ -379,7 +379,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
       </div>
 
       {done && (
-        <div role="status" className="mt-2 mb-4 max-w-2xl border border-line p-3 text-[13.5px] leading-5 text-ink sag-drop">
+        <div role="status" className="sag-glass rounded-[16px]! shadow-none! mt-2 mb-4 max-w-2xl p-3 text-[13.5px] leading-5 text-ink sag-drop">
           <p className="font-medium">Thanks — your review will appear after approval.</p>
           {done.updated && <p className="mt-1">It replaces your earlier review of this style.</p>}
           {done.verified && <p className="mt-1">It will carry a “Verified purchase” badge — this style is in your paid orders.</p>}
@@ -392,7 +392,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
             <legend className="sag-label">Your rating</legend>
             <div className="flex items-center gap-1 -ml-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <label key={i} className="w-10 h-11 flex items-center justify-center cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
+                <label key={i} className="w-10 h-11 rounded-full flex items-center justify-center cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand">
                   <input type="radio" name="review-rating" value={i} checked={rating === i} onChange={() => setRating(i)} className="sr-only" />
                   <span className="sr-only">{i} {i === 1 ? 'star' : 'stars'}</span>
                   <Star aria-hidden="true" className={`w-6 h-6 ${i <= rating ? 'fill-star text-star' : 'text-control'}`} strokeWidth={1.25} />
@@ -419,13 +419,13 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
               <span className="sag-label">Add a photo <span className="font-normal text-ink-muted">(optional, up to 8 MB)</span></span>
               {file ? (
                 <div className="flex items-center gap-3">
-                  {preview && <img src={preview} alt="Selected photo" className="w-16 aspect-[4/5] object-cover object-top bg-sunken" onError={() => setPreview('')} />}
+                  {preview && <img src={preview} alt="Selected photo" className="w-16 aspect-[4/5] rounded-[14px] object-cover object-top bg-sunken" onError={() => setPreview('')} />}
                   <span className="min-w-0 flex-1 text-sm text-ink-muted break-all">{file.name}</span>
                   <button type="button" onClick={removeFile} disabled={busy} className="sag-link text-[12.5px] underline-offset-4 decoration-1 disabled:opacity-50">Remove</button>
                 </div>
               ) : (
-                <label className="inline-flex w-fit items-center gap-2 h-11 px-4 border border-dashed border-control text-[13px] font-medium text-ink hover:border-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-ink">
-                  <Camera className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Choose a photo
+                <label className="inline-flex w-fit items-center gap-2 h-11 px-4 rounded-full! border border-dashed border-control bg-white/[0.06] text-[13px] font-medium text-ink hover:border-brand cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand">
+                  <Camera className="w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" /> Choose a photo
                   <input ref={fileInput} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" className="sr-only" onChange={(e) => pickFile(e.target.files?.[0])} />
                 </label>
               )}
@@ -476,8 +476,8 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                   <li key={star} className="sag-num flex items-center gap-2 text-xs leading-4 text-ink-muted">
                     <span className="sr-only">{star} {star === 1 ? 'star' : 'stars'}: {count} {count === 1 ? 'review' : 'reviews'}</span>
                     <span aria-hidden="true" className="w-3 shrink-0 text-right">{star}</span>
-                    <span aria-hidden="true" className="flex-1 h-[2px] bg-line overflow-hidden">
-                      <span className="block h-full bg-ink" style={{ width: `${(count / summary.count) * 100}%` }} />
+                    <span aria-hidden="true" className="flex-1 h-[3px] rounded-full bg-line overflow-hidden">
+                      <span className="block h-full rounded-full bg-brand" style={{ width: `${(count / summary.count) * 100}%` }} />
                     </span>
                     <span aria-hidden="true" className="w-5 shrink-0 text-right">{count}</span>
                   </li>
@@ -491,7 +491,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                 <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-2 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-2 overflow-x-auto">
                   {photoRows.map((r) => (
                     <button key={r.id} type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                      className="shrink-0 w-[72px] aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in">
+                      className="shrink-0 w-[72px] aspect-[4/5] overflow-hidden rounded-[14px] bg-sunken cursor-zoom-in">
                       <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                         className="w-full h-full object-cover object-top" />
                     </button>
@@ -509,7 +509,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                     <li key={m.key}>
                       <button type="button" onClick={() => { setAspect(aspect === m.key ? null : m.key); setVisible(PAGE_SIZE); }} aria-pressed={aspect === m.key}
                         aria-label={`${m.label}: mentioned in ${m.count} of ${summary.count} reviews`}
-                        className="sag-num h-[38px] sm:h-11 px-3 text-[13px] leading-5 inline-flex items-center justify-center border border-line bg-surface text-ink cursor-pointer transition-colors hover:border-control aria-pressed:border-ink aria-pressed:font-semibold aria-pressed:shadow-[inset_0_0_0_1px_var(--sag-ink)]">
+                        className="sag-chip sag-num h-[38px] sm:h-11 px-3.5 text-[13px] leading-5">
                         {m.label} · {m.count}
                       </button>
                     </li>
@@ -542,7 +542,7 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                     <p className="mt-2.5 text-sm leading-[22px] text-ink whitespace-pre-line break-words">{r.comment}</p>
                     {r.imageUrl && !brokenPhotos.includes(r.imageUrl) && (
                       <button type="button" onClick={() => setPhoto(r)} aria-label={`View the photo from ${r.userName}'s review`}
-                        className="mt-3 block w-20 aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in">
+                        className="mt-3 block w-20 aspect-[4/5] overflow-hidden rounded-[14px] bg-sunken cursor-zoom-in">
                         <img src={getCleanImageUrl(r.imageUrl, 240)} alt="" loading="lazy" onError={() => setBrokenPhotos((list) => [...list, r.imageUrl])}
                           className="w-full h-full object-cover object-top" />
                       </button>
@@ -557,13 +557,13 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
                       {r.verifiedPurchase && r.sizePurchased && <span>Size bought: {r.sizePurchased}</span>}
                     </p>
                     {r.adminReply && (
-                      <p className="mt-3 border-l border-ink pl-3 text-[13.5px] leading-5 text-ink-muted whitespace-pre-line break-words">
+                      <p className="mt-3 border-l-2 border-brand pl-3 text-[13.5px] leading-5 text-ink-muted whitespace-pre-line break-words">
                         <span className="font-medium text-ink">Suit Aura Girls:</span> {r.adminReply}
                       </p>
                     )}
                     <div className="mt-auto pt-2">
                       <button type="button" onClick={() => markHelpful(r)} disabled={hasVoted || voting === r.id} aria-pressed={hasVoted}
-                        className={`sag-num h-11 text-[12.5px] inline-flex items-center gap-2 cursor-pointer disabled:cursor-default ${hasVoted ? 'font-medium text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                        className={`sag-num h-11 text-[12.5px] inline-flex items-center gap-2 cursor-pointer disabled:cursor-default ${hasVoted ? 'font-medium text-sale' : 'text-ink-muted hover:text-ink'}`}>
                         {voting === r.id ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <ThumbsUp className={`w-[15px] h-[15px] ${hasVoted ? 'fill-current' : ''}`} strokeWidth={1.5} aria-hidden="true" />}
                         Helpful{helpful !== null ? ` (${helpful})` : ''}
                       </button>

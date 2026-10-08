@@ -65,7 +65,7 @@ export const ContactUsPage: React.FC = () => {
   const label = 'sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted';
 
   return (
-    <div id="contact-us-page" className="bg-page pb-12 lg:pb-16">
+    <div id="contact-us-page" className="pb-12 lg:pb-16">
       <InfoPageHeader
         crumb="Contact us"
         eyebrow="Customer care"
@@ -81,7 +81,7 @@ export const ContactUsPage: React.FC = () => {
         {/* Ways to reach us */}
         <div className="lg:col-span-5 min-w-0">
           {/* WhatsApp & call come first */}
-          <section className="border border-line bg-surface p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
+          <section className="sag-glass p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
             <div className="flex items-start gap-3">
               <span className="shrink-0 flex text-sale mt-0.5"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
               <div className="min-w-0 flex-1">
@@ -157,10 +157,10 @@ export const ContactUsPage: React.FC = () => {
         </div>
 
         {/* Contact form */}
-        <div className="lg:col-span-7 border border-line bg-surface p-4 sm:p-6 min-w-0">
+        <div className="lg:col-span-7 sag-glass p-4 sm:p-6 min-w-0">
           {submitted ? (
             <div className="py-8 sm:py-12 text-center" role="status">
-              <div className="w-[54px] h-[54px] rounded-full border border-ink text-ink flex items-center justify-center mx-auto">
+              <div className="w-[54px] h-[54px] !rounded-full sag-glass text-sale flex items-center justify-center mx-auto">
                 <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
               </div>
               <h2 className="mt-4 font-display text-[22px] leading-7 font-medium text-ink">Thank you!</h2>

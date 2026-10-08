@@ -74,32 +74,32 @@ export const SmartAssistant: React.FC = () => {
 
   return (
     <>
-      {/* A quiet white button: teal is kept for buying, so this never competes with it */}
+      {/* A quiet round glass button */}
       {!open && (
         <button onClick={() => setOpen(true)} aria-label="Ask SuitAura shopping assistant"
-          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-6 z-40 h-12 rounded-full bg-white text-ink border border-line shadow-[var(--sag-shadow-pop)] items-center justify-center gap-2 text-sm font-semibold hover:bg-sunken transition-colors cursor-pointer hidden min-[1440px]:inline-flex right-3 w-12">
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-6 z-40 sag-glass-bar h-12 text-ink items-center justify-center gap-2 text-sm font-semibold hover:text-sale transition-colors cursor-pointer hidden min-[1440px]:inline-flex right-3 w-12">
           <MessageCircleQuestion className="w-[22px] h-[22px]" strokeWidth={1.75} />
         </button>
       )}
-      {open && <div aria-hidden="true" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-[59] bg-ink/50 sag-fade" />}
+      {open && <div aria-hidden="true" onClick={() => setOpen(false)} className="md:hidden fixed inset-0 z-[59] bg-[color:var(--sag-scrim)] sag-fade" />}
       {open && (
         <div role="dialog" aria-modal="false" aria-label="SuitAura shopping assistant"
-          className="fixed z-[60] inset-x-0 bottom-0 md:inset-auto md:right-6 md:bottom-6 md:w-[400px] h-[85dvh] md:h-[620px] md:max-h-[calc(100vh-48px)] bg-page text-ink rounded-t-sheet md:rounded-card md:border md:border-line shadow-[var(--sag-shadow-bar)] md:shadow-[var(--sag-shadow-pop)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
-          <div className="bg-white border-b border-line shrink-0">
-            <span aria-hidden="true" className="md:hidden block mx-auto mt-2 w-9 h-1 rounded-full bg-sunken-deep" />
+          className="fixed z-[60] inset-x-0 bottom-0 md:inset-auto md:right-6 md:bottom-6 md:w-[400px] h-[85dvh] md:h-[620px] md:max-h-[calc(100vh-48px)] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x md:border-b border-line rounded-t-[26px] md:rounded-[26px] shadow-[var(--sag-shadow-bar)] md:shadow-[var(--sag-shadow-pop)] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
+          <div className="border-b border-line shrink-0">
+            <span aria-hidden="true" className="md:hidden block mx-auto mt-2 w-10 h-1 rounded-full bg-control" />
             <div className="flex items-center justify-between pl-4 pr-2 min-h-[56px]">
               <div className="min-w-0">
-                <p className="font-display text-base leading-[22px] font-semibold text-ink">Ask SuitAura</p>
+                <p className="font-display text-[19px] leading-6 text-ink">Ask SuitAura</p>
                 <p className="text-[13px] leading-[18px] text-ink-muted">Answers come only from styles in our store</p>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close assistant" className="w-11 h-11 shrink-0 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.75} /></button>
+              <button onClick={() => setOpen(false)} aria-label="Close assistant" className="w-11 h-11 shrink-0 rounded-full text-ink hover:bg-sunken-deep flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.75} /></button>
             </div>
           </div>
 
           <div ref={listRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-3" aria-live="polite">
             {messages.length === 0 && (
               <div className="space-y-4">
-                <p className="max-w-[88%] rounded-card rounded-bl-badge bg-white border border-line px-3.5 py-2.5 text-sm leading-5 text-ink">Tell me what you're looking for — colour, occasion, size or budget. Hindi-English mix works too.</p>
+                <p className="max-w-[88%] rounded-[18px] rounded-bl-[6px] bg-sunken ring-1 ring-inset ring-line px-3.5 py-2.5 text-sm leading-5 text-ink">Tell me what you're looking for — colour, occasion, size or budget. Hindi-English mix works too.</p>
                 <div>
                   <p className="sag-eyebrow mb-2">Try asking</p>
                   <div className="flex flex-wrap gap-2">
@@ -112,18 +112,18 @@ export const SmartAssistant: React.FC = () => {
             )}
             {messages.map((m, i) => (
               <div key={i} className={m.from === 'you' ? 'flex justify-end' : ''}>
-                <p className={`inline-block max-w-[85%] rounded-card px-3.5 py-2.5 text-sm leading-5 ${m.from === 'you' ? 'bg-ink text-white rounded-br-badge' : 'bg-white border border-line text-ink rounded-bl-badge'}`}>{m.text}</p>
+                <p className={`inline-block max-w-[85%] rounded-[18px] px-3.5 py-2.5 text-sm leading-5 ${m.from === 'you' ? 'bg-brand text-[color:var(--sag-on-gold)] rounded-br-[6px]' : 'bg-sunken ring-1 ring-inset ring-line text-ink rounded-bl-[6px]'}`}>{m.text}</p>
                 {m.products && (
                   <ul className="mt-2 space-y-2">
                     {m.products.map((p) => {
                       const available = isAvailable(p);
                       return (
                         <li key={p.id}>
-                          <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} aria-label={`View ${p.name}`} className="w-full flex items-center gap-3 p-2 rounded-control bg-white border border-line hover:bg-sunken text-left transition-colors cursor-pointer">
-                            <img src={getCleanImageUrl(p.images?.[0] || p.image || '', 120)} alt="" className="w-14 h-[70px] rounded-chip object-cover object-top shrink-0 bg-sunken" loading="lazy" />
+                          <button onClick={() => { setOpen(false); navigateToProduct(p.id); }} aria-label={`View ${p.name}`} className="w-full flex items-center gap-3 p-2 rounded-[18px] bg-sunken border border-line hover:bg-sunken-deep text-left transition-colors cursor-pointer">
+                            <img src={getCleanImageUrl(p.images?.[0] || p.image || '', 120)} alt="" className="w-14 h-[70px] rounded-[12px] object-cover object-top shrink-0 bg-sunken" loading="lazy" />
                             <span className="min-w-0 flex-1">
                               <span className="block text-sm leading-5 font-medium text-ink line-clamp-1">{p.name}</span>
-                              <span className="sag-num block text-[15px] leading-5 font-bold text-ink mt-0.5">₹{p.price.toLocaleString('en-IN')}</span>
+                              <span className="sag-num block text-[15px] leading-5 font-semibold text-ink mt-0.5">₹{p.price.toLocaleString('en-IN')}</span>
                               <span className={`block mt-0.5 text-[13px] leading-[18px] truncate ${available ? 'text-ink-muted' : 'text-ink-muted font-semibold'}`}>
                                 {available ? `In stock · ${(p.sizes || []).join(', ')}` : 'Sold out'}
                               </span>
@@ -139,13 +139,13 @@ export const SmartAssistant: React.FC = () => {
             ))}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); ask(input); }} className="bg-white px-3 pt-2.5 border-t border-line flex items-center gap-2 pb-[calc(0.625rem+env(safe-area-inset-bottom))] shrink-0">
+          <form onSubmit={(e) => { e.preventDefault(); ask(input); }} className="px-3 pt-2.5 border-t border-line flex items-center gap-2 pb-[calc(0.625rem+env(safe-area-inset-bottom))] shrink-0">
             <div className="relative flex-1">
               <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)} placeholder="e.g. Pink suit under ₹999" aria-label="Ask the assistant" enterKeyHint="send"
-                className="sag-input h-12 pr-12" maxLength={160} />
+                className="sag-input h-12 pr-12 !rounded-full" maxLength={160} />
               <VoiceSearchButton onResult={ask} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
             </div>
-            <button type="submit" aria-label="Send" disabled={!input.trim()} className="w-12 h-12 shrink-0 rounded-control bg-ink text-white flex items-center justify-center disabled:bg-sunken-deep disabled:text-ink-muted transition-colors cursor-pointer disabled:cursor-not-allowed"><ArrowUp className="w-5 h-5" /></button>
+            <button type="submit" aria-label="Send" disabled={!input.trim()} className="w-12 h-12 shrink-0 rounded-full bg-brand text-[color:var(--sag-on-gold)] flex items-center justify-center disabled:bg-sunken-deep disabled:text-ink-faint transition-colors cursor-pointer disabled:cursor-not-allowed"><ArrowUp className="w-5 h-5" /></button>
           </form>
         </div>
       )}

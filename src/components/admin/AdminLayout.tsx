@@ -185,12 +185,12 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const quickItems = quickIds.map((id) => navItems.find((item) => item.id === id)!).filter(Boolean);
 
   const Monogram: React.FC<{ size?: string }> = ({ size = 'w-9 h-9 text-[13px]' }) => (
-    <div className={`${size} shrink-0 border border-ink text-ink flex items-center justify-center font-medium tracking-[0.06em]`} aria-hidden="true">
+    <div className={`${size} shrink-0 rounded-full border border-brand-line text-sale flex items-center justify-center font-medium tracking-[0.06em]`} aria-hidden="true">
       SA
     </div>
   );
 
-  const iconButton = 'flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer';
+  const iconButton = 'rounded-full flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer';
 
   const renderNav = (collapsed: boolean, withIds: boolean) => (
     <nav className={collapsed ? 'space-y-2' : 'space-y-5'} aria-label="Admin sections">
@@ -215,7 +215,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   onClick={() => handleNavClick(item.id)}
                   className={`relative w-full flex items-center ${collapsed ? 'justify-center h-10' : `justify-between pl-3.5 pr-3 ${withIds ? 'h-9' : 'h-11'}`} border-l-2 text-sm transition-colors cursor-pointer ${
                     isActive
-                      ? 'border-ink bg-sunken text-ink font-medium'
+                      ? 'border-brand bg-brand-wash text-sale font-medium'
                       : 'border-transparent text-ink-muted font-normal hover:text-ink hover:bg-sunken'
                   }`}
                   title={collapsed ? item.label : undefined}
@@ -245,7 +245,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div id="admin-layout" className="min-h-screen bg-page flex flex-col font-sans text-ink">
+    <div id="admin-layout" className="min-h-screen flex flex-col font-sans text-ink">
 
       {/* Top bar: menu, where you are, and the two things checked most (store, alerts) */}
       <header className="bg-surface border-b border-line sticky top-0 z-30">
@@ -274,7 +274,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <button
               onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              className="hidden lg:flex w-10 h-10 items-center justify-center text-ink-muted hover:text-ink hover:bg-sunken transition-colors ml-1 cursor-pointer"
+              className="hidden lg:flex w-10 h-10 items-center justify-center rounded-full text-ink-muted hover:text-ink hover:bg-sunken transition-colors ml-1 cursor-pointer"
               title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
@@ -287,7 +287,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <button
               id="admin-view-storefront-btn"
               onClick={handleViewStorefront}
-              className="w-11 sm:w-auto h-11 sm:h-10 sm:px-3.5 sm:border sm:border-line bg-surface hover:bg-sunken text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-11 sm:w-auto h-11 sm:h-10 sm:px-4 rounded-full sm:border sm:border-line bg-surface hover:bg-sunken text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
               title="Open the store your customers see"
               aria-label="View store"
             >
@@ -306,7 +306,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             >
               <Bell className="w-5 h-5" strokeWidth={THIN} />
               {waitingRequests > 0 ? (
-                <span className="absolute top-1 right-0.5 min-w-4 h-4 px-0.5 bg-surface text-sale text-[11px] leading-4 font-medium tabular-nums flex items-center justify-center" aria-label={`${waitingRequests} return or cancellation requests waiting`}>{waitingRequests}</span>
+                <span className="absolute top-1 right-0.5 min-w-4 h-4 px-1 rounded-full bg-brand text-[color:var(--sag-on-gold)] text-[11px] leading-4 font-semibold tabular-nums flex items-center justify-center" aria-label={`${waitingRequests} return or cancellation requests waiting`}>{waitingRequests}</span>
               ) : pendingOrdersCount > 0 && (
                 <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-sale" />
               )}
@@ -332,7 +332,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   type="button"
                   onClick={() => handleNavClick(item.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative shrink-0 h-11 px-3 inline-flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors ${isActive ? 'text-ink font-medium' : 'text-ink-muted font-normal hover:text-ink'}`}
+                  className={`relative shrink-0 h-11 px-3 inline-flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors ${isActive ? 'text-sale font-medium' : 'text-ink-muted font-normal hover:text-ink'}`}
                 >
                   {item.id === 'returns' ? 'Returns' : item.label}
                   {item.alert && item.badge !== undefined && (
@@ -340,7 +340,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                       <span className="w-1.5 h-1.5 rounded-full bg-sale" aria-hidden="true" />{item.badge}
                     </span>
                   )}
-                  {isActive && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-ink" aria-hidden="true" />}
+                  {isActive && <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-brand" aria-hidden="true" />}
                 </button>
               );
             })}
@@ -352,7 +352,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Desktop sidebar */}
         <aside className={`hidden lg:block shrink-0 transition-[width] duration-200 ${isSidebarCollapsed ? 'w-[68px]' : 'w-60'}`}>
-          <div className="bg-surface border border-line pt-4 pb-2 sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] overflow-y-auto space-y-4">
+          <div className="bg-surface border border-line rounded-[22px] pt-4 pb-2 sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] overflow-y-auto space-y-4">
 
             {renderNav(isSidebarCollapsed, true)}
 
@@ -374,8 +374,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Phone menu */}
         {mobileSidebarOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden bg-ink/50 flex animate-in fade-in" role="dialog" aria-modal="true" aria-label="Admin menu">
-            <div className="w-[86vw] max-w-xs bg-surface h-full flex flex-col overflow-hidden animate-in slide-in-from-left">
+          <div className="fixed inset-0 z-50 lg:hidden bg-[color:var(--sag-scrim)] flex animate-in fade-in" role="dialog" aria-modal="true" aria-label="Admin menu">
+            <div className="w-[86vw] max-w-xs bg-surface border-r border-line h-full flex flex-col overflow-hidden animate-in slide-in-from-left">
               <div className="flex items-center justify-between pl-4 pr-1.5 h-14 border-b border-line shrink-0">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Monogram />
@@ -400,13 +400,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line flex gap-2 shrink-0">
                 <button
                   onClick={handleViewStorefront}
-                  className="flex-1 h-11 px-3 bg-surface text-ink border border-ink text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:bg-sunken transition-colors"
+                  className="flex-1 h-11 px-3 rounded-full bg-surface text-sale border border-brand-line text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:bg-sunken transition-colors"
                 >
                   <Store className="w-4 h-4" strokeWidth={THIN} /> View store
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex-1 h-11 px-3 bg-surface text-ink-muted border border-line text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:text-ink hover:bg-sunken transition-colors"
+                  className="flex-1 h-11 px-3 rounded-full bg-surface text-ink-muted border border-line text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:text-ink hover:bg-sunken transition-colors"
                 >
                   <LogOut className="w-4 h-4" strokeWidth={THIN} /> Logout
                 </button>

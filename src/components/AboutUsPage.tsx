@@ -27,7 +27,7 @@ export const AboutUsPage: React.FC = () => {
   }, [products]);
 
   return (
-    <div id="about-us-page" className="bg-page pb-12 lg:pb-16">
+    <div id="about-us-page" className="pb-12 lg:pb-16">
       <InfoPageHeader
         crumb="About us"
         eyebrow="Our story"
@@ -40,12 +40,12 @@ export const AboutUsPage: React.FC = () => {
         <section className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 md:gap-8 lg:gap-12 md:items-center" aria-labelledby="about-story-title">
           <div className="w-full max-w-[320px] md:max-w-none mx-auto">
             {storyImage ? (
-              <div className="aspect-[4/5] overflow-hidden bg-sunken">
+              <div className="aspect-[4/5] overflow-hidden rounded-[22px] border border-line bg-sunken">
                 <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
               </div>
             ) : (
-              <div className="aspect-[4/5] bg-surface border border-line flex items-center justify-center p-8">
-                <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" width={480} height={240} className="w-3/4 h-auto" />
+              <div className="aspect-[4/5] sag-glass flex items-center justify-center p-8">
+                <img src="/suit-aura-mark-132.webp" alt="Suit Aura Girls" width={132} height={132} className="h-[132px] w-[132px] !rounded-full border border-line object-cover" />
               </div>
             )}
           </div>
@@ -74,9 +74,9 @@ export const AboutUsPage: React.FC = () => {
         <section aria-labelledby="about-promises-title">
           <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Shopping with us</p>
           <h2 id="about-promises-title" className="font-display font-medium text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1.5">What you can count on</h2>
-          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-10 border-t border-line">
+          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {PROMISES.map(({ icon: Icon, title, text, page, link }) => (
-              <li key={title} className="flex gap-3 border-b border-line py-4">
+              <li key={title} className="sag-glass flex gap-3 p-4">
                 <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-sm leading-5 font-medium text-ink">{title}</h3>
@@ -91,7 +91,7 @@ export const AboutUsPage: React.FC = () => {
         </section>
 
         {/* Visit */}
-        <section className="border border-line bg-surface p-4 sm:p-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
+        <section className="sag-glass p-4 sm:p-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
           <div className="flex items-start gap-3">
             <span className="shrink-0 flex text-sale mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
             <div className="min-w-0">

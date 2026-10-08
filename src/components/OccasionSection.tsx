@@ -40,7 +40,7 @@ export const OccasionSection: React.FC = () => {
           />
         </div>
         {list.length > 0 && (
-          <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1">
+          <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pt-1 pb-6 -mb-5">
             {list.map(({ occasion, items }) => {
               const cover = items.find(isAvailable) || items[0];
               const count = items.filter(isAvailable).length;
@@ -49,13 +49,13 @@ export const OccasionSection: React.FC = () => {
                 <li key={occasion.id} className="shrink-0">
                   {/* Nothing is drawn on the photo: the name and the real in-stock count sit below it */}
                   <button type="button" onClick={() => openOccasion(occasion.id, { setSelectedCategory, setActivePage, navigate })}
-                    className="block w-[108px] sm:w-[140px] lg:w-[180px] text-center cursor-pointer">
-                    <span className="block aspect-[3/4] w-full overflow-hidden bg-sunken">
+                    className="sag-glass block h-full w-[108px] sm:w-[140px] lg:w-[180px] p-1.5 lg:p-2 text-center cursor-pointer">
+                    <span className="block aspect-square w-full overflow-hidden rounded-[16px] bg-sunken">
                       <img src={photoUrl ? getCleanImageUrl(photoUrl, 400) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="lazy" decoding="async"
-                        className="w-full h-full object-cover object-top" />
+                        className="w-full h-full rounded-none object-cover object-top" />
                     </span>
-                    <span className="mt-2 block text-[13px] leading-[18px] text-ink line-clamp-1">{occasion.name}</span>
-                    <span className="sag-num block text-[11.5px] leading-4 text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
+                    <span className="block px-0.5 pt-[7px] text-[12.5px] font-medium leading-[18px] text-ink line-clamp-1">{occasion.name}</span>
+                    <span className="sag-num block pb-[3px] text-[11.5px] leading-4 text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
                   </button>
                 </li>
               );

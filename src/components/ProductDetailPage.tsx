@@ -66,7 +66,7 @@ const BottomSheet: React.FC<{ title: string; onClose: () => void; children: Reac
     };
   }, []);
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/50 sag-fade" onClick={onClose}>
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-[color:var(--sag-scrim)] sag-fade" onClick={onClose}>
       <div
         ref={panel}
         role="dialog"
@@ -74,7 +74,7 @@ const BottomSheet: React.FC<{ title: string; onClose: () => void; children: Reac
         aria-label={title}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[85dvh] overflow-y-auto bg-surface border-t border-line px-4 pt-1 pb-[calc(16px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
+        className="w-full max-w-lg max-h-[85dvh] overflow-y-auto rounded-t-[28px] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl border-t border-x border-[color:var(--sag-edge)] px-4 pt-2 pb-[calc(16px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
       >
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-[19px] leading-6 font-medium text-ink">{title}</h2>
@@ -338,7 +338,7 @@ export const ProductDetailPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center bg-surface">
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4 px-4 text-center">
         <h1 className="font-display text-[26px] leading-8 font-medium text-ink">This style is no longer available</h1>
         <p className="text-sm text-ink-muted">It may have sold out or been removed. Explore what is in stock now.</p>
         <button onClick={() => navigateToCategory('All')} className="sag-btn-primary px-8 cursor-pointer">Shop all styles</button>
@@ -556,6 +556,10 @@ export const ProductDetailPage: React.FC = () => {
   const eyebrow = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
   const quietLink = 'sag-link text-[12.5px] underline-offset-4 decoration-1';
   const sectionTitle = 'font-display text-[19px] leading-6 font-medium text-ink';
+  // Round glass icon button (heart, share, the viewer's controls)
+  const iconBtn = 'rounded-full flex items-center justify-center border border-[color:var(--sag-edge)] bg-white/[0.08] text-ink hover:bg-white/[0.14] cursor-pointer transition-colors';
+  // The "1 / N" pill on a photo: light and translucent with dark text, so it reads on any photo
+  const photoCount = 'sag-num pointer-events-none absolute bottom-2.5 right-2.5 z-10 rounded-full bg-white/75 px-2.5 py-1 text-[11px] leading-4 tracking-[0.04em] font-medium text-[color:var(--sag-on-gold)]';
   const badgeText = (product.isNewArrival || product.isBestSeller) && !soldOut ? (product.isNewArrival ? 'New' : 'Bestseller') : '';
   const toReviews = () => document.getElementById('pdp-reviews')?.scrollIntoView({ behavior: 'smooth' });
 
@@ -610,7 +614,7 @@ export const ProductDetailPage: React.FC = () => {
     },
   ];
 
-  // Square outline boxes; the chosen one has an ink border. The red border appears only after the shopper
+  // Glass pill chips; the chosen one is gold with dark text. The red border appears only after the shopper
   // tried to go on without a size.
   const sizeChips = (error: boolean) => (
     <div className="flex flex-wrap gap-2">
@@ -620,7 +624,7 @@ export const ProductDetailPage: React.FC = () => {
           type="button"
           onClick={() => pickSize(s)}
           aria-pressed={size === s}
-          className={`sag-num h-[38px] sm:h-11 min-w-11 px-3 inline-flex items-center justify-center border bg-surface text-[13px] leading-5 text-ink cursor-pointer transition-colors ${size === s ? 'border-ink shadow-[inset_0_0_0_1px_var(--sag-ink)] font-semibold' : error && !size ? 'border-danger' : 'border-line hover:border-control'}`}
+          className={`sag-chip sag-num h-[38px] sm:h-11 min-w-[46px] px-3 text-[13px] leading-5 ${error && !size ? 'border-danger!' : ''}`}
         >
           {s}
         </button>
@@ -636,9 +640,9 @@ export const ProductDetailPage: React.FC = () => {
   );
 
   const rail = (title: string, items: Product[]) => (
-    <section className="mt-10 border-t border-line pt-7 lg:mt-14 lg:pt-10">
+    <section className="mt-9 lg:mt-14">
       <h2 className={sectionTitle}>{title}</h2>
-      <div className="sag-scroll-x scroll-px-4 sm:scroll-px-0 mt-4 -mx-4 px-4 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
+      <div className="sag-scroll-x scroll-px-3 sm:scroll-px-0 mt-4 -mx-3 px-3 sm:mx-0 sm:px-0 flex gap-3 overflow-x-auto lg:grid lg:grid-cols-4 lg:gap-6 lg:overflow-visible">
         {items.map((p) => (
           <div key={p.id} className="w-[86%] sm:w-52 shrink-0 lg:w-auto min-w-0"><ProductCard product={p} compact /></div>
         ))}
@@ -655,8 +659,8 @@ export const ProductDetailPage: React.FC = () => {
   ];
 
   return (
-    <div id="product-detail-page" className="bg-surface pb-4 md:pb-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
+    <div id="product-detail-page" className="pt-3 md:pt-0 pb-4 md:pb-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex flex-col">
         {/* Breadcrumb: quiet, at the bottom on phones; at the top from tablet width */}
         <nav aria-label="Breadcrumb" className="order-last md:order-first mt-2 md:mt-0 md:py-2 -mx-1.5 px-1.5 text-xs text-ink-muted flex items-center gap-1 overflow-hidden">
           <button onClick={() => setActivePage('home')} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">Home</button>
@@ -674,32 +678,19 @@ export const ProductDetailPage: React.FC = () => {
 
         {/* One grid, every block once. Phone and tablet: photo, buy box, details, reviews in one column (a centred
             column on tablets). Desktop: photos left; buy box and details right; reviews across. */}
-        <div className="grid grid-cols-1 sm:mx-auto sm:w-full sm:max-w-xl lg:mx-0 lg:max-w-none lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-12">
+        <div className="grid grid-cols-1 sm:mx-auto sm:w-full sm:max-w-xl lg:mx-0 lg:max-w-none lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-8">
           {/* Photos */}
           <div className="min-w-0 lg:col-start-1 lg:row-start-1 lg:row-span-2">
             <div style={{ top: stickyTop }} className="lg:sticky lg:flex lg:gap-3 min-w-0">
-              {images.length > 1 && (
-                <div className="sag-scroll-x hidden lg:flex flex-col gap-3 overflow-y-auto max-h-[640px] w-[86px] p-[3px] shrink-0">
-                  {images.map((img, idx) => (
-                    <button
-                      key={img + idx}
-                      type="button"
-                      onClick={() => showImage(idx)}
-                      aria-label={`Show image ${idx + 1}`}
-                      aria-current={idx === imageIdx}
-                      className={`shrink-0 w-20 aspect-[4/5] overflow-hidden bg-sunken cursor-pointer transition-opacity ${idx === imageIdx ? 'outline outline-ink outline-offset-2' : 'opacity-75 hover:opacity-100'}`}
-                    >
-                      <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
+              {/* One glass panel holds the large photo and the row of small photos */}
+              {/* Desktop: the panel is kept short enough for the small photos to stay on screen while it sticks */}
+              <div style={isDesktop ? { maxWidth: `max(380px, calc((100dvh - ${stickyTop + 136}px) * 0.8))` } : undefined} className="sag-glass rounded-[28px]! p-2 flex-1 min-w-0 lg:mx-auto">
                 {isDesktop ? (
+                <div className="relative">
                 <div
                   ref={strip}
                   onScroll={onStripScroll}
-                  className="sag-scroll-x scroll-px-0 min-w-0 flex gap-2 overflow-x-auto overscroll-x-contain"
+                  className="sag-scroll-x scroll-px-0 min-w-0 flex gap-2 overflow-x-auto overscroll-x-contain rounded-[22px]"
                 >
                   {images.map((img, idx) => (
                     <button
@@ -707,7 +698,7 @@ export const ProductDetailPage: React.FC = () => {
                       type="button"
                       onClick={() => { setImageIdx(idx); setLightbox(true); }}
                       aria-label={images.length > 1 ? `Open photo ${idx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className="relative shrink-0 w-full aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in active:[transform:none]!"
+                      className="relative shrink-0 w-full aspect-[4/5] overflow-hidden rounded-[22px] bg-sunken cursor-zoom-in active:[transform:none]!"
                     >
                       {idx === 0 ? (
                         <img {...productPhoto(img)} alt={product.name} data-vt-hero="" style={{ viewTransitionName: 'pdp-hero' } as React.CSSProperties} className="w-full h-full object-cover object-top" fetchPriority="high" decoding="async" onLoad={() => markLoaded(img)} onError={() => markLoaded(img)} />
@@ -727,10 +718,12 @@ export const ProductDetailPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {images.length > 1 && <span aria-hidden="true" className={photoCount}>{imageIdx + 1} / {images.length}</span>}
+                </div>
                 ) : (
-                  /* Phones and tablets: one large photo, edge to edge on phones. Swipe sideways or tap a small photo
+                  /* Phones and tablets: one large photo. Swipe sideways or tap a small photo
                      to change it; a tap opens the viewer. Only the photo on screen is downloaded at full size. */
-                  <div className="relative -mx-4 sm:mx-0">
+                  <div className="relative">
                     <button
                       key={mainImage}
                       type="button"
@@ -738,7 +731,7 @@ export const ProductDetailPage: React.FC = () => {
                       onTouchStart={onPhotoTouchStart}
                       onTouchEnd={onPhotoTouchEnd}
                       aria-label={images.length > 1 ? `Open photo ${imageIdx + 1} of ${images.length} full size` : 'Open full-size image'}
-                      className="relative block w-full aspect-[4/5] overflow-hidden bg-sunken cursor-zoom-in touch-pan-y active:[transform:none]!"
+                      className="relative block w-full aspect-[4/5] overflow-hidden rounded-[22px] bg-sunken cursor-zoom-in touch-pan-y active:[transform:none]!"
                     >
                       {/* Until the photo arrives, its place holds the small picture the row below already downloaded */}
                       {images.length > 1 && <img src={getCleanImageUrl(mainImage, 160)} alt="" aria-hidden="true" className="w-full h-full object-cover object-top" decoding="async" />}
@@ -759,12 +752,12 @@ export const ProductDetailPage: React.FC = () => {
                       )}
                     </button>
                     {images.length > 1 && (
-                      <span aria-hidden="true" className="sag-num pointer-events-none absolute bottom-3 right-3 bg-surface/90 px-2 py-[3px] text-[11px] leading-4 tracking-[0.04em] text-ink">{imageIdx + 1} / {images.length}</span>
+                      <span aria-hidden="true" className={photoCount}>{imageIdx + 1} / {images.length}</span>
                     )}
                   </div>
                 )}
                 {images.length > 1 && (
-                  <div ref={thumbs} className="sag-scroll-x lg:hidden mt-[7px] -mx-4 px-4 py-[3px] sm:mx-0 sm:px-[3px] flex gap-3 overflow-x-auto overscroll-x-contain">
+                  <div ref={thumbs} className="sag-scroll-x scroll-px-0 mt-1.5 p-[3px] flex gap-2 overflow-x-auto overscroll-x-contain">
                     {images.map((img, idx) => (
                       <button
                         key={img + idx}
@@ -772,19 +765,11 @@ export const ProductDetailPage: React.FC = () => {
                         onClick={() => showImage(idx)}
                         aria-label={`Show photo ${idx + 1}`}
                         aria-current={idx === imageIdx}
-                        className={`shrink-0 w-14 aspect-[4/5] overflow-hidden bg-sunken cursor-pointer ${idx === imageIdx ? 'outline outline-ink outline-offset-2' : 'opacity-75'}`}
+                        className={`shrink-0 w-14 lg:w-16 aspect-[4/5] overflow-hidden rounded-[14px] bg-sunken cursor-pointer transition-opacity ${idx === imageIdx ? 'outline-2 outline-brand outline-offset-1' : 'opacity-75 hover:opacity-100'}`}
                       >
                         <img src={getCleanImageUrl(img, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" decoding="async" />
                       </button>
                     ))}
-                  </div>
-                )}
-                {images.length > 1 && (
-                  <div className="mt-3 h-5 hidden lg:flex items-center gap-3">
-                    <span className="flex flex-1 gap-1">
-                      {images.map((_, idx) => <span key={idx} className={`h-px flex-1 max-w-8 ${idx === imageIdx ? 'bg-ink' : 'bg-line'}`} />)}
-                    </span>
-                    <span className="sag-num text-xs leading-4 tracking-[0.04em] text-ink-muted">{imageIdx + 1} / {images.length}</span>
                   </div>
                 )}
               </div>
@@ -792,24 +777,25 @@ export const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Buy box: the same at every width */}
-          <div className="min-w-0 pt-[18px] lg:pt-1 lg:col-start-2 lg:row-start-1">
+          <div className="min-w-0 pt-3 lg:pt-0 lg:col-start-2 lg:row-start-1">
+            <div className="sag-glass p-4 lg:p-5">
             <div className="flex items-start gap-2">
               <div className="flex-1 min-w-0">
                 {badgeText && <p className={eyebrow}>{badgeText}</p>}
                 <h1 className={`font-sans text-[17px] leading-[23px] lg:text-[21px] lg:leading-[29px] font-normal text-ink break-words ${badgeText ? 'mt-1.5' : ''}`}>{product.name}</h1>
               </div>
-              <div className="flex shrink-0 -mr-2.5 -mt-1.5">
-                <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className="w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
-                  <Heart className={`w-[21px] h-[21px] ${fav ? 'fill-ink' : ''}`} strokeWidth={1.5} />
+              <div className="flex shrink-0 gap-1.5">
+                <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className={`w-10 h-10 lg:w-11 lg:h-11 ${iconBtn}`}>
+                  <Heart className={`w-[18px] h-[18px] ${fav ? 'fill-sale text-sale' : ''}`} strokeWidth={1.5} />
                 </button>
-                <button type="button" onClick={share} aria-label="Share this style" className="w-10 h-10 lg:w-11 lg:h-11 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer">
-                  <Share2 className="w-5 h-5" strokeWidth={1.5} />
+                <button type="button" onClick={share} aria-label="Share this style" className={`w-10 h-10 lg:w-11 lg:h-11 ${iconBtn}`}>
+                  <Share2 className="w-[17px] h-[17px]" strokeWidth={1.5} />
                 </button>
               </div>
             </div>
 
             <p className="sag-num mt-2.5 flex flex-wrap items-baseline gap-x-[7px]">
-              <span className="text-[22px] leading-7 font-semibold text-ink">₹{price.toLocaleString('en-IN')}</span>
+              <span className="text-[23px] leading-7 font-semibold text-ink">₹{price.toLocaleString('en-IN')}</span>
               {mrp > price && <span className="text-[13px] leading-5 text-ink-muted"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
               {discount > 0 && <span className="text-[13px] leading-5 font-semibold text-sale">{discount}% off</span>}
             </p>
@@ -836,9 +822,9 @@ export const ProductDetailPage: React.FC = () => {
               <p className="mt-2 flex items-center gap-1.5 text-[13px] leading-5 text-ink"><Baby className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Suitable for {product.ageRange}</p>
             )}
 
-            {/* Offers: only the ones that are live, as plain lines in one quiet box */}
+            {/* Offers: only the ones that are live, as plain lines in one inner glass box */}
             {hasOffers && (
-              <div className="sag-num mt-3.5 bg-sunken px-[13px] py-[11px] text-[13px] leading-5 text-ink">
+              <div className="sag-glass sag-num mt-3.5 rounded-[16px]! shadow-none! px-[13px] py-[11px] text-[13px] leading-5 text-ink">
                 {prepaidLines.map((line) => <p key={line}>{line}</p>)}
                 {comboHere && <p>Buy {comboHere.minItems} or more outfits and save {comboHere.percent}%</p>}
                 {bestCoupon && (
@@ -849,7 +835,7 @@ export const ProductDetailPage: React.FC = () => {
                     </span>
                     <button type="button" onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
                       aria-label={`Copy code ${bestCoupon.code}`}
-                      className="-my-3 py-3 shrink-0 text-[12.5px] font-semibold text-ink underline underline-offset-4 decoration-1 cursor-pointer">
+                      className="-my-3 py-3 shrink-0 text-[12.5px] font-semibold text-sale underline underline-offset-4 decoration-1 cursor-pointer">
                       Copy
                     </button>
                   </p>
@@ -869,10 +855,10 @@ export const ProductDetailPage: React.FC = () => {
             {swatches.length > 0 && (
               <div className="mt-5">
                 <p className="text-[13px] leading-5 text-ink"><span className="font-semibold">Colour</span>{color?.name && color.name !== 'Default' && <> · {color.name}</>}</p>
-                <div role="group" aria-label="Colour" className="mt-1 -ml-[5px] flex flex-wrap gap-x-0.5">
+                <div role="group" aria-label="Colour" className="mt-1.5 -ml-1 flex flex-wrap gap-x-1">
                   {swatches.map((c) => (
                     <button key={c.name} type="button" onClick={() => pickColour(c)} aria-label={c.name} title={c.name} aria-pressed={color?.name === c.name} className="w-9 h-9 lg:w-10 lg:h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer">
-                      <span style={{ backgroundColor: c.hex || undefined }} className={`block w-[26px] h-[26px] rounded-full border border-ink/10 bg-sunken ${color?.name === c.name ? 'ring-1 ring-ink ring-offset-2 ring-offset-surface' : ''}`} />
+                      <span style={{ backgroundColor: c.hex || undefined }} className={`block w-7 h-7 rounded-full border-2 border-[color:var(--sag-edge)] bg-sunken ${color?.name === c.name ? 'shadow-[0_0_0_2px_var(--sag-brand)]' : ''}`} />
                     </button>
                   ))}
                 </div>
@@ -880,7 +866,7 @@ export const ProductDetailPage: React.FC = () => {
             )}
 
             {sizes.length > 0 && !oneSize && (
-              <div id="pdp-size-selector" className="mt-3 scroll-mt-24">
+              <div id="pdp-size-selector" className="mt-3.5 scroll-mt-24">
                 <div className="flex items-center justify-between gap-3 min-h-11">
                   <p className={`text-[13px] leading-5 ${needSize && !size ? 'text-danger font-semibold' : 'text-ink'}`} aria-live="polite">
                     {needSize && !size ? chooseSizeText : <><span className="font-semibold">{sizeWord}</span>{size && <> · {size}</>}</>}
@@ -890,7 +876,7 @@ export const ProductDetailPage: React.FC = () => {
                 {sizeChips(needSize)}
                 {kidsPage && (
                   <p className="mt-2.5 flex items-start gap-2 text-[13px] leading-[18px] text-ink-muted">
-                    <Baby className="w-4 h-4 shrink-0 text-ink" strokeWidth={1.5} aria-hidden="true" />
+                    <Baby className="w-4 h-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
                     <span><span className="font-medium text-ink">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}.</span> If your child is between two sizes, pick the bigger one.</span>
                   </p>
                 )}
@@ -902,12 +888,12 @@ export const ProductDetailPage: React.FC = () => {
 
             {!soldOut && (
               <div className="mt-5 flex items-center gap-4">
-                <div className="inline-flex items-center border border-line bg-surface" role="group" aria-label="Quantity">
-                  <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
+                <div className="inline-flex items-center rounded-full! border border-[color:var(--sag-edge)] bg-white/[0.08]" role="group" aria-label="Quantity">
+                  <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label="Decrease quantity" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-ink disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">
                     <Minus className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                   <span className="sag-num w-8 text-center text-sm font-medium text-ink" aria-live="polite">{qty}</span>
-                  <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity" className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-ink disabled:text-sunken-deep cursor-pointer disabled:cursor-not-allowed">
+                  <button type="button" onClick={() => setQty((q) => Math.min(maxQty, q + 1))} disabled={qty >= maxQty} aria-label="Increase quantity" className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-ink disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed">
                     <Plus className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 </div>
@@ -926,14 +912,16 @@ export const ProductDetailPage: React.FC = () => {
                 <label htmlFor="pdp-restock-email" className="sag-label">Email for the restock alert</label>
                 <div className="flex gap-2">
                   <input id="pdp-restock-email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" required autoFocus value={restockEmail} onChange={(e) => setRestockEmail(e.target.value)} placeholder="you@example.com"
-                    className="sag-input flex-1 min-w-0 border border-line focus:border-ink" />
+                    className="sag-input flex-1 min-w-0 rounded-full! px-4" />
                   <button type="submit" className="sag-btn-outline shrink-0 px-4 cursor-pointer">Notify me</button>
                 </div>
               </form>
             )}
 
-            {/* "Buy now" over "Add to bag", full width (phones also keep the fixed bar) */}
-            <div className="mt-[22px] grid gap-2.5">
+            </div>
+
+            {/* Gold "Buy now" over glass "Add to bag", full width (phones also keep the floating bar) */}
+            <div className="mt-3 grid gap-2.5">
               {soldOut ? (
                 <button type="button" onClick={notifyRestock} className="sag-btn-primary h-[52px] w-full gap-2 cursor-pointer">
                   <Bell className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Notify me when back
@@ -948,8 +936,8 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* What the store stands behind: four plain facts between hairlines */}
-            <ul className="mt-[22px] border-t border-line pt-[18px] grid grid-cols-2 gap-x-2.5 gap-y-3.5">
+            {/* What the store stands behind: four facts as small glass tiles */}
+            <ul className="mt-3 grid grid-cols-2 gap-2.5">
               {factRows.map((fact) => {
                 const inner = (
                   <>
@@ -957,9 +945,9 @@ export const ProductDetailPage: React.FC = () => {
                     <span className="min-w-0">{fact.text}</span>
                   </>
                 );
-                const cls = 'flex w-full items-center gap-[9px] text-left text-[12.5px] leading-[1.3] text-ink';
+                const cls = 'flex w-full items-center gap-2 px-[11px] py-2.5 min-h-[52px] text-left text-[12.5px] leading-[1.3] text-ink';
                 return (
-                  <li key={fact.key} className="flex min-w-0">
+                  <li key={fact.key} className="sag-glass rounded-[16px]! flex min-w-0">
                     {fact.href ? <a href={fact.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
                       : fact.page ? <button type="button" onClick={() => { setActivePage(fact.page!); window.scrollTo(0, 0); }} className={`${cls} cursor-pointer`}>{inner}</button>
                       : <span className={cls}>{inner}</span>}
@@ -968,35 +956,35 @@ export const ProductDetailPage: React.FC = () => {
               })}
             </ul>
 
-            {/* PIN code check: a plain bordered area */}
-            <div className="mt-[18px] border border-line px-4">
+            {/* PIN code check: a glass panel */}
+            <div className="sag-glass mt-3 px-4">
               <DeliveryCheck product={product} quantity={qty} className="py-4" />
             </div>
           </div>
 
-          {/* Details: plain rows between hairlines, one open at a time */}
+          {/* Details: "+" rows inside one glass panel, one open at a time */}
           <div className="min-w-0 lg:col-start-2 lg:row-start-2">
-            <div className="mt-[18px] border-t border-line">
+            <div className="sag-glass mt-3 px-4 divide-y divide-line">
               {detailRows.map((item) => {
                 const isOpen = open === item.key;
                 return (
-                  <div key={item.key} className="border-b border-line">
+                  <div key={item.key}>
                     <h2 id={item.key === 'details' ? 'pdp-details-title' : undefined} className="font-sans">
                       <button type="button" onClick={() => setOpen(isOpen ? null : item.key)} aria-expanded={isOpen} className="w-full min-h-[52px] flex items-center justify-between gap-3 text-left text-sm leading-5 font-normal text-ink cursor-pointer">
                         <span className="flex-1 min-w-0">{item.title}</span>
                         {isOpen
-                          ? <Minus className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
-                          : <Plus className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />}
+                          ? <Minus className="w-[17px] h-[17px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                          : <Plus className="w-[17px] h-[17px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />}
                       </button>
                     </h2>
                     {isOpen && <div className="pb-4 text-[13.5px] leading-[21px] text-ink-muted sag-drop">{item.body}</div>}
                   </div>
                 );
               })}
-              <div className="border-b border-line">
+              <div>
                 <button type="button" onClick={toReviews} className="sag-num w-full min-h-[52px] flex items-center justify-between gap-3 text-left text-sm leading-5 font-normal text-ink cursor-pointer">
                   <span className="flex-1 min-w-0">Reviews{reviews.length > 0 ? ` (${reviews.length})` : ''}</span>
-                  <ChevronDown className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                  <ChevronDown className="w-[17px] h-[17px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -1026,31 +1014,33 @@ export const ProductDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Phone buy bar: white with a hairline on top; the total and both buttons stay on screen */}
-      <div className="sag-bar shadow-none md:hidden fixed left-0 right-0 bottom-0 z-40">
+      {/* Phone buy bar: a floating glass pill with room from the edges; the total and both buttons stay on screen */}
+      <div className="md:hidden fixed left-2.5 right-2.5 bottom-[max(8px,env(safe-area-inset-bottom))] z-40">
+        <div className={`sag-glass-bar ${soldOut ? 'p-1.5' : 'py-1.5 pr-1.5 pl-4'}`}>
         {soldOut ? (
-          <button type="button" onClick={notifyRestock} className="sag-btn-primary w-full gap-2 cursor-pointer">
+          <button type="button" onClick={notifyRestock} className="sag-btn-primary h-[42px] w-full gap-2 cursor-pointer">
             <Bell className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Notify me when back
           </button>
         ) : (
-          <div className="flex items-center gap-2.5">
-            <p className="sag-num shrink-0 min-w-[58px]">
+          <div className="flex items-center gap-2">
+            <p className="sag-num shrink-0 min-w-[56px]">
               <span className="block text-[11.5px] leading-4 text-ink-muted">Total</span>
-              <span className="block text-[17px] leading-[22px] font-semibold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
+              <span className="block text-[16px] leading-[21px] font-semibold text-ink">₹{(price * qty).toLocaleString('en-IN')}</span>
             </p>
-            <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="sag-btn-outline h-[46px] flex-1 min-w-0 px-2 gap-1.5 whitespace-nowrap cursor-pointer">
+            <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="sag-btn-outline h-[42px] flex-1 min-w-0 px-2 gap-1.5 whitespace-nowrap cursor-pointer">
               {justAdded ? <><Check className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Added</> : inBagNow ? 'View bag' : 'Add to bag'}
             </button>
-            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary sag-btn-buy h-[46px] flex-1 min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
+            <button type="button" onClick={() => fromBar('buy')} className="sag-btn-primary sag-btn-buy h-[42px] flex-1 min-w-0 px-2 whitespace-nowrap cursor-pointer">Buy now</button>
           </div>
         )}
+        </div>
       </div>
 
       {/* Size sheet: opened by a bar button when no size is chosen yet. The shopper picks, then confirms. */}
       {sheetAction && (
         <BottomSheet title={kidsPage ? "Choose your child's age" : 'Choose your size'} onClose={() => setSheetAction(null)}>
           <div className="flex items-center gap-3">
-            <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 object-cover object-top bg-sunken" />
+            <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 rounded-[14px] object-cover object-top bg-sunken" />
             <div className="min-w-0">
               <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{product.name}</p>
               <p className="sag-num mt-1 flex items-baseline gap-1.5">
@@ -1073,20 +1063,20 @@ export const ProductDetailPage: React.FC = () => {
         </BottomSheet>
       )}
 
-      {/* Photo viewer: the photo on a white page, plain icons */}
+      {/* Photo viewer: the photo on a dark blurred sheet, round glass controls */}
       {lightbox && (
-        <div className="fixed inset-0 z-[80] bg-surface flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
-          <button type="button" onClick={() => setLightbox(false)} aria-label="Close" autoFocus className="absolute top-3 right-3 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer">
+        <div className="fixed inset-0 z-[80] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
+          <button type="button" onClick={() => setLightbox(false)} aria-label="Close" autoFocus className={`absolute top-3 right-3 z-10 w-11 h-11 ${iconBtn}`}>
             <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
           </button>
           {images.length > 1 && (
             <>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className="absolute left-2 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer"><ChevronLeft className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className="absolute right-2 z-10 w-11 h-11 bg-surface/90 text-ink flex items-center justify-center cursor-pointer"><ChevronRight className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
-              <span className="sag-num absolute bottom-4 left-1/2 -translate-x-1/2 z-10 bg-surface/90 px-2 py-[3px] text-[11px] leading-4 tracking-[0.04em] text-ink" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className={`absolute left-2 z-10 w-11 h-11 ${iconBtn}`}><ChevronLeft className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className={`absolute right-2 z-10 w-11 h-11 ${iconBtn}`}><ChevronRight className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+              <span className="sag-num absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full bg-white/75 px-2.5 py-1 text-[11px] leading-4 tracking-[0.04em] font-medium text-[color:var(--sag-on-gold)]" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
             </>
           )}
-          <img src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} className="max-h-[92vh] max-w-[94vw] object-contain" onClick={(e) => e.stopPropagation()} />
+          <img src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} className="max-h-[92vh] max-w-[94vw] rounded-[22px] object-contain" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

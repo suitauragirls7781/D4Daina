@@ -43,7 +43,7 @@ export const CouponDrawer: React.FC = () => {
     <div
       id="coupon-drawer-overlay"
       onClick={close}
-      className="fixed inset-0 z-[10000] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn"
+      className="fixed inset-0 z-[10000] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn"
     >
       <div
         id="coupon-drawer"
@@ -51,7 +51,7 @@ export const CouponDrawer: React.FC = () => {
         aria-modal="true"
         aria-labelledby="coupon-drawer-title"
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface w-full sm:max-w-lg max-h-[85dvh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5"
+        className="bg-surface w-full sm:max-w-lg max-h-[85dvh] overflow-hidden rounded-t-[26px] sm:rounded-[26px] border-t sm:border border-[color:var(--sag-edge)] flex flex-col animate-in slide-in-from-bottom-5"
       >
         {/* Title row */}
         <div className="flex items-center justify-between gap-3 pl-4 pr-1.5 min-h-14 border-b border-line shrink-0">
@@ -63,7 +63,7 @@ export const CouponDrawer: React.FC = () => {
             type="button"
             onClick={close}
             aria-label="Close offers"
-            className="w-11 h-11 shrink-0 flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer"
+            className="w-10 h-10 mr-1.5 shrink-0 flex items-center justify-center rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-ink hover:bg-[color:var(--sag-glass-strong)] transition-colors cursor-pointer"
             id="close-coupon-drawer"
           >
             <X className="w-[22px] h-[22px]" strokeWidth={1.5} />
@@ -87,19 +87,19 @@ export const CouponDrawer: React.FC = () => {
               return (
                 <div
                   key={cp.id}
-                  className={`border bg-surface p-3.5 ${isApplied ? 'border-ink ring-1 ring-inset ring-ink' : 'border-line'}`}
+                  className={`rounded-[18px] border bg-[color:var(--sag-glass)] p-3.5 ${isApplied ? 'border-brand ring-1 ring-inset ring-brand' : 'border-[color:var(--sag-edge)]'}`}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <p className="min-w-0 text-[13.5px] leading-5 sag-num">
                       <span className="font-semibold tracking-[0.04em] text-ink break-all">{cp.code}</span>
-                      <span className="ml-2 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-sale whitespace-nowrap">{discountLabel}</span>
+                      <span className="ml-2 inline-flex h-[22px] items-center rounded-full border border-brand px-2 align-middle text-[10px] font-semibold uppercase tracking-[0.06em] text-sale whitespace-nowrap">{discountLabel}</span>
                     </p>
                     {isApplied ? (
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink">
                           <Check className="w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" /> Applied
                         </span>
-                        <button type="button" onClick={removeCoupon} className="sag-link text-[12.5px] decoration-1 underline-offset-4">
+                        <button type="button" onClick={removeCoupon} className="sag-link text-[12.5px] font-semibold decoration-1 underline-offset-4">
                           Remove
                         </button>
                       </div>

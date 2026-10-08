@@ -9,9 +9,9 @@ import { KIDS_TOYS, departmentOf, isKidsToysListing } from '../utils/kids';
 import { assuranceFacts } from './Assurance';
 
 /**
- * The phone menu (Noir & Champagne): a white panel. The wordmark and close on top; a quiet tinted row to
- * sign in (or open the account); the main destinations as large serif rows with hairlines and their real
- * counts; the collections as square outline chips; then the help rows with thin champagne icons and one
+ * The phone menu (Midnight glass): a dark blurred glass sheet. The wordmark and close on top; a glass box to
+ * sign in (or open the account) with a gold pill; the main destinations as large serif rows with hairlines and
+ * their real counts; the collections as glass chips; then the help rows with thin gold icons and one
  * small line of the store's facts. Every number on it is counted from the products the store has right now.
  */
 export const MobileMenuDrawer: React.FC = () => {
@@ -55,31 +55,31 @@ export const MobileMenuDrawer: React.FC = () => {
   const helpIcon = 'w-5 h-5 shrink-0 text-sale';
   const helpRow = 'flex w-full min-h-[50px] items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer';
   const smallLink = 'inline-flex items-center min-h-10 text-[12.5px] text-ink-muted underline underline-offset-4 decoration-1 hover:text-ink cursor-pointer';
-  const topIcon = 'w-9 h-10 shrink-0 flex items-center justify-center text-ink hover:text-ink-muted cursor-pointer';
-  const chevron = <ChevronRight className="w-4 h-4 shrink-0 text-ink" strokeWidth={1.5} aria-hidden="true" />;
+  const topIcon = 'w-[38px] h-[38px] shrink-0 flex items-center justify-center rounded-full border border-line bg-white/10 text-ink hover:bg-white/15 cursor-pointer';
+  const chevron = <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />;
 
   return (
     <div className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-200 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isMobileMenuOpen}>
-      <div className="absolute inset-0 bg-ink/50" onClick={close} />
+      <div className="absolute inset-0 bg-[color:var(--sag-scrim)]" onClick={close} />
       <nav
         aria-label="Mobile menu"
-        className={`absolute left-0 top-0 h-full w-[88%] max-w-sm bg-surface flex flex-col overflow-hidden border-r border-line transition-transform duration-[240ms] ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`absolute left-0 top-0 h-full w-[88%] max-w-sm bg-surface flex flex-col overflow-hidden rounded-r-[26px] border-r border-line transition-transform duration-[240ms] ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         {/* Top line: the wordmark, search and close */}
-        <div className="shrink-0 flex h-[52px] items-center justify-between gap-2 border-b border-line pl-4 pr-2">
+        <div className="shrink-0 flex h-[58px] items-center justify-between gap-2 border-b border-line pl-4 pr-3">
           <button type="button" onClick={() => goPage('home')} aria-current={activePage === 'home' ? 'page' : undefined} className="sag-caps min-w-0 truncate font-display text-[17px] font-medium uppercase leading-6 tracking-[0.14em] text-ink cursor-pointer" aria-label="Suit Aura Girls home">
             Suit Aura Girls
           </button>
-          <span className="flex shrink-0">
+          <span className="flex shrink-0 gap-1.5">
             <button type="button" onClick={() => { close(); setIsSearchOpen(true); }} aria-label="Search styles" className={topIcon}><Search className="w-5 h-5" strokeWidth={1.5} /></button>
             <button type="button" onClick={close} aria-label="Close menu" className={topIcon}><X className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
           </span>
         </div>
 
         <div className="flex-1 overflow-y-auto overscroll-contain flex flex-col">
-          {/* Sign in (or the account), on the one quiet tint */}
-          <div className="flex items-center gap-3 bg-sunken px-4 py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink">
+          {/* Sign in (or the account), in a glass box with the gold pill */}
+          <div className="sag-glass sag-glass-strong mx-4 mt-4 flex items-center gap-3 p-3 shadow-none!">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-ink">
               <User className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" />
             </span>
             <p className="min-w-0 flex-1 text-[11.5px] leading-4 text-ink-muted">
@@ -92,10 +92,10 @@ export const MobileMenuDrawer: React.FC = () => {
           </div>
 
           {/* The rows enter one after another each time the menu opens */}
-          <div className={`px-4 ${isMobileMenuOpen ? 'sag-stagger' : ''}`}>
+          <div className={`mt-1.5 px-4 ${isMobileMenuOpen ? 'sag-stagger' : ''}`}>
             {mainRows.map((row) => (
               <button key={row.key} type="button" onClick={row.onClick} aria-current={row.current ? 'page' : undefined} className="flex w-full min-h-[54px] items-center gap-3 border-b border-line py-3 text-left cursor-pointer">
-                <span className={`min-w-0 flex-1 truncate font-display text-[19px] font-medium leading-7 text-ink ${row.current ? 'underline underline-offset-[6px] decoration-1' : ''}`}>{row.label}</span>
+                <span className={`min-w-0 flex-1 truncate font-display text-[19px] font-medium leading-7 ${row.current ? 'text-brand' : 'text-ink'}`}>{row.label}</span>
                 {Boolean(row.count) && <span className="sag-num shrink-0 text-[11.5px] text-ink-muted">{row.count}</span>}
                 {chevron}
               </button>
@@ -110,8 +110,8 @@ export const MobileMenuDrawer: React.FC = () => {
                   const current = activePage === 'shop' && selectedCategory === name;
                   return (
                     <button key={name} type="button" onClick={() => goCategory(name)} aria-current={current ? 'page' : undefined}
-                      className={`h-[34px] px-3 text-[12.5px] bg-surface text-ink inline-flex items-center gap-1.5 border cursor-pointer ${current ? 'border-ink font-semibold shadow-[inset_0_0_0_1px_var(--color-ink)]' : 'border-line'}`}>
-                      {name} <span className="sag-num font-normal text-ink-muted">{count}</span>
+                      className={`sag-chip h-[36px] px-3.5 text-[12.5px] inline-flex items-center gap-1.5 cursor-pointer ${current ? 'is-selected' : 'font-normal'}`}>
+                      {name} <span className={`sag-num font-normal ${current ? '' : 'text-ink-muted'}`}>{count}</span>
                     </button>
                   );
                 })}

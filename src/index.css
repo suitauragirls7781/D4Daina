@@ -162,7 +162,7 @@
   --sag-plum: #E0BB7C;
   --sag-plum-dark: var(--sag-brand-dark);
   --sag-gold: var(--sag-star);
-  --marketplace-surface: #FFFFFF;
+  --marketplace-surface: var(--sag-surface);
   --marketplace-muted: var(--sag-page);
   --marketplace-border: var(--sag-line);
   --marketplace-shadow: none;
@@ -220,13 +220,13 @@
   :is(h1, h2).font-sans { letter-spacing: 0; }
 
   ::selection {
-    background: #F6F4F0;
-    color: #161514;
+    background: rgba(224, 187, 124, 0.38);
+    color: #FFFFFF;
   }
 
   input, select, textarea {
-    color: #161514;
-    background-color: #FFFFFF;
+    color: var(--sag-ink);
+    background-color: rgba(255, 255, 255, 0.06);
     /* Sticky buy / pay bars stay on screen while typing; keep the focused field clear of them */
     scroll-margin-bottom: 96px;
   }
@@ -237,16 +237,16 @@
   }
 
   select option {
-    background-color: #FFFFFF;
-    color: #161514;
+    background-color: #1B1721;
+    color: #F6F1EA;
   }
 
   input[type="checkbox"], input[type="radio"] {
-    accent-color: #161514;
+    accent-color: #E0BB7C;
   }
 
   :focus-visible {
-    outline: 2px solid #161514;
+    outline: 2px solid #E0BB7C;
     outline-offset: 2px;
   }
 
@@ -255,10 +255,10 @@
   }
 }
 
-/* Focus on dark and teal surfaces is white */
+/* Focus on a gold fill is a light ring */
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark, footer#main-footer) :focus-visible,
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark):focus-visible {
-  outline-color: #FFFFFF;
+  outline-color: #F6F1EA;
 }
 
 /* Storefront copy is sentence case: older "uppercase tracking-[…]" labels and buttons are neutralised here.
@@ -275,17 +275,17 @@
   }
 }
 
-/* The admin panel keeps its own light working theme */
+/* The admin panel shares the dark theme */
 #admin-root-container {
   color: var(--sag-ink);
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 #admin-root-container input,
 #admin-root-container select,
 #admin-root-container textarea {
   color: var(--sag-ink);
-  background-color: #FFFFFF;
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 #admin-root-container input::placeholder,
@@ -336,21 +336,21 @@
 .gold-hairline { border-color: var(--sag-line); }
 .gold-gradient-text { color: var(--sag-ink); background: none; -webkit-text-fill-color: currentColor; }
 
-/* Teal, ink and dark surfaces (primary buttons, selected chips, banners) always carry white text,
+/* Gold and cream fills (primary buttons, selected chips, the current tab) always carry dark text,
    including buttons that never declared a text colour and children that still say text-ink. */
-#app-main-content :is([class~="bg-brand"], [class~="bg-brand-dark"], [class~="bg-ink"], [class~="bg-dark"]),
+#app-main-content :is([class~="bg-brand"], [class~="bg-brand-dark"], [class~="bg-ink"]),
 #app-main-content :is([class~="hover:bg-brand-dark"], [class~="hover:bg-brand"], [class~="hover:bg-ink"]):hover {
-  color: #FFFFFF;
+  color: var(--sag-on-gold);
 }
 
 #app-main-content :is(button, a, span, label)[class~="bg-brand"] :is([class~="text-ink"], [class~="text-ink-muted"], [class~="text-ink-faint"]),
 #app-main-content :is(button, a, span, label)[class~="bg-ink"] :is([class~="text-ink"], [class~="text-ink-muted"], [class~="text-ink-faint"]),
 #app-main-content :is(button, a):is([class~="hover:bg-brand-dark"], [class~="hover:bg-brand"], [class~="hover:bg-ink"]):hover :is([class~="text-ink"], [class~="text-ink-muted"], [class~="text-ink-faint"]) {
-  color: #FFFFFF !important;
+  color: var(--sag-on-gold) !important;
 }
 
 #app-main-content :is(button, a, span, label, div):is([class~="bg-brand"], [class~="bg-brand-dark"], [class~="bg-ink"]):is([class~="text-ink"], [class~="text-ink-muted"], [class~="text-ink-faint"]) {
-  color: #FFFFFF !important;
+  color: var(--sag-on-gold) !important;
 }
 
 /* Admin: dark blocks keep light text */

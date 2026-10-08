@@ -34,7 +34,7 @@ const reviewPlace = (location?: string) => {
 
 /**
  * Approved customer reviews. Hidden entirely until there is at least one.
- * One review at a time as a centred serif quote on the quiet tint (verified purchases first, the others one
+ * One review at a time as a centred serif quote on a glass panel (verified purchases first, the others one
  * swipe or arrow away), then the real average and count. The same at every width.
  */
 export const CustomerReviews: React.FC = () => {
@@ -83,11 +83,12 @@ export const CustomerReviews: React.FC = () => {
       setShown(nearest);
     });
   };
-  const arrow = 'flex h-9 w-9 items-center justify-center text-ink cursor-pointer transition-opacity hover:opacity-60 disabled:opacity-25 disabled:cursor-not-allowed';
+  const arrow = 'flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white/[0.08] text-ink cursor-pointer transition-colors hover:bg-white/[0.16] disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
-    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className={`${HOME_SECTION} bg-sunken text-center`}>
-      <div className="mx-auto max-w-2xl px-4 sm:px-6">
+    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className={`${HOME_SECTION} text-center`}>
+      <div className="mx-auto max-w-3xl px-3 sm:px-6">
+       <div className="sag-glass rounded-[26px]! px-4 py-6 sm:px-8 lg:px-12 lg:py-10">
         <h2 id="customer-reviews-title" className="font-sans text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale">
           <span className="sr-only">Customer reviews: </span>Real customers
         </h2>
@@ -112,7 +113,7 @@ export const CustomerReviews: React.FC = () => {
                   {place ? `, ${place}` : ''}
                   {review.verifiedPurchase === true ? ' · Verified purchase' : ''}
                   {product ? (
-                    <button type="button" onClick={() => navigateToProduct(product.id)} className="mx-auto mt-0.5 block min-h-6 cursor-pointer underline decoration-1 underline-offset-4 line-clamp-1">{product.name}</button>
+                    <button type="button" onClick={() => navigateToProduct(product.id)} className="mx-auto mt-0.5 block min-h-6 cursor-pointer text-sale hover:text-brand-dark transition-colors line-clamp-1">{product.name}</button>
                   ) : review.productName ? (
                     <span className="mt-0.5 block line-clamp-1">{review.productName}</span>
                   ) : null}
@@ -123,7 +124,7 @@ export const CustomerReviews: React.FC = () => {
         </div>
 
         {quotes.length > 1 && (
-          <div className="mt-2 flex items-center justify-center gap-2">
+          <div className="mt-3 flex items-center justify-center gap-3">
             <button type="button" onClick={() => step(at - 1)} disabled={at === 0} aria-label="Previous review" className={arrow}>
               <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={1.25} />
             </button>
@@ -143,11 +144,12 @@ export const CustomerReviews: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateToProduct(linked.id)}
-            className="mt-2 inline-flex min-h-9 cursor-pointer items-center text-[12.5px] font-semibold text-ink underline decoration-1 underline-offset-4"
+            className="mt-2 inline-flex min-h-9 cursor-pointer items-center text-[13px] font-semibold text-sale hover:text-brand-dark transition-colors"
           >
             Read all reviews
           </button>
         )}
+       </div>
       </div>
     </section>
   );

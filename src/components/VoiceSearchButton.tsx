@@ -31,8 +31,8 @@ export const VoiceSearchButton: React.FC<{ onResult: (text: string) => void; cla
   return (
     <button type="button" onClick={start} aria-label={listening ? 'Stop voice search' : 'Search by voice'} aria-pressed={listening}
       title={listening ? 'Listening… tap to stop' : undefined}
-      className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-ink text-white' : 'text-ink-muted hover:bg-sunken hover:text-ink'} ${className}`}>
-      {/* Listening is shown by the ink fill and a square "stop" mark; nothing pulses */}
+      className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors ${listening ? 'bg-brand text-[color:var(--sag-on-gold)]' : 'text-ink-muted hover:bg-sunken hover:text-ink'} ${className}`}>
+      {/* Listening is shown by the gold fill and a square "stop" mark; nothing pulses */}
       {listening
         ? <Square className="w-3.5 h-3.5 fill-current" strokeWidth={1.75} aria-hidden="true" />
         : <Mic className="w-[18px] h-[18px]" strokeWidth={1.75} aria-hidden="true" />}

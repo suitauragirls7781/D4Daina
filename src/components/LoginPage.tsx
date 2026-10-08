@@ -154,7 +154,7 @@ export const LoginPage: React.FC = () => {
         if (cancelled || !el) return;
         el.innerHTML = '';
         g.renderButton(el, {
-          type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular', text: 'continue_with', logo_alignment: 'center',
+          type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center',
           width: Math.min(400, Math.max(220, el.clientWidth || 320)),
         });
       })
@@ -187,9 +187,9 @@ export const LoginPage: React.FC = () => {
 
   if (user) {
     return (
-      <div className="min-h-[70vh] bg-page px-4 py-12 flex items-start sm:items-center justify-center">
-        <div className="w-full max-w-sm text-center">
-          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full border border-ink text-ink">
+      <div className="min-h-[70vh] px-4 py-12 flex items-start sm:items-center justify-center">
+        <div className="w-full max-w-sm text-center sag-glass px-5 py-8">
+          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center !rounded-full sag-glass text-sale">
             <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
           </span>
           <h1 className="mt-4 font-display text-[23px] leading-7 font-medium text-ink">You are signed in</h1>
@@ -206,14 +206,14 @@ export const LoginPage: React.FC = () => {
   const note = 'text-[11.5px] leading-4 text-ink-muted';
 
   return (
-    <div className="min-h-[80vh] bg-page px-4 pt-1 pb-12 sm:py-12 flex items-start justify-center">
+    <div className="min-h-[80vh] px-4 pt-1 pb-12 sm:py-12 flex items-start justify-center">
       <div className="w-full max-w-[400px]">
         <button type="button" onClick={() => setActivePage('home')} className="sag-link gap-1.5 text-[12.5px]">
           <ArrowLeft className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
           <span>Back to shop</span>
         </button>
 
-        <div className="mt-6 sm:mt-4">
+        <div className="mt-5 sm:mt-4 sag-glass px-5 py-7 sm:px-7 sm:py-8">
           <div className="text-center">
             <img src="/suit-aura-mark-132.webp" alt="" width="66" height="66" className="mx-auto h-[66px] w-[66px] rounded-full border border-line bg-surface object-cover" />
             <h1 className="mt-[18px] font-display text-[23px] leading-7 font-medium text-ink lg:text-[28px] lg:leading-9">{title}</h1>
@@ -233,7 +233,7 @@ export const LoginPage: React.FC = () => {
                     aria-selected={mode === tab}
                     onClick={() => switchMode(tab)}
                     className={`-mb-px h-11 border-b text-[11.5px] uppercase tracking-[0.1em] transition-colors cursor-pointer ${
-                      mode === tab ? 'border-ink font-semibold text-ink' : 'border-transparent text-ink-muted hover:text-ink'
+                      mode === tab ? 'border-brand font-semibold text-sale' : 'border-transparent text-ink-muted hover:text-ink'
                     }`}
                   >
                     {tab === 'login' ? 'Sign in' : 'New account'}
@@ -271,9 +271,9 @@ export const LoginPage: React.FC = () => {
                     </div>
                     <div>
                       <label htmlFor="signup-phone" className={label}>Mobile number</label>
-                      <div className="flex h-[52px] max-sm:h-[46px] border border-line bg-surface overflow-hidden has-[:focus]:border-ink has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink">
+                      <div className="flex h-[52px] max-sm:h-[46px] !rounded-[16px] border border-line bg-surface overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
                         <span className="flex items-center px-3.5 border-r border-line text-base text-ink-muted" aria-hidden="true">+91</span>
-                        <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-surface text-base text-ink placeholder:text-ink-faint focus:outline-none" />
+                        <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-transparent text-base text-ink placeholder:text-ink-faint focus:outline-none" />
                       </div>
                     </div>
                   </>
@@ -292,7 +292,7 @@ export const LoginPage: React.FC = () => {
               </form>
             ) : (
               <form onSubmit={handleVerify} className="space-y-5">
-                <div className="flex items-center justify-between gap-3 border border-line bg-surface px-3.5 py-2">
+                <div className="flex items-center justify-between gap-3 rounded-[16px] border border-line bg-surface px-3.5 py-2.5">
                   <div className="min-w-0">
                     <p className={note}>Code sent to</p>
                     <p className="text-sm leading-5 font-medium text-ink break-all">{email}</p>
@@ -317,8 +317,8 @@ export const LoginPage: React.FC = () => {
                         onKeyDown={(e) => {
                           if (e.key === 'Backspace' && !digit && idx > 0) document.getElementById(`otp-input-${idx - 1}`)?.focus();
                         }}
-                        className={`sag-num w-full min-w-0 h-14 px-0 text-center text-[22px] leading-7 font-medium text-ink bg-surface border transition-colors focus:border-ink ${
-                          digit ? 'border-ink' : 'border-line'
+                        className={`sag-num w-full min-w-0 h-14 px-0 text-center text-[22px] leading-7 font-medium text-ink bg-surface border rounded-[14px] transition-colors focus:border-brand ${
+                          digit ? 'border-brand' : 'border-line'
                         }`}
                       />
                     ))}

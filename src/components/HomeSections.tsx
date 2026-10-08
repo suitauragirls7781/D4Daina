@@ -14,18 +14,18 @@ import { createSupportWhatsAppUrl } from '../utils/storeContact';
 
 /** Shared widths so every home section lines up on the same gutters. */
 export const HOME_WRAP = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
-/** Section rhythm: white space and one hairline on top (26px on phones, 48px on desktop). No filled blocks. */
-export const HOME_SECTION = 'w-full -mt-px border-t border-line py-[26px] lg:py-12';
+/** Section rhythm: space only; sections sit straight on the night backdrop (no hairline, no filled block). */
+export const HOME_SECTION = 'w-full py-[18px] lg:py-10';
 /** One card in a horizontal product rail: two and a bit cards show on a phone, so the rail reads as swipeable. */
 export const HOME_RAIL_ITEM = 'shrink-0 w-[150px] sm:w-[200px] lg:w-[240px]';
 /** The rail itself: a 12px gap on phones to match the two-column product grids. */
 export const HOME_RAIL = 'sag-scroll-x flex gap-3 lg:gap-6 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1';
 /** Product grid: two columns on phones (12px between columns, 18px between rows), four from tablet width up. */
 export const HOME_GRID = 'grid grid-cols-2 gap-x-3 gap-y-[18px] md:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:gap-x-6 lg:gap-y-10';
-/** Eyebrow label: small spaced capitals in champagne. */
+/** Eyebrow label: small spaced capitals in gold. */
 export const HOME_EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
-/** Quiet text link with a thin underline. */
-const HOME_LINK = 'inline-flex min-h-9 items-center text-[12.5px] leading-5 font-semibold text-ink underline underline-offset-4 decoration-1 cursor-pointer hover:text-ink-muted transition-colors';
+/** Quiet gold text link ("View all"). */
+const HOME_LINK = 'inline-flex min-h-9 items-center text-[13px] leading-5 font-semibold text-sale cursor-pointer hover:text-brand-dark transition-colors';
 
 interface HomeSectionHeaderProps {
   title: string;
@@ -37,12 +37,12 @@ interface HomeSectionHeaderProps {
   className?: string;
 }
 
-/** Home section title: serif headline on the left, one thin-underlined "View all" link on the right. */
+/** Home section title: serif headline on the left, one gold "View all" link on the right. */
 export const HomeSectionHeader: React.FC<HomeSectionHeaderProps> = ({ title, text, eyebrow, titleId, action, className = 'mb-4 lg:mb-7' }) => (
   <div className={`flex items-end justify-between gap-4 ${className}`}>
     <div className="min-w-0">
       {eyebrow && <p className={`${HOME_EYEBROW} mb-1.5`}>{eyebrow}</p>}
-      <h2 id={titleId} className="font-display text-[19px] leading-6 lg:text-[26px] lg:leading-8 text-ink">{title}</h2>
+      <h2 id={titleId} className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">{title}</h2>
       {text && <p className="mt-1 text-[13px] leading-5 text-ink-muted max-w-xl">{text}</p>}
     </div>
     {action && (
@@ -60,9 +60,9 @@ export const HomeViewAllButton: React.FC<{ onClick: () => void; label?: string }
   </div>
 );
 
-/** The four store facts, straight under the hero, between two hairlines. The wording lives in Assurance.tsx. */
+/** The four store facts, straight under the hero, as four small glass tiles. The wording lives in Assurance.tsx. */
 export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assurance' }) => (
-  <section id={id} aria-label="Shopping with us" className="w-full -mt-px border-y border-line py-5 lg:py-7">
+  <section id={id} aria-label="Shopping with us" className="w-full py-1 lg:py-3">
     <div className={HOME_WRAP}>
       <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />
     </div>
@@ -71,7 +71,7 @@ export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assura
 
 /**
  * Featured collection: admin "featured" / bestseller picks, otherwise the latest styles.
- * A white section: a grid of product cards (two columns on phones) and one outline "View all styles" under it.
+ * A grid of product cards on the backdrop (two columns on phones) and one glass "View all styles" pill under it.
  */
 export const FeaturedCollection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
@@ -99,7 +99,7 @@ export const FeaturedCollection: React.FC = () => {
   );
 };
 
-/** New arrivals: a white section with a swipe row of product cards, at every width. */
+/** New arrivals: a swipe row of product cards on the backdrop, at every width. */
 export const NewArrivalsRail: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
   const items = useMemo(() => {
@@ -154,7 +154,7 @@ export const KidsCorner: React.FC = () => {
                 const active = g.key === current.key;
                 return (
                   <button key={g.key} type="button" role="tab" aria-selected={active} data-selected={active} onClick={() => setTab(i)}
-                    className="sag-chip shrink-0 h-10 border border-line text-[13px] data-[selected=true]:border-ink">
+                    className="sag-chip shrink-0 h-10 px-4 text-[13px]">
                     {g.label}&nbsp;<span className="sag-num font-normal">({g.items.length})</span>
                   </button>
                 );
@@ -203,7 +203,7 @@ export const OfferBanner: React.FC = () => {
   return (
     <section id="offer-banner" aria-labelledby="offer-banner-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
-        <div className="border border-line bg-surface p-4 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
+        <div className="sag-glass rounded-[26px]! p-4 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
           <div className="min-w-0 max-w-2xl">
             <p className={HOME_EYEBROW}>Offers live now</p>
             <h2 id="offer-banner-title" className="mt-2 font-display text-[21px] leading-7 lg:text-[30px] lg:leading-9 text-ink break-words">{headline}</h2>
@@ -247,12 +247,12 @@ export const AskAssistantRow: React.FC = () => {
   const { features } = useDiscovery();
   if (!features.assistant) return null;
   return (
-    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full -mt-px border-t border-line py-[26px] lg:py-10 min-[1440px]:hidden">
+    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full py-[18px] lg:py-8 min-[1440px]:hidden">
       <div className={HOME_WRAP}>
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('sag-open-assistant'))}
-          className="w-full min-h-[64px] flex items-center gap-3 border border-line bg-surface px-4 py-3 text-left hover:bg-sunken transition-colors cursor-pointer"
+          className="sag-glass w-full min-h-[64px] flex items-center gap-3 px-4 py-3 text-left transition-opacity hover:opacity-90 cursor-pointer"
         >
           <MessageCircleQuestion className="w-[21px] h-[21px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
           <span className="min-w-0 flex-1">
@@ -278,14 +278,14 @@ export const WhyShop: React.FC = () => {
     <section id="why-shop-with-us" aria-labelledby="why-shop-title" className={HOME_SECTION}>
       <div className={`${HOME_WRAP} lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center`}>
         <div className="lg:col-span-5 mb-4 lg:mb-0">
-          <h2 id="why-shop-title" className="font-display text-[19px] leading-6 lg:text-[26px] lg:leading-8 text-ink">Why shop with us</h2>
+          <h2 id="why-shop-title" className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">Why shop with us</h2>
           <p className="hidden lg:block mt-2 text-sm leading-6 text-ink-muted max-w-xl">Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help.</p>
         </div>
         <div className="lg:col-span-7">
-          <div className="hidden lg:block">
-            <Assurance variant="full" whatsappMessage="Hi Suit Aura Girls, I need some help." />
+          <div className="sag-glass hidden px-5 py-1 lg:block">
+            <Assurance variant="full" className="border-y-0!" whatsappMessage="Hi Suit Aura Girls, I need some help." />
           </div>
-          <div className="lg:hidden flex flex-col gap-5">
+          <div className="lg:hidden flex flex-col gap-3">
             {!factsShownAbove && <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />}
             <HowOrderWorks />
           </div>
@@ -319,10 +319,10 @@ export const NewsletterSignup: React.FC = () => {
   return (
     <section id="newsletter-section" aria-labelledby="newsletter-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
-        {/* A white section: the title, one muted line, an outline WhatsApp button (phones and tablets), then the email field */}
-        <div className="lg:flex lg:items-center lg:justify-between lg:gap-10">
+        {/* One glass panel: the title, one muted line, a glass WhatsApp pill (phones and tablets), then the email field */}
+        <div className="sag-glass rounded-[26px]! p-4 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
           <div className="lg:max-w-md">
-            <h2 id="newsletter-title" className="font-display text-[19px] leading-6 lg:text-[26px] lg:leading-8 text-ink">
+            <h2 id="newsletter-title" className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">
               <span className="lg:hidden">Questions before you buy?</span>
               <span className="hidden lg:inline">Hear about new styles first</span>
             </h2>
@@ -338,11 +338,11 @@ export const NewsletterSignup: React.FC = () => {
             </a>
           </div>
           {status === 'done' ? (
-            <p role="status" className="mt-3 lg:mt-0 flex items-center gap-2 border border-line bg-sunken px-4 py-3 text-[13px] leading-5 text-ink">
+            <p role="status" className="mt-3 lg:mt-0 flex items-center gap-2 border border-line bg-white/[0.08] px-4 py-3 text-[13px] leading-5 text-ink">
               <CheckCircle2 className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> You are subscribed. Thank you!
             </p>
           ) : (
-            <form onSubmit={submit} className="mt-2.5 lg:mt-0 flex gap-2 lg:flex-1 lg:max-w-lg">
+            <form onSubmit={submit} className="mt-3 lg:mt-0 flex gap-2 lg:flex-1 lg:max-w-lg">
               <label htmlFor="newsletter-email" className="sr-only">Email address</label>
               <input
                 id="newsletter-email"
@@ -353,7 +353,7 @@ export const NewsletterSignup: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
-                className="sag-input flex-1 w-auto min-w-0 border border-line"
+                className="sag-input flex-1 w-auto min-w-0"
               />
               <button
                 type="submit"

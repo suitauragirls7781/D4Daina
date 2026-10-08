@@ -10,8 +10,8 @@ import { PackageIcon } from './StoreIcons';
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
 const label = 'text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em]';
-const quietLink = 'inline-flex items-center gap-1.5 min-h-11 text-[12.5px] font-medium text-ink underline decoration-1 underline-offset-4 hover:text-ink-muted cursor-pointer';
-const grid = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-[12px] gap-y-[18px] sm:gap-x-5 sm:gap-y-9';
+const quietLink = 'inline-flex items-center gap-1.5 min-h-11 text-[12.5px] font-medium text-sale underline decoration-1 underline-offset-4 hover:text-ink cursor-pointer';
+const grid = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5';
 
 /** "Move to bag" under a wishlist card; styles with several sizes show the size chips first. */
 const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: ProductSize) => void }> = ({ product, onMove }) => {
@@ -20,7 +20,7 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
   const single = defaultSizeFor(product);
   if (!product.inStock) {
     return (
-      <p className="h-[38px] border border-line text-[11.5px] font-medium uppercase tracking-[0.12em] text-ink-muted flex items-center justify-center">
+      <p className="h-[38px] px-2 rounded-full border border-line text-[11.5px] font-medium uppercase tracking-[0.12em] text-ink-muted flex items-center justify-center">
         Sold out
       </p>
     );
@@ -30,17 +30,17 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
       <button
         type="button"
         onClick={() => (single ? onMove(product, single) : setChoosing(true))}
-        className="sag-btn-outline w-full h-[38px] px-2"
+        className="sag-btn-primary w-full h-[38px] px-2"
       >
         Move to bag
       </button>
     );
   }
   return (
-    <div className="border border-line bg-surface p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
+    <div className="rounded-[16px] border border-line bg-sunken p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
       <div className="flex items-center justify-between pl-1">
         <span className={`${label} text-ink-muted`}>Choose a size</span>
-        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+        <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
           <X className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
@@ -51,7 +51,7 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
             type="button"
             onClick={() => onMove(product, size)}
             aria-label={`Move to bag in size ${size}`}
-            className="sag-chip min-w-0 h-10 px-1 border border-line text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis hover:border-ink"
+            className="sag-chip min-w-0 h-10 px-1 text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis"
           >
             {size}
           </button>
@@ -68,12 +68,12 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
   const mrp = Math.max(product.price, Number(product.originalPrice) || product.price);
   const off = mrp > product.price ? Math.round((1 - product.price / mrp) * 100) : 0;
   return (
-    // No card chrome at any width: the photo, the name, the price and a small outline "Move to bag"
-    <article className="relative flex h-full min-w-0 flex-col">
+    // A glass card at every width: the photo, the name, the price and a gold "Move to bag" pill
+    <article className="sag-glass relative flex h-full min-w-0 flex-col p-2 !rounded-[24px]">
       <button
         type="button"
         onClick={() => navigateToProduct(product.id)}
-        className="block aspect-[4/5] w-full shrink-0 bg-sunken overflow-hidden cursor-pointer"
+        className="block aspect-[4/5] w-full shrink-0 rounded-[18px] bg-sunken overflow-hidden cursor-pointer"
         aria-label={`View ${product.name}`}
       >
         {image && (
@@ -87,7 +87,7 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
             loading="lazy"
             decoding="async"
             onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-            className={`w-full h-full object-cover object-top ${product.inStock ? '' : 'opacity-60 grayscale-[35%]'}`}
+            className={`w-full h-full rounded-none object-cover object-top ${product.inStock ? '' : 'opacity-60 grayscale-[35%]'}`}
           />
         )}
       </button>
@@ -96,13 +96,13 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
         onClick={() => toggleWishlist(product)}
         aria-label={`Remove ${product.name} from wishlist`}
         title="Remove from wishlist"
-        className="absolute top-px right-px w-11 h-11 flex items-center justify-center cursor-pointer"
+        className="absolute top-[10px] right-[10px] w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
       >
-        <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-white/90 text-ink">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] bg-[rgba(255,255,255,0.74)] text-[color:var(--sag-on-gold)] backdrop-blur-md">
           <Heart className="w-[15px] h-[15px] fill-current" strokeWidth={1.5} aria-hidden="true" />
         </span>
       </button>
-      <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-[9px]">
+      <div className="flex min-w-0 flex-1 flex-col gap-[5px] px-1 pt-[9px] pb-1">
         {!product.inStock && <span className={`${label} text-ink-muted`}>Sold out</span>}
         <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-[13px] leading-[1.35] font-normal text-ink line-clamp-2 hover:underline underline-offset-2 cursor-pointer">
           {product.name}
@@ -161,7 +161,7 @@ export const WishlistPage: React.FC = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div id="wishlist-empty-state" className="py-12 sm:py-20 px-4 bg-surface">
+      <div id="wishlist-empty-state" className="py-12 sm:py-20 px-4">
         <div className="max-w-md mx-auto text-center">
           <span className="mx-auto flex w-fit text-ink-muted" aria-hidden="true">
             <Heart className="w-7 h-7" strokeWidth={1.25} />
@@ -179,7 +179,7 @@ export const WishlistPage: React.FC = () => {
           {collections.length > 0 && (
             <div className="mt-10 text-left">
               <p className={`${label} mb-1 text-sale`}>Browse collections</p>
-              <div className="border-t border-line">
+              <div className="sag-glass px-4">
                 {collections.map(([name, count]) => (
                   <button
                     key={name}
@@ -200,7 +200,7 @@ export const WishlistPage: React.FC = () => {
   }
 
   return (
-    <div id="wishlist-page-container" className="pt-4 pb-14 sm:pt-6 lg:pt-8 lg:pb-20 bg-surface">
+    <div id="wishlist-page-container" className="pt-4 pb-14 sm:pt-6 lg:pt-8 lg:pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
         {/* Breadcrumbs (tablet and desktop) */}
@@ -242,12 +242,12 @@ export const WishlistPage: React.FC = () => {
             const live = allProducts.find((p) => String(p.id) === String(saved.id));
             if (live) return <WishlistCard key={saved.id} product={live} />;
             return (
-              <article key={saved.id} className="flex h-full min-w-0 flex-col">
-                <div className="aspect-[4/5] w-full shrink-0 bg-sunken flex flex-col items-center justify-center gap-2 px-3 text-center text-ink-muted">
+              <article key={saved.id} className="sag-glass flex h-full min-w-0 flex-col p-2 !rounded-[24px]">
+                <div className="aspect-[4/5] w-full shrink-0 rounded-[18px] bg-sunken flex flex-col items-center justify-center gap-2 px-3 text-center text-ink-muted">
                   <PackageIcon className="w-6 h-6" mono live={false} />
                   <p className="text-[12.5px] leading-4">No longer available</p>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-[9px]">
+                <div className="flex min-w-0 flex-1 flex-col gap-[5px] px-1 pt-[9px] pb-1">
                   <p className="text-[13px] leading-[1.35] text-ink line-clamp-2">{saved.name}</p>
                   <p className="text-[12.5px] leading-[17px] text-ink-muted">This style has left our collection.</p>
                   <div className="mt-auto pt-1">

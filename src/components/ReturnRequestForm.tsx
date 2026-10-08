@@ -280,11 +280,11 @@ export const ReturnRequestForm: React.FC<{
 
   const legendClass = 'flex items-baseline gap-2 mb-3 text-sm leading-5 font-semibold text-ink';
   const stepDot = (n: number) => <span className="sag-num w-[18px] shrink-0 text-[11.5px] leading-5 font-normal text-ink-muted" aria-hidden="true">{n}</span>;
-  const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink';
+  const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand';
   const noteText = 'text-[11.5px] leading-4 text-ink-muted';
 
   return createPortal(
-    <div className="fixed inset-0 z-[80] bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
+    <div className="fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
       <form
         ref={panelRef}
         role="dialog"
@@ -293,9 +293,9 @@ export const ReturnRequestForm: React.FC<{
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
         noValidate
-        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col border border-line animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col border border-line !rounded-t-[22px] !rounded-b-none sm:!rounded-[22px] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2 h-px w-9 bg-control" aria-hidden="true" />
+        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
         <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line">
           <div className="min-w-0 pt-2">
             <h2 id="return-form-title" className="font-display text-[19px] leading-6 font-medium text-ink">Return or exchange</h2>
@@ -303,7 +303,7 @@ export const ReturnRequestForm: React.FC<{
               #{order.orderNumber}{windowEnds ? ` · request by ${windowEnds}` : ''}
             </p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
+          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
             <X className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
@@ -337,7 +337,7 @@ export const ReturnRequestForm: React.FC<{
               ))}
             </div>
             {clearanceLines.length > 0 && (
-              <p className="mt-2.5 border border-sale-line bg-surface px-3.5 py-2.5 text-[13px] leading-[18px] text-ink">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
+              <p className="mt-2.5 rounded-[14px] border border-sale-line bg-surface px-3.5 py-2.5 text-[13px] leading-[18px] text-ink">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
             )}
           </fieldset>
 
@@ -355,7 +355,7 @@ export const ReturnRequestForm: React.FC<{
                 const sizes = sizesFor(item.product?.id);
                 const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                 return (
-                  <li key={item.id || index} data-selected={checked} className={`sag-card px-3 py-3 ${settled ? 'bg-page' : ''}`}>
+                  <li key={item.id || index} data-selected={checked} className={`sag-card px-3 py-3 ${settled ? 'opacity-70' : ''}`}>
                     <label className={`flex items-center gap-3 min-h-11 ${settled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
@@ -365,7 +365,7 @@ export const ReturnRequestForm: React.FC<{
                         className="w-[22px] h-[22px] shrink-0 accent-brand disabled:opacity-40"
                         aria-label={`Include ${item.product?.name || 'item'}`}
                       />
-                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden bg-sunken ${settled ? 'opacity-50' : ''}`}>
+                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken ${settled ? 'opacity-50' : ''}`}>
                         {item.product?.images?.[0] && <img src={getCleanImageUrl(item.product.images[0], 120)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <span className="min-w-0 flex-1">
@@ -374,14 +374,14 @@ export const ReturnRequestForm: React.FC<{
                           {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {bought}
                           {!settled && left < bought ? ` · ${left} can still be returned or exchanged` : ''}
                         </span>
-                        {settled && <span className="sag-badge mt-1 border bg-surface font-semibold border-line text-ink-muted">Already returned or exchanged</span>}
-                        {!settled && clearance && <span className="sag-badge mt-1 border bg-surface font-semibold border-sale-line text-sale">Clearance · exchange only</span>}
+                        {settled && <span className="sag-badge !rounded-full mt-1 border bg-surface font-semibold border-line text-ink-muted">Already returned or exchanged</span>}
+                        {!settled && clearance && <span className="sag-badge !rounded-full mt-1 border bg-surface font-semibold border-sale-line text-sale">Clearance · exchange only</span>}
                       </span>
                     </label>
                     {checked && (left > 1 || kind === 'exchange') && (
                       <div className="mt-3 pt-3 border-t border-line flex flex-wrap items-center gap-3">
                         {left > 1 && (
-                          <div className="inline-flex items-center border border-line bg-surface" role="group" aria-label="Quantity">
+                          <div className="inline-flex items-center rounded-full border border-line bg-surface" role="group" aria-label="Quantity">
                             <button type="button" onClick={() => setLine(index, { qty: Math.max(1, qty - 1) })} disabled={qty <= 1} aria-label="One less" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
                               <Minus className="w-4 h-4" strokeWidth={1.5} />
                             </button>
@@ -397,7 +397,7 @@ export const ReturnRequestForm: React.FC<{
                             <select
                               value={line?.exchangeSize || ''}
                               onChange={(e) => setLine(index, { exchangeSize: e.target.value })}
-                              className="h-11 max-w-full border border-line bg-surface px-3 text-base font-normal normal-case tracking-normal text-ink cursor-pointer focus:border-ink"
+                              className="h-11 max-w-full rounded-[14px] border border-line bg-surface px-3 text-base font-normal normal-case tracking-normal text-ink cursor-pointer focus:border-brand"
                             >
                               <option value="">{clearance ? 'Choose a size' : 'Choose (or add a note)'}</option>
                               {sizes.map((size) => <option key={size} value={size}>{size}{size === item.selectedSize ? ' (same size)' : ''}</option>)}
@@ -473,12 +473,12 @@ export const ReturnRequestForm: React.FC<{
             <div className="grid grid-cols-4 gap-2">
               {photos.map((photo) => (
                 <div key={photo.id} className="min-w-0">
-                  <div className="aspect-[4/5] overflow-hidden bg-sunken flex items-center justify-center">
+                  <div className="aspect-[4/5] overflow-hidden rounded-[12px] bg-sunken flex items-center justify-center">
                     {photo.preview ? <img src={photo.preview} alt="Your photo" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />}
                   </div>
                   {photo.status === 'uploading' && (
-                    <div className="mt-1.5 h-[3px] bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
-                      <div className="h-full bg-ink transition-[width]" style={{ width: `${Math.max(6, photo.progress)}%` }} />
+                    <div className="mt-1.5 h-[3px] rounded-full bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
+                      <div className="h-full rounded-full bg-brand transition-[width]" style={{ width: `${Math.max(6, photo.progress)}%` }} />
                     </div>
                   )}
                   {photo.status === 'done' && <p className="mt-1 text-[11px] leading-[14px] text-ink-muted">Uploaded</p>}
@@ -492,7 +492,7 @@ export const ReturnRequestForm: React.FC<{
                 <button
                   type="button"
                   onClick={() => fileInput.current?.click()}
-                  className="aspect-[4/5] border border-dashed border-control bg-surface hover:bg-sunken flex flex-col items-center justify-center gap-1 text-ink transition-colors cursor-pointer"
+                  className="aspect-[4/5] rounded-[14px] border border-dashed border-control bg-surface hover:bg-sunken flex flex-col items-center justify-center gap-1 text-ink transition-colors cursor-pointer"
                 >
                   <ImagePlus className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
                   <span className="text-[11px] leading-[14px]">Add photo</span>
@@ -503,14 +503,14 @@ export const ReturnRequestForm: React.FC<{
             <p className={`mt-2 ${noteText}`}>Up to {MAX_PHOTOS} clear photos of the piece, the problem and the tag. They are resized before upload.</p>
           </div>
 
-          <div className="bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
+          <div className="rounded-[14px] bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
             Pieces must be unused and unwashed, with their original tags. Our team reviews every request and emails you the next steps.
             {kind === 'return' && ' Refunds go to your original payment method.'}{' '}
             {onPolicy && <button type="button" onClick={onPolicy} className="text-ink underline decoration-1 underline-offset-4 cursor-pointer">Return policy</button>}
           </div>
 
           {error && (
-            <p role="alert" className="border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
+            <p role="alert" className="rounded-[14px] border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
               <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" /> {error}
             </p>
           )}

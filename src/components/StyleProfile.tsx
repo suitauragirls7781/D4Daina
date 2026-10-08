@@ -162,7 +162,7 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
 };
 
 // Square outline chips; the selected one carries an ink border and a small tick (never a fill)
-const chipClass = 'sag-chip h-[38px] min-w-[44px] gap-1.5 px-3 border border-line bg-surface text-[13px] font-normal text-ink hover:bg-surface hover:border-ink aria-pressed:bg-surface aria-pressed:text-ink aria-pressed:border-ink aria-pressed:font-medium aria-pressed:shadow-[inset_0_0_0_1px_var(--color-ink)]';
+const chipClass = 'sag-chip h-[38px] min-w-[44px] gap-1.5 px-3.5 text-[13px] font-normal aria-pressed:font-semibold';
 const legendClass = 'text-[11px] leading-4 font-semibold uppercase tracking-[0.14em] text-ink';
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
@@ -183,7 +183,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'sag-input sag-num h-[46px] border border-line focus:border-ink';
+const inputClass = 'sag-input sag-num h-[46px]';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -275,7 +275,7 @@ export const StyleProfile: React.FC = () => {
 
   if (failed) {
     return (
-      <div className="border-y border-line px-2 py-8 text-center space-y-3" role="alert">
+      <div className="sag-glass px-4 py-8 text-center space-y-3" role="alert">
         <p className="text-sm leading-5 text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
         <button type="button" onClick={retry} className="sag-btn-outline h-11 px-5">Try again</button>
       </div>
@@ -377,7 +377,7 @@ export const StyleProfile: React.FC = () => {
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
           <h3 className="font-display text-[19px] leading-6 text-ink">Matching styles</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-[12px] gap-y-[18px] sm:gap-x-3 sm:gap-y-6 lg:gap-x-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>
