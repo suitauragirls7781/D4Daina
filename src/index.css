@@ -1030,3 +1030,6 @@ select.sag-input option, select option { background: #1B1721; color: #F6F1EA; }
   .sag-glass-bar, .sag-bar { background: #17141C; }
   :is(.sticky, .fixed):is(.bg-surface, .bg-page, .bg-white), .fixed :is(.bg-surface, .bg-page, .bg-white) { background-color: #17141C; }
 }
+/* The backdrop lights sit between the html colour and the app, so the app's own wrappers stay see-through */
+html { background-color: #0F0D12; }
+body, #root { background-color: transparent; }
