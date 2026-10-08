@@ -349,6 +349,24 @@ export interface Banner {
 }
 
 /** Multi-buy discount applied automatically (browser preview and server) when the bag holds enough pieces. */
+/** One festival offer of the homepage's festive panel (Admin → Special DOD). Its discount and dates are the coupon's. */
+export interface SpecialDodOffer {
+  id: string;
+  enabled: boolean;
+  /** The small gold label above the name, e.g. "Festive month" */
+  eyebrow: string;
+  /** The offer's name, e.g. "Navratri Sale" */
+  title: string;
+  /** The real coupon (Admin → Coupons) this offer runs on */
+  couponCode: string;
+  /** The panel's photo; empty = the store's diya photo */
+  imageUrl: string;
+}
+export interface SpecialDodConfig {
+  enabled: boolean;
+  offers: SpecialDodOffer[];
+}
+
 export interface ComboOfferConfig {
   enabled: boolean;
   percent: number;
@@ -465,6 +483,7 @@ export type AdminTab =
   | 'aiController'
   | 'products'
   | 'comboOffers'
+  | 'specialDod'
   | 'discovery'
   | 'reels'
   | 'looks'

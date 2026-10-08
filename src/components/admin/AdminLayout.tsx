@@ -133,6 +133,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     { id: 'coupons', label: 'Coupons', route: '/admin/coupons', icon: Tag, group: 'Offers', badge: coupons.length },
     { id: 'dealOfTheDay', label: 'Deal of the day', route: '/admin/deal-of-the-day', icon: Flame, group: 'Offers' },
+    { id: 'specialDod', label: 'Special DOD', route: '/admin/special-dod', icon: Sparkles, group: 'Offers' },
     { id: 'comboOffers', label: 'Combo offer', route: '/admin/combo-offers', icon: Flame, group: 'Offers' },
 
     { id: 'homepage', label: 'Homepage', route: '/admin/homepage', icon: LayoutTemplate, group: 'Storefront' },

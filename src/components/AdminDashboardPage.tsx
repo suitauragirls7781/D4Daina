@@ -23,6 +23,7 @@ import { AdminBanners } from './admin/AdminBanners';
 import { AdminReviews } from './admin/AdminReviews';
 import { AdminSettings } from './admin/AdminSettings';
 import { AdminComboOffers } from './admin/AdminComboOffers';
+import { AdminSpecialDod } from './admin/AdminSpecialDod';
 import { AdminDiscovery } from './admin/AdminDiscovery';
 import { AdminReels } from './admin/AdminReels';
 import { AdminLooks } from './admin/AdminLooks';
@@ -130,6 +131,8 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminHero />;
       case 'comboOffers':
         return <AdminComboOffers />;
+      case 'specialDod':
+        return <AdminSpecialDod />;
       case 'discovery':
         return <AdminDiscovery />;
       case 'reels':

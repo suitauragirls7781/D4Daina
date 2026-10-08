@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
+import { getCleanImageUrl } from '../utils/imageHelper';
 
 // Festive month (owner, 2026-10-07; Dussehra replaced by Navratri on 2026-10-08): one sale in two rounds,
 // Navratri (till 20 Oct) and Diwali (21 Oct to 8 Nov).
@@ -8,9 +9,16 @@ import { useShop } from '../context/ShopContext';
 // switched on and today is inside its dates, and every number on it (percent, cap, minimum, last day, the online
 // payment percent) is read from the coupon and the store's settings. Outside the dates nothing is shown.
 
-const ROUNDS: { code: string; title: string }[] = [
-  { code: 'NAVRATRI', title: 'Navratri Sale' },
-  { code: 'DIWALI', title: 'Diwali Sale' },
+//
+// The offers themselves are the owner's list in Admin → Special DOD (storefront_settings/specialDod): each has a
+// name, a small label, a coupon and an optional photo. Until that page has been saved once, the two rounds
+// below are used.
+
+type Round = { code: string; title: string; eyebrow: string; imageUrl: string };
+export const DEFAULT_EYEBROW = 'Festive month';
+export const DEFAULT_ROUNDS: Round[] = [
+  { code: 'NAVRATRI', title: 'Navratri Sale', eyebrow: DEFAULT_EYEBROW, imageUrl: '' },
+  { code: 'DIWALI', title: 'Diwali Sale', eyebrow: DEFAULT_EYEBROW, imageUrl: '' },
 ];
 
 // The banner's photo: diyas being lit. "Lighting Lamps!" by Framedtwinkles, Wikimedia Commons, CC0 (free for any use).
@@ -23,9 +31,18 @@ const rupees = (value: number) => `₹${Math.round(value).toLocaleString('en-IN'
 
 /** The festive round that is live right now, with the coupon it runs on; null when none is. */
 export const useFestiveRound = () => {
-  const { coupons, storeOffers } = useShop();
+  const { coupons, storeOffers, specialDod } = useShop();
   const today = todayInIndia();
-  for (const round of ROUNDS) {
+  // The owner's list, in the owner's order: the first offer whose coupon is live today is the one shown
+  const rounds: Round[] = specialDod
+    ? (specialDod.enabled ? specialDod.offers : []).filter((offer) => offer.enabled !== false && offer.couponCode && offer.title).map((offer) => ({
+      code: String(offer.couponCode).trim().toUpperCase(),
+      title: offer.title,
+      eyebrow: offer.eyebrow || DEFAULT_EYEBROW,
+      imageUrl: offer.imageUrl || '',
+    }))
+    : DEFAULT_ROUNDS;
+  for (const round of rounds) {
     const coupon = coupons.find((c) => String(c.code || '').trim().toUpperCase() === round.code);
     if (!coupon || coupon.isActive === false) continue;
     const start = String(coupon.startDate || '').slice(0, 10);
@@ -120,10 +137,10 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
     <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass rounded-[26px]! overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
       <div className="overflow-hidden lg:order-2 lg:w-[46%] lg:shrink-0">
         <img
-          src={PHOTO.src}
-          srcSet={`${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
+          src={round.imageUrl ? getCleanImageUrl(round.imageUrl, 1100) : PHOTO.src}
+          srcSet={round.imageUrl ? `${getCleanImageUrl(round.imageUrl, 640)} 640w, ${getCleanImageUrl(round.imageUrl, 1100)} 1100w` : `${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
           sizes="(min-width: 1024px) 560px, 96vw"
-          alt={PHOTO.alt}
+          alt={round.imageUrl ? '' : PHOTO.alt}
           width={1000}
           height={544}
           decoding="async"
@@ -132,7 +149,7 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
       </div>
 
       <div className="min-w-0 flex-1 p-4 sm:p-7 lg:self-center lg:p-10">
-        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Festive month</p>
+        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{round.eyebrow}</p>
         <h2 id="festive-banner-title" className="mt-1.5 font-display text-[23px] leading-[1.18] font-medium text-ink sm:text-[30px] lg:text-[36px]">{round.title}</h2>
         <p className="sag-num mt-1.5 text-[15px] leading-6 text-ink lg:text-[17px]">
           {round.offer} with code <span className="font-semibold text-sale">{round.code}</span>

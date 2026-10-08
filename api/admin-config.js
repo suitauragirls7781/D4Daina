@@ -64,6 +64,7 @@ const PUBLIC_SETTINGS = new Set([
   'paymentSettings',
   'instagramReels',
   'comboOffer',
+  'specialDod',
   'discovery',
   'auraReels',
   'lookRelations',
@@ -108,6 +109,20 @@ const sanitizeComboOffer = (value) => ({
   minItems: Math.min(10, Math.max(2, Math.round(Number(value?.minItems) || 2))),
   title: typeof value?.title === 'string' ? value.title.trim().slice(0, 80) : '',
   subtitle: typeof value?.subtitle === 'string' ? value.subtitle.trim().slice(0, 200) : '',
+});
+
+// Special DOD: the festive panel's offers. Each runs on a real coupon (its discount and dates are the coupon's);
+// the photo must be one of this store's own photos.
+const sanitizeSpecialDod = (value) => ({
+  enabled: value?.enabled !== false,
+  offers: (Array.isArray(value?.offers) ? value.offers : []).slice(0, 12).map((offer, index) => ({
+    id: text(offer?.id, 40).replace(/[^a-z0-9-]/gi, '').toLowerCase() || `offer-${index + 1}`,
+    enabled: offer?.enabled !== false,
+    eyebrow: text(offer?.eyebrow, 40),
+    title: text(offer?.title, 60),
+    couponCode: text(offer?.couponCode, 30).toUpperCase().replace(/[^A-Z0-9_-]/g, ''),
+    imageUrl: mediaImage(offer?.imageUrl) ? String(offer.imageUrl).trim() : '',
+  })).filter((offer) => offer.title || offer.couponCode),
 });
 
 // Only real Instagram reel/post links are stored, normalised to https://www.instagram.com/<type>/<code>/
@@ -779,6 +794,7 @@ export default async function handler(req, res) {
       paymentSettings: sanitizePublicPaymentSettings,
       instagramReels: sanitizeInstagramReels,
       comboOffer: sanitizeComboOffer,
+      specialDod: sanitizeSpecialDod,
       discovery: sanitizeDiscovery,
       auraReels: sanitizeAuraReels,
       lookRelations: sanitizeLookRelations,

@@ -8,7 +8,8 @@ import {
   ActivePage,
   ProductCategory,
   Coupon,
-  ComboOfferConfig
+  ComboOfferConfig,
+  SpecialDodConfig
 } from '../types';
 import { useProducts } from './ProductContext';
 import { useRouter } from './RouterContext';
@@ -101,6 +102,8 @@ interface ShopContextType {
   /** Automatic multi-buy discount on the current bag (0 when the combo rule does not apply). */
   comboDiscount: number;
   comboOffer: ComboOfferConfig | null;
+  /** The festive panel's offers as saved in Admin → Special DOD; null until the owner has saved that page once */
+  specialDod: SpecialDodConfig | null;
   /** Bag pieces that count towards the combo offer's minimum: outfits only (accessories never count). */
   comboPieces: number;
   freeShippingThreshold: number;
@@ -1117,6 +1120,20 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }, () => setComboOffer(null)),
     );
   }, []);
+  const [specialDod, setSpecialDod] = useState<SpecialDodConfig | null>(null);
+  useEffect(() => {
+    const apply = (value: any) => setSpecialDod(value && Array.isArray(value.offers) ? { enabled: value.enabled !== false, offers: value.offers } : null);
+    return fromCatalogOrLive(
+      (catalog) => apply((catalog.settings as any).specialDod || null),
+      () => onSnapshot(fsDoc(db, 'storefront_settings', 'specialDod'), (snapshot) => {
+        try {
+          apply(snapshot.exists() ? JSON.parse(snapshot.data().value_json || 'null') : null);
+        } catch {
+          setSpecialDod(null);
+        }
+      }, () => setSpecialDod(null)),
+    );
+  }, []);
   // Only outfit pieces unlock the combo offer (same rule as the server); the percentage comes off the whole subtotal.
   const comboPieces = comboPiecesIn(cart);
   const comboDiscount = comboOffer && comboPieces >= comboOffer.minItems ? Math.round((cartSubtotal * comboOffer.percent) / 100) : 0;
@@ -1229,6 +1246,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         prepaidDiscount,
         comboDiscount,
         comboOffer,
+        specialDod,
         comboPieces,
         freeShippingThreshold,
         storeOffers: storeShippingSettings,
