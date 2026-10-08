@@ -78,9 +78,10 @@ Default order (admin can reorder/toggle in Admin → Homepage; stored in `storef
 6. Deal of the day / Offer banner (built only from offers that are actually live)
 7. Why shop with us
 8. Customer reviews
-9. Instagram reels
-10. Newsletter
-11. Footer
+9. Newsletter
+10. Footer
+
+(The "On Instagram" section was removed from the homepage at the owner's request on 2026-10-09; do not bring it back.)
 
 ---
 

@@ -7,7 +7,6 @@ import { FestiveComboOffers } from './FestiveComboOffers';
 import { DealOfTheDaySection } from './DealOfTheDaySection';
 import { FestiveCollectionSection } from './BestSellersSection';
 import { TrendingNowSection } from './TrendingNowSection';
-import { InstagramGallery } from './InstagramGallery';
 import { CustomerReviews } from './CustomerReviews';
 import { ShopByCategory } from './ShopByCategory';
 import { PersonalRails } from './PersonalRails';
@@ -57,7 +56,8 @@ export const HomePage: React.FC = () => {
       case 'reviews':
         return <CustomerReviews />;
       case 'instagram':
-        return <InstagramGallery />;
+        // Removed from the homepage at the owner's request (2026-10-09)
+        return null;
       case 'newsletter':
         return <NewsletterSignup />;
       default:
@@ -70,7 +70,7 @@ export const HomePage: React.FC = () => {
   const dealOn = heroOn && enabledKeys.has('dealOfTheDay');
 
   const visibleSections = [...homepageSections]
-    .filter((section) => section.enabled !== false && !(dealOn && section.key === 'dealOfTheDay'))
+    .filter((section) => section.enabled !== false && section.key !== 'instagram' && !(dealOn && section.key === 'dealOfTheDay'))
     .sort((first, second) => first.order - second.order);
 
   return (
