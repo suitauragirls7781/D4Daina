@@ -45,6 +45,10 @@ const SECURITY_HEADERS = {
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'X-Frame-Options': 'SAMEORIGIN',
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',
+  // Browsers that have opened the site once use only https for it afterwards
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  // No other website may put this site in a frame, change the base address or load plugins
+  'Content-Security-Policy': "frame-ancestors 'self'; base-uri 'self'; object-src 'none'",
 };
 
 /** api/** reads its settings from process.env, so the Worker's string bindings and secrets are put there. */
