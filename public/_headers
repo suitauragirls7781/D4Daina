@@ -34,3 +34,8 @@
 /admin/*
   X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
+
+# Design previews for the owner (not part of the storefront)
+/looks/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store

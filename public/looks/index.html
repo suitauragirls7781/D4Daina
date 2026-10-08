@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Suit Aura Girls: checkout preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://media.suitauragirls.in">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
+<style>
+/* Design preview for the owner (not part of the storefront): a checkout and payment page built to win
+   prepaid orders, in the Midnight glass look. Amounts follow the store's real rules (coupon, 15% online, ₹99 COD). */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0F0D12;--ink:#F6F1EA;--mut:#B9AFA6;--gold:#E0BB7C;--on:#16110B;--edge:rgba(255,255,255,.16);--glass:rgba(255,255,255,.07);--glass2:rgba(255,255,255,.11);--line:rgba(255,255,255,.12);--bad:#FF8A80}
+body{font-family:Figtree,system-ui,sans-serif;background:#D9D5CF;color:#111;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;padding-bottom:40px}
+svg{display:block;flex:none;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+img{display:block;max-width:100%}
+s{text-decoration:line-through}
+.intro{background:#111;color:#fff;text-align:center;padding:14px}
+.intro h1{font-size:15px;font-weight:600}.intro p{font-size:12.5px;color:#C9C9C9;margin-top:3px}
+.wrap{display:grid;gap:28px;max-width:1320px;margin:24px auto 0;padding:0 12px}
+@media(min-width:900px){.wrap{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1280px){.wrap{grid-template-columns:repeat(4,1fr)}}
+.scr{max-width:400px;width:100%;margin:0 auto}
+.scr>h2{font-size:14px;font-weight:700;margin:0 4px 8px}
+.frame{position:relative;background:var(--bg);color:var(--ink);border-radius:30px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.28);isolation:isolate;padding-bottom:14px}
+.frame::before,.frame::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(64px);opacity:.7}
+.frame::before{width:320px;height:320px;left:-120px;top:60px;background:#B8894A}
+.frame::after{width:340px;height:340px;right:-150px;top:520px;background:#7A2742}
+.g{background:var(--glass);border:1px solid var(--edge);border-radius:22px}
+.g2{background:var(--glass2)}
+.pad{padding:14px}
+.r{display:flex;align-items:center;gap:10px}.sb{justify-content:space-between}.f1{flex:1;min-width:0}
+.lab{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.h{font-family:Fraunces,serif;font-weight:500;font-size:21px;line-height:1.2}
+.m{color:var(--mut);font-size:12.5px}.x{font-size:11.5px}
+.gold{color:var(--gold)}
+.bt{height:52px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 20px;border-radius:99px;font-weight:700;font-size:15px;white-space:nowrap}
+.b1{background:var(--gold);color:var(--on);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.b2{background:var(--glass);border:1px solid var(--edge)}
+.chip{height:30px;padding:0 11px;border-radius:99px;background:var(--glass);border:1px solid var(--edge);display:inline-flex;align-items:center;gap:6px;font-size:11.5px;white-space:nowrap}
+.chip.on{background:var(--gold);color:var(--on);border-color:transparent;font-weight:700}
+.ib{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--glass);border:1px solid var(--edge)}
+.fld{height:48px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid var(--edge);display:flex;align-items:center;gap:8px;padding:0 13px;font-size:15px;color:var(--mut)}
+.fld.ok{border-color:rgba(224,187,124,.55);color:var(--ink)}
+.fl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:0 0 5px 4px}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:13.5px;font-variant-numeric:tabular-nums}
+.hr{height:1px;background:var(--line);margin:8px 0}
+.ph{object-fit:cover;object-position:top;border-radius:12px;background:rgba(127,127,127,.2)}
+.n{position:absolute;z-index:3;width:22px;height:22px;border-radius:50%;background:#fff;color:#111;font-size:11.5px;font-weight:800;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.rel{position:relative}
+.app{flex:1;height:54px;border-radius:16px;background:var(--glass2);border:1px solid var(--edge);display:grid;place-items:center;font-size:12px;font-weight:600;text-align:center;line-height:1.15}
+.bar{height:6px;border-radius:9px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--gold);border-radius:9px}
+.legend{max-width:900px;margin:30px auto 0;padding:0 14px}
+.legend h3{font-size:16px;font-weight:700;margin-bottom:10px}
+.legend ol{list-style:none;display:grid;gap:9px}
+@media(min-width:760px){.legend ol{grid-template-columns:1fr 1fr;gap:10px 22px}}
+.legend li{display:flex;gap:10px;font-size:13.5px;line-height:1.5;color:#222}
+.legend li>b{flex:none;width:24px;height:24px;border-radius:50%;background:#111;color:#fff;font-size:12px;display:grid;place-items:center}
+.legend li span b{font-weight:700}
+.note{max-width:900px;margin:22px auto 0;padding:0 14px;font-size:13px;color:#333;line-height:1.6}.note b{font-weight:700}
+</style>
+</head>
+<body>
+<div class="intro"><h1>Checkout aur payment page: prepaid order ke liye bana design</h1><p>4 screen hain. Safed gol number niche ki list se milte hain. Rakam store ke asli niyam se hai (coupon, 15% online, COD ₹99).</p></div>
+<main class="wrap" id="main"></main>
+
+<section class="legend">
+  <h3>Is design me kya-kya hai (number screen ke gol number se milte hain)</h3>
+  <ol>
+    <li><b>1</b><span><b>Sirf 2 step, upar bachat hamesha saamne.</b> "You save ₹849" patti har step pe dikhti hai, taaki customer ko yaad rahe wo kya kho dega.</span></li>
+    <li><b>2</b><span><b>Phone number sabse pehle.</b> Number likhte hi wo save ho jata hai; customer chhod bhi de to aapke paas uska number aur bag rehta hai (yaad-dihani ke liye).</span></li>
+    <li><b>3</b><span><b>PIN daalte hi city aur state apne aap.</b> Purane customer ko "Use saved address" ek tap me. Kam likhna = kam chhodna.</span></li>
+    <li><b>4</b><span><b>Sabse accha coupon apne aap lagta hai.</b> Customer ko code dhoondhna nahi padta; hatana ho to hata sakta hai.</span></li>
+    <li><b>5</b><span><b>Online payment bada aur pehle se chuna hua.</b> Sunehra card, bada daam, "Best price" aur 4 asli fayde.</span></li>
+    <li><b>6</b><span><b>UPI app ke seedhe button.</b> Google Pay / PhonePe / Paytm / koi bhi UPI. Dabate hi Razorpay usi app ke saath khulta hai, ek step kam.</span></li>
+    <li><b>7</b><span><b>COD chhota aur niche, poori sachchai ke saath.</b> "₹214 zyada lagega" saaf likha hai. Chhupaya nahi, bas kam ubhara hai.</span></li>
+    <li><b>8</b><span><b>Dono ka seedha hisaab ek patti me.</b> Online ₹650 banam COD ₹864: farq aankhon ke saamne.</span></li>
+    <li><b>9</b><span><b>COD chunne pe ek baar rok-ke poochhna.</b> "Online pe ₹214 bachenge, pakka COD?" Ek hi baar, zabardasti nahi; "COD hi rakho" ka button bhi hai.</span></li>
+    <li><b>10</b><span><b>Payment fail ho to order nahi jata.</b> Wahi order, "Dobara try karo" ya "Doosra UPI app", aur WhatsApp madad. Paisa kata ho to order number ke saath seedha message.</span></li>
+    <li><b>11</b><span><b>Bharosa pay button ke theek paas.</b> "Razorpay secured · UPI PIN hum nahi dekhte · 7-day returns". Jahan dar lagta hai wahin jawab.</span></li>
+    <li><b>12</b><span><b>Asli offer ki asli ghadi.</b> NAVRATRI coupon 20 Oct ko khatam hota hai; wahi ghadi yahan. Nakli "5 minute me khatam" nahi.</span></li>
+  </ol>
+</section>
+<p class="note"><b>Sachchi baat:</b> "99% prepaid" ka vaada koi design nahi kar sakta, kyunki kuch customer sirf COD hi lete hain. Ye design prepaid ko sabse aasaan aur sabse sasta raasta banata hai aur COD ko mehnga aur ek kadam door rakhta hai. Aur sakht karna ho to do switch aap chala sakte ho: (a) COD ka advance ₹99 se badhana, (b) kisi rakam ke upar COD band karna. Ye sab bata do to main asli checkout me bana dunga. Pasand aaye to "laga do" likh do; kuch hatana / jodna ho to number bata do.</p>
+
+<script>
+const M='https://media.suitauragirls.in/i/product-images/tfqqvjciw7oivdtfmzwx/w160.webp';
+const rs=n=>'₹'+n.toLocaleString('en-IN');
+const P={back:'<path d="m15 5-7 7 7 7"/>',lock:'<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',check:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',tag:'<path d="M4 4h8l8 8-8 8-8-8z"/><circle cx="9" cy="9" r="1.5"/>',pin:'<path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',wa:'<path d="M4 20l1.4-4.2A8 8 0 1 1 8.5 19z"/>',warn:'<path d="M12 4 3 20h18z"/><path d="M12 10v4M12 17h.01"/>',clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',shield:'<path d="M12 3 5 6v6c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V6z"/><path d="m9 12 2.2 2.2L15 10.5"/>'};
+const ic=(n,s=18)=>`<svg viewBox="0 0 24 24" width="${s}" height="${s}">${P[n]}</svg>`;
+const N=(n,style)=>`<i class="n" style="font-style:normal;${style}">${n}</i>`;
+const head=(step)=>`<div style="padding:10px 12px 0"><div class="g g2 r sb" style="padding:7px 14px 7px 7px;border-radius:99px"><span class="ib">${ic('back')}</span><span class="r" style="gap:7px;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase">${ic('lock',15)}Secure checkout</span><span class="x gold" style="font-weight:600">Help</span></div></div>
+ <div class="r" style="justify-content:center;gap:8px;padding:12px 12px 0"><span class="chip${step===1?' on':''}">${step===2?ic('check',13):''}1 Address</span><span style="width:22px;height:1px;background:var(--line)"></span><span class="chip${step===2?' on':''}">2 Payment</span></div>
+ <div class="rel" style="padding:10px 12px 0">${N(1,'left:4px;top:2px')}<div class="g r" style="padding:9px 12px;border-radius:18px"><img class="ph" src="${M}" width="40" height="50" alt=""><div class="f1"><div style="font-size:13.5px;font-weight:600">1 item · ${rs(650)} <span class="m x" style="font-weight:400">paying online</span></div><div class="x gold" style="font-weight:700">You save ${rs(849)} on this order</div></div><span class="x gold" style="font-weight:600">View</span></div></div>`;
+const field=(l,v,ok)=>`<div><div class="fl">${l}</div><div class="fld${ok?' ok':''}">${v}${ok?`<span class="f1"></span><span class="gold">${ic('check',16)}</span>`:''}</div></div>`;
+
+const ADDRESS=`${head(1)}
+ <div style="padding:18px 16px 0"><div class="h">Where should we deliver?</div><div class="m" style="margin-top:3px">Takes about a minute.</div></div>
+ <div class="rel" style="padding:12px 12px 0;display:grid;gap:11px">${N(2,'right:6px;top:2px')}${N(3,'left:4px;top:170px')}
+  ${field('Mobile number','+91 98XXXXXX10',1)}
+  <div class="g r" style="padding:9px 12px;border-radius:16px;gap:9px"><span class="gold">${ic('pin',17)}</span><span class="f1 x">Ordered before? <b style="font-weight:600;color:var(--ink)">Use your saved address</b></span><span class="x gold" style="font-weight:700">Use</span></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${field('PIN code','302001',1)}${field('City / State','Jaipur, Rajasthan',1)}</div>
+  ${field('Full name','')}
+  ${field('House no., street, area','')}
+  ${field('Email (for your receipt)','')}
+ </div>
+ <div class="rel" style="padding:14px 12px 0">${N(4,'left:4px;top:8px')}<div class="g r" style="padding:10px 12px;border-radius:16px;border-color:rgba(224,187,124,.5)"><span class="gold">${ic('tag',17)}</span><span class="f1 x"><b style="font-weight:700;color:var(--ink)">Best coupon applied: NAVRATRI</b><br>You save ${rs(85)} · <span class="gold" style="text-decoration:underline">Remove</span></span><span class="gold">${ic('check',17)}</span></div></div>
+ <div style="padding:16px 12px 0"><span class="bt b1">${ic('lock',17)}Continue to payment</span><div class="m x" style="text-align:center;margin-top:10px">7-day returns & exchange · Help on WhatsApp</div></div>`;
+
+const perk=t=>`<div class="r x" style="gap:7px"><span>${ic('check',14)}</span>${t}</div>`;
+const PAY=`${head(2)}
+ <div style="padding:18px 16px 0"><div class="h">How would you like to pay?</div></div>
+ <div class="rel" style="padding:12px 12px 0">${N(5,'left:4px;top:2px')}
+  <div style="border-radius:24px;padding:14px;background:var(--gold);color:var(--on);box-shadow:0 14px 30px rgba(0,0,0,.4)">
+   <div class="r sb"><span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;background:rgba(22,17,11,.14);padding:3px 8px;border-radius:99px">Best price</span><span class="r" style="gap:6px"><span style="width:18px;height:18px;border-radius:50%;border:2px solid var(--on);display:grid;place-items:center"><i style="width:9px;height:9px;border-radius:50%;background:var(--on);display:block"></i></span></span></div>
+   <div class="r sb" style="margin-top:8px;align-items:flex-end"><div><div style="font-size:17px;font-weight:700">Pay online now</div><div class="x" style="font-weight:600">You save ${rs(214)} against cash on delivery</div></div><div style="text-align:right"><div style="font-size:28px;font-weight:700;line-height:1">${rs(650)}</div><s class="x" style="opacity:.7">${rs(864)}</s></div></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;margin-top:10px">${perk('15% off')}${perk('Free delivery')}${perk('Confirmed at once')}${perk('Receipt on email')}</div>
+  </div></div>
+ <div class="rel" style="padding:10px 12px 0">${N(6,'right:6px;top:2px')}<div class="lab" style="margin:0 4px 7px">Pay with</div><div class="r" style="gap:8px"><span class="app" style="border-color:var(--gold)">Google<br>Pay</span><span class="app">PhonePe</span><span class="app">Paytm</span><span class="app">Any UPI<br>app</span></div></div>
+ <div class="rel" style="padding:12px 12px 0">${N(7,'left:4px;top:6px')}<div class="g r" style="padding:11px 13px;border-radius:18px;align-items:flex-start"><span style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--mut);margin-top:2px"></span><div class="f1"><div style="font-size:13.5px;font-weight:600">Cash on delivery</div><div class="m x">${rs(99)} now by UPI + ${rs(765)} in cash · no online discount</div></div><div style="text-align:right"><div style="font-size:14px;font-weight:600">${rs(864)}</div><div class="x" style="color:var(--bad);font-weight:600">${rs(214)} more</div></div></div></div>
+ <div class="rel" style="padding:12px 12px 0">${N(8,'left:4px;top:2px')}<div class="g pad" style="border-radius:18px"><div class="r sb x"><span><b style="font-weight:700;color:var(--gold)">Online ${rs(650)}</b></span><span class="m">Cash on delivery ${rs(864)}</span></div><div class="bar" style="margin-top:7px"><i style="width:75%"></i></div></div></div>
+ <div class="rel" style="padding:14px 12px 0">${N(11,'right:6px;top:4px')}${N(12,'left:4px;top:100px')}
+  <span class="bt b1" style="height:56px;font-size:16px">${ic('lock',18)}Pay ${rs(650)} with Google Pay</span>
+  <div class="r x m" style="justify-content:center;gap:6px;margin-top:10px;text-align:center">${ic('shield',14)}Secured by Razorpay · We never see your UPI PIN · 7-day returns</div>
+  <div class="g r x" style="margin-top:12px;padding:9px 12px;border-radius:14px;gap:8px"><span class="gold">${ic('clock',15)}</span><span class="f1">Navratri offer ends in <b style="font-weight:700;color:var(--ink)" data-cd>--</b></span></div>
+ </div>`;
+
+const SURE=`${head(2)}
+ <div style="padding:18px 16px 0;opacity:.35"><div class="h">How would you like to pay?</div><div class="g" style="height:120px;margin-top:12px"></div><div class="g" style="height:60px;margin-top:10px"></div></div>
+ <div class="rel" style="margin:26px 12px 0">${N(9,'left:-6px;top:-8px')}
+  <div style="border-radius:26px;padding:18px;background:rgba(24,20,30,.96);border:1px solid var(--edge);box-shadow:0 20px 44px rgba(0,0,0,.6)">
+   <div class="lab">Before you choose cash on delivery</div>
+   <div class="h" style="margin-top:8px">Pay online and keep ${rs(214)}</div>
+   <div class="g pad" style="margin-top:14px;border-radius:18px"><div class="kv"><span class="gold" style="font-weight:700">Pay online</span><span class="gold" style="font-weight:700">${rs(650)}</span></div><div class="kv"><span class="m">Cash on delivery</span><span class="m">${rs(864)}</span></div><div class="hr"></div><div class="x m">With cash on delivery you still pay ${rs(99)} online now, and ${rs(765)} in cash at the door.</div></div>
+   <span class="bt b1" style="margin-top:14px">Pay ${rs(650)} online</span>
+   <span class="bt b2" style="margin-top:10px;height:46px;font-size:13.5px;font-weight:600">Keep cash on delivery (${rs(864)})</span>
+   <div class="m x" style="text-align:center;margin-top:10px">Shown once. Your choice is respected.</div>
+  </div></div>`;
+
+const FAIL=`${head(2)}
+ <div class="rel" style="margin:20px 12px 0">${N(10,'left:-6px;top:-8px')}
+  <div class="g pad" style="border-radius:24px;border-color:rgba(255,138,128,.45)">
+   <div class="r" style="gap:10px;align-items:flex-start"><span style="color:var(--bad)">${ic('warn',22)}</span><div class="f1"><div style="font-size:16px;font-weight:700">The payment did not go through</div><div class="m" style="margin-top:3px">No order was lost. Your bag, address and offer are saved.</div></div></div>
+   <div class="g pad" style="margin-top:14px;border-radius:16px"><div class="kv"><span class="m">Order</span><span>SAG-XXXXXX <span class="m x">(example)</span></span></div><div class="kv"><span class="m">To pay</span><span class="gold" style="font-weight:700">${rs(650)}</span></div></div>
+   <span class="bt b1" style="margin-top:14px">Try again with Google Pay</span>
+   <div class="r" style="gap:8px;margin-top:10px"><span class="app" style="height:46px">PhonePe</span><span class="app" style="height:46px">Paytm</span><span class="app" style="height:46px">Any UPI</span></div>
+   <div class="hr" style="margin:14px 0 10px"></div>
+   <div class="r x" style="gap:8px"><span class="gold">${ic('wa',17)}</span><span class="f1">Money was taken but this still shows? <b style="font-weight:700;color:var(--gold)">Message us with this order number</b></span></div>
+  </div>
+  <div class="m x" style="text-align:center;margin-top:12px">If you leave now, we will email you a link to finish this order.</div>
+ </div>`;
+
+document.getElementById('main').innerHTML=[['1. Address step',ADDRESS],['2. Payment step',PAY],['3. COD chunne pe ek baar poochhna',SURE],['4. Payment fail ho jaye to',FAIL]].map(([t,h])=>`<section class="scr"><h2>${t}</h2><div class="frame">${h}</div></section>`).join('');
+// The real end of the Navratri coupon: 20 Oct 2026, end of day in India
+const END=Date.parse('2026-10-20T23:59:59+05:30');const two=n=>String(Math.max(0,n)).padStart(2,'0');
+const tick=()=>{const left=Math.max(0,END-Date.now()),d=Math.floor(left/864e5),h=Math.floor(left/36e5)%24,m=Math.floor(left/6e4)%60,s=Math.floor(left/1e3)%60;document.querySelectorAll('[data-cd]').forEach(el=>el.textContent=`${d}d ${two(h)}h ${two(m)}m ${two(s)}s`)};
+tick();setInterval(tick,1000);
+</script>
+</body>
+</html>
