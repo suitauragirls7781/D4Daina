@@ -180,10 +180,11 @@ export const AdminToys: React.FC = () => {
         description={<>Add cars, bikes, dolls, soft toys, puzzles and more here. They are shown in their own Toys section of the store. A toy is sold as one piece (no sizes); add its suitable age so parents can choose.</>}
       />
 
-      <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Toys in numbers">
+      <dl className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="Toys in numbers">
         <Stat label="Toys" value={count(toys.length)} note={countsLoading ? 'Loading…' : `${published} published · ${toys.length - published} hidden`} />
         <Stat label="On the store now" value={count(onStore)} note={countsLoading ? 'Loading…' : 'published and in stock'} />
-        <Stat label="Sold out" value={count(soldOut)} note={countsLoading ? 'Loading…' : soldOut ? 'published, add stock to sell' : 'none'} />
+        <Stat label="Sold out" value={count(soldOut)} note={countsLoading ? 'Loading…' : soldOut ? 'published, add stock to sell' : 'nothing is sold out'} />
+        <Stat label="Hidden" value={count(toys.length - published)} note={countsLoading ? 'Loading…' : 'kept here, not on the store'} />
       </dl>
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="toys-add-title">
@@ -202,7 +203,7 @@ export const AdminToys: React.FC = () => {
       <CategoryStatus names={[TOYS]} cats={cats} showToast={showToast} onOpenCategories={() => openAdminTab('categories')} />
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="toys-list-title">
-        <h3 id="toys-list-title" className={ui.h2}>Toys ({count(toys.length)})</h3>
+        <h3 id="toys-list-title" className={ui.h2}>All toys <span className="font-normal text-ink-muted sag-num">({count(toys.length)})</span></h3>
         {kinds.length > 0 && (
           <div className="mt-3">
             <FilterChips label="Show toys of kind" value={activeFilter} onChange={(v) => { setFilter(v); setLimit(LIST_STEP); }} options={[
@@ -223,7 +224,7 @@ export const AdminToys: React.FC = () => {
         {countsLoading ? (
           <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : toys.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-page border border-line p-4 text-sm text-ink-muted">
+          <div className="mt-4 rounded-2xl bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
             No toys yet. Use the buttons above to add a car, bike, doll, soft toy, puzzle or any other toy.
           </div>
         ) : results.length === 0 ? (
@@ -243,8 +244,8 @@ export const AdminToys: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 ml-auto">
                   <PublishButton p={p} busy={busyId === p.id} onToggle={() => togglePublished(p)} />
-                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-sunken text-ink`}>
-                    <Pencil className="w-4 h-4 text-current" />
+                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.small} !border-brand-line !text-brand`}>
+                    <Pencil className="w-3.5 h-3.5 text-current" /> Edit
                   </button>
                   <button type="button" onClick={() => remove(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${ui.iconBtn} hover:bg-danger-tint text-danger`}>
                     {busyId === p.id ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Trash2 className="w-4 h-4 text-current" />}

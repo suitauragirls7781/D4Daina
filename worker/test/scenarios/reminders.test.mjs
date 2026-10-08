@@ -241,7 +241,11 @@ test('email not configured: the run does nothing and reads nothing', async () =>
     const env = { ...h.workerEnv };
     delete env.BREVO_API_KEY;
     let calls = 0;
-    env.DB = { prepare: () => { calls += 1; throw new Error('the database must not be read'); }, batch: () => { calls += 1; throw new Error('the database must not be read'); } };
+    // The same run also clears old live-presence rows (its own statements, not counted here: they are not reminders)
+    env.DB = {
+      prepare: (sql) => { if (!/\bpresence\b/.test(String(sql))) calls += 1; throw new Error('the database must not be read'); },
+      batch: () => { calls += 1; throw new Error('the database must not be read'); },
+    };
     await h.worker.scheduled({ cron: '17 * * * *' }, env, { waitUntil() {} });
     used = calls;
   } finally {

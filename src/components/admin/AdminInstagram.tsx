@@ -5,6 +5,7 @@ import { ArrowDown, ArrowUp, ExternalLink, Instagram, Loader2, Plus, Save, Trash
 import type { InstagramReel } from '../../types';
 import { instagramEmbedUrl, instagramProfile, normalizeInstagramUrl } from '../../utils/instagram';
 import { AdminPageHeader } from './kidsToysShared';
+import { Empty, Panel, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const MAX_REELS = 24;
 
@@ -64,8 +65,10 @@ export const AdminInstagram: React.FC = () => {
     }
   };
 
+  const liveCount = instagramReels.length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <AdminPageHeader
         eyebrow={`Social · ${profile.handle}`}
@@ -73,25 +76,23 @@ export const AdminInstagram: React.FC = () => {
         icon={<Instagram className="text-current" />}
         description={'Paste links of your reels or posts. They play inside the homepage "Follow the Aura" section, in the order shown here.'}
         actions={
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving || !isDirty}
-            className="h-11 px-5 sag-btn-primary disabled:bg-sunken disabled:text-ink disabled:cursor-not-allowed text-sm flex items-center gap-2 shrink-0"
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
-            <span>{isSaving ? 'Saving…' : isDirty ? 'Save & publish' : 'All changes saved'}</span>
-          </button>
+          <Pill role="status" tone={liveCount > 0 ? 'live' : 'off'}>
+            {liveCount > 0 ? 'Live on the site' : 'No reels on the site yet'}
+          </Pill>
         }
       />
 
+      <Tiles className="lg:!grid-cols-2 max-w-2xl">
+        <Tile label="On the site now" value={liveCount} note={liveCount === 0 ? `The homepage shows a "Follow us" card for ${profile.handle}` : 'Reels and posts saved'} />
+        <Tile label="In this list" value={<>{draft.length} <span className="text-base font-medium text-ink-muted">of {MAX_REELS}</span></>} note={isDirty ? 'Not saved yet' : 'Same as the site'} />
+      </Tiles>
+
       {/* Add form */}
-      <form onSubmit={handleAdd} className="bg-white rounded-2xl p-5 sm:p-6 border border-line space-y-3">
-        <h2 className="font-sans text-base font-semibold text-ink">Add a reel</h2>
-        <p className="text-sm text-ink-muted">
-          On Instagram open the reel → tap ⋯ / Share → <strong>Copy link</strong>, then paste it below.
-        </p>
-        <div className="flex flex-col md:flex-row gap-3">
+      <Panel
+        title="Add a reel"
+        hint={<>On Instagram open the reel → tap ⋯ / Share → <strong className="text-ink">Copy link</strong>, then paste it below.</>}
+      >
+        <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-3">
           <input
             type="url"
             value={linkInput}
@@ -112,28 +113,24 @@ export const AdminInstagram: React.FC = () => {
           />
           <button
             type="submit"
-            className="h-11 px-6 sag-btn-primary text-sm flex items-center justify-center gap-2"
+            className={kit.outline}
           >
             <Plus className="w-4 h-4 text-current" />
             Add
           </button>
-        </div>
-        {isDirty && (
-          <p className="inline-flex rounded-md bg-sale-tint px-3 py-1 text-xs font-semibold text-sale">You have unsaved changes. Click "Save &amp; Publish" to put them live.</p>
-        )}
-      </form>
+        </form>
+      </Panel>
 
       {/* List */}
       {draft.length === 0 ? (
-        <div className="bg-white rounded-2xl px-6 py-14 border border-dashed border-line text-center text-sm text-ink-muted">
-          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-sunken text-ink flex items-center justify-center"><Instagram className="w-6 h-6 text-current" /></span>
-          No reels yet. Until you add some, the homepage shows a "Follow us on Instagram" card linking to {profile.handle}.
-        </div>
+        <Empty icon={<Instagram />} title="No reels yet">
+          Until you add some, the homepage shows a "Follow us on Instagram" card linking to {profile.handle}.
+        </Empty>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {draft.map((reel, index) => (
-            <div key={reel.url} className="bg-white rounded-2xl border border-line overflow-hidden flex flex-col">
-              <div className="bg-page flex justify-center border-b border-line">
+            <div key={reel.url} className="sag-glass overflow-hidden flex flex-col">
+              <div className="bg-sunken flex justify-center border-b border-line">
                 <iframe
                   src={instagramEmbedUrl(reel)}
                   title={reel.caption || `Instagram reel ${index + 1}`}
@@ -154,19 +151,19 @@ export const AdminInstagram: React.FC = () => {
                   className="sag-input h-12"
                 />
                 <div className="flex items-center justify-between gap-2 mt-auto">
-                  <span className="w-8 h-8 rounded-full bg-ink text-white text-sm font-semibold flex items-center justify-center">{index + 1}</span>
+                  <span className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">Reel {index + 1}</span>
                   <div className="flex items-center gap-0.5">
-                    <a href={reel.url} target="_blank" rel="noopener noreferrer" className="w-11 h-11 inline-flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors" title="Open on Instagram" aria-label="Open on Instagram">
+                    <a href={reel.url} target="_blank" rel="noopener noreferrer" className={kit.iconBtn} title="Open on Instagram" aria-label="Open on Instagram">
                       <ExternalLink className="w-4 h-4 text-current" />
                     </a>
-                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className="w-11 h-11 inline-flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors disabled:opacity-30 cursor-pointer" title="Move up" aria-label="Move up">
+                    <button type="button" onClick={() => move(index, -1)} disabled={index === 0} className={kit.iconBtn} title="Move up" aria-label="Move up">
                       <ArrowUp className="w-4 h-4 text-current" />
                     </button>
-                    <button type="button" onClick={() => move(index, 1)} disabled={index === draft.length - 1} className="w-11 h-11 inline-flex items-center justify-center rounded-full text-ink hover:bg-sunken transition-colors disabled:opacity-30 cursor-pointer" title="Move down" aria-label="Move down">
+                    <button type="button" onClick={() => move(index, 1)} disabled={index === draft.length - 1} className={kit.iconBtn} title="Move down" aria-label="Move down">
                       <ArrowDown className="w-4 h-4 text-current" />
                     </button>
-                    <button type="button" onClick={() => setDraft(draft.filter((r) => r.url !== reel.url))} className="w-11 h-11 inline-flex items-center justify-center rounded-full hover:bg-danger-tint transition-colors cursor-pointer" title="Remove" aria-label="Remove">
-                      <Trash2 className="w-4 h-4 text-danger" />
+                    <button type="button" onClick={() => setDraft(draft.filter((r) => r.url !== reel.url))} className={kit.iconBtnDanger} title="Remove" aria-label="Remove">
+                      <Trash2 className="w-4 h-4 text-current" />
                     </button>
                   </div>
                 </div>
@@ -175,6 +172,18 @@ export const AdminInstagram: React.FC = () => {
           ))}
         </div>
       )}
+
+      <SaveBar note={isDirty ? <span className="font-medium text-brand">You have unsaved changes. Click "Save &amp; publish" to put them live.</span> : 'Everything here is on the site.'}>
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving || !isDirty}
+          className={kit.primary}
+        >
+          {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
+          <span>{isSaving ? 'Saving…' : isDirty ? 'Save & publish' : 'All changes saved'}</span>
+        </button>
+      </SaveBar>
     </div>
   );
 };

@@ -6,7 +6,8 @@ import { ordersApi } from '../../lib/api';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { ArrowRight, Check, Clock, ExternalLink, Phone, RefreshCw, RotateCcw, X } from 'lucide-react';
 import { WhatsAppIcon } from '../BrandIcons';
-import { AdminPageHeader, tone, ui } from './kidsToysShared';
+import { EmptyState, KeyNumbers, PageTitle, Pill, adminUi } from './PaymentBadge';
+import type { PillTone } from './PaymentBadge';
 import { RETURN_STATUS_LABEL, returnRequestOf, returnStatusOf } from '../OrderProgress';
 import type { Order, ReturnRequest, ReturnRequestItem, ReturnRequestStatus } from '../../types';
 
@@ -58,18 +59,23 @@ const when = (iso?: string) => {
 };
 export const digits = (phone: string) => String(phone || '').replace(/\D/g, '').slice(-10);
 
-const statusTone = (state: ReturnRequestStatus) =>
-  state === 'requested' ? tone.warn
-    : state === 'approved' || state === 'received' ? tone.neutral
-      : state === 'rejected' ? tone.danger
-        : tone.ok;
+// Gold while the request waits or is moving, red (with the word) when it was denied, muted once finished
+const statusTone = (state: ReturnRequestStatus): PillTone =>
+  state === 'requested' || state === 'approved' || state === 'received' ? 'good'
+    : state === 'rejected' ? 'danger'
+      : 'muted';
+/** Waiting requests first, then the ones in progress, then the closed ones. */
+const stateRank = (state: ReturnRequestStatus) => (state === 'requested' ? 0 : state === 'approved' || state === 'received' ? 1 : 2);
 
 // Shared pieces of the request cards (returns here, cancellations in AdminCancellations.tsx)
-export const cardShell = 'rounded-2xl bg-white border p-3.5 sm:p-5';
-export const newBadge = `${ui.badge} bg-accent text-white`;
-export const contactBtn = 'h-11 px-3.5 rounded-[10px] border-[1.5px] border-control bg-white text-sm font-semibold text-ink inline-flex items-center justify-center gap-1.5 hover:bg-sunken';
-export const orderLink = `${ui.link} mt-2 min-h-11 max-w-full font-mono text-sm inline-flex items-center gap-1 break-all text-left`;
+export const cardShell = adminUi.card;
+/** "New" mark: a gold fill, so it carries dark text. */
+export const newBadge = 'inline-flex items-center min-h-6 px-2.5 py-0.5 rounded-full bg-brand text-[color:var(--sag-on-gold)] text-xs leading-4 font-semibold whitespace-nowrap';
+export const contactBtn = `${adminUi.outline} px-4`;
+export const orderLink = `${adminUi.link} mt-2.5 min-h-11 max-w-full text-[15px] font-semibold sag-num inline-flex items-center gap-1.5 break-all text-left`;
 export const actionRow = 'flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none';
+/** Small muted capitals above a value inside a request card. */
+export const cardEyebrow = 'text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted';
 
 /**
  * Admin → Returns & exchanges. Customer requests arrive here live (the orders list is a live listener);
@@ -92,7 +98,8 @@ export const AdminReturns: React.FC = () => {
     decide: rows.filter((row) => row.state === 'requested'),
     progress: rows.filter((row) => row.state === 'approved' || row.state === 'received'),
     closed: rows.filter((row) => !['requested', 'approved', 'received'].includes(row.state)),
-    all: rows,
+    // The waiting ones come first; each group keeps its newest-first order
+    all: [...rows].sort((a, b) => stateRank(a.state) - stateRank(b.state)),
   };
   const shown = groups[filter];
   const chips: Array<{ id: Filter; label: string }> = [
@@ -103,41 +110,35 @@ export const AdminReturns: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
-      <AdminPageHeader
-        eyebrow="Sales"
+    <div className="space-y-5 max-w-5xl mx-auto">
+      <PageTitle
         title="Returns & exchanges"
-        icon={<RotateCcw className="w-5 h-5" />}
-        description={<>Customer return and exchange requests appear here live. Answer them right here; the customer sees your decision in their account and gets an email.</>}
+        line={<>Customer return and exchange requests appear here live. Answer them right here; the customer sees your decision in their account and gets an email.</>}
       />
 
-      <dl className="grid grid-cols-3 gap-2.5">
-        {[
-          { label: 'Waiting for you', value: groups.decide.length, tone: groups.decide.length ? 'text-sale' : 'text-ink' },
-          { label: 'In progress', value: groups.progress.length, tone: 'text-ink' },
-          { label: 'Closed', value: groups.closed.length, tone: 'text-ink-muted' },
-        ].map((s) => (
-          <div key={s.label} className={`min-w-0 rounded-2xl border px-3 py-2.5 sm:px-4 ${s.label === 'Waiting for you' && s.value ? 'bg-sale-tint border-sale-line' : 'bg-white border-line'}`}>
-            <dt className={ui.eyebrow}>{s.label}</dt>
-            <dd className={`text-2xl leading-8 font-bold tabular-nums ${s.tone}`}>{s.value}</dd>
-          </div>
-        ))}
-      </dl>
+      <KeyNumbers
+        label="Returns at a glance"
+        items={[
+          { label: 'Waiting for you', value: groups.decide.length, highlight: groups.decide.length > 0, note: groups.decide.length ? 'Approve or deny each one' : 'Nothing to decide' },
+          { label: 'In progress', value: groups.progress.length, note: 'Approved, not finished yet' },
+          { label: 'Closed', value: groups.closed.length, note: 'Refunded, exchanged or denied' },
+        ]}
+      />
 
-      <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist" aria-label="Show requests">
+      <div className={adminUi.chipRow} role="tablist" aria-label="Show requests">
         {chips.map((c) => (
-          <button key={c.id} role="tab" aria-selected={filter === c.id} onClick={() => setFilter(c.id)}
-            className={`${ui.chip(filter === c.id)} shrink-0 whitespace-nowrap`}>
-            {c.label} <span className={`tabular-nums font-normal ${filter === c.id ? 'text-on-dark-muted' : 'text-ink-muted'}`}>{groups[c.id].length}</span>
+          <button key={c.id} type="button" role="tab" aria-selected={filter === c.id} data-selected={filter === c.id} onClick={() => setFilter(c.id)} className={adminUi.chip}>
+            {c.label} <span className="sag-num font-normal opacity-70">{groups[c.id].length}</span>
           </button>
         ))}
       </div>
 
       {shown.length === 0 ? (
-        <div className={ui.empty}>
-          <p className="text-base font-semibold text-ink">{filter === 'decide' ? 'Nothing waiting for you' : 'No requests here'}</p>
-          <p className="mt-1 text-sm leading-5 text-ink-muted max-w-md mx-auto">New return and exchange requests from customers show up here the moment they are sent. Cancellation requests are on the Cancellations page.</p>
-        </div>
+        <EmptyState
+          icon={<RotateCcw />}
+          title={filter === 'decide' ? 'No returns waiting' : 'No requests here'}
+          line="New return and exchange requests from customers show up here the moment they are sent. Cancellation requests are on the Cancellations page."
+        />
       ) : (
         <ul className="space-y-3">
           {shown.map((row) => (
@@ -194,13 +195,13 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
   };
 
   return (
-    <article className={`${cardShell} ${state === 'requested' ? 'border-sale-line' : 'border-line'}`}>
+    <article className={cardShell}>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {isNew && <span className={newBadge}>New</span>}
-            <span className={`${ui.badge} ${tone.neutral}`}>{kindLabel}</span>
-            <span className={`${ui.badge} ${statusTone(state)}`}>{RETURN_STATUS_LABEL[state] || state}</span>
+            <Pill>{kindLabel}</Pill>
+            <Pill tone={statusTone(state)} dot>{RETURN_STATUS_LABEL[state] || state}</Pill>
             <span className="text-xs text-ink-muted inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {ago(row.at, now)}</span>
           </div>
           <button type="button" onClick={onOpenOrder} className={orderLink}>
@@ -217,39 +218,42 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
         )}
       </header>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <ul className="space-y-2.5">
-          {items.map((item, i) => (
-            <li key={`${item.line}-${i}`} className="flex gap-3">
-              <div className="w-14 aspect-[4/5] shrink-0 rounded-[10px] overflow-hidden bg-sunken">
-                {(item.image || order.items?.[item.line]?.product?.images?.[0]) && <img src={getCleanImageUrl(item.image || order.items?.[item.line]?.product?.images?.[0] || '', 160)} alt="" className="w-full h-full object-cover object-top" />}
-              </div>
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold text-ink leading-snug line-clamp-2">{item.name}</p>
-                <p className="text-ink-muted">
-                  Size {item.size || 'one size'}{kind === 'exchange' && item.exchangeSize ? <> → <strong className="text-ink">{item.exchangeSize}</strong></> : null} · Qty {item.qty}
-                  {item.price ? ` · ₹${Number(item.price).toLocaleString('en-IN')}` : ''}
-                </p>
-              </div>
-            </li>
-          ))}
-          {value > 0 && <li className="text-xs text-ink-muted">Items value ₹{value.toLocaleString('en-IN')} (prices paid, before order discounts and shipping)</li>}
-        </ul>
-        <div className="text-sm space-y-2">
-          <p className={ui.eyebrow}>Reason</p>
+      <div className="mt-4 pt-4 border-t border-line grid gap-4 md:grid-cols-2">
+        <div className="min-w-0">
+          <p className={`${cardEyebrow} mb-2`}>{kind === 'exchange' ? 'Pieces to exchange' : 'Pieces coming back'}</p>
+          <ul className="space-y-2.5">
+            {items.map((item, i) => (
+              <li key={`${item.line}-${i}`} className="flex gap-3">
+                <div className="w-14 aspect-[4/5] shrink-0 rounded-xl overflow-hidden bg-sunken">
+                  {(item.image || order.items?.[item.line]?.product?.images?.[0]) && <img src={getCleanImageUrl(item.image || order.items?.[item.line]?.product?.images?.[0] || '', 160)} alt="" className="w-full h-full object-cover object-top" />}
+                </div>
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold text-ink leading-snug line-clamp-2">{item.name}</p>
+                  <p className="text-ink-muted sag-num">
+                    Size {item.size || 'one size'}{kind === 'exchange' && item.exchangeSize ? <> → <strong className="text-ink">{item.exchangeSize}</strong></> : null} · Qty {item.qty}
+                    {item.price ? ` · ₹${Number(item.price).toLocaleString('en-IN')}` : ''}
+                  </p>
+                </div>
+              </li>
+            ))}
+            {value > 0 && <li className="text-xs text-ink-muted sag-num">Items value ₹{value.toLocaleString('en-IN')} (prices paid, before order discounts and shipping)</li>}
+          </ul>
+        </div>
+        <div className="text-sm space-y-2 min-w-0">
+          <p className={cardEyebrow}>Reason</p>
           <p className="font-semibold text-ink">{request.reason || 'Not given'}</p>
           {request.details && <p className="text-ink-muted whitespace-pre-line break-words">{request.details}</p>}
           {request.refundUpi && <p className="font-semibold text-ink break-all">Refund to UPI ID (cash on delivery order): {request.refundUpi}</p>}
           {(request.photos || []).length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
               {(request.photos || []).map((url, i) => (
-                <a key={url} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Customer photo ${i + 1}`} className="w-14 aspect-[4/5] rounded-[10px] overflow-hidden bg-sunken">
+                <a key={url} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Customer photo ${i + 1}`} className="w-14 aspect-[4/5] rounded-xl overflow-hidden bg-sunken">
                   <img src={getCleanImageUrl(url, 160)} alt="" loading="lazy" className="w-full h-full object-cover" />
                 </a>
               ))}
             </div>
           )}
-          {request.adminNote && <p className="text-[13px] leading-[18px] text-ink-muted break-words"><strong>Your last note:</strong> {request.adminNote}</p>}
+          {request.adminNote && <p className="text-[13px] leading-[18px] text-ink-muted break-words"><strong className="font-semibold text-ink">Your last note:</strong> {request.adminNote}</p>}
           {(request.history || []).length > 1 && (
             <p className="text-xs leading-4 text-ink-muted">{(request.history || []).map((h) => `${RETURN_STATUS_LABEL[h.status as ReturnRequestStatus] || h.status} ${when(h.at)}`).join(' → ')}</p>
           )}
@@ -257,22 +261,24 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
       </div>
 
       {actions.length > 0 && (
-        <div className="mt-4 pt-3.5 border-t border-line space-y-3">
+        <div className="mt-4 pt-4 border-t border-line space-y-3">
+          <p className={cardEyebrow}>Your answer</p>
           <textarea rows={2} maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note to the customer"
             placeholder={state === 'requested'
               ? 'Note to the customer (required): the next steps to approve, e.g. "Please pack it with tags; pickup in 2 days" — or why it is denied.'
               : kind === 'return' ? 'Optional note, e.g. "Refund sent to your UPI today." (required to deny)' : 'Optional note, e.g. "New size shipped, tracking on WhatsApp." (required to deny)'}
-            className={ui.textarea} />
+            className={adminUi.textarea} />
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5">
-            <label className="min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer">
-              <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand" /> Email the customer
+            <label className={adminUi.checkRow}>
+              <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className={adminUi.check} /> Email the customer
             </label>
             <div className={actionRow}>
-              {actions.map((action) => {
+              {/* "Deny" sits first, apart from the gold main action at the end */}
+              {[...actions].sort((a, b) => Number(b === 'reject') - Number(a === 'reject')).map((action) => {
                 const primary = action === 'approve' || action === 'refund' || action === 'exchange';
                 return (
                   <button key={action} type="button" onClick={() => act(action)} disabled={Boolean(busy)}
-                    className={primary ? ui.primary : action === 'reject' ? ui.danger : ui.outline}>
+                    className={primary ? adminUi.primary : action === 'reject' ? adminUi.danger : adminUi.outline}>
                     {busy === action ? <RefreshCw className="w-4 h-4 animate-spin" /> : action === 'reject' ? <X className="w-4 h-4" /> : action === 'approve' ? <Check className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                     {busy === action ? 'Saving…' : LABEL[action]}
                   </button>

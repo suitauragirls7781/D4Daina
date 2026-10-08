@@ -12,7 +12,7 @@ import {
   AdminPageHeader, CategoryResult, CategoryStatus, ColourFind, ColourRow, ColoursField, FilterChips, FormSheet, LIST_STEP, OTHER, PhotoField, Price, PriceHint, Problem,
   PublishButton, ShowToast, Stat, Status, Thumb, Toggle, categoryNote, changedFields, clip, colourNames, colourRow, colourRowsFrom, coloursToSave,
   focusField, keepPricesTogether, matchesText, mrpOf, newSku, priceFields, priceProblem, settleWithin, stockProblem, ui, usePhotoSession,
-  useStoreCategories,
+  useStoreCategories, ON_GOLD,
 } from './kidsToysShared';
 
 type KidsCategory = (typeof KIDS_CATEGORIES)[number];
@@ -20,8 +20,8 @@ const ALL = 'all';
 const isKidsCategory = (value: string): value is KidsCategory => (KIDS_CATEGORIES as readonly string[]).includes(value);
 
 const QUICK_ADD: Array<{ category: KidsCategory; hint: string; tone: string }> = [
-  { category: BABY_GIRLS, hint: 'Frocks, ethnic sets, tops… ages 1-2 Y to 14-15 Y', tone: 'bg-white border-line hover:bg-sunken text-ink' },
-  { category: BABY_BOYS, hint: 'Shirts, kurta sets, T-shirts… ages 1-2 Y to 14-15 Y', tone: 'bg-white border-line hover:bg-sunken text-ink' },
+  { category: BABY_GIRLS, hint: 'Frocks, ethnic sets, tops… ages 1-2 Y to 14-15 Y', tone: 'sag-glass sag-glass-strong text-ink' },
+  { category: BABY_BOYS, hint: 'Shirts, kurta sets, T-shirts… ages 1-2 Y to 14-15 Y', tone: 'sag-glass sag-glass-strong text-ink' },
 ];
 
 /** "1-2 Y, 3-4 Y" or "8 ages · 1-2 to 14-15 Y". */
@@ -148,6 +148,7 @@ export const AdminKids: React.FC = () => {
   const count = (n: number) => (countsLoading ? '…' : n);
   const onStore = (list: Product[]) => list.filter((p) => !p.hidden && isAvailable(p)).length;
   const published = kids.filter((p) => !p.hidden).length;
+  const soldOut = kids.filter((p) => !p.hidden && !isAvailable(p)).length;
 
   const togglePublished = async (p: Product) => {
     setBusyId(p.id);
@@ -187,17 +188,18 @@ export const AdminKids: React.FC = () => {
         description={<>Add clothes for Baby Girls and Baby Boys here. They are shown in their own Kids section of the store, with sizes by age from 1-2 Y to 14-15 Y. Your women's products stay in Products and are not changed here.</>}
       />
 
-      <dl className="grid grid-cols-3 gap-2 sm:gap-3" aria-label="Kids wear in numbers">
+      <dl className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="Kids wear in numbers">
         <Stat label="Kids wear" value={count(kids.length)} note={countsLoading ? 'Loading…' : `${published} published · ${kids.length - published} hidden`} />
         <Stat label={BABY_GIRLS} value={count(girls.length)} note={countsLoading ? 'Loading…' : `${onStore(girls)} on the store now`} />
-        <Stat label={BABY_BOYS} value={count(boys.length)} note={countsLoading ? 'Loading…' : `${onStore(boys)} on the store now`} />
+        <Stat label={BABY_BOYS} value={count(boys.length)} note={countsLoading ? 'Loading…' : ` on the store now`} />
+        <Stat label="Sold out" value={count(soldOut)} note={countsLoading ? 'Loading…' : soldOut ? 'published, add stock to sell' : 'nothing is sold out'} />
       </dl>
 
       <div className="grid grid-cols-2 gap-3">
         {QUICK_ADD.map(({ category, hint, tone }) => (
           <button key={category} type="button" onClick={() => setDraft(emptyDraft(category))}
-            className={`min-w-0 text-left rounded-2xl border p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 transition-colors cursor-pointer ${tone}`}>
-            <span className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shrink-0" aria-hidden="true"><Plus className="w-5 h-5 text-current" /></span>
+            className={`min-w-0 text-left p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 transition-colors cursor-pointer ${tone}`}>
+            <span className={`w-10 h-10 rounded-full bg-brand ${ON_GOLD} flex items-center justify-center shrink-0`} aria-hidden="true"><Plus className="w-5 h-5 text-current" /></span>
             <span className="min-w-0">
               <span className="block text-base font-semibold leading-tight">Add {category} wear</span>
               <span className="hidden sm:block mt-0.5 text-[13px] text-ink-muted">{hint}</span>
@@ -210,7 +212,7 @@ export const AdminKids: React.FC = () => {
 
       <section className={`${ui.card} min-w-0`} aria-labelledby="kids-list-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h3 id="kids-list-title" className="text-[17px] leading-6 font-semibold text-ink">Kids wear ({count(kids.length)})</h3>
+          <h3 id="kids-list-title" className={ui.h2}>All kids wear <span className="font-normal text-ink-muted sag-num">({count(kids.length)})</span></h3>
           <FilterChips label="Show kids wear for" value={filter} onChange={changeFilter} options={[
             { value: ALL, label: 'All', count: kids.length },
             { value: BABY_GIRLS, label: BABY_GIRLS, count: girls.length },
@@ -229,7 +231,7 @@ export const AdminKids: React.FC = () => {
         {countsLoading ? (
           <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : kids.length === 0 ? (
-          <div className="mt-4 rounded-xl bg-page border border-line p-4 text-sm text-ink-muted">
+          <div className="mt-4 rounded-2xl bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
             No kids wear yet. Use <span className="font-semibold text-ink">Add Baby Girls wear</span> or <span className="font-semibold text-ink">Add Baby Boys wear</span> above to add the first item.
           </div>
         ) : results.length === 0 ? (
@@ -250,8 +252,8 @@ export const AdminKids: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 ml-auto">
                   <PublishButton p={p} busy={busyId === p.id} onToggle={() => togglePublished(p)} />
-                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.iconBtn} hover:bg-sunken text-ink`}>
-                    <Pencil className="w-4 h-4 text-current" />
+                  <button type="button" onClick={() => setDraft(draftFrom(p))} disabled={busyId === p.id} aria-label={`Edit ${p.name}`} className={`${ui.small} !border-brand-line !text-brand`}>
+                    <Pencil className="w-3.5 h-3.5 text-current" /> Edit
                   </button>
                   <button type="button" onClick={() => remove(p)} disabled={busyId === p.id} aria-label={`Delete ${p.name}`} className={`${ui.iconBtn} hover:bg-danger-tint text-danger`}>
                     {busyId === p.id ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Trash2 className="w-4 h-4 text-current" />}
@@ -298,7 +300,7 @@ interface KidsFormProps {
   showToast: ShowToast;
 }
 
-const shortcut = 'h-11 px-3 rounded-[10px] border border-control bg-white text-[13px] font-semibold text-ink hover:bg-sunken cursor-pointer';
+const shortcut = 'h-11 sm:h-9 px-3.5 rounded-full border border-line bg-sunken text-[13px] font-semibold text-ink hover:bg-sunken-deep cursor-pointer';
 
 /** Add / edit one kids wear item, saved through the same product functions as the rest of the catalogue. */
 const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProducts, onClose, onSaved, addProduct, updateProduct, ensureCategory, showToast }) => {
@@ -460,7 +462,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 const on = d.category === c;
                 return (
                   <button key={c} id={c === BABY_GIRLS ? 'kid-for-girls' : 'kid-for-boys'} type="button" aria-pressed={on} onClick={() => set({ category: c })}
-                    className={`h-11 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${on ? 'bg-ink border-ink text-white' : 'bg-white border-line text-ink hover:bg-sunken'}`}>
+                    className={ui.chip(on)}>
                     {on && <Check className="w-4 h-4 text-current" aria-hidden="true" />}{c}
                   </button>
                 );
@@ -512,7 +514,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
 
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
-              <p id="kid-sizes-label" className="text-[13px] font-semibold text-ink">Age sizes * <span className={ui.optional}>(tick the ones you have)</span></p>
+              <p id="kid-sizes-label" className="text-[13px] font-medium text-ink-muted">Age sizes * <span className={ui.optional}>(tick the ones you have)</span></p>
               <div className="flex flex-wrap gap-1.5">
                 <button type="button" onClick={() => set({ sizes: [...KIDS_SIZE_PAIRS] })} title="Tick 1-2, 3-4, 5-6, 7-8, 9-10, 11-12, 13-14 and 14-15 Y" className={shortcut}>
                   1-2, 3-4, 5-6…
@@ -521,7 +523,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 {d.sizes.length > 0 && <button type="button" onClick={() => set({ sizes: [] })} className={shortcut}>Clear</button>}
               </div>
             </div>
-            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-4 focus:ring-offset-page">
+            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
               {sizeOrder.map((s) => {
                 const on = d.sizes.includes(s);
                 return (

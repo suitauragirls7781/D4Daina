@@ -84,6 +84,15 @@ Default order (admin can reorder/toggle in Admin → Homepage; stored in `storef
 
 ---
 
+## 🧭 4b. Admin panel (redesigned 2026-10-08)
+The owner is not technical: every admin page uses plain words and the same skeleton (serif title with one line saying what the page is for, 2-4 real key numbers in small glass tiles, filters in one row, the main list or form in titled glass panels, one gold primary action, clear empty states). Shared pieces live in `src/components/admin/adminUi.tsx`, `kidsToysShared.tsx`, `PaymentBadge.tsx` and `AdminPaymentGateways.tsx`.
+- **Dashboard**: "Right now" (people on the site this moment, visitors today, orders and sales today), "Today's to-do", cash to collect on cash-on-delivery orders, live visitors with their page trail, "What customers are doing", visitors by hour, Today / This week / This month, the path to an order (funnel), the last 30 days, "Needs your attention", top products, sources and devices. **Reports** is the day / week / month history with CSV.
+- **Live visitors** come from the `presence` table (one row per visitor: city from Cloudflare, device, source, current page, the last 12 pages; never the IP address). The storefront sends a small signal on each page change and every 2 minutes (`src/utils/presence.ts`, `api/_lib/presence.js`, event `presence` on `/api/track`); the admin reads `GET /api/admin-config?action=live` every 15 seconds while the dashboard is open. Presence has its own daily write budget (`PRESENCE_WRITE_BUDGET`): when it is used up only the live view pauses for the day; visit counting and orders are never affected.
+- Top bar: search everything (`/` or Ctrl+K), quick actions, an optional sound for new paid orders. Order details carry a printable packing slip and ready-made WhatsApp messages.
+- Every number in the admin is real; a day without data says "No data".
+
+---
+
 ## ✅ 5. Honesty Rules
 - Never show fake coupons, fake ratings/reviews, invented delivery dates, countdowns that reset, stock numbers that are not real, or service claims the owner has not confirmed.
 - Every price, discount, coupon and total shown in the browser is only a preview; the server (`api/orders.js`) recalculates everything before payment.

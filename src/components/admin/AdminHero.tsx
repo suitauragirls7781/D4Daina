@@ -2,29 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
-import { 
-  Save, 
-  Sparkles, 
+import {
+  Save,
+  Sparkles,
   Plus,
   Trash2,
-  ExternalLink,
   Upload,
   Image as ImageIcon,
   X,
   Loader2,
-  CheckCircle2,
   Eye,
   ShoppingBag,
   Search,
   Check,
   RefreshCw,
-  Zap,
   ArrowUp,
   ArrowDown
 } from 'lucide-react';
 import { HeroBannerConfig } from '../../types';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminPageHeader } from './kidsToysShared';
+import { Empty, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const AVAILABLE_CATEGORIES = [
   'All',
@@ -40,9 +38,9 @@ const AVAILABLE_CATEGORIES = [
 ];
 
 export const AdminHero: React.FC = () => {
-  const { 
+  const {
     products,
-    heroConfig, 
+    heroConfig,
     updateHeroConfig,
     syncHeroWithLiveProducts,
     dealOfTheDay
@@ -200,62 +198,79 @@ export const AdminHero: React.FC = () => {
     p.category.toLowerCase().includes(productSearch.toLowerCase())
   ));
 
+  const slides = heroForm.slides || [];
+  const liveCount = heroConfig?.slides?.length || 0;
+  const linkedCount = slides.filter((slide) => slide.productId).length;
+  const ownPhotoCount = slides.filter((slide) => slide.bannerImage).length;
+  const unsaved = JSON.stringify(slides) !== JSON.stringify(heroConfig?.slides || []);
+
   return (
-    <div id="admin-hero-page" className="space-y-6 pb-12">
-      
+    <div id="admin-hero-page" className="space-y-5 pb-12">
+
       {/* Header */}
       <AdminPageHeader
         eyebrow="Storefront banners"
         title="Hero slides"
         icon={<Sparkles className="text-current" />}
-        description="The main square (1:1) slider at the top of the homepage. Change, add, reorder or delete slides, or link a slide to a real product."
+        description="The big photo slides at the top of the homepage. Add, change, reorder or remove slides here, then press Save to put them on the site."
         actions={<>
-          {/* Quick Sync Button */}
           <button
             type="button"
-            onClick={handleQuickSyncProducts}
-            disabled={isSyncing}
-            className="h-11 px-4 bg-white border-[1.5px] border-control hover:bg-sunken text-ink rounded-xl text-sm font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer disabled:opacity-50"
-            title="Auto-fill slides with top 6 live products from database"
+            onClick={() => setActivePage('home')}
+            className={kit.outline}
           >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>Sync 6 live products</span>
+            <Eye className="w-4 h-4 text-current" />
+            <span>View home</span>
           </button>
 
           <button
             type="button"
             onClick={addSlide}
-            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2"
+            className={kit.primary}
           >
             <Plus className="w-4 h-4 text-current" />
             <span>Add slide</span>
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActivePage('home')}
-            className="h-11 px-4 bg-sunken hover:bg-sunken-deep text-ink rounded-xl text-sm font-semibold transition-colors inline-flex items-center gap-2 cursor-pointer"
-          >
-            <Eye className="w-4 h-4 text-current" />
-            <span>View home</span>
-          </button>
         </>}
       />
 
-      <form onSubmit={handleHeroSubmit} className="space-y-6">
-        
+      <Tiles className="lg:!grid-cols-3">
+        <Tile label="Slides on the site now" value={liveCount} note="Shown one after another" />
+        <Tile label="Linked to a product" value={linkedCount} note="A tap opens that product" />
+        <Tile label="With their own banner photo" value={ownPhotoCount} note="The others use the product photo" />
+      </Tiles>
+
+      {/* Fill from products: replaces the list, so it sits apart from the slides */}
+      <div className={`${kit.panel} flex flex-wrap items-center justify-between gap-3`}>
+        <div className="min-w-0 flex-1 basis-60">
+          <h3 className={kit.h2}>Fill the slides from your products</h3>
+          <p className={`mt-1 ${kit.hint}`}>Makes six slides from six products that are live on the store, with their photo, name and price, and saves them straight away.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleQuickSyncProducts}
+          disabled={isSyncing}
+          className={kit.outline}
+          title="Auto-fill slides with top 6 live products from database"
+        >
+          <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+          <span>Sync 6 live products</span>
+        </button>
+      </div>
+
+      <form onSubmit={handleHeroSubmit} className="space-y-5">
+
         {/* Slides List */}
-        <div className="space-y-6">
-          {(!heroForm.slides || heroForm.slides.length === 0) ? (
-            <div className="text-center px-6 py-14 bg-white rounded-2xl border-2 border-dashed border-line">
-              <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-sunken text-ink flex items-center justify-center"><ImageIcon className="w-6 h-6 text-current" /></span>
-              <p className="text-base text-ink">No custom slides added yet</p>
-              <p className="text-sm text-ink-muted mt-1">Click the button below to auto-populate from your active live products.</p>
-              <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+        <div className="space-y-5">
+          {slides.length === 0 ? (
+            <Empty
+              icon={<ImageIcon />}
+              title="No custom slides added yet"
+              action={<>
                 <button
                   type="button"
                   onClick={handleQuickSyncProducts}
-                  className="h-11 px-5 bg-white border-[1.5px] border-control text-ink hover:bg-sunken rounded-xl text-sm font-semibold inline-flex items-center gap-2 cursor-pointer"
+                  className={kit.outline}
                 >
                   <RefreshCw className="w-4 h-4 text-current" />
                   <span>Sync 6 Products</span>
@@ -263,44 +278,42 @@ export const AdminHero: React.FC = () => {
                 <button
                   type="button"
                   onClick={addSlide}
-                  className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2"
+                  className={kit.primary}
                 >
                   <Plus className="w-4 h-4 text-current" />
                   <span>Add Manual Slide</span>
                 </button>
-              </div>
-            </div>
+              </>}
+            >
+              Fill the slides from your live products with one tap, or add a slide by hand.
+            </Empty>
           ) : (
-            heroForm.slides.map((slide, index) => {
+            slides.map((slide, index) => {
               const slideImg = getCleanImageUrl(slide.bannerImage || slide.image);
 
               return (
-                <div 
+                <div
                   key={slide.id || index}
-                  className="bg-white p-4 sm:p-6 rounded-2xl border border-line space-y-5"
+                  className={`${kit.panel} space-y-5`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1 basis-64">
-                      <span className="w-8 h-8 shrink-0 rounded-full bg-ink text-white flex items-center justify-center text-base font-semibold">
-                        {index + 1}
+                    <div className="flex items-center gap-3 min-w-0 flex-1 basis-64">
+                      <span className="shrink-0 text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">
+                        Slide {index + 1}
                       </span>
-                      <h3 className="text-lg font-semibold text-ink min-w-0 truncate">
+                      <h3 className="text-[17px] leading-6 font-semibold text-ink min-w-0 truncate">
                         {slide.title || 'Untitled slide'}
                       </h3>
-                      {slide.productId && (
-                        <span className="shrink-0 px-2.5 py-0.5 rounded-md bg-ok-tint text-ok text-[11px] font-semibold border border-ok-line">
-                          Linked Product
-                        </span>
-                      )}
+                      {slide.productId && <Pill tone="soon">Linked Product</Pill>}
                     </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       {/* Move Up/Down */}
                       <button
                         type="button"
                         disabled={index === 0}
                         onClick={() => moveSlide(index, 'up')}
-                        className="w-11 h-11 inline-flex items-center justify-center text-ink hover:bg-sunken disabled:opacity-30 rounded-full transition-colors cursor-pointer"
+                        className={kit.iconBtn}
                         title="Move Up"
                         aria-label="Move slide up"
                       >
@@ -308,9 +321,9 @@ export const AdminHero: React.FC = () => {
                       </button>
                       <button
                         type="button"
-                        disabled={index === (heroForm.slides?.length || 0) - 1}
+                        disabled={index === slides.length - 1}
                         onClick={() => moveSlide(index, 'down')}
-                        className="w-11 h-11 inline-flex items-center justify-center text-ink hover:bg-sunken disabled:opacity-30 rounded-full transition-colors cursor-pointer"
+                        className={kit.iconBtn}
                         title="Move Down"
                         aria-label="Move slide down"
                       >
@@ -324,7 +337,7 @@ export const AdminHero: React.FC = () => {
                           setProductPickerSlideId(slide.id);
                           setProductSearch('');
                         }}
-                        className="h-11 px-3.5 bg-white hover:bg-sunken text-ink border-[1.5px] border-control rounded-xl text-sm font-semibold transition-colors flex items-center gap-1.5 cursor-pointer"
+                        className={kit.small}
                       >
                         <ShoppingBag className="w-3.5 h-3.5 text-current" />
                         <span>Link product</span>
@@ -334,7 +347,7 @@ export const AdminHero: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => removeSlide(slide.id)}
-                        className="w-11 h-11 inline-flex items-center justify-center text-danger hover:bg-danger-tint rounded-full transition-colors cursor-pointer"
+                        className={kit.iconBtnDanger}
                         title="Remove Slide"
                         aria-label="Remove slide"
                       >
@@ -344,9 +357,10 @@ export const AdminHero: React.FC = () => {
                   </div>
 
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-                    
+
                     {/* Left: 1:1 Square Image Preview & Upload */}
                     <div className="lg:col-span-4 space-y-3">
+                      <p className="sag-label">Photo</p>
                       <div className="w-full aspect-square max-w-[260px] mx-auto bg-sunken rounded-2xl overflow-hidden border border-line relative group">
                         {slideImg ? (
                           <img
@@ -362,7 +376,7 @@ export const AdminHero: React.FC = () => {
                         )}
 
                         {uploadingSlideId === slide.id && (
-                          <div className="absolute inset-0 bg-ink/50 flex items-center justify-center text-white text-xs font-bold gap-2">
+                          <div className="absolute inset-0 bg-[color:var(--sag-scrim)] flex items-center justify-center text-ink text-xs font-semibold gap-2">
                             <Loader2 className="w-5 h-5 animate-spin text-current" />
                             <span>Uploading...</span>
                           </div>
@@ -371,7 +385,7 @@ export const AdminHero: React.FC = () => {
 
                       {/* Image actions */}
                       <div className="space-y-2">
-                        <label className="w-full h-11 bg-sunken hover:bg-sunken-deep text-ink border border-dashed border-control rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                        <label className="sag-btn-outline w-full h-11 text-sm gap-2 cursor-pointer">
                           <Upload className="w-4 h-4 text-current" />
                           <span>Upload banner photo</span>
                           <input
@@ -392,20 +406,20 @@ export const AdminHero: React.FC = () => {
                         />
 
                         {slide.bannerImage ? (
-                          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-ok-tint border border-ok-line px-3 py-2">
-                            <span className="text-[11px] font-bold text-ok">Custom banner photo (not used on the product page)</span>
+                          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-brand-wash border border-brand-line px-3 py-2">
+                            <span className="text-[13px] leading-[18px] font-medium text-brand">Custom banner photo (not used on the product page)</span>
                             {slide.productId && (
                               <button
                                 type="button"
                                 onClick={() => updateSlide(slide.id, { bannerImage: undefined })}
-                                className="shrink-0 h-11 px-3 rounded-xl bg-white border border-ok-line text-sm font-semibold text-ink hover:bg-sunken cursor-pointer"
+                                className={`${kit.small} shrink-0`}
                               >
                                 Use product photo
                               </button>
                             )}
                           </div>
                         ) : (
-                          <p className="text-[13px] text-ink-muted leading-snug">
+                          <p className={kit.hint}>
                             {slide.productId
                               ? "Showing the product's own photo. Upload a banner photo to use a different image here only."
                               : 'Upload a banner photo for this slide.'}
@@ -416,7 +430,7 @@ export const AdminHero: React.FC = () => {
 
                     {/* Right: Slide Text & Link Controls */}
                     <div className="lg:col-span-8 space-y-4">
-                      
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className="sag-label" htmlFor={`hero-slide-${index}-title`}>
@@ -428,7 +442,7 @@ export const AdminHero: React.FC = () => {
                             placeholder="e.g. Festive Cambric Silk Suit Set"
                             value={slide.title || ''}
                             onChange={(e) => updateSlide(slide.id, { title: e.target.value, customText: true })}
-                            className="sag-input h-12 font-bold"
+                            className="sag-input h-12 font-medium"
                           />
                         </div>
 
@@ -462,7 +476,7 @@ export const AdminHero: React.FC = () => {
                       </div>
 
                       {/* Pricing Row */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-page rounded-2xl border border-line">
+                      <div className={`${kit.inset} grid grid-cols-1 sm:grid-cols-2 gap-3`}>
                         <div>
                           <label className="sag-label" htmlFor={`hero-slide-${index}-price`}>
                             Offer price (₹)
@@ -473,7 +487,7 @@ export const AdminHero: React.FC = () => {
                             placeholder="1299"
                             value={slide.price || ''}
                             onChange={(e) => updateSlide(slide.id, { price: Number(e.target.value) || 0 })}
-                            className="sag-input h-12 font-bold"
+                            className="sag-input h-12 font-semibold sag-num"
                           />
                         </div>
 
@@ -487,7 +501,7 @@ export const AdminHero: React.FC = () => {
                             placeholder="2499"
                             value={slide.originalPrice || ''}
                             onChange={(e) => updateSlide(slide.id, { originalPrice: Number(e.target.value) || 0 })}
-                            className="sag-input h-12 text-ink-muted"
+                            className="sag-input h-12 text-ink-muted sag-num"
                           />
                         </div>
                       </div>
@@ -506,6 +520,7 @@ export const AdminHero: React.FC = () => {
                             onChange={(e) => updateSlide(slide.id, { link: e.target.value })}
                             className="sag-input h-12"
                           />
+                          <p className={`mt-1.5 ${kit.hint}`}>Where a tap on the slide goes. "Link product" fills this in for you.</p>
                         </div>
 
                         <div>
@@ -518,7 +533,7 @@ export const AdminHero: React.FC = () => {
                             placeholder="BUY NOW"
                             value={slide.linkText || 'BUY NOW'}
                             onChange={(e) => updateSlide(slide.id, { linkText: e.target.value })}
-                            className="sag-input h-12 font-bold"
+                            className="sag-input h-12 font-medium"
                           />
                         </div>
                       </div>
@@ -533,15 +548,16 @@ export const AdminHero: React.FC = () => {
         </div>
 
         {/* Save Bar */}
-        <div className="sticky bottom-3 z-20 flex items-center justify-between gap-3 bg-white pl-5 pr-2 py-2 rounded-xl border border-line shadow-[var(--sag-shadow-bar)]">
-          <div className="text-sm text-ink-muted">
-            <span className="text-lg font-semibold text-ink">{heroForm.slides?.length || 0}</span> slides
-          </div>
-
+        <SaveBar
+          note={<>
+            <span className="text-base font-semibold text-ink sag-num">{slides.length}</span> slides
+            {unsaved && <span className="text-brand"> · Changes not saved yet</span>}
+          </>}
+        >
           <button
             type="submit"
             disabled={isSaving}
-            className="h-11 px-5 sm:px-6 sag-btn-primary text-sm flex items-center gap-2 disabled:opacity-50"
+            className={kit.primary}
           >
             {isSaving ? (
               <>
@@ -555,30 +571,29 @@ export const AdminHero: React.FC = () => {
               </>
             )}
           </button>
-        </div>
+        </SaveBar>
 
       </form>
 
       {/* Product Picker Modal */}
       {productPickerSlideId && (
-        <div className="fixed inset-0 bg-ink/50 flex items-end sm:items-center justify-center sm:p-4 z-50">
-          <div role="dialog" aria-modal="true" aria-label="Select product for slide" className="bg-white w-full max-w-xl rounded-t-[20px] sm:rounded-2xl overflow-hidden shadow-[var(--sag-shadow-pop)] border border-line flex flex-col max-h-[90dvh] sm:max-h-[85vh]">
-            
+        <div className={`${kit.scrim} !z-50`}>
+          <div role="dialog" aria-modal="true" aria-label="Select product for slide" className={`${kit.sheet} max-w-xl overflow-hidden flex flex-col max-h-[90dvh] sm:max-h-[85vh]`}>
+
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-line flex items-start justify-between gap-3 bg-white">
+            <div className="p-4 sm:p-5 border-b border-line flex items-start justify-between gap-3">
               <div>
-                <h3 className="text-base font-semibold text-ink flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-ink" />
+                <h3 className="font-display text-xl leading-7 text-ink">
                   Select Product for Slide
                 </h3>
-                <p className="text-[13px] text-ink-muted">
+                <p className={`mt-0.5 ${kit.hint}`}>
                   Select any product to automatically populate photo, title, price, and instant checkout link.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setProductPickerSlideId(null)}
-                aria-label="Close" className="w-11 h-11 shrink-0 flex items-center justify-center text-ink rounded-full hover:bg-sunken cursor-pointer"
+                aria-label="Close" className={kit.iconBtn}
               >
                 <X className="w-5 h-5 text-current" />
               </button>
@@ -594,7 +609,7 @@ export const AdminHero: React.FC = () => {
                   aria-label="Search products"
                   value={productSearch}
                   onChange={(e) => setProductSearch(e.target.value)}
-                  className="sag-input h-12 pl-10 pr-4 bg-page focus:bg-white"
+                  className="sag-input h-12 pl-10 pr-4"
                   autoFocus
                 />
               </div>
@@ -613,7 +628,7 @@ export const AdminHero: React.FC = () => {
                     <div
                       key={p.id}
                       onClick={() => handleSelectProductForSlide(productPickerSlideId, p)}
-                      className="flex items-center justify-between gap-3 p-2.5 hover:bg-sunken rounded-2xl cursor-pointer transition-colors group"
+                      className="flex items-center justify-between gap-3 p-2.5 hover:bg-sunken-deep rounded-2xl cursor-pointer transition-colors group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <img
@@ -621,13 +636,13 @@ export const AdminHero: React.FC = () => {
                           alt={p.name}
                           className="w-12 aspect-[4/5] rounded-xl object-cover object-top border border-line shrink-0"
                         />
-                        <div>
-                          <h4 className="text-sm font-semibold text-ink group-hover:text-ink line-clamp-1">
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-medium text-ink line-clamp-1">
                             {p.name}
                           </h4>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[13px] text-ink-muted font-medium">{p.category}</span>
-                            <span className="text-[11px] font-bold text-ink">₹{p.price}</span>
+                          <div className="flex flex-wrap items-center gap-x-2 mt-0.5 sag-num">
+                            <span className="text-[13px] text-ink-muted">{p.category}</span>
+                            <span className="text-[13px] font-semibold text-ink">₹{p.price}</span>
                             {p.originalPrice && p.originalPrice > p.price && (
                               <span className="text-[13px] text-ink-faint line-through">₹{p.originalPrice}</span>
                             )}

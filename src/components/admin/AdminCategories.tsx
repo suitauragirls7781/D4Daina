@@ -16,7 +16,8 @@ import {
 } from 'lucide-react';
 import { CategoryItem, ProductCategory } from '../../types';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader, EmptyState, SCRIM, SWITCH_TRACK, StatRow, StatTile, tone, ui } from './kidsToysShared';
+import { getCleanImageUrl } from '../../utils/imageHelper';
 
 const MAX_UPLOAD_MB = 10;
 
@@ -150,15 +151,18 @@ export const AdminCategories: React.FC = () => {
     return products.filter((p) => p.category === catName).length;
   };
 
+  const activeCount = categories.filter((c) => c.isActive).length;
+  const noPhotoCount = categories.filter((c) => !c.image).length;
+
   return (
     <div id="admin-categories-page" className="space-y-6">
 
       {/* Header */}
       <AdminPageHeader
         eyebrow="Catalogue"
-        title={<>Categories <span className="text-ink-faint font-normal">({categories.length})</span></>}
+        title="Categories"
         icon={<Layers className="text-current" />}
-        description="The category tiles and menu links shoppers browse by. The store shows only categories that have products."
+        description="The groups shoppers browse by (Suits, Kurtis, Kids…). Give each one a photo. The store shows a category only when it has products."
         actions={
           <button
             onClick={handleOpenAdd}
@@ -169,11 +173,16 @@ export const AdminCategories: React.FC = () => {
           </button>
         }
       />
+      <StatRow label="Categories in numbers">
+        <StatTile label="Categories" value={categories.length} note="in total" />
+        <StatTile label="Shown on the store" value={activeCount} note="switched on" tone="gold" />
+        <StatTile label="Switched off" value={categories.length - activeCount} note="hidden from shoppers" />
+        <StatTile label="No photo yet" value={noPhotoCount} note={noPhotoCount ? 'the store uses a product photo' : 'every category has a photo'} />
+      </StatRow>
+
       {categories.length === 0 && (
-        <div className="px-6 py-14 text-center bg-white rounded-2xl border border-dashed border-line">
-          <span className="mx-auto mb-3 w-14 h-14 rounded-2xl bg-sunken text-ink flex items-center justify-center"><Layers className="w-6 h-6 text-current" /></span>
-          <p className="text-base font-semibold text-ink">No categories yet</p>
-          <p className="mt-1 text-sm text-ink-muted">Use Add category to create the first one.</p>
+        <div className="sag-glass">
+          <EmptyState icon={<Layers />} title="No categories yet">Use Add category to create the first one.</EmptyState>
         </div>
       )}
 
@@ -184,12 +193,12 @@ export const AdminCategories: React.FC = () => {
           return (
             <div
               key={cat.id}
-              className="min-w-0 bg-white rounded-2xl border border-line overflow-hidden flex flex-col"
+              className="min-w-0 sag-glass overflow-hidden flex flex-col"
             >
               {/* Category Image Banner */}
-              <div className="m-2.5 mb-0 aspect-[4/5] overflow-hidden rounded-xl bg-sunken flex items-center justify-center">
+              <div className="m-2.5 mb-0 aspect-[4/5] overflow-hidden rounded-2xl bg-sunken flex items-center justify-center">
                 <img
-                  src={cat.image}
+                  src={cat.image ? getCleanImageUrl(cat.image, 480) : undefined}
                   alt={cat.title}
                   loading="lazy"
                   className={`w-full h-full object-cover object-top ${!cat.image ? 'hidden' : ''}`}
@@ -197,11 +206,9 @@ export const AdminCategories: React.FC = () => {
                 {!cat.image && <ImageIcon className="w-7 h-7 text-ink-faint" aria-hidden="true" />}
               </div>
               <div className="px-3.5 sm:px-4 pt-3.5">
-                <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-md border text-xs font-semibold ${
-                  cat.isActive ? 'bg-ok-tint text-ok border-ok-line' : 'bg-sunken text-ink border-line'
-                }`}>
-                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-ok' : 'bg-ink/50'}`} aria-hidden="true" />
-                  {cat.isActive ? 'Active' : 'Disabled'}
+                <span className={`${ui.badge} ${cat.isActive ? tone.ok : tone.muted}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${cat.isActive ? 'bg-ok' : 'bg-ink-faint'}`} aria-hidden="true" />
+                  {cat.isActive ? 'On the store' : 'Switched off'}
                 </span>
                 <h4 className="mt-2 text-base font-semibold leading-snug text-ink break-words">
                   {cat.title}
@@ -215,36 +222,33 @@ export const AdminCategories: React.FC = () => {
 
               {/* Body stats & controls */}
               <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-3 text-[13px]">
-                <div className="flex flex-wrap items-center justify-between gap-1 text-ink-muted">
-                  <span>Products</span>
-                  <span className="font-semibold text-ink sag-num">
-                    {liveCount} in this category
-                  </span>
-                </div>
+                <p className="flex items-baseline gap-1.5 text-ink-muted">
+                  <span className="text-xl leading-7 font-semibold text-ink sag-num">{liveCount}</span>
+                  <span>{liveCount === 1 ? 'product' : 'products'} in this category</span>
+                </p>
+                {!cat.image && <p className="text-xs leading-4 text-ink-muted">No photo yet: the store uses the first product photo.</p>}
 
-                <div className="flex flex-wrap items-center justify-between gap-1 pt-2 border-t border-line">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 pt-3 border-t border-line">
+                  <button
+                    onClick={() => handleOpenEdit(cat)}
+                    className={`${ui.small} !border-brand-line !text-brand`}
+                    title="Edit category"
+                    aria-label={`Edit ${cat.title}`}
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-current" /> Edit
+                  </button>
                   <button
                     onClick={() => {
                       updateCategory(cat.id, { isActive: !cat.isActive })
                         .then(() => showToast(`Category "${cat.title}" ${!cat.isActive ? 'enabled' : 'hidden'}.`, 'info'))
                         .catch((err: any) => showToast(err?.message || 'Could not save. Please try again.', 'error'));
                     }}
-                    className={`h-11 px-3.5 text-sm font-semibold rounded-xl border transition-colors cursor-pointer ${
-                      cat.isActive ? 'text-ink border-line hover:bg-sunken' : 'text-ok border-ok-line hover:bg-ok-tint'
-                    }`}
+                    className={ui.small}
                   >
-                    {cat.isActive ? 'Disable' : 'Enable'}
+                    {cat.isActive ? 'Switch off' : 'Switch on'}
                   </button>
 
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleOpenEdit(cat)}
-                      className="w-11 h-11 inline-flex items-center justify-center hover:bg-sunken rounded-full text-ink transition-colors cursor-pointer"
-                      title="Edit category"
-                      aria-label={`Edit ${cat.title}`}
-                    >
-                      <Edit3 className="w-4 h-4 text-current" />
-                    </button>
+                  <div className="flex items-center gap-1 ml-auto">
                     <button
                       onClick={() => handleDelete(cat)}
                       className="w-11 h-11 inline-flex items-center justify-center hover:bg-danger-tint rounded-full text-danger transition-colors cursor-pointer"
@@ -263,14 +267,14 @@ export const AdminCategories: React.FC = () => {
 
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-ink/50 flex items-end sm:items-center justify-center sm:p-4">
-          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-white rounded-t-[20px] sm:rounded-2xl sm:max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
+        <div className={`fixed inset-0 z-50 ${SCRIM} flex items-end sm:items-center justify-center sm:p-4`}>
+          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-surface border border-line rounded-t-[28px] sm:rounded-[28px] sm:max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
 
-            <div className="sticky top-0 z-10 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 px-5 sm:px-7 py-3 bg-white flex items-center justify-between border-b border-line">
-              <h3 className="text-[17px] leading-6 font-semibold text-ink">
+            <div className="sticky top-0 z-10 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 px-5 sm:px-7 py-3 bg-surface flex items-center justify-between border-b border-line">
+              <h3 className="font-display text-[20px] leading-7 text-ink">
                 {editingCatId ? 'Edit category' : 'Add a category'}
               </h3>
-              <button type="button" onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken cursor-pointer">
+              <button type="button" onClick={() => setIsModalOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full flex items-center justify-center text-ink hover:bg-sunken-deep cursor-pointer">
                 <X className="w-5 h-5 text-current" />
               </button>
             </div>
@@ -316,9 +320,9 @@ export const AdminCategories: React.FC = () => {
                 <p className="sag-label">Category photo <span className="font-normal text-ink-muted">(optional)</span></p>
                 <div className="flex items-start gap-3">
                   {/* The whole photo is shown, uncropped, so you can check what was uploaded */}
-                  <div className="w-28 aspect-[4/5] shrink-0 rounded-xl overflow-hidden border border-line bg-sunken flex items-center justify-center">
+                  <div className="w-28 aspect-[4/5] shrink-0 rounded-2xl overflow-hidden border border-line bg-sunken flex items-center justify-center">
                     {formData.image ? (
-                      <img src={formData.image} alt="Category photo preview" className="w-full h-full object-contain" />
+                      <img src={getCleanImageUrl(formData.image, 320)} alt="Category photo preview" className="w-full h-full object-contain" />
                     ) : (
                       <ImageIcon className="w-5 h-5 text-ink-faint" />
                     )}
@@ -360,19 +364,19 @@ export const AdminCategories: React.FC = () => {
               </div>
 
               <div className="pt-1">
-                <label className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
+                <label className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-2xl border border-line bg-sunken cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="peer sr-only"
                   />
-                  <span className="relative shrink-0 w-11 h-6 rounded-full bg-sunken-deep peer-checked:bg-brand peer-focus-visible:ring-2 peer-focus-visible:ring-brand transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5" aria-hidden="true" />
+                  <span className={SWITCH_TRACK} aria-hidden="true" />
                   <span className="order-first">Show this category on the store</span>
                 </label>
               </div>
 
-              <div className="sticky bottom-0 z-10 -mx-5 sm:-mx-7 -mb-5 sm:-mb-7 px-5 sm:px-7 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white flex gap-3 border-t border-line shadow-[var(--sag-shadow-bar)]">
+              <div className="sticky bottom-0 z-10 -mx-5 sm:-mx-7 -mb-5 sm:-mb-7 px-5 sm:px-7 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-surface flex gap-3 border-t border-line">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}

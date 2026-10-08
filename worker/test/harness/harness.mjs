@@ -194,7 +194,7 @@ export const startHarness = async ({ env: extraEnv = {}, realD1 = false } = {}) 
    * as the client; origin defaults to the store itself for anything but GET and HEAD (null = send none).
    * The answer carries d1Calls: how many D1 calls the Worker made for this request.
    */
-  const call = async (path, { method, json, form, raw, contentType, token, cookie, ip = '198.51.100.10', ua = BROWSER_UA, origin, headers = {} } = {}) => {
+  const call = async (path, { method, json, form, raw, contentType, token, cookie, ip = '198.51.100.10', ua = BROWSER_UA, origin, headers = {}, cf } = {}) => {
     const hasBody = json !== undefined || form !== undefined || raw !== undefined;
     const verb = method || (hasBody ? 'POST' : 'GET');
     const sent = new Headers(headers);
@@ -219,7 +219,10 @@ export const startHarness = async ({ env: extraEnv = {}, realD1 = false } = {}) 
     const usage = { d1Calls: 0 };
     const response = await requests.run(usage, async () => {
       const background = [];
-      const answer = await worker.fetch(new Request(`${SITE}${path}`, { method: verb, headers: sent, body }), env, {
+      const request = new Request(`${SITE}${path}`, { method: verb, headers: sent, body });
+      // What Cloudflare adds to a request (city, region, country); Node's Request has no such field
+      if (cf) Object.defineProperty(request, 'cf', { value: cf });
+      const answer = await worker.fetch(request, env, {
         waitUntil: (promise) => { background.push(promise); },
         passThroughOnException() {},
       });

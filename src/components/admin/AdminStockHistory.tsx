@@ -61,19 +61,19 @@ export const AdminStockHistory: React.FC = () => {
 
 
   const diffBadge = (diff: number) => (
-    <span className={`sag-badge sag-num shrink-0 ${diff > 0 ? 'bg-ok-tint text-ok' : 'bg-danger-tint text-danger'}`}>{diff > 0 ? `+${diff}` : diff}</span>
+    <span className={`inline-flex items-center min-h-[22px] px-2.5 py-0.5 rounded-full text-xs font-semibold sag-num shrink-0 ${diff > 0 ? 'bg-ok-tint text-ok' : 'bg-sunken-deep text-ink'}`}>{diff > 0 ? `+${diff} added` : `${diff} removed`}</span>
   );
 
   return (
-    <section aria-label="Stock history" className="bg-white rounded-2xl border border-line overflow-hidden">
+    <section aria-label="Stock history" className="sag-glass overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 border-b border-line">
         <div className="flex items-center gap-3">
-          <span className="w-9 h-9 shrink-0 rounded-xl bg-sunken text-ink flex items-center justify-center">
+          <span className="w-10 h-10 shrink-0 rounded-full bg-sunken text-brand flex items-center justify-center">
             <History className="w-[18px] h-[18px]" aria-hidden="true" />
           </span>
           <div>
             <h3 className="text-[17px] leading-6 font-semibold text-ink">Stock history</h3>
-            <p className="text-[13px] text-ink-muted">Last {MAX_ENTRIES} stock changes made in the admin panel, newest first.</p>
+            <p className="text-[13px] text-ink-muted">Every time stock was changed by hand in the admin panel: the last {MAX_ENTRIES} changes, newest first. Stock taken by orders shows on each order.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export const AdminStockHistory: React.FC = () => {
             onClick={() => setReloadKey((k) => k + 1)}
             disabled={loading}
             aria-label="Refresh stock history"
-            className="h-11 w-11 shrink-0 rounded-full border border-line text-ink hover:bg-sunken flex items-center justify-center disabled:opacity-50 cursor-pointer transition-colors"
+            className="h-11 w-11 shrink-0 rounded-full border border-line bg-sunken text-ink hover:bg-sunken-deep flex items-center justify-center disabled:opacity-50 cursor-pointer transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -113,8 +113,9 @@ export const AdminStockHistory: React.FC = () => {
         </div>
       ) : entries.length === 0 ? (
         <div className="px-6 py-12 text-center">
-          <span className="mx-auto w-12 h-12 rounded-xl bg-sunken text-ink flex items-center justify-center mb-3"><History className="w-6 h-6" /></span>
-          <p className="text-sm text-ink-muted max-w-md mx-auto">No stock changes recorded yet. Changes made from now on in Products, Kids Wear, Toys and Complete the Look appear here.</p>
+          <span className="mx-auto w-12 h-12 rounded-full bg-sunken text-ink-muted flex items-center justify-center mb-3"><History className="w-6 h-6" /></span>
+          <p className="text-base font-semibold text-ink">{productId ? 'No stock changes for this product' : 'No stock changes yet'}</p>
+          <p className="mt-1 text-sm text-ink-muted max-w-md mx-auto">No stock changes recorded yet. Changes made from now on in Products, Kids Wear, Toys and Complete the Look appear here.</p>
         </div>
       ) : (
         <>
@@ -128,7 +129,7 @@ export const AdminStockHistory: React.FC = () => {
                     <p className="text-sm font-semibold text-ink min-w-0 break-words">{entry.productName || entry.productId}</p>
                     {diffBadge(diff)}
                   </div>
-                  <p className="mt-0.5 text-[13px] text-ink-muted">{entry.from} → {entry.to} · {entry.reason}</p>
+                  <p className="mt-0.5 text-[13px] text-ink-muted"><span className="sag-num text-ink">{entry.from} → {entry.to}</span> · {entry.reason}</p>
                   <p className="text-[13px] text-ink-muted">{formatWhen(entry.at)}</p>
                 </li>
               );
@@ -138,22 +139,22 @@ export const AdminStockHistory: React.FC = () => {
           {/* Tablet / desktop: table */}
           <div className="hidden sm:block overflow-x-auto max-h-[70vh] overflow-y-auto">
             <table className="w-full text-left text-[13px]">
-              <thead className="sticky top-0 z-10">
-                <tr className="bg-page border-b border-line text-xs text-ink-muted">
-                  <th className="py-3 pl-5 pr-3 font-semibold">When</th>
-                  <th className="py-3 px-3 font-semibold">Product</th>
-                  <th className="py-3 px-3 font-semibold">Change</th>
-                  <th className="py-3 pl-3 pr-5 font-semibold">Reason</th>
+              <thead className="sticky top-0 z-10 bg-surface">
+                <tr className="border-b border-line text-[11px] uppercase tracking-[0.08em] text-ink-muted">
+                  <th className="py-3 pl-5 pr-3 font-medium">When</th>
+                  <th className="py-3 px-3 font-medium">Product</th>
+                  <th className="py-3 px-3 font-medium text-right">Stock before → after</th>
+                  <th className="py-3 pl-3 pr-5 font-medium">Why</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {entries.map((entry) => {
                   const diff = Number(entry.to) - Number(entry.from);
                   return (
-                    <tr key={entry.id} className="hover:bg-page transition-colors">
+                    <tr key={entry.id} className="hover:bg-sunken transition-colors">
                       <td className="py-3 pl-5 pr-3 whitespace-nowrap text-ink-muted">{formatWhen(entry.at)}</td>
                       <td className="py-3 px-3 font-medium text-ink max-w-[260px] truncate">{entry.productName || entry.productId}</td>
-                      <td className="py-3 px-3 whitespace-nowrap">
+                      <td className="py-3 px-3 whitespace-nowrap text-right">
                         <span className="text-ink-muted tabular-nums">{entry.from} → {entry.to}</span>
                         <span className="ml-2">{diffBadge(diff)}</span>
                       </td>

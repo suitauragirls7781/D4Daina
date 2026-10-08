@@ -11,9 +11,6 @@ import {
   Image as ImageIcon,
   Sparkles,
   Check,
-  Layers,
-  IndianRupee,
-  Package,
   Plus,
   RefreshCw
 } from 'lucide-react';
@@ -21,33 +18,31 @@ import { Product, ProductCategory, ProductSize, ProductColor } from '../../types
 import { ACCESSORY_CATEGORY, FOOTWEAR_SIZES, SET_TYPES, isAccessory, setTypeHint } from '../../utils/looks';
 import { KIDS_CATEGORIES, TOYS, departmentOf } from '../../utils/kids';
 import { AiProductFill, type AiDraft } from './AiProductFill';
-import { SectionTitle, tone, ui } from './kidsToysShared';
-
-// On / off switch drawn after a hidden checkbox (same switch as the other admin pages)
-const SWITCH_TRACK = "relative shrink-0 w-12 h-7 rounded-full bg-control peer-checked:bg-brand peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink transition-colors after:content-[''] after:absolute after:top-1 after:left-1 after:w-5 after:h-5 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-5";
+import { ON_GOLD, SWITCH_TRACK, SectionTitle, tone, ui } from './kidsToysShared';
+import { getCleanImageUrl } from '../../utils/imageHelper';
 
 /** Page header with a back button, in the same layout as the order details page. */
 // isName: the title is the product's own name, so it stays Inter (font-sans) instead of the display face
 const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; isName?: boolean; description?: React.ReactNode; onBack: () => void; actions?: React.ReactNode }> = ({ crumb, title, isName = false, description, onBack, actions }) => (
-  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3 pb-4 border-b border-line">
-    <div className="flex items-start gap-2 min-w-0">
+  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-3">
+    <div className="flex items-start gap-2.5 min-w-0">
       <button
         type="button"
         onClick={onBack}
-        className="w-11 h-11 -ml-2 shrink-0 flex items-center justify-center hover:bg-sunken text-ink rounded-full transition-colors cursor-pointer"
+        className="w-11 h-11 shrink-0 flex items-center justify-center bg-sunken border border-line hover:bg-sunken-deep text-ink rounded-full transition-colors cursor-pointer"
         title="Back to Products"
         aria-label="Back to Products"
       >
         <ArrowLeft className="w-5 h-5 text-current" />
       </button>
       <div className="min-w-0">
-        <div className={`flex items-center gap-1.5 ${ui.eyebrow} min-w-0`}>
+        <div className={`flex items-center gap-1.5 ${ui.eyebrow} !text-brand min-w-0`}>
           <span>Catalog</span>
           <span aria-hidden="true">/</span>
           <span className="truncate">{crumb}</span>
         </div>
-        <h2 className={`mt-0.5 ${isName ? ui.h1Name : ui.h1} break-words`}>{title}</h2>
-        {description && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-2xl">{description}</p>}
+        <h2 className={`mt-1 ${isName ? ui.h1Name : ui.h1} break-words`}>{title}</h2>
+        {description && <p className="mt-1.5 text-sm leading-5 text-ink-muted max-w-2xl">{description}</p>}
       </div>
     </div>
     {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
@@ -568,43 +563,103 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     );
   }
 
-  const flagToggles: Array<{ id: string; label: string; checked: boolean; onChange: (next: boolean) => void }> = [
-    { id: 'apf-flag-featured', label: 'Featured Product', checked: isFeatured, onChange: setIsFeatured },
-    { id: 'apf-flag-new', label: 'New Arrival', checked: isNewArrival, onChange: setIsNewArrival },
-    { id: 'apf-flag-bestseller', label: 'Best Seller', checked: isBestSeller, onChange: setIsBestSeller },
-    { id: 'apf-flag-sale', label: 'Sale Item', checked: isSale, onChange: setIsSale },
-    { id: 'apf-flag-trending', label: 'Trending Now', checked: isTrending, onChange: setIsTrending },
-    { id: 'apf-flag-festive', label: 'Festive Edit', checked: isFestive, onChange: setIsFestive },
-    { id: 'apf-flag-published', label: 'Published on store', checked: published, onChange: setPublished },
+  // The labels shoppers see on the store (the "published" switch has its own panel: Visibility)
+  const labelToggles: Array<{ id: string; label: string; hint: string; checked: boolean; onChange: (next: boolean) => void }> = [
+    { id: 'apf-flag-new', label: 'New Arrival', hint: 'Shows a "New" label on the product', checked: isNewArrival, onChange: setIsNewArrival },
+    { id: 'apf-flag-bestseller', label: 'Best Seller', hint: 'Shows a "Bestseller" label', checked: isBestSeller, onChange: setIsBestSeller },
+    { id: 'apf-flag-featured', label: 'Featured Product', hint: 'Picked first for the homepage and the shop', checked: isFeatured, onChange: setIsFeatured },
+    { id: 'apf-flag-sale', label: 'Sale Item', hint: 'Listed under Sale in the shop', checked: isSale, onChange: setIsSale },
+    { id: 'apf-flag-trending', label: 'Trending Now', hint: 'Listed under Trending in the shop', checked: isTrending, onChange: setIsTrending },
+    { id: 'apf-flag-festive', label: 'Festive Edit', hint: 'Part of the festive picks', checked: isFestive, onChange: setIsFestive },
   ];
 
-  // One label for the one save action, in the header and in the bottom bar
-  const saveLabel = isSaving ? 'Saving…' : (isEditMode ? 'Save changes' : 'Add product');
+  // One label for the one save action
+  const saveLabel = isSaving ? 'Saving…' : 'Save product';
+
+  // What the price boxes come to, shown live under them (the server works the real total out again at checkout)
+  const livePrice = Number(price) || 0;
+  const liveMrp = Number(originalPrice) || 0;
+  const mrpTooLow = liveMrp > 0 && liveMrp < livePrice;
+  const hasMrp = livePrice > 0 && liveMrp > livePrice;
+  const liveOff = hasMrp ? Math.round(((liveMrp - livePrice) / liveMrp) * 100) : 0;
+  const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
+
+  // The short checklist: the same things the save button checks, plus the optional parts
+  const stockValid = Number.isInteger(stockQuantity) && stockQuantity >= 0;
+  const requiredSteps: Array<{ target: string; label: string; done: boolean; note: string }> = [
+    { target: 'apf-sec-photos', label: 'Photos', done: images.length > 0, note: images.length ? `${images.length} added` : 'add at least one' },
+    { target: 'apf-sec-name', label: 'Name', done: Boolean(name.trim()), note: name.trim() ? 'filled' : 'needed' },
+    { target: 'apf-sec-price', label: 'Price', done: livePrice > 0 && !mrpTooLow, note: mrpTooLow ? 'MRP is below the price' : livePrice > 0 ? rupees(livePrice) : 'needed' },
+    { target: 'apf-sec-sizes', label: 'Sizes', done: selectedSizes.length > 0, note: selectedSizes.length ? `${selectedSizes.length} chosen` : 'choose at least one' },
+    { target: 'apf-sec-stock', label: 'Stock', done: stockValid, note: !stockValid ? 'enter a whole number' : stockQuantity === 0 ? '0: shows as sold out' : `${stockQuantity} pieces` },
+    { target: 'apf-sec-category', label: 'Category', done: Boolean(category) && !(customSetType && !setType.trim()), note: customSetType && !setType.trim() ? 'type the set type' : String(category) },
+  ];
+  const optionalSteps: Array<{ target: string; label: string; done: boolean }> = [
+    { target: 'apf-sec-name', label: 'Description', done: Boolean(description.trim()) },
+    { target: 'apf-sec-sizes', label: 'Colours', done: colors.length > 0 },
+    { target: 'apf-sec-details', label: 'Details', done: Boolean(fabric.trim() || fit.trim() || occasion.trim() || washCare.trim()) },
+    { target: 'apf-sec-seo', label: 'Search & sharing', done: Boolean(seoTitle.trim() || seoDescription.trim() || searchKeywords.trim()) },
+  ];
+  const doneCount = requiredSteps.filter((s) => s.done).length;
+  const allDone = doneCount === requiredSteps.length;
+  const goTo = (target: string) => document.getElementById(target)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  const num = (n: number) => <span className="text-sm font-semibold sag-num">{n}</span>;
 
   return (
     <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
 
-      {/* Header: back, where you are, and the save action */}
+      {/* Header: back and where you are (the save action is in the bar that stays at the bottom) */}
       <FormHeader
         crumb={isEditMode ? 'Edit product' : 'New product'}
         title={isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
         isName={isEditMode && Boolean(existingProduct?.name)}
         description={isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}
         onBack={handleCancel}
-        actions={
-          <>
-            <button type="button" disabled={isSaving} onClick={handleCancel} className={ui.outline}>
-              Cancel
-            </button>
-            <button type="submit" form="product-edit-form" disabled={isSaving} className={ui.primary}>
-              {isSaving ? <RefreshCw className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
-              <span>{saveLabel}</span>
-            </button>
-          </>
-        }
       />
 
-      <form id="product-edit-form" onSubmit={handleSave} className="space-y-4 sm:space-y-5">
+      <form id="product-edit-form" onSubmit={handleSave} className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5 space-y-4 sm:space-y-5 lg:space-y-0">
+
+        {/* Progress: which parts are filled in. Tap one to jump to it. */}
+        <nav id="apf-progress" aria-label="What is filled in" className={`${ui.card} lg:col-start-2 lg:row-start-1 lg:sticky lg:top-24`}>
+          <div className="flex items-baseline justify-between gap-3">
+            <p className={ui.eyebrow}>Checklist</p>
+            <p className={`text-[13px] leading-[18px] font-semibold sag-num ${allDone ? 'text-brand' : 'text-ink'}`} aria-live="polite">
+              {allDone ? 'Ready to save' : `${doneCount} of ${requiredSteps.length} done`}
+            </p>
+          </div>
+          <div className="mt-2 h-1 rounded-full bg-sunken-deep overflow-hidden" aria-hidden="true">
+            <div className="h-full rounded-full bg-brand transition-[width] duration-300" style={{ width: `${Math.round((doneCount / requiredSteps.length) * 100)}%` }} />
+          </div>
+          <ul className="mt-3 flex flex-wrap lg:flex-col gap-1.5 lg:gap-0.5">
+            {requiredSteps.map((step) => (
+              <li key={step.label} className="lg:w-full">
+                <button type="button" onClick={() => goTo(step.target)}
+                  className={`w-full h-9 lg:h-10 pl-2 pr-3 lg:px-2 rounded-full lg:rounded-xl border lg:border-0 inline-flex items-center gap-2 text-[13px] text-left cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line' : 'border-line'}`}>
+                  <span className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${step.done ? `bg-brand ${ON_GOLD}` : 'border border-control'}`} aria-hidden="true">
+                    {step.done && <Check className="w-3 h-3 text-current" strokeWidth={3} />}
+                  </span>
+                  <span className={`font-semibold ${step.done ? 'text-ink' : 'text-ink-muted'}`}>{step.label}</span>
+                  <span className="sr-only">{step.done ? ' (done)' : ' (to do)'}</span>
+                  <span className={`hidden lg:block ml-auto min-w-0 truncate text-xs sag-num ${step.done ? 'text-ink-muted' : 'text-sale'}`}>{step.note}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className={`mt-3 pt-3 border-t border-line ${ui.eyebrow}`}>Optional, but helps sell</p>
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {optionalSteps.map((step) => (
+              <li key={step.label}>
+                <button type="button" onClick={() => goTo(step.target)}
+                  className={`h-8 px-2.5 rounded-full border inline-flex items-center gap-1.5 text-xs cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line text-brand' : 'border-line text-ink-muted'}`}>
+                  {step.done && <Check className="w-3 h-3 text-current" aria-hidden="true" />}{step.label}
+                  <span className="sr-only">{step.done ? ' (filled)' : ' (empty)'}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        <div className="min-w-0 space-y-4 sm:space-y-5 lg:col-start-1 lg:row-start-1">
 
         {/* Gemini: drafts the listing text from the product photos */}
         <AiProductFill
@@ -618,13 +673,75 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           onApply={applyAiDraft}
         />
 
-        {/* Section 1: Basic Information */}
-        <section className={ui.card}>
-          <SectionTitle icon={<Package className="text-current" />} title="Basic Product Information" />
+        {/* 1. Photos */}
+        <section id="apf-sec-photos" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(1)} title={<>Photos <span className="text-danger" aria-hidden="true">*</span></>} hint="At least one photo. The first photo is the cover shoppers see in the shop." />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <label htmlFor="apf-name" className={ui.label}>Product Name *</label>
+          <div className="space-y-4">
+            {/* Upload Area */}
+            <label className="w-full flex flex-col items-center justify-center gap-1.5 px-4 py-7 rounded-2xl border-[1.5px] border-dashed border-control bg-sunken hover:bg-sunken-deep text-center cursor-pointer transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
+              <span className="w-11 h-11 mb-1 rounded-full bg-brand-wash text-brand flex items-center justify-center" aria-hidden="true">
+                <ImageIcon className="w-5 h-5 text-current" />
+              </span>
+              <span className="text-[15px] leading-[22px] font-semibold text-ink">Upload product photos</span>
+              <span className="text-[13px] leading-[18px] text-ink-muted">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="sr-only"
+              />
+            </label>
+
+            {/* Gallery Grid Preview */}
+            {images.length > 0 ? (
+              <div className="grid grid-cols-3 min-[480px]:grid-cols-4 sm:grid-cols-5 gap-2.5">
+                {images.map((imgUrl, idx) => (
+                  <div key={idx} className="min-w-0">
+                    {imgUrl && imgUrl.trim() !== "" ? (
+                      <img src={getCleanImageUrl(imgUrl, 320)} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-2xl object-cover object-top bg-sunken" />
+                    ) : (
+                      <div className="w-full aspect-[4/5] rounded-2xl bg-sunken" />
+                    )}
+                    <div className="mt-1 flex items-center justify-between gap-1">
+                      {/* Image Badge */}
+                      <span className={`${ui.badge} ${idx === 0 ? tone.brand : tone.muted}`}>
+                        {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
+                      </span>
+
+                      {/* Delete Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveImage(idx);
+                        }}
+                        className="w-10 h-10 shrink-0 rounded-full hover:bg-danger-tint text-danger flex items-center justify-center cursor-pointer"
+                        title="Remove image"
+                        aria-label={`Remove photo ${idx + 1}`}
+                      >
+                        <X className="w-4 h-4 text-current" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[13px] leading-[18px] text-ink-muted">No photos yet. A product cannot be saved without a photo.</p>
+            )}
+            <p className={ui.hint}>Each photo is made lighter on this device before it uploads, so large phone photos are fine. Nothing changes on the store until you save.</p>
+          </div>
+        </section>
+
+        {/* 2. Name & description */}
+        <section id="apf-sec-name" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(2)} title="Name & description" hint="What shoppers read first. Keep the name short and clear." />
+
+          <div className="grid grid-cols-1 gap-4">
+            <div>
+              <label htmlFor="apf-name" className={ui.label}>Product Name <span className="text-danger">*</span></label>
               <input
                 id="apf-name"
                 type="text"
@@ -637,7 +754,362 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </div>
 
             <div>
-              <label htmlFor="apf-category" className={ui.label}>Category *</label>
+              <label htmlFor="apf-description" className={ui.label}>Product Description <span className={ui.optional}>(recommended)</span></label>
+              <textarea
+                id="apf-description"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Write full product craftsmanship, silhouette, and drape details..."
+                className={ui.textarea}
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* 3. Price */}
+        <section id="apf-sec-price" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(3)} title="Price" hint="In rupees (₹). The MRP is the printed price that is shown crossed out." />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="apf-price" className={ui.label}>Selling Price (₹) <span className="text-danger">*</span></label>
+              <input
+                id="apf-price"
+                type="number"
+                min="1"
+                required
+                value={price}
+                onChange={(e) => handlePriceChange(Number(e.target.value))}
+                className={`${ui.field} font-semibold sag-num`}
+              />
+              <p className={ui.hint}>What the customer pays.</p>
+            </div>
+
+            <div>
+              <label htmlFor="apf-mrp" className={ui.label}>MRP / Original Price (₹)</label>
+              <input
+                id="apf-mrp"
+                type="number"
+                min="1"
+                value={originalPrice}
+                onChange={(e) => handleOriginalPriceChange(Number(e.target.value))}
+                className={`${ui.field} sag-num`}
+              />
+              <p className={ui.hint}>Same as the price, or higher.</p>
+            </div>
+
+            <div>
+              <label htmlFor="apf-discount" className={ui.label}>Discount Calculated (%)</label>
+              <div className="relative">
+                <input
+                  id="apf-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={discount}
+                  onChange={(e) => setDiscount(Number(e.target.value))}
+                  className={`${ui.field} pr-20 font-semibold sag-num`}
+                />
+                <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${ui.badge} ${tone.warn}`}>% OFF</span>
+              </div>
+              <p className={ui.hint}>Filled in for you from the price and MRP.</p>
+            </div>
+          </div>
+
+          {/* The result, read-only */}
+          <div id="apf-price-preview" aria-live="polite" className={`mt-4 rounded-2xl border px-4 py-3 ${mrpTooLow ? 'bg-danger-tint border-danger-line' : 'bg-brand-wash border-brand-line'}`}>
+            {mrpTooLow ? (
+              <p className="text-sm leading-5 font-medium text-danger">MRP cannot be lower than the selling price. Raise the MRP or lower the price.</p>
+            ) : livePrice <= 0 ? (
+              <p className="text-sm leading-5 text-ink-muted">Enter the selling price to see how it will show on the store.</p>
+            ) : hasMrp ? (
+              <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sag-num">
+                <span className={ui.eyebrow}>On the store</span>
+                <span className="text-xl leading-7 font-semibold text-ink">{rupees(livePrice)}</span>
+                <span className="text-sm text-ink-faint line-through">{rupees(liveMrp)}</span>
+                <span className="text-base font-semibold text-brand">{liveOff}% off</span>
+                <span className="text-[13px] text-ink-muted">· the customer saves {rupees(liveMrp - livePrice)}</span>
+              </p>
+            ) : (
+              <p className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 sag-num">
+                <span className={ui.eyebrow}>On the store</span>
+                <span className="text-xl leading-7 font-semibold text-ink">{rupees(livePrice)}</span>
+                <span className="text-[13px] text-ink-muted">· no "% off" is shown. Enter an MRP higher than the price to show one.</span>
+              </p>
+            )}
+          </div>
+        </section>
+
+        {/* 4. Sizes & colours */}
+        <section id="apf-sec-sizes" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(4)} title="Sizes & colours" hint="The sizes you have, and the colours it comes in." />
+
+          {/* Sizes Selection */}
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <p id="apf-sizes-label" className={`${ui.label} !mb-0`}>Available Sizes <span className="text-danger">*</span></p>
+              <button
+                type="button"
+                onClick={() => setSelectedSizes(sortSizes([...RANGE_SIZES, ...selectedSizes.filter((s) => s === 'XS')]))}
+                className={ui.small}
+              >
+                Select S – 5XL
+              </button>
+            </div>
+            <div role="group" aria-labelledby="apf-sizes-label" className="flex flex-wrap gap-2">
+              {sizeOptions.map((sz) => {
+                const isSelected = selectedSizes.includes(sz);
+                return (
+                  <button
+                    type="button"
+                    key={sz}
+                    aria-pressed={isSelected}
+                    onClick={() => toggleSize(sz)}
+                    className={`${ui.chip(isSelected)} min-w-12 sag-num`}
+                  >
+                    {sz} {isSelected && <Check className="w-3.5 h-3.5 text-current" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+            <p className={ui.hint}>
+              <span className="sag-num">{selectedSizes.length} chosen.</span> Choosing Free Size replaces the other sizes.
+            </p>
+          </div>
+
+          {/* Colors Selection */}
+          <div className="pt-4 mt-4 border-t border-line">
+            <div className="flex flex-wrap justify-between items-center gap-2 mb-1">
+              <p className={`${ui.label} !mb-0`}>Available Colors & Sync Image <span className={ui.optional}>(optional)</span></p>
+              <button type="button" onClick={addColor} className={ui.small}>
+                <Plus className="w-4 h-4 text-current" /> Add colour
+              </button>
+            </div>
+            <p className="mb-3 text-[13px] leading-[18px] text-ink-muted">Link each colour to its photo: when a shopper taps that colour, the store shows that photo. The first colour is read from the first photo you upload.</p>
+
+            {colourSuggestion && (
+              <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-2xl bg-brand-wash border border-brand-line pl-3 pr-1 py-1.5">
+                <span
+                  className="w-8 h-8 rounded-full ring-1 ring-control shrink-0"
+                  style={{ backgroundColor: colourSuggestion.hex }}
+                  aria-hidden="true"
+                />
+                {colourSuggestion.imageUrl && (
+                  <img src={getCleanImageUrl(colourSuggestion.imageUrl, 160)} alt="" className="w-7 aspect-[4/5] rounded-md object-cover object-top bg-sunken" referrerPolicy="no-referrer" />
+                )}
+                <div className="min-w-0 grow">
+                  <span className={`block ${ui.eyebrow}`}>Detected colour</span>
+                  <span className="text-sm font-semibold text-ink">{colourSuggestion.name}</span>
+                  <span className="ml-2 text-xs font-mono text-ink-muted">{colourSuggestion.hex}</span>
+                </div>
+                <button type="button" onClick={addSuggestedColour} className={ui.small}>
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setColourSuggestion(null)}
+                  className={`${ui.iconBtn} hover:bg-sunken-deep text-ink`}
+                  title="Dismiss"
+                  aria-label="Dismiss detected colour"
+                >
+                  <X className="w-4 h-4 text-current" />
+                </button>
+              </div>
+            )}
+
+            {colors.length === 0 && !colourSuggestion && (
+              <p className="rounded-2xl bg-sunken border border-line px-4 py-3 text-[13px] leading-[18px] text-ink-muted">No colours yet. Upload a photo and the colour is filled in, or tap Add colour.</p>
+            )}
+
+            <div className="space-y-3">
+              {colors.map((color, idx) => {
+                const previewHex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`;
+                return (
+                  <div key={idx} className="rounded-2xl border border-line bg-sunken p-3 sm:p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2 -mt-1 -mr-1">
+                      <p className={ui.eyebrow}>Colour {idx + 1}</p>
+                      <button
+                        type="button"
+                        onClick={() => removeColor(idx)}
+                        className="h-11 md:h-9 px-3 rounded-full text-[13px] font-semibold text-danger hover:bg-danger-tint transition-colors cursor-pointer"
+                        title="Delete Color"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
+                      {/* Preview and Name */}
+                      <div className="flex items-end gap-2.5">
+                        <label
+                          className="relative w-12 h-12 sm:w-11 sm:h-11 shrink-0 rounded-full border-[1.5px] border-control overflow-hidden cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand"
+                          title="Click to open color picker"
+                        >
+                          <input
+                            type="color"
+                            value={previewHex.length === 7 ? previewHex : '#241D1B'}
+                            onChange={(e) => updateColor(idx, 'hex', e.target.value.toUpperCase())}
+                            aria-label={`Colour ${idx + 1} swatch`}
+                            className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                          />
+                          <span
+                            className="block w-full h-full"
+                            style={{ backgroundColor: previewHex || '#e2e8f0' }}
+                          />
+                        </label>
+                        <div className="flex-grow min-w-0">
+                          <label htmlFor={`apf-colour-name-${idx}`} className={ui.label}>Color Name</label>
+                          <input
+                            id={`apf-colour-name-${idx}`}
+                            type="text"
+                            placeholder="e.g. Royal Blue"
+                            value={color.name}
+                            onChange={(e) => updateColor(idx, 'name', e.target.value)}
+                            className={ui.field}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Hex Code Input */}
+                      <div>
+                        <label htmlFor={`apf-colour-hex-${idx}`} className={ui.label}>Hex Color Code <span className={ui.optional}>(set by the round colour picker)</span></label>
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm font-mono" aria-hidden="true">#</span>
+                          <input
+                            id={`apf-colour-hex-${idx}`}
+                            type="text"
+                            placeholder="58152D"
+                            value={color.hex.replace('#', '')}
+                            onChange={(e) => {
+                              const typedVal = e.target.value.trim();
+                              const finalHex = typedVal.startsWith('#') ? typedVal : `#${typedVal}`;
+                              updateColor(idx, 'hex', finalHex);
+                            }}
+                            className={`${ui.field} !pl-8 font-mono`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sync Product Image */}
+                    <div className="pt-3 border-t border-line">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <span className="text-[13px] leading-[18px] font-medium text-ink-muted">
+                          Tap an uploaded image to sync with this color:
+                        </span>
+                        {color.imageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => detectColourForRow(idx)}
+                            disabled={detectingIdx !== null}
+                            className={`${ui.small} disabled:cursor-wait`}
+                            title="Read this colour from the synced photo"
+                          >
+                            {detectingIdx === idx ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-current" /> : <Sparkles className="w-3.5 h-3.5 text-current" />}
+                            {detectingIdx === idx ? 'Detecting…' : 'Detect'}
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {images.map((imgUrl, imgIdx) => {
+                          const synced = color.imageUrl === imgUrl;
+                          return (
+                            <button
+                              key={imgIdx}
+                              type="button"
+                              aria-pressed={synced}
+                              onClick={() => {
+                                // If already selected, clicking again toggles/deselects it
+                                if (synced) {
+                                  updateColor(idx, 'imageUrl', '');
+                                } else {
+                                  updateColor(idx, 'imageUrl', imgUrl);
+                                }
+                              }}
+                              className="w-12 flex flex-col items-center gap-0.5 cursor-pointer"
+                            >
+                              <span className={`block w-full aspect-[4/5] rounded-xl overflow-hidden border-2 transition-colors ${synced ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                                <img src={getCleanImageUrl(imgUrl, 160)} className="w-full h-full object-cover object-top bg-sunken" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
+                              </span>
+                              <span className={`text-[11px] leading-[14px] font-semibold ${synced ? 'text-brand' : 'invisible'}`}>Sync</span>
+                            </button>
+                          );
+                        })}
+                        {images.length === 0 && (
+                          <span className="text-[13px] leading-[18px] text-ink-muted">Please upload product images first (panel 1, Photos).</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* 5. Stock */}
+        <section id="apf-sec-stock" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(5)} title="Stock" hint="How many pieces you have, all sizes together. At 0 the product shows as sold out." />
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor="apf-stock" className={ui.label}>Inventory Stock Quantity <span className="text-danger">*</span></label>
+              <input
+                id="apf-stock"
+                type="number"
+                min="0"
+                value={stockQuantity}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  setStockQuantity(val);
+                  if (val === 0) setInStock(false);
+                  else setInStock(true);
+                }}
+                className={`${ui.field} font-semibold sag-num`}
+              />
+              <p className={`${ui.hint} ${stockValid && stockQuantity === 0 ? '!text-danger' : ''}`}>
+                {!stockValid ? 'Enter a whole number, 0 or more.' : stockQuantity === 0 ? 'Out of stock: shoppers cannot buy it.' : 'Pieces ready to sell.'}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="apf-low-stock" className={ui.label}>Low-stock alert at (pieces) <span className={ui.optional}>(optional)</span></label>
+              <input
+                id="apf-low-stock"
+                type="number"
+                min="0"
+                step="1"
+                value={lowStockOverride}
+                onChange={(e) => setLowStockOverride(e.target.value)}
+                placeholder="Store default"
+                className={`${ui.field} sag-num`}
+              />
+              <p className={ui.hint}>Leave empty to use the store setting in Products.</p>
+            </div>
+
+            <div>
+              <label htmlFor="apf-sku" className={ui.label}>SKU (Stock Keeping Unit)</label>
+              <input
+                id="apf-sku"
+                type="text"
+                value={sku}
+                onChange={(e) => setSku(e.target.value)}
+                placeholder="e.g. SAG-COT-9901"
+                className={`${ui.field} font-mono`}
+              />
+              <p className={ui.hint}>Your own code for this product. One is made for you.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. Category & labels */}
+        <section id="apf-sec-category" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(6)} title="Category & labels" hint="Where shoppers find it, and the labels it carries on the store." />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="apf-category" className={ui.label}>Category <span className="text-danger">*</span></label>
               <select
                 id="apf-category"
                 value={category}
@@ -699,7 +1171,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 "Complete the look" (bags, heels, jewellery... from Complete the Look in the menu) shows only on the pages of products with a set / combo type.
               </p>
               {!setType.trim() && !customSetType && nameHint.looksLikeSet && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-sale-tint border border-sale-line pl-3.5 pr-1.5 py-1.5 text-[13px] leading-[18px] text-ink">
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-2xl bg-sale-tint border border-sale-line pl-3.5 pr-1.5 py-1.5 text-[13px] leading-[18px] text-ink">
                   <span className="min-w-0 flex-1 basis-56 py-1">This name looks like a set. Choose its set / combo type so accessories show on its page.</span>
                   {nameHint.suggestion && (
                     <button type="button" onClick={() => setSetType(nameHint.suggestion)} className={ui.small}>
@@ -709,375 +1181,36 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 </div>
               )}
             </div>
-
-            <div>
-              <label htmlFor="apf-sku" className={ui.label}>SKU (Stock Keeping Unit)</label>
-              <input
-                id="apf-sku"
-                type="text"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                placeholder="e.g. SAG-COT-9901"
-                className={`${ui.field} font-mono`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="apf-stock" className={ui.label}>Inventory Stock Quantity</label>
-              <input
-                id="apf-stock"
-                type="number"
-                min="0"
-                value={stockQuantity}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  setStockQuantity(val);
-                  if (val === 0) setInStock(false);
-                  else setInStock(true);
-                }}
-                className={`${ui.field} sag-num`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="apf-low-stock" className={ui.label}>Low-stock alert at (pieces) <span className={ui.optional}>(optional)</span></label>
-              <input
-                id="apf-low-stock"
-                type="number"
-                min="0"
-                step="1"
-                value={lowStockOverride}
-                onChange={(e) => setLowStockOverride(e.target.value)}
-                placeholder="Store default"
-                className={`${ui.field} sag-num`}
-              />
-              <p className={ui.hint}>Leave empty to use the store setting in Products.</p>
-            </div>
-
-            <div className="md:col-span-2">
-              <label htmlFor="apf-description" className={ui.label}>Product Description</label>
-              <textarea
-                id="apf-description"
-                rows={3}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Write full product craftsmanship, silhouette, and drape details..."
-                className={ui.textarea}
-              />
-            </div>
           </div>
-        </section>
 
-        {/* Section 2: Pricing & Discount */}
-        <section className={ui.card}>
-          <SectionTitle icon={<IndianRupee className="text-current" />} title="Pricing & Currency (₹ INR)" />
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label htmlFor="apf-price" className={ui.label}>Selling Price (₹) *</label>
-              <input
-                id="apf-price"
-                type="number"
-                min="1"
-                required
-                value={price}
-                onChange={(e) => handlePriceChange(Number(e.target.value))}
-                className={`${ui.field} font-semibold sag-num`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="apf-mrp" className={ui.label}>MRP / Original Price (₹)</label>
-              <input
-                id="apf-mrp"
-                type="number"
-                min="1"
-                value={originalPrice}
-                onChange={(e) => handleOriginalPriceChange(Number(e.target.value))}
-                className={`${ui.field} sag-num`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="apf-discount" className={ui.label}>Discount Calculated (%)</label>
-              <div className="relative">
-                <input
-                  id="apf-discount"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={discount}
-                  onChange={(e) => setDiscount(Number(e.target.value))}
-                  className={`${ui.field} pr-20 font-semibold sag-num`}
-                />
-                <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${ui.badge} ${tone.warn}`}>% OFF</span>
-              </div>
-            </div>
-
-            {/* Colors Selection */}
-            <div className="pt-4 border-t border-line sm:col-span-3">
-              <div className="flex flex-wrap justify-between items-center gap-2 mb-3">
-                <p className={`${ui.label} !mb-0`}>Available Colors & Sync Image *</p>
-                <button type="button" onClick={addColor} className={ui.small}>
-                  <Plus className="w-4 h-4 text-current" /> Add colour
-                </button>
-              </div>
-
-              {colourSuggestion && (
-                <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-xl bg-brand-wash border border-brand-line pl-3 pr-1 py-1.5">
-                  <span
-                    className="w-8 h-8 rounded-full border-[1.5px] border-white ring-1 ring-line shrink-0"
-                    style={{ backgroundColor: colourSuggestion.hex }}
-                    aria-hidden="true"
+          <div className="pt-4 mt-4 border-t border-line">
+            <p id="apf-labels-label" className={ui.label}>Labels <span className={ui.optional}>(switch on the ones that are true for this product)</span></p>
+            <div role="group" aria-labelledby="apf-labels-label" className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2.5">
+              {labelToggles.map((flag) => (
+                <label key={flag.id} className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-2xl border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
+                  <input
+                    id={flag.id}
+                    type="checkbox"
+                    checked={flag.checked}
+                    onChange={(e) => flag.onChange(e.target.checked)}
+                    className="peer sr-only"
                   />
-                  {colourSuggestion.imageUrl && (
-                    <img src={colourSuggestion.imageUrl} alt="" className="w-7 aspect-[4/5] rounded-md object-cover object-top bg-sunken" referrerPolicy="no-referrer" />
-                  )}
-                  <div className="min-w-0 grow">
-                    <span className={`block ${ui.eyebrow}`}>Detected colour</span>
-                    <span className="text-sm font-semibold text-ink">{colourSuggestion.name}</span>
-                    <span className="ml-2 text-xs font-mono text-ink-muted">{colourSuggestion.hex}</span>
-                  </div>
-                  <button type="button" onClick={addSuggestedColour} className={ui.small}>
-                    Add
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setColourSuggestion(null)}
-                    className={`${ui.iconBtn} hover:bg-white text-ink`}
-                    title="Dismiss"
-                    aria-label="Dismiss detected colour"
-                  >
-                    <X className="w-4 h-4 text-current" />
-                  </button>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {colors.map((color, idx) => {
-                  const previewHex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`;
-                  return (
-                    <div key={idx} className="rounded-xl border border-line bg-page p-3 sm:p-4 space-y-3">
-                      <div className="flex items-center justify-between gap-2 -mt-1 -mr-1">
-                        <p className={ui.eyebrow}>Colour {idx + 1}</p>
-                        <button
-                          type="button"
-                          onClick={() => removeColor(idx)}
-                          className="h-11 md:h-9 px-3 rounded-[10px] text-[13px] font-semibold text-danger hover:bg-danger-tint transition-colors cursor-pointer"
-                          title="Delete Color"
-                        >
-                          Delete
-                        </button>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-end">
-                        {/* Preview and Name */}
-                        <div className="flex items-end gap-2.5">
-                          <label
-                            className="relative w-12 h-12 sm:w-11 sm:h-11 shrink-0 rounded-full border-[1.5px] border-control overflow-hidden cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink"
-                            title="Click to open color picker"
-                          >
-                            <input
-                              type="color"
-                              value={previewHex.length === 7 ? previewHex : '#241D1B'}
-                              onChange={(e) => updateColor(idx, 'hex', e.target.value.toUpperCase())}
-                              aria-label={`Colour ${idx + 1} swatch`}
-                              className="opacity-0 absolute inset-0 w-full h-full cursor-pointer"
-                            />
-                            <span
-                              className="block w-full h-full"
-                              style={{ backgroundColor: previewHex || '#e2e8f0' }}
-                            />
-                          </label>
-                          <div className="flex-grow min-w-0">
-                            <label htmlFor={`apf-colour-name-${idx}`} className={ui.label}>Color Name</label>
-                            <input
-                              id={`apf-colour-name-${idx}`}
-                              type="text"
-                              placeholder="e.g. Royal Blue"
-                              value={color.name}
-                              onChange={(e) => updateColor(idx, 'name', e.target.value)}
-                              className={ui.field}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Hex Code Input */}
-                        <div>
-                          <label htmlFor={`apf-colour-hex-${idx}`} className={ui.label}>Hex Color Code</label>
-                          <div className="relative">
-                            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted text-sm font-mono" aria-hidden="true">#</span>
-                            <input
-                              id={`apf-colour-hex-${idx}`}
-                              type="text"
-                              placeholder="58152D"
-                              value={color.hex.replace('#', '')}
-                              onChange={(e) => {
-                                const typedVal = e.target.value.trim();
-                                const finalHex = typedVal.startsWith('#') ? typedVal : `#${typedVal}`;
-                                updateColor(idx, 'hex', finalHex);
-                              }}
-                              className={`${ui.field} !pl-8 font-mono`}
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Sync Product Image */}
-                      <div className="pt-3 border-t border-line">
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                          <span className="text-[13px] leading-[18px] font-semibold text-ink">
-                            Tap an uploaded image to sync with this color:
-                          </span>
-                          {color.imageUrl && (
-                            <button
-                              type="button"
-                              onClick={() => detectColourForRow(idx)}
-                              disabled={detectingIdx !== null}
-                              className={`${ui.small} disabled:cursor-wait`}
-                              title="Read this colour from the synced photo"
-                            >
-                              {detectingIdx === idx ? <RefreshCw className="w-3.5 h-3.5 animate-spin text-current" /> : <Sparkles className="w-3.5 h-3.5 text-current" />}
-                              {detectingIdx === idx ? 'Detecting…' : 'Detect'}
-                            </button>
-                          )}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {images.map((imgUrl, imgIdx) => {
-                            const synced = color.imageUrl === imgUrl;
-                            return (
-                              <button
-                                key={imgIdx}
-                                type="button"
-                                aria-pressed={synced}
-                                onClick={() => {
-                                  // If already selected, clicking again toggles/deselects it
-                                  if (synced) {
-                                    updateColor(idx, 'imageUrl', '');
-                                  } else {
-                                    updateColor(idx, 'imageUrl', imgUrl);
-                                  }
-                                }}
-                                className="w-12 flex flex-col items-center gap-0.5 cursor-pointer"
-                              >
-                                <span className={`block w-full aspect-[4/5] rounded-[10px] overflow-hidden border-2 transition-colors ${synced ? 'border-brand' : 'border-transparent opacity-70 hover:opacity-100'}`}>
-                                  <img src={imgUrl} className="w-full h-full object-cover object-top bg-sunken" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
-                                </span>
-                                <span className={`text-[11px] leading-[14px] font-bold ${synced ? 'text-brand' : 'invisible'}`}>Sync</span>
-                              </button>
-                            );
-                          })}
-                          {images.length === 0 && (
-                            <span className="text-[13px] leading-[18px] text-ink-muted">Please upload product images below first.</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                  <span className={SWITCH_TRACK} aria-hidden="true" />
+                  <span className="order-first min-w-0">
+                    <span className="block text-sm leading-5 font-semibold text-ink">{flag.label}</span>
+                    <span className="block text-xs leading-4 text-ink-muted">{flag.hint}</span>
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Section 3: Product Imagery */}
-        <section className={ui.card}>
-          <SectionTitle icon={<ImageIcon className="text-current" />} title="Product Gallery" hint="The first photo is the cover. Portrait (4:5) photos look best." />
+        {/* 7. Details */}
+        <section id="apf-sec-details" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(7)} title="Details" hint="Optional. Shown on the product page under the description." />
 
-          <div className="space-y-4">
-            {/* Upload Area */}
-            <label className="w-full flex flex-col items-center justify-center gap-1.5 px-4 py-8 rounded-xl border-[1.5px] border-dashed border-control bg-page hover:bg-sunken text-center cursor-pointer transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink">
-              <span className="w-11 h-11 mb-1 rounded-xl bg-white border border-line text-ink flex items-center justify-center" aria-hidden="true">
-                <ImageIcon className="w-5 h-5 text-current" />
-              </span>
-              <span className="text-[15px] leading-[22px] font-semibold text-ink">Upload product photos</span>
-              <span className="text-[13px] leading-[18px] text-ink-muted">Tap to choose photos · the first photo is the cover · portrait (4:5) looks best</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImageUpload}
-                className="sr-only"
-              />
-            </label>
-
-            {/* Gallery Grid Preview */}
-            {images.length > 0 && (
-              <div className="grid grid-cols-3 min-[480px]:grid-cols-4 sm:grid-cols-5 gap-2.5">
-                {images.map((imgUrl, idx) => (
-                  <div key={idx} className="min-w-0">
-                    {imgUrl && imgUrl.trim() !== "" ? (
-                      <img src={imgUrl} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
-                    ) : (
-                      <div className="w-full aspect-[4/5] rounded-xl bg-sunken" />
-                    )}
-                    <div className="mt-1 flex items-center justify-between gap-1">
-                      {/* Image Badge */}
-                      <span className={`${ui.badge} ${idx === 0 ? tone.brand : tone.muted}`}>
-                        {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
-                      </span>
-
-                      {/* Delete Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemoveImage(idx);
-                        }}
-                        className="w-10 h-10 shrink-0 rounded-full hover:bg-danger-tint text-danger flex items-center justify-center cursor-pointer"
-                        title="Remove image"
-                        aria-label={`Remove photo ${idx + 1}`}
-                      >
-                        <X className="w-4 h-4 text-current" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* Section 4: Sizes, Colors & Fabric Specs */}
-        <section className={ui.card}>
-          <SectionTitle icon={<Layers className="text-current" />} title="Sizes, Colors & Fabric Specifications" />
-
-          {/* Sizes Selection */}
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-              <p id="apf-sizes-label" className={`${ui.label} !mb-0`}>Available Sizes *</p>
-              <button
-                type="button"
-                onClick={() => setSelectedSizes(sortSizes([...RANGE_SIZES, ...selectedSizes.filter((s) => s === 'XS')]))}
-                className={ui.small}
-              >
-                Select S – 5XL
-              </button>
-            </div>
-            <div role="group" aria-labelledby="apf-sizes-label" className="flex flex-wrap gap-2">
-              {sizeOptions.map((sz) => {
-                const isSelected = selectedSizes.includes(sz);
-                return (
-                  <button
-                    type="button"
-                    key={sz}
-                    aria-pressed={isSelected}
-                    onClick={() => toggleSize(sz)}
-                    className={`${ui.chip(isSelected)} min-w-12 sag-num`}
-                  >
-                    {sz} {isSelected && <Check className="w-3.5 h-3.5 text-current" aria-hidden="true" />}
-                  </button>
-                );
-              })}
-            </div>
-            <p className={ui.hint}>
-              Choosing Free Size replaces the other sizes.
-            </p>
-          </div>
-
-          {/* Specifications */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 mt-4 border-t border-line">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="apf-fabric" className={ui.label}>Fabric Material</label>
               <input
@@ -1128,35 +1261,11 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           </div>
         </section>
 
-        {/* Section 5: Storefront Badges & Visibility */}
-        <section className={ui.card}>
-          <SectionTitle icon={<Sparkles className="text-current" />} title="Merchandising Badges & Visibility" />
+        {/* 8. Search & sharing (SEO, optional) */}
+        <section id="apf-sec-seo" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(8)} title="Search & sharing" hint="Optional. How this product reads on Google and when its link is shared. Left empty, the name and description are used." />
 
-          <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2.5">
-            {flagToggles.map((flag) => (
-              <label key={flag.id} className="flex items-center justify-between gap-3 min-h-[52px] px-3.5 py-2.5 rounded-xl border border-line bg-white cursor-pointer text-sm font-semibold text-ink transition-colors has-[:checked]:border-brand has-[:checked]:bg-brand-wash">
-                <input
-                  id={flag.id}
-                  type="checkbox"
-                  checked={flag.checked}
-                  onChange={(e) => flag.onChange(e.target.checked)}
-                  className="peer sr-only"
-                />
-                <span className={SWITCH_TRACK} aria-hidden="true" />
-                <span className="order-first">{flag.label}</span>
-              </label>
-            ))}
-          </div>
-        </section>
-
-        {/* Section 6: SEO (optional, collapsible) */}
-        <details className={`group ${ui.card}`} open={Boolean(seoTitle || seoDescription || searchKeywords)}>
-          <summary className="cursor-pointer list-none flex items-center justify-between gap-2 min-h-11 -my-1">
-            <span className={ui.h2}>SEO &amp; search (optional)</span>
-            <span className="h-9 px-3 rounded-[10px] border-[1.5px] border-control inline-flex items-center text-[13px] font-semibold text-ink group-open:hidden">Show</span>
-            <span className="h-9 px-3 rounded-[10px] border-[1.5px] border-control items-center text-[13px] font-semibold text-ink hidden group-open:inline-flex">Hide</span>
-          </summary>
-          <div className="mt-4 pt-4 border-t border-line grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label htmlFor="apf-seo-title" className={ui.label}>Page title</label>
               <input
@@ -1197,10 +1306,39 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
               <p className={ui.hint}>Comma separated. Shoppers searching these words on the store will find this product.</p>
             </div>
           </div>
-        </details>
+        </section>
 
-        {/* Bottom Save/Cancel Actions */}
-        <div className="sticky bottom-0 z-20 -mx-4 sm:mx-0 flex items-center gap-3 sm:justify-end px-4 sm:px-5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-3 bg-white border-t sm:border border-line sm:rounded-2xl shadow-[var(--sag-shadow-bar)]">
+        {/* 9. Visibility */}
+        <section id="apf-sec-visibility" className={`${ui.card} scroll-mt-24`}>
+          <SectionTitle icon={num(9)} title="Visibility" hint="Whether shoppers can see this product." />
+
+          <label className="flex items-center justify-between gap-4 min-h-[64px] px-4 py-3 rounded-2xl border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
+            <input
+              id="apf-flag-published"
+              type="checkbox"
+              checked={published}
+              onChange={(e) => setPublished(e.target.checked)}
+              className="peer sr-only"
+            />
+            <span className={SWITCH_TRACK} aria-hidden="true" />
+            <span className="order-first min-w-0">
+              <span className="block text-[15px] leading-[22px] font-semibold text-ink">Published on store</span>
+              <span className="block text-[13px] leading-[18px] text-ink-muted">
+                {published
+                  ? (stockValid && stockQuantity === 0 ? 'On: shoppers see it, marked as sold out until you add stock.' : 'On: shoppers can see and buy it as soon as you save.')
+                  : 'Off: saved here as a draft. Shoppers cannot see it.'}
+              </span>
+            </span>
+          </label>
+        </section>
+
+        {/* The save bar stays at the bottom of the screen */}
+        <div className="sticky bottom-0 sm:bottom-3 z-20 -mx-4 sm:mx-0 sag-bar sm:border sm:border-line sm:rounded-full flex items-center gap-3 px-4 sm:pl-6 sm:pr-2.5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-2.5">
+          <p className="hidden sm:block min-w-0 mr-auto text-[13px] leading-[18px] text-ink-muted truncate sag-num">
+            {allDone
+              ? <><span className="font-semibold text-brand">Ready to save.</span> {published ? 'It will be live on the store.' : 'It will be saved as a draft.'}</>
+              : <><span className="font-semibold text-ink">{doneCount} of {requiredSteps.length} done.</span> Still needed: {requiredSteps.filter((s) => !s.done).map((s) => s.label).join(', ')}</>}
+          </p>
           <button
             type="button"
             disabled={isSaving}
@@ -1212,7 +1350,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           <button
             type="submit"
             disabled={isSaving}
-            className={`${ui.primary} flex-1 sm:flex-none`}
+            className={`${ui.primary} flex-1 sm:flex-none sm:px-7`}
           >
             {isSaving ? (
               <RefreshCw className="w-4 h-4 animate-spin text-current" />
@@ -1223,6 +1361,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
           </button>
         </div>
 
+        </div>
       </form>
 
     </div>

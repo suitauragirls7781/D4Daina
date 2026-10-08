@@ -3,6 +3,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, isSameOrigin, parseBody, reply } from './_lib/http.js';
 import { effectivePlan } from './_lib/usage.js';
+import { cleanPresencePath, presenceBudget, recordPresence } from './_lib/presence.js';
 
 // Anonymous visitor counting. Browsers can no longer write analytics directly; each count is made here,
 // at most once per visitor (IP + browser) per day and event, with a cap per IP so a script can't inflate numbers.
@@ -34,13 +35,15 @@ const FREE_WRITE_BUDGET = Number(process.env.TRACK_WRITE_BUDGET) || 8000;
 const PAID_WRITE_BUDGET = 600000;
 // The plan is the owner's switch in Admin -> Usage & limits (api/_lib/usage.js), looked up again once a minute
 let TRACK_WRITE_BUDGET = FREE_WRITE_BUDGET;
+let plan = 'free';
 let budget = { day: '', at: 0, used: 0 };
 const isQuotaError = (error) => error?.code === 8 || /RESOURCE_EXHAUSTED|quota/i.test(String(error?.message || ''));
 const pauseCounting = (day) => { budget = { day, at: Date.now() + 9 * 60 * 1000, used: Infinity }; }; // checked again in 10 minutes
 const countingPaused = async (db, day) => {
   if (budget.day === day && Date.now() - budget.at < 60 * 1000) return budget.used >= TRACK_WRITE_BUDGET;
   try {
-    TRACK_WRITE_BUDGET = (await effectivePlan(db)) === 'paid' ? PAID_WRITE_BUDGET : FREE_WRITE_BUDGET;
+    plan = await effectivePlan(db);
+    TRACK_WRITE_BUDGET = plan === 'paid' ? PAID_WRITE_BUDGET : FREE_WRITE_BUDGET;
     const d = (await db.collection('daily_analytics').doc(day).get()).data() || {};
     const n = (key) => Number(d[key]) || 0;
     // roughly what today's counting has written so far (6 per visit, 4 per item event, 2-3 for the rest)
@@ -52,6 +55,12 @@ const countingPaused = async (db, day) => {
   }
   return budget.used >= TRACK_WRITE_BUDGET;
 };
+
+// The database itself is refusing work (pauseCounting), as opposed to the counting budget being used up
+const databaseRefusing = () => budget.used === Infinity;
+
+/** For the admin's live view: is visitor counting paused right now, and which plan sets the budgets? */
+export const countingState = async (db = firestore()) => ({ paused: await countingPaused(db, new Date().toISOString().slice(0, 10)), plan });
 
 const deviceType = (ua) => {
   if (/Instagram|FBAV|FBAN|FB_IAB/i.test(ua)) return 'instagram_webview';
@@ -73,7 +82,39 @@ export default async function handler(req, res) {
   const ip = clientIp(req);
   const db = firestore();
   const now = new Date().toISOString();
-  if (await countingPaused(db, day)) return reply(res, 200, { ok: true, counted: false, paused: true });
+  const visitCountingPaused = await countingPaused(db, day);
+
+  // Live presence (api/_lib/presence.js): "this visitor is on this page now". A view on each page change and a
+  // heartbeat every two minutes; one row write per accepted signal, limited per visitor from the row itself.
+  // It has a daily budget of its own: it neither uses nor waits for the visit counting budget. It stops only
+  // when its own budget is used up or the database itself is refusing work.
+  if (body.event === 'presence') {
+    const visitorId = String(body.visitorId || '');
+    const path = cleanPresencePath(body.path);
+    if (!VISITOR_ID.test(visitorId) || !path) return reply(res, 400, { error: 'Invalid event.' });
+    // A browser that asks not to be tracked is not followed, even if the page sent the signal
+    if (req.headers.dnt === '1' || req.headers['sec-gpc'] === '1') return reply(res, 200, { ok: true });
+    if (databaseRefusing() || (await presenceBudget(plan)).paused) return reply(res, 200, { ok: true, counted: false, paused: true });
+    try {
+      const counted = await recordPresence({
+        visitorId,
+        kind: body.kind === 'beat' ? 'beat' : 'view',
+        path,
+        label: body.label,
+        source: body.source,
+        device: deviceType(ua),
+        cf: req.cf,
+      });
+      return reply(res, 200, { ok: true, counted });
+    } catch (error) {
+      console.error('Presence signal failed:', error?.message || error);
+      if (isQuotaError(error)) pauseCounting(day);
+      // Never an error for the page: presence is only a view for the owner
+      return reply(res, 200, { ok: true, counted: false });
+    }
+  }
+
+  if (visitCountingPaused) return reply(res, 200, { ok: true, counted: false, paused: true });
 
   // Product views, wishlist saves and search terms: once per visitor per item per day.
   // product_daily powers honest social proof ("N people saved this today") and admin insights.

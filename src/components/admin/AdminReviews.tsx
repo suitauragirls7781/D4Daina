@@ -9,7 +9,8 @@ import { useShop } from '../../context/ShopContext';
 import { useProducts } from '../../context/ProductContext';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { Review } from '../../types';
-import { AdminPageHeader } from './kidsToysShared';
+import { EmptyState, KeyNumbers, PageTitle, Pill, adminUi } from './PaymentBadge';
+import type { PillTone } from './PaymentBadge';
 import { parseMediaUrl } from '../../lib/media';
 
 /** Fields the review API stores that the shared review list does not carry. */
@@ -26,18 +27,19 @@ type FormData = Omit<Review, 'id'>;
 
 // The shared review list fills this in when a review has no location, so it is not shown as one
 const PLACEHOLDER_LOCATION = 'Artisan, India';
-const STATUS_LABEL: Record<Status, string> = { pending: 'Pending', approved: 'Approved', hidden: 'Hidden' };
-const STATUS_STYLE: Record<Status, string> = {
-  pending: 'bg-sale-tint text-sale border-sale-line',
-  approved: 'bg-ok-tint text-ok border-ok-line',
-  hidden: 'bg-sunken text-ink-muted border-line',
-};
+const STATUS_LABEL: Record<Status, string> = { pending: 'Waiting for approval', approved: 'Shown on the store', hidden: 'Hidden' };
+// Gold while a review waits for you, plain once it is live, muted when hidden
+const STATUS_TONE: Record<Status, PillTone> = { pending: 'good', approved: 'plain', hidden: 'muted' };
+/** In "All", the reviews waiting for approval come first. */
+const STATUS_RANK: Record<Status, number> = { pending: 0, approved: 1, hidden: 2 };
 
-const card = 'sag-card p-4 sm:p-5';
-const fieldLabel = 'grid gap-1.5 text-[13px] leading-[18px] font-semibold text-ink';
-// Fields sit inside the semibold label wrapper: keep the typed text and placeholders at normal weight
-const input = 'sag-input font-normal';
-const pill = 'h-11 px-4 rounded-xl text-sm font-semibold inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50';
+const card = adminUi.card;
+const fieldLabel = 'grid gap-1.5 text-[13px] leading-[18px] font-medium text-ink-muted';
+// Fields sit inside the label wrapper: the typed text keeps the normal text colour and weight
+const input = 'sag-input h-11 font-normal';
+const textArea = 'sag-input font-normal';
+const pill = `${adminUi.outline} px-4`;
+const dangerPill = `${adminUi.danger} px-4`;
 
 // Same limit as the other admin photo uploads
 const MAX_UPLOAD_MB = 10;
@@ -135,7 +137,13 @@ export const AdminReviews: React.FC = () => {
 
   const shown = useMemo(() => reviewsList
     .filter((r) => filter === 'all' || statusOf(r) === filter)
-    .sort((a, b) => sortTime(b, extras?.[b.id]) - sortTime(a, extras?.[a.id])), [reviewsList, filter, extras]);
+    .sort((a, b) => (STATUS_RANK[statusOf(a)] - STATUS_RANK[statusOf(b)]) || (sortTime(b, extras?.[b.id]) - sortTime(a, extras?.[a.id]))), [reviewsList, filter, extras]);
+
+  // Average of the reviews shoppers can see (approved ones); null when there are none
+  const average = useMemo(() => {
+    const live = reviewsList.filter((r) => statusOf(r) === 'approved' && Number(r.rating) > 0);
+    return live.length ? live.reduce((sum, r) => sum + Number(r.rating), 0) / live.length : null;
+  }, [reviewsList]);
 
   const products = useMemo(() => [...allProducts].sort((a, b) => String(a.name).localeCompare(String(b.name))), [allProducts]);
   const editing = editor?.id ? reviewsList.find((r) => r.id === editor.id) : undefined;
@@ -295,35 +303,42 @@ export const AdminReviews: React.FC = () => {
 
   return (
     <div id="admin-reviews-page" className="space-y-5">
-      <AdminPageHeader
-        eyebrow="Storefront"
+      <PageTitle
         title="Customer reviews"
-        icon={<MessageSquare className="text-current" />}
-        description="Reviews from the store wait here until you approve them. “Verified purchase” is set automatically when the customer’s paid order contains the product."
+        line="Reviews from the store wait here until you approve them. “Verified purchase” is set automatically when the customer’s paid order contains the product."
         actions={
-          <button type="button" onClick={openNew} className="sag-btn-primary h-12 px-5 text-[15px] gap-2 w-full sm:w-auto">
+          <button type="button" onClick={openNew} className={`${adminUi.primary} h-12 w-full sm:w-auto`}>
             <Plus className="w-4 h-4" /> Add a review you received
           </button>
         }
       />
 
-      <div role="group" aria-label="Filter reviews by status" className="flex gap-2 overflow-x-auto sag-scroll-x -mx-1 px-1 pb-0.5">
+      <KeyNumbers
+        label="Reviews at a glance"
+        items={[
+          { label: 'Waiting for approval', value: counts.pending, highlight: counts.pending > 0, note: counts.pending ? 'Approve or reject each one' : 'Nothing to approve' },
+          { label: 'Shown on the store', value: counts.approved, note: 'Approved reviews' },
+          { label: 'Hidden', value: counts.hidden, note: 'Not shown to shoppers' },
+          { label: 'Average rating', value: average === null ? '—' : `${average.toFixed(1)} / 5`, note: average === null ? 'No approved reviews yet' : `From ${counts.approved} approved ${counts.approved === 1 ? 'review' : 'reviews'}` },
+        ]}
+      />
+
+      <div role="group" aria-label="Filter reviews by status" className={adminUi.chipRow}>
         {tabs.map((t) => (
-          <button key={t.key} type="button" aria-pressed={filter === t.key} onClick={() => setFilter(t.key)}
-            className={`${pill} shrink-0 border ${filter === t.key ? 'bg-ink border-ink text-white' : 'bg-white border-control text-ink hover:bg-sunken'}`}>
+          <button key={t.key} type="button" aria-pressed={filter === t.key} onClick={() => setFilter(t.key)} className={adminUi.chip}>
             {t.label}
-            <span className={`min-w-5 px-1.5 rounded-md text-[11px] font-bold ${filter === t.key ? 'bg-white/20' : t.key === 'pending' && counts.pending ? 'bg-sale-tint text-sale' : 'bg-sunken'}`}>{counts[t.key]}</span>
+            <span className="sag-num font-normal opacity-70">{counts[t.key]}</span>
           </button>
         ))}
       </div>
 
       {editor && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-ink/50 p-0 sm:p-4 sag-fade" onClick={() => closeEditor()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-dark/70 p-0 sm:p-4 sag-fade" onClick={() => closeEditor()}>
           <form role="dialog" aria-modal="true" aria-labelledby="review-editor-title" onSubmit={saveForm} onClick={(e) => e.stopPropagation()}
-            className="bg-white w-full sm:max-w-2xl max-h-[92dvh] rounded-t-[20px] sm:rounded-2xl flex flex-col overflow-hidden shadow-[var(--sag-shadow-pop)] animate-in slide-in-from-bottom-5 fade-in">
+            className="bg-surface border border-line w-full sm:max-w-2xl max-h-[92dvh] rounded-t-[28px] sm:rounded-[22px] flex flex-col overflow-hidden shadow-[var(--sag-shadow-pop)] animate-in slide-in-from-bottom-5 fade-in">
             <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
-              <h3 id="review-editor-title" className="text-[17px] leading-6 font-semibold text-ink">{editor.id ? 'Edit review' : 'Add a review you received'}</h3>
-              <button type="button" onClick={() => closeEditor()} disabled={saving} aria-label="Close" autoFocus className="w-11 h-11 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer disabled:opacity-50"><X className="w-5 h-5" /></button>
+              <h3 id="review-editor-title" className="font-display text-xl leading-7 text-ink">{editor.id ? 'Edit review' : 'Add a review you received'}</h3>
+              <button type="button" onClick={() => closeEditor()} disabled={saving} aria-label="Close" autoFocus className={adminUi.iconBtn}><X className="w-5 h-5" /></button>
             </div>
             <div className="overflow-y-auto overscroll-contain p-5 grid gap-4">
               {!editor.id && <p className="text-sm text-ink-muted">Only add real reviews a customer sent you (for example on WhatsApp or Instagram).</p>}
@@ -336,7 +351,7 @@ export const AdminReviews: React.FC = () => {
                 </label>
                 {editingFromStore ? (
                   <div className={fieldLabel}>Product
-                    <p className="min-h-10 flex items-center text-sm font-normal text-ink-muted break-words">{formData.productName || 'Deleted product'} (the style the customer reviewed)</p>
+                    <p className="min-h-11 flex items-center text-sm font-normal text-ink break-words">{formData.productName || 'Deleted product'} (the style the customer reviewed)</p>
                   </div>
                 ) : (
                   <label className={fieldLabel}>Product
@@ -353,7 +368,7 @@ export const AdminReviews: React.FC = () => {
                 )}
                 {editingFromStore ? (
                   <div className={fieldLabel}>Review date
-                    <p className="min-h-10 flex items-center text-sm font-normal text-ink-muted">{showDate(formData.date)} (when the customer sent it)</p>
+                    <p className="min-h-11 flex items-center text-sm font-normal text-ink">{showDate(formData.date)} (when the customer sent it)</p>
                   </div>
                 ) : (
                   <label className={fieldLabel}>Review date
@@ -367,7 +382,7 @@ export const AdminReviews: React.FC = () => {
                 </label>
                 {editingFromStore ? (
                   <div className={fieldLabel}>Verified purchase
-                    <p className="min-h-10 flex items-center text-sm font-normal text-ink-muted">{editing?.verifiedPurchase ? 'Yes — found in the customer’s paid orders' : 'No — no paid order with this product'}</p>
+                    <p className="min-h-11 flex items-center text-sm font-normal text-ink">{editing?.verifiedPurchase ? 'Yes — found in the customer’s paid orders' : 'No — no paid order with this product'}</p>
                   </div>
                 ) : (
                   <label className={fieldLabel}>Verified purchase
@@ -379,7 +394,7 @@ export const AdminReviews: React.FC = () => {
                 )}
               </div>
               <div className="grid gap-2 min-w-0">
-                <p className="text-[13px] leading-[18px] font-semibold text-ink">Customer’s photo <span className="font-normal text-ink-muted">(optional)</span></p>
+                <p className="text-[13px] leading-[18px] font-medium text-ink-muted">Customer’s photo <span className="font-normal">(optional)</span></p>
                 <div className="flex items-start gap-3 min-w-0">
                   {formData.imageUrl && (
                     <img src={getCleanImageUrl(formData.imageUrl, 240)} alt="Photo preview"
@@ -389,13 +404,13 @@ export const AdminReviews: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       <input ref={fileInput} type="file" accept="image/*" onChange={handlePhotoFile} className="sr-only" tabIndex={-1} aria-label="Choose the customer’s photo" />
                       <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading} aria-busy={uploading}
-                        className={`${pill} border-[1.5px] border-control bg-white text-ink hover:bg-sunken`}>
+                        className={pill}>
                         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                         {uploading ? 'Uploading…' : formData.imageUrl ? 'Change photo' : 'Upload photo'}
                       </button>
                       {formData.imageUrl && (
                         <button type="button" onClick={() => setFormData({ ...formData, imageUrl: '' })} disabled={uploading}
-                          className={`${pill} border-[1.5px] border-danger-line bg-white text-danger hover:bg-danger-tint`}>
+                          className={dangerPill}>
                           <Trash2 className="w-3.5 h-3.5" /> Remove photo
                         </button>
                       )}
@@ -413,12 +428,12 @@ export const AdminReviews: React.FC = () => {
               </div>
               <label className={fieldLabel}>Review text *
                 <textarea rows={4} value={formData.comment} onChange={(e) => setFormData({ ...formData, comment: e.target.value })} maxLength={2000}
-                  className={input} />
+                  className={textArea} />
               </label>
             </div>
-            <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line bg-white shadow-[var(--sag-shadow-bar)] flex sm:justify-end gap-3">
-              <button type="button" onClick={() => closeEditor()} disabled={saving} className="sag-btn-outline h-12 flex-1 sm:flex-none sm:px-6 text-[15px]">Cancel</button>
-              <button type="submit" disabled={saving || uploading} className="sag-btn-primary h-12 flex-[2] sm:flex-none sm:px-8 gap-2">
+            <div className="px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line flex sm:justify-end gap-3">
+              <button type="button" onClick={() => closeEditor()} disabled={saving} className={`${adminUi.outline} h-12 flex-1 sm:flex-none sm:px-6`}>Cancel</button>
+              <button type="submit" disabled={saving || uploading} className={`${adminUi.primary} h-12 flex-[2] sm:flex-none sm:px-8`}>
                 <Save className="w-4 h-4" /> {saving ? 'Saving…' : editor.id ? 'Save changes' : 'Add review'}
               </button>
             </div>
@@ -428,10 +443,7 @@ export const AdminReviews: React.FC = () => {
 
       <div className="space-y-4">
         {shown.length === 0 ? (
-          <div className={`${card} text-center text-sm text-ink-muted py-14`}>
-            <span className="mx-auto w-12 h-12 rounded-xl bg-sunken text-ink flex items-center justify-center mb-3"><MessageSquare className="w-6 h-6" /></span>
-            {filter === 'pending' ? 'No reviews waiting for approval.' : 'No reviews here yet.'}
-          </div>
+          <EmptyState icon={<MessageSquare />} title={filter === 'pending' ? 'No reviews waiting for approval.' : 'No reviews here yet.'} />
         ) : shown.map((review) => {
           const status = statusOf(review);
           const extra = extras?.[review.id];
@@ -440,15 +452,15 @@ export const AdminReviews: React.FC = () => {
           return (
             <article key={review.id} className={`${card} space-y-3`}>
               <div className="flex items-start justify-between gap-3">
-                <span className="hidden sm:flex w-10 h-10 shrink-0 rounded-full bg-sunken text-ink font-semibold text-lg items-center justify-center" aria-hidden="true">{(review.userName || '?').trim().charAt(0).toUpperCase()}</span>
+                <span className={`hidden sm:flex w-10 h-10 text-base ${adminUi.avatar}`} aria-hidden="true">{(review.userName || '?').trim().charAt(0).toUpperCase()}</span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="font-sans text-sm font-semibold text-ink break-words">{review.userName}</h4>
-                    <span className={`sag-badge border ${STATUS_STYLE[status]}`}>{STATUS_LABEL[status]}</span>
+                    <h4 className="font-sans text-[15px] leading-5 font-semibold text-ink break-words">{review.userName}</h4>
+                    <Pill tone={STATUS_TONE[status]} dot>{STATUS_LABEL[status]}</Pill>
                     {review.verifiedPurchase && (
-                      <span className="sag-badge border border-ok-line bg-ok-tint text-ok gap-1">
+                      <Pill tone="good">
                         <BadgeCheck className="w-3.5 h-3.5" /> Verified purchase
-                      </span>
+                      </Pill>
                     )}
                     {extra && <span className="text-xs text-ink-muted">{extra.source === 'storefront' ? 'From the store' : 'Added in admin'}</span>}
                   </div>
@@ -477,47 +489,47 @@ export const AdminReviews: React.FC = () => {
               )}
 
               {review.adminReply && replyingId !== review.id && (
-                <div className="rounded-xl bg-sunken p-3.5 text-sm text-ink-muted">
+                <div className={`${adminUi.inset} text-sm text-ink-muted`}>
                   <p className="text-[13px] font-semibold text-ink flex items-center gap-1.5"><Reply className="w-3.5 h-3.5" /> Your reply</p>
                   <p className="mt-1 whitespace-pre-line break-words">{review.adminReply}</p>
                 </div>
               )}
 
               {replyingId === review.id && (
-                <div className="rounded-xl border border-line bg-page p-3.5 space-y-2">
-                  <label htmlFor={`reply-${review.id}`} className="text-xs font-semibold text-ink-muted">Reply shown under the review</label>
+                <div className={`${adminUi.inset} space-y-2`}>
+                  <label htmlFor={`reply-${review.id}`} className={adminUi.label}>Reply shown under the review</label>
                   <textarea id={`reply-${review.id}`} rows={2} value={replyText} onChange={(e) => setReplyText(e.target.value)} maxLength={1000}
                     placeholder="Thank the customer or answer their question…"
-                    className="sag-input" />
+                    className={adminUi.textarea} />
                   <div className="flex justify-end gap-2">
-                    <button type="button" onClick={() => setReplyingId(null)} className={`${pill} border-[1.5px] border-control bg-white text-ink hover:bg-sunken`}>Cancel</button>
-                    <button type="button" onClick={() => saveReply(review.id)} disabled={busy} className="sag-btn-primary h-11 px-4 text-sm gap-1.5"><Save className="w-4 h-4" /> Publish reply</button>
+                    <button type="button" onClick={() => setReplyingId(null)} className={pill}>Cancel</button>
+                    <button type="button" onClick={() => saveReply(review.id)} disabled={busy} className={`${adminUi.primary} px-4`}><Save className="w-4 h-4" /> Publish reply</button>
                   </div>
                 </div>
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-line">
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" onClick={() => { setReplyingId(review.id); setReplyText(review.adminReply || ''); }} className={`${pill} border-[1.5px] border-control bg-white text-ink hover:bg-sunken`}>
+                  <button type="button" onClick={() => { setReplyingId(review.id); setReplyText(review.adminReply || ''); }} className={pill}>
                     <Reply className="w-3.5 h-3.5" /> {review.adminReply ? 'Edit reply' : 'Reply'}
                   </button>
-                  <button type="button" onClick={() => openEdit(review)} className={`${pill} border-[1.5px] border-control bg-white text-ink hover:bg-sunken`}>
+                  <button type="button" onClick={() => openEdit(review)} className={pill}>
                     <Edit2 className="w-3.5 h-3.5" /> Edit
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {status !== 'approved' && (
-                    <button type="button" onClick={() => setStatus(review, 'approved')} disabled={busy} className={`${pill} bg-ok-tint text-ok border border-ok-line hover:bg-ok-tint`}>
+                    <button type="button" onClick={() => setStatus(review, 'approved')} disabled={busy} className={`${adminUi.primary} px-4`}>
                       <Check className="w-3.5 h-3.5" /> Approve
                     </button>
                   )}
                   {status !== 'hidden' && (
-                    <button type="button" onClick={() => setStatus(review, 'hidden')} disabled={busy} className={`${pill} border-[1.5px] border-control bg-white text-ink hover:bg-sunken`}>
+                    <button type="button" onClick={() => setStatus(review, 'hidden')} disabled={busy} className={pill}>
                       <EyeOff className="w-3.5 h-3.5" /> {status === 'pending' ? 'Reject' : 'Hide'}
                     </button>
                   )}
                   <button type="button" onClick={() => remove(review)} disabled={busy} aria-label={`Delete the review by ${review.userName}`}
-                    className={`${pill} border-[1.5px] border-danger-line bg-white text-danger hover:bg-danger-tint`}>
+                    className={dangerPill}>
                     <Trash2 className="w-3.5 h-3.5" /> Delete
                   </button>
                 </div>

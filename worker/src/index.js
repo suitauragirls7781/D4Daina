@@ -15,6 +15,7 @@ import * as sitemap from '../../api/sitemap.js';
 import * as razorpayWebhook from '../../api/webhooks/razorpay.js';
 import { firestore } from '../../api/_lib/firebaseAdmin.js';
 import { runReminders } from '../../api/_lib/reminders.js';
+import { cleanupPresence, setPresenceDb } from '../../api/_lib/presence.js';
 
 /**
  * Worker entry. The handlers in api/** are plain Node-style (req, res) handlers; this file only decides which one
@@ -119,6 +120,7 @@ const answerApi = async (apiModule, path, request, env, ctx) => {
     exposeEnv(env);
     setEnv(env);
     if (env.MEDIA) setMediaBucket(env.MEDIA);
+    setPresenceDb(env.DB);
     if (path === MEDIA_PATH) response = await handleMedia(request, env);
     else if (apiModule) ({ response, cache } = await serveApi(apiModule, request, ctx));
     else response = await handleDb(request, env, ctx);
@@ -137,7 +139,7 @@ const answerApi = async (apiModule, path, request, env, ctx) => {
 
 /**
  * The hourly run (wrangler.jsonc "triggers"): abandoned-checkout reminders and review requests
- * (api/_lib/reminders.js). Never rejects: a failure is logged and the next hour tries again.
+ * (api/_lib/reminders.js), then the presence cleanup. Never rejects: a failure is logged and the next hour tries again.
  */
 const runScheduled = async (event, env) => {
   const startedAt = Date.now();
@@ -150,6 +152,17 @@ const runScheduled = async (event, env) => {
   } catch (error) {
     try {
       console.error(JSON.stringify({ level: 'error', message: 'Scheduled run failed', cron: event?.cron || '', error: error?.message || String(error), stack: error?.stack }));
+    } catch { /* nothing more can be done */ }
+  }
+  // Live visitor presence: rows not seen for 48 hours are removed (one statement). On its own, so a failed
+  // reminder run does not skip it and it cannot fail the reminders.
+  try {
+    setPresenceDb(env?.DB);
+    const removed = await cleanupPresence(startedAt);
+    console.log(JSON.stringify({ level: 'info', message: 'presence cleanup', removed }));
+  } catch (error) {
+    try {
+      console.error(JSON.stringify({ level: 'error', message: 'Presence cleanup failed', error: error?.message || String(error) }));
     } catch { /* nothing more can be done */ }
   }
 };

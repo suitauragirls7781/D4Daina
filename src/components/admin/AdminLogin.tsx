@@ -82,16 +82,14 @@ export const AdminLogin: React.FC = () => {
       <div className="flex-1 flex flex-col sm:justify-center px-4 py-6 sm:py-10">
         <div className="w-full max-w-md mx-auto">
           <div className="sag-glass p-5 sm:p-7">
-            <div className="flex items-start gap-3">
-              <span className="w-10 h-10 shrink-0 rounded-full bg-brand-wash text-sale flex items-center justify-center" aria-hidden="true">
-                <ShieldCheck className="w-5 h-5" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="font-display font-medium text-[22px] leading-7 text-ink">Admin sign in</h2>
-                <p className="mt-0.5 text-sm leading-5 text-ink-muted">
-                  For store staff. Manage products, orders, customers and store settings.
-                </p>
-              </div>
+            <div className="pb-5 border-b border-line">
+              <p className="flex items-center gap-1.5 text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand">
+                <ShieldCheck className="w-4 h-4" aria-hidden="true" /> Store staff only
+              </p>
+              <h2 className="mt-2 font-display font-medium text-[26px] leading-8 text-ink">Admin sign in</h2>
+              <p className="mt-1 text-sm leading-5 text-ink-muted">
+                Enter your username, password and 6-digit PIN to manage products, orders, customers and store settings.
+              </p>
             </div>
 
             {errorMessage && (
@@ -192,7 +190,7 @@ export const AdminLogin: React.FC = () => {
                 role="switch"
                 aria-checked={remember}
                 onClick={toggleRemember}
-                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-surface'}`}
+                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-sunken'}`}
               >
                 <span className="min-w-0">
                   <span className="block text-sm leading-5 font-semibold text-ink">Save login on this phone</span>
@@ -200,7 +198,7 @@ export const AdminLogin: React.FC = () => {
                     {remember ? 'You will not be asked to sign in again on this phone and browser.' : 'You will be signed out after 12 hours.'}
                   </span>
                 </span>
-                <span aria-hidden="true" className={`relative w-12 h-7 shrink-0 rounded-full transition-colors ${remember ? 'bg-brand' : 'bg-control'}`}>
+                <span aria-hidden="true" className={`relative w-12 h-7 shrink-0 rounded-full border transition-colors ${remember ? 'bg-brand border-transparent' : 'bg-sunken-deep border-line'}`}>
                   <span className={`absolute top-1 left-1 w-5 h-5 rounded-full transition-transform ${remember ? 'translate-x-5 bg-[color:var(--sag-on-gold)]' : 'bg-ink'}`} />
                 </span>
               </button>
@@ -218,7 +216,7 @@ export const AdminLogin: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    <span>Unlock Admin Vault</span>
+                    <span>Sign in to the admin</span>
                     <ArrowRight className="w-[18px] h-[18px]" />
                   </>
                 )}

@@ -5,8 +5,9 @@ import { useRouter } from '../../context/RouterContext';
 import { ordersApi } from '../../lib/api';
 import { ArrowRight, Check, Clock, ExternalLink, Phone, RefreshCw, X, XCircle } from 'lucide-react';
 import { WhatsAppIcon } from '../BrandIcons';
-import { AdminPageHeader, tone, ui } from './kidsToysShared';
-import { actionRow, ago, cardShell, contactBtn, digits, newBadge, orderLink } from './AdminReturns';
+import { EmptyState, KeyNumbers, PageTitle, Pill, adminUi } from './PaymentBadge';
+import type { PillTone } from './PaymentBadge';
+import { actionRow, ago, cardEyebrow, cardShell, contactBtn, digits, newBadge, orderLink } from './AdminReturns';
 import { CANCELLABLE_STATUSES } from '../OrderProgress';
 import type { CancelRequest } from '../OrderProgress';
 import { formatOrderDate } from '../../utils/orderDate';
@@ -63,9 +64,11 @@ export const AdminCancellations: React.FC = () => {
   const groups: Record<Filter, CancelRow[]> = {
     waiting: rows.filter((row) => row.state !== 'closed'),
     closed: rows.filter((row) => row.state === 'closed'),
-    all: rows,
+    // The waiting ones come first; each group keeps its newest-first order
+    all: [...rows].sort((a, b) => Number(a.state === 'closed') - Number(b.state === 'closed')),
   };
   const shown = groups[filter];
+  const keptCount = groups.closed.filter((row) => row.request.outcome === 'kept').length;
   const chips: Array<{ id: Filter; label: string }> = [
     { id: 'waiting', label: 'Waiting' },
     { id: 'closed', label: 'Closed' },
@@ -73,30 +76,35 @@ export const AdminCancellations: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
-      <AdminPageHeader
-        eyebrow="Sales"
+    <div className="space-y-5 max-w-5xl mx-auto">
+      <PageTitle
         title="Cancellations"
-        icon={<XCircle className="w-5 h-5" />}
-        description={<>Customers can ask to cancel a paid order until it is shipped. Their requests appear here live. Cancel the order or keep it right here; the customer sees your decision in their account and gets an email. Refunds are made by you in your payment dashboard.</>}
+        line={<>Customers can ask to cancel a paid order until it is shipped. Their requests appear here live. Cancel the order or keep it right here; the customer sees your decision in their account and gets an email. Refunds are made by you in your payment dashboard.</>}
       />
 
-      <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0" role="tablist" aria-label="Show cancellation requests">
+      <KeyNumbers
+        label="Cancellations at a glance"
+        items={[
+          { label: 'Waiting for you', value: groups.waiting.length, highlight: groups.waiting.length > 0, note: groups.waiting.length ? 'Cancel or keep each order' : 'Nothing to decide' },
+          { label: 'Order cancelled', value: groups.closed.length - keptCount, note: 'Requests you agreed to' },
+          { label: 'Order kept', value: keptCount, note: 'Requests closed, order went ahead' },
+        ]}
+      />
+
+      <div className={adminUi.chipRow} role="tablist" aria-label="Show cancellation requests">
         {chips.map((c) => (
-          <button key={c.id} role="tab" aria-selected={filter === c.id} onClick={() => setFilter(c.id)}
-            className={`${ui.chip(filter === c.id)} shrink-0 whitespace-nowrap`}>
-            {c.label} <span className={`tabular-nums font-normal ${filter === c.id ? 'text-on-dark-muted' : 'text-ink-muted'}`}>{groups[c.id].length}</span>
+          <button key={c.id} type="button" role="tab" aria-selected={filter === c.id} data-selected={filter === c.id} onClick={() => setFilter(c.id)} className={adminUi.chip}>
+            {c.label} <span className="sag-num font-normal opacity-70">{groups[c.id].length}</span>
           </button>
         ))}
       </div>
 
       {shown.length === 0 ? (
-        <div className={ui.empty}>
-          <p className="text-base font-semibold text-ink">
-            {filter === 'waiting' ? 'No cancellation requests waiting' : filter === 'closed' ? 'No closed cancellation requests' : 'No cancellation requests yet'}
-          </p>
-          <p className="mt-1 text-sm leading-5 text-ink-muted max-w-md mx-auto">A new cancellation request from a customer shows up here the moment it is sent.</p>
-        </div>
+        <EmptyState
+          icon={<XCircle />}
+          title={filter === 'waiting' ? 'No cancellation requests waiting' : filter === 'closed' ? 'No closed cancellation requests' : 'No cancellation requests yet'}
+          line="A new cancellation request from a customer shows up here the moment it is sent."
+        />
       ) : (
         <ul className="space-y-3">
           {shown.map((row) => (
@@ -176,17 +184,16 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
   const statusLabel = state === 'open' ? 'Waiting for you'
     : state === 'stale' ? `Order already ${order.status}`
       : request.outcome === 'kept' ? 'Closed · order kept' : 'Closed · order cancelled';
-  const statusClass = state === 'open' || state === 'stale' ? tone.warn
-    : request.outcome === 'kept' ? tone.ok : tone.neutral;
+  const statusTone: PillTone = state === 'closed' ? 'muted' : 'good';
 
   return (
-    <article className={`${cardShell} ${state !== 'closed' ? 'border-sale-line' : 'border-line'}`}>
+    <article className={cardShell}>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             {isNew && <span className={newBadge}>New</span>}
-            <span className={`${ui.badge} ${tone.danger}`}><XCircle className="w-3.5 h-3.5" /> Cancellation</span>
-            <span className={`${ui.badge} ${statusClass}`}>{statusLabel}</span>
+            <Pill><XCircle className="w-3.5 h-3.5" /> Cancellation</Pill>
+            <Pill tone={statusTone} dot>{statusLabel}</Pill>
             <span className="text-xs text-ink-muted inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {ago(row.at, now)}</span>
           </div>
           <button type="button" onClick={onOpenOrder} className={orderLink}>
@@ -203,23 +210,23 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
         )}
       </header>
 
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
-        <dl className="text-sm space-y-2 min-w-0">
+      <div className="mt-4 pt-4 border-t border-line grid gap-4 md:grid-cols-2">
+        <dl className="text-sm space-y-3 min-w-0">
           <div>
-            <dt className={ui.eyebrow}>{paid ? 'Amount paid' : 'Order total'}</dt>
-            <dd className="font-semibold text-ink">{amount}{paid ? '' : ` · payment ${order.paymentStatus}`}{pieces > 0 ? <span className="font-normal text-ink-muted"> · {pieces} {pieces === 1 ? 'piece' : 'pieces'}</span> : null}</dd>
+            <dt className={cardEyebrow}>{paid ? 'Amount paid' : 'Order total'}</dt>
+            <dd className="mt-0.5 text-ink"><span className="text-xl leading-7 font-semibold sag-num">{amount}</span>{paid ? '' : ` · payment ${order.paymentStatus}`}{pieces > 0 ? <span className="text-ink-muted"> · {pieces} {pieces === 1 ? 'piece' : 'pieces'}</span> : null}</dd>
           </div>
           <div>
-            <dt className={ui.eyebrow}>Requested</dt>
-            <dd className="text-ink">{formatOrderDate(request.at) || 'Date not recorded'}{request.handledAt ? <span className="text-ink-muted"> · closed {formatOrderDate(request.handledAt)}</span> : null}</dd>
+            <dt className={cardEyebrow}>Requested</dt>
+            <dd className="mt-0.5 text-ink">{formatOrderDate(request.at) || 'Date not recorded'}{request.handledAt ? <span className="text-ink-muted"> · closed {formatOrderDate(request.handledAt)}</span> : null}</dd>
           </div>
           <div>
-            <dt className={ui.eyebrow}>Order status</dt>
-            <dd className="text-ink">{order.status}</dd>
+            <dt className={cardEyebrow}>Order status</dt>
+            <dd className="mt-0.5 text-ink">{order.status}</dd>
           </div>
         </dl>
         <div className="text-sm space-y-2 min-w-0">
-          <p className={ui.eyebrow}>Reason</p>
+          <p className={cardEyebrow}>Reason</p>
           <p className="font-semibold text-ink whitespace-pre-line break-words">{request.reason || 'Not given'}</p>
           {state !== 'closed' && request.storeNotified === false && (
             <p className="text-sm leading-5 text-danger font-medium">
@@ -247,41 +254,42 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
       </div>
 
       {state !== 'closed' && (
-        <div className="mt-4 pt-3.5 border-t border-line space-y-3">
+        <div className="mt-4 pt-4 border-t border-line space-y-3">
+          <p className={cardEyebrow}>Your answer</p>
           {!(state === 'stale' && orderStopped) && (
             <textarea rows={2} maxLength={1000} value={customerNote} onChange={(e) => setCustomerNote(e.target.value)} aria-label="Message to customer"
               placeholder='Message to customer (optional), e.g. "Your order is already being packed, so it will be delivered."'
-              className={ui.textarea} />
+              className={adminUi.textarea} />
           )}
           <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-2.5">
             {state === 'open' ? (
-              <label className="min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer">
-                <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand" /> Email the customer when cancelling
+              <label className={adminUi.checkRow}>
+                <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className={adminUi.check} /> Email the customer when cancelling
               </label>
             ) : <span className="hidden sm:block" />}
             <div className={actionRow}>
               {state === 'open' && (
                 <button type="button" onClick={cancelOrder} disabled={Boolean(busy)}
-                  className={ui.danger}>
+                  className={adminUi.danger}>
                   {busy === 'cancel' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                   {busy === 'cancel' ? 'Saving…' : 'Cancel order'}
                 </button>
               )}
               <button type="button" onClick={keepOrder} disabled={Boolean(busy)}
-                className={ui.outline}>
+                className={adminUi.outline}>
                 {busy === 'keep' ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 {busy === 'keep' ? 'Saving…' : state === 'open' ? 'Keep order' : 'Close request'}
               </button>
               {state === 'stale' && (
                 <button type="button" onClick={onOpenOrder}
-                  className={ui.primary}>
+                  className={adminUi.primary}>
                   Open order <ArrowRight className="w-4 h-4" />
                 </button>
               )}
             </div>
           </div>
           {state === 'open' && (
-            <p className="text-sm text-ink-muted">
+            <p className="text-[13px] leading-[18px] text-ink-muted">
               Cancelling returns the stock automatically and emails the customer (if the email box is ticked). {paid ? <>The money is not refunded automatically: refund {amount} from your {gateway} dashboard{order.paymentRef ? ` (payment ${order.paymentRef})` : ''}, then set the order status to Refunded.</> : notPaidNote} Keeping the order closes the request and emails the customer that it is going ahead.
             </p>
           )}

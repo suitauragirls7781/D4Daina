@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { Flame, Save, Clock, RefreshCw, Zap, Search, Eye, Upload, Loader2, Image as ImageIcon, TimerOff, CalendarClock } from 'lucide-react';
+import { Flame, Save, RefreshCw, Search, Eye, Upload, Loader2, Image as ImageIcon, TimerOff, CalendarClock } from 'lucide-react';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { AdminPageHeader } from './kidsToysShared';
+import { CheckRow, Empty, Panel, Pill, SaveBar, SwitchRow, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const DURATION_PRESETS = [1, 2, 3, 6, 12, 24, 48, 72];
 
@@ -26,23 +27,7 @@ const formatLeft = (ms: number) => {
   return `${d > 0 ? `${d}d ` : ''}${String(h).padStart(2, '0')}h ${String(m).padStart(2, '0')}m ${String(s).padStart(2, '0')}s`;
 };
 
-const card = 'sag-card p-4 sm:p-6';
 const label = 'sag-label';
-
-const Toggle: React.FC<{ checked: boolean; onChange: (value: boolean) => void; label: string }> = ({ checked, onChange, label: aria }) => (
-  <button
-    type="button"
-    role="switch"
-    aria-checked={checked}
-    aria-label={aria}
-    onClick={() => onChange(!checked)}
-    className={`relative h-11 w-11 shrink-0 cursor-pointer flex items-center`}
-  >
-    <span className={`relative block h-6 w-11 rounded-full transition-colors ${checked ? 'bg-brand' : 'bg-sunken-deep'}`}>
-      <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : ''}`} />
-    </span>
-  </button>
-);
 
 export const AdminDealOfTheDay: React.FC = () => {
   const { products: allAdminProducts = [], dealOfTheDay, updateDealOfTheDay } = useAdmin();
@@ -175,142 +160,71 @@ export const AdminDealOfTheDay: React.FC = () => {
     showToast('Timer turned off. The deal stays on the homepage without a countdown.', 'info');
   };
 
+  // What shoppers see right now, from the saved deal
+  const siteOn = Boolean(dealOfTheDay?.enabled);
+  const endedAndHidden = siteOn && liveTimerOn && liveLeft <= 0 && dealOfTheDay?.hideWhenEnded === true;
+  const liveProduct = products.find((p) => p.id === dealOfTheDay?.productId);
+  const endsAtText = liveTimerOn ? new Date(liveEndMs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
       <AdminPageHeader
         eyebrow="Offers"
         title="Deal of the Day"
         icon={<Flame className="text-current" />}
-        description="Pick a product, add a photo and control the countdown timer shown on the homepage."
+        description="One product shown as today's deal on the homepage. Pick the product, add a photo and control the countdown shoppers see."
         actions={
-        <div role="status" className="rounded-xl bg-brand-wash border border-brand-line text-ink px-4 py-3 text-sm w-full sm:w-auto sm:min-w-[240px]">
-          <p className="text-xs font-semibold text-ink-muted">Timer on the site</p>
-          {!dealOfTheDay?.enabled ? (
-            <p className="mt-0.5 font-semibold">Deal is hidden</p>
-          ) : !liveTimerOn ? (
-            <p className="mt-0.5 font-semibold">No timer (deal shown without countdown)</p>
-          ) : liveLeft > 0 ? (
-            <p className="mt-0.5 font-semibold sag-num">Ends in {formatLeft(liveLeft)}</p>
-          ) : (
-            <p className="mt-0.5 font-semibold text-sale">Ended{dealOfTheDay?.hideWhenEnded === true ? ' — deal hidden from homepage' : ' — deal shown without timer'}</p>
-          )}
-          {liveTimerOn && <p className="text-[13px] text-ink-muted">{new Date(liveEndMs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>}
-        </div>
+          <Pill role="status" tone={!siteOn ? 'off' : endedAndHidden ? 'soon' : 'live'}>
+            {!siteOn ? 'Off' : endedAndHidden ? 'Timer ended: hidden from the site' : 'Live on the site'}
+          </Pill>
         }
       />
 
-      {/* Show / hide */}
-      <div className={`${card} flex items-center justify-between gap-4`}>
-        <div>
-          <p className="text-sm font-semibold text-ink flex items-center gap-2">
-            Show Deal of the Day on homepage
-            {enabled && <span className="sag-badge bg-ok-tint text-ok">Live</span>}
-          </p>
-          <p className="text-[13px] text-ink-muted mt-0.5">Turn this off to take the deal off the homepage.</p>
+      <Tiles className="!grid-cols-1 sm:!grid-cols-2">
+        <Tile
+          label="Deal product"
+          value={<span className="block text-lg leading-7 line-clamp-2">{liveProduct ? liveProduct.name : 'None chosen'}</span>}
+          note={liveProduct ? `Shoppers pay ₹${liveProduct.price.toLocaleString('en-IN')}` : 'Choose one below'}
+        />
+        <div role="status" className="sag-glass min-w-0 px-4 py-3.5">
+          <p className="text-xs leading-4 font-medium text-ink-muted">Timer on the site</p>
+          {!dealOfTheDay?.enabled ? (
+            <p className="mt-1 text-lg leading-7 font-semibold text-ink">Deal is hidden</p>
+          ) : !liveTimerOn ? (
+            <p className="mt-1 text-lg leading-7 font-semibold text-ink">No timer (deal shown without countdown)</p>
+          ) : liveLeft > 0 ? (
+            <p className="mt-1 text-[26px] leading-8 font-semibold text-ink sag-num">Ends in {formatLeft(liveLeft)}</p>
+          ) : (
+            <p className="mt-1 text-lg leading-7 font-semibold text-sale">Ended{dealOfTheDay?.hideWhenEnded === true ? ' — deal hidden from homepage' : ' — deal shown without timer'}</p>
+          )}
+          {liveTimerOn && <p className="mt-0.5 text-xs leading-4 text-ink-muted sag-num">{endsAtText}</p>}
         </div>
-        <Toggle
+      </Tiles>
+
+      {/* Show / hide */}
+      <Panel title="On the homepage" hint="The switch saves by itself, straight away.">
+        <SwitchRow
+          label="Show Deal of the Day on homepage"
+          hint="Turn this off to take the deal off the homepage."
           checked={enabled}
-          label="Show deal on homepage"
+          ariaLabel="Show deal on homepage"
           onChange={(val) => {
             setEnabled(val);
             updateDealOfTheDay({ enabled: val });
             showToast(val ? 'Deal section shown' : 'Deal section hidden', 'info');
           }}
         />
-      </div>
-
-      {/* Timer */}
-      <div className={`${card} space-y-5`}>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Clock className="h-5 w-5 text-current" /> Countdown timer</h2>
-            <p className="text-[13px] text-ink-muted mt-0.5">Customers see a live countdown. It never restarts by itself; only you can start it again.</p>
-          </div>
-          <Toggle checked={showTimer} onChange={setShowTimer} label="Show countdown timer" />
-        </div>
-
-        {showTimer && (
-          <>
-            <div role="group" aria-label="How the timer ends" className="flex sm:inline-flex rounded-xl bg-sunken p-1">
-              {([['duration', 'Run for hours'], ['exact', 'End at date & time']] as const).map(([mode, text]) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setTimerMode(mode)}
-                  aria-pressed={timerMode === mode}
-                  className={`flex-1 sm:flex-none h-11 rounded-[10px] px-4 text-sm font-semibold transition-colors cursor-pointer ${timerMode === mode ? 'bg-ink text-white' : 'text-ink'}`}
-                >
-                  {text}
-                </button>
-              ))}
-            </div>
-
-            {timerMode === 'duration' ? (
-              <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
-                {DURATION_PRESETS.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    onClick={() => setDurationHours(h)}
-                    aria-pressed={durationHours === h}
-                    className="sag-chip h-11 min-w-[64px]"
-                  >
-                    {h < 24 ? `${h} hr` : `${h / 24} day${h > 24 ? 's' : ''}`}
-                  </button>
-                ))}
-              </div>
-            ) : (
-              <div className="max-w-xs">
-                <label className={label} htmlFor="deal-end-time">Deal ends at</label>
-                <input
-                  id="deal-end-time"
-                  type="datetime-local"
-                  value={exactEnd}
-                  min={toLocalInput(new Date(Date.now() + 5 * 60000).toISOString())}
-                  onChange={(e) => setExactEnd(e.target.value)}
-                  className="sag-input"
-                />
-              </div>
-            )}
-
-            <label className="flex items-start gap-3 min-h-11 rounded-xl border border-line bg-white p-3.5 cursor-pointer">
-              <input type="checkbox" checked={hideWhenEnded} onChange={(e) => setHideWhenEnded(e.target.checked)} className="mt-0.5 h-[22px] w-[22px] shrink-0 accent-brand" />
-              <span className="text-sm text-ink">
-                Hide the deal when the timer ends
-                <span className="block text-[13px] text-ink-muted">Off: the deal stays on the homepage without the countdown.</span>
-              </span>
-            </label>
-
-            <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap gap-2">
-              <button type="button" onClick={handleRestartTimer} className="sag-btn-outline h-12 px-5 text-sm gap-2">
-                <RefreshCw className="h-4 w-4 text-current" /> {liveTimerOn && liveLeft > 0 ? 'Restart timer now' : 'Start timer now'}
-              </button>
-              {liveTimerOn && (
-                <button type="button" onClick={handleStopTimer} className="sag-btn-outline h-12 px-5 text-sm gap-2">
-                  <TimerOff className="h-4 w-4 text-current" /> Turn timer off
-                </button>
-              )}
-            </div>
-            <p className="text-[13px] text-ink-muted flex items-center gap-1.5">
-              <CalendarClock className="h-3.5 w-3.5 text-current" />
-              {timerMode === 'duration'
-                ? `Will end on ${new Date(now + durationHours * 3600000).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} if started now.`
-                : exactEnd ? `Will end on ${new Date(exactEnd).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}.` : 'Choose a date and time.'}
-            </p>
-          </>
-        )}
-      </div>
+      </Panel>
 
       {/* Product picker */}
-      <div className={`${card} space-y-4`}>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink flex items-center gap-2"><Zap className="h-5 w-5 text-current" /> Choose the deal product</h2>
-            <p className="text-[13px] text-ink-muted">One click makes it live{showTimer && !timerRunning ? ' and starts the timer' : ''}.</p>
-          </div>
-          <div className="grid grid-cols-1 min-[420px]:grid-cols-[minmax(0,1fr)_auto] gap-2 w-full sm:w-auto">
-            <div className="relative min-w-0 sm:w-56">
+      <Panel
+        title="1. Choose the deal product"
+        hint={`One tap on "Set as deal" makes it live${showTimer && !timerRunning ? ' and starts the timer' : ''}.`}
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-[minmax(0,1fr)_auto] gap-2">
+            <div className="relative min-w-0">
               <Search className="w-4 h-4 text-ink-faint absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <input
                 type="text"
@@ -330,93 +244,198 @@ export const AdminDealOfTheDay: React.FC = () => {
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto overscroll-contain p-0.5">
-          {filteredProducts.map((prod) => {
-            const isActive = productId === prod.id && enabled;
-            return (
-              <div key={prod.id} className={`p-3 rounded-xl border-2 flex flex-col justify-between ${isActive ? 'border-brand bg-brand-wash' : 'border-line bg-white'}`}>
-                <div className="flex items-center gap-3">
-                  <img src={getCleanImageUrl(prod.images?.[0] || prod.image, 160)} alt={prod.name} loading="lazy" className="w-14 aspect-[4/5] object-cover object-top rounded-[10px] shrink-0 bg-sunken" />
-                  <div className="min-w-0">
-                    <span className="block truncate text-xs text-ink-muted">{prod.category}</span>
-                    <h4 className="text-sm font-semibold text-ink line-clamp-2 leading-tight">{prod.name}</h4>
-                    <p className="text-sm font-semibold text-ink sag-num">₹{prod.price.toLocaleString('en-IN')}</p>
+          {filteredProducts.length === 0 ? (
+            <p className={kit.note}>{products.length === 0 ? 'There are no products yet. Add one in Products first.' : 'No product matches this search.'}</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto overscroll-contain p-0.5">
+              {filteredProducts.map((prod) => {
+                const isActive = productId === prod.id && enabled;
+                return (
+                  <div key={prod.id} className={`p-3 rounded-2xl border flex flex-col justify-between ${isActive ? 'border-brand bg-brand-wash' : 'border-line bg-sunken'}`}>
+                    <div className="flex items-center gap-3">
+                      <img src={getCleanImageUrl(prod.images?.[0] || prod.image, 160)} alt={prod.name} loading="lazy" className="w-14 aspect-[4/5] object-cover object-top rounded-[10px] shrink-0 bg-sunken" />
+                      <div className="min-w-0">
+                        <span className="block truncate text-xs text-ink-muted">{prod.category}</span>
+                        <h4 className="text-sm font-medium text-ink line-clamp-2 leading-tight">{prod.name}</h4>
+                        <p className="mt-0.5 text-sm font-semibold text-ink sag-num">₹{prod.price.toLocaleString('en-IN')}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOneClickSelect(prod)}
+                      aria-pressed={isActive}
+                      className="sag-chip mt-3 w-full h-11 text-sm"
+                    >
+                      {isActive ? 'Current deal' : 'Set as deal'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </Panel>
+
+      {/* Timer */}
+      <Panel title="2. Countdown timer" hint="Customers see a live countdown. It never restarts by itself; only you can start it again.">
+        <div className="space-y-5">
+          <SwitchRow
+            label="Show a countdown with the deal"
+            hint="Off: the deal is shown without a clock."
+            checked={showTimer}
+            onChange={setShowTimer}
+            ariaLabel="Show countdown timer"
+            onText="On"
+          />
+
+          {showTimer && (
+            <>
+              <div>
+                <p className={label}>How the timer ends</p>
+                <div role="group" aria-label="How the timer ends" className="flex sm:inline-flex gap-2">
+                  {([['duration', 'Run for hours'], ['exact', 'End at date & time']] as const).map(([mode, text]) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setTimerMode(mode)}
+                      aria-pressed={timerMode === mode}
+                      className="sag-chip flex-1 sm:flex-none h-11 px-4 text-sm"
+                    >
+                      {text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {timerMode === 'duration' ? (
+                <div>
+                  <p className={label}>Run for</p>
+                  <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-2">
+                    {DURATION_PRESETS.map((h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => setDurationHours(h)}
+                        aria-pressed={durationHours === h}
+                        className="sag-chip h-11 min-w-[64px]"
+                      >
+                        {h < 24 ? `${h} hr` : `${h / 24} day${h > 24 ? 's' : ''}`}
+                      </button>
+                    ))}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleOneClickSelect(prod)}
-                  className={`mt-3 w-full h-11 text-sm font-semibold rounded-xl border-[1.5px] transition-colors cursor-pointer ${isActive ? 'bg-ok-tint border-ok-line text-ok' : 'bg-white border-ink text-ink hover:bg-sunken'}`}
-                >
-                  {isActive ? 'Current deal' : 'Set as deal'}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Photo & text */}
-      <form onSubmit={handleSaveForm} className={`${card} space-y-5`}>
-        <h2 className="font-sans text-[17px] leading-6 font-semibold text-ink">Photo and text</h2>
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
-          <div className="md:col-span-4">
-            <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-xl overflow-hidden border border-line bg-sunken">
-              {previewImage ? (
-                <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-contain" />
               ) : (
-                <div className="w-full h-full grid place-items-center text-ink-faint"><ImageIcon className="w-8 h-8 text-current" /></div>
+                <div className="max-w-xs">
+                  <label className={label} htmlFor="deal-end-time">Deal ends at</label>
+                  <input
+                    id="deal-end-time"
+                    type="datetime-local"
+                    value={exactEnd}
+                    min={toLocalInput(new Date(Date.now() + 5 * 60000).toISOString())}
+                    onChange={(e) => setExactEnd(e.target.value)}
+                    className="sag-input"
+                  />
+                </div>
               )}
-            </div>
-            <p className="mt-2 min-h-5 text-center text-[13px] text-ink-muted" role="status">
-              {isUploading ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-4 h-4 animate-spin text-current" /> Uploading…</span> : previewImage ? 'The full photo, uncropped.' : 'No photo yet.'}
-            </p>
-          </div>
-          <div className="md:col-span-8 space-y-4">
-            <div>
-              <span className={label}>Deal photo</span>
-              <p className="text-[13px] text-ink-muted">Optional. Used only on the homepage deal; the product page keeps its own photos.</p>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <label className={`sag-btn-outline h-11 px-4 text-sm gap-2 ${isUploading ? 'opacity-60 cursor-wait' : ''}`}>
-                  <Upload className="w-4 h-4 text-current" /> {bannerImage ? 'Replace photo' : 'Upload photo'}
-                  <input type="file" accept="image/*" className="sr-only" onChange={handleBannerUpload} disabled={isUploading} />
-                </label>
-                {bannerImage && (
-                  <button type="button" onClick={() => setBannerImage('')} className="sag-link">
-                    Use product photo instead
+
+              <p className={`${kit.note} flex items-start gap-2 sag-num`}>
+                <CalendarClock className="h-4 w-4 shrink-0 mt-0.5 text-brand" />
+                <span>
+                  {timerMode === 'duration'
+                    ? `Will end on ${new Date(now + durationHours * 3600000).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} if started now.`
+                    : exactEnd ? `Will end on ${new Date(exactEnd).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}.` : 'Choose a date and time.'}
+                </span>
+              </p>
+
+              <CheckRow
+                label="Hide the deal when the timer ends"
+                hint="Off: the deal stays on the homepage without the countdown."
+                checked={hideWhenEnded}
+                onChange={setHideWhenEnded}
+              />
+
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap gap-2">
+                <button type="button" onClick={handleRestartTimer} className={kit.outline}>
+                  <RefreshCw className="h-4 w-4 text-current" /> {liveTimerOn && liveLeft > 0 ? 'Restart timer now' : 'Start timer now'}
+                </button>
+                {liveTimerOn && (
+                  <button type="button" onClick={handleStopTimer} className={kit.outline}>
+                    <TimerOff className="h-4 w-4 text-current" /> Turn timer off
                   </button>
                 )}
               </div>
+            </>
+          )}
+        </div>
+      </Panel>
+
+      {/* Photo & text */}
+      <form onSubmit={handleSaveForm} className="space-y-5">
+        <Panel title="3. Photo and text" hint="How the deal looks on the homepage. The product page keeps its own photos.">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+            <div className="md:col-span-4">
+              <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-2xl overflow-hidden border border-line bg-sunken">
+                {previewImage ? (
+                  <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-contain" />
+                ) : (
+                  <div className="w-full h-full grid place-items-center text-ink-faint"><ImageIcon className="w-8 h-8 text-current" /></div>
+                )}
+              </div>
+              <p className="mt-2 min-h-5 text-center text-[13px] text-ink-muted" role="status">
+                {isUploading ? <span className="inline-flex items-center gap-1.5"><Loader2 className="w-4 h-4 animate-spin text-current" /> Uploading…</span> : previewImage ? 'The full photo, uncropped.' : 'No photo yet.'}
+              </p>
             </div>
-            <div>
-              <label className={label} htmlFor="deal-label">Small label above the name</label>
-              <input id="deal-label" type="text" value={badgeText} onChange={(e) => setBadgeText(e.target.value)} placeholder="Deal of the day"
-                className="sag-input" />
-            </div>
-            <div>
-              <label className={label} htmlFor="deal-subtitle">Short line (optional)</label>
-              <input id="deal-subtitle" type="text" value={customSubtitle} onChange={(e) => setCustomSubtitle(e.target.value)} placeholder="Leave empty to use the product description"
-                className="sag-input" />
+            <div className="md:col-span-8 space-y-4">
+              <div>
+                <span className={label}>Deal photo</span>
+                <p className={kit.hint}>Optional. Used only on the homepage deal; the product page keeps its own photos.</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <label className={`sag-btn-outline h-11 px-4 text-sm gap-2 cursor-pointer ${isUploading ? 'opacity-60 cursor-wait' : ''}`}>
+                    <Upload className="w-4 h-4 text-current" /> {bannerImage ? 'Replace photo' : 'Upload photo'}
+                    <input type="file" accept="image/*" className="sr-only" onChange={handleBannerUpload} disabled={isUploading} />
+                  </label>
+                  {bannerImage && (
+                    <button type="button" onClick={() => setBannerImage('')} className="sag-link min-h-11">
+                      Use product photo instead
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div>
+                <label className={label} htmlFor="deal-label">Small label above the name</label>
+                <input id="deal-label" type="text" value={badgeText} onChange={(e) => setBadgeText(e.target.value)} placeholder="Deal of the day"
+                  className="sag-input" />
+              </div>
+              <div>
+                <label className={label} htmlFor="deal-subtitle">Short line (optional)</label>
+                <input id="deal-subtitle" type="text" value={customSubtitle} onChange={(e) => setCustomSubtitle(e.target.value)} placeholder="Leave empty to use the product description"
+                  className="sag-input" />
+              </div>
+              {activeProduct && (
+                <p className={`${kit.note} sag-num`}>
+                  Price customers pay: <span className="font-semibold text-ink">₹{activeProduct.price.toLocaleString('en-IN')}</span> (the product's own price — change it from Products → Edit).
+                </p>
+              )}
             </div>
           </div>
-        </div>
-        {activeProduct && (
-          <p className="text-[13px] text-ink-muted">
-            Price customers pay: <span className="font-semibold text-ink">₹{activeProduct.price.toLocaleString('en-IN')}</span> (the product's own price — change it from Products → Edit).
-          </p>
-        )}
-        <button type="submit" disabled={isSaving}
-          className="sag-btn-primary w-full sm:w-auto px-8 gap-2">
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
-          {isSaving ? 'Saving...' : showTimer && !timerRunning ? 'Save deal & start timer' : 'Save deal'}
-        </button>
-      </form>
+        </Panel>
 
-      {activeProduct && (
-        <p className="text-[13px] text-ink-muted flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-current" /> Open the homepage to see the deal exactly as customers see it.</p>
-      )}
+        {products.length === 0 && (
+          <Empty icon={<Flame />} title="No products yet">Add a product in Products, then come back to make it the deal.</Empty>
+        )}
+
+        <SaveBar
+          note={activeProduct
+            ? <span className="inline-flex items-start gap-1.5"><Eye className="h-3.5 w-3.5 shrink-0 mt-0.5 text-current" /> Open the homepage to see the deal exactly as customers see it.</span>
+            : undefined}
+        >
+          <button type="submit" disabled={isSaving} className={kit.primary}>
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Save className="w-4 h-4 text-current" />}
+            {isSaving ? 'Saving...' : showTimer && !timerRunning ? 'Save deal & start timer' : 'Save deal'}
+          </button>
+        </SaveBar>
+      </form>
     </div>
   );
 };

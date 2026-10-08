@@ -1,4 +1,5 @@
 import { useScrollReveal } from './utils/reveal';
+import { usePresence } from './utils/presence';
 import React, { Suspense, lazy, useEffect } from 'react';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import { ProductProvider } from './context/ProductContext';
@@ -83,7 +84,9 @@ const MainContent: React.FC = () => {
     selectedCategory,
     setSelectedCategory,
     selectedProductId,
-    setSelectedProductId, 
+    setSelectedProductId,
+    products,
+    searchQuery,
     isLoading,
     isCouponDrawerOpen,
     isSizeGuideOpen
@@ -165,6 +168,17 @@ const MainContent: React.FC = () => {
   // Global loading blocker
   // Sections rise in once as they come into view (storefront only; the hook itself skips nothing else)
   useScrollReveal();
+
+  // Live presence for the owner's dashboard (src/utils/presence.ts): the page this visitor is on now.
+  // Storefront only, never the admin panel; the rules and caps are in that file.
+  const onStorefront = !isLoading && !isAdminRoute && activePage !== 'admin';
+  const viewedProductId = currentPage === 'product-detail' ? String(routeState.customerParams?.id || selectedProductId || '') : '';
+  usePresence(onStorefront, currentPath, {
+    route: String(currentPage || 'home'),
+    category: selectedCategory,
+    productName: viewedProductId ? products.find((p) => String(p.id) === viewedProductId)?.name : undefined,
+    search: currentPage === 'shop' ? searchQuery : '',
+  });
 
   if (isLoading) {
     return <LoadingScreen />;

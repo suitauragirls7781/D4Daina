@@ -60,3 +60,9 @@ CREATE INDEX IF NOT EXISTS docs_inventory_log_at       ON docs (collection, json
 
 -- admin leads list, newest first
 CREATE INDEX IF NOT EXISTS docs_leads_createdAt        ON docs (collection, json_extract(data, '$.createdAt'))       WHERE collection = 'leads';
+
+-- Live visitor presence (api/_lib/presence.js): one row per visitor, rewritten by one statement per signal,
+-- outside the document store. `signals` counts the visitor's signals today (the daily cap and the write budget).
+-- The same SQL is in migration/presence-table.sql and in PRESENCE_SCHEMA; the Worker creates it if it is missing.
+CREATE TABLE IF NOT EXISTS presence (visitor_id TEXT PRIMARY KEY, day TEXT NOT NULL, first_seen INTEGER NOT NULL, last_seen INTEGER NOT NULL, path TEXT NOT NULL, label TEXT NOT NULL, pages INTEGER NOT NULL DEFAULT 1, trail TEXT NOT NULL DEFAULT '[]', device TEXT NOT NULL DEFAULT '', source TEXT NOT NULL DEFAULT '', city TEXT NOT NULL DEFAULT '', region TEXT NOT NULL DEFAULT '', country TEXT NOT NULL DEFAULT '', signals INTEGER NOT NULL DEFAULT 1);
+CREATE INDEX IF NOT EXISTS presence_last_seen ON presence (last_seen);

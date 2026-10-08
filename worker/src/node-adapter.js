@@ -136,6 +136,8 @@ const createReq = (request, raw, { rawBody }) => {
   req.socket = { remoteAddress: ip || undefined, encrypted: url.protocol === 'https:' };
   req.connection = req.socket;
   req.httpVersion = '1.1';
+  // Cloudflare's own data about the request (city, region, country), for api/track.js. Not the address.
+  req.cf = request.cf || null;
 
   // Parsed on first use. A handler that switched the parser off gets no body and reads the stream.
   let parsed;

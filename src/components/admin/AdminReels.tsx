@@ -15,6 +15,7 @@ import { isAvailable } from '../../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminPageHeader } from './kidsToysShared';
 import { makeVideoPoster, putMediaFile, uploadImageWithGrant } from '../../lib/media';
+import { CheckRow, Empty, Meter, Panel, Pill, Switch, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 // Sizes in decimal MB, as phones show them
 const MB = 1000 * 1000;
@@ -99,20 +100,19 @@ const warmUp = (reel: AuraReel) => {
   img.src = reelPosterSrc(reel, 400);
 };
 
-const card = 'bg-white rounded-2xl border border-line p-4 sm:p-6';
-const input = 'sag-input h-12';
-const fileInput = 'block w-full text-sm text-ink-muted file:mr-3 file:h-11 file:px-4 file:rounded-xl file:border-0 file:bg-sunken file:text-ink file:text-sm file:font-medium file:cursor-pointer';
-const iconBtn = 'w-11 h-11 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed';
+const input = kit.field;
+const fileInput = 'block w-full text-sm text-ink-muted file:mr-3 file:h-11 file:px-4 file:rounded-full file:border file:border-solid file:border-line file:bg-sunken-deep file:text-ink file:text-sm file:font-medium file:cursor-pointer';
+const iconBtn = kit.iconBtn;
+const fieldLabel = 'block text-[13px] leading-[18px] font-semibold text-ink-muted';
+const textArea = 'sag-input h-auto py-3 resize-none';
 
 const ProgressBar: React.FC<{ label: string; fraction: number; onCancel?: () => void }> = ({ label, fraction, onCancel }) => (
   <div className="space-y-1.5">
-    <div className="flex items-center justify-between text-[13px] text-ink-muted">
+    <div className="flex items-center justify-between text-[13px] text-ink-muted sag-num">
       <span>{label}… {Math.round(fraction * 100)}%</span>
       {onCancel && <button type="button" onClick={onCancel} className="min-h-11 px-2 text-danger font-medium hover:underline cursor-pointer">Cancel upload</button>}
     </div>
-    <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(fraction * 100)} className="h-2 rounded-full bg-sunken overflow-hidden">
-      <div className="h-full bg-brand transition-[width] duration-200" style={{ width: `${Math.round(fraction * 100)}%` }} />
-    </div>
+    <Meter label={label} percent={fraction * 100} />
   </div>
 );
 
@@ -132,16 +132,16 @@ const ProductPicker: React.FC<{ products: Product[]; byId: Map<string, Product>;
   return (
     <div className="space-y-2">
       {selected ? (
-        <div className="flex items-center gap-2 rounded-xl border border-line bg-sunken p-2">
-          <img src={getCleanImageUrl(selected.images?.[0] || selected.image, 120)} alt="" className="w-9 h-11 rounded-md object-cover object-top bg-white" />
+        <div className="flex items-center gap-2 rounded-2xl border border-brand-line bg-brand-wash p-2">
+          <img src={getCleanImageUrl(selected.images?.[0] || selected.image, 120)} alt="" className="w-9 h-11 rounded-md object-cover object-top bg-sunken" />
           <span className="flex-1 min-w-0 text-sm">
             <span className="block font-medium text-ink line-clamp-1">{selected.name}</span>
-            <span className="block text-[13px] text-ink-muted">{inr(selected.price)}{selected.hidden ? ' · Hidden on store' : isAvailable(selected) ? '' : ' · Sold out'}</span>
+            <span className="block text-[13px] text-ink-muted sag-num">{inr(selected.price)}{selected.hidden ? ' · Hidden on store' : isAvailable(selected) ? '' : ' · Sold out'}</span>
           </span>
           <button type="button" onClick={() => onChange('')} aria-label="Remove linked product" className={iconBtn}><X className="w-4 h-4 text-current" /></button>
         </div>
       ) : (
-        <p className="text-[13px] text-ink-muted">{value ? 'The linked product no longer exists. Pick another or leave empty.' : 'No product linked — the reel plays without shop buttons.'}</p>
+        <p className={kit.hint}>{value ? 'The linked product no longer exists. Pick another or leave empty.' : 'No product linked — the reel plays without shop buttons.'}</p>
       )}
       <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search products by name or SKU" aria-label="Search products" className={input} />
       <ul className="max-h-52 overflow-y-auto grid gap-1">
@@ -151,12 +151,12 @@ const ProductPicker: React.FC<{ products: Product[]; byId: Map<string, Product>;
           return (
             <li key={p.id}>
               <button type="button" onClick={() => onChange(on ? '' : String(p.id))} aria-pressed={on}
-                className={`w-full flex items-center gap-2 text-left text-sm p-1.5 rounded-lg cursor-pointer ${on ? 'bg-sunken' : 'hover:bg-sunken'}`}>
+                className={`w-full flex items-center gap-2 text-left text-sm text-ink p-1.5 rounded-xl cursor-pointer ${on ? 'bg-brand-wash' : 'hover:bg-sunken-deep'}`}>
                 <img src={getCleanImageUrl(p.images?.[0] || p.image, 80)} alt="" loading="lazy" className="w-7 h-9 rounded object-cover object-top bg-sunken" />
                 <span className="flex-1 min-w-0 line-clamp-1">{p.name}</span>
                 {!isAvailable(p) && <span className="text-[13px] text-danger">Sold out</span>}
-                <span className="text-[13px] text-ink-muted">{inr(p.price)}</span>
-                {on && <Check className="w-4 h-4 text-ink" />}
+                <span className="text-[13px] text-ink-muted sag-num">{inr(p.price)}</span>
+                {on && <Check className="w-4 h-4 text-brand" />}
               </button>
             </li>
           );
@@ -407,6 +407,7 @@ export const AdminReels: React.FC = () => {
   if (!loaded) return <div className="py-20 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-ink" /></div>;
 
   const liveCount = list.filter((r) => r.enabled).length;
+  const linkedCount = list.filter((r) => r.productId && productById.has(r.productId)).length;
   const uploading = Boolean(progress);
 
   const productStatus = (reel: AuraReel) => {
@@ -418,164 +419,178 @@ export const AdminReels: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <AdminPageHeader
         eyebrow="Storefront · Video"
         title="Aura Reels"
         icon={<Clapperboard className="text-current" />}
-        description="Vertical videos on the homepage. Link a reel to a product so shoppers can buy straight from it. Changes save and go live immediately."
+        description="Short vertical videos on the homepage. Link a reel to a product so shoppers can buy straight from it. Changes save and go live immediately."
         actions={
-          <span className="h-11 px-4 rounded-xl bg-sunken text-sm text-ink inline-flex items-center gap-1.5">
-            <span className="font-semibold">{list.length}</span> of {MAX_REELS} reels · <span className="font-semibold">{liveCount}</span> switched on
-          </span>
+          <Pill role="status" tone={!features.reels ? 'off' : liveCount > 0 ? 'live' : 'off'}>
+            {!features.reels ? 'Off in Discovery settings' : liveCount > 0 ? 'Live on the site' : 'No reel switched on'}
+          </Pill>
         }
       />
 
+      <Tiles className="lg:!grid-cols-3">
+        <Tile label="Reels" value={<>{list.length} <span className="text-base font-medium text-ink-muted">of {MAX_REELS}</span></>} note="The most you can keep" />
+        <Tile label="Switched on" value={liveCount} note="Shown to shoppers" />
+        <Tile label="Linked to a product" value={linkedCount} note="These show shop buttons" />
+      </Tiles>
+
       {!features.reels && (
-        <div className="rounded-2xl border border-line bg-page p-4 text-sm text-ink flex flex-wrap items-center justify-between gap-3">
-          <span>Aura Reels are switched off in the Discovery settings, so the store is not showing them.</span>
-          <button type="button" onClick={() => openAdminTab('discovery')} className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm font-medium cursor-pointer hover:bg-sunken">Open Discovery settings</button>
+        <div className={`${kit.note} flex flex-wrap items-center justify-between gap-3 !text-ink`}>
+          <span className="min-w-0 flex-1 basis-60">Aura Reels are switched off in the Discovery settings, so the store is not showing them.</span>
+          <button type="button" onClick={() => openAdminTab('discovery')} className={kit.small}>Open Discovery settings</button>
         </div>
       )}
-      {loadError && <p role="alert" className="rounded-2xl border border-danger-line bg-danger-tint p-4 text-sm text-danger">Could not load reels: {loadError}</p>}
+      {loadError && <p role="alert" className={kit.alert}>Could not load reels: {loadError}</p>}
 
-      <section className={card} aria-labelledby="add-reel-title">
-        <h3 id="add-reel-title" className="font-semibold text-ink mb-1">Add a reel</h3>
-        <p className="text-[13px] text-ink-muted mb-4">MP4 only, up to 50 MB. The video is shown exactly as you upload it, so export it at 720p for a quick start on mobile data. Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy.</p>
+      <Panel
+        titleId="add-reel-title"
+        title="Add a reel"
+        hint="MP4 only, up to 50 MB. The video is shown exactly as you upload it, so export it at 720p for a quick start on mobile data. Film vertically (9:16); for a longer clip, export it at 720p or 1080p. Shoppers get an automatically compressed copy."
+      >
         <div className="grid gap-5 md:grid-cols-2">
           <div className="space-y-4">
-            <label className="block text-[13px] text-ink-muted space-y-1.5">
-              <span className="block">Video</span>
+            <label className="block space-y-1.5">
+              <span className={fieldLabel}>1. Video</span>
               <input key={`video-${formKey}`} type="file" accept="video/mp4,.mp4" disabled={uploading}
                 onChange={(e) => { setVideoFile(e.target.files?.[0] || null); setUploadError(''); setUploadNote(''); }} className={fileInput} />
             </label>
             {videoFile && (
               <div className="flex gap-3 items-start">
-                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-xl bg-ink object-contain" />}
-                <p className={`text-[13px] ${videoProblem(videoFile) ? 'text-danger' : 'text-ink-muted'}`}>{videoFile.name} · {mb(videoFile.size)}{videoProblem(videoFile) ? ` — ${videoProblem(videoFile)}` : ''}</p>
+                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-2xl bg-dark object-contain" />}
+                <p className={`text-[13px] leading-[18px] sag-num ${videoProblem(videoFile) ? 'text-danger' : 'text-ink-muted'}`}>{videoFile.name} · {mb(videoFile.size)}{videoProblem(videoFile) ? ` — ${videoProblem(videoFile)}` : ''}</p>
               </div>
             )}
-            <label className="block text-[13px] text-ink-muted space-y-1.5">
-              <span className="block">Thumbnail (optional)</span>
+            <label className="block space-y-1.5">
+              <span className={fieldLabel}>2. Thumbnail (optional)</span>
               <input key={`poster-${formKey}`} type="file" accept="image/jpeg,image/png,image/webp" disabled={uploading}
                 onChange={(e) => setPosterFile(e.target.files?.[0] || null)} className={fileInput} />
-              <span className="block text-[13px] text-ink-muted">Without one, the first frame of the video is used.</span>
+              <span className={`block ${kit.hint}`}>Without one, the first frame of the video is used.</span>
             </label>
           </div>
           <div className="space-y-4">
-            <label className="block text-[13px] text-ink-muted space-y-1.5">
-              <span className="flex justify-between"><span>Caption (optional)</span><span>{caption.length}/{MAX_CAPTION}</span></span>
+            <label className="block space-y-1.5">
+              <span className={`flex justify-between ${fieldLabel}`}><span>3. Caption (optional)</span><span className="font-normal sag-num">{caption.length}/{MAX_CAPTION}</span></span>
               <textarea value={caption} maxLength={MAX_CAPTION} rows={3} disabled={uploading} onChange={(e) => setCaption(e.target.value)}
-                className="w-full px-3 py-2 rounded-2xl border border-line text-sm focus:outline-none focus:border-control resize-none" />
+                className={textArea} />
             </label>
-            <div className="text-[13px] text-ink-muted space-y-1.5">
-              <span className="block">Linked product (optional)</span>
+            <div className="space-y-1.5">
+              <span className={fieldLabel}>4. Linked product (optional)</span>
               <ProductPicker products={visibleProducts} byId={productById} value={productId} onChange={setProductId} />
             </div>
-            <label className="min-h-11 flex items-center gap-2 text-sm text-ink cursor-pointer">
-              <input type="checkbox" checked={showNow} onChange={(e) => setShowNow(e.target.checked)} disabled={uploading} className="accent-brand w-4 h-4" />
-              Show on the store right away
-            </label>
+            <CheckRow
+              label="Show on the store right away"
+              hint="Off: the reel is uploaded but stays hidden until you switch it on."
+              checked={showNow}
+              onChange={setShowNow}
+              disabled={uploading}
+              onText="Live after upload"
+              offText="Hidden after upload"
+            />
           </div>
         </div>
 
         <div className="mt-5 space-y-3">
-          {uploadError && <p role="alert" className="rounded-xl border border-danger-line bg-danger-tint px-3 py-2 text-sm text-danger">{uploadError}</p>}
-          {uploadNote && <p className="rounded-xl border border-line bg-page px-3 py-2 text-sm text-ink">{uploadNote}</p>}
+          {uploadError && <p role="alert" className={kit.alert}>{uploadError}</p>}
+          {uploadNote && <p className={kit.note}>{uploadNote}</p>}
           {unsaved && (
-            <div role="alert" className="rounded-xl border border-danger-line bg-danger-tint px-3 py-2 text-sm text-danger flex flex-wrap items-center gap-2">
-              <span className="flex-1">The video uploaded, but the reel list could not be saved.</span>
+            <div role="alert" className={`${kit.alert} flex flex-wrap items-center gap-2`}>
+              <span className="flex-1 basis-52">The video uploaded, but the reel list could not be saved.</span>
               <button type="button" onClick={retryUnsaved} disabled={saving} className="sag-btn-primary h-11 px-4 text-sm">Try saving again</button>
-              <button type="button" onClick={discardUnsaved} disabled={saving} className="h-11 px-4 rounded-xl border-[1.5px] border-control bg-white text-sm cursor-pointer">Discard upload</button>
+              <button type="button" onClick={discardUnsaved} disabled={saving} className={kit.small}>Discard upload</button>
             </div>
           )}
           {progress && <ProgressBar label={progress.label} fraction={progress.fraction} onCancel={progress.label === 'Saving' ? undefined : () => xhrRef.current?.abort()} />}
           <button type="button" onClick={upload} disabled={uploading || saving || !videoFile || Boolean(unsaved)}
-            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
+            className={`${kit.primary} w-full sm:w-auto`}>
             {uploading ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Upload className="w-4 h-4 text-current" />} Upload reel
           </button>
         </div>
-      </section>
+      </Panel>
 
-      <section className={card} aria-labelledby="reel-list-title">
-        <div className="flex items-center justify-between mb-3">
-          <h3 id="reel-list-title" className="font-semibold text-ink">Your reels</h3>
-          {saving && <span className="text-[13px] text-ink-muted inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin text-current" /> Saving…</span>}
-        </div>
+      <Panel
+        titleId="reel-list-title"
+        title="Your reels"
+        hint="Shown on the store in this order, top first. Every change here saves by itself."
+        action={saving ? <span className="text-[13px] text-ink-muted inline-flex items-center gap-1.5"><Loader2 className="w-3.5 h-3.5 animate-spin text-current" /> Saving…</span> : undefined}
+      >
         {list.length === 0 ? (
-          <p className="text-sm text-ink-muted">No reels yet. Upload your first one above — the homepage section appears once at least one reel is switched on.</p>
+          <Empty icon={<Clapperboard />} title="No reels yet">Upload your first one above — the homepage section appears once at least one reel is switched on.</Empty>
         ) : (
           <ul className="space-y-2">
             {list.map((reel, i) => {
               const open = editingId === reel.id;
               return (
-                <li key={`${reel.id}-${i}`} className="rounded-xl border border-line">
+                <li key={`${reel.id}-${i}`} className="rounded-2xl border border-line bg-sunken">
                   <div className="flex gap-3 p-3">
                     <img src={reelPosterSrc(reel, 160)} alt="" loading="lazy"
                       onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-                      className="w-14 aspect-[9/16] shrink-0 rounded-lg object-cover object-top bg-sunken" />
+                      className="w-16 aspect-[9/16] shrink-0 rounded-xl object-cover object-top bg-sunken" />
                     <div className="flex-1 min-w-0 space-y-1">
-                      <p className="flex items-center gap-2">
-                        <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${reel.enabled ? 'bg-ok-tint text-ok' : 'bg-sunken text-ink-muted'}`}>{reel.enabled ? 'On' : 'Off'}</span>
-                        <span className="text-[13px] text-ink-faint">#{i + 1}</span>
+                      <p className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">Reel {i + 1}</span>
+                        <Pill tone={reel.enabled ? 'live' : 'off'}>{reel.enabled ? 'Live on the site' : 'Off'}</Pill>
                       </p>
-                      <p className="text-sm text-ink line-clamp-2">{reel.caption || <span className="text-ink-faint">No caption</span>}</p>
-                      <p className="text-[13px] line-clamp-1">{productStatus(reel)}</p>
+                      <p className="text-sm leading-5 text-ink line-clamp-2">{reel.caption || <span className="text-ink-faint">No caption</span>}</p>
+                      <p className="text-[13px] leading-[18px] line-clamp-1 sag-num">{productStatus(reel)}</p>
                       <div className="flex flex-wrap items-center gap-1 pt-1">
-                        <label className="min-h-11 flex items-center gap-2 text-sm text-ink mr-2 cursor-pointer">
-                          <input type="checkbox" checked={reel.enabled} disabled={saving} onChange={() => toggle(i)} className="accent-brand w-4 h-4" />
+                        <span className="inline-flex items-center gap-2 mr-2 text-[13px] text-ink-muted">
+                          <Switch checked={reel.enabled} disabled={saving} onChange={() => toggle(i)} label="Show on store" />
                           Show on store
-                        </label>
+                        </span>
                         <button type="button" onClick={() => move(i, -1)} disabled={saving || i === 0} aria-label="Move up" className={iconBtn}><ArrowUp className="w-4 h-4 text-current" /></button>
                         <button type="button" onClick={() => move(i, 1)} disabled={saving || i === list.length - 1} aria-label="Move down" className={iconBtn}><ArrowDown className="w-4 h-4 text-current" /></button>
                         <button type="button" onClick={() => (open ? closeEditor(false) : openEditor(reel))} disabled={saving} aria-expanded={open} aria-label="Edit reel" className={iconBtn}><Pencil className="w-4 h-4 text-current" /></button>
-                        <button type="button" onClick={() => remove(i)} disabled={saving} aria-label="Delete reel" className={`${iconBtn} text-danger hover:bg-danger-tint`}><Trash2 className="w-4 h-4 text-current" /></button>
+                        <button type="button" onClick={() => remove(i)} disabled={saving} aria-label="Delete reel" className={kit.iconBtnDanger}><Trash2 className="w-4 h-4 text-current" /></button>
                       </div>
                     </div>
                   </div>
 
                   {open && (
-                    <div className="border-t border-line p-3 grid gap-4 md:grid-cols-[auto_1fr]">
+                    <div className="border-t border-line p-3 sm:p-4 grid gap-4 md:grid-cols-[auto_1fr]">
                       <div className="space-y-2">
                         <video src={reelVideoSrc(reel.videoUrl)} poster={reelPosterSrc({ videoUrl: reel.videoUrl, posterUrl: draft.posterUrl }, 480)} controls playsInline preload="metadata"
                           onError={(e) => { if (e.currentTarget.src !== reel.videoUrl) e.currentTarget.src = reel.videoUrl; }}
-                          className="w-40 aspect-[9/16] rounded-xl bg-ink object-contain" />
-                        <p className="text-[13px] text-ink-muted w-40">Poster shown before the video plays.</p>
+                          className="w-40 aspect-[9/16] rounded-2xl bg-dark object-contain" />
+                        <p className={`${kit.hint} w-40`}>Poster shown before the video plays.</p>
                       </div>
                       <div className="space-y-4">
-                        <label className="block text-[13px] text-ink-muted space-y-1.5">
-                          <span className="flex justify-between"><span>Caption</span><span>{draft.caption.length}/{MAX_CAPTION}</span></span>
+                        <label className="block space-y-1.5">
+                          <span className={`flex justify-between ${fieldLabel}`}><span>Caption</span><span className="font-normal sag-num">{draft.caption.length}/{MAX_CAPTION}</span></span>
                           <textarea value={draft.caption} maxLength={MAX_CAPTION} rows={3} onChange={(e) => setDraft((d) => ({ ...d, caption: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-2xl border border-line text-sm focus:outline-none focus:border-control resize-none" />
+                            className={textArea} />
                         </label>
-                        <div className="text-[13px] text-ink-muted space-y-1.5">
-                          <span className="block">Thumbnail</span>
+                        <div className="space-y-1.5">
+                          <span className={fieldLabel}>Thumbnail</span>
                           {posterProgress !== null ? (
                             <ProgressBar label="Uploading thumbnail" fraction={posterProgress} onCancel={() => posterXhrRef.current?.abort()} />
                           ) : (
                             <div className="flex flex-wrap items-center gap-2">
-                              <label className="h-11 px-4 rounded-xl border-[1.5px] border-control text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken cursor-pointer focus-within:ring-2 focus-within:ring-brand">
+                              <label className={`${kit.small} cursor-pointer focus-within:ring-2 focus-within:ring-brand`}>
                                 <Upload className="w-4 h-4 text-current" /> Upload new thumbnail
                                 <input type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" onChange={(e) => { replacePoster(e.target.files?.[0]); e.target.value = ''; }} />
                               </label>
                               {draft.posterUrl && (
-                                <button type="button" onClick={() => setDraft((d) => ({ ...d, posterUrl: '' }))} className="h-11 px-4 rounded-xl border-[1.5px] border-control text-sm text-ink hover:bg-sunken cursor-pointer">
+                                <button type="button" onClick={() => setDraft((d) => ({ ...d, posterUrl: '' }))} className={kit.small}>
                                   Use the first frame instead
                                 </button>
                               )}
                             </div>
                           )}
                         </div>
-                        <div className="text-[13px] text-ink-muted space-y-1.5">
-                          <span className="block">Linked product</span>
+                        <div className="space-y-1.5">
+                          <span className={fieldLabel}>Linked product</span>
                           <ProductPicker products={visibleProducts} byId={productById} value={draft.productId} onChange={(id) => setDraft((d) => ({ ...d, productId: id }))} />
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <button type="button" onClick={() => saveEdit(reel)} disabled={saving || posterProgress !== null}
-                            className="h-11 px-5 sag-btn-primary text-sm inline-flex items-center gap-2 disabled:opacity-60">
+                            className="sag-btn-primary h-11 px-5 text-sm gap-2">
                             {saving ? <Loader2 className="w-4 h-4 animate-spin text-current" /> : <Check className="w-4 h-4 text-current" />} Save reel
                           </button>
-                          <button type="button" onClick={() => closeEditor(false)} className="h-11 px-5 rounded-xl border-[1.5px] border-control text-sm text-ink hover:bg-sunken cursor-pointer">Cancel</button>
+                          <button type="button" onClick={() => closeEditor(false)} className="sag-btn-outline h-11 px-5 text-sm">Cancel</button>
                         </div>
                       </div>
                     </div>
@@ -585,7 +600,7 @@ export const AdminReels: React.FC = () => {
             })}
           </ul>
         )}
-      </section>
+      </Panel>
     </div>
   );
 };

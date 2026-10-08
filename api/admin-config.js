@@ -4,6 +4,8 @@ import { createHmac, pbkdf2Sync, randomBytes, scryptSync, timingSafeEqual } from
 import { clearGatewayCache, gatewaysDoc, normalizeGateways, razorpayCreds } from './_lib/payu.js';
 import { GEMINI_MESSAGES, aiAdminView, aiDoc, describeProduct, pickModel, readAi } from './_lib/gemini.js';
 import { effectivePlan, readUsage, savePlan } from './_lib/usage.js';
+import { readLive } from './_lib/presence.js';
+import { countingState } from './track.js';
 
 const hint = (value) => (value ? `••••${value.slice(-4)}` : '');
 
@@ -455,6 +457,13 @@ export default async function handler(req, res) {
         const auth = await authenticate(req, client);
         if (!auth) return reply(res, 401, { error: 'Admin session required.' });
         return reply(res, 200, await readUsage(process.env, new Date(), await effectivePlan(client, process.env, true), visitsOn(client)));
+      }
+
+      // Admin only: who is on the store right now (api/_lib/presence.js). Two queries, no writes.
+      if (action === 'live') {
+        const auth = await authenticate(req, client);
+        if (!auth) return reply(res, 401, { error: 'Admin session required.' });
+        return reply(res, 200, await readLive(await countingState(client)));
       }
 
       // Admin only: the latest Razorpay payments with their status and failure reason (for checking payments)

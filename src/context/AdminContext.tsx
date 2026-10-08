@@ -418,6 +418,10 @@ export const mapOrderFromDb = (o: any): Order => {
     date: o.date ?? new Date().toISOString(),
     estimatedDeliveryDate: o.estimatedDeliveryDate || '',
     testPayment: Boolean(o.testPayment),
+    // Cash on delivery: what was paid online and what is still to be collected at the door
+    payMode: o.payMode === 'cod' ? 'cod' : 'prepaid',
+    codAdvance: o.payMode === 'cod' ? Number(o.codAdvance) || 0 : 0,
+    codDue: o.payMode === 'cod' ? Number(o.codDue) || 0 : 0,
     trackingNumber: o.trackingNumber || '',
     courierPartner: o.courierPartner || '',
     notes: o.notes || '',

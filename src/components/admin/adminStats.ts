@@ -29,6 +29,14 @@ export const dayRange = (from: string, to: string) => {
 export const dayLabel = (day: string, withYear = false) =>
   new Date(`${day}T00:00:00Z`).toLocaleDateString('en-IN', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
 
+/** The Monday of the day's week (weeks run Monday to Sunday, India time). */
+export const weekStart = (day: string) => shiftDay(day, -((new Date(`${day}T00:00:00Z`).getUTCDay() + 6) % 7));
+/** The first day of the day's calendar month. */
+export const monthStart = (day: string) => `${day.slice(0, 7)}-01`;
+/** The last day of the day's calendar month. */
+export const monthEnd = (day: string) => new Date(Date.UTC(Number(day.slice(0, 4)), Number(day.slice(5, 7)), 0)).toISOString().slice(0, 10);
+export const monthLabel = (day: string) => new Date(`${day}T00:00:00Z`).toLocaleDateString('en-IN', { timeZone: 'UTC', month: 'long', year: 'numeric' });
+
 export const num = (value: number) => Math.round(value).toLocaleString('en-IN');
 export const rupees = (value: number) => `₹${num(value)}`;
 
@@ -39,6 +47,9 @@ export interface AnalyticsDay {
   visitors: number | null;
   cartAdds: number | null;
   checkouts: number | null;
+  /** Product pages opened (once per visitor per product per day). */
+  productViews: number | null;
+  searches: number | null;
 }
 
 const count = (value: unknown): number | null => (value === undefined || value === null || !Number.isFinite(Number(value)) ? null : Number(value));
@@ -50,7 +61,7 @@ const toAnalyticsDay = (id: string, data: Record<string, unknown>): AnalyticsDay
   const visitors = count(data.totalUniqueVisitors);
   // Days before every visit was counted hold only one count per visitor per day; that count is the visits figure then
   const visits = sessions === null && visitors === null ? null : Math.max(sessions ?? 0, visitors ?? 0);
-  return { date, visits, visitors, cartAdds: count(data.cartAdditions), checkouts: count(data.checkoutsInitiated) };
+  return { date, visits, visitors, cartAdds: count(data.cartAdditions), checkouts: count(data.checkoutsInitiated), productViews: count(data.productViews), searches: count(data.searches) };
 };
 
 /**
@@ -162,6 +173,7 @@ export interface PeriodTotals extends OrderDay {
   visitDays: number;
   cartAdds: number | null;
   checkouts: number | null;
+  productViews: number | null;
   /** sales ÷ sold; null when nothing was sold. */
   averageOrder: number | null;
   /** Paid orders ÷ visits, over the days that have a visits figure; null when those visits are 0 or unknown. */
@@ -169,7 +181,7 @@ export interface PeriodTotals extends OrderDay {
 }
 
 export const totalsFor = (days: string[], analytics: Map<string, AnalyticsDay>, orders: Map<string, OrderDay>): PeriodTotals => {
-  const total: PeriodTotals = { ...emptyOrderDay(), days: days.length, visits: null, visitDays: 0, cartAdds: null, checkouts: null, averageOrder: null, conversion: null };
+  const total: PeriodTotals = { ...emptyOrderDay(), days: days.length, visits: null, visitDays: 0, cartAdds: null, checkouts: null, productViews: null, averageOrder: null, conversion: null };
   let paidOnCountedDays = 0;
   days.forEach((day) => {
     const o = orders.get(day);
@@ -186,6 +198,7 @@ export const totalsFor = (days: string[], analytics: Map<string, AnalyticsDay>, 
     }
     if (a.cartAdds !== null) total.cartAdds = (total.cartAdds ?? 0) + a.cartAdds;
     if (a.checkouts !== null) total.checkouts = (total.checkouts ?? 0) + a.checkouts;
+    if (a.productViews !== null) total.productViews = (total.productViews ?? 0) + a.productViews;
   });
   total.averageOrder = total.sold > 0 ? total.sales / total.sold : null;
   total.conversion = total.visits !== null && total.visits > 0 ? paidOnCountedDays / total.visits : null;

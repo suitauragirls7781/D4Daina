@@ -35,13 +35,18 @@ import {
   Shirt,
   RotateCcw,
   ShoppingCart,
-  XCircle
+  XCircle,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { AdminSearch } from './AdminSearch';
+import { useNewOrderAlerts } from './adminAlerts';
 import { AdminTab } from '../../types';
 import { returnRows } from './AdminReturns';
 import { waitingCancelRows } from './AdminCancellations';
 import { departmentOf } from '../../utils/kids';
 import { isLowStock } from '../../utils/inventory';
+import { useLiveCount } from './AdminLive';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -58,6 +63,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     logoutAdmin,
     adminEmail,
     orders = [],
+    ordersLoaded,
     products = [],
     lowStockThreshold,
     categories = [],
@@ -65,10 +71,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     reviews = []
   } = useAdmin();
   const { showToast, setActivePage } = useShop();
-  const { currentPath, activeAdminTab, openAdminTab, openAdminProductNew, navigate } = useRouter();
+  const { currentPath, activeAdminTab, openAdminTab, openAdminProductNew, openAdminOrderDetails, navigate } = useRouter();
+  // A newly paid order while the panel is open: a toast, the tab title, and the chime when switched on
+  const { alerts: orderAlerts, dismissAlert, soundOn, setSoundOn } = useNewOrderAlerts(orders, ordersLoaded);
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // People on the site right now: the dashboard's own live loop shares it while the dashboard is open (null otherwise)
+  const liveCount = useLiveCount();
 
   const pendingOrdersCount = orders.filter((o) => o.paymentStatus === 'Paid' && (o.status === 'Processing' || o.status === 'Packed')).length;
   const lowStockCount = products.filter((p) => isLowStock(p, lowStockThreshold)).length;
@@ -101,8 +111,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   }, [orders]);
 
   // The order of this list is the order in the menu, group by group (NAV_GROUPS)
-  const navItems: { id: AdminTab | 'add-product'; label: string; route: string; icon: LucideIcon; group: NavGroup; badge?: number; alert?: boolean }[] = [
-    { id: 'dashboard', label: 'Dashboard', route: '/admin/dashboard', icon: LayoutDashboard, group: 'Overview' },
+  const navItems: { id: AdminTab | 'add-product'; label: string; route: string; icon: LucideIcon; group: NavGroup; badge?: number; alert?: boolean; live?: number | null }[] = [
+    { id: 'dashboard', label: 'Dashboard', route: '/admin/dashboard', icon: LayoutDashboard, group: 'Overview', live: liveCount },
     { id: 'reports', label: 'Reports', route: '/admin/reports', icon: BarChart3, group: 'Overview' },
 
     { id: 'orders', label: 'Orders', route: '/admin/orders', icon: ShoppingBag, group: 'Orders', badge: pendingOrdersCount, alert: pendingOrdersCount > 0 },
@@ -191,6 +201,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   const iconButton = 'rounded-full flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer';
+  // Quick actions: a glass pill with its words on wide screens, the icon alone below that
+  const quickPill = 'shrink-0 w-10 h-10 xl:w-auto xl:px-3.5 rounded-full border border-line bg-sunken hover:bg-sunken-deep text-ink text-[13px] leading-[18px] font-medium inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer';
+  const quickActions: Array<{ id: string; label: string; title: string; icon: LucideIcon; run: () => void }> = [
+    { id: 'admin-quick-add-product', label: 'Add product', title: 'Add a new product', icon: PlusCircle, run: () => handleNavClick('add-product') },
+    { id: 'admin-quick-new-coupon', label: 'New coupon', title: 'Open Coupons to add a coupon', icon: Tag, run: () => handleNavClick('coupons') },
+    { id: 'admin-view-storefront-btn', label: 'View store', title: 'Open the store your customers see', icon: Store, run: handleViewStorefront },
+  ];
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    showToast(next
+      ? 'Sound for new orders is on. You will hear a soft chime while the admin is open in this browser.'
+      : 'Sound for new orders is off.', 'info');
+  };
 
   const renderNav = (collapsed: boolean, withIds: boolean) => (
     <nav className={collapsed ? 'space-y-2' : 'space-y-5'} aria-label="Admin sections">
@@ -226,6 +250,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     <Icon className="w-[17px] h-[17px] shrink-0" strokeWidth={THIN} />
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
+                  {!collapsed && typeof item.live === 'number' && (
+                    <span className="ml-2 inline-flex items-center gap-1.5 text-xs leading-4 font-medium tabular-nums text-sale" title="People on the site right now" aria-label={`${item.live} on the site right now`}>
+                      <span className="relative inline-flex w-1.5 h-1.5" aria-hidden="true">
+                        {item.live > 0 && <span className="absolute inset-0 rounded-full bg-brand opacity-60 motion-safe:animate-ping" />}
+                        <span className="relative w-1.5 h-1.5 rounded-full bg-brand" />
+                      </span>
+                      {item.live} live
+                    </span>
+                  )}
                   {!collapsed && item.badge !== undefined && (
                     <span className={`ml-2 inline-flex items-center gap-1.5 text-xs leading-4 tabular-nums ${item.alert ? 'text-sale font-medium' : 'text-ink-muted font-normal'}`}>
                       {item.alert && <span className="w-1.5 h-1.5 rounded-full bg-sale" aria-hidden="true" />}
@@ -249,9 +282,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
       {/* Top bar: menu, where you are, and the two things checked most (store, alerts) */}
       <header className="bg-surface border-b border-line sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto pl-1.5 pr-2 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
+        <div className="max-w-[1400px] mx-auto pl-2 pr-2.5 sm:px-6 lg:px-8 h-[60px] flex items-center justify-between gap-3">
 
-          <div className="flex items-center gap-1 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
               className={`lg:hidden w-11 h-11 shrink-0 ${iconButton}`}
@@ -262,13 +295,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             </button>
 
             <div
-              className="flex items-center gap-2.5 cursor-pointer min-w-0"
+              className="flex items-center gap-3 cursor-pointer min-w-0"
               onClick={() => openAdminTab('dashboard')}
             >
               <span className="hidden sm:block"><Monogram /></span>
               <div className="min-w-0">
-                <h1 className="font-sans text-[15px] leading-5 font-medium text-ink truncate">Suit Aura Girls</h1>
-                <span className="block text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-ink-muted truncate">Admin</span>
+                <h1 className="font-sans text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h1>
+                <span className="block text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-sale truncate">Store admin</span>
               </div>
             </div>
 
@@ -284,23 +317,44 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
           <div className="flex items-center gap-1 sm:gap-2 shrink-0">
 
+            <AdminSearch
+              pages={navItems.map((item) => ({ id: item.id, label: item.label, group: item.group }))}
+              onOpenPage={(id) => handleNavClick(id as AdminTab | 'add-product')}
+            />
+
+            {/* Quick actions (on phones they sit at the start of the row below) */}
+            <div className="hidden sm:flex items-center gap-1 sm:gap-2">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button key={action.id} id={action.id} type="button" onClick={action.run} className={quickPill} title={action.title} aria-label={action.label}>
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={THIN} aria-hidden="true" />
+                    <span className="hidden xl:inline">{action.label}</span>
+                    {action.label === 'View store' && <ExternalLink className="w-3.5 h-3.5 hidden xl:inline text-ink-muted" strokeWidth={THIN} aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+
             <button
-              id="admin-view-storefront-btn"
-              onClick={handleViewStorefront}
-              className="w-11 sm:w-auto h-11 sm:h-10 sm:px-4 rounded-full sm:border sm:border-line bg-surface hover:bg-sunken text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
-              title="Open the store your customers see"
-              aria-label="View store"
+              id="admin-order-sound-switch"
+              type="button"
+              role="switch"
+              aria-checked={soundOn}
+              aria-label="Sound for new orders"
+              title={soundOn ? 'Sound for new orders: on. Tap to switch it off.' : 'Sound for new orders: off. Tap to hear a soft chime when an order is paid.'}
+              onClick={toggleSound}
+              className={`shrink-0 w-10 h-10 sm:w-11 sm:h-11 2xl:w-auto 2xl:px-3.5 rounded-full inline-flex items-center justify-center gap-1.5 text-[13px] leading-[18px] font-medium whitespace-nowrap transition-colors cursor-pointer hover:bg-sunken ${soundOn ? 'text-sale' : 'text-ink-muted'}`}
             >
-              <Store className="w-5 h-5 sm:w-4 sm:h-4" strokeWidth={THIN} />
-              <span className="hidden sm:inline">View store</span>
-              <ExternalLink className="w-3.5 h-3.5 hidden sm:inline text-ink-muted" strokeWidth={THIN} />
+              {soundOn ? <Volume2 className="w-5 h-5 shrink-0" strokeWidth={THIN} aria-hidden="true" /> : <VolumeX className="w-5 h-5 shrink-0" strokeWidth={THIN} aria-hidden="true" />}
+              <span className="hidden 2xl:inline">Sound for new orders: {soundOn ? 'On' : 'Off'}</span>
             </button>
 
             <button
               onClick={() => (waitingRequests
                 ? openAdminTab(waitingCancels.length ? 'cancellations' : 'returns')
                 : showToast(`${pendingOrdersCount} ${pendingOrdersCount === 1 ? 'order' : 'orders'} to pack and ship · ${lowStockCount} ${lowStockCount === 1 ? 'product' : 'products'} low on stock.`, 'info'))}
-              className={`w-11 h-11 relative ${iconButton}`}
+              className={`w-10 h-10 sm:w-11 sm:h-11 shrink-0 relative ${iconButton}`}
               title="Notifications"
               aria-label="Notifications"
             >
@@ -314,7 +368,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
             <div className="hidden md:block pl-3 ml-1 border-l border-line text-left">
               <p className="text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-ink-muted">Signed in</p>
-              <p className="text-[13px] leading-4 text-ink max-w-[200px] truncate">{adminEmail || 'Store admin'}</p>
+              <p className="text-[13px] leading-4 text-ink max-w-[150px] 2xl:max-w-[200px] truncate">{adminEmail || 'Store admin'}</p>
             </div>
 
           </div>
@@ -323,7 +377,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Phone and tablet: the everyday pages, one tap away */}
         <div className="lg:hidden border-t border-line">
-          <div className="sag-scroll-x flex gap-1 overflow-x-auto px-2" role="navigation" aria-label="Quick admin pages">
+          <div className="sag-scroll-x flex items-center gap-1 overflow-x-auto px-2" role="navigation" aria-label="Quick admin pages">
+            {/* Phones: the quick actions as icons */}
+            <div className="sm:hidden flex items-center gap-1.5 pr-1.5 shrink-0">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button key={action.id} type="button" onClick={action.run} className={`${quickPill} !w-9 !h-9`} title={action.title} aria-label={action.label}>
+                    <Icon className="w-4 h-4 shrink-0" strokeWidth={THIN} aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </div>
             {quickItems.map((item) => {
               const isActive = isItemActive(item.id);
               return (
@@ -332,9 +397,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   type="button"
                   onClick={() => handleNavClick(item.id)}
                   aria-current={isActive ? 'page' : undefined}
-                  className={`relative shrink-0 h-11 px-3 inline-flex items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors ${isActive ? 'text-sale font-medium' : 'text-ink-muted font-normal hover:text-ink'}`}
+                  className={`relative shrink-0 h-11 px-3 ${item.id === 'add-product' ? 'hidden sm:inline-flex' : 'inline-flex'} items-center gap-1.5 text-sm whitespace-nowrap cursor-pointer transition-colors ${isActive ? 'text-sale font-medium' : 'text-ink-muted font-normal hover:text-ink'}`}
                 >
                   {item.id === 'returns' ? 'Returns' : item.label}
+                  {typeof item.live === 'number' && (
+                    <span className="inline-flex items-center gap-1 text-xs leading-4 font-medium text-sale tabular-nums" aria-label={`${item.live} on the site right now`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />{item.live} live
+                    </span>
+                  )}
                   {item.alert && item.badge !== undefined && (
                     <span className="inline-flex items-center gap-1 text-xs leading-4 font-medium text-sale tabular-nums">
                       <span className="w-1.5 h-1.5 rounded-full bg-sale" aria-hidden="true" />{item.badge}
@@ -352,7 +422,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Desktop sidebar */}
         <aside className={`hidden lg:block shrink-0 transition-[width] duration-200 ${isSidebarCollapsed ? 'w-[68px]' : 'w-60'}`}>
-          <div className="bg-surface border border-line rounded-[22px] pt-4 pb-2 sticky top-[4.5rem] max-h-[calc(100vh-5.5rem)] overflow-y-auto space-y-4">
+          <div className="bg-surface border border-line rounded-[22px] pt-4 pb-2 sticky top-[5rem] max-h-[calc(100vh-6rem)] overflow-y-auto space-y-4">
 
             {renderNav(isSidebarCollapsed, true)}
 
@@ -421,6 +491,28 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </main>
 
       </div>
+
+      {/* A newly paid order, announced once while the panel is open */}
+      {orderAlerts.length > 0 && (
+        <div className="fixed z-40 top-[116px] lg:top-[72px] right-3 left-3 sm:left-auto sm:w-[380px] space-y-2" role="status" aria-live="polite">
+          {orderAlerts.map((alert) => (
+            <div key={alert.orderNumber} className="bg-surface border border-brand-line rounded-[18px] pl-4 pr-1.5 py-2 flex items-center gap-2 animate-in fade-in">
+              <span className="w-2 h-2 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+              <p className="min-w-0 flex-1 text-sm leading-5 text-ink break-words sag-num">{alert.text}</p>
+              <button
+                type="button"
+                onClick={() => { dismissAlert(alert.orderNumber); openAdminOrderDetails(alert.orderNumber); window.scrollTo({ top: 0 }); }}
+                className="shrink-0 min-h-11 px-2 text-sm font-medium text-brand underline underline-offset-[3px] cursor-pointer"
+              >
+                View<span className="sr-only"> order {alert.orderNumber}</span>
+              </button>
+              <button type="button" onClick={() => dismissAlert(alert.orderNumber)} className={`w-10 h-10 shrink-0 ${iconButton}`} aria-label={`Close the alert for order ${alert.orderNumber}`}>
+                <X className="w-4 h-4" strokeWidth={THIN} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
     </div>
   );

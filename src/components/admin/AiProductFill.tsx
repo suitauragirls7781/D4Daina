@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Check, ExternalLink, ImagePlus, KeyRound, RefreshCw, Sparkles, X } from 'lucide-react';
+import { getCleanImageUrl } from '../../utils/imageHelper';
 
 /** Text fields Gemini drafts from the photos. Price, MRP, sizes and stock are never part of it. */
 export interface AiDraft {
@@ -123,12 +124,13 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
   const showKeyForm = status && (!status.configured || editingKey);
 
   return (
-    <section aria-labelledby="ai-fill-title" className="rounded-2xl border border-brand-line bg-brand-wash p-4 sm:p-6">
+    <section aria-labelledby="ai-fill-title" className="sag-glass sag-glass-strong !border-brand-line p-4 sm:p-6">
       <div className="flex items-start gap-3">
-        <span className="w-9 h-9 shrink-0 rounded-xl bg-white border border-brand-line flex items-center justify-center text-brand">
+        <span className="w-10 h-10 shrink-0 rounded-full bg-brand-wash flex items-center justify-center text-brand">
           <Sparkles className="w-[18px] h-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
+          <p className="text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-brand">Quick start</p>
           <h3 id="ai-fill-title" className="text-[17px] leading-6 font-semibold text-ink">Fill details from photos</h3>
           <p className="mt-0.5 text-sm text-ink-muted">
             Upload the photos and Gemini writes {writes}. You add {ownFields.replace(/^P/, 'p')}.
@@ -139,7 +141,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
       {!status && <p className="mt-4 text-sm text-ink-muted inline-flex items-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Checking…</p>}
 
       {showKeyForm && (
-        <div className="mt-4 rounded-xl bg-white border border-line p-4">
+        <div className="mt-4 rounded-2xl bg-sunken border border-line p-4">
           <p className="text-sm font-semibold text-ink inline-flex items-center gap-2"><KeyRound className="w-4 h-4 text-ink-muted" /> {status?.configured ? 'Change your Gemini API key' : 'One-time setup: your free Gemini API key'}</p>
           <ol className="mt-2 text-[13px] text-ink-muted list-decimal pl-5 space-y-1">
             <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-brand font-semibold underline underline-offset-[3px] inline-flex items-center gap-0.5">aistudio.google.com <ExternalLink className="w-3 h-3" /></a> and sign in with your Google account.</li>
@@ -176,11 +178,11 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
           </div>
           {images.length > 0 && (
             <div className="flex gap-2 overflow-x-auto sag-scroll-x pb-1">
-              {images.slice(0, 6).map((url) => <img key={url} src={url} alt="" className="w-12 aspect-[4/5] shrink-0 rounded-lg object-cover object-top border border-line bg-white" />)}
+              {images.slice(0, 6).map((url) => <img key={url} src={getCleanImageUrl(url, 160)} alt="" className="w-12 aspect-[4/5] shrink-0 rounded-xl object-cover object-top bg-sunken" />)}
             </div>
           )}
           {done && (
-            <div className="rounded-xl bg-ok-tint border border-ok-line p-3.5 text-sm text-ok">
+            <div className="rounded-2xl bg-ok-tint border border-ok-line p-3.5 text-sm text-ok">
               <p className="font-semibold inline-flex items-center gap-1.5"><Check className="w-4 h-4" /> Details filled from {done.photos} photo{done.photos === 1 ? '' : 's'}.</p>
               <p className="mt-1 text-ink-muted">Now add <b>{ownFields.replace(/^P/, 'p')}</b>, check the text once and save.{done.notes ? ` Please check: ${done.notes}` : checkHint}</p>
             </div>
@@ -195,7 +197,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
       )}
 
       {error && (
-        <p role="alert" className="mt-3 rounded-xl bg-danger-tint border border-danger-line px-3.5 py-2.5 text-sm text-danger flex items-start gap-2">
+        <p role="alert" className="mt-3 rounded-2xl bg-danger-tint border border-danger-line px-3.5 py-2.5 text-sm text-danger flex items-start gap-2">
           <X className="w-4 h-4 mt-0.5 shrink-0" /> <span>{error}</span>
         </p>
       )}
