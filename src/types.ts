@@ -461,6 +461,7 @@ export interface Lead {
 
 export type AdminTab =
   | 'dashboard'
+  | 'reports'
   | 'aiController'
   | 'products'
   | 'comboOffers'
