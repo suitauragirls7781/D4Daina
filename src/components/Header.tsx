@@ -23,10 +23,11 @@ const EYEBROW = 'sag-caps text-[10.5px] leading-4 font-semibold uppercase tracki
 const WORDMARK = 'sag-caps font-display font-medium uppercase whitespace-nowrap text-ink';
 
 /**
- * The one thin dark line above the header. It shows the festive round that is live right now (a real coupon
- * inside its dates, read by useFestiveRound) and nothing at all when no round is live. It scrolls away with the page.
+ * The one announcement line. It shows the festive round that is live right now (a real coupon inside its dates,
+ * read by useFestiveRound) and nothing at all when no round is live. Desktop: a thin dark line above the header.
+ * Phones and tablets: a soft line with champagne text under the search row.
  */
-const AnnouncementLine: React.FC = () => {
+const AnnouncementLine: React.FC<{ soft?: boolean }> = ({ soft = false }) => {
   const round = useFestiveRound();
   const { storeOffers } = useShop();
   const [turn, setTurn] = useState(0);
@@ -54,7 +55,7 @@ const AnnouncementLine: React.FC = () => {
   if (!round || count === 0) return null;
   const current = still ? 0 : turn % count;
   return (
-    <div id="festive-announcement" role="region" aria-label="Store announcement" className="w-full bg-dark text-on-dark">
+    <div id="festive-announcement" role="region" aria-label="Store announcement" className={`w-full ${soft ? 'bg-sunken text-sale font-semibold' : 'bg-dark text-on-dark'}`}>
       {/* Every message sits in the same cell, so the line keeps the height of the longest one and never jumps */}
       <div className="sag-num mx-auto grid max-w-7xl px-3 py-2 text-center text-[11.5px] leading-4 tracking-[0.06em]">
         {(still ? messages.slice(0, 1) : messages).map((message, index) => (
@@ -161,7 +162,48 @@ export const Header: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
-  // The phone header is one line, so it simply stays at the top of the screen (nothing slides away on scroll).
+  // Desktop keeps the announcement above the header; phones and tablets show it under the search row
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)');
+    const onChange = () => setIsDesktop(query.matches);
+    onChange();
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+  // Phones and tablets: the search row and the announcement slide away while scrolling down and return on
+  // scrolling up. With reduced motion they simply stay.
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    let last = window.scrollY;
+    let frame = 0;
+    let lockUntil = 0;
+    let current = false;
+    const apply = (next: boolean) => {
+      if (current === next) return;
+      current = next;
+      // The header changes height, which moves the page a little: ignore the scroll events that follow
+      lockUntil = performance.now() + 350;
+      setCompact(next);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        if (performance.now() < lockUntil) { last = y; return; }
+        const moved = y - last;
+        if (y < 80) apply(false);
+        else if (moved > 8) apply(true);
+        else if (moved < -8) apply(false);
+        else return;
+        last = y;
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (frame) window.cancelAnimationFrame(frame); };
+  }, []);
   // The phone's Back button closes the search panel or the PIN check instead of leaving the page
   useBackToClose(isSearchOpen, () => setIsSearchOpen(false));
   useBackToClose(pinOpen, () => setPinOpen(false));
@@ -263,44 +305,29 @@ export const Header: React.FC = () => {
   const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-ink-muted';
   const searchLabel = 'Search suits, kurtis & more';
   const closeSearch = () => setIsSearchOpen(false);
+  // Never tucked away while the menu is open
+  const tucked = compact && !isMobileMenuOpen;
+  const showAnnouncement = activePage !== 'checkout';
   const count = (value: number) => (value > 99 ? '99+' : value);
 
   return (
     <>
-      {/* The thin dark line sits above the header and scrolls away; checkout stays free of offers */}
-      {activePage !== 'checkout' && <AnnouncementLine />}
+      {/* Desktop: the thin dark line sits above the header and scrolls away; checkout stays free of offers */}
+      {showAnnouncement && isDesktop && <AnnouncementLine />}
       <header className="sticky top-0 z-50 w-full bg-surface border-b border-line select-none">
-        {/* Phones and tablets: one white line. Menu on the left, the wordmark in the middle, search and bag on the right. */}
-        <div className="lg:hidden mx-auto grid h-[52px] max-w-2xl grid-cols-[1fr_auto_1fr] items-center gap-1 px-2.5">
-          <div className="flex items-center justify-self-start">
-            <button
-              id="mobile-menu-trigger"
-              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className={`${phoneIcon} flex`}
-              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X className="w-[22px] h-[22px]" strokeWidth={1.5} /> : <Menu className="w-[22px] h-[22px]" strokeWidth={1.5} />}
-            </button>
-          </div>
-          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className={`${WORDMARK} min-w-0 text-[16px] leading-6 tracking-[0.12em] min-[380px]:text-[18px] min-[380px]:tracking-[0.14em] cursor-pointer`} aria-label="Suit Aura Girls home">
-            Suit Aura Girls
+        {/* Phones and tablets: one white bar. The round mark and the wordmark on the left, wishlist and bag on the right. */}
+        <div className="lg:hidden mx-auto flex h-[52px] max-w-2xl items-center justify-between gap-2 px-3">
+          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 items-center gap-2.5 text-left cursor-pointer" aria-label="Suit Aura Girls home">
+            <img src="/suit-aura-mark-132.webp" width={36} height={36} alt="" className="h-9 w-9 shrink-0 rounded-full border border-line object-cover" />
+            <span className="min-w-0">
+              <span className={`${WORDMARK} block text-[16px] leading-5 tracking-[0.12em]`}>Suit Aura Girls</span>
+              <span className="sag-caps block truncate text-[9.5px] leading-[14px] uppercase tracking-[0.04em] text-ink-muted sm:text-[10.5px] sm:tracking-[0.12em]">Ethnic wear · Delivery across India</span>
+            </span>
           </button>
-          <div className="flex items-center justify-self-end">
-            {/* Phones reach the wishlist from the bottom bar; tablets have no bottom bar, so it shows here */}
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} hidden md:flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
+          <div className="flex shrink-0 items-center">
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
               <Heart className="w-[21px] h-[21px]" strokeWidth={1.5} />
               {wishlist.length > 0 && <span className={`${badge} top-1 right-0`}>{count(wishlist.length)}</span>}
-            </button>
-            {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
-            <button
-              id="header-search-btn"
-              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(!isSearchOpen); }}
-              className={`${phoneIcon} flex`}
-              aria-label={searchLabel}
-              aria-expanded={isSearchOpen}
-            >
-              <Search className="w-[21px] h-[21px]" strokeWidth={1.5} />
             </button>
             <button
               id="header-cart-btn-mobile"
@@ -314,16 +341,55 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
+        {/* Phones and tablets: the menu button and the search field, then the announcement. Both slide away on
+            scrolling down. While the search panel is open its own field takes this place. */}
+        {!isDesktop && !isSearchOpen && (
+          <div className={`lg:hidden grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${tucked ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}>
+            <div className={`min-h-0 overflow-hidden transition-[visibility] duration-200 ${tucked ? 'invisible' : ''}`} aria-hidden={tucked || undefined}>
+              <div className="mx-auto flex max-w-2xl items-center gap-2 px-3 pb-3 pt-0.5">
+                <button
+                  id="mobile-menu-trigger"
+                  onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+                  className={`${iconButton} flex h-11 w-11 border border-line hover:border-control`}
+                  aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMobileMenuOpen}
+                >
+                  {isMobileMenuOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Menu className="w-5 h-5" strokeWidth={1.5} />}
+                </button>
+                <div className="relative min-w-0 flex-1">
+                  {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
+                  <button
+                    type="button"
+                    id="header-search-btn"
+                    onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+                    className="h-11 w-full truncate border border-line bg-surface pl-10 pr-12 text-left text-sm text-ink-muted hover:border-control cursor-pointer transition-colors"
+                    aria-label={searchLabel}
+                    aria-expanded={isSearchOpen}
+                  >
+                    Search suits, dresses…
+                  </button>
+                  <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 text-ink-muted">
+                    <Search className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />
+                  </span>
+                  <VoiceSearchButton onResult={executeSearch} className="absolute right-0.5 top-1/2 -translate-y-1/2" />
+                </div>
+              </div>
+              {showAnnouncement && <AnnouncementLine soft />}
+            </div>
+          </div>
+        )}
+
         {/* Desktop: the wordmark, a square search field with a hairline, and the icons */}
         <div className="hidden lg:flex max-w-7xl mx-auto px-8 h-[68px] items-center justify-between gap-3">
           <div className="flex items-center min-w-0">
             <button
               id="header-brand-logo"
               onClick={() => setActivePage('home')}
-              className={`${WORDMARK} shrink-0 text-[22px] leading-7 tracking-[0.14em] cursor-pointer`}
+              className="flex shrink-0 items-center gap-3 cursor-pointer"
               aria-label="Suit Aura Girls home"
             >
-              Suit Aura Girls
+              <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full border border-line object-cover" />
+              <span className={`${WORDMARK} text-[22px] leading-7 tracking-[0.14em]`}>Suit Aura Girls</span>
             </button>
           </div>
 

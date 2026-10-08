@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin, generateHeroSlidesFromProducts } from '../context/AdminContext';
 import { HeroBannerConfig, Product } from '../types';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { slugToCategory } from '../utils/slugHelper';
 import { prepaidPercentApplies } from '../utils/prepaid';
@@ -26,9 +26,13 @@ const ownerBadge = (badge?: string) => {
 const SLIDE_MS = 6000;
 const HERO_CATEGORY_LINKS =['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
 
+/** The badge as plain words: emoji and the joiners that belong to them are removed. */
+const plainWords = (text: string) => text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim();
+
 /**
- * Hero. Per slide: the photo with square corners (edge to edge and about 1:1 on phones), and the words on white:
- * under the photo and centred on phones, beside it from tablets up. Nothing is drawn on a photo.
+ * Hero, "magazine" composition (owner's pick 4-2). Per slide a collage: a narrow vertical caption, the main
+ * photo and a second real photo framed in white over its bottom-right corner; the words sit on white under
+ * the collage (beside it on desktop). Nothing is drawn on a photo.
  */
 export const HeroSection: React.FC = () => {
   const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
@@ -197,14 +201,15 @@ export const HeroSection: React.FC = () => {
 
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="w-full md:py-8 lg:py-10" aria-hidden="true">
-        <div className="mx-auto max-w-7xl md:grid md:grid-cols-2 md:items-center md:gap-8 md:px-6 lg:gap-12 lg:px-8">
-          <div className="aspect-square w-full bg-sunken md:aspect-[4/5]" />
-          <div className="flex flex-col items-center gap-3 px-4 pt-[22px] pb-[26px] md:items-start md:p-0">
-            <div className="h-3 w-24 bg-sunken" />
-            <div className="h-7 w-3/4 bg-sunken" />
+      <div className="w-full px-4 pt-[18px] pb-[22px] md:px-6 lg:px-8 lg:py-10" aria-hidden="true">
+        <div className="mx-auto max-w-2xl lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12">
+          <div className="pb-[22%] pl-7">
+            <div className="aspect-[4/5] w-[78%] bg-sunken" />
+          </div>
+          <div className="mt-4 flex flex-col items-start gap-3 lg:mt-0">
+            <div className="h-8 w-3/4 bg-sunken" />
             <div className="h-6 w-1/3 bg-sunken" />
-            <div className="h-12 w-full max-w-md bg-sunken" />
+            <div className="h-12 w-40 bg-sunken" />
           </div>
         </div>
       </div>
@@ -218,8 +223,8 @@ export const HeroSection: React.FC = () => {
   const originalPrice = Math.max(slidePrice, Number(currentSlide.originalPrice) || slidePrice);
   const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
   const count = slides.length;
-  // The admin's own badge text, or nothing
-  const eyebrow = ownerBadge(currentSlide.badge);
+  // The admin's own badge text as the vertical caption, or the plain "New season"
+  const caption = plainWords(ownerBadge(currentSlide.badge)) || 'New season';
   // The percent offer is shown only when this product's price qualifies for it
   const onlineOffer = slidePrice <= 0
     ? ''
@@ -230,11 +235,20 @@ export const HeroSection: React.FC = () => {
     : '';
   const arrow = 'flex h-11 w-11 items-center justify-center border border-line bg-surface text-ink hover:border-ink transition-colors cursor-pointer';
 
+  /** The second picture of a slide's collage, always a real one: another photo of the same product, else the next slide's photo. */
+  const secondPhoto = (slide: LiveHeroSlide, index: number): string => {
+    const product = slide.rawProduct || (slide.productId ? products.find((p) => String(p.id) === String(slide.productId)) : undefined);
+    const own = (product?.images || []).find((url) => url && url !== slide.image);
+    if (own) return own;
+    const next = count > 1 ? slides[(index + 1) % count]?.image : '';
+    return next && next !== slide.image ? next : '';
+  };
+
   return (
     <section
       id="haute-couture-hero"
       aria-label="Featured collection"
-      className="w-full md:py-8 lg:py-10"
+      className="w-full px-4 pt-[18px] pb-[22px] md:px-6 lg:px-8 lg:py-10"
       onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHold((h) => ({ ...h, hover: true })); }}
       onPointerLeave={() => setHold((h) => (h.hover ? { ...h, hover: false } : h))}
       onTouchStart={() => setHold((h) => ({ ...h, touch: true }))}
@@ -243,49 +257,125 @@ export const HeroSection: React.FC = () => {
       onFocus={(event) => { if ((event.target as HTMLElement).matches?.(':focus-visible')) setHold((h) => ({ ...h, focus: true })); }}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHold((h) => (h.focus ? { ...h, focus: false } : h)); }}
     >
-      <div className="mx-auto max-w-7xl md:grid md:grid-cols-2 md:items-center md:gap-8 md:px-6 lg:gap-12 lg:px-8">
-        {/* Photos: a swipeable strip, edge to edge on phones. Nothing is ever drawn on a photo. */}
-        <div className="min-w-0">
+      <div className="mx-auto max-w-2xl lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12">
+        {/* Collage: the vertical caption, then a swipeable strip of two-photo compositions. Nothing is drawn on a photo. */}
+        <div className="flex min-w-0 items-stretch gap-3 lg:gap-4">
+          <div className="relative w-4 shrink-0" aria-hidden="true">
+            <span className="absolute left-0 top-0 max-h-full truncate text-[11px] font-medium uppercase leading-4 tracking-[0.3em] text-sale [writing-mode:vertical-rl] rotate-180">
+              {caption}
+            </span>
+          </div>
           <div
             ref={stripRef}
             onScroll={onStripScroll}
-            className="sag-scroll-x scroll-px-0! flex items-stretch overflow-x-auto"
+            className="sag-scroll-x scroll-px-0! flex min-w-0 flex-1 items-start overflow-x-auto"
           >
             {slides.map((slide, index) => {
               const small = getCleanImageUrl(slide.image, 640);
               const mid = getCleanImageUrl(slide.image, 828);
               const wide = getCleanImageUrl(slide.image, 1100);
+              const second = secondPhoto(slide, index);
+              const secondSmall = second ? getCleanImageUrl(second, 320) : '';
+              const secondMid = second ? getCleanImageUrl(second, 480) : '';
+              const secondWide = second ? getCleanImageUrl(second, 640) : '';
               return (
                 <button
                   key={slide.id || index}
                   type="button"
                   onClick={() => handleSlideClick(slide)}
-                  className="block aspect-square w-full shrink-0 cursor-pointer overflow-hidden bg-sunken md:aspect-[4/5]"
+                  className={`relative block w-full shrink-0 cursor-pointer text-left ${second ? 'pb-[22%]' : ''}`}
                   aria-label={`View ${slide.title}`}
                 >
-                  <span className={`block h-full w-full overflow-hidden ${index === fx.curtain && index === currentSlideIdx ? 'sag-curtain' : ''}`}>
-                  <img
-                    src={small || ELEGANT_PLACEHOLDER_SVG}
-                    srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
-                    sizes="(min-width: 1280px) 600px, (min-width: 768px) 46vw, 100vw"
-                    alt={slide.title || 'Featured Suit Aura Girls design'}
-                    className={`h-full w-full object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    decoding="async"
-                    onError={(event) => {
-                      if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
-                    }}
-                  />
+                  <span className={`block aspect-[4/5] overflow-hidden bg-sunken ${second ? 'w-[78%]' : 'w-full'}`}>
+                    <span className={`block h-full w-full overflow-hidden ${index === fx.curtain && index === currentSlideIdx ? 'sag-curtain' : ''}`}>
+                      <img
+                        src={small || ELEGANT_PLACEHOLDER_SVG}
+                        srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
+                        sizes="(min-width: 1280px) 520px, (min-width: 1024px) 40vw, (min-width: 768px) 500px, 70vw"
+                        alt={slide.title || 'Featured Suit Aura Girls design'}
+                        className={`h-full w-full object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'auto'}
+                        decoding="async"
+                        onError={(event) => {
+                          if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
+                        }}
+                      />
+                    </span>
                   </span>
+                  {second && (
+                    <span className="absolute bottom-0 right-0 block aspect-[4/5] w-[46%] overflow-hidden border-[6px] border-surface bg-sunken lg:border-8">
+                      <img
+                        src={secondMid || ELEGANT_PLACEHOLDER_SVG}
+                        srcSet={secondSmall && secondSmall !== secondWide ? `${secondSmall} 320w, ${secondMid} 480w, ${secondWide} 640w` : undefined}
+                        sizes="(min-width: 1280px) 310px, (min-width: 1024px) 24vw, (min-width: 768px) 300px, 42vw"
+                        alt=""
+                        className="h-full w-full object-cover object-top"
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        onError={(event) => {
+                          if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
+                        }}
+                      />
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
+        </div>
+
+        {/* Words: left-aligned under the collage; beside it and vertically centred on desktop */}
+        <div className="mt-4 min-w-0 lg:mt-0">
+          {/* Re-made per slide, so the title, price and buttons arrive one after another */}
+          <div key={currentSlide.id || currentSlideIdx} className="sag-stagger">
+          {/* Three lines are reserved below desktop so a change of slide never moves the buttons */}
+          <h1 className="sag-lines font-display font-medium text-[30px] leading-[1.12] text-ink min-h-[3.36em] md:text-[36px] lg:min-h-0 lg:text-[44px] lg:leading-[1.1]">
+            <span className="sr-only">Suit Aura Girls: </span>
+            <span className="sag-line-up" style={{ '--sag-line-delay': '120ms' } as React.CSSProperties}>
+              <span className="line-clamp-3">{currentSlide.title}</span>
+            </span>
+          </h1>
+          {currentSlide.subtitle && (
+            <p className="mt-3 max-w-xl text-[15px] leading-[22px] text-ink-muted line-clamp-2 max-lg:hidden">
+              {currentSlide.subtitle}
+            </p>
+          )}
+
+          {slidePrice > 0 && (
+            <p className="sag-num mt-2.5 flex flex-wrap items-baseline gap-x-[7px] gap-y-1 lg:mt-5">
+              <span className="text-[22px] font-semibold leading-7 text-ink lg:text-[28px] lg:leading-8">₹{slidePrice.toLocaleString('en-IN')}</span>
+              {originalPrice > slidePrice && <span className="text-[12.5px] text-ink-muted line-through lg:text-sm">₹{originalPrice.toLocaleString('en-IN')}</span>}
+              {discountPercent > 0 && <span className="text-[12.5px] font-semibold text-sale lg:text-sm">{discountPercent}% off</span>}
+            </p>
+          )}
+          {onlineOffer && <p className="mt-1 text-xs leading-[18px] text-sale">{onlineOffer}</p>}
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 lg:mt-7">
+            <button
+              type="button"
+              id="hero-view-style-btn"
+              onClick={() => handleSlideClick(currentSlide)}
+              className="sag-btn-primary gap-2 px-6 whitespace-nowrap"
+            >
+              Shop now
+              <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.25} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              id="hero-explore-btn"
+              onClick={() => navigateToCategory('All')}
+              aria-label="Explore collection"
+              className="sag-link cursor-pointer text-sm font-medium whitespace-nowrap"
+            >
+              Explore
+            </button>
+          </div>
+          </div>
 
           {/* Place marks: thin lines, the current one fills while its slide is shown; then the slide number */}
           {count > 1 && (
-            <div className="mt-1 flex items-center gap-3 px-4 md:px-0">
+            <div className="mt-3 flex items-center gap-3 lg:mt-6 lg:max-w-md">
               <div className="flex min-w-0 flex-1 gap-1.5">
                 {slides.map((slide, index) => (
                   <button
@@ -313,62 +403,9 @@ export const HeroSection: React.FC = () => {
               </span>
             </div>
           )}
-        </div>
-
-        {/* Words: under the photo and centred on phones, beside it from tablets up */}
-        <div className="min-w-0 px-4 pt-[22px] pb-[26px] text-center md:p-0 md:text-left">
-          {/* Re-made per slide, so the rule, title, price and buttons arrive one after another */}
-          <div key={currentSlide.id || currentSlideIdx} className="sag-stagger">
-          <div className="flex h-4 items-center justify-center gap-2.5 md:justify-start">
-            <span className="h-px w-8 shrink-0 bg-star" aria-hidden="true" />
-            {eyebrow && <p className="min-w-0 truncate text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale">{eyebrow}</p>}
-          </div>
-
-          {/* Two lines are reserved on phones so a change of slide never moves the buttons */}
-          <h1 className="sag-lines mt-2 font-display font-medium text-[23px] leading-[1.18] text-ink min-h-[2.36em] md:min-h-0 md:text-[30px] lg:text-[40px] lg:leading-[1.12]">
-            <span className="sr-only">Suit Aura Girls: </span>
-            <span className="sag-line-up" style={{ '--sag-line-delay': '120ms' } as React.CSSProperties}>
-              <span className="line-clamp-2 md:line-clamp-3">{currentSlide.title}</span>
-            </span>
-          </h1>
-          {currentSlide.subtitle && (
-            <p className="mt-3 max-w-xl text-sm leading-5 text-ink-muted line-clamp-2 max-md:hidden lg:text-[15px] lg:leading-[22px]">
-              {currentSlide.subtitle}
-            </p>
-          )}
-
-          {slidePrice > 0 && (
-            <p className="sag-num mt-2.5 flex flex-wrap items-baseline justify-center gap-x-[7px] gap-y-1 md:mt-4 md:justify-start lg:mt-5">
-              <span className="text-[22px] font-semibold leading-7 text-ink lg:text-[28px] lg:leading-8">₹{slidePrice.toLocaleString('en-IN')}</span>
-              {originalPrice > slidePrice && <span className="text-[12.5px] text-ink-muted line-through lg:text-sm">₹{originalPrice.toLocaleString('en-IN')}</span>}
-              {discountPercent > 0 && <span className="text-[12.5px] font-semibold text-sale lg:text-sm">{discountPercent}% off</span>}
-            </p>
-          )}
-          {onlineOffer && <p className="mt-1 text-xs leading-[18px] text-sale">{onlineOffer}</p>}
-
-          <div className="mt-4 flex gap-2.5 md:mt-6 md:max-w-md lg:mt-7">
-            <button
-              type="button"
-              id="hero-view-style-btn"
-              onClick={() => handleSlideClick(currentSlide)}
-              className="sag-btn-primary min-w-0 flex-1 px-3"
-            >
-              Shop now
-            </button>
-            <button
-              type="button"
-              id="hero-explore-btn"
-              onClick={() => navigateToCategory('All')}
-              aria-label="Explore collection"
-              className="sag-btn-outline min-w-0 flex-1 px-3 whitespace-nowrap"
-            >
-              Explore
-            </button>
-          </div>
-          </div>
 
           {count > 1 && (
-            <div className="mt-8 hidden items-center gap-4 md:flex lg:mt-10">
+            <div className="mt-6 hidden items-center gap-4 lg:flex">
               <div className="flex flex-wrap gap-2.5" role="tablist" aria-label="Featured designs">
                 {slides.map((slide, index) => (
                   <button
@@ -378,7 +415,7 @@ export const HeroSection: React.FC = () => {
                     aria-selected={index === currentSlideIdx}
                     aria-label={`Show ${slide.title}`}
                     onClick={() => goTo(index)}
-                    className={`h-[70px] w-14 cursor-pointer overflow-hidden border bg-sunken transition-opacity lg:h-20 lg:w-16 ${index === currentSlideIdx ? 'border-ink' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`h-20 w-16 cursor-pointer overflow-hidden border bg-sunken transition-opacity ${index === currentSlideIdx ? 'border-ink' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
                     <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full object-cover object-top" loading="lazy" decoding="async" />
                   </button>
