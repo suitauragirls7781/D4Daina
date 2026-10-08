@@ -171,36 +171,15 @@ export const Header: React.FC = () => {
     query.addEventListener('change', onChange);
     return () => query.removeEventListener('change', onChange);
   }, []);
-  // Phones and tablets: the search row and the announcement slide away while scrolling down and return on
-  // scrolling up. With reduced motion they simply stay.
+  // Phones and tablets: the search row and the announcement sit at the top of the page and scroll away with it.
+  // Once they are out of sight the header pill shows the menu and search buttons instead. Only those two icons
+  // change; the fixed header keeps its height, so the page never moves by itself.
   const [compact, setCompact] = useState(false);
   useEffect(() => {
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    let last = window.scrollY;
     let frame = 0;
-    let lockUntil = 0;
-    let current = false;
-    const apply = (next: boolean) => {
-      if (current === next) return;
-      current = next;
-      // The header changes height, which moves the page a little: ignore the scroll events that follow
-      lockUntil = performance.now() + 350;
-      setCompact(next);
-    };
-    const onScroll = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        const y = window.scrollY;
-        if (performance.now() < lockUntil) { last = y; return; }
-        const moved = y - last;
-        if (y < 80) apply(false);
-        else if (moved > 8) apply(true);
-        else if (moved < -8) apply(false);
-        else return;
-        last = y;
-      });
-    };
+    const read = () => { frame = 0; setCompact(window.scrollY > 110); };
+    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(read); };
+    read();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => { window.removeEventListener('scroll', onScroll); if (frame) window.cancelAnimationFrame(frame); };
   }, []);
@@ -305,8 +284,8 @@ export const Header: React.FC = () => {
   const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-brand';
   const searchLabel = 'Search suits, kurtis & more';
   const closeSearch = () => setIsSearchOpen(false);
-  // Never tucked away while the menu is open
-  const tucked = compact && !isMobileMenuOpen;
+  // True once the search row has scrolled out of sight
+  const tucked = compact;
   const showAnnouncement = activePage !== 'checkout';
   const count = (value: number) => (value > 99 ? '99+' : value);
 
@@ -326,12 +305,18 @@ export const Header: React.FC = () => {
             </span>
           </button>
           <div className="flex shrink-0 items-center gap-1.5">
+            {tucked && (
+              <button type="button" id="header-menu-icon-btn" onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }} className={`${phoneIcon} flex`} aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={isMobileMenuOpen}>
+                <Menu className="w-[18px] h-[18px]" strokeWidth={1.5} />
+              </button>
+            )}
             {tucked && !isSearchOpen && (
               <button type="button" id="header-search-icon-btn" onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }} className={`${phoneIcon} flex`} aria-label="Search">
                 <Search className="w-[18px] h-[18px]" strokeWidth={1.5} />
               </button>
             )}
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
+            {/* On a narrow phone the heart makes room for the two buttons above (Wishlist is in the bottom bar too) */}
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} ${tucked ? 'hidden sm:flex' : 'flex'}`} aria-label={`Wishlist, ${wishlist.length} items`}>
               <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
               {wishlist.length > 0 && <span className={`${badge} -top-1 -right-1`}>{count(wishlist.length)}</span>}
             </button>
@@ -346,44 +331,6 @@ export const Header: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Phones and tablets: the menu button and the search field, then the announcement. Both slide away on
-            scrolling down. While the search panel is open its own field takes this place. */}
-        {!isDesktop && !isSearchOpen && (
-          <div className={`lg:hidden grid transition-[grid-template-rows] duration-200 ease-out motion-reduce:transition-none ${tucked ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}>
-            <div className={`min-h-0 overflow-hidden transition-[visibility] duration-200 ${tucked ? 'invisible' : ''}`} aria-hidden={tucked || undefined}>
-              <div className="mx-auto flex max-w-2xl items-center gap-2 pt-2">
-                <button
-                  id="mobile-menu-trigger"
-                  onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-                  className={`${iconButton} sag-glass-bar flex h-11 w-11 shadow-none!`}
-                  aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-                  aria-expanded={isMobileMenuOpen}
-                >
-                  {isMobileMenuOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Menu className="w-5 h-5" strokeWidth={1.5} />}
-                </button>
-                <div className="relative min-w-0 flex-1">
-                  {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
-                  <button
-                    type="button"
-                    id="header-search-btn"
-                    onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                    className="sag-glass-bar h-11 w-full truncate pl-10 pr-12 text-left text-sm text-ink-muted shadow-none! hover:text-ink cursor-pointer transition-colors"
-                    aria-label={searchLabel}
-                    aria-expanded={isSearchOpen}
-                  >
-                    Search suits, dresses…
-                  </button>
-                  <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-ink-muted">
-                    <Search className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />
-                  </span>
-                  <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
-                </div>
-              </div>
-              {showAnnouncement && <AnnouncementLine soft />}
-            </div>
-          </div>
-        )}
 
         {/* Desktop: one wide glass bar: the mark and wordmark, a glass pill search field, the icons, then the menu row */}
         <div className="sag-glass-bar hidden lg:block max-w-7xl mx-auto rounded-[26px]!">
@@ -511,7 +458,7 @@ export const Header: React.FC = () => {
         </div>
 
         {isSearchOpen && (
-          <div id="search-drawer-overlay" className="sag-drop relative mt-2">
+          <div id="search-drawer-overlay" className="sag-drop absolute left-2.5 right-2.5 top-full mt-2 lg:left-6 lg:right-6">
             {/* Dim the page under the panel; a tap outside closes it */}
             <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={closeSearch} aria-hidden="true" />
             <div className="relative max-w-3xl mx-auto rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl px-4 sm:px-8 pt-3 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
@@ -664,6 +611,43 @@ export const Header: React.FC = () => {
           </div>
         )}
       </header>
+
+      {/* Phones and tablets: the menu button and the search field, then the announcement. They belong to the page,
+          not to the fixed header: they scroll away with the page, so nothing changes height or jumps while
+          scrolling. Once they are out of sight the header pill itself offers the menu and search. */}
+      {!isDesktop && (
+        <div className={`sag-header-row lg:hidden px-2.5 ${isSearchOpen ? 'invisible' : ''}`}>
+          <div className="mx-auto flex max-w-2xl items-center gap-2 pt-2">
+            <button
+              id="mobile-menu-trigger"
+              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              className={`${iconButton} sag-glass-bar flex h-11 w-11 shadow-none!`}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Menu className="w-5 h-5" strokeWidth={1.5} />}
+            </button>
+            <div className="relative min-w-0 flex-1">
+              {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
+              <button
+                type="button"
+                id="header-search-btn"
+                onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+                className="sag-glass-bar h-11 w-full truncate pl-10 pr-12 text-left text-sm text-ink-muted shadow-none! hover:text-ink cursor-pointer transition-colors"
+                aria-label={searchLabel}
+                aria-expanded={isSearchOpen}
+              >
+                Search suits, dresses…
+              </button>
+              <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-ink-muted">
+                <Search className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />
+              </span>
+              <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
+            </div>
+          </div>
+          {showAnnouncement && <AnnouncementLine soft />}
+        </div>
+      )}
     </>
   );
 };

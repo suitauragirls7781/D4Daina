@@ -707,7 +707,8 @@
    "sag-checkout" on its root only while a bag is being checked out (the
    empty-bag and payment-result screens keep the normal header).
 ------------------------------------------------------------------- */
-#app-main-content:has(.sag-checkout) > header.sticky { display: none; }
+#app-main-content:has(.sag-checkout) > header.sticky,
+#app-main-content:has(.sag-checkout) > .sag-header-row { display: none; }
 
 /* ------------------------------------------------------------------
    Pastel blocks (owner's pick, 2026-10-06): a few gentle loops that
