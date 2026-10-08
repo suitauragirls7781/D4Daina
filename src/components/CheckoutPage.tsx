@@ -12,7 +12,9 @@ import { OrderPlacedOverlay } from './OrderPlacedOverlay';
 import { estimateDelivery, formatDeliveryDate } from '../utils/delivery';
 import { AddressBook } from './AddressBook';
 import { listAddresses, SavedAddress } from '../lib/addressBook';
-import { Gateway, loadRazorpaySDK, razorpayDisplayConfig, submitToPayu } from '../lib/payments';
+import { Gateway, UPI_APPS, UpiAppId, loadRazorpaySDK, razorpayDisplayConfig, submitToPayu } from '../lib/payments';
+import { useFestiveRound, useTimeLeft } from './FestiveBanner';
+import { couponEligibleSubtotal } from '../utils/coupons';
 
 type PaymentReturn = { state: 'checking' | 'failed' | 'pending'; orderNumber: string; token: string; message: string };
 
@@ -29,7 +31,7 @@ const checkoutAttemptKey = (signature: string) => {
   }
 };
 
-import { AlertCircle, ArrowLeft, Check, ChevronDown, Gift, Info, Loader2, Lock, MapPin, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, ChevronDown, Clock, Gift, Info, Loader2, Lock, MapPin, ShieldCheck, Tag, X } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { BagIcon } from './BrandIcons';
@@ -74,7 +76,7 @@ const FIELD_INPUT_ID: Record<CheckoutField, string> = {
 };
 
 // The fields in the order they appear on the screen (mobile comes before the name in this layout)
-const FIELD_SCREEN_ORDER: CheckoutField[] = ['mobile', 'firstName', 'email', 'pincode', 'city', 'state', 'houseFlat', 'street'];
+const FIELD_SCREEN_ORDER: CheckoutField[] = ['mobile', 'pincode', 'city', 'state', 'firstName', 'houseFlat', 'street', 'email'];
 
 /** Display only: the same problems as getCheckoutFieldErrors(), one per field, in on-screen order. */
 const inScreenOrder = (errors: Array<{ field: CheckoutField; message: string }>) =>
@@ -261,6 +263,50 @@ export const CheckoutPage: React.FC = () => {
   const codCharge = storeOffers.codCharge;
   const codDue = Math.max(0, cartTotal - shippingFee);
   const codTotal = codDue + codCharge;
+  // The UPI app tapped on the payment step ('' = any app): the Razorpay window then opens with that app first
+  const [upiApp, setUpiApp] = useState<UpiAppId | ''>('');
+  // Shown once per visit when cash on delivery is picked: what paying online would save
+  const [codAsk, setCodAsk] = useState(false);
+  const codAsked = useRef(false);
+  // A payment that failed in the payment window: the same order stays open to be paid again
+  const [payFail, setPayFail] = useState<{ orderNumber: string; reason: string } | null>(null);
+  // One-tap UPI app choices are for phones, where the app can be opened straight from the payment window
+  const [onPhone] = useState(() => typeof navigator !== 'undefined' && /Android|iPhone|iPod/i.test(navigator.userAgent));
+  // The live festive round and the time to its coupon's real last day
+  const festiveRound = useFestiveRound();
+  const festiveLeft = useTimeLeft(festiveRound ? festiveRound.endsAt : null);
+
+  // The best coupon is applied by itself, once, when the shopper has none (and has not removed one in this visit).
+  // Only coupons without a per-customer limit, so the server never refuses it later. The server prices it again.
+  const [autoCouponCode, setAutoCouponCode] = useState('');
+  const autoCouponTried = useRef(false);
+  useEffect(() => {
+    if (autoCouponTried.current || appliedCoupon || !coupons.length || !cart.length) return;
+    autoCouponTried.current = true;
+    try { if (sessionStorage.getItem('sag_auto_coupon_off')) return; } catch {}
+    const today = new Date(Date.now() + 5.5 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const worth = (coupon: typeof coupons[number]) => {
+      const start = String(coupon.startDate || '').slice(0, 10);
+      const end = String(coupon.expiryDate || '').slice(0, 10);
+      if (coupon.isActive === false || (start && today < start) || (end && today > end)) return 0;
+      if (Number(coupon.usageLimit) > 0 && Number(coupon.usageCount) >= Number(coupon.usageLimit)) return 0;
+      if (Number(coupon.perUserLimit) > 0 || cartSubtotal < (Number(coupon.minOrderValue) || 0)) return 0;
+      const base = couponEligibleSubtotal(coupon, cart);
+      const value = Number(coupon.discountValue) || 0;
+      if (coupon.discountType === 'fixed') return Math.min(value, base);
+      const cut = Math.round((base * value) / 100);
+      return Number(coupon.maxDiscount) > 0 ? Math.min(cut, Number(coupon.maxDiscount)) : cut;
+    };
+    const best = coupons.map((coupon) => ({ coupon, saves: worth(coupon) })).filter((entry) => entry.saves > 0).sort((a, b) => b.saves - a.saves)[0];
+    if (!best) return;
+    applyCoupon(best.coupon.code, () => {}).then((ok) => { if (ok) setAutoCouponCode(best.coupon.code.trim().toUpperCase()); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coupons.length, cart.length, appliedCoupon]);
+  // Removing a coupon on this page also stops it from being applied again by itself
+  const removeCouponHere = () => {
+    try { sessionStorage.setItem('sag_auto_coupon_off', '1'); } catch {}
+    removeCoupon();
+  };
 
   // Session ID & debounce timer ref for abandoned checkout tracking
   const getCheckoutSessionId = () => {
@@ -744,9 +790,12 @@ export const CheckoutPage: React.FC = () => {
     ? (/Instagram/i.test(navigator.userAgent) ? 'Instagram' : /FBAN|FBAV|FB_IAB/i.test(navigator.userAgent) ? 'Facebook' : '')
     : '';
 
-  const handlePlacePrepaidOrder = async (e: React.FormEvent) => {
+  const handlePlacePrepaidOrder = async (e: React.FormEvent, appOverride?: UpiAppId | '') => {
     e.preventDefault();
     if (isProcessing) return;
+    const payApp = appOverride ?? upiApp;
+    if (appOverride !== undefined) setUpiApp(appOverride);
+    setPayFail(null);
 
     if (!cart || cart.length === 0) {
       setErrorMessage('Your bag is empty. Please add products before placing an order.');
@@ -836,9 +885,10 @@ export const CheckoutPage: React.FC = () => {
         prefill: { name: fullName, email: address.email, contact: address.mobile },
         notes: { order_number: created.orderNumber },
         theme: { color: '#161514' },
-        config: razorpayDisplayConfig(paymentSettings),
+        config: razorpayDisplayConfig(paymentSettings, payApp),
         retry: { enabled: true },
         handler: async (response: any) => {
+          setPayFail(null);
           try {
             const verified = await ordersApi<{ order: Order }>('verify', {
               orderNumber: created.orderNumber,
@@ -863,8 +913,9 @@ export const CheckoutPage: React.FC = () => {
       });
       rzp.on('payment.failed', (response: any) => {
         setIsProcessing(false);
-        const reason = response?.error?.description || 'Payment failed.';
-        setErrorMessage(`${reason} You can try again.`);
+        // The same order stays open: the panel on the payment step offers to pay it again (never a second order)
+        setPayFail({ orderNumber: created.orderNumber, reason: String(response?.error?.description || '').trim() });
+        setErrorMessage('');
       });
       rzp.open();
     } catch (err) {
@@ -1005,6 +1056,10 @@ export const CheckoutPage: React.FC = () => {
   const codOn = storeOffers.codEnabled && Boolean(gateways?.razorpay);
   const codChosen = payMode === 'cod' && codOn;
   const prepaidSaving = Math.max(0, codTotal - finalCartTotal);
+  // One-tap UPI apps: on a phone, when the payment goes through Razorpay with UPI on (the cash-on-delivery advance always does)
+  const upiOn = noMethodSwitch || Boolean(paymentSettings?.enableUpi);
+  const showUpiApps = onPhone && !inAppBrowser && upiOn && Boolean(gateways?.razorpay) && (codChosen || gateway === 'razorpay');
+  const pickedApp = showUpiApps ? UPI_APPS.find((app) => app.id === upiApp) : undefined;
   // A cash-on-delivery order does not get the online payment discount, so it is not counted as saved
   const summarySavings = codChosen ? Math.max(0, totalSavings - prepaidDiscount) : totalSavings;
   const payButtonContent = isProcessing ? (
@@ -1016,9 +1071,33 @@ export const CheckoutPage: React.FC = () => {
     <>
       <Lock className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />
       {/* "Pay by UPI" only when UPI is the one method the chosen gateway offers; otherwise the wording as before */}
-      <span className="sag-num">{codChosen ? `Pay ${rupees(codCharge)} now to confirm` : gateway === 'razorpay' && upiOnly ? 'Pay by UPI' : `Pay ${rupees(finalCartTotal)} securely`}</span>
+      <span className="sag-num">{codChosen ? `Pay ${rupees(codCharge)} now to confirm` : pickedApp ? `Pay ${rupees(finalCartTotal)} with ${pickedApp.name}` : gateway === 'razorpay' && upiOnly ? 'Pay by UPI' : `Pay ${rupees(finalCartTotal)} securely`}</span>
     </>
   );
+  // Picking cash on delivery: asked once per visit whether to keep the online saving, then the choice stands
+  const choosePayMode = (mode: 'prepaid' | 'cod') => {
+    if (mode === 'cod' && payMode !== 'cod' && prepaidSaving > 0 && !codAsked.current) {
+      codAsked.current = true;
+      setCodAsk(true);
+      return;
+    }
+    // The other way to pay is priced as its own order, so an earlier failed payment no longer applies
+    if (mode !== payMode) setPayFail(null);
+    setPayMode(mode);
+  };
+  // The time left on the festive coupon, shown only while the shopper's own coupon is that round's coupon
+  const festiveClock = festiveRound && festiveLeft && !festiveLeft.over && appliedCoupon?.code?.trim().toUpperCase() === festiveRound.code
+    ? `${festiveLeft.days}d ${String(festiveLeft.hours).padStart(2, '0')}h ${String(festiveLeft.minutes).padStart(2, '0')}m ${String(festiveLeft.seconds).padStart(2, '0')}s`
+    : '';
+  const couponIsAuto = Boolean(appliedCoupon) && appliedCoupon?.code?.trim().toUpperCase() === autoCouponCode;
+  // What paying online gives, in the shopper's words: only what is true for this bag
+  const prepaidPerks = [
+    storeOffers.prepaidPercent > 0 && prepaidDiscount > 0 ? `${storeOffers.prepaidPercent}% off` : '',
+    shippingFee === 0 ? 'Free delivery' : '',
+    'Confirmed at once',
+    'Receipt on email',
+  ].filter(Boolean);
+  const appTile = (on: boolean) => `flex min-h-[52px] flex-1 items-center justify-center rounded-[16px]! border px-1.5 text-center text-[12px] leading-[15px] font-semibold transition-colors cursor-pointer disabled:opacity-60 ${on ? 'border-brand bg-[color:var(--sag-glass-strong)] text-ink ring-1 ring-brand' : 'border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-ink hover:bg-[color:var(--sag-glass-strong)]'}`;
   // "Secure payment by <gateway> · 7-day returns & exchange": the store's own wording (Assurance), with the
   // gateway's name only once it is known (the cash-on-delivery advance always goes through Razorpay)
   const securedByText = assuranceLine(gatewayKnown ? (codChosen ? 'razorpay' : gateway) : undefined);
@@ -1140,50 +1219,6 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                   </Field>
 
-                  <div>
-                    <label htmlFor="co-first-name" className={LABEL}>Full name</label>
-                    <input
-                      id="co-first-name"
-                      name="name"
-                      type="text"
-                      autoComplete="name"
-                      autoCapitalize="words"
-                      enterKeyHint="next"
-                      value={nameInput}
-                      onChange={(e) => handleFieldChangeDebounced('fullName', e.target.value)}
-                      onBlur={() => { handleFieldBlur(); touch('firstName'); }}
-                      placeholder="Your full name"
-                      aria-invalid={nameError ? true : undefined}
-                      aria-describedby={nameError ? 'co-name-error' : undefined}
-                      className={INPUT}
-                    />
-                    {nameError && (
-                      <p id="co-name-error" role="alert" className={FIELD_ERROR}>
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" /><span>{nameError}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  <Field id="co-email" label="Email" error={emailError} helper="Order updates are sent to this email.">
-                    <input
-                      id="co-email"
-                      name="email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      enterKeyHint="next"
-                      value={address.email}
-                      onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
-                      onBlur={() => { handleFieldBlur(); touch('email'); }}
-                      placeholder="you@example.com"
-                      aria-invalid={emailError ? true : undefined}
-                      aria-describedby={emailError ? 'co-email-error' : 'co-email-help'}
-                      className={INPUT}
-                    />
-                  </Field>
                 </div>
               </section>
 
@@ -1275,6 +1310,30 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                   </Field>
 
+                  <div>
+                    <label htmlFor="co-first-name" className={LABEL}>Full name</label>
+                    <input
+                      id="co-first-name"
+                      name="name"
+                      type="text"
+                      autoComplete="name"
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      value={nameInput}
+                      onChange={(e) => handleFieldChangeDebounced('fullName', e.target.value)}
+                      onBlur={() => { handleFieldBlur(); touch('firstName'); }}
+                      placeholder="Your full name"
+                      aria-invalid={nameError ? true : undefined}
+                      aria-describedby={nameError ? 'co-name-error' : undefined}
+                      className={INPUT}
+                    />
+                    {nameError && (
+                      <p id="co-name-error" role="alert" className={FIELD_ERROR}>
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" /><span>{nameError}</span>
+                      </p>
+                    )}
+                  </div>
+
                   <Field id="co-house" label="Flat, house no., building" error={houseError}>
                     <input
                       id="co-house"
@@ -1309,6 +1368,27 @@ export const CheckoutPage: React.FC = () => {
                     />
                   </Field>
 
+                  <Field id="co-email" label="Email" error={emailError} helper="Your receipt and order updates are sent to this email.">
+                    <input
+                      id="co-email"
+                      name="email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      enterKeyHint="next"
+                      value={address.email}
+                      onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
+                      onBlur={() => { handleFieldBlur(); touch('email'); }}
+                      placeholder="you@example.com"
+                      aria-invalid={emailError ? true : undefined}
+                      aria-describedby={emailError ? 'co-email-error' : 'co-email-help'}
+                      className={INPUT}
+                    />
+                  </Field>
+
                   <label htmlFor="saveAddr" className="flex items-center gap-2.5 min-h-11 text-[13px] leading-5 text-ink cursor-pointer">
                     <input
                       type="checkbox"
@@ -1323,6 +1403,18 @@ export const CheckoutPage: React.FC = () => {
 
                 {/* One gold pill at the end of the form at every width (this step has no fixed bar), then a small facts line.
                     Its accessible name keeps "Deliver here" (the e2e test in worker/test/e2e finds the button by it). */}
+                {/* The coupon on this order, in sight before paying (the best one is applied by itself) */}
+                {appliedCoupon && discountAmount > 0 && (
+                  <div id="co-coupon-strip" className="mt-2 flex items-center gap-2.5 rounded-[16px]! border border-brand bg-[color:var(--sag-glass)] px-3.5 py-2.5">
+                    <Tag className="h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-ink-muted">
+                      <span className="block font-semibold text-ink">{couponIsAuto ? 'Best coupon applied' : 'Coupon applied'}: {appliedCoupon.code}</span>
+                      <span className="sag-num">You save {rupees(discountAmount)}</span>
+                    </p>
+                    <button type="button" onClick={removeCouponHere} aria-label={`Remove coupon ${appliedCoupon.code}`} className={`${LINK} shrink-0`}>Remove</button>
+                  </div>
+                )}
+
                 <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="sag-btn-primary flex w-full mt-3 h-[54px] gap-2 px-3">
                   <Lock className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Continue to secure payment
                 </button>
@@ -1354,36 +1446,104 @@ export const CheckoutPage: React.FC = () => {
               <section className="mt-5" aria-labelledby="co-pay-title">
                 <h2 id="co-pay-title" className="mx-1 font-display text-[21px] leading-7 text-ink">How would you like to pay?</h2>
 
-                {codOn ? (
-                  <div id="co-pay-mode" className="mt-3.5 grid gap-2.5" role="radiogroup" aria-label="How would you like to pay?">
-                    {([
-                      ['prepaid', 'Pay online now', prepaidDetail, finalCartTotal],
-                      ['cod', 'Cash on delivery', `Pay ${rupees(codCharge)} now, ${rupees(codDue)} in cash at delivery`, codTotal],
-                    ] as Array<['prepaid' | 'cod', string, string, number]>).map(([id, title, detail, amount]) => (
-                      <label key={id} className={`cursor-pointer ${optionBox(payMode === id)}`}>
-                        <input type="radio" name="payMode" value={id} checked={payMode === id} onChange={() => setPayMode(id)} disabled={isProcessing} className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-brand" />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[14.5px] leading-5 font-semibold text-ink">
-                            {title}
-                            {id === 'prepaid' && prepaidSaving > 0 && <span className="inline-flex h-[22px] items-center rounded-full border border-brand px-2 text-[10px] leading-4 font-semibold uppercase tracking-[0.06em] text-sale sag-num">Save {rupees(prepaidSaving)}</span>}
-                          </span>
-                          {detail && <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted sag-num">{detail}</span>}
-                        </span>
-                        <span className="shrink-0 text-[15px] leading-5 font-semibold text-ink sag-num">{rupees(amount)}</span>
-                      </label>
-                    ))}
+                {/* A payment that failed in the payment window: the same order, ready to be paid again */}
+                {payFail && (
+                  <div id="co-pay-fail" role="alert" className="mt-3.5 rounded-[22px]! border border-danger bg-[color:var(--sag-glass)] backdrop-blur-[18px] p-4">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" strokeWidth={1.5} aria-hidden="true" />
+                      <div className="min-w-0">
+                        <p className="text-[15px] leading-5 font-semibold text-ink">The payment did not go through</p>
+                        <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{payFail.reason ? `${payFail.reason.replace(/[.\s]+$/, '')}. ` : ''}Your bag, address and offer are saved. You can pay for the same order again.</p>
+                      </div>
+                    </div>
+                    <dl className="mt-3 rounded-[16px]! border border-[color:var(--sag-edge)] px-3.5 py-1.5 text-[13.5px] leading-5 sag-num">
+                      <div className={kvRow}><dt className="text-ink-muted">Order</dt><dd className="text-ink">{payFail.orderNumber}</dd></div>
+                      <div className={kvRow}><dt className="text-ink-muted">To pay now</dt><dd className="font-semibold text-sale">{rupees(codChosen ? codCharge : finalCartTotal)}</dd></div>
+                    </dl>
+                    <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary mt-3 flex h-[50px] w-full gap-2 px-3 disabled:opacity-60">
+                      {isProcessing && <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.5} />}
+                      Try again{pickedApp ? ` with ${pickedApp.name}` : ''}
+                    </button>
+                    {showUpiApps && (
+                      <div className="mt-2.5 flex gap-2">
+                        {UPI_APPS.filter((app) => app.id !== upiApp).map((app) => (
+                          <button type="button" key={app.id} onClick={(e) => handlePlacePrepaidOrder(e, app.id)} disabled={payDisabled} className={appTile(false)}>{app.name}</button>
+                        ))}
+                        {upiApp && <button type="button" onClick={(e) => handlePlacePrepaidOrder(e, '')} disabled={payDisabled} className={appTile(false)}>{upiOnly ? 'Any UPI app' : 'Other ways'}</button>}
+                      </div>
+                    )}
+                    <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, my payment for order ${payFail.orderNumber} did not go through. Please help.`)} target="_blank" rel="noopener noreferrer"
+                      className="mt-3 block border-t border-line pt-3 text-[12.5px] leading-[18px] text-ink-muted">
+                      Money was taken but this still shows? <span className="font-semibold text-sale">Message us on WhatsApp with this order number</span>
+                    </a>
                   </div>
-                ) : (
-                  // Online payment is the one way to pay: the same box, already chosen
-                  <div className={`mt-3.5 ${optionBox(true)}`}>
-                    <span aria-hidden="true" className="mt-0.5 flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-brand">
-                      <span className="h-2.5 w-2.5 rounded-full bg-brand" />
+                )}
+
+                {/* The two ways to pay. Online payment is the large gold card, chosen from the start; cash on
+                    delivery (when the owner has it on) is the small row under it with its full cost. */}
+                <div id="co-pay-mode" className="mt-3.5 grid gap-2.5" role={codOn ? 'radiogroup' : undefined} aria-label={codOn ? 'How would you like to pay?' : undefined}>
+                  <label className={`block rounded-[24px]! p-4 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${codOn ? 'cursor-pointer' : ''} ${codChosen ? 'border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-ink' : 'bg-brand text-[color:var(--sag-on-gold)]'}`}>
+                    {(codOn || prepaidDiscount > 0) && (
+                      <span className="mb-2 flex items-center justify-between gap-3">
+                        {(prepaidSaving > 0 || prepaidDiscount > 0) ? (
+                          <span className={`inline-flex h-[22px] items-center rounded-full px-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.14em] ${codChosen ? 'border border-brand text-sale' : 'bg-[rgba(22,17,11,0.14)]'}`}>Best price</span>
+                        ) : <span />}
+                        {codOn && <input type="radio" name="payMode" value="prepaid" checked={!codChosen} onChange={() => choosePayMode('prepaid')} disabled={isProcessing} className="h-[18px] w-[18px] shrink-0 accent-[color:var(--sag-on-gold)]" />}
+                      </span>
+                    )}
+                    <span className="flex items-end justify-between gap-3">
+                      <span className="min-w-0">
+                        <span className="block text-[17px] leading-6 font-semibold">Pay online now</span>
+                        {codOn && prepaidSaving > 0 && <span className="block text-[12.5px] leading-[18px] font-medium sag-num">You save {rupees(prepaidSaving)} against cash on delivery</span>}
+                      </span>
+                      <span className="shrink-0 text-right sag-num">
+                        <span className="block text-[26px] leading-7 font-semibold">{rupees(finalCartTotal)}</span>
+                        {codOn && prepaidSaving > 0 && <span className="block text-[12px] leading-4 line-through opacity-70">{rupees(codTotal)}</span>}
+                      </span>
                     </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[14.5px] leading-5 font-semibold text-ink">Pay online now</span>
-                      {prepaidDetail && <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted sag-num">{prepaidDetail}</span>}
+                    <span className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[12px] leading-4 sag-num">
+                      {prepaidPerks.map((perk) => (
+                        <span key={perk} className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />{perk}</span>
+                      ))}
                     </span>
-                    <span className="shrink-0 text-[15px] leading-5 font-semibold text-ink sag-num">{rupees(finalCartTotal)}</span>
+                  </label>
+
+                  {codOn && (
+                    <label className={`cursor-pointer ${optionBox(codChosen)}`}>
+                      <input type="radio" name="payMode" value="cod" checked={codChosen} onChange={() => choosePayMode('cod')} disabled={isProcessing} className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-brand" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[13.5px] leading-5 font-semibold text-ink">Cash on delivery</span>
+                        <span className="mt-0.5 block text-[12px] leading-4 text-ink-muted sag-num">Pay {rupees(codCharge)} now, {rupees(codDue)} in cash at delivery{prepaidDiscount > 0 ? ' · no online discount' : ''}</span>
+                      </span>
+                      <span className="shrink-0 text-right sag-num">
+                        <span className="block text-[14px] leading-5 font-semibold text-ink">{rupees(codTotal)}</span>
+                        {prepaidSaving > 0 && <span className="block text-[11.5px] leading-4 font-semibold text-danger">{rupees(prepaidSaving)} more</span>}
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                {/* Both totals side by side, to scale */}
+                {codOn && prepaidSaving > 0 && codTotal > 0 && (
+                  <div className="sag-glass mt-2.5 px-3.5 py-3" aria-hidden="true">
+                    <div className="flex justify-between gap-3 text-[11.5px] leading-4 sag-num">
+                      <span className="font-semibold text-sale">Online {rupees(finalCartTotal)}</span>
+                      <span className="text-ink-muted">Cash on delivery {rupees(codTotal)}</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line"><div className="h-full rounded-full bg-brand" style={{ width: `${Math.round((finalCartTotal / codTotal) * 100)}%` }} /></div>
+                  </div>
+                )}
+
+                {/* One-tap UPI apps (phones): the payment window then opens with that app first */}
+                {showUpiApps && (
+                  <div id="co-upi-apps" className="mt-3.5">
+                    <p className={`mx-1 ${EYEBROW}`}>Pay with</p>
+                    <div className="mt-2 flex gap-2" role="group" aria-label="Pay with">
+                      {UPI_APPS.map((app) => (
+                        <button type="button" key={app.id} aria-pressed={upiApp === app.id} onClick={() => setUpiApp(app.id)} disabled={isProcessing} className={appTile(upiApp === app.id)}>{app.name}</button>
+                      ))}
+                      <button type="button" aria-pressed={!upiApp} onClick={() => setUpiApp('')} disabled={isProcessing} className={appTile(!upiApp)}>{upiOnly || codChosen ? 'Any UPI app' : 'Other ways'}</button>
+                    </div>
                   </div>
                 )}
 
@@ -1489,7 +1649,17 @@ export const CheckoutPage: React.FC = () => {
                   <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary flex w-full mt-3.5 h-[54px] gap-2 px-3 text-[15px] disabled:opacity-60">
                     {payButtonContent}
                   </button>
-                  <p className="mt-2.5 text-center text-[11.5px] leading-4 text-ink-muted">{securedByText}</p>
+                  <p className="mt-2.5 flex items-start justify-center gap-1.5 text-center text-[11.5px] leading-4 text-ink-muted">
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                    <span>{securedByText}{upiOn && (codChosen || gateway === 'razorpay') ? '. Your UPI PIN is entered only in your own UPI app.' : ''}</span>
+                  </p>
+                  {/* The festive coupon on this order and the real time left on it */}
+                  {festiveClock && festiveRound && !codChosen && (
+                    <p className="mt-3 flex items-center gap-2 rounded-[14px]! border border-[color:var(--sag-edge)] px-3 py-2 text-[12px] leading-4 text-ink-muted">
+                      <Clock className="h-3.5 w-3.5 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                      <span>{festiveRound.title} offer ends in <span className="sag-num font-semibold text-ink">{festiveClock}</span></span>
+                    </p>
+                  )}
                 </div>
 
                 <p className="mt-3 text-center text-[11.5px] leading-4 text-ink-muted">Your order is confirmed only after the payment is verified. Receipt on your email.</p>
@@ -1549,7 +1719,7 @@ export const CheckoutPage: React.FC = () => {
                         <span className="block text-[11.5px] leading-4 text-sale sag-num">You save ₹{discountAmount.toLocaleString('en-IN')} with this coupon</span>
                       </span>
                     </span>
-                    <button type="button" onClick={removeCoupon} className={`${LINK} shrink-0`}>
+                    <button type="button" onClick={removeCouponHere} className={`${LINK} shrink-0`}>
                       Remove
                     </button>
                   </div>
@@ -1597,6 +1767,23 @@ export const CheckoutPage: React.FC = () => {
         </aside>
 
       </div>
+
+      {/* Asked once when cash on delivery is picked: both totals, and both answers one tap away */}
+      {codAsk && (
+        <div className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center p-3 sm:p-4 animate-fadeIn" onClick={() => setCodAsk(false)}>
+          <div id="co-cod-ask" role="dialog" aria-modal="true" aria-labelledby="co-cod-ask-title" onClick={(e) => e.stopPropagation()} className="bg-surface w-full sm:max-w-md rounded-[26px]! border border-[color:var(--sag-edge)] p-[18px] mb-[env(safe-area-inset-bottom)]">
+            <p className={EYEBROW}>Before you choose cash on delivery</p>
+            <h2 id="co-cod-ask-title" className="mt-2 font-display text-[21px] leading-7 text-ink sag-num">Pay online and keep {rupees(prepaidSaving)}</h2>
+            <dl className="mt-3.5 rounded-[18px]! border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] px-3.5 py-2.5 text-[13.5px] leading-5 sag-num">
+              <div className={`${kvRow} font-semibold text-sale`}><dt>Pay online</dt><dd>{rupees(finalCartTotal)}</dd></div>
+              <div className={`${kvRow} text-ink-muted`}><dt>Cash on delivery</dt><dd>{rupees(codTotal)}</dd></div>
+              <p className="mt-1.5 border-t border-line pt-2 text-[12px] leading-4 text-ink-muted">With cash on delivery you still pay {rupees(codCharge)} online now, and {rupees(codDue)} in cash at the door.</p>
+            </dl>
+            <button type="button" autoFocus onClick={() => { setCodAsk(false); setPayMode('prepaid'); }} className="sag-btn-primary mt-3.5 flex h-[52px] w-full px-3 sag-num">Pay {rupees(finalCartTotal)} online</button>
+            <button type="button" onClick={() => { setCodAsk(false); setPayFail(null); setPayMode('cod'); }} className="sag-btn-outline mt-2.5 flex h-[46px] w-full px-3 sag-num">Keep cash on delivery ({rupees(codTotal)})</button>
+          </div>
+        </div>
+      )}
 
       {/* Available coupons: a sheet on phones, a dialog on wider screens */}
       {showCouponsModal && (

@@ -49,7 +49,7 @@ export const useFestiveRound = () => {
 };
 
 /** Time left to `endsAt`, updated every second. null until the component has mounted. */
-const useTimeLeft = (endsAt: number | null) => {
+export const useTimeLeft = (endsAt: number | null) => {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
     if (endsAt === null) return;

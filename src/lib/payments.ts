@@ -6,13 +6,24 @@ export type Gateway = 'razorpay' | 'payu';
 type MethodSwitches = { enableUpi?: boolean; enableCards?: boolean; enableNetBanking?: boolean };
 
 /** Razorpay window blocks, following the admin's method switches (all off counts as all on, so paying always works). */
-export const razorpayDisplayConfig = (settings?: MethodSwitches) => {
+/** The UPI apps the checkout offers as one-tap choices (Razorpay's own app codes). */
+export const UPI_APPS = [
+  { id: 'google_pay', name: 'Google Pay' },
+  { id: 'phonepe', name: 'PhonePe' },
+  { id: 'paytm', name: 'Paytm' },
+] as const;
+export type UpiAppId = typeof UPI_APPS[number]['id'];
+
+export const razorpayDisplayConfig = (settings?: MethodSwitches, preferredApp?: UpiAppId | '') => {
   const none = !settings?.enableUpi && !settings?.enableCards && !settings?.enableNetBanking;
   const upi = none || Boolean(settings?.enableUpi);
   const cards = none || Boolean(settings?.enableCards);
   const banking = none || Boolean(settings?.enableNetBanking);
   const blocks: Record<string, { name: string; instruments: Array<Record<string, unknown>> }> = {};
   if (upi) {
+    // The app the shopper tapped on the checkout page comes first; every other way to pay still follows it
+    const picked = UPI_APPS.find((app) => app.id === preferredApp);
+    if (picked) blocks.upiPicked = { name: `Pay with ${picked.name}`, instruments: [{ method: 'upi', flows: ['intent'], apps: [picked.id] }] };
     // No app list: Razorpay then offers every UPI app installed on the phone (GPay, PhonePe, Paytm, BHIM, CRED, bank apps...)
     blocks.upiApps = { name: 'Pay with any UPI app', instruments: [{ method: 'upi', flows: ['intent'] }] };
     // Laptops and phones without a UPI app: scan the QR with any UPI app, or type a UPI ID
