@@ -4,90 +4,116 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>Suit Aura Girls: loading screen previews</title>
+<title>Suit Aura Girls: sleek sidebar previews</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
 <style>
-/* Design previews for the owner (not part of the storefront): two opening / loading screens in the
-   Midnight glass look, both carrying the line "Dialing into the digital realm". They loop here so they can
-   be watched; on the site the screen shows only while the store is really loading. */
+/* Design previews for the owner (not part of the storefront): two "sleek sidebar" designs for the admin panel,
+   in the Midnight glass look. Both work: click items, collapse and expand. */
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0F0D12;--ink:#F6F1EA;--mut:#B9AFA6;--gold:#E0BB7C;--edge:rgba(255,255,255,.16)}
+:root{--bg:#0F0D12;--ink:#F6F1EA;--mut:#B9AFA6;--gold:#E0BB7C;--on:#16110B;--edge:rgba(255,255,255,.14);--glass:rgba(255,255,255,.06)}
 body{font-family:Figtree,system-ui,sans-serif;background:#D9D5CF;color:#111;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;padding-bottom:40px}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left}
+svg{display:block;flex:none;width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .intro{background:#111;color:#fff;text-align:center;padding:14px}
 .intro h1{font-size:15px;font-weight:600}.intro p{font-size:12.5px;color:#C9C9C9;margin-top:3px}
-.wrap{display:grid;gap:30px;max-width:900px;margin:24px auto 0;padding:0 12px}
-@media(min-width:820px){.wrap{grid-template-columns:1fr 1fr;align-items:start}}
-.opt{max-width:400px;width:100%;margin:0 auto}
+.wrap{display:grid;gap:34px;max-width:1180px;margin:24px auto 0;padding:0 12px}
 .opt h2{font-size:15px;font-weight:700;margin:0 4px 4px}
-.opt p{font-size:13px;color:#444;margin:0 4px 10px;line-height:1.45}
-.phone{position:relative;height:640px;border-radius:32px;overflow:hidden;background:var(--bg);color:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.28);isolation:isolate;display:grid;place-items:center;text-align:center}
-.phone::before,.phone::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(64px);opacity:.7}
-.phone::before{width:300px;height:300px;left:-110px;top:40px;background:#B8894A}
-.phone::after{width:320px;height:320px;right:-140px;bottom:20px;background:#7A2742}
-.mark{border-radius:50%;display:block;background:#fff}
-.brand{font-family:Fraunces,serif;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:19px;margin-top:22px}
-.line{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:10px;min-height:16px}
+.opt>p{font-size:13px;color:#444;margin:0 4px 10px;line-height:1.45;max-width:760px}
+.stage{position:relative;height:600px;border-radius:26px;overflow:hidden;background:var(--bg);color:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.28);isolation:isolate;display:flex}
+.stage::before,.stage::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(70px);opacity:.6}
+.stage::before{width:340px;height:340px;left:-120px;top:-40px;background:#B8894A}
+.stage::after{width:380px;height:380px;right:-140px;bottom:-80px;background:#7A2742}
+.main{flex:1;min-width:0;padding:22px}
+.main .lab{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--gold)}
+.main h3{font-family:Fraunces,serif;font-weight:500;font-size:26px;margin-top:6px}
+.main .m{color:var(--mut);font-size:13px;margin-top:4px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:18px}
+.tile{height:84px;border-radius:20px;background:var(--glass);border:1px solid var(--edge)}
+.tile.b{height:190px;margin-top:12px}
 .note{max-width:760px;margin:26px auto 0;padding:0 14px;font-size:13px;color:#333;line-height:1.6}.note b{font-weight:700}
+.badge{margin-left:auto;font-size:11px;font-weight:700;min-width:20px;height:20px;padding:0 6px;border-radius:10px;display:grid;place-items:center;background:rgba(224,187,124,.16);color:var(--gold)}
+.grp{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);padding:14px 12px 6px;white-space:nowrap;overflow:hidden}
 
-/* 1. Rotary dial: ten points on a ring light up one after another, like a number being dialled */
-.dial{position:relative;width:170px;height:170px;margin:0 auto}
-.dial .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--edge);background:rgba(255,255,255,.05);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.dial .mark{position:absolute;inset:0;margin:auto;width:84px;height:84px}
-.dial i{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:rgba(255,255,255,.22);transform:rotate(calc(var(--n)*36deg)) translateY(-70px);animation:dot 2.6s linear infinite;animation-delay:calc(var(--n)*.2s)}
-@keyframes dot{0%,8%{background:var(--gold);box-shadow:0 0 12px rgba(224,187,124,.9)}22%,100%{background:rgba(255,255,255,.22);box-shadow:none}}
-.dial .hand{position:absolute;inset:8px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);animation:spin 2.6s linear infinite;opacity:.9}
-@keyframes spin{to{transform:rotate(360deg)}}
-.type::after{content:"";display:inline-block;width:1px;height:1em;background:var(--gold);margin-left:3px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
-@keyframes blink{50%{opacity:0}}
+/* 1. Icon rail that opens: a slim rail of icons; it widens to show the names (button, or hover on a computer).
+      A gold bar slides to the current item. */
+.s1{position:relative;width:76px;flex:none;margin:12px 0 12px 12px;border-radius:24px;background:rgba(20,17,25,.72);border:1px solid var(--edge);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);padding:12px 10px;display:flex;flex-direction:column;transition:width .38s cubic-bezier(.22,1,.36,1);overflow:hidden}
+.s1.open{width:236px}
+@media(hover:hover){.s1.auto:hover{width:236px}}
+.s1 .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 10px;border-bottom:1px solid var(--edge);white-space:nowrap}
+.s1 .brand img{border-radius:50%;background:#fff}
+.s1 .brand b{font-family:Fraunces,serif;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
+.s1 .list{position:relative;margin-top:10px;flex:1;overflow:hidden}
+.s1 .slide{position:absolute;left:0;top:0;width:3px;height:42px;border-radius:3px;background:var(--gold);transform:translateY(var(--y,0px));transition:transform .4s cubic-bezier(.34,1.3,.5,1)}
+.s1 .list button{display:flex;align-items:center;gap:14px;width:100%;height:42px;padding:0 16px;border-radius:14px;color:var(--mut);white-space:nowrap;transition:color .25s,background .25s}
+.s1 .list button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.s1 .list button[aria-current=page]{color:var(--gold);background:rgba(224,187,124,.1)}
+.s1 .list span,.s1 .brand b,.s1 .foot span{opacity:0;transition:opacity .25s}
+.s1.open .list span,.s1.open .brand b,.s1.open .foot span{opacity:1}
+@media(hover:hover){.s1.auto:hover .list span,.s1.auto:hover .brand b,.s1.auto:hover .foot span{opacity:1}}
+.s1 .foot{border-top:1px solid var(--edge);padding-top:8px}
+.s1 .foot button{display:flex;align-items:center;gap:14px;width:100%;height:40px;padding:0 16px;border-radius:14px;color:var(--mut);white-space:nowrap}
 
-/* 2. Signal: soft rings travel outward from the mark while a thin line fills and the words rise in */
-.signal{position:relative;width:200px;height:200px;margin:0 auto;display:grid;place-items:center}
-.signal span{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;border:1px solid var(--gold);opacity:0;animation:wave 3s ease-out infinite}
-.signal span:nth-child(2){animation-delay:1s}.signal span:nth-child(3){animation-delay:2s}
-@keyframes wave{0%{transform:scale(.9);opacity:.75}100%{transform:scale(2.1);opacity:0}}
-.signal .glass{position:absolute;inset:0;margin:auto;width:112px;height:112px;border-radius:50%;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
-.signal .mark{position:relative;width:84px;height:84px;animation:breathe 3s ease-in-out infinite}
-@keyframes breathe{50%{transform:scale(1.04)}}
-.words{overflow:hidden}
-.words b{display:inline-block;font-weight:400;animation:rise 3.2s cubic-bezier(.22,1,.36,1) infinite;animation-delay:calc(var(--i)*.09s)}
-@keyframes rise{0%{transform:translateY(120%);opacity:0}14%,82%{transform:none;opacity:1}100%{transform:translateY(-120%);opacity:0}}
-.track{width:150px;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:18px auto 0;overflow:hidden}
-.track i{display:block;width:40%;height:100%;border-radius:2px;background:var(--gold);animation:slide 1.6s ease-in-out infinite}
-@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
-@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+/* 2. Grouped glass sidebar: always readable; groups fold; the current item is a gold pill; a search on top. */
+.s2{width:252px;flex:none;margin:12px 0 12px 12px;border-radius:24px;background:rgba(20,17,25,.72);border:1px solid var(--edge);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;transition:width .38s cubic-bezier(.22,1,.36,1)}
+.s2 .head{display:flex;align-items:center;gap:10px;padding:14px 14px 12px}
+.s2 .head img{border-radius:50%;background:#fff}
+.s2 .head b{font-family:Fraunces,serif;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:13px;display:block}
+.s2 .head small{font-size:10.5px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.s2 .find{margin:0 12px 6px;height:38px;border-radius:99px;background:var(--glass);border:1px solid var(--edge);display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--mut);font-size:13px}
+.s2 .find kbd{margin-left:auto;font:inherit;font-size:11px;border:1px solid var(--edge);border-radius:6px;padding:0 5px}
+.s2 .scroll{flex:1;overflow:auto;padding:0 8px 8px;scrollbar-width:none}
+.s2 .scroll::-webkit-scrollbar{display:none}
+.s2 .gh{display:flex;align-items:center;width:100%;padding:12px 10px 6px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.s2 .gh svg{margin-left:auto;width:14px;height:14px;transition:transform .3s}
+.s2 .g.shut .gh svg{transform:rotate(-90deg)}
+.s2 .items{display:grid;grid-template-rows:1fr;transition:grid-template-rows .35s cubic-bezier(.22,1,.36,1)}
+.s2 .g.shut .items{grid-template-rows:0fr}
+.s2 .items>div{overflow:hidden}
+.s2 .items button{display:flex;align-items:center;gap:11px;width:100%;height:40px;padding:0 12px;border-radius:99px;color:var(--mut);transition:color .25s,background .25s}
+.s2 .items button:hover{background:rgba(255,255,255,.06);color:var(--ink)}
+.s2 .items button[aria-current=page]{background:var(--gold);color:var(--on);font-weight:600}
+.s2 .items button[aria-current=page] .badge{background:rgba(22,17,11,.16);color:var(--on)}
+.s2 .me{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:1px solid var(--edge)}
+.s2 .me i{width:34px;height:34px;border-radius:50%;background:var(--glass);border:1px solid var(--edge);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:700}
+.s2 .me small{display:block;font-size:11px;color:var(--mut)}
+@media(max-width:640px){.stage{height:640px}.main{padding:16px}.s2{width:214px}.tiles{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
-<div class="intro"><h1>Loading page: 2 design</h1><p>Ye yahan lagataar chal rahe hain taaki aap dekh sako; asli site pe ye sirf utni der dikhega jitni der site khul rahi hoti hai.</p></div>
+<div class="intro"><h1>Sleek sidebar: 2 design (admin panel ke liye)</h1><p>Dono chalte hain: naam pe click karo, patti kholo / band karo.</p></div>
 <main class="wrap">
   <section class="opt">
-    <h2>1 · Rotary dial</h2>
-    <p>Logo ke charon taraf kaanch ka gol dial. Das bindu ek-ek karke sunehre hote hain, jaise number dial ho raha ho. Niche line akshar-akshar type hoti hai.</p>
-    <div class="phone"><div>
-      <div class="dial"><div class="ring"></div><div class="hand"></div><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i><img class="mark" src="/suit-aura-mark-132.webp" alt=""></div>
-      <div class="brand">Suit Aura Girls</div>
-      <div class="line type" data-type="Dialing into the digital realm"></div>
-    </div></div>
+    <h2>1 · Patli icon wali patti jo khulti hai</h2>
+    <p>Shuru me sirf icon dikhte hain, to kaam ki jagah zyada milti hai. Computer pe mouse le jaate hi (ya button dabane pe) patti chaudi hoke naam dikhati hai. Chalu page pe ek sunehri rekha khisak ke aati hai.</p>
+    <div class="stage"><aside class="s1 auto" id="s1"><div class="brand"><img src="/suit-aura-mark-132.webp" width="34" height="34" alt=""><b>Suit Aura Girls</b></div><div class="list" id="l1"><i class="slide"></i></div><div class="foot"><button type="button" id="t1"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg><span>Khula rakho</span></button></div></aside>
+      <div class="main"><div class="lab">Overview</div><h3 data-title>Dashboard</h3><div class="m">Yahan us page ka maal dikhega.</div><div class="tiles"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div><div class="tile b"></div></div></div>
   </section>
   <section class="opt">
-    <h2>2 · Signal</h2>
-    <p>Logo se sunehre gole lehron ki tarah bahar jaate hain, jaise signal ja raha ho. Line ke akshar niche se uthte hue aate hain, aur ek patli line chalti rehti hai.</p>
-    <div class="phone"><div>
-      <div class="signal"><span></span><span></span><span></span><div class="glass"></div><img class="mark" src="/suit-aura-mark-132.webp" alt=""></div>
-      <div class="brand">Suit Aura Girls</div>
-      <div class="line words" data-words="Dialing into the digital realm"></div>
-      <div class="track"><i></i></div>
-    </div></div>
+    <h2>2 · Hisson wali kaanch ki patti</h2>
+    <p>Naam hamesha dikhte hain, to dhoondhna nahi padta. Upar search, phir hisse (Orders, Catalogue…) jo band / khul sakte hain. Chalu page sunehri pill me. Niche aapka naam aur "Sign out".</p>
+    <div class="stage"><aside class="s2"><div class="head"><img src="/suit-aura-mark-132.webp" width="36" height="36" alt=""><span><b>Suit Aura Girls</b><small>Store admin</small></span></div><div class="find"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>Search<kbd>/</kbd></div><div class="scroll" id="l2"></div><div class="me"><i>SA</i><span>Owner<small>Sign out</small></span></div></aside>
+      <div class="main"><div class="lab">Overview</div><h3 data-title>Dashboard</h3><div class="m">Yahan us page ka maal dikhega.</div><div class="tiles"><div class="tile"></div><div class="tile"></div><div class="tile"></div></div><div class="tile b"></div></div></div>
   </section>
 </main>
-<p class="note"><b>Sachchi baat:</b> maine kisi me bhi "37%… 68%…" jaisi ginti nahi rakhi, kyunki wo nakli hoti (site ko pata nahi hota kitna khula). Dono me chalti animation hai jo site khulte hi hat jati hai. Pasand aaye to "1" ya "2" bata do. Line badalni ho (jaise "Dialing into the world of ethnic elegance") to wo bhi likh do.</p>
+<p class="note"><b>Dhyan rahe:</b> ye admin panel ki side wali patti ka preview hai (naam aur ginti namoone ke hain). Phone pe dono me patti menu button se khulegi, jaise abhi khulti hai. Agar aapka matlab site ke customer wale menu se tha, to bata do, yahi design wahan laga dunga. Pasand: "1" ya "2".</p>
 <script>
-// 1: the line types itself, rests, and starts again
-document.querySelectorAll('[data-type]').forEach((el)=>{const text=el.dataset.type;let n=0;const tick=()=>{el.textContent=text.slice(0,n);n=n>text.length+14?0:n+1;setTimeout(tick,n===1?500:70)};tick()});
-// 2: each letter rises in its own time
-document.querySelectorAll('[data-words]').forEach((el)=>{el.innerHTML=[...el.dataset.words].map((c,i)=>`<b style="--i:${i}">${c===' '?'&nbsp;':c}</b>`).join('')});
+const P={dash:'<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>',rep:'<path d="M5 20V10M12 20V4M19 20v-7"/>',ord:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',ret:'<path d="M4 9h11a5 5 0 0 1 0 10H8"/><path d="M8 5 4 9l4 4"/>',cust:'<circle cx="12" cy="8" r="4"/><path d="M4 20a8 8 0 0 1 16 0"/>',prod:'<path d="M4 8 12 4l8 4v8l-8 4-8-4z"/><path d="M4 8l8 4 8-4M12 12v8"/>',tag:'<path d="M4 4h8l8 8-8 8-8-8z"/><circle cx="9" cy="9" r="1.5"/>',home:'<path d="M4 11 12 4l8 7v9h-5v-6H9v6H4z"/>',set:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',chev:'<path d="m6 9 6 6 6-6"/>'};
+const ic=n=>`<svg viewBox="0 0 24 24">${P[n]}</svg>`;
+const FLAT=[['dash','Dashboard'],['rep','Reports'],['ord','Orders','3'],['ret','Returns','1'],['cust','Customers'],['prod','Products'],['tag','Coupons'],['home','Homepage'],['set','Settings']];
+const GROUPS=[['Overview',[['dash','Dashboard'],['rep','Reports']]],['Orders',[['ord','Orders','3'],['ret','Returns & exchanges','1']]],['Customers',[['cust','Customers']]],['Catalogue',[['prod','Products']]],['Offers',[['tag','Coupons']]],['Storefront',[['home','Homepage']]],['System',[['set','Settings']]]];
+// 1
+const l1=document.getElementById('l1'),s1=document.getElementById('s1');
+l1.insertAdjacentHTML('beforeend',FLAT.map(([i,l,b],n)=>`<button type="button" data-n="${n}" ${n?'':'aria-current="page"'}>${ic(i)}<span>${l}</span>${b?`<span class="badge">${b}</span>`:''}</button>`).join(''));
+const go1=n=>{l1.querySelectorAll('button').forEach((b,k)=>k===n?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current'));l1.querySelector('.slide').style.setProperty('--y',n*42+'px');s1.closest('.stage').querySelector('[data-title]').textContent=FLAT[n][1]};
+l1.addEventListener('click',e=>{const b=e.target.closest('button');if(b)go1(+b.dataset.n)});
+document.getElementById('t1').addEventListener('click',()=>{const open=s1.classList.toggle('open');document.querySelector('#t1 span').textContent=open?'Patla karo':'Khula rakho';document.querySelector('#t1 svg').style.transform=open?'rotate(180deg)':''});
+// 2
+const l2=document.getElementById('l2');
+l2.innerHTML=GROUPS.map(([g,items])=>`<div class="g"><button type="button" class="gh">${g}${ic('chev')}</button><div class="items"><div>${items.map(([i,l,b])=>`<button type="button" data-l="${l}" ${l==='Dashboard'?'aria-current="page"':''}>${ic(i)}<span>${l}</span>${b?`<span class="badge">${b}</span>`:''}</button>`).join('')}</div></div></div>`).join('');
+l2.addEventListener('click',e=>{const h=e.target.closest('.gh');if(h){h.parentElement.classList.toggle('shut');return}const b=e.target.closest('.items button');if(!b)return;l2.querySelectorAll('.items button').forEach(x=>x.removeAttribute('aria-current'));b.setAttribute('aria-current','page');l2.closest('.stage').querySelector('[data-title]').textContent=b.dataset.l});
 </script>
 </body>
 </html>
