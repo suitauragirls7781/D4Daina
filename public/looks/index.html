@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Suit Aura Girls: loading screen previews</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&family=Fraunces:opsz,wght@9..144,500&display=swap" rel="stylesheet">
+<style>
+/* Design previews for the owner (not part of the storefront): two opening / loading screens in the
+   Midnight glass look, both carrying the line "Dialing into the digital realm". They loop here so they can
+   be watched; on the site the screen shows only while the store is really loading. */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0F0D12;--ink:#F6F1EA;--mut:#B9AFA6;--gold:#E0BB7C;--edge:rgba(255,255,255,.16)}
+body{font-family:Figtree,system-ui,sans-serif;background:#D9D5CF;color:#111;-webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45;padding-bottom:40px}
+.intro{background:#111;color:#fff;text-align:center;padding:14px}
+.intro h1{font-size:15px;font-weight:600}.intro p{font-size:12.5px;color:#C9C9C9;margin-top:3px}
+.wrap{display:grid;gap:30px;max-width:900px;margin:24px auto 0;padding:0 12px}
+@media(min-width:820px){.wrap{grid-template-columns:1fr 1fr;align-items:start}}
+.opt{max-width:400px;width:100%;margin:0 auto}
+.opt h2{font-size:15px;font-weight:700;margin:0 4px 4px}
+.opt p{font-size:13px;color:#444;margin:0 4px 10px;line-height:1.45}
+.phone{position:relative;height:640px;border-radius:32px;overflow:hidden;background:var(--bg);color:var(--ink);box-shadow:0 14px 40px rgba(0,0,0,.28);isolation:isolate;display:grid;place-items:center;text-align:center}
+.phone::before,.phone::after{content:"";position:absolute;z-index:-1;border-radius:50%;filter:blur(64px);opacity:.7}
+.phone::before{width:300px;height:300px;left:-110px;top:40px;background:#B8894A}
+.phone::after{width:320px;height:320px;right:-140px;bottom:20px;background:#7A2742}
+.mark{border-radius:50%;display:block;background:#fff}
+.brand{font-family:Fraunces,serif;font-weight:500;letter-spacing:.14em;text-transform:uppercase;font-size:19px;margin-top:22px}
+.line{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-top:10px;min-height:16px}
+.note{max-width:760px;margin:26px auto 0;padding:0 14px;font-size:13px;color:#333;line-height:1.6}.note b{font-weight:700}
+
+/* 1. Rotary dial: ten points on a ring light up one after another, like a number being dialled */
+.dial{position:relative;width:170px;height:170px;margin:0 auto}
+.dial .ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--edge);background:rgba(255,255,255,.05);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.dial .mark{position:absolute;inset:0;margin:auto;width:84px;height:84px}
+.dial i{position:absolute;left:50%;top:50%;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:rgba(255,255,255,.22);transform:rotate(calc(var(--n)*36deg)) translateY(-70px);animation:dot 2.6s linear infinite;animation-delay:calc(var(--n)*.2s)}
+@keyframes dot{0%,8%{background:var(--gold);box-shadow:0 0 12px rgba(224,187,124,.9)}22%,100%{background:rgba(255,255,255,.22);box-shadow:none}}
+.dial .hand{position:absolute;inset:8px;border-radius:50%;border:2px solid transparent;border-top-color:var(--gold);animation:spin 2.6s linear infinite;opacity:.9}
+@keyframes spin{to{transform:rotate(360deg)}}
+.type::after{content:"";display:inline-block;width:1px;height:1em;background:var(--gold);margin-left:3px;vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* 2. Signal: soft rings travel outward from the mark while a thin line fills and the words rise in */
+.signal{position:relative;width:200px;height:200px;margin:0 auto;display:grid;place-items:center}
+.signal span{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;border:1px solid var(--gold);opacity:0;animation:wave 3s ease-out infinite}
+.signal span:nth-child(2){animation-delay:1s}.signal span:nth-child(3){animation-delay:2s}
+@keyframes wave{0%{transform:scale(.9);opacity:.75}100%{transform:scale(2.1);opacity:0}}
+.signal .glass{position:absolute;inset:0;margin:auto;width:112px;height:112px;border-radius:50%;border:1px solid var(--edge);background:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.signal .mark{position:relative;width:84px;height:84px;animation:breathe 3s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.04)}}
+.words{overflow:hidden}
+.words b{display:inline-block;font-weight:400;animation:rise 3.2s cubic-bezier(.22,1,.36,1) infinite;animation-delay:calc(var(--i)*.09s)}
+@keyframes rise{0%{transform:translateY(120%);opacity:0}14%,82%{transform:none;opacity:1}100%{transform:translateY(-120%);opacity:0}}
+.track{width:150px;height:2px;border-radius:2px;background:rgba(255,255,255,.14);margin:18px auto 0;overflow:hidden}
+.track i{display:block;width:40%;height:100%;border-radius:2px;background:var(--gold);animation:slide 1.6s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="intro"><h1>Loading page: 2 design</h1><p>Ye yahan lagataar chal rahe hain taaki aap dekh sako; asli site pe ye sirf utni der dikhega jitni der site khul rahi hoti hai.</p></div>
+<main class="wrap">
+  <section class="opt">
+    <h2>1 · Rotary dial</h2>
+    <p>Logo ke charon taraf kaanch ka gol dial. Das bindu ek-ek karke sunehre hote hain, jaise number dial ho raha ho. Niche line akshar-akshar type hoti hai.</p>
+    <div class="phone"><div>
+      <div class="dial"><div class="ring"></div><div class="hand"></div><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i><img class="mark" src="/suit-aura-mark-132.webp" alt=""></div>
+      <div class="brand">Suit Aura Girls</div>
+      <div class="line type" data-type="Dialing into the digital realm"></div>
+    </div></div>
+  </section>
+  <section class="opt">
+    <h2>2 · Signal</h2>
+    <p>Logo se sunehre gole lehron ki tarah bahar jaate hain, jaise signal ja raha ho. Line ke akshar niche se uthte hue aate hain, aur ek patli line chalti rehti hai.</p>
+    <div class="phone"><div>
+      <div class="signal"><span></span><span></span><span></span><div class="glass"></div><img class="mark" src="/suit-aura-mark-132.webp" alt=""></div>
+      <div class="brand">Suit Aura Girls</div>
+      <div class="line words" data-words="Dialing into the digital realm"></div>
+      <div class="track"><i></i></div>
+    </div></div>
+  </section>
+</main>
+<p class="note"><b>Sachchi baat:</b> maine kisi me bhi "37%… 68%…" jaisi ginti nahi rakhi, kyunki wo nakli hoti (site ko pata nahi hota kitna khula). Dono me chalti animation hai jo site khulte hi hat jati hai. Pasand aaye to "1" ya "2" bata do. Line badalni ho (jaise "Dialing into the world of ethnic elegance") to wo bhi likh do.</p>
+<script>
+// 1: the line types itself, rests, and starts again
+document.querySelectorAll('[data-type]').forEach((el)=>{const text=el.dataset.type;let n=0;const tick=()=>{el.textContent=text.slice(0,n);n=n>text.length+14?0:n+1;setTimeout(tick,n===1?500:70)};tick()});
+// 2: each letter rises in its own time
+document.querySelectorAll('[data-words]').forEach((el)=>{el.innerHTML=[...el.dataset.words].map((c,i)=>`<b style="--i:${i}">${c===' '?'&nbsp;':c}</b>`).join('')});
+</script>
+</body>
+</html>
