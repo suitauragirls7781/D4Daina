@@ -135,18 +135,33 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
 
   return (
     <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass rounded-[26px]! overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
-      <div className="overflow-hidden lg:order-2 lg:w-[46%] lg:shrink-0">
-        <img
-          src={round.imageUrl ? getCleanImageUrl(round.imageUrl, 1100) : PHOTO.src}
-          srcSet={round.imageUrl ? `${getCleanImageUrl(round.imageUrl, 640)} 640w, ${getCleanImageUrl(round.imageUrl, 1100)} 1100w` : `${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
-          sizes="(min-width: 1024px) 560px, 96vw"
-          alt={round.imageUrl ? '' : PHOTO.alt}
-          width={1000}
-          height={544}
-          decoding="async"
-          className="sag-drift h-[150px] w-full rounded-none object-cover sm:h-[230px] lg:h-full lg:min-h-[360px]"
-        />
-      </div>
+      {round.imageUrl ? (
+        // The owner's own photo (often a banner with words on it): shown whole at its own shape, never cut and
+        // never moving. On desktop it sits at the right, centred beside the words.
+        <div className="lg:order-2 lg:flex lg:w-[46%] lg:shrink-0 lg:items-center">
+          <img
+            src={getCleanImageUrl(round.imageUrl, 1100)}
+            srcSet={`${getCleanImageUrl(round.imageUrl, 640)} 640w, ${getCleanImageUrl(round.imageUrl, 1100)} 1100w`}
+            sizes="(min-width: 1024px) 560px, 96vw"
+            alt={round.title}
+            decoding="async"
+            className="block h-auto w-full rounded-none"
+          />
+        </div>
+      ) : (
+        <div className="overflow-hidden lg:order-2 lg:w-[46%] lg:shrink-0">
+          <img
+            src={PHOTO.src}
+            srcSet={`${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
+            sizes="(min-width: 1024px) 560px, 96vw"
+            alt={PHOTO.alt}
+            width={1000}
+            height={544}
+            decoding="async"
+            className="sag-drift h-[150px] w-full rounded-none object-cover sm:h-[230px] lg:h-full lg:min-h-[360px]"
+          />
+        </div>
+      )}
 
       <div className="min-w-0 flex-1 p-4 sm:p-7 lg:self-center lg:p-10">
         <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{round.eyebrow}</p>
