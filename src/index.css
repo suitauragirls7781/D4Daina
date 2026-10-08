@@ -1033,3 +1033,9 @@ select.sag-input option, select option { background: #1B1721; color: #F6F1EA; }
 /* The backdrop lights sit between the html colour and the app, so the app's own wrappers stay see-through */
 html { background-color: #0F0D12; }
 body, #root { background-color: transparent; }
+/* Phone navigation "rising bump" (MobileAppNavbar.tsx): the bar is one drawn shape that swells around the current tab */
+:root { --sag-nav-fill: rgba(24, 20, 30, 0.9); }
+.sag-blobnav-shape { filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.45)); }
+.sag-blobnav .sag-blobnav-shape path { fill: var(--sag-nav-fill) !important; stroke: var(--sag-edge) !important; stroke-width: 1; }
+/* The frosted layer under the drawn shape (the straight part of the bar) */
+.sag-blobnav-blur { -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); border-radius: 26px; }
