@@ -410,6 +410,7 @@ export const TermsPage: React.FC = () => (
     subtitle="The terms that apply when you use this website and place an order"
       short={[
         "All prices are in Indian Rupees (INR) and inclusive of GST",
+        "If an order is cancelled and you order again, the first order's refund starts once the new payment is successful",
         "Colours can look slightly different on different screens",
         "Photographs and designs are the intellectual property of Suit Aura Girls",
       ]}
@@ -423,6 +424,11 @@ export const TermsPage: React.FC = () => (
         id: 'general',
         title: 'General store terms',
         body: <p className={P}>By accessing and placing orders on Suit Aura Girls, you agree to abide by our terms of service, pricing guidelines, and prepaid store policies.</p>,
+      },
+      {
+        id: 'cancelled-reorder',
+        title: 'If an order is cancelled and you order again',
+        body: <p className={P}>If your order is cancelled because of a technical issue or for any other reason and you place the order again, the refund for the first order is started as soon as the payment for the new order is successful. If you do not order again, the first order is still refunded as described in our Cancellation policy.</p>,
       },
       {
         id: 'colour',
