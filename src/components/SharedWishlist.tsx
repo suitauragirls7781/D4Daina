@@ -5,6 +5,7 @@ import { apiPost } from '../lib/api';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
+import { SectionTitle } from './SectionTitle';
 
 export const sharedWishlistId = () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('shared') || '';
 
@@ -32,8 +33,7 @@ export const SharedWishlistView: React.FC<{ id: string }> = ({ id }) => {
   return (
     <div className="pt-6 pb-14 sm:pt-8 lg:pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-sale">Shared with you</p>
-        <h1 className="mt-1.5 font-display text-[23px] leading-[1.18] lg:text-[32px] text-ink">A wishlist from a friend</h1>
+        <SectionTitle as="h1" eyebrow="Shared with you" title="A wishlist from a friend" />
         {error ? (
           <div role="alert" className="sag-glass mt-6 px-4 py-8 text-center">
             <p className="text-[14px] leading-[21px] text-ink">{error}</p>
@@ -46,11 +46,11 @@ export const SharedWishlistView: React.FC<{ id: string }> = ({ id }) => {
           <div className="py-20 flex justify-center" role="status" aria-label="Loading wishlist"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
         ) : (
           <>
-            <div className="mt-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4 rounded-none!">
               <p className="sag-num text-[13px] text-ink-muted">{items.length} {items.length === 1 ? 'style' : 'styles'}</p>
-              {items.length > 0 && <button onClick={saveAll} className="sag-btn-outline h-[38px] px-4 gap-2"><Heart className="w-3.5 h-3.5" strokeWidth={1.5} /> Save all to my wishlist</button>}
+              {items.length > 0 && <button onClick={saveAll} className="sag-btn-outline h-11 px-4 gap-2"><Heart className="w-3.5 h-3.5" strokeWidth={1.5} /> Save all to my wishlist</button>}
             </div>
-            <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+            <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
               {items.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
             {items.length === 0 && (
@@ -92,7 +92,7 @@ export const ShareWishlistButton: React.FC = () => {
   };
 
   return (
-    <button onClick={share} disabled={busy} className="inline-flex items-center min-h-11 text-[12.5px] font-medium text-sale underline decoration-1 underline-offset-4 hover:text-ink cursor-pointer gap-1.5 disabled:opacity-60">
+    <button onClick={share} disabled={busy} className="sag-lnk disabled:opacity-60">
       {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" strokeWidth={1.5} />} Share wishlist
     </button>
   );

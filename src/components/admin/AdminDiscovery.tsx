@@ -161,7 +161,7 @@ export const AdminDiscovery: React.FC = () => {
               const count = occasionProducts(o, products).length;
               const open = editing === o.id;
               return (
-                <li key={o.id} className={`rounded-2xl border transition-colors ${open ? 'border-brand-line bg-sunken-deep' : 'border-line bg-sunken'}`}>
+                <li key={o.id} className={`rounded-[10px] border transition-colors ${open ? 'border-brand-line bg-sunken-deep' : 'border-line bg-sunken'}`}>
                   <div className="flex flex-wrap items-center gap-x-1 gap-y-1 pl-3 pr-1.5 py-1.5">
                     <span className="inline-flex mr-1" title={o.enabled ? 'Shown on the store' : 'Hidden'}>
                       <Switch checked={o.enabled} onChange={(enabled) => setOccasion(o.id, { enabled })} label={`Show ${o.name}`} />
@@ -201,11 +201,11 @@ export const AdminDiscovery: React.FC = () => {
                       <div className="sm:col-span-2">
                         <p className={label}>Hand-picked products <span className={`${optional} sag-num`}>({o.productIds.length})</span></p>
                         <input value={pickerQuery} onChange={(e) => setPickerQuery(e.target.value)} placeholder="Search products" aria-label="Search products to hand-pick" className={`${input} mb-2`} />
-                        <div className="max-h-64 overflow-y-auto overscroll-contain rounded-2xl border border-line p-1 grid gap-0.5">
+                        <div className="max-h-64 overflow-y-auto overscroll-contain rounded-[10px] border border-line p-1 grid gap-0.5">
                           {products.filter((p) => p.productType !== 'accessory' && p.name.toLowerCase().includes(pickerQuery.toLowerCase())).map((p) => {
                             const on = o.productIds.includes(String(p.id));
                             return (
-                              <label key={p.id} className="flex items-center gap-2.5 min-h-11 px-2 text-sm leading-5 text-ink rounded-xl hover:bg-sunken-deep cursor-pointer">
+                              <label key={p.id} className="flex items-center gap-2.5 min-h-11 px-2 text-sm leading-5 text-ink rounded-lg hover:bg-sunken-deep cursor-pointer">
                                 <input type="checkbox" checked={on} onChange={() => setOccasion(o.id, { productIds: on ? o.productIds.filter((x) => x !== String(p.id)) : [...o.productIds, String(p.id)] })} className="w-5 h-5 shrink-0 accent-brand" />
                                 <span className="flex-1 min-w-0 line-clamp-1">{p.name}</span><span className="text-[13px] text-ink-muted sag-num">₹{p.price}</span>
                               </label>

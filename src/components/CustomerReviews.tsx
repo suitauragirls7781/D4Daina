@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useShop } from '../context/ShopContext';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { HOME_SECTION } from './HomeSections';
+import { SectionTitle } from './SectionTitle';
 
 /** Small star row filled to exactly the value (one decimal, same rule as the product page): 4.7 is four and seven tenths stars. */
 const Stars: React.FC<{ value: number }> = ({ value }) => {
@@ -12,11 +12,11 @@ const Stars: React.FC<{ value: number }> = ({ value }) => {
       {[1, 2, 3, 4, 5].map((i) => {
         const fill = Math.max(0, Math.min(1, shown - (i - 1)));
         return (
-          <span key={i} className="relative block h-[15px] w-[15px] shrink-0">
-            <Star className="block h-[15px] w-[15px] text-star" strokeWidth={1.25} />
+          <span key={i} className="relative block h-[14px] w-[14px] shrink-0">
+            <Star className="block h-[14px] w-[14px] text-star" strokeWidth={1.25} />
             {fill > 0 && (
               <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-                <Star className="block h-[15px] w-[15px] max-w-none fill-star text-star" strokeWidth={1.25} />
+                <Star className="block h-[14px] w-[14px] max-w-none fill-star text-star" strokeWidth={1.25} />
               </span>
             )}
           </span>
@@ -34,7 +34,7 @@ const reviewPlace = (location?: string) => {
 
 /**
  * Approved customer reviews. Hidden entirely until there is at least one.
- * One review at a time as a centred serif quote on a glass panel (verified purchases first, the others one
+ * One review at a time as a centred serif italic quote on a warm tinted band (verified purchases first, the others one
  * swipe or arrow away), then the real average and count. The same at every width.
  */
 export const CustomerReviews: React.FC = () => {
@@ -83,18 +83,16 @@ export const CustomerReviews: React.FC = () => {
       setShown(nearest);
     });
   };
-  const arrow = 'flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white/[0.08] text-ink cursor-pointer transition-colors hover:bg-white/[0.16] disabled:opacity-30 disabled:cursor-not-allowed';
+  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-control bg-surface text-ink cursor-pointer transition-colors hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
-    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className={`${HOME_SECTION} text-center`}>
+    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className="w-full rounded-none bg-sunken py-12 text-center lg:py-20">
       <div className="mx-auto max-w-3xl px-3 sm:px-6">
-       <div className="sag-glass rounded-[26px]! px-4 py-6 sm:px-8 lg:px-12 lg:py-10">
-        <h2 id="customer-reviews-title" className="font-sans text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale">
-          <span className="sr-only">Customer reviews: </span>Real customers
-        </h2>
+       <div className="px-1 sm:px-8 lg:px-12">
+        <SectionTitle id="customer-reviews-title" eyebrow="Real customers" title="Customer reviews" />
 
         {/* One review per view; a swipe or the arrows bring the next real one */}
-        <div ref={stripRef} onScroll={onScroll} className="sag-scroll-x scroll-px-0! mt-2.5 flex overflow-x-auto">
+        <div ref={stripRef} onScroll={onScroll} className="sag-scroll-x scroll-px-0! mt-7 flex overflow-x-auto lg:mt-9">
           {quotes.map((review) => {
             const product = productOf(review);
             const rating = Number(review.rating) || 0;
@@ -107,13 +105,13 @@ export const CustomerReviews: React.FC = () => {
                     <span className="sr-only">Rated {rating} out of 5</span>
                   </div>
                 )}
-                <blockquote className="mt-2.5 font-display text-[19px] font-normal italic leading-[1.4] text-ink line-clamp-6 lg:text-2xl lg:leading-[1.4]">“{String(review.comment).trim()}”</blockquote>
-                <figcaption className="mt-2.5 text-[13px] leading-[18px] text-ink-muted">
+                <blockquote className="mt-4 font-display text-[23px] font-medium italic leading-[1.32] text-ink line-clamp-6 lg:text-[32px] lg:leading-[1.28]">“{String(review.comment).trim()}”</blockquote>
+                <figcaption className="mt-4 text-[13px] leading-[19px] text-ink-muted">
                   {review.userName}
                   {place ? `, ${place}` : ''}
                   {review.verifiedPurchase === true ? ' · Verified purchase' : ''}
                   {product ? (
-                    <button type="button" onClick={() => navigateToProduct(product.id)} className="mx-auto mt-0.5 block min-h-6 cursor-pointer text-sale hover:text-brand-dark transition-colors line-clamp-1">{product.name}</button>
+                    <button type="button" onClick={() => navigateToProduct(product.id)} className="mx-auto mt-0.5 block min-h-6 cursor-pointer text-brand underline decoration-1 underline-offset-4 hover:text-brand-dark transition-colors line-clamp-1">{product.name}</button>
                   ) : review.productName ? (
                     <span className="mt-0.5 block line-clamp-1">{review.productName}</span>
                   ) : null}
@@ -124,7 +122,7 @@ export const CustomerReviews: React.FC = () => {
         </div>
 
         {quotes.length > 1 && (
-          <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="mt-5 flex items-center justify-center gap-4">
             <button type="button" onClick={() => step(at - 1)} disabled={at === 0} aria-label="Previous review" className={arrow}>
               <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={1.25} />
             </button>
@@ -136,7 +134,7 @@ export const CustomerReviews: React.FC = () => {
         )}
 
         {approved.length > 0 && (
-          <p className="sag-num mt-3 text-[11.5px] leading-4 tracking-[0.04em] text-ink-muted">
+          <p className="sag-num mt-5 text-[12.5px] leading-[18px] text-ink-muted">
             {allAverage.toFixed(1)} out of 5 from {approved.length} {approved.length === 1 ? 'review' : 'reviews'}
           </p>
         )}
@@ -144,7 +142,7 @@ export const CustomerReviews: React.FC = () => {
           <button
             type="button"
             onClick={() => navigateToProduct(linked.id)}
-            className="mt-2 inline-flex min-h-9 cursor-pointer items-center text-[13px] font-semibold text-sale hover:text-brand-dark transition-colors"
+            className="sag-lnk mt-1"
           >
             Read all reviews
           </button>

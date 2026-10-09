@@ -11,6 +11,7 @@ import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { CourierCard, DeliveryAgentCard, OrderProgress, OrderWithRequests, StatusHistory, StatusPill, canRequestCancel, formatDateTime, formatWindowEnd, latestUpdate } from './OrderProgress';
 import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
+import { SectionTitle } from './SectionTitle';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
@@ -121,23 +122,22 @@ export const TrackOrderPage: React.FC = () => {
     }
   };
 
-  const cardTitle = 'font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
+  const cardTitle = 'font-display text-[22px] leading-7 font-semibold text-ink';
+  const fieldLabel = 'sag-label mb-1.5 block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted';
+  const eyebrow = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale';
   const moneyRow = 'flex justify-between gap-3';
 
   return (
-    <div className="min-h-[70vh] px-4 pt-5 pb-10 sm:py-12">
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div>
-          <h1 className="font-display font-medium text-[23px] leading-7 lg:text-[32px] lg:leading-10 text-ink">Track your order</h1>
-          <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">Enter the order number from your confirmation email.</p>
-        </div>
+    <div className="min-h-[70vh] px-4 pt-7 pb-16 sm:py-12">
+      <div className="max-w-2xl mx-auto space-y-5">
+        <SectionTitle as="h1" eyebrow="Orders" title="Track your order" sub="Enter the order number from your confirmation email." className="pb-2" />
 
         <form
           onSubmit={(e) => { e.preventDefault(); search(orderQuery, contactQuery); }}
           className="sag-glass p-4 sm:p-5 grid gap-4 sm:grid-cols-2"
         >
           <div>
-            <label htmlFor="track-order-number" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Order number</label>
+            <label htmlFor="track-order-number" className={fieldLabel}>Order number</label>
             <input
               id="track-order-number"
               name="orderNumber"
@@ -153,7 +153,7 @@ export const TrackOrderPage: React.FC = () => {
             />
           </div>
           <div>
-            <label htmlFor="track-order-contact" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">Email or mobile{user ? ' (optional)' : ''}</label>
+            <label htmlFor="track-order-contact" className={fieldLabel}>Email or mobile{user ? ' (optional)' : ''}</label>
             <input
               id="track-order-contact"
               name="contact"
@@ -176,7 +176,7 @@ export const TrackOrderPage: React.FC = () => {
         </form>
 
         {error && (
-          <div role="alert" className="border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
+          <div role="alert" className="rounded-[10px] border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
             <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />
             <span>{error}</span>
           </div>
@@ -203,12 +203,12 @@ export const TrackOrderPage: React.FC = () => {
         )}
 
         {order && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-5">
             {/* At every width: the status box and timeline, the items, the two buttons, then updates and help */}
             <section className="order-1 space-y-3 sag-fade" aria-labelledby="tracked-order-title">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Order</p>
+                  <p className={eyebrow}>Order</p>
                   <h2 id="tracked-order-title" className="sag-num mt-1 font-sans text-[17px] leading-6 font-semibold text-ink break-all">#{order.orderNumber}</h2>
                   <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
@@ -219,7 +219,7 @@ export const TrackOrderPage: React.FC = () => {
                   type="button"
                   onClick={share}
                   aria-label="Share tracking link"
-                  className="sag-link shrink-0 gap-1.5 text-[12.5px]"
+                  className="shrink-0 inline-flex min-h-11 items-center gap-1.5 text-[10.5px] leading-none font-semibold uppercase tracking-[0.16em] text-brand underline underline-offset-4 cursor-pointer"
                 >
                   <Share2 className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> Share
                 </button>
@@ -254,8 +254,8 @@ export const TrackOrderPage: React.FC = () => {
 
             <section className="order-4 space-y-3 empty:hidden" aria-label="Order updates">
               {latest && (
-                <div className="sag-glass sag-glass-strong px-4 py-3 text-[13px] leading-[18px]">
-                  <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Latest update</p>
+                <div className="sag-glass sag-glass-strong px-4 py-3.5 text-[13px] leading-[18px]">
+                  <p className={eyebrow}>Latest update</p>
                   <p className="mt-1 text-ink">
                     <span className="font-medium">{latest.label}</span>
                     <span className="text-ink-muted"> · {formatDateTime(latest.at)}</span>
@@ -275,7 +275,7 @@ export const TrackOrderPage: React.FC = () => {
               <section className="order-5 sag-glass p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3">
                 <span className="hidden sm:flex shrink-0 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm leading-5 font-semibold text-ink">Not the right fit?</p>
+                  <p className="font-display text-[20px] leading-6 font-semibold text-ink">Not the right fit?</p>
                   <p className="text-[13px] leading-[18px] text-ink-muted">
                     Ask for a return or a size exchange{formatWindowEnd(order.returnEligibility?.windowEndsAt) ? ` by ${formatWindowEnd(order.returnEligibility?.windowEndsAt)}` : ' within 7 days of delivery'}.
                   </p>
@@ -286,7 +286,7 @@ export const TrackOrderPage: React.FC = () => {
               </section>
             )}
 
-            <section className="order-2 sag-glass p-3.5 sm:p-5 space-y-4" aria-labelledby="tracked-items-title">
+            <section className="order-2 sag-glass p-4 sm:p-6 space-y-4" aria-labelledby="tracked-items-title">
               <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
               <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {
@@ -294,7 +294,7 @@ export const TrackOrderPage: React.FC = () => {
                   const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                   return (
                     <li key={item.id || index} className="flex items-start gap-[13px] py-3 first:pt-0 last:pb-0">
-                      <span className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken">
+                      <span className="w-[62px] aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-sunken">
                         {image && <img src={getCleanImageUrl(image, 160)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <div className="min-w-0 flex-1">
@@ -351,7 +351,7 @@ export const TrackOrderPage: React.FC = () => {
 
             <section className="order-6 sag-glass p-4 sm:p-5 space-y-3" aria-label="Help with this order">
               <div>
-                <p className="text-sm leading-5 font-semibold text-ink">Need help with this order?</p>
+                <p className="font-display text-[20px] leading-6 font-semibold text-ink">Need help with this order?</p>
                 <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Share your order number and we will take it from there.</p>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
@@ -367,11 +367,11 @@ export const TrackOrderPage: React.FC = () => {
                   <Phone className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
                 </a>
                 {user ? (
-                  <button type="button" onClick={() => setActivePage('account')} className="sag-btn-outline h-12 px-3 text-sm">
+                  <button type="button" onClick={() => setActivePage('account')} className="sag-btn-outline h-12 px-3">
                     All my orders
                   </button>
                 ) : (
-                  <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12 px-3 text-sm">
+                  <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12 px-3">
                     Contact us
                   </button>
                 )}

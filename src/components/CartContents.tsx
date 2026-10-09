@@ -12,8 +12,10 @@ const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleStri
 /** "Size M", or "One size" for free-size pieces. */
 const sizeLabel = (size?: string) => (!size || /^(free ?size|one ?size|standard)$/i.test(String(size)) ? 'One size' : `Size ${size}`);
 
-// Midnight glass: a small gold text link
+// Emerald Heritage: a small emerald text link, and the quiet small-capitals link ("Remove", "Move to wishlist")
 const LINK = 'sag-link text-[12.5px] font-semibold decoration-1 underline-offset-4';
+const CAPS_LINK = 'inline-flex min-h-11 items-center text-[10.5px] leading-none font-semibold uppercase tracking-[0.18em] text-ink-muted underline decoration-control decoration-1 underline-offset-4 transition-colors hover:text-brand cursor-pointer';
+const CAPS_LINK_BRAND = CAPS_LINK.replace('text-ink-muted', 'text-brand');
 
 /** The bag's estimated total (a preview; the server recalculates at checkout). */
 export const useBagTotal = () => {
@@ -41,8 +43,9 @@ export const SavingsStrip: React.FC<{ className?: string }> = ({ className = '' 
   const { totalSavings } = useBagSavings();
   if (!(totalSavings > 0)) return null;
   return (
-    <p className={`sag-glass rounded-full px-4 py-2.5 text-xs leading-4 tracking-[0.02em] text-ink sag-num ${className}`}>
-      <span className="font-semibold text-sale">You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span></span> on this order
+    <p className={`flex items-center gap-2 rounded-lg bg-sunken px-3.5 py-2.5 text-[13px] leading-[18px] text-ink-muted sag-num ${className}`}>
+      <TagIcon className="h-4 w-4 shrink-0 text-brand" mono live={false} />
+      <span><span className="font-semibold text-sale">You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span></span> on this order</span>
     </p>
   );
 };
@@ -103,28 +106,28 @@ export const PriceDetails: React.FC<{ totalLabel?: string }> = ({ totalLabel = '
   } = useShop();
   const total = useBagTotal();
   const { totalMRP, catalogDiscount, totalSavings } = useBagSavings();
-  const row = 'flex justify-between gap-3 py-[5px]';
+  const row = 'flex justify-between gap-4 py-[7px]';
   return (
     <div>
       <h3 className="sr-only">Price details</h3>
-      <dl className="text-[13.5px] leading-5 text-ink sag-num">
+      <dl className="text-[14px] leading-5 text-ink sag-num">
         <div className={row}><dt className="text-ink-muted">Total MRP</dt><dd>{inr(totalMRP)}</dd></div>
-        {catalogDiscount > 0 && <div className={row}><dt className="text-ink-muted">Discount on MRP</dt><dd className="text-sale">−{inr(catalogDiscount)}</dd></div>}
+        {catalogDiscount > 0 && <div className={row}><dt className="text-ink-muted">Discount on MRP</dt><dd className="font-semibold text-accent">−{inr(catalogDiscount)}</dd></div>}
         <div className={row}><dt className="text-ink-muted">Subtotal</dt><dd>{inr(cartSubtotal)}</dd></div>
         <div className={row}><dt className="text-ink-muted">Delivery</dt><dd>{shippingFee > 0 ? inr(shippingFee) : 'Free'}</dd></div>
-        {comboDiscount > 0 && <div className={row}><dt className="text-ink-muted">Combo discount{comboOffer ? ` (${comboOffer.percent}% on ${comboOffer.minItems}+ outfits)` : ''}</dt><dd className="text-sale">−{inr(comboDiscount)}</dd></div>}
-        {discountAmount > 0 && <div className={row}><dt className="text-ink-muted">Coupon {appliedCoupon?.code}</dt><dd className="text-sale">−{inr(discountAmount)}</dd></div>}
-        {prepaidDiscount > 0 && <div className={row}><dt className="text-ink-muted">Online payment discount</dt><dd className="text-sale">−{inr(prepaidDiscount)}</dd></div>}
-        <div className="mt-2 flex items-baseline justify-between gap-3 border-t border-line pt-3">
+        {comboDiscount > 0 && <div className={row}><dt className="text-ink-muted">Combo discount{comboOffer ? ` (${comboOffer.percent}% on ${comboOffer.minItems}+ outfits)` : ''}</dt><dd className="font-semibold text-accent">−{inr(comboDiscount)}</dd></div>}
+        {discountAmount > 0 && <div className={row}><dt className="text-ink-muted">Coupon {appliedCoupon?.code}</dt><dd className="font-semibold text-accent">−{inr(discountAmount)}</dd></div>}
+        {prepaidDiscount > 0 && <div className={row}><dt className="text-ink-muted">Online payment discount</dt><dd className="font-semibold text-accent">−{inr(prepaidDiscount)}</dd></div>}
+        <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-line pt-3.5">
           <dt>
-            <span className="block text-[17px] leading-6 font-semibold text-ink">{totalLabel}</span>
-            <span className="block text-[11.5px] leading-4 text-ink-muted">Inclusive of all taxes{shippingFee > 0 ? ' and delivery' : ''}{freeShippingThreshold > 0 && shippingFee > 0 ? ` · free delivery above ${inr(freeShippingThreshold)}` : ''}</span>
+            <span className="block font-display text-[21px] leading-6 font-semibold text-ink">{totalLabel}</span>
+            <span className="mt-1 block text-[11.5px] leading-4 text-ink-muted">Inclusive of all taxes{shippingFee > 0 ? ' and delivery' : ''}{freeShippingThreshold > 0 && shippingFee > 0 ? ` · free delivery above ${inr(freeShippingThreshold)}` : ''}</span>
           </dt>
-          <dd className="text-[17px] leading-6 font-semibold text-ink"><span key={total} className="sag-settle">{inr(total)}</span></dd>
+          <dd className="text-[21px] leading-6 font-semibold text-ink"><span key={total} className="sag-settle">{inr(total)}</span></dd>
         </div>
       </dl>
       {totalSavings > 0 && (
-        <p className="mt-2 text-xs leading-4 font-semibold text-sale sag-num">
+        <p className="mt-2.5 text-[12.5px] leading-4 font-semibold text-sale sag-num">
           You save <span key={totalSavings} className="sag-settle">{inr(totalSavings)}</span> on this order
         </p>
       )}
@@ -134,7 +137,8 @@ export const PriceDetails: React.FC<{ totalLabel?: string }> = ({ totalLabel = '
 
 /**
  * Bag lines with quantity controls. Used by the cart drawer and the cart page.
- * Midnight glass (owner's pick): each line is its own glass card, at every width.
+ * Emerald Heritage: lines separated by thin lines; a 3:4 photo, the name, size and colour, a white quantity
+ * box, the price at the right with the MRP struck through, and the quiet small-capitals links under them.
  */
 export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate }) => {
   const { cart, removeFromCart, updateCartQuantity, navigateToProduct, maxQtyPerItem, toggleWishlist, isInWishlist, showToast } = useShop();
@@ -144,9 +148,9 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
     if (isInWishlist(product.id)) showToast(`Moved to wishlist\n${product.name}`, 'success');
     else toggleWishlist(product);
   };
-  const stepButton = 'w-9 h-full flex items-center justify-center rounded-full text-ink hover:bg-[color:var(--sag-glass-strong)] transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer';
+  const stepButton = 'w-[38px] h-full flex items-center justify-center rounded-md text-ink hover:bg-sunken transition-colors disabled:text-ink-faint disabled:opacity-50 disabled:hover:bg-transparent disabled:cursor-not-allowed cursor-pointer';
   return (
-    <ul className="sag-stagger space-y-3">
+    <ul className="sag-stagger border-t border-line">
       {cart.map((item) => {
         const stock = Number(item.product.stockQuantity ?? 0);
         const accessory = isAccessory(item.product) && item.lookParentId;
@@ -170,56 +174,54 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
           : '';
         const canMove = !item.lookParentId && !isAccessory(item.product);
         return (
-          <li key={item.id} className="sag-glass p-3">
-            <div className="flex gap-[13px]">
+          <li key={item.id} className="grid grid-cols-[84px_minmax(0,1fr)] gap-3.5 border-b border-line py-[18px] sm:grid-cols-[92px_minmax(0,1fr)]">
+            <button
+              onClick={() => { navigateToProduct(openId); onNavigate?.(); }}
+              className="sag-zoom self-start aspect-[3/4] w-full overflow-hidden rounded-md bg-sunken cursor-pointer"
+              aria-label={`View ${item.product.name}`}
+            >
+              <img src={getCleanImageUrl(lineImage(item), 240)} alt="" width={92} height={123} className="w-full h-full object-cover object-top" loading="lazy" />
+            </button>
+            <div className="flex min-w-0 flex-col">
               <button
+                type="button"
                 onClick={() => { navigateToProduct(openId); onNavigate?.(); }}
-                className="shrink-0 self-start w-[78px] sm:w-[84px] aspect-[4/5] overflow-hidden rounded-[14px] bg-[color:var(--sag-glass)] cursor-pointer"
-                aria-label={`View ${item.product.name}`}
+                className="block text-left text-[14px] leading-5 font-medium text-ink line-clamp-2 cursor-pointer"
               >
-                <img src={getCleanImageUrl(lineImage(item), 240)} alt="" width={84} height={105} className="w-full h-full object-cover object-top" loading="lazy" />
+                {item.product.name}
               </button>
-              <div className="flex-1 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => { navigateToProduct(openId); onNavigate?.(); }}
-                  className="block text-left text-[13px] leading-[18px] text-ink line-clamp-2 cursor-pointer"
-                >
-                  {item.product.name}
-                </button>
-                <p className="mt-1 text-[11.5px] leading-4 text-ink-muted">{sizeLabel(item.selectedSize)}{colour ? ` · ${colour}` : ''}</p>
-                {accessory && (
-                  <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted line-clamp-1">Complete the look · with {outfit?.product.name || 'your outfit'}</p>
-                )}
-                <p className="mt-1.5 flex flex-wrap items-baseline gap-x-[7px] sag-num">
-                  <span className="text-[14.5px] leading-5 font-semibold text-ink">{inr(item.product.price * item.quantity)}</span>
-                  {mrp > item.product.price && <span className="text-[12.5px] text-ink-muted line-through">{inr(mrp * item.quantity)}</span>}
-                  {off > 0 && <span className="text-[12.5px] font-semibold text-sale">{off}% off</span>}
-                </p>
-                {/* The glass pill quantity stepper and "Remove" sit under the price, beside the photo */}
-                <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3">
-                  <div className="inline-flex items-center h-9 rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)]" role="group" aria-label={`Quantity of ${item.product.name}`}>
-                    {/* At quantity 1 the "Remove" link beside the stepper is the one way to take the line out */}
-                    <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className={stepButton}>
-                      <Minus className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    </button>
-                    <span className="w-6 text-center text-[13px] font-semibold text-ink sag-num" aria-live="polite">{item.quantity}</span>
-                    <button onClick={() => updateCartQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= cap} aria-label="Increase quantity" className={stepButton}>
-                      <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-3.5">
-                    {canMove && (
-                      <button type="button" onClick={() => moveToWishlist(item.id, item.product)} className={LINK}>
-                        Move to wishlist
-                      </button>
-                    )}
-                    <button type="button" onClick={() => removeFromCart(item.id)} className={LINK} aria-label={`Remove ${item.product.name} from bag`}>
-                      Remove
-                    </button>
-                  </div>
+              <p className="mt-[3px] text-[12.5px] leading-[18px] text-ink-muted">{sizeLabel(item.selectedSize)}{colour ? ` · ${colour}` : ''}</p>
+              {accessory && (
+                <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted line-clamp-1">Complete the look · with {outfit?.product.name || 'your outfit'}</p>
+              )}
+              {/* The white quantity box at the left, the price at the right with the MRP struck through */}
+              <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
+                <div className="inline-flex h-10 shrink-0 items-center rounded-lg border border-control bg-surface" role="group" aria-label={`Quantity of ${item.product.name}`}>
+                  {/* At quantity 1 the "Remove" link under the box is the one way to take the line out */}
+                  <button onClick={() => updateCartQuantity(item.id, item.quantity - 1)} disabled={item.quantity <= 1} aria-label="Decrease quantity" className={stepButton}>
+                    <Minus className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  </button>
+                  <span className="w-7 text-center text-[14px] font-semibold text-ink sag-num" aria-live="polite">{item.quantity}</span>
+                  <button onClick={() => updateCartQuantity(item.id, item.quantity + 1)} disabled={item.quantity >= cap} aria-label="Increase quantity" className={stepButton}>
+                    <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  </button>
                 </div>
-                {capNote && <p className="mt-1 text-[11.5px] leading-4 text-ink-muted">{capNote}</p>}
+                <p className="min-w-0 text-right sag-num">
+                  <span className="block text-[15.5px] leading-5 font-semibold text-ink">{inr(item.product.price * item.quantity)}</span>
+                  {mrp > item.product.price && <span className="text-[12px] leading-4 text-ink-muted line-through">{inr(mrp * item.quantity)}</span>}
+                  {off > 0 && <span className="ml-1.5 text-[12px] leading-4 font-semibold text-accent">{off}% off</span>}
+                </p>
+              </div>
+              {capNote && <p className="mt-1.5 text-[11.5px] leading-4 text-ink-muted">{capNote}</p>}
+              <div className="-mb-3 mt-0.5 flex flex-wrap items-center gap-x-4">
+                <button type="button" onClick={() => removeFromCart(item.id)} className={CAPS_LINK} aria-label={`Remove ${item.product.name} from bag`}>
+                  Remove
+                </button>
+                {canMove && (
+                  <button type="button" onClick={() => moveToWishlist(item.id, item.product)} className={CAPS_LINK}>
+                    Move to wishlist
+                  </button>
+                )}
               </div>
             </div>
           </li>
@@ -235,9 +237,10 @@ export const EmptyBag: React.FC<{ onDone?: () => void; heading?: 'h1' | 'h2' }> 
   const Heading = heading;
   return (
     <div className="flex flex-col items-center text-center px-6 w-full max-w-sm mx-auto">
-      <BagIcon className="w-8 h-8 text-ink" />
-      <Heading className="mt-5 font-display text-[23px] leading-7 text-ink">Your bag is empty</Heading>
-      <p className="mt-2 text-[13px] leading-5 text-ink-muted">Add a style you like and it will wait here until you are ready to check out.</p>
+      <BagIcon className="w-7 h-7 text-brand" />
+      <Heading className="mt-5 font-display text-[30px] leading-[1.08] text-ink">Your bag is empty</Heading>
+      <span aria-hidden="true" className="sag-orn mt-3.5"><i /></span>
+      <p className="mt-3.5 text-[13.5px] leading-5 text-ink-muted">Add a style you like and it will wait here until you are ready to check out.</p>
       <button onClick={() => { onDone?.(); navigateToCategory('All'); }} className="mt-6 sag-btn-primary w-full">
         Start shopping
       </button>
@@ -260,15 +263,15 @@ const BagNudges: React.FC = () => {
   const progress = freeShippingThreshold > 0 ? Math.min(100, Math.round((cartSubtotal / freeShippingThreshold) * 100)) : 0;
   const divider = toFreeShipping > 0 || unlocked ? 'pt-2.5 border-t border-line' : '';
   return (
-    <div className="sag-glass px-3.5 py-3 space-y-2.5 text-[13px] leading-[18px] text-ink">
+    <div className="sag-glass px-4 py-3.5 space-y-2.5 text-[13px] leading-[18px] text-ink">
       {toFreeShipping > 0 && (
         <div>
           <p className="flex items-center gap-2.5">
             <TruckIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
             <span>Add <span className="font-semibold sag-num">{inr(toFreeShipping)}</span> more for free delivery</span>
           </p>
-          <div className="mt-2 h-1 rounded-full bg-[color:var(--sag-glass-strong)] overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free delivery">
-            <div className="h-full rounded-full bg-brand" style={{ width: `${progress}%` }} />
+          <div className="mt-2.5 h-[3px] rounded-full! bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label="Progress to free delivery">
+            <div className="h-full rounded-full! bg-brand transition-[width] duration-700" style={{ width: `${progress}%` }} />
           </div>
         </div>
       )}
@@ -287,7 +290,7 @@ const BagNudges: React.FC = () => {
       {comboOffer && comboDiscount > 0 && (
         <p className={`flex items-center gap-2.5 font-medium ${divider}`}>
           <TagIcon className="w-[18px] h-[18px] shrink-0 text-sale" mono live={false} />
-          <span>Combo offer applied · <span className="text-sale">{comboOffer.percent}% off</span></span>
+          <span>Combo offer applied · <span className="font-semibold text-accent">{comboOffer.percent}% off</span></span>
         </p>
       )}
     </div>
@@ -315,10 +318,11 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
   const couponValue = (c: (typeof coupons)[number]) => (c.discountType === 'fixed' ? `₹${c.discountValue} off` : `${c.discountValue}% off`);
   const chip = (c: (typeof coupons)[number]) => (
     <button key={c.id} type="button" onClick={() => apply(c.code)} disabled={applying}
-      className="inline-flex items-center gap-1.5 min-h-10 px-3.5 rounded-full border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)] text-[12.5px] leading-[18px] cursor-pointer hover:border-brand transition-colors disabled:opacity-60"
+      className="flex w-full min-h-11 items-center gap-2.5 rounded-lg border border-dashed border-[color:var(--sag-champagne)] bg-surface px-3 py-2 text-left text-[13px] leading-[18px] text-ink-muted cursor-pointer transition-colors hover:bg-sunken active:bg-sunken disabled:opacity-60"
       aria-label={`Apply coupon ${c.code}, ${couponValue(c)}`}>
-      <span className="font-semibold tracking-[0.04em] text-ink">{c.code}</span>
-      <span className="font-medium text-sale">{couponValue(c)}</span>
+      <span className="min-w-0 break-all font-display text-[17px] leading-5 font-semibold tracking-[0.06em] text-brand">{c.code}</span>
+      <span className="shrink-0 sag-num">{couponValue(c)}</span>
+      <span className="ml-auto shrink-0 text-[10.5px] leading-none font-semibold uppercase tracking-[0.18em] text-brand underline decoration-1 underline-offset-4">Apply</span>
     </button>
   );
 
@@ -327,53 +331,50 @@ export const CartTotals: React.FC<{ idPrefix?: string }> = ({ idPrefix = 'bag' }
       <BagNudges />
 
       {appliedCoupon ? (
-        <div className="sag-glass flex items-center justify-between gap-3 px-3.5 min-h-[52px] text-[13.5px] leading-5 text-ink">
+        <div className="sag-glass flex items-center justify-between gap-3 px-4 min-h-[60px] text-[13.5px] leading-5 text-ink">
           <span className="inline-flex items-center gap-2.5 min-w-0">
-            <Check className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+            <Check className="sag-tick-draw w-5 h-5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden="true" />
             <span className="min-w-0">
               <span className="block truncate">Code <span className="font-semibold">{appliedCoupon.code}</span> applied</span>
-              {discountAmount > 0 && <span className="block text-[11.5px] leading-4 text-sale sag-num">You save {inr(discountAmount)}</span>}
+              {discountAmount > 0 && <span className="block text-[12px] leading-4 text-ink-muted sag-num">You save {inr(discountAmount)}</span>}
             </span>
           </span>
-          <button onClick={removeCoupon} aria-label="Remove coupon" className={`${LINK} shrink-0`}>Remove</button>
+          <button onClick={removeCoupon} aria-label="Remove coupon" className={`${CAPS_LINK} shrink-0`}>Remove</button>
         </div>
       ) : (
-        <div className="sag-glass">
-          <div className="flex items-center gap-2 pr-3.5">
-            <button type="button" onClick={() => setCouponOpen((open) => !open)} aria-expanded={couponOpen} aria-controls={panelId}
-              className="flex-1 min-w-0 flex items-center gap-2.5 min-h-[48px] pl-3.5 text-left text-[13.5px] leading-5 text-ink cursor-pointer">
-              <span className="shrink-0 text-sale"><TagIcon className="w-[18px] h-[18px]" mono live={false} /></span>
-              <span className="flex-1">Apply coupon</span>
-              <ChevronDown className={`w-4 h-4 shrink-0 text-ink-muted transition-transform ${couponOpen ? 'rotate-180' : ''}`} strokeWidth={1.5} aria-hidden="true" />
-            </button>
-          </div>
+        <div className="sag-glass px-4 py-3.5">
+          <button type="button" onClick={() => setCouponOpen((open) => !open)} aria-expanded={couponOpen} aria-controls={panelId}
+            className="flex w-full min-h-11 items-center gap-2.5 text-left text-ink cursor-pointer">
+            <span className="flex-1 font-display text-[21px] leading-6 font-semibold">Apply coupon</span>
+            <ChevronDown className={`w-4 h-4 shrink-0 text-ink-muted transition-transform ${couponOpen ? 'rotate-180' : ''}`} strokeWidth={1.5} aria-hidden="true" />
+          </button>
           {!couponOpen && coupons.length > 0 && (
-            <div className="px-3.5 pb-3 -mt-0.5">{chip(coupons[0])}</div>
+            <div className="mt-1.5">{chip(coupons[0])}</div>
           )}
-          <div id={panelId} className={couponOpen ? 'px-3.5 pb-3.5' : 'hidden'}>
-            <form onSubmit={(e) => { e.preventDefault(); apply(code); }} className="flex gap-2">
+          <div id={panelId} className={couponOpen ? 'mt-2' : 'hidden'}>
+            <form onSubmit={(e) => { e.preventDefault(); apply(code); }} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
               <label htmlFor={couponId} className="sr-only">Coupon code</label>
               <input id={couponId} value={code} onChange={(e) => { setCode(e.target.value.toUpperCase()); if (couponError) clearError(); }} aria-invalid={couponError ? true : undefined} aria-describedby={couponError ? errorId : undefined} placeholder="Enter coupon code" autoComplete="off" autoCapitalize="characters" autoCorrect="off" spellCheck={false} enterKeyHint="done"
-                className="sag-input sag-caps flex-1 min-w-0 h-12 aria-[invalid=true]:border-danger! uppercase placeholder:normal-case" />
-              <button type="submit" disabled={applying || !code.trim()} className="sag-btn-outline h-12 min-w-[84px] px-4">
+                className="sag-input sag-caps min-w-0 h-[50px] aria-[invalid=true]:border-danger! uppercase placeholder:normal-case" />
+              <button type="submit" disabled={applying || !code.trim()} className="sag-btn-outline h-[50px] min-w-[84px] px-[18px]">
                 {applying ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} aria-label="Applying" /> : 'Apply'}
               </button>
             </form>
             {coupons.length > 0 && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="mt-2.5 space-y-2">
                 {coupons.slice(0, 3).map(chip)}
-                <button type="button" onClick={() => setIsCouponDrawerOpen(true)} className={LINK}>
+                <button type="button" onClick={() => setIsCouponDrawerOpen(true)} className={CAPS_LINK_BRAND}>
                   View all offers
                 </button>
               </div>
             )}
           </div>
           {/* Shown whether the field is open or the shopper tapped the coupon chip */}
-          <CouponError id={errorId} message={couponError} className={couponOpen ? 'px-3.5 pb-3.5 -mt-1.5' : 'px-3.5 pb-3'} />
+          <CouponError id={errorId} message={couponError} className="mt-2" />
         </div>
       )}
 
-      <div className="sag-glass p-4">
+      <div className="sag-glass px-4 py-[18px]">
         <PriceDetails />
       </div>
     </div>

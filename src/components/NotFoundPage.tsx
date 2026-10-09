@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { HomeIcon, SearchIcon, SupportIcon, TruckIcon } from './StoreIcons';
+import { SectionTitle } from './SectionTitle';
 
 /** Friendly 404: real collections from the catalogue plus the main help routes. */
 export const NotFoundPage: React.FC = () => {
@@ -22,10 +23,8 @@ export const NotFoundPage: React.FC = () => {
   return (
     <div id="not-found-page" className="px-4 sm:px-6 py-8 lg:py-16">
       <div className="max-w-xl mx-auto">
-        <div className="text-center sag-glass px-5 py-8 sm:py-10">
-          <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Error 404</p>
-          <h1 className="font-display font-medium text-[23px] leading-7 lg:text-[36px] lg:leading-[44px] text-ink mt-2">This page does not exist</h1>
-          <p className="mt-2 text-[13px] leading-[18px] lg:text-[15px] lg:leading-[22px] text-ink-muted">The link may be old or mistyped. Try the shop or go back to the homepage.</p>
+        <div className="text-center sag-glass rounded-xl! px-5 py-9 sm:py-11">
+          <SectionTitle as="h1" eyebrow="Error 404" title="This page does not exist" sub="The link may be old or mistyped. Try the shop or go back to the homepage." />
           <div className="mt-6 flex flex-col min-[420px]:flex-row gap-2.5">
             <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-primary min-[420px]:flex-1">Shop all styles</button>
             <button type="button" onClick={() => setActivePage('home')} className="sag-btn-outline gap-2 min-[420px]:flex-1">
@@ -36,11 +35,11 @@ export const NotFoundPage: React.FC = () => {
 
         {collections.length > 0 && (
           <section className="mt-8" aria-labelledby="not-found-collections">
-            <h2 id="not-found-collections" className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Popular collections</h2>
+            <h2 id="not-found-collections" className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale">Popular collections</h2>
             <div className="mt-3 flex flex-wrap gap-2">
               {collections.map((name) => (
                 <button key={name} type="button" onClick={() => navigateToCategory(name as any)}
-                  className="inline-flex items-center h-[38px] px-4 rounded-full bg-surface border border-line text-[13px] text-ink hover:bg-sunken transition-colors cursor-pointer">
+                  className="sag-chip inline-flex items-center h-11 px-4 text-[13px] transition-colors cursor-pointer">
                   {name}
                 </button>
               ))}

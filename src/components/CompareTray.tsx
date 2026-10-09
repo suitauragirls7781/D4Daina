@@ -59,7 +59,7 @@ export const CompareTray: React.FC = () => {
 
   const rows: Array<[string, (p: Product) => React.ReactNode]> = [
     ['Price', (p) => <span className="sag-num font-semibold text-ink">{inr(p.price)}</span>],
-    ['Discount', (p) => (discountOf(p) ? <span className="sag-num"><span className="font-medium text-sale">{discountOf(p)}% off</span> <span className="text-ink-muted line-through">{inr(Math.max(p.price, Number(p.originalPrice) || p.price))}</span></span> : '—')],
+    ['Discount', (p) => (discountOf(p) ? <span className="sag-num"><span className="font-semibold text-accent">{discountOf(p)}% off</span> <span className="text-ink-muted line-through">{inr(Math.max(p.price, Number(p.originalPrice) || p.price))}</span></span> : '—')],
     ['Colour', (p) => (p.colors || []).map((c) => c.name).filter((n) => !['Default', 'Standard'].includes(n)).join(', ') || productColourFamilies(p).join(', ') || '—'],
     ['Fabric', (p) => p.fabric || '—'],
     ['Fit', (p) => p.fit || '—'],
@@ -69,35 +69,35 @@ export const CompareTray: React.FC = () => {
     ['Availability', (p) => (isAvailable(p) ? <span className="text-ink">In stock</span> : <span className="text-ink-muted">Sold out</span>)],
   ];
   const columns = { gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` };
-  const viewButton = 'sag-btn-outline h-[38px] w-full px-2';
+  const viewButton = 'sag-btn-outline h-11 w-full px-2';
   const removeLink = 'min-h-11 inline-flex items-center text-[12.5px] text-ink-muted underline decoration-1 underline-offset-4 hover:text-ink cursor-pointer';
-  // Cells that stay in place while the table scrolls: a solid dark sheet, so nothing shows through them
-  const stuck = 'bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl';
-  const photo = 'w-full aspect-[4/5] rounded-[18px]! object-cover object-top bg-sunken';
+  // Cells that stay in place while the table scrolls: solid white, so nothing shows through them
+  const stuck = 'bg-surface';
+  const photo = 'w-full aspect-[4/5] rounded-lg object-cover object-top bg-sunken';
 
   return (
     <>
       {!open && items.length > 0 && (
         <div className="sag-glass-bar fixed left-1/2 -translate-x-1/2 bottom-[calc(92px+env(safe-area-inset-bottom))] md:bottom-6 z-40 flex items-center gap-1.5 max-w-[calc(100vw-2rem)] text-ink p-1.5 sag-pop">
           <div className="flex -space-x-2 pl-1">
-            {items.map((p) => <img key={p.id} src={getCleanImageUrl(p.images?.[0] || '', 80)} alt="" className="w-8 h-10 rounded-[10px]! border border-line object-cover object-top bg-sunken" />)}
+            {items.map((p) => <img key={p.id} src={getCleanImageUrl(p.images?.[0] || '', 80)} alt="" className="w-8 h-10 rounded-[6px]! border border-line object-cover object-top bg-sunken" />)}
           </div>
           <button onClick={() => (items.length >= 2 ? setOpen(true) : showToast('Add one more style to compare.', 'info'))}
-            className="sag-btn-primary sag-num h-10 px-4 gap-2 whitespace-nowrap">
+            className="sag-btn-primary sag-num h-11 px-4 gap-2 whitespace-nowrap">
             <GitCompare className="w-3.5 h-3.5" strokeWidth={1.5} /> Compare ({items.length})
           </button>
-          <button onClick={clearCompare} aria-label="Clear comparison" className="w-10 h-10 rounded-full border border-line bg-white/10 text-ink-muted hover:text-ink flex items-center justify-center cursor-pointer"><X className="w-[18px] h-[18px]" strokeWidth={1.5} /></button>
+          <button onClick={clearCompare} aria-label="Clear comparison" className="w-11 h-11 rounded-full text-ink-muted hover:text-ink flex items-center justify-center cursor-pointer"><X className="w-[18px] h-[18px]" strokeWidth={1.5} /></button>
         </div>
       )}
 
       {open && (
         <div className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={() => setOpen(false)}>
           <div role="dialog" aria-modal="true" aria-label="Compare styles" onClick={(e) => e.stopPropagation()}
-            className="bg-surface text-ink w-full md:max-w-4xl max-h-[85dvh] overflow-hidden rounded-t-[26px] md:rounded-[26px] border-t border-line md:border flex flex-col animate-in slide-in-from-bottom-5 fade-in">
-            <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-9 h-1 rounded-full bg-white/25" /></div>
-            <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
-              <p className="font-display text-[19px] font-medium leading-6 text-ink">Compare styles</p>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="w-10 h-10 mr-1 rounded-full border border-line bg-white/10 text-ink hover:bg-white/15 flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+            className="bg-surface text-ink w-full md:max-w-4xl max-h-[85dvh] overflow-hidden rounded-t-[10px] rounded-b-none md:rounded-[10px] border-t border-line md:border flex flex-col animate-in slide-in-from-bottom-5 fade-in">
+            <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-control" /></div>
+            <div className="flex items-center justify-between pl-4 pr-2 min-h-[60px] border-b border-line shrink-0">
+              <p className="font-display text-[24px] leading-7 text-ink">Compare styles</p>
+              <button onClick={() => setOpen(false)} aria-label="Close" className="w-11 h-11 rounded-full text-ink hover:text-ink-muted flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
             </div>
             <div className="overflow-auto overscroll-contain pb-[env(safe-area-inset-bottom)]">
               {/* Phones: products sit side by side in narrow columns and each detail is a labelled row */}
@@ -163,7 +163,7 @@ export const CompareTray: React.FC = () => {
               </table>
               {facts.length > 0 && (
                 <div className="mx-4 mb-4 md:mt-2 border-t border-line pt-4">
-                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.16em] text-sale mb-2">The facts, side by side</p>
+                  <p className="text-[10.5px] font-semibold uppercase tracking-[0.2em] text-brand mb-2">The facts, side by side</p>
                   <ul className="text-sm leading-5 text-ink-muted space-y-1 list-disc pl-5">{facts.map((f) => <li key={f}>{f}</li>)}</ul>
                 </div>
               )}
@@ -173,7 +173,7 @@ export const CompareTray: React.FC = () => {
                   <div className="flex flex-wrap gap-2">
                     {history.map((set) => (
                       <button key={set.map((p) => p.id).join('|')} onClick={() => setCompare(set.map((p) => String(p.id)))}
-                        className="sag-chip h-[38px] min-w-0 max-w-full px-3.5 text-[13px] font-normal">
+                        className="sag-chip h-11 min-w-0 max-w-full px-3.5 text-[13px] font-normal">
                         <span className="truncate">{set.map((p) => p.name.split(' ').slice(0, 2).join(' ')).join(' vs ')}</span>
                       </button>
                     ))}

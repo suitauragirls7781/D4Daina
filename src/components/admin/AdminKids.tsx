@@ -231,7 +231,7 @@ export const AdminKids: React.FC = () => {
         {countsLoading ? (
           <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : kids.length === 0 ? (
-          <div className="mt-4 rounded-2xl bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
+          <div className="mt-4 rounded-[10px] bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
             No kids wear yet. Use <span className="font-semibold text-ink">Add Baby Girls wear</span> or <span className="font-semibold text-ink">Add Baby Boys wear</span> above to add the first item.
           </div>
         ) : results.length === 0 ? (
@@ -300,7 +300,7 @@ interface KidsFormProps {
   showToast: ShowToast;
 }
 
-const shortcut = 'h-11 sm:h-9 px-3.5 rounded-full border border-line bg-sunken text-[13px] font-semibold text-ink hover:bg-sunken-deep cursor-pointer';
+const shortcut = 'h-11 sm:h-9 px-3.5 rounded-lg border border-line bg-sunken text-[13px] font-semibold text-ink hover:bg-sunken-deep cursor-pointer';
 
 /** Add / edit one kids wear item, saved through the same product functions as the rest of the catalogue. */
 const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProducts, onClose, onSaved, addProduct, updateProduct, ensureCategory, showToast }) => {
@@ -523,7 +523,7 @@ const KidsForm: React.FC<KidsFormProps> = ({ draft: initial, existing, allProduc
                 {d.sizes.length > 0 && <button type="button" onClick={() => set({ sizes: [] })} className={shortcut}>Clear</button>}
               </div>
             </div>
-            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand">
+            <div id="kid-sizes" role="group" aria-labelledby="kid-sizes-label" tabIndex={-1} className="flex flex-wrap gap-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand">
               {sizeOrder.map((s) => {
                 const on = d.sizes.includes(s);
                 return (

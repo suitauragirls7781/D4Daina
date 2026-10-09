@@ -57,12 +57,12 @@ export const ContactUsPage: React.FC = () => {
 
   const telHref = `tel:+91${SUPPORT_PHONE_DISPLAY.replace(/\D/g, '').replace(/^91/, '')}`;
   const optional = <span className="normal-case tracking-normal">(optional)</span>;
-  const row = 'flex items-start gap-3 border-b border-line py-[15px]';
+  const row = 'flex items-start gap-3 border-b border-line py-4 rounded-none!';
   const rowIcon = 'shrink-0 flex text-sale mt-0.5';
-  const rowTitle = 'block font-sans text-sm leading-5 font-normal text-ink';
-  const rowSub = 'block text-[11.5px] leading-4 font-normal text-ink-muted mt-0.5';
+  const rowTitle = 'block font-sans text-sm leading-5 font-semibold text-ink';
+  const rowSub = 'block text-[12px] leading-[17px] font-normal text-ink-muted mt-0.5';
   const chevron = <ChevronRight className="w-4 h-4 text-ink-muted shrink-0 mt-0.5" strokeWidth={1.5} aria-hidden="true" />;
-  const label = 'sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted';
+  const label = 'sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted';
 
   return (
     <div id="contact-us-page" className="pb-12 lg:pb-16">
@@ -81,12 +81,12 @@ export const ContactUsPage: React.FC = () => {
         {/* Ways to reach us */}
         <div className="lg:col-span-5 min-w-0">
           {/* WhatsApp & call come first */}
-          <section className="sag-glass p-4 sm:p-5" aria-labelledby="contact-whatsapp-title">
+          <section className="sag-glass sag-glass-strong p-5 sm:p-6" aria-labelledby="contact-whatsapp-title">
             <div className="flex items-start gap-3">
               <span className="shrink-0 flex text-sale mt-0.5"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
               <div className="min-w-0 flex-1">
-                <h2 id="contact-whatsapp-title" className="font-sans text-sm leading-5 font-semibold text-ink">WhatsApp &amp; call</h2>
-                <p className="mt-0.5 text-[11.5px] leading-4 text-ink-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
+                <h2 id="contact-whatsapp-title" className="font-display text-[22px] leading-7 text-ink">WhatsApp &amp; call</h2>
+                <p className="mt-0.5 text-[12px] leading-[17px] text-ink-muted">Monday to Saturday: 10:00 AM - 7:00 PM IST</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-1 min-[420px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-2.5">
@@ -102,7 +102,7 @@ export const ContactUsPage: React.FC = () => {
                 <Phone className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> {SUPPORT_PHONE_DISPLAY}
               </a>
             </div>
-            <p className="mt-3 text-[11.5px] leading-4 text-ink-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
+            <p className="mt-3 text-[12px] leading-[17px] text-ink-muted">Sunday: Closed for order fulfillment and scheduled dispatches. Sunday queries are attended to first thing Monday morning.</p>
           </section>
 
           {/* Email */}
@@ -157,13 +157,13 @@ export const ContactUsPage: React.FC = () => {
         </div>
 
         {/* Contact form */}
-        <div className="lg:col-span-7 sag-glass p-4 sm:p-6 min-w-0">
+        <div className="lg:col-span-7 sag-glass p-5 sm:p-7 min-w-0">
           {submitted ? (
             <div className="py-8 sm:py-12 text-center" role="status">
-              <div className="w-[54px] h-[54px] !rounded-full sag-glass text-sale flex items-center justify-center mx-auto">
+              <div className="w-[54px] h-[54px] rounded-full! border border-brand text-sale flex items-center justify-center mx-auto">
                 <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
               </div>
-              <h2 className="mt-4 font-display text-[22px] leading-7 font-medium text-ink">Thank you!</h2>
+              <h2 className="mt-4 font-display text-[30px] leading-9 text-ink">Thank you!</h2>
               <p className="mt-2 text-[13px] leading-[18px] text-ink-muted max-w-sm mx-auto">
                 We have received your message. Our team will reach out to you during support hours.
               </p>
@@ -183,8 +183,8 @@ export const ContactUsPage: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <h2 className="font-display text-[19px] leading-6 font-medium text-ink">Send us a message</h2>
-                <p className="text-[11.5px] leading-4 text-ink-muted mt-1">Fields marked * are required.</p>
+                <h2 className="font-display text-[26px] leading-8 text-ink">Send us a message</h2>
+                <p className="text-[12px] leading-[17px] text-ink-muted mt-1">Fields marked * are required.</p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -8,7 +8,7 @@ import { HOME_WRAP } from './HomeSections';
  * No fabric, weaving or dispatch-time claims are made here, because the owner has not confirmed any.
  */
 export const ArtisanalPromises: React.FC = () => (
-  <section id="artisanal-promises-strip" aria-label="Shopping with us" className="w-full py-1 lg:py-3">
+  <section id="artisanal-promises-strip" aria-label="Shopping with us" className="w-full py-4 lg:py-8">
     <div className={HOME_WRAP}>
       <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />
     </div>

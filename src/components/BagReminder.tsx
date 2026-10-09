@@ -29,7 +29,7 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
   };
 
   return (
-    <aside aria-label="Your bag" className={`sag-glass sag-glass-strong flex items-center gap-2.5 rounded-[20px]! p-2 shadow-none! sm:gap-3 sm:p-2.5 ${className}`}>
+    <aside aria-label="Your bag" className={`sag-glass sag-glass-strong flex items-center gap-2.5 p-2 sm:gap-3 sm:p-2.5 ${className}`}>
       <img
         src={getCleanImageUrl(photo, 160)}
         alt=""
@@ -37,7 +37,7 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
         height={55}
         loading="lazy"
         decoding="async"
-        className="h-[55px] w-11 shrink-0 rounded-[12px]! bg-sunken object-cover object-top"
+        className="h-[55px] w-11 shrink-0 rounded-lg bg-sunken object-cover object-top"
       />
       <p className="min-w-0 flex-1 text-[13.5px] leading-5 text-ink">
         <span className="block font-medium">Your bag has {cartCount} {cartCount === 1 ? 'item' : 'items'}</span>
@@ -46,7 +46,7 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
       <button
         type="button"
         onClick={() => setActivePage('cart')}
-        className="sag-btn-primary h-10 shrink-0 px-4 sm:h-11 sm:px-5"
+        className="sag-btn-primary h-11 shrink-0 px-4 sm:px-5"
       >
         Checkout
       </button>
@@ -54,7 +54,7 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
         type="button"
         onClick={close}
         aria-label="Hide this reminder"
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-ink-muted cursor-pointer hover:text-ink sm:h-10 sm:w-10"
+        className="flex h-11 w-9 shrink-0 items-center justify-center text-ink-muted cursor-pointer hover:text-ink sm:w-11"
       >
         <X className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
       </button>

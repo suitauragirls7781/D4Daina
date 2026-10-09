@@ -204,7 +204,7 @@ export const AdminSpecialDod: React.FC = () => {
 
                     <div className="grid grid-cols-1 gap-3.5 md:grid-cols-[168px_1fr]">
                       <div>
-                        <img src={photo} alt="" width={168} height={105} className={`w-full rounded-2xl border border-line md:w-[168px] ${offer.imageUrl ? 'h-auto' : 'aspect-[16/10] object-cover'}`} />
+                        <img src={photo} alt="" width={168} height={105} className={`w-full rounded-[10px] border border-line md:w-[168px] ${offer.imageUrl ? 'h-auto' : 'aspect-[16/10] object-cover'}`} />
                         <div className="mt-2 flex flex-wrap gap-2">
                           <label className={`sag-btn-outline h-9 cursor-pointer gap-1.5 px-3 text-xs ${uploadingId ? 'pointer-events-none opacity-60' : ''}`}>
                             {uploadingId === offer.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ImagePlus className="w-3.5 h-3.5" />}

@@ -164,7 +164,7 @@ export const AdminBanners: React.FC = () => {
             className={`${kit.panel} overflow-hidden flex flex-col md:flex-row gap-4 md:gap-5 md:items-center justify-between`}
           >
             {/* Banner Preview Thumbnail */}
-            <div className="w-full md:w-64 aspect-[2/1] md:aspect-auto md:h-32 rounded-2xl overflow-hidden shrink-0 bg-sunken flex items-center justify-center">
+            <div className="w-full md:w-64 aspect-[2/1] md:aspect-auto md:h-32 rounded-[10px] overflow-hidden shrink-0 bg-sunken flex items-center justify-center">
               {banner.image && banner.image.trim() !== "" ? (
                 <img
                   src={banner.image}
@@ -294,7 +294,7 @@ export const AdminBanners: React.FC = () => {
                   {/* Visual Thumbnail & Upload Trigger */}
                   <div className="space-y-3">
                     {formData.image && formData.image.trim() !== "" ? (
-                      <div className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden bg-sunken border border-line">
+                      <div className="relative w-full aspect-[2/1] rounded-[10px] overflow-hidden bg-sunken border border-line">
                         <img
                           src={formData.image}
                           alt="Banner Preview"
@@ -303,7 +303,7 @@ export const AdminBanners: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setFormData({ ...formData, image: '' })}
-                          className="absolute top-1.5 right-1.5 w-11 h-11 flex items-center justify-center bg-[color:var(--sag-glass-sheet)] text-danger border border-line rounded-full cursor-pointer"
+                          className="absolute top-1.5 right-1.5 w-11 h-11 flex items-center justify-center bg-surface text-danger border border-line rounded-full cursor-pointer"
                           title="Remove Image"
                           aria-label="Remove image"
                         >
@@ -311,7 +311,7 @@ export const AdminBanners: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-6 text-center text-ink-muted rounded-2xl border border-dashed border-control">
+                      <div className="flex flex-col items-center justify-center py-6 text-center text-ink-muted rounded-[10px] border border-dashed border-control">
                         <ImageIcon className="w-6 h-6 mb-2 text-ink-faint" />
                         <p className="text-[13px] leading-[18px]">No image selected</p>
                       </div>

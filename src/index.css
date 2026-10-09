@@ -709,7 +709,7 @@
    empty-bag and payment-result screens keep the normal header).
 ------------------------------------------------------------------- */
 #app-main-content:has(.sag-checkout) > header.sticky,
-#app-main-content:has(.sag-checkout) > .sag-header-row { display: none; }
+#app-main-content:has(.sag-checkout) > .sag-marquee { display: none; }
 
 /* ------------------------------------------------------------------
    Pastel blocks (owner's pick, 2026-10-06): a few gentle loops that
@@ -803,8 +803,7 @@
   body { font-size: 14px; line-height: 20px; }
   /* Display headings: page titles 21px, section titles 18px (an h1 / h2 that is a product name or an order
      number carries font-sans and keeps its own size) */
-  #app-main-content h1:not(.font-sans):not(.sr-only) { font-size: 21px !important; line-height: 27px !important; }
-  #app-main-content h2:not(.font-sans):not(.sr-only) { font-size: 18px !important; line-height: 24px !important; }
+  /* (Emerald Heritage: serif titles keep the size each page gives them; the old forced 21px / 18px is gone) */
 }
 @layer components {
   @media (max-width: 639px) {
@@ -1059,3 +1058,82 @@ h1, h2, .font-display { font-weight: 600; font-size-adjust: 0.455; }
 .sag-marquee-track > span::after { content: ""; width: 5px; height: 5px; border: 1px solid currentColor; transform: rotate(45deg); flex: none; }
 @keyframes sag-marquee { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .sag-marquee-track { animation: none; } .sag-lnk::after { transition: none; } }
+
+/* Account, orders, sign in and information pages (Emerald Heritage): the order timeline and the sign-in step */
+.sag-tl { position: relative; padding-left: 38px; }
+.sag-tl > li { position: relative; min-height: 58px; padding-bottom: 20px; animation: sag-tl-in 600ms var(--sag-ease) both; animation-delay: calc(var(--i, 0) * 170ms + 150ms); }
+.sag-tl > li:last-child { min-height: 24px; padding-bottom: 0; }
+.sag-tl > li::before, .sag-tl > li::after { content: ""; position: absolute; top: 24px; bottom: 0; }
+.sag-tl > li::before { left: -26.5px; width: 1px; background: var(--sag-control); }
+.sag-tl > li::after { left: -27px; width: 2px; background: var(--sag-brand); transform: scaleY(0); transform-origin: top; }
+.sag-tl > li.is-done::after { animation: sag-tl-fill 520ms var(--sag-ease) both; animation-delay: calc(var(--i, 0) * 170ms + 420ms); }
+.sag-tl > li:last-child::before, .sag-tl > li:last-child::after { content: none; }
+.sag-tl-dot { position: absolute; left: -38px; top: 0; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--sag-control); background: var(--sag-glass); display: grid; place-items: center; color: var(--sag-on-gold); }
+.sag-tl > li.is-done > .sag-tl-dot { background: var(--sag-brand); border-color: var(--sag-brand); }
+.sag-tl > li.is-current > .sag-tl-dot { border: 2px solid var(--sag-brand); }
+.sag-tl > li.is-current > .sag-tl-dot::after { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sag-brand); }
+.sag-tl > li.is-stopped > .sag-tl-dot { background: var(--sag-danger); border-color: var(--sag-danger); }
+@keyframes sag-tl-in { from { opacity: 0; transform: translate3d(0, 10px, 0); } }
+@keyframes sag-tl-fill { to { transform: scaleY(1); } }
+.sag-step-in { animation: sag-step-in 550ms var(--sag-ease) both; }
+@keyframes sag-step-in { from { opacity: 0; transform: translate3d(18px, 0, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .sag-tl > li, .sag-step-in { animation: none !important; }
+  .sag-tl > li.is-done::after { animation: none !important; transform: none; }
+}
+
+/* Bag and checkout (Emerald Heritage): the step content slides in once, a tick draws itself, the line between
+   the two steps fills. All off with reduced motion. */
+@keyframes sag-co-step-in { from { opacity: 0; transform: translate3d(18px, 0, 0); } }
+.sag-co-step-in { animation: sag-co-step-in 550ms var(--sag-ease) both; }
+@keyframes sag-tick-draw { from { stroke-dashoffset: 26; } to { stroke-dashoffset: 0; } }
+.sag-tick-draw path, .sag-tick-draw polyline { stroke-dasharray: 26; stroke-dashoffset: 0; animation: sag-tick-draw 550ms var(--sag-ease) 150ms both; }
+@keyframes sag-ring-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.sag-ring-draw { stroke-dasharray: 1; stroke-dashoffset: 0; animation: sag-ring-draw 800ms var(--sag-ease) both; }
+.sag-steps-fill { transform-origin: left; transition: scale 800ms var(--sag-ease), transform 800ms var(--sag-ease); }
+.sag-step-dot { transition: background-color 450ms var(--sag-ease), border-color 450ms var(--sag-ease), color 450ms var(--sag-ease), scale 450ms var(--sag-ease); }
+@media (prefers-reduced-motion: reduce) {
+  .sag-co-step-in, .sag-tick-draw path, .sag-tick-draw polyline, .sag-ring-draw { animation: none !important; }
+  .sag-steps-fill, .sag-step-dot { transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   Homepage sections (Emerald Heritage): the hero's cross-fade and slow zoom,
+   and the thin arch line that draws around a category photo.
+------------------------------------------------------------------- */
+.sag-hero-slide { opacity: 0; transition: opacity 1000ms cubic-bezier(0.6, 0, 0.2, 1); }
+.sag-hero-slide.is-on { opacity: 1; z-index: 1; }
+/* The slide that leaves keeps its zoomed size while it fades, so it never jumps */
+.sag-hero-slide img { transform: scale(1.06); }
+@keyframes sag-hero-zoom { from { transform: scale(1); } to { transform: scale(1.06); } }
+.sag-hero-slide.is-on img, #main-content .sag-hero-slide.is-on img { animation: sag-hero-zoom 7500ms cubic-bezier(0.2, 0.4, 0.3, 1) both; }
+.sag-arch-line { position: absolute; left: -6px; right: -6px; top: -6px; bottom: 0; border: 1px solid var(--sag-champagne); border-bottom: 0; border-radius: 999px 999px 0 0; pointer-events: none; }
+.sag-reveal .sag-arch-line { clip-path: inset(100% 0 0 0); transition: clip-path 1400ms var(--sag-ease) 250ms; }
+.sag-reveal.is-in .sag-arch-line { clip-path: inset(0); }
+@media (prefers-reduced-motion: reduce) {
+  .sag-hero-slide { transition: none; }
+  .sag-hero-slide img, .sag-hero-slide.is-on img, #main-content .sag-hero-slide.is-on img { animation: none !important; transform: none; }
+  .sag-reveal .sag-arch-line { clip-path: none; transition: none; }
+}
+
+/* ------------------------------------------------------------------
+   Site frame (header, phone menu, footer), Emerald Heritage.
+------------------------------------------------------------------- */
+/* Phone menu: the rows slide in one after another each time the menu opens (--i is the row's place) */
+@keyframes sag-menu-row { from { opacity: 0; transform: translate3d(-12px, 0, 0); } }
+.sag-menu-row { animation: sag-menu-row 500ms var(--sag-ease) both; animation-delay: calc(var(--i, 0) * 40ms + 120ms); }
+/* Header wordmark: it arrives once and the two rules of its ornament draw outwards; the bar keeps its height */
+@keyframes sag-hdr-wm { from { opacity: 0; transform: translate3d(0, -6px, 0); } }
+@keyframes sag-hdr-rule { from { transform: scaleX(0); } }
+.sag-hdr-wm { animation: sag-hdr-wm 900ms var(--sag-ease) both; }
+.sag-hdr-orn { height: 5px; }
+.sag-hdr-orn::before, .sag-hdr-orn::after { width: 34px; transform-origin: right; animation: sag-hdr-rule 1000ms var(--sag-ease) 350ms both; }
+.sag-hdr-orn::after { transform-origin: left; }
+/* The white collections menu hangs from the emerald bar: its focus ring is emerald, not champagne */
+#collections-menu :focus-visible { outline-color: var(--sag-brand); }
+@media (prefers-reduced-motion: reduce) {
+  .sag-menu-row, .sag-hdr-wm, .sag-hdr-orn::before, .sag-hdr-orn::after { animation: none !important; }
+}
+
+/* A title that already has the ornament under it does not also get the drawn line */
+#main-content section.sag-reveal :is(h1, h2).font-display:has(+ .sag-orn)::after { content: none; }

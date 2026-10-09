@@ -43,10 +43,10 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
 
   const labelText = 'sag-label';
   return (
-    <div className="sag-glass rounded-[18px]! shadow-none! mt-4 p-4 sag-drop" role="region" aria-label="Find my size">
+    <div className="sag-glass mt-4 p-4 sag-drop" role="region" aria-label="Find my size">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Find my size</p>
+          <p className="font-display text-[21px] leading-6 text-ink">Find my size</p>
           <p className="text-[12.5px] leading-[18px] text-ink-muted mt-1.5">Only sizes this style is made in: {offered.join(', ') || sizes.join(', ')}</p>
         </div>
         <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 -mt-3 -mr-3 shrink-0 rounded-full text-ink hover:text-ink-muted flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
@@ -68,7 +68,7 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
           <div className="grid grid-cols-3 gap-2">
             {(['fitted', 'regular', 'relaxed'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFit(f)} aria-pressed={fit === f}
-                className="sag-chip h-[38px] sm:h-11 min-w-0 px-2 text-[13px] leading-5 capitalize">{f}</button>
+                className="sag-chip h-11 min-w-0 px-2 text-[13px] leading-5 capitalize">{f}</button>
             ))}
           </div>
         </fieldset>
@@ -78,11 +78,11 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
         <div className="mt-4 border-t border-line pt-4 sag-fade" aria-live="polite">
           {result.size && (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Recommended size <strong className="block text-[26px] leading-8 font-medium normal-case tracking-normal text-ink mt-1">{result.size}</strong></p>
+              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-brand">Recommended size <strong className="block font-display text-[32px] leading-9 font-semibold normal-case tracking-normal text-ink mt-1">{result.size}</strong></p>
               <button type="button" onClick={() => onPick(result.size!)} className="sag-btn-primary h-12 px-6 shrink-0">Select {result.size}</button>
             </div>
           )}
-          <p className={`${result.size ? 'mt-3' : ''} text-[12.5px] leading-[18px] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-semibold text-sale underline underline-offset-4 decoration-1 cursor-pointer inline-block py-[13px] -my-[13px]">size chart</button>.</p>
+          <p className={`${result.size ? 'mt-3' : ''} text-[12.5px] leading-[18px] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-semibold text-brand underline underline-offset-4 decoration-1 cursor-pointer inline-block py-[13px] -my-[13px]">size chart</button>.</p>
         </div>
       )}
     </div>

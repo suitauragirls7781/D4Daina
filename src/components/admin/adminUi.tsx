@@ -1,7 +1,7 @@
 import React from 'react';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 
-/** Shared pieces of the admin dashboard and reports in the "Midnight glass" look. */
+/** Shared pieces of the admin dashboard and reports in the "Emerald Heritage" look. */
 
 export const adminText = {
   eyebrow: 'text-[11px] leading-4 font-medium uppercase tracking-[0.12em] text-ink-muted',
@@ -65,7 +65,7 @@ export const EmptyNote: React.FC<{ children: React.ReactNode }> = ({ children })
 /** A small product photo (4:5), or a quiet placeholder when the product has none. */
 export const Thumb: React.FC<{ url?: string }> = ({ url }) => (url && url.trim()
   ? <img src={getCleanImageUrl(url, 160)} alt="" loading="lazy" className="w-10 aspect-[4/5] shrink-0 object-cover object-top bg-sunken" />
-  : <span className="w-10 aspect-[4/5] shrink-0 rounded-[14px] bg-sunken" aria-hidden="true" />);
+  : <span className="w-10 aspect-[4/5] shrink-0 rounded-[10px] bg-sunken" aria-hidden="true" />);
 
 /** A share of a whole as a thin gold bar with its label and number. */
 export const ShareRow: React.FC<{ label: string; count: number; total: number }> = ({ label, count, total }) => {

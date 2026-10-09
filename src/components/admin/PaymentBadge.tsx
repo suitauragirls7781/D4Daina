@@ -4,7 +4,7 @@ import { paymentFailed } from '../OrderProgress';
 
 /**
  * The shared pieces of the admin sales pages (orders, order details, returns, cancellations, abandoned
- * checkouts, customers, leads, reviews) in the "Midnight glass" look: status pills, the page title, the row
+ * checkouts, customers, leads, reviews) in the "Emerald Heritage" look: status pills, the page title, the row
  * of key numbers, titled glass panels, and the class names for buttons, fields, chips and tables.
  * Every page is built in the same order: title, key numbers, filters, the list, an honest empty state.
  */
@@ -19,14 +19,14 @@ export const adminUi = {
   /** One of many repeated cards in a list (same glass, without the blur, so long lists stay smooth). */
   card: 'sag-card p-4 sm:p-5',
   /** A quiet box inside a panel. */
-  inset: 'rounded-2xl border border-line bg-sunken p-3.5',
+  inset: 'rounded-[10px] border border-line bg-sunken p-3.5',
   primary: 'sag-btn-primary h-11 px-5 gap-2 whitespace-nowrap disabled:cursor-not-allowed',
   outline: 'sag-btn-outline h-11 px-5 gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed',
   /** Compact buttons for table rows. */
   primarySmall: 'sag-btn-primary h-10 px-4 gap-1.5 whitespace-nowrap disabled:cursor-not-allowed',
   outlineSmall: 'sag-btn-outline h-10 px-4 gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed',
   /** "Say no" or delete: always with words, kept apart from the main action. */
-  danger: 'h-11 px-5 rounded-full border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-50 disabled:cursor-not-allowed',
+  danger: 'h-11 px-5 rounded-lg border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-50 disabled:cursor-not-allowed',
   iconBtn: 'w-11 h-11 shrink-0 rounded-full inline-flex items-center justify-center text-ink cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-40',
   field: 'sag-input h-11',
   search: 'sag-input h-11 pl-10',
@@ -45,9 +45,9 @@ export const adminUi = {
   row: 'transition-colors hover:bg-sunken',
   check: 'w-[22px] h-[22px] shrink-0 accent-brand',
   checkRow: 'min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer',
-  alert: 'rounded-2xl border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 font-medium text-danger',
+  alert: 'rounded-[10px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 font-medium text-danger',
   avatar: 'shrink-0 rounded-full border border-line bg-sunken text-ink text-sm font-semibold flex items-center justify-center',
-  photo: 'shrink-0 aspect-[4/5] rounded-xl object-cover object-top bg-sunken',
+  photo: 'shrink-0 aspect-[4/5] rounded-lg object-cover object-top bg-sunken',
 };
 
 // ---------------------------------------------------------------- pills
@@ -62,7 +62,7 @@ const PILL_TONE: Record<PillTone, string> = {
   danger: 'border-danger-line bg-danger-tint text-danger',
 };
 const PILL_DOT: Record<PillTone, string> = { good: 'bg-brand', plain: 'bg-ink', muted: 'bg-control', danger: 'bg-danger' };
-const PILL = 'inline-flex items-center gap-1.5 min-h-6 px-2.5 py-0.5 rounded-full border text-xs leading-4 font-medium whitespace-nowrap';
+const PILL = 'inline-flex items-center gap-1.5 min-h-6 px-2.5 py-0.5 rounded-lg border text-xs leading-4 font-medium whitespace-nowrap';
 
 export const pillClass = (tone: PillTone) => `${PILL} ${PILL_TONE[tone]}`;
 

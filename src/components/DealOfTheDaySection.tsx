@@ -21,9 +21,10 @@ const readTimeLeft = (endTime?: string): TimeLeft | null => {
 const two = (value: number) => String(value).padStart(2, '0');
 
 /**
- * Deal of the day (pick 3-3): one glass panel in two parts. Left, a brighter glass area with the label and
- * the real discount percent very large in gold serif (the price when there is no discount) and the countdown
- * when a real end time is set; right, a rounded photo, the name, price, the real saving and a gold "View deal".
+ * Deal of the day (pick 3-3): one card in two parts. Left, the emerald side with the label and the real
+ * discount percent very large in champagne serif (the price when there is no discount) and the countdown
+ * when a real end time is set; right, the white side with the photo, the name, price, the real saving and an
+ * emerald "View deal".
  * The selling price counts once from the MRP to the real price when the section first comes into view.
  * The whole box opens the product, where the size is chosen.
  * The price is the product's own price (what the bag charges), and the clock runs only to the end time the
@@ -91,7 +92,7 @@ export const DealOfTheDaySection: React.FC = () => {
   const showClock = Boolean(timeLeft && timerOn);
   const saving = originalPrice > dealPrice ? originalPrice - dealPrice : 0;
   const clockParts: Array<[string, number]> = timeLeft
-    ? [['Days', timeLeft.days], ['Hours', timeLeft.hours], ['Min', timeLeft.minutes], ['Sec', timeLeft.seconds]]
+    ? [['Days', timeLeft.days], ['Hrs', timeLeft.hours], ['Min', timeLeft.minutes], ['Sec', timeLeft.seconds]]
     : [];
   const clockText = timeLeft ? `Offer ends in ${timeLeft.days} days ${timeLeft.hours} hours ${timeLeft.minutes} minutes` : '';
   // What the price line shows right now; it always ends on the real price
@@ -104,44 +105,44 @@ export const DealOfTheDaySection: React.FC = () => {
   };
 
   return (
-    <section ref={sectionRef} id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full py-[18px] lg:py-10">
-      <div className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8">
+    <section ref={sectionRef} id="deal-of-the-day-section" aria-labelledby="deal-of-the-day-title" className="w-full py-10 lg:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <a
           href={`/product/${product.id}`}
           onClick={openProduct}
-          className="sag-glass rounded-[26px]! mx-auto flex max-w-2xl items-stretch overflow-hidden text-ink lg:max-w-4xl"
+          className="sag-glass mx-auto flex max-w-2xl items-stretch overflow-hidden text-ink lg:max-w-4xl"
         >
-          {/* Left: the brighter glass area with the real discount (or the price when there is no discount) */}
-          <span className="flex w-[38%] shrink-0 flex-col items-center justify-center gap-1.5 border-r border-line bg-white/[0.08] px-2 py-4 text-center text-ink sm:px-4 sm:py-6 lg:w-[300px]">
-            <span className="text-[10.5px] font-semibold uppercase leading-4 tracking-[0.16em] text-sale sm:text-[11px]">Deal of the day</span>
+          {/* Left: the emerald side with the real discount (or the price when there is no discount) */}
+          <span className="sag-on-emerald flex w-[38%] shrink-0 flex-col items-center justify-center gap-1.5 px-2 py-5 text-center sm:px-4 sm:py-8 lg:w-[300px]">
+            <span className="text-[10.5px] font-semibold uppercase leading-4 tracking-[0.2em] text-sale sm:text-[11px]">Deal of the day</span>
             {discountPercent > 0 ? (
               <>
-                <span className="font-display text-[46px] font-medium leading-[0.95] text-sale sm:text-[64px] lg:text-[84px]">
+                <span className="sag-num font-display text-[52px] font-semibold leading-[0.9] text-sale sm:text-[72px] lg:text-[92px]">
                   {discountPercent}<span className="text-[22px] sm:text-[30px] lg:text-[34px]">%</span>
                 </span>
-                <span className="text-[11px] font-semibold uppercase leading-4 tracking-[0.2em] text-ink">Off</span>
+                <span className="text-[11px] font-semibold uppercase leading-4 tracking-[0.24em] text-ink">Off</span>
               </>
             ) : (
-              <span className="sag-num text-[26px] font-semibold leading-8 text-sale sm:text-[36px] sm:leading-10">₹{dealPrice.toLocaleString('en-IN')}</span>
+              <span className="sag-num font-display text-[30px] font-semibold leading-8 text-sale sm:text-[44px] sm:leading-[1.05]">₹{dealPrice.toLocaleString('en-IN')}</span>
             )}
             {showClock && (
               <span className="mt-1.5 block w-full" role="timer" aria-live="off" aria-label={clockText}>
                 <span aria-hidden="true" className="block text-[11px] leading-4 text-ink-muted">Ends in</span>
                 <span aria-hidden="true" className="mx-auto mt-1 grid max-w-[220px] grid-cols-4 gap-1 sm:gap-1.5">
                   {clockParts.map(([label, value]) => (
-                    <span key={label} className="flex min-w-0 flex-col items-center rounded-[10px] border border-line bg-white/[0.08] py-1 sm:rounded-[14px] sm:py-1.5">
-                      <span className="sag-digit sag-num text-[12px] font-semibold leading-4 text-ink sm:text-[15px] sm:leading-5">{two(value)}</span>
-                      <span className="text-[9px] leading-3 text-ink-muted sm:text-[10.5px]">{label}</span>
+                    <span key={label} className="flex min-w-0 flex-col items-center rounded-lg border border-line py-1 sm:py-1.5">
+                      <span className="sag-digit sag-num font-display text-[15px] font-semibold leading-4 text-ink sm:text-[20px] sm:leading-6">{two(value)}</span>
+                      <span className="text-[10.5px] leading-3 text-ink-muted">{label}</span>
                     </span>
                   ))}
                 </span>
               </span>
             )}
           </span>
-          {/* Right: the rounded photo, name, price and the gold pill */}
-          <span className="flex min-w-0 flex-1 flex-col justify-center gap-2.5 p-2.5 sm:gap-4 sm:p-5">
+          {/* Right: the white side with the photo, name, price and the emerald button */}
+          <span className="flex min-w-0 flex-1 flex-col justify-center gap-3 bg-surface p-3 sm:gap-4 sm:p-6">
             <span className="flex items-start gap-2.5 sm:gap-4">
-              <span className="sag-zoom block w-[74px] shrink-0 overflow-hidden rounded-[14px] bg-sunken sm:w-[120px] sm:rounded-[18px] lg:w-[150px]">
+              <span className="sag-zoom block w-[74px] shrink-0 overflow-hidden rounded-lg bg-sunken sm:w-[120px] lg:w-[150px]">
                 <img
                   src={image ? getCleanImageUrl(image, 320) : ELEGANT_PLACEHOLDER_SVG}
                   alt=""
@@ -152,19 +153,19 @@ export const DealOfTheDaySection: React.FC = () => {
                 />
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <span id="deal-of-the-day-title" role="heading" aria-level={2} className="break-words text-[13px] leading-[1.35] text-ink line-clamp-3 sm:text-base">{product.name}</span>
+                <span id="deal-of-the-day-title" role="heading" aria-level={2} className="break-words text-[13.5px] leading-[1.38] font-medium text-ink line-clamp-3 sm:text-base">{product.name}</span>
                 <span className="sag-num flex flex-wrap items-baseline gap-x-[7px] gap-y-0.5">
                   {/* Screen readers get the real price; the counting figure is for the eye only */}
                   <span className="sr-only">₹{dealPrice.toLocaleString('en-IN')}</span>
                   <span aria-hidden="true" className="text-[19px] font-semibold leading-6 text-ink sm:text-[24px] sm:leading-8">₹{shownPrice.toLocaleString('en-IN')}</span>
                   {originalPrice > dealPrice && <span className="text-[12.5px] text-ink-muted line-through">₹{originalPrice.toLocaleString('en-IN')}</span>}
                 </span>
-                {saving > 0 && <span className="sag-num text-[11.5px] font-semibold leading-4 text-sale sm:text-[13px]">You save ₹{saving.toLocaleString('en-IN')}</span>}
+                {saving > 0 && <span className="sag-num text-[13px] font-semibold leading-[18px] text-sale">You save ₹{saving.toLocaleString('en-IN')}</span>}
               </span>
             </span>
             <span
               aria-disabled={soldOut || undefined}
-              className={`sag-btn-primary h-10 w-full whitespace-nowrap sm:h-12 ${soldOut ? '' : 'sag-sheen'}`}
+              className={`sag-btn-primary h-11 w-full whitespace-nowrap sm:h-12 ${soldOut ? '' : 'sag-sheen'}`}
             >
               {soldOut ? 'Sold out' : 'View deal'}
             </span>

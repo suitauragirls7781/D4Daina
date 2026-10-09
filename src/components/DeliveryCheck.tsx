@@ -156,7 +156,7 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
       aria-busy={status === 'loading'}
       noValidate
     >
-      <label htmlFor={inputId} className="sag-label text-[13px] font-semibold">Check delivery to your PIN code</label>
+      <label htmlFor={inputId} className="block mb-2.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-ink">Check delivery to your PIN code</label>
       <div className="flex gap-2">
         <input
           id={inputId}
@@ -169,9 +169,9 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
           placeholder="6-digit PIN code"
           aria-describedby={status === 'idle' ? undefined : resultId}
           aria-invalid={failed}
-          className="sag-input sag-num flex-1 min-w-0 h-[46px] rounded-full! px-4 aria-invalid:border-danger!"
+          className="sag-input sag-num flex-1 min-w-0 h-12 px-4 aria-invalid:border-danger!"
         />
-        <button type="submit" disabled={status === 'loading'} className="sag-btn-primary shrink-0 h-[46px] min-w-[88px] px-5 cursor-pointer disabled:cursor-wait">
+        <button type="submit" disabled={status === 'loading'} className="sag-btn-primary shrink-0 h-12 min-w-[88px] px-5 cursor-pointer disabled:cursor-wait">
           {status === 'loading' ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} aria-hidden="true" /><span className="sr-only">Checking</span></> : 'Check'}
         </button>
       </div>
@@ -198,7 +198,7 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
         )}
         {status === 'ok' && (
           <p className="mt-2.5 flex items-start gap-1.5 text-ink-muted">
-            <CircleCheck className="w-4 h-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+            <CircleCheck className="w-4 h-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden="true" />
             <span>
               <span className="font-medium text-ink">We ship to {placeName ? <>{placeName} ({pincode})</> : pincode}.</span>{' '}
               {shippingLine()}

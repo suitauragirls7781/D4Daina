@@ -7,19 +7,23 @@ import { pickedForYou } from '../utils/recommend';
 import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
 import { recommendedForYou, useStylePrefs } from './StyleProfile';
-import { HOME_RAIL, HOME_RAIL_ITEM, HOME_SECTION, HomeSectionHeader } from './HomeSections';
+import { HOME_RAIL, HOME_RAIL_ITEM, HOME_SECTION } from './HomeSections';
+import { SectionTitle } from './SectionTitle';
 
 const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: { label: string; onClick: () => void } }> = ({ title, note, items, action }) => (
   <section className={HOME_SECTION} aria-label={title}>
     <div className="max-w-7xl mx-auto">
-      <div className="px-4 sm:px-6 lg:px-8">
-        <HomeSectionHeader title={title} text={note} action={action} />
-      </div>
+      <SectionTitle eyebrow="For you" title={title} sub={note} className="mb-6 px-4 sm:px-6 lg:mb-9 lg:px-8" />
       <ul className={HOME_RAIL}>
         {items.map((p) => (
           <li key={p.id} className={HOME_RAIL_ITEM}><ProductCard product={p} compact /></li>
         ))}
       </ul>
+      {action && (
+        <div className="mt-4 flex justify-center px-4 lg:mt-7">
+          <button type="button" onClick={action.onClick} className="sag-lnk">{action.label}</button>
+        </div>
+      )}
     </div>
   </section>
 );

@@ -58,7 +58,7 @@ export const SizeGuideModal: React.FC = () => {
   };
 
   const unitBtn = (active: boolean) =>
-    `sag-chip h-10 min-w-[72px] px-4 text-[13px] ${active ? 'is-selected' : ''}`;
+    `sag-chip rounded-lg h-11 min-w-[72px] px-4 text-[11px] font-semibold uppercase tracking-[0.16em] ${active ? 'is-selected' : ''}`;
 
   return (
     <div
@@ -72,17 +72,17 @@ export const SizeGuideModal: React.FC = () => {
         aria-modal="true"
         aria-labelledby="size-guide-title"
         onClick={(event) => event.stopPropagation()}
-        className="rounded-t-[28px] sm:rounded-[28px] bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl border-t sm:border border-[color:var(--sag-edge)] max-w-3xl w-full max-h-[85dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain relative animate-in slide-in-from-bottom-5 fade-in"
+        className="rounded-t-[10px] sm:rounded-[10px] bg-surface border-t sm:border border-line max-w-3xl w-full max-h-[85dvh] sm:max-h-[90dvh] overflow-y-auto overscroll-contain relative animate-in slide-in-from-bottom-5 fade-in"
       >
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl border-b border-line pl-4 pr-2 sm:pl-6 sm:pr-3 py-2">
+        <div className="sticky top-0 z-20 bg-surface border-b border-line pl-4 pr-2 sm:pl-6 sm:pr-3 py-2.5">
           <div className="flex items-center justify-between gap-3">
-            <h3 id="size-guide-title" className="font-display text-[19px] leading-6 font-medium text-ink">Size &amp; fitting guide</h3>
+            <h3 id="size-guide-title" className="font-display text-[26px] leading-8 text-ink">Size &amp; fitting guide</h3>
             <button
               id="close-size-guide-btn"
               type="button"
               onClick={() => setIsSizeGuideOpen(false)}
-              className="shrink-0 w-10 h-10 rounded-full border border-[color:var(--sag-edge)] bg-white/[0.08] flex items-center justify-center text-ink hover:bg-white/[0.14] transition-colors cursor-pointer"
+              className="shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-ink hover:text-brand transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-[19px] h-[19px]" strokeWidth={1.5} />
@@ -97,8 +97,8 @@ export const SizeGuideModal: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             {/* Size finder */}
-            <div className="sag-glass shadow-none! lg:col-span-4 p-4">
-              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Find your size</p>
+            <div className="sag-glass sag-glass-strong lg:col-span-4 p-4">
+              <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">Find your size</p>
               <p className="text-[13px] leading-5 text-ink-muted mt-2">Enter your bust measurement and we will suggest a size from this chart.</p>
 
               <label htmlFor="size-guide-bust" className="sag-label mt-4">
@@ -122,8 +122,8 @@ export const SizeGuideModal: React.FC = () => {
               <div aria-live="polite">
                 {suggestedSize ? (
                   <div className="mt-4 border-t border-line pt-4">
-                    <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Suggested size</p>
-                    <p className="text-[26px] leading-8 font-medium text-ink mt-1">{suggestedSize}</p>
+                    <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">Suggested size</p>
+                    <p className="sag-settle font-display text-[36px] leading-10 text-ink mt-1" key={suggestedSize}>{suggestedSize}</p>
                     <p className="text-[12.5px] leading-[18px] text-ink-muted mt-1">Includes the 2" comfort margin. This is an estimate.</p>
                     <button
                       type="button"
@@ -151,11 +151,11 @@ export const SizeGuideModal: React.FC = () => {
                 </div>
               </div>
 
-              <div className="sag-glass shadow-none! rounded-[18px]! overflow-x-auto">
+              <div className="sag-glass overflow-x-auto">
                 <table className="w-full min-w-[460px] text-left text-[13.5px] text-ink">
-                  <thead className="border-b border-line text-[10.5px] leading-4 font-semibold uppercase tracking-[0.12em] text-ink-muted">
+                  <thead className="border-b border-line text-[10.5px] leading-4 font-semibold uppercase tracking-[0.18em] text-ink-muted">
                     <tr>
-                      <th scope="col" className="py-3 px-3 text-center sticky left-0 bg-[color:var(--sag-glass-sheet)] border-r border-line">Size</th>
+                      <th scope="col" className="py-3 px-3 text-center sticky left-0 bg-surface border-r border-line">Size</th>
                       <th scope="col" className="py-3 px-3">Bust</th>
                       <th scope="col" className="py-3 px-3">Waist</th>
                       <th scope="col" className="py-3 px-3">Hip</th>
@@ -172,10 +172,10 @@ export const SizeGuideModal: React.FC = () => {
                           key={row.size}
                           onClick={() => setSelectedRowSize(isRowHighlighted ? null : row.size)}
                           aria-selected={isRowHighlighted}
-                          className={`transition-colors cursor-pointer sag-num whitespace-nowrap ${isRowHighlighted ? 'bg-brand-wash text-ink font-medium' : 'hover:bg-white/[0.06] text-ink'}`}
+                          className={`transition-colors cursor-pointer sag-num whitespace-nowrap ${isRowHighlighted ? 'bg-sunken text-ink font-medium' : 'hover:bg-sunken text-ink'}`}
                         >
-                          <td className="py-1.5 px-3 text-center sticky left-0 border-r border-line bg-[color:var(--sag-glass-sheet)]">
-                            <span className={`inline-flex items-center justify-center min-w-11 h-9 px-2 rounded-full text-[13px] ${isRowHighlighted ? 'bg-brand font-semibold text-[color:var(--sag-on-gold)]' : 'font-medium text-ink'}`}>
+                          <td className="py-1.5 px-3 text-center sticky left-0 border-r border-line bg-surface">
+                            <span className={`inline-flex items-center justify-center min-w-11 h-9 px-2 rounded-[6px] text-[13px] transition-colors duration-300 ${isRowHighlighted ? 'bg-brand font-semibold text-[color:var(--sag-on-gold)]' : 'font-medium text-ink'}`}>
                               {row.size}
                             </span>
                           </td>
@@ -196,7 +196,7 @@ export const SizeGuideModal: React.FC = () => {
           {/* How to measure + note */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 border-t border-line pt-5">
             <div>
-              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">How to measure</p>
+              <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">How to measure</p>
               <dl className="mt-2.5 space-y-2">
                 {HOW_TO_MEASURE.map(([k, v]) => (
                   <div key={k} className="text-[13.5px] leading-5">
@@ -207,8 +207,8 @@ export const SizeGuideModal: React.FC = () => {
               </dl>
             </div>
 
-            <div className="border-t border-line pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-6 self-start">
-              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">A note on fit</p>
+            <div className="rounded-none border-t border-line pt-5 md:border-t-0 md:border-l md:pt-0 md:pl-6 self-start">
+              <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">A note on fit</p>
               <p className="text-[13.5px] leading-5 text-ink-muted mt-2.5">
                 Fit can vary slightly with fabric and style. Check the size details on each product, and if you are between two sizes, choose the larger one.
               </p>

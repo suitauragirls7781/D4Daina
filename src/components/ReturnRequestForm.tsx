@@ -278,10 +278,10 @@ export const ReturnRequestForm: React.FC<{
     }
   };
 
-  const legendClass = 'flex items-baseline gap-2 mb-3 text-sm leading-5 font-semibold text-ink';
-  const stepDot = (n: number) => <span className="sag-num w-[18px] shrink-0 text-[11.5px] leading-5 font-normal text-ink-muted" aria-hidden="true">{n}</span>;
+  const legendClass = 'flex items-baseline gap-2.5 mb-3 font-display text-[21px] leading-7 font-semibold text-ink';
+  const stepDot = (n: number) => <span className="sag-num w-[20px] shrink-0 font-sans text-[11px] leading-5 font-semibold tracking-[0.1em] text-sale" style={{ fontSizeAdjust: 'none' }} aria-hidden="true">{String(n).padStart(2, '0')}</span>;
   const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand';
-  const noteText = 'text-[11.5px] leading-4 text-ink-muted';
+  const noteText = 'text-[12px] leading-[17px] text-ink-muted';
 
   return createPortal(
     <div className="fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
@@ -293,12 +293,12 @@ export const ReturnRequestForm: React.FC<{
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
         noValidate
-        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col border border-line !rounded-t-[22px] !rounded-b-none sm:!rounded-[22px] animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col border border-line rounded-t-xl! rounded-b-none! sm:rounded-xl! animate-in fade-in slide-in-from-bottom-5"
       >
         <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line">
+        <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line rounded-none!">
           <div className="min-w-0 pt-2">
-            <h2 id="return-form-title" className="font-display text-[19px] leading-6 font-medium text-ink">Return or exchange</h2>
+            <h2 id="return-form-title" className="font-display text-[26px] leading-8 text-ink">Return or exchange</h2>
             <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted break-words">
               #{order.orderNumber}{windowEnds ? ` · request by ${windowEnds}` : ''}
             </p>
@@ -330,14 +330,14 @@ export const ReturnRequestForm: React.FC<{
                     {Icon === ReturnIcon ? <ReturnIcon className="w-5 h-5" mono live={false} /> : <Icon className="w-5 h-5" aria-hidden="true" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm leading-5 font-medium text-ink">{title}</span>
+                    <span className="block text-sm leading-5 font-semibold text-ink">{title}</span>
                     <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
                   </span>
                 </label>
               ))}
             </div>
             {clearanceLines.length > 0 && (
-              <p className="mt-2.5 rounded-[14px] border border-sale-line bg-surface px-3.5 py-2.5 text-[13px] leading-[18px] text-ink">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
+              <p className="mt-2.5 rounded-lg border border-sale-line bg-surface px-3.5 py-2.5 text-[13px] leading-[18px] text-ink">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
             )}
           </fieldset>
 
@@ -365,7 +365,7 @@ export const ReturnRequestForm: React.FC<{
                         className="w-[22px] h-[22px] shrink-0 accent-brand disabled:opacity-40"
                         aria-label={`Include ${item.product?.name || 'item'}`}
                       />
-                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[12px] bg-sunken ${settled ? 'opacity-50' : ''}`}>
+                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-sunken ${settled ? 'opacity-50' : ''}`}>
                         {item.product?.images?.[0] && <img src={getCleanImageUrl(item.product.images[0], 120)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <span className="min-w-0 flex-1">
@@ -374,14 +374,14 @@ export const ReturnRequestForm: React.FC<{
                           {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {bought}
                           {!settled && left < bought ? ` · ${left} can still be returned or exchanged` : ''}
                         </span>
-                        {settled && <span className="sag-badge !rounded-full mt-1 border bg-surface font-semibold border-line text-ink-muted">Already returned or exchanged</span>}
-                        {!settled && clearance && <span className="sag-badge !rounded-full mt-1 border bg-surface font-semibold border-sale-line text-sale">Clearance · exchange only</span>}
+                        {settled && <span className="sag-badge mt-1 border bg-surface font-semibold border-line text-ink-muted">Already returned or exchanged</span>}
+                        {!settled && clearance && <span className="sag-badge mt-1 border bg-surface font-semibold border-sale-line text-sale">Clearance · exchange only</span>}
                       </span>
                     </label>
                     {checked && (left > 1 || kind === 'exchange') && (
-                      <div className="mt-3 pt-3 border-t border-line flex flex-wrap items-center gap-3">
+                      <div className="mt-3 pt-3 border-t border-line rounded-none! flex flex-wrap items-center gap-3">
                         {left > 1 && (
-                          <div className="inline-flex items-center rounded-full border border-line bg-surface" role="group" aria-label="Quantity">
+                          <div className="inline-flex items-center rounded-lg! border border-control bg-surface" role="group" aria-label="Quantity">
                             <button type="button" onClick={() => setLine(index, { qty: Math.max(1, qty - 1) })} disabled={qty <= 1} aria-label="One less" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
                               <Minus className="w-4 h-4" strokeWidth={1.5} />
                             </button>
@@ -392,12 +392,12 @@ export const ReturnRequestForm: React.FC<{
                           </div>
                         )}
                         {kind === 'exchange' && (sizes.length > 0 ? (
-                          <label className="inline-flex flex-wrap items-center gap-2 text-[11.5px] leading-4 uppercase tracking-[0.06em] text-ink-muted">
+                          <label className="inline-flex flex-wrap items-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">
                             New size
                             <select
                               value={line?.exchangeSize || ''}
                               onChange={(e) => setLine(index, { exchangeSize: e.target.value })}
-                              className="h-11 max-w-full rounded-[14px] border border-line bg-surface px-3 text-base font-normal normal-case tracking-normal text-ink cursor-pointer focus:border-brand"
+                              className="h-11 max-w-full rounded-lg border border-control bg-surface px-3 text-base font-normal normal-case tracking-normal text-ink cursor-pointer focus:border-brand"
                             >
                               <option value="">{clearance ? 'Choose a size' : 'Choose (or add a note)'}</option>
                               {sizes.map((size) => <option key={size} value={size}>{size}{size === item.selectedSize ? ' (same size)' : ''}</option>)}
@@ -433,7 +433,7 @@ export const ReturnRequestForm: React.FC<{
           </fieldset>
 
           <div>
-            <label htmlFor="return-details" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">
+            <label htmlFor="return-details" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">
               {reason === 'Other' ? 'Tell us what is wrong' : kind === 'exchange' ? 'Note (optional) — e.g. the size or colour you would like' : 'More details (optional)'}
             </label>
             <textarea
@@ -448,7 +448,7 @@ export const ReturnRequestForm: React.FC<{
 
           {needsUpi && (
             <div>
-              <label htmlFor="return-refund-upi" className="sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted">UPI ID for your refund</label>
+              <label htmlFor="return-refund-upi" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">UPI ID for your refund</label>
               <input
                 id="return-refund-upi"
                 type="text"
@@ -462,7 +462,7 @@ export const ReturnRequestForm: React.FC<{
                 onChange={(e) => { setRefundUpi(e.target.value); setError(''); }}
                 className="sag-input"
               />
-              <p className="mt-1.5 text-[11.5px] leading-4 text-ink-muted">This order was cash on delivery, so the refund is sent to this UPI ID after our quality check.</p>
+              <p className="mt-1.5 text-[12px] leading-[17px] text-ink-muted">This order was cash on delivery, so the refund is sent to this UPI ID after our quality check.</p>
             </div>
           )}
 
@@ -473,17 +473,17 @@ export const ReturnRequestForm: React.FC<{
             <div className="grid grid-cols-4 gap-2">
               {photos.map((photo) => (
                 <div key={photo.id} className="min-w-0">
-                  <div className="aspect-[4/5] overflow-hidden rounded-[12px] bg-sunken flex items-center justify-center">
+                  <div className="aspect-[4/5] overflow-hidden rounded-lg bg-sunken flex items-center justify-center">
                     {photo.preview ? <img src={photo.preview} alt="Your photo" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />}
                   </div>
                   {photo.status === 'uploading' && (
-                    <div className="mt-1.5 h-[3px] rounded-full bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
-                      <div className="h-full rounded-full bg-brand transition-[width]" style={{ width: `${Math.max(6, photo.progress)}%` }} />
+                    <div className="mt-1.5 h-[2px] rounded-none! bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
+                      <div className="h-full bg-brand transition-[width]" style={{ width: `${Math.max(6, photo.progress)}%` }} />
                     </div>
                   )}
                   {photo.status === 'done' && <p className="mt-1 text-[11px] leading-[14px] text-ink-muted">Uploaded</p>}
                   {photo.status === 'error' && <p className="mt-1 text-[11px] leading-[14px] font-medium text-danger">{photo.error}</p>}
-                  <button type="button" onClick={() => removePhoto(photo.id)} aria-label="Remove photo" className="w-full min-h-11 text-[12.5px] text-ink underline decoration-1 underline-offset-4 cursor-pointer">
+                  <button type="button" onClick={() => removePhoto(photo.id)} aria-label="Remove photo" className="w-full min-h-11 text-[12.5px] text-brand underline decoration-1 underline-offset-4 cursor-pointer">
                     Remove
                   </button>
                 </div>
@@ -492,7 +492,7 @@ export const ReturnRequestForm: React.FC<{
                 <button
                   type="button"
                   onClick={() => fileInput.current?.click()}
-                  className="aspect-[4/5] rounded-[14px] border border-dashed border-control bg-surface hover:bg-sunken flex flex-col items-center justify-center gap-1 text-ink transition-colors cursor-pointer"
+                  className="aspect-[4/5] rounded-lg border border-dashed border-control bg-surface hover:bg-sunken flex flex-col items-center justify-center gap-1 text-ink transition-colors cursor-pointer"
                 >
                   <ImagePlus className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
                   <span className="text-[11px] leading-[14px]">Add photo</span>
@@ -503,24 +503,24 @@ export const ReturnRequestForm: React.FC<{
             <p className={`mt-2 ${noteText}`}>Up to {MAX_PHOTOS} clear photos of the piece, the problem and the tag. They are resized before upload.</p>
           </div>
 
-          <div className="rounded-[14px] bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
+          <div className="rounded-lg bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
             Pieces must be unused and unwashed, with their original tags. Our team reviews every request and emails you the next steps.
             {kind === 'return' && ' Refunds go to your original payment method.'}{' '}
-            {onPolicy && <button type="button" onClick={onPolicy} className="text-ink underline decoration-1 underline-offset-4 cursor-pointer">Return policy</button>}
+            {onPolicy && <button type="button" onClick={onPolicy} className="text-brand underline decoration-1 underline-offset-4 cursor-pointer">Return policy</button>}
           </div>
 
           {error && (
-            <p role="alert" className="rounded-[14px] border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
+            <p role="alert" className="rounded-lg border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
               <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" /> {error}
             </p>
           )}
 
         </div>
-        <div className="grid grid-cols-[auto_1fr] sm:grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line">
-          <button type="button" onClick={close} disabled={sending} className="sag-btn-outline h-12 px-4 text-[15px]">
+        <div className="grid grid-cols-[auto_1fr] sm:grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line rounded-none!">
+          <button type="button" onClick={close} disabled={sending} className="sag-btn-outline h-12 px-4">
             Not now
           </button>
-          <button type="submit" disabled={sending} className="sag-btn-primary h-12 px-4 gap-2 text-[15px]">
+          <button type="submit" disabled={sending} className="sag-btn-primary h-12 px-4 gap-2">
             {(sending || uploading) && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
             {sending ? 'Sending…' : uploading ? 'Uploading photos…' : 'Send request'}
           </button>

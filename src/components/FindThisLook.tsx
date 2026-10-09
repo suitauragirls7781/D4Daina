@@ -36,16 +36,18 @@ const BASIS_LABEL: Record<LookBasis, string> = {
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
 
 /** Opens "Find this look" (only when the Visual search switch is on in Admin → Discovery). */
-export const FindThisLookButton: React.FC<{ variant?: 'pill' | 'chip' | 'icon'; className?: string }> = ({ variant = 'pill', className = '' }) => {
+export const FindThisLookButton: React.FC<{ variant?: 'pill' | 'chip' | 'icon' | 'link'; className?: string }> = ({ variant = 'pill', className = '' }) => {
   const { features } = useDiscovery();
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   if (!features.visualSearch) return null;
 
   const styles = {
-    pill: 'h-10 px-4 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)] backdrop-blur-md text-sm font-medium inline-flex items-center gap-1.5',
-    chip: 'h-10 px-4 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-sm text-ink inline-flex items-center gap-1.5 hover:bg-sunken-deep',
-    icon: 'w-10 h-10 rounded-full flex items-center justify-center text-ink hover:bg-sunken-deep',
+    pill: 'h-11 px-4 rounded-lg border border-control bg-surface text-ink hover:border-brand text-[13px] font-medium inline-flex items-center gap-2',
+    chip: 'h-11 px-4 rounded-lg border border-control bg-surface text-[13px] text-ink inline-flex items-center gap-2 hover:border-brand',
+    icon: 'w-11 h-11 rounded-full flex items-center justify-center text-ink hover:text-brand',
+    // The caller's own classes only (the shop page's quiet small-capitals tool link)
+    link: '',
   };
   const close = () => {
     setOpen(false);
@@ -63,7 +65,7 @@ export const FindThisLookButton: React.FC<{ variant?: 'pill' | 'chip' | 'icon'; 
         title="Search by the colours in a photo"
         className={`${styles[variant]} transition-colors cursor-pointer ${className}`}
       >
-        <Camera className="w-4 h-4" />
+        <Camera className="w-4 h-4" strokeWidth={1.5} />
         {variant !== 'icon' && 'Find this look'}
       </button>
       {open && <FindThisLookDialog onClose={close} />}
@@ -258,15 +260,15 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
         aria-describedby={descId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x md:border-b border-line rounded-t-[26px] md:rounded-[26px] w-full md:max-w-4xl max-h-[92dvh] flex flex-col outline-none animate-in slide-in-from-bottom-5 fade-in"
+        className="bg-surface text-ink border-t md:border border-line rounded-t-[10px] md:rounded-[10px] w-full md:max-w-4xl max-h-[92dvh] flex flex-col outline-none animate-in slide-in-from-bottom-5 fade-in"
       >
-        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-line">
-          <h2 id={titleId} className="font-display text-[21px] leading-7 text-ink flex items-center gap-2"><Camera className="w-5 h-5 text-sale" /> Find this look</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full text-ink hover:bg-sunken-deep flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
+        <div className="flex items-center justify-between gap-3 pl-4 pr-2 sm:pl-5 py-3 border-b border-line">
+          <h2 id={titleId} className="font-display text-[26px] leading-8 text-ink flex items-center gap-2.5"><Camera className="w-5 h-5 text-brand" strokeWidth={1.5} /> Find this look</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full text-ink hover:text-brand flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
 
         <div className="overflow-y-auto overscroll-contain px-4 sm:px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
-          <p id={descId} className="text-sm text-ink-muted">
+          <p id={descId} className="text-[13.5px] leading-[21px] text-ink-muted">
             We match the colours in your photo with real styles in our store. It’s colour matching, not AI, so the print and cut may differ.
             {' '}<span className="text-ink">Your photo stays on this device — it is never uploaded.</span>
           </p>
@@ -277,18 +279,18 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
             onChange={(e) => { void handleFile(e.target.files?.[0]); e.target.value = ''; }} />
 
           {!hasPhoto && (
-            <div className={`mt-4 rounded-2xl border border-dashed px-4 py-6 sm:py-8 text-center transition-colors ${dragging ? 'border-brand bg-butter' : 'border-control bg-sunken'}`}>
-              <ImagePlus className="w-8 h-8 mx-auto text-sale" strokeWidth={1.5} aria-hidden="true" />
-              <p className="mt-3 font-display text-xl text-ink">Add a photo of a look you love</p>
+            <div className={`mt-4 rounded-[10px] border border-dashed px-4 py-7 sm:py-9 text-center transition-colors duration-300 ${dragging ? 'border-brand bg-surface' : 'border-control bg-sunken'}`}>
+              <ImagePlus className="w-8 h-8 mx-auto text-brand" strokeWidth={1.25} aria-hidden="true" />
+              <p className="mt-3 font-display text-[26px] leading-[1.15] text-ink">Add a photo of a look you love</p>
               <p className="mt-1 text-sm text-ink-muted">A screenshot, a saved picture or a photo you take now.</p>
               <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
                 <button type="button" data-autofocus onClick={() => galleryRef.current?.click()}
-                  className="sag-btn-primary h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer">
-                  <ImagePlus className="w-4 h-4" /> Choose a photo
+                  className="sag-btn-primary h-12 px-6 gap-2 cursor-pointer">
+                  <ImagePlus className="w-4 h-4" strokeWidth={1.5} /> Choose a photo
                 </button>
                 <button type="button" onClick={() => cameraRef.current?.click()}
-                  className="md:hidden sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-2 cursor-pointer">
-                  <Camera className="w-4 h-4" /> Take a photo
+                  className="md:hidden sag-btn-outline h-12 px-6 gap-2 cursor-pointer">
+                  <Camera className="w-4 h-4" strokeWidth={1.5} /> Take a photo
                 </button>
               </div>
               <p className="hidden md:block mt-3 text-sm text-ink-muted">or drag a photo here, or paste one with Ctrl+V</p>
@@ -297,25 +299,25 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
           )}
 
           {hasPhoto && (
-            <div className={`mt-4 flex gap-4 items-start rounded-2xl p-3 transition-colors ${dragging ? 'bg-butter border border-brand' : 'bg-sunken border border-line'}`}>
+            <div className={`mt-4 flex gap-4 items-start rounded-[10px] p-3 transition-colors duration-300 ${dragging ? 'bg-surface border border-brand' : 'bg-sunken border border-line'}`}>
               {preview && (
                 <img src={preview} alt="Your photo" onError={() => setPreview('')}
-                  className="w-20 sm:w-28 aspect-[4/5] object-cover rounded-xl bg-sunken shrink-0" />
+                  className="w-20 sm:w-28 aspect-[4/5] object-cover rounded-lg bg-surface shrink-0" />
               )}
               <div className="min-w-0 flex-1">
-                <p className="sag-eyebrow">Colours in your photo</p>
+                <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">Colours in your photo</p>
                 {palette.length > 0 ? (
                   <>
                     <div role="group" aria-label="Match these colours" className="mt-2 flex flex-wrap gap-2">
                       <button type="button" aria-pressed={focus === null} onClick={() => { setFocus(null); setShown(PAGE); }}
-                        className={`h-10 px-3.5 rounded-full text-sm cursor-pointer transition-colors ${focus === null ? 'bg-brand text-[color:var(--sag-on-gold)] font-semibold' : 'border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-sunken-deep'}`}>
+                        className={`h-11 px-3.5 rounded-lg border text-[13px] cursor-pointer transition-colors duration-300 ${focus === null ? 'border-brand bg-brand text-[color:var(--sag-on-gold)] font-semibold' : 'border-control bg-surface text-ink hover:border-brand'}`}>
                         All colours
                       </button>
                       {palette.map((c, i) => (
                         <button key={`${c.hex}-${i}`} type="button" aria-pressed={focus === i} onClick={() => { setFocus(focus === i ? null : i); setShown(PAGE); }}
                           title={`${colourLabel(c)} (${c.hex})`}
-                          className={`h-10 pl-2 pr-3.5 rounded-full text-sm inline-flex items-center gap-2 cursor-pointer transition-colors ${focus === i ? 'bg-brand text-[color:var(--sag-on-gold)] font-semibold' : 'border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-sunken-deep'}`}>
-                          <span className="w-6 h-6 rounded-full border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />
+                          className={`h-11 pl-2.5 pr-3.5 rounded-lg border text-[13px] inline-flex items-center gap-2 cursor-pointer transition-colors duration-300 ${focus === i ? 'border-brand bg-brand text-[color:var(--sag-on-gold)] font-semibold' : 'border-control bg-surface text-ink hover:border-brand'}`}>
+                          <span className="w-5 h-5 rounded-full border border-control" style={{ backgroundColor: c.hex }} aria-hidden="true" />
                           {colourLabel(c)}
                         </button>
                       ))}
@@ -326,8 +328,8 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
                   <p className="mt-2 text-sm text-ink-muted">{phase === 'reading' ? 'Reading the colours…' : 'No colours yet.'}</p>
                 )}
                 <button type="button" onClick={() => galleryRef.current?.click()} disabled={phase === 'reading'}
-                  className="mt-3 h-10 px-4 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)] text-sm inline-flex items-center gap-1.5 disabled:opacity-60 cursor-pointer">
-                  <RefreshCw className="w-4 h-4" /> Use another photo
+                  className="mt-3 min-h-11 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand hover:text-ink inline-flex items-center gap-2 disabled:opacity-60 cursor-pointer">
+                  <RefreshCw className="w-4 h-4" strokeWidth={1.5} /> Use another photo
                 </button>
               </div>
             </div>
@@ -335,32 +337,32 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
 
           <div className="mt-4">
             {busy && (
-              <div className="rounded-2xl bg-sunken p-4">
-                <p className="text-sm text-ink flex items-center gap-2">
-                  <LoaderCircle className="w-4 h-4 animate-spin text-sale" aria-hidden="true" />
+              <div className="rounded-[10px] bg-sunken p-4">
+                <p className="sag-num text-sm text-ink flex items-center gap-2">
+                  <LoaderCircle className="w-4 h-4 animate-spin text-brand" aria-hidden="true" />
                   <span role="status">
                     {phase === 'reading' ? 'Reading the colours in your photo…' : phase === 'waiting' ? 'Loading our styles…' : 'Comparing with our styles…'}
                   </span>
                   {phase === 'matching' && progress.total > 0 && <span aria-hidden="true" className="text-ink-muted">{progress.done} of {progress.total} photos</span>}
                 </p>
                 {phase === 'matching' && progress.total > 0 && (
-                  <div className="mt-3 h-1.5 rounded-full bg-line overflow-hidden" role="progressbar" aria-label="Comparing with our styles"
+                  <div className="mt-3 h-0.5 rounded-none bg-control overflow-hidden" role="progressbar" aria-label="Comparing with our styles"
                     aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}>
-                    <div className="h-full rounded-full bg-brand transition-[width] duration-200" style={{ width: `${pct}%` }} />
+                    <div className="h-full bg-brand transition-[width] duration-200" style={{ width: `${pct}%` }} />
                   </div>
                 )}
               </div>
             )}
             {problem && (
-              <div role="alert" className="rounded-2xl border border-danger p-4">
+              <div role="alert" className="rounded-[10px] border border-danger p-4">
                 <p className="text-sm text-danger">{PROBLEMS[problem]}</p>
                 <button type="button" onClick={retry}
-                  className="mt-3 h-10 px-4 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)] text-sm inline-flex items-center gap-1.5 cursor-pointer">
-                  <RefreshCw className="w-4 h-4" /> {problem === 'no-products' ? 'Try again' : 'Choose another photo'}
+                  className="sag-btn-outline mt-3 h-11 px-4 gap-2 cursor-pointer">
+                  <RefreshCw className="w-4 h-4" strokeWidth={1.5} /> {problem === 'no-products' ? 'Try again' : 'Choose another photo'}
                 </button>
               </div>
             )}
-            <p aria-live="polite" className="text-[15px] font-medium text-ink empty:hidden">{summary}</p>
+            <p aria-live="polite" className="sag-num font-display text-[22px] leading-7 text-ink empty:hidden">{summary}</p>
           </div>
 
           {phase === 'done' && inStock.length > 0 && (
@@ -371,7 +373,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
               {inStock.length > shown && (
                 <div className="mt-4 text-center">
                   <button type="button" onClick={() => setShown((n) => n + PAGE)}
-                    className="sag-btn-outline h-10 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">
+                    className="sag-btn-outline h-11 px-8 cursor-pointer">
                     Show more styles
                   </button>
                 </div>
@@ -381,7 +383,7 @@ export const FindThisLookDialog: React.FC<{ onClose: () => void }> = ({ onClose 
 
           {phase === 'done' && soldOutShown.length > 0 && (
             <div className="mt-6">
-              <p className="sag-eyebrow">Sold out right now</p>
+              <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">Sold out right now</p>
               <div className="mt-2 grid gap-3 md:grid-cols-2">
                 {soldOutShown.map((m) => <LookResult key={m.product.id} match={m} onView={view} />)}
               </div>
@@ -428,24 +430,24 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
   };
 
   return (
-    <article className="bg-sunken rounded-[20px] border border-line p-3 flex flex-col gap-3">
+    <article className="sag-glass p-3 flex flex-col gap-3">
       <div className="flex gap-3">
         <button type="button" tabIndex={-1} aria-hidden="true" onClick={() => onView(p)}
-          className="shrink-0 w-24 sm:w-28 self-start rounded-xl overflow-hidden bg-sunken cursor-pointer group">
+          className="shrink-0 w-24 sm:w-28 self-start rounded-lg overflow-hidden bg-sunken cursor-pointer group">
           <img src={getCleanImageUrl(image, 280)} alt="" loading="lazy" decoding="async"
             onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
             className={`w-full aspect-[4/5] rounded-none object-cover object-top transition-transform duration-500 group-hover:scale-[1.03] ${available ? '' : 'opacity-70'}`} />
         </button>
 
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-          <span className={`self-start px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-[0.06em] uppercase ${
-            match.close ? 'bg-butter text-sale' : 'bg-sunken text-ink-muted'}`}>
+          <span className={`self-start text-[10.5px] leading-4 font-semibold tracking-[0.16em] uppercase ${
+            match.close ? 'text-brand' : 'text-ink-muted'}`}>
             {BASIS_LABEL[match.basis] || (match.close ? 'Close colour match' : 'Nearest tone')}
           </span>
-          <h3 className="text-base sm:text-[17px] leading-snug text-ink line-clamp-2">
+          <h3 className="text-[14.5px] sm:text-[15.5px] font-medium leading-snug text-ink line-clamp-2">
             <button type="button" onClick={() => onView(p)} className="text-left hover:underline underline-offset-2 focus-visible:underline cursor-pointer">{p.name}</button>
           </h3>
-          <p className="flex items-baseline gap-2 flex-wrap">
+          <p className="sag-num flex items-baseline gap-2 flex-wrap">
             <span className="text-[15px] font-semibold text-ink">{inr(price)}</span>
             {mrp > price && <span className="text-xs text-ink-muted line-through">{inr(mrp)}</span>}
           </p>
@@ -461,7 +463,7 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
             </p>
           )}
           {sizes.length > 0 && <p className="text-sm text-ink-muted"><span className="text-ink-muted">Sizes: </span>{sizes.join(', ')}</p>}
-          <p className={`text-sm ${available ? 'text-sale' : 'text-ink-muted'}`}>
+          <p className={`sag-num text-[13px] font-medium ${available ? 'text-brand' : 'text-ink-muted'}`}>
             {!available ? 'Sold out' : stock <= 5 ? `Only ${stock} left` : 'In stock'}
           </p>
         </div>
@@ -473,27 +475,26 @@ const LookResult: React.FC<{ match: LookMatch; onView: (p: Product) => void }> =
           <div className="flex flex-wrap gap-1.5">
             {sizes.map((size) => (
               <button key={size} type="button" onClick={() => add(size)}
-                className="min-w-[40px] h-10 px-2.5 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)] text-sm cursor-pointer">
+                className="min-w-11 h-11 px-2.5 rounded-lg border border-control bg-surface text-ink hover:border-brand text-[13px] font-semibold cursor-pointer">
                 {size}
               </button>
             ))}
             <button type="button" onClick={() => setPicking(false)} aria-label="Cancel size choice"
-              className="w-10 h-10 rounded-full flex items-center justify-center text-ink-muted hover:bg-sunken-deep cursor-pointer">
-              <X className="w-4 h-4" />
+              className="w-11 h-11 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+              <X className="w-4 h-4" strokeWidth={1.5} />
             </button>
           </div>
         </div>
       ) : (
         <div className={`grid gap-2 ${available ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <button type="button" onClick={() => onView(p)}
-            className="sag-btn-outline h-10 px-2 text-xs font-semibold uppercase tracking-[0.1em] cursor-pointer">
+            className="sag-btn-outline h-11 px-2 cursor-pointer">
             View product
           </button>
           {available && (
             <button type="button" onClick={onAdd}
-              className={`h-10 px-2 rounded-full text-xs font-semibold uppercase tracking-[0.1em] inline-flex items-center justify-center gap-1 transition-colors cursor-pointer ${
-                added ? 'border border-brand text-sale' : 'sag-btn-primary'}`}>
-              {added ? <><Check className="w-4 h-4" /> Added</> : <><Plus className="w-4 h-4" /> Add to bag</>}
+              className={`h-11 px-2 gap-1 cursor-pointer ${added ? 'sag-btn-outline' : 'sag-btn-primary'}`}>
+              {added ? <><Check className="w-4 h-4" strokeWidth={1.5} /> Added</> : <><Plus className="w-4 h-4" strokeWidth={1.5} /> Add to bag</>}
             </button>
           )}
         </div>

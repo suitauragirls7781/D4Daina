@@ -8,9 +8,10 @@ import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
 import { assuranceFacts } from './Assurance';
 
 /**
- * The footer (Midnight glass): one glass panel with round corners, not an opaque block. The wordmark and one
- * muted line, the help and policy links in plain columns, the social marks as round glass buttons, a hairline,
- * then the address and one line of small print built from the store's own facts.
+ * The footer (Emerald Heritage): one emerald band, edge to edge. On top, centred: the serif wordmark with its
+ * small ornament, one muted line and the social marks as round champagne outlines. Then the help and policy
+ * links in columns under small champagne headings, with the store address beside them, and one row of small
+ * print built from the store's own facts.
  */
 export const Footer: React.FC = () => {
   const { setActivePage, activePage } = useShop();
@@ -26,66 +27,83 @@ export const Footer: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const plainIcon = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-full! border border-line bg-white/10 text-ink hover:bg-white/15 hover:text-brand transition-colors';
+  const plainIcon = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full! border border-highlight/50 text-highlight transition-colors duration-300 hover:bg-highlight hover:text-dark active:bg-highlight active:text-dark';
   const socials = [
     { icon: InstagramIcon, href: storeSettings?.instagramUrl || STORE_INSTAGRAM_URL, label: 'Instagram' },
     { icon: FacebookIcon, href: storeSettings?.facebookUrl || '', label: 'Facebook' },
     { icon: XIcon, href: storeSettings?.twitterUrl || '', label: 'X (Twitter)' },
   ].filter((s) => s.href);
 
-  const links: Array<[ActivePage, string]> = [
-    ['track-order', 'Track order'],
-    ['return-policy', 'Returns & exchange'],
-    ['shipping-policy', 'Shipping'],
-    ['cancellation-policy', 'Cancellation'],
-    ['contact', 'Contact us'],
-    ['size-guide', 'Size guide'],
-    ['account', 'My account'],
-    ['about', 'About us'],
-    ['privacy-policy', 'Privacy'],
-    ['terms-policy', 'Terms'],
+  // The same ten links as before, in three columns under plain headings
+  const columns: Array<{ title: string; links: Array<[ActivePage, string]> }> = [
+    { title: 'Orders', links: [
+      ['track-order', 'Track order'],
+      ['return-policy', 'Returns & exchange'],
+      ['shipping-policy', 'Shipping'],
+      ['cancellation-policy', 'Cancellation'],
+    ] },
+    { title: 'Help', links: [
+      ['contact', 'Contact us'],
+      ['size-guide', 'Size guide'],
+      ['account', 'My account'],
+    ] },
+    { title: 'About', links: [
+      ['about', 'About us'],
+      ['privacy-policy', 'Privacy'],
+      ['terms-policy', 'Terms'],
+    ] },
   ];
+  const heading = 'sag-caps mb-2 text-[10.5px] font-semibold uppercase leading-4 tracking-[0.24em] text-highlight';
 
   // Phones: room under the footer for whichever fixed bar the page shows (bottom navigation, bag bar or buy bar)
   const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(5.75rem+env(safe-area-inset-bottom))]';
 
   return (
-    <footer id="main-footer" className={`w-full px-3 pt-6 text-ink md:px-6 md:pt-10 md:pb-6 ${bottomRoom}`}>
-      <div className="sag-glass max-w-7xl mx-auto rounded-[26px]! px-4 pt-6 pb-5 sm:px-6 md:pt-8 lg:px-8">
-        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-12">
-          <div>
-            <button type="button" onClick={() => go('home')} className="sag-caps block max-w-full truncate font-display text-[18px] font-medium uppercase leading-6 tracking-[0.14em] text-ink text-left cursor-pointer lg:text-[20px]" aria-label="Suit Aura Girls home">
-              Suit Aura Girls
-            </button>
-            <p className="mt-1.5 text-[13px] leading-5 text-ink-muted">Ethnic wear · {facts.delivery}</p>
+    <footer id="main-footer" className={`sag-on-emerald w-full px-4 pt-12 sm:px-6 md:pt-16 md:pb-0 ${bottomRoom}`}>
+      <div className="mx-auto max-w-7xl">
+        <div className="flex flex-col items-center gap-3.5 pb-9 text-center">
+          <button type="button" onClick={() => go('home')} className="sag-caps max-w-full truncate pl-[0.2em] font-display text-[22px] uppercase leading-none tracking-[0.2em]! cursor-pointer sm:text-[26px]" aria-label="Suit Aura Girls home">
+            Suit Aura Girls
+          </button>
+          <span className="sag-orn" aria-hidden="true"><i /></span>
+          <p className="text-[13.5px] leading-5 text-on-dark-muted">Ethnic wear · {facts.delivery}</p>
+          <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+            {socials.map(({ icon: Icon, href, label }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[19px] h-[19px]" mono /></a>
+            ))}
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[19px] h-[19px]" mono /></a>
+            <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" /></a>
           </div>
+        </div>
 
-          <nav aria-label="Help and policies" className="mt-5 lg:mt-0">
-            <ul className="grid grid-cols-2 gap-x-2.5 gap-y-1 sm:grid-cols-3 lg:grid-cols-4">
-              {links.map(([page, label]) => (
-                <li key={page}>
-                  <button type="button" onClick={() => go(page)} className="min-h-9 py-1 text-left text-[13px] leading-5 text-ink hover:text-brand cursor-pointer transition-colors">
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
+        <div className="grid gap-x-4 gap-y-8 border-t border-line py-8 md:grid-cols-[3fr_1.6fr]">
+          <nav aria-label="Help and policies" className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3">
+            {columns.map((column) => (
+              <div key={column.title}>
+                <p className={heading}>{column.title}</p>
+                <ul>
+                  {column.links.map(([page, label]) => (
+                    <li key={page}>
+                      <button type="button" onClick={() => go(page)} className="flex min-h-10 items-center text-left text-[14px] leading-5 cursor-pointer">
+                        <span className="sag-underline">{label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
+          <div className="text-[13.5px] leading-[1.65] text-on-dark-muted">
+            <p className={heading}>Address</p>
+            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block py-1.5 transition-colors hover:text-on-dark">
+              {storeSettings?.address?.trim() || STORE_ADDRESS}
+            </a>
+          </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {socials.map(({ icon: Icon, href, label }) => (
-            <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[18px] h-[18px]" mono /></a>
-          ))}
-          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[18px] h-[18px]" mono /></a>
-          <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" /></a>
-        </div>
-
-        <div className="mt-5 border-t border-line pt-3.5 text-[11.5px] leading-[18px] text-ink-muted md:flex md:items-start md:justify-between md:gap-8">
-          <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block hover:text-ink md:max-w-[60%]">
-            {storeSettings?.address?.trim() || STORE_ADDRESS}
-          </a>
-          <p className="mt-1.5 md:mt-0 md:shrink-0 md:text-right">{facts.payment} · {facts.returns} · © {new Date().getFullYear()} Suit Aura Girls</p>
+        <div className="flex flex-wrap justify-between gap-x-4 gap-y-2 border-t border-line pb-6 pt-[18px] text-[12px] leading-[18px] text-on-dark-muted">
+          <p>© {new Date().getFullYear()} Suit Aura Girls</p>
+          <p className="text-highlight">{facts.payment} · {facts.returns}</p>
         </div>
       </div>
     </footer>

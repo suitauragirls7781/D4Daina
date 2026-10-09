@@ -5,27 +5,36 @@ import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { ProductCard } from './ProductCard';
 import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
-import { CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, Tag } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, Tag } from 'lucide-react';
 import { useDiscovery } from '../utils/discovery';
 import { BABY_BOYS, BABY_GIRLS, KIDS_ALL, KIDS_TOYS, TOYS, departmentOf, isToy } from '../utils/kids';
 import { Assurance, HowOrderWorks } from './Assurance';
 import { WhatsAppIcon } from './BrandIcons';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
+import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
+import { SectionTitle } from './SectionTitle';
 
 /** Shared widths so every home section lines up on the same gutters. */
 export const HOME_WRAP = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8';
-/** Section rhythm: space only; sections sit straight on the night backdrop (no hairline, no filled block). */
-export const HOME_SECTION = 'w-full py-[18px] lg:py-10';
-/** One card in a horizontal product rail: two and a bit cards show on a phone, so the rail reads as swipeable. */
-export const HOME_RAIL_ITEM = 'shrink-0 w-[150px] sm:w-[200px] lg:w-[240px]';
+/** Section rhythm: space only; sections sit straight on the ivory page (no hairline, no filled block). */
+export const HOME_SECTION = 'w-full py-10 lg:py-16';
+/** One card in a horizontal product rail: a little under two cards show on a phone, so the rail reads as swipeable. */
+export const HOME_RAIL_ITEM = 'shrink-0 w-[58%] sm:w-[250px]';
 /** The rail itself: a 12px gap on phones to match the two-column product grids. */
-export const HOME_RAIL = 'sag-scroll-x flex gap-3 lg:gap-6 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1';
-/** Product grid: two columns on phones (12px between columns, 18px between rows), four from tablet width up. */
-export const HOME_GRID = 'grid grid-cols-2 gap-x-3 gap-y-[18px] md:grid-cols-4 md:gap-x-4 md:gap-y-7 lg:gap-x-6 lg:gap-y-10';
-/** Eyebrow label: small spaced capitals in gold. */
-export const HOME_EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
-/** Quiet gold text link ("View all"). */
-const HOME_LINK = 'inline-flex min-h-9 items-center text-[13px] leading-5 font-semibold text-sale cursor-pointer hover:text-brand-dark transition-colors';
+export const HOME_RAIL = 'sag-scroll-x flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1';
+/** Product grid: two columns on phones (12px between columns, 24px between rows), four from tablet width up. */
+export const HOME_GRID = 'grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5 md:gap-y-9';
+/** Eyebrow label: small spaced capitals in emerald. */
+export const HOME_EYEBROW = 'sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.24em]';
+/** The space between a section's title and its content. */
+const HOME_TITLE_GAP = 'mb-7 lg:mb-10';
+
+/** The small-capitals link centred under a section's content ("View all"). */
+export const HomeMore: React.FC<{ onClick: () => void; id?: string; className?: string; children: React.ReactNode }> = ({ onClick, id, className = 'mt-6 lg:mt-9', children }) => (
+  <div className={`flex justify-center px-4 ${className}`}>
+    <button type="button" id={id} onClick={onClick} className="sag-lnk whitespace-nowrap">{children}</button>
+  </div>
+);
 
 interface HomeSectionHeaderProps {
   title: string;
@@ -37,32 +46,34 @@ interface HomeSectionHeaderProps {
   className?: string;
 }
 
-/** Home section title: serif headline on the left, one gold "View all" link on the right. */
-export const HomeSectionHeader: React.FC<HomeSectionHeaderProps> = ({ title, text, eyebrow, titleId, action, className = 'mb-4 lg:mb-7' }) => (
-  <div className={`flex items-end justify-between gap-4 ${className}`}>
-    <div className="min-w-0">
-      {eyebrow && <p className={`${HOME_EYEBROW} mb-1.5`}>{eyebrow}</p>}
-      <h2 id={titleId} className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">{title}</h2>
-      {text && <p className="mt-1 text-[13px] leading-5 text-ink-muted max-w-xl">{text}</p>}
-    </div>
+/**
+ * Home section title: the centred eyebrow, serif title and ornament (SectionTitle). A section in this file
+ * puts its "View all" under its content with HomeMore; an `action` passed here is drawn as the same
+ * small-capitals link, centred under the title.
+ */
+export const HomeSectionHeader: React.FC<HomeSectionHeaderProps> = ({ title, text, eyebrow, titleId, action, className = HOME_TITLE_GAP }) => (
+  <div className={`flex flex-col items-center ${className}`}>
+    <SectionTitle id={titleId} eyebrow={eyebrow} title={title} sub={text} />
     {action && (
-      <button type="button" id={action.id} onClick={action.onClick} className={`${HOME_LINK} shrink-0 -my-2 whitespace-nowrap`}>
+      <button type="button" id={action.id} onClick={action.onClick} className="sag-lnk mt-1 whitespace-nowrap">
         {action.label}
+        <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
       </button>
     )}
   </div>
 );
 
-/** One outline button under a product grid: full width on phones, centred on desktop. */
+/** The link under a product grid, centred. */
 export const HomeViewAllButton: React.FC<{ onClick: () => void; label?: string }> = ({ onClick, label = 'View all styles' }) => (
-  <div className="mt-5 flex justify-center lg:mt-9">
-    <button type="button" onClick={onClick} className="sag-btn-outline w-full sm:w-auto sm:min-w-[280px]">{label}</button>
-  </div>
+  <HomeMore onClick={onClick}>
+    {label}
+    <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+  </HomeMore>
 );
 
 /** The four store facts, straight under the hero, as four small glass tiles. The wording lives in Assurance.tsx. */
 export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assurance' }) => (
-  <section id={id} aria-label="Shopping with us" className="w-full py-1 lg:py-3">
+  <section id={id} aria-label="Shopping with us" className="w-full pt-6 pb-2 lg:pt-10 lg:pb-4">
     <div className={HOME_WRAP}>
       <Assurance variant="grid" whatsappMessage="Hi Suit Aura Girls, I need some help." />
     </div>
@@ -71,35 +82,82 @@ export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assura
 
 /**
  * Featured collection: admin "featured" / bestseller picks, otherwise the latest styles.
- * A grid of product cards on the backdrop (two columns on phones) and one glass "View all styles" pill under it.
+ * The emerald band of the page: the first two styles as arch-topped photos (the second set lower) beside the
+ * title, the real number of styles in stock and an ivory button; the other picks follow as a grid of product cards.
  */
 export const FeaturedCollection: React.FC = () => {
-  const { products = [], navigateToCategory } = useShop();
-  const items = useMemo(() => {
+  const { products = [], navigateToCategory, navigateToProduct } = useShop();
+  const { items, liveCount } = useMemo(() => {
     const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
     const picked = live.filter((p) => p.isFeatured || p.isBestSeller);
-    return (picked.length >= 2 ? picked : live).slice(0, 8);
+    return { items: (picked.length >= 2 ? picked : live).slice(0, 10), liveCount: live.length };
   }, [products]);
   if (items.length === 0) return null;
+  const band = items.length >= 2 ? items.slice(0, 2) : [];
+  const rest = band.length > 0 ? items.slice(2) : items;
   return (
-    <section id="featured-collection" aria-labelledby="featured-collection-title" className={HOME_SECTION}>
-      <div className={HOME_WRAP}>
-        <HomeSectionHeader titleId="featured-collection-title" title="Featured collection" action={{ label: 'View all', onClick: () => navigateToCategory('All') }} />
-        <div className={HOME_GRID}>
-          {items.map((product, index) => (
-            // Phones show four styles; from tablet width up all eight
-            <div key={product.id} className={index >= 4 ? 'hidden md:block' : ''}>
-              <ProductCard product={product} />
+    <section id="featured-collection" aria-labelledby="featured-collection-title" className={band.length > 0 ? `w-full ${rest.length > 0 ? 'pb-10 lg:pb-16' : ''}` : HOME_SECTION}>
+      {band.length > 0 ? (
+        <div className="sag-on-emerald px-4 py-14 sm:px-6 lg:px-8 lg:py-24">
+          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center lg:gap-20">
+            {/* Nothing is drawn on a photo: each one opens its own style */}
+            <div className="grid grid-cols-2 items-start gap-[22px] px-1.5 pt-1.5 lg:gap-9">
+              {band.map((product, index) => {
+                const photoUrl = product.images?.find(Boolean) || product.image || '';
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => navigateToProduct(product.id)}
+                    aria-label={`View ${product.name}`}
+                    className={`relative block w-full cursor-pointer ${index === 1 ? 'mt-11' : ''}`}
+                  >
+                    <span className="sag-arch sag-zoom block aspect-[3/4.3] w-full overflow-hidden bg-sunken">
+                      <img
+                        src={photoUrl ? getCleanImageUrl(photoUrl, 640) : ELEGANT_PLACEHOLDER_SVG}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        className="h-full w-full rounded-none object-cover object-top"
+                      />
+                    </span>
+                    <span className="sag-arch-line" aria-hidden="true" />
+                  </button>
+                );
+              })}
             </div>
-          ))}
+            <div className="flex flex-col items-start gap-4">
+              <SectionTitle align="left" id="featured-collection-title" eyebrow="In stock now" title="Featured collection" />
+              <p className="sag-num max-w-[38ch] text-[14px] leading-6 text-ink-muted">
+                {liveCount} women's {liveCount === 1 ? 'style' : 'styles'} in stock right now.
+              </p>
+              <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-light mt-1">View all styles</button>
+            </div>
+          </div>
         </div>
-        <HomeViewAllButton onClick={() => navigateToCategory('All')} />
-      </div>
+      ) : (
+        <div className={HOME_WRAP}>
+          <HomeSectionHeader titleId="featured-collection-title" eyebrow="In stock now" title="Featured collection" />
+        </div>
+      )}
+      {rest.length > 0 && (
+        <div className={`${HOME_WRAP} ${band.length > 0 ? 'pt-10 lg:pt-16' : ''}`}>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4">
+            {rest.map((product, index) => (
+              // Phones show four styles, tablets six, desktop all eight
+              <div key={product.id} className={index >= 6 ? 'hidden lg:block' : index >= 4 ? 'hidden sm:block' : ''}>
+                <ProductCard product={product} />
+              </div>
+            ))}
+          </div>
+          {band.length === 0 && <HomeViewAllButton onClick={() => navigateToCategory('All')} />}
+        </div>
+      )}
     </section>
   );
 };
 
-/** New arrivals: a swipe row of product cards on the backdrop, at every width. */
+/** New arrivals: a swipe row of product cards on the page, at every width, with "View all" centred under it. */
 export const NewArrivalsRail: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
   const items = useMemo(() => {
@@ -112,7 +170,7 @@ export const NewArrivalsRail: React.FC = () => {
     <section id="new-arrivals-rail" aria-labelledby="new-arrivals-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
         <div className="px-4 sm:px-6 lg:px-8">
-          <HomeSectionHeader titleId="new-arrivals-title" title="New arrivals" action={{ label: 'View all', onClick: () => navigateToCategory('New Arrivals') }} />
+          <HomeSectionHeader titleId="new-arrivals-title" eyebrow="Just in" title="New arrivals" />
         </div>
         <div className={HOME_RAIL}>
           {items.map((product) => (
@@ -121,6 +179,9 @@ export const NewArrivalsRail: React.FC = () => {
             </div>
           ))}
         </div>
+        <HomeMore onClick={() => navigateToCategory('New Arrivals')}>
+          View all <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        </HomeMore>
       </div>
     </section>
   );
@@ -144,17 +205,18 @@ export const KidsCorner: React.FC = () => {
         <div className="px-4 sm:px-6 lg:px-8">
           <HomeSectionHeader
             titleId="kids-corner-title"
+            eyebrow="For little ones"
             title={hasKids && groups.some((g) => g.key === TOYS) ? 'Kids & toys' : hasKids ? 'Kids wear' : 'Toys'}
             text={hasKids ? 'Outfits for baby girls and boys, sized by age from 1 to 15 years.' : 'Toys for every age.'}
-            action={{ label: 'View all', onClick: () => navigateToCategory((groups.length > 1 ? KIDS_TOYS : current.key === TOYS ? TOYS : KIDS_ALL) as any) }}
+            className={groups.length > 1 ? 'mb-5' : undefined}
           />
           {groups.length > 1 && (
-            <div className="sag-scroll-x flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 mb-4" role="tablist" aria-label="Kids and toys">
+            <div className="sag-scroll-x flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 mb-6 [justify-content:safe_center]" role="tablist" aria-label="Kids and toys">
               {groups.map((g, i) => {
                 const active = g.key === current.key;
                 return (
                   <button key={g.key} type="button" role="tab" aria-selected={active} data-selected={active} onClick={() => setTab(i)}
-                    className="sag-chip shrink-0 h-10 px-4 text-[13px]">
+                    className="sag-chip shrink-0 h-11 px-4 text-[13px]">
                     {g.label}&nbsp;<span className="sag-num font-normal">({g.items.length})</span>
                   </button>
                 );
@@ -169,6 +231,9 @@ export const KidsCorner: React.FC = () => {
             </div>
           ))}
         </div>
+        <HomeMore onClick={() => navigateToCategory((groups.length > 1 ? KIDS_TOYS : current.key === TOYS ? TOYS : KIDS_ALL) as any)}>
+          View all <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        </HomeMore>
       </div>
     </section>
   );
@@ -200,37 +265,45 @@ export const OfferBanner: React.FC = () => {
     ? `₹${prepaidDiscount} off prepaid orders`
     : prepaidPercentLine || offers[0];
 
+  // The coupon is drawn as a ticket, so its line is left out of the list under it
+  const otherOffers = bestCoupon ? offers.filter((offer) => !offer.startsWith(`Code ${bestCoupon.code}:`)) : offers;
+
   return (
     <section id="offer-banner" aria-labelledby="offer-banner-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
-        <div className="sag-glass rounded-[26px]! p-4 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
-          <div className="min-w-0 max-w-2xl">
-            <p className={HOME_EYEBROW}>Offers live now</p>
-            <h2 id="offer-banner-title" className="mt-2 font-display text-[21px] leading-7 lg:text-[30px] lg:leading-9 text-ink break-words">{headline}</h2>
-            {offers.length > 0 && (
-              <ul className="mt-3.5 space-y-2">
-                {offers.map((offer) => (
-                  <li key={offer} className="flex items-start gap-2 text-[13px] leading-5 text-ink">
-                    <Tag className="w-4 h-4 mt-0.5 text-sale shrink-0" strokeWidth={1.5} aria-hidden="true" />
-                    <span className="min-w-0 break-words">{offer}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row lg:mt-0 lg:flex-col lg:min-w-[240px] lg:shrink-0">
-            <button type="button" onClick={() => navigateToCategory(saleCount > 0 ? 'Sale' : 'All')} className="sag-btn-primary h-12 sm:px-8">
-              {saleCount > 0 ? 'Shop offers' : 'Shop now'}
-            </button>
-            {bestCoupon && (
+        <SectionTitle id="offer-banner-title" eyebrow="Offers live now" title={<span className="break-words">{headline}</span>} className="mb-7 lg:mb-10" />
+        <div className="mx-auto max-w-[640px]">
+          {bestCoupon && (
+            // A ticket: the real code, a dashed champagne divider, what it gives, and "Copy"
+            <div className="sag-glass grid grid-cols-[auto_1fr_auto] items-center gap-3 py-4 pl-4 pr-2 sm:gap-4 sm:pl-[18px] sm:pr-3">
+              <p className="sag-caps max-w-[40vw] break-all border-r border-dashed border-[color:var(--sag-champagne)] pr-3 font-display text-[22px] font-semibold uppercase leading-none tracking-[0.06em] text-brand sm:max-w-none sm:pr-4 sm:text-[28px]">{bestCoupon.code}</p>
+              <p className="sag-num min-w-0">
+                <span className="block text-[14px] font-semibold leading-[1.3] text-ink">{bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue} off` : `${bestCoupon.discountValue}% off`}</span>
+                {bestCoupon.minOrderValue ? <span className="block text-[13px] leading-[18px] text-ink-muted">On orders above ₹{bestCoupon.minOrderValue.toLocaleString('en-IN')}</span> : null}
+              </p>
               <button
                 type="button"
                 onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
-                className="sag-btn-outline h-12 sm:px-6 max-w-full"
+                className="sag-lnk mx-1.5"
               >
-                <span className="truncate">Copy code {bestCoupon.code}</span>
+                Copy<span className="sr-only"> code {bestCoupon.code}</span>
               </button>
-            )}
+            </div>
+          )}
+          {otherOffers.length > 0 && (
+            <ul className={`sag-glass divide-y divide-line px-4 ${bestCoupon ? 'mt-3' : ''}`}>
+              {otherOffers.map((offer) => (
+                <li key={offer} className="flex items-start gap-2.5 py-3 text-[13.5px] leading-5 text-ink">
+                  <Tag className="w-4 h-4 mt-0.5 text-sale shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                  <span className="sag-num min-w-0 break-words">{offer}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-6 flex justify-center">
+            <button type="button" onClick={() => navigateToCategory(saleCount > 0 ? 'Sale' : 'All')} className="sag-btn-primary h-12 w-full px-8 sm:w-auto sm:min-w-[240px]">
+              {saleCount > 0 ? 'Shop offers' : 'Shop now'}
+            </button>
           </div>
         </div>
       </div>
@@ -247,7 +320,7 @@ export const AskAssistantRow: React.FC = () => {
   const { features } = useDiscovery();
   if (!features.assistant) return null;
   return (
-    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full py-[18px] lg:py-8 min-[1440px]:hidden">
+    <section id="home-ask-assistant" aria-label="Help choosing a style" className="w-full pt-2 pb-10 lg:pb-14 min-[1440px]:hidden">
       <div className={HOME_WRAP}>
         <button
           type="button"
@@ -276,12 +349,10 @@ export const WhyShop: React.FC = () => {
   const factsShownAbove = homepageSections.some((s) => s.enabled !== false && (s.key === 'hero' || s.key === 'artisanalPromises'));
   return (
     <section id="why-shop-with-us" aria-labelledby="why-shop-title" className={HOME_SECTION}>
-      <div className={`${HOME_WRAP} lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center`}>
-        <div className="lg:col-span-5 mb-4 lg:mb-0">
-          <h2 id="why-shop-title" className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">Why shop with us</h2>
-          <p className="hidden lg:block mt-2 text-sm leading-6 text-ink-muted max-w-xl">Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help.</p>
-        </div>
-        <div className="lg:col-span-7">
+      <div className={HOME_WRAP}>
+        <SectionTitle id="why-shop-title" eyebrow="Suit Aura Girls" title="Why shop with us" className="mb-7 lg:mb-8" />
+        <p className="hidden lg:block mx-auto mb-10 text-center text-sm leading-6 text-ink-muted max-w-xl">Pay online by UPI with Google Pay, PhonePe, Paytm or any UPI app. Your order is confirmed only after the payment is verified, and our team is on WhatsApp if you need help.</p>
+        <div className="mx-auto max-w-3xl">
           <div className="sag-glass hidden px-5 py-1 lg:block">
             <Assurance variant="full" className="border-y-0!" whatsappMessage="Hi Suit Aura Girls, I need some help." />
           </div>
@@ -319,30 +390,32 @@ export const NewsletterSignup: React.FC = () => {
   return (
     <section id="newsletter-section" aria-labelledby="newsletter-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
-        {/* One glass panel: the title, one muted line, a glass WhatsApp pill (phones and tablets), then the email field */}
-        <div className="sag-glass rounded-[26px]! p-4 sm:p-8 lg:flex lg:items-center lg:justify-between lg:gap-10">
-          <div className="lg:max-w-md">
-            <h2 id="newsletter-title" className="font-display text-[20px] leading-6 lg:text-[28px] lg:leading-9 text-ink">
+        {/* One white panel, centred: the title with its ornament, one muted line, the WhatsApp button (phones and tablets), then the email field */}
+        <div className="sag-glass mx-auto flex max-w-2xl flex-col items-center px-4 py-8 text-center sm:px-10 sm:py-12">
+          <SectionTitle
+            id="newsletter-title"
+            eyebrow="Stay in touch"
+            title={<>
               <span className="lg:hidden">Questions before you buy?</span>
               <span className="hidden lg:inline">Hear about new styles first</span>
-            </h2>
-            <p className="mt-1.5 text-[13px] leading-5 text-ink-muted lg:hidden">Ask us about size, colour or delivery on WhatsApp.</p>
-            <p className="mt-2 hidden text-sm leading-6 text-ink-muted lg:block">New collections, restocks and offers by email. A few emails, never spam.</p>
-            <a
-              href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I have a question before I buy.')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sag-btn-outline mt-4 w-full gap-2 lg:hidden"
-            >
-              <WhatsAppIcon className="h-4 w-4" mono /> Chat on WhatsApp
-            </a>
-          </div>
+            </>}
+          />
+          <p className="mt-3 text-[13.5px] leading-5 text-ink-muted lg:hidden">Ask us about size, colour or delivery on WhatsApp.</p>
+          <p className="mt-3 hidden text-sm leading-6 text-ink-muted lg:block">New collections, restocks and offers by email. A few emails, never spam.</p>
+          <a
+            href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I have a question before I buy.')}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="sag-btn-outline mt-5 w-full gap-2 lg:hidden"
+          >
+            <WhatsAppIcon className="h-4 w-4" mono /> Chat on WhatsApp
+          </a>
           {status === 'done' ? (
-            <p role="status" className="mt-3 lg:mt-0 flex items-center gap-2 border border-line bg-white/[0.08] px-4 py-3 text-[13px] leading-5 text-ink">
+            <p role="status" className="mt-5 flex items-center gap-2 border border-line bg-sunken px-4 py-3 text-left text-[13px] leading-5 text-ink">
               <CheckCircle2 className="w-[18px] h-[18px] shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> You are subscribed. Thank you!
             </p>
           ) : (
-            <form onSubmit={submit} className="mt-3 lg:mt-0 flex gap-2 lg:flex-1 lg:max-w-lg">
+            <form onSubmit={submit} className="mt-4 flex w-full max-w-lg gap-2 lg:mt-6">
               <label htmlFor="newsletter-email" className="sr-only">Email address</label>
               <input
                 id="newsletter-email"

@@ -252,7 +252,7 @@ export const AdminDealOfTheDay: React.FC = () => {
               {filteredProducts.map((prod) => {
                 const isActive = productId === prod.id && enabled;
                 return (
-                  <div key={prod.id} className={`p-3 rounded-2xl border flex flex-col justify-between ${isActive ? 'border-brand bg-brand-wash' : 'border-line bg-sunken'}`}>
+                  <div key={prod.id} className={`p-3 rounded-[10px] border flex flex-col justify-between ${isActive ? 'border-brand bg-brand-wash' : 'border-line bg-sunken'}`}>
                     <div className="flex items-center gap-3">
                       <img src={getCleanImageUrl(prod.images?.[0] || prod.image, 160)} alt={prod.name} loading="lazy" className="w-14 aspect-[4/5] object-cover object-top rounded-[10px] shrink-0 bg-sunken" />
                       <div className="min-w-0">
@@ -375,7 +375,7 @@ export const AdminDealOfTheDay: React.FC = () => {
         <Panel title="3. Photo and text" hint="How the deal looks on the homepage. The product page keeps its own photos.">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
             <div className="md:col-span-4">
-              <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-2xl overflow-hidden border border-line bg-sunken">
+              <div className="w-full max-w-[220px] mx-auto aspect-[4/5] rounded-[10px] overflow-hidden border border-line bg-sunken">
                 {previewImage ? (
                   <img src={getCleanImageUrl(previewImage)} alt="Deal photo preview" className="w-full h-full object-contain" />
                 ) : (

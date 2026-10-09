@@ -9,6 +9,7 @@ import { isAvailable } from '../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
 import { trackItem } from '../utils/visitorTracker';
 import { HOME_SECTION } from './HomeSections';
+import { SectionTitle } from './SectionTitle';
 import { useAdmin } from '../context/AdminContext';
 import { STORE_INSTAGRAM_URL } from '../utils/storeContact';
 
@@ -128,43 +129,32 @@ export const AuraReelsSection: React.FC = () => {
     document.body,
   );
 
-  // The same plain white section at every width: three tiles side by side on phones, a rail of fixed tiles from
-  // tablets up; the rest are a swipe away. Only the still poster is shown here; a video loads when a reel is opened.
+  // The same section at every width: a centred title, then a swipe row of 9:16 posters (two and a bit on a phone,
+  // fixed tiles centred from tablets up). Nothing is drawn on a poster: the round play button and "Watch" sit in the
+  // caption row under it. Only the still poster is shown here; a video loads when a reel is opened.
   return (
     <section id="aura-reels" aria-labelledby="aura-reels-title" className={HOME_SECTION}>
       <div className="max-w-7xl mx-auto">
-        <div className="mb-4 flex items-end justify-between gap-4 px-4 sm:px-6 lg:mb-6 lg:px-8">
-          <div className="min-w-0">
-            <h2 id="aura-reels-title" className="font-display text-[20px] font-medium leading-[1.18] text-ink lg:text-[28px]">Reels</h2>
-            <p className="mt-1 hidden text-[13px] leading-[18px] text-ink-muted sm:block">
-              Tap a reel to watch{anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}
-            </p>
-          </div>
-          {instagramUrl && (
-            <a
-              href={instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="View all reels on Instagram"
-              className="shrink-0 whitespace-nowrap text-[13px] font-semibold text-sale hover:text-brand-dark transition-colors"
-            >
-              View all
-            </a>
-          )}
-        </div>
-        <ul className="sag-scroll-x flex gap-2 overflow-x-auto px-4 pb-1 sm:gap-3 sm:px-6 lg:gap-5 lg:px-8">
+        <SectionTitle
+          id="aura-reels-title"
+          eyebrow="Watch"
+          title="Reels"
+          sub={<>Tap a reel to watch{anyProduct ? ' — styles linked to a reel can be shopped right from the video.' : '.'}</>}
+          className="mb-6 px-4 sm:px-6 lg:mb-9 lg:px-8"
+        />
+        <ul className="sag-scroll-x flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-5 sm:px-6 sm:[justify-content:safe_center] lg:px-8">
           {live.map((reel, i) => {
             const product = reel.productId ? productById.get(reel.productId) : undefined;
             return (
-              <li key={`${reel.id}-${i}`} className="w-[calc((100vw-3rem)/3)] shrink-0 sm:w-[190px]">
+              <li key={`${reel.id}-${i}`} className="w-[44%] shrink-0 sm:w-[220px]">
                 <button
                   type="button"
                   onClick={(e) => open(i, e.currentTarget)}
                   aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
-                  className="block w-full cursor-pointer text-left"
+                  className="group block w-full cursor-pointer text-left"
                 >
-                  {/* The only mark on the poster is the thin play ring; caption and product sit below it */}
-                  <span className="relative block aspect-[9/16] overflow-hidden rounded-[18px] border border-line bg-sunken">
+                  {/* Nothing sits on the poster; the play button, caption and product are below it */}
+                  <span className="sag-zoom relative block aspect-[9/16] overflow-hidden rounded-lg bg-sunken">
                     <img
                       src={reelPosterSrc(reel, 400)}
                       alt=""
@@ -173,11 +163,14 @@ export const AuraReelsSection: React.FC = () => {
                       onError={onPosterError}
                       className="h-full w-full rounded-none object-cover object-top"
                     />
-                    <span aria-hidden="true" className="absolute inset-0 m-auto flex h-10 w-10 items-center justify-center rounded-full border border-white/45 bg-[color:var(--sag-scrim)] text-white backdrop-blur-md">
-                      <Play className="h-3.5 w-3.5 translate-x-px" strokeWidth={1.25} />
-                    </span>
                   </span>
-                  {reel.caption && <span className="mt-2 text-[13px] leading-[18px] text-ink line-clamp-2 max-sm:hidden">{reel.caption}</span>}
+                  <span aria-hidden="true" className="flex h-12 items-center gap-2.5 text-[10.5px] leading-none font-semibold uppercase tracking-[0.2em] text-brand">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-brand transition-colors duration-300 group-hover:bg-brand group-hover:text-[color:var(--sag-on-gold)] group-active:bg-brand group-active:text-[color:var(--sag-on-gold)]">
+                      <Play className="ml-0.5 h-3 w-3 fill-current" strokeWidth={0} />
+                    </span>
+                    Watch
+                  </span>
+                  {reel.caption && <span className="block text-[13px] leading-[18px] text-ink line-clamp-2 max-sm:hidden">{reel.caption}</span>}
                   {product && (
                     <span className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted line-clamp-1 max-sm:hidden">
                       {product.name} · {inr(Number(product.price) || 0)}
@@ -188,6 +181,13 @@ export const AuraReelsSection: React.FC = () => {
             );
           })}
         </ul>
+        {instagramUrl && (
+          <div className="mt-5 flex justify-center px-4 lg:mt-8">
+            <a href={instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="View all reels on Instagram" className="sag-lnk">
+              View all
+            </a>
+          </div>
+        )}
       </div>
       {viewerPortal}
     </section>
@@ -304,8 +304,8 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
     if (video) video.muted = next;
   };
 
-  // Viewer controls sit on the dark frame around the video
-  const iconButton = 'w-11 h-11 rounded-full border border-white/20 bg-[color:var(--sag-scrim)] hover:bg-dark text-white backdrop-blur-md flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
+  // Viewer controls sit over the video: ivory on a dark circle with a thin champagne edge
+  const iconButton = 'w-11 h-11 rounded-full border border-[color:var(--sag-champagne)] bg-brand-dark hover:bg-brand text-[color:var(--sag-on-gold)] flex items-center justify-center cursor-pointer transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
 
   return (
     <div ref={dialogRef} role="dialog" aria-modal="true" aria-label="Aura Reels" className="fixed inset-0 z-[1000] bg-dark sag-fade">
@@ -335,24 +335,24 @@ const ReelsViewer: React.FC<ViewerProps> = ({ reels, start, productById, onClose
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="pointer-events-auto flex items-center gap-2">
           <button type="button" onClick={toggleMute} aria-label={muted ? 'Turn sound on' : 'Turn sound off'} className={iconButton}>
-            {muted ? <VolumeX className="w-5 h-5 text-white" /> : <Volume2 className="w-5 h-5 text-white" />}
+            {muted ? <VolumeX className="w-5 h-5" strokeWidth={1.5} /> : <Volume2 className="w-5 h-5" strokeWidth={1.5} />}
           </button>
-          <span className="sag-num rounded-full border border-white/20 bg-[color:var(--sag-scrim)] px-3 py-1 text-xs leading-4 font-medium text-white backdrop-blur-md">
+          <span className="sag-num rounded-lg border border-[color:var(--sag-champagne)] bg-brand-dark px-3 py-1.5 text-xs leading-4 font-medium text-[color:var(--sag-on-gold)]">
             {active + 1} / {reels.length}
           </span>
         </div>
         <button ref={closeRef} type="button" onClick={() => onClose()} aria-label="Close reels" className={`pointer-events-auto ${iconButton}`}>
-          <X className="w-5 h-5 text-white" />
+          <X className="w-5 h-5" strokeWidth={1.5} />
         </button>
       </div>
 
       {reels.length > 1 && (
         <div className="hidden md:flex absolute right-6 top-1/2 -translate-y-1/2 flex-col gap-3">
           <button type="button" onClick={() => go(active - 1)} disabled={active === 0} aria-label="Previous reel" className={iconButton}>
-            <ChevronUp className="w-5 h-5 text-white" />
+            <ChevronUp className="w-5 h-5" strokeWidth={1.5} />
           </button>
           <button type="button" onClick={() => go(active + 1)} disabled={active === reels.length - 1} aria-label="Next reel" className={iconButton}>
-            <ChevronDown className="w-5 h-5 text-white" />
+            <ChevronDown className="w-5 h-5" strokeWidth={1.5} />
           </button>
         </div>
       )}
@@ -483,7 +483,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
   const showSpinner = isActive && wantPlay && !failed && (!playing || buffering);
   const showPlayButton = isActive && !wantPlay && !failed;
   const fav = product ? isInWishlist(product.id) : false;
-  const roundButton = 'w-11 h-11 shrink-0 rounded-full border border-line bg-white/[0.08] text-ink flex items-center justify-center hover:bg-white/[0.16] transition-colors cursor-pointer';
+  const roundButton = 'w-12 h-12 shrink-0 rounded-full border border-control bg-surface text-ink flex items-center justify-center hover:border-brand hover:text-brand transition-colors cursor-pointer';
   const legend = 'mb-2 text-[13px] leading-[18px] font-semibold text-ink';
 
   return (
@@ -525,24 +525,24 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
           )}
           {showSpinner && (
             <span className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-              <Loader2 className="w-8 h-8 text-white/80 animate-spin" />
+              <Loader2 className="w-8 h-8 text-[color:var(--sag-on-gold)] animate-spin" />
             </span>
           )}
           {showPlayButton && (
             <span className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden="true">
-              <span className="w-16 h-16 rounded-full border border-white/30 bg-[color:var(--sag-scrim)] text-white flex items-center justify-center backdrop-blur-md">
-                <Play className="w-7 h-7 text-white fill-current translate-x-0.5" />
+              <span className="w-16 h-16 rounded-full border border-[color:var(--sag-champagne)] bg-brand-dark text-[color:var(--sag-on-gold)] flex items-center justify-center">
+                <Play className="w-7 h-7 fill-current translate-x-0.5" />
               </span>
             </span>
           )}
           {failed && (
-            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-control border border-line bg-[color:var(--sag-glass-sheet)] px-4 py-3 text-sm leading-5 text-ink text-center">
+            <span className="absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-lg border border-line bg-surface px-4 py-3 text-sm leading-5 text-ink text-center">
               This video can’t play right now. Please try again later.
             </span>
           )}
         </button>
 
-        <div className="shrink-0 border-t border-line bg-[color:var(--sag-glass-sheet)] text-ink rounded-t-sheet px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
+        <div className="shrink-0 border-t border-line bg-surface text-ink rounded-t-[10px] rounded-b-none px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3">
           {reel.caption && <p className="text-sm leading-5 text-ink-muted line-clamp-3">{reel.caption}</p>}
 
           {product && facts ? (
@@ -553,20 +553,20 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                   alt=""
                   loading="lazy"
                   onError={onPosterError}
-                  className="w-14 h-[70px] shrink-0 rounded-chip object-cover object-top bg-sunken"
+                  className="w-14 h-[70px] shrink-0 rounded-lg object-cover object-top bg-sunken"
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm leading-5 font-medium text-ink line-clamp-1">{product.name}</p>
                   <p className="sag-num mt-0.5 flex flex-wrap items-baseline gap-x-2">
                     <span className="text-base leading-5 font-semibold text-ink">{inr(facts.price)}</span>
                     {facts.mrp > facts.price && <span className="text-[13px] text-ink-faint line-through">{inr(facts.mrp)}</span>}
-                    {facts.discount > 0 && <span className="text-[13px] font-semibold text-sale">{facts.discount}% off</span>}
+                    {facts.discount > 0 && <span className="text-[13px] font-semibold text-accent">{facts.discount}% off</span>}
                   </p>
                   <p className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs leading-4 text-ink-muted">
                     {facts.colours.length > 0 && (
                       <span className="inline-flex items-center gap-1">
                         {facts.colours.slice(0, 4).map((c) => (
-                          <span key={c.name} aria-hidden="true" title={c.name} className="w-3.5 h-3.5 rounded-full border border-line" style={{ background: c.hex || '#DEDBD3' }} />
+                          <span key={c.name} aria-hidden="true" title={c.name} className="w-3.5 h-3.5 rounded-full border border-line" style={{ background: c.hex || 'var(--color-sunken-deep)' }} />
                         ))}
                         <span className="ml-0.5">
                           {facts.colours.slice(0, 2).map((c) => c.name).join(', ')}{facts.colours.length > 2 ? ` +${facts.colours.length - 2}` : ''}
@@ -580,7 +580,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
               </div>
 
               {pickerOpen && (
-                <div id={`reel-options-${index}`} className="rounded-control border border-line bg-white/[0.06] p-3 space-y-3 sag-pop">
+                <div id={`reel-options-${index}`} className="rounded-lg border border-line bg-sunken p-3 space-y-3 sag-pop">
                   {facts.colours.length > 1 && (
                     <fieldset>
                       <legend className={legend}>Colour: {colour?.name}</legend>
@@ -594,7 +594,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                             aria-pressed={colour?.name === c.name}
                             className="sag-chip h-11 min-w-0 px-3 gap-2 text-sm"
                           >
-                            <span className="w-4 h-4 rounded-full border border-line" style={{ background: c.hex || '#DEDBD3' }} aria-hidden="true" />
+                            <span className="w-4 h-4 rounded-full border border-line" style={{ background: c.hex || 'var(--color-sunken-deep)' }} aria-hidden="true" />
                             {c.name}
                           </button>
                         ))}
@@ -630,7 +630,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
               )}
 
               <div className="flex items-center gap-1.5">
-                <button type="button" tabIndex={tab} onClick={shopNow} className="sag-btn-primary h-12 flex-1 px-3 text-[15px] whitespace-nowrap">
+                <button type="button" tabIndex={tab} onClick={shopNow} className="sag-btn-primary h-12 flex-1 px-3 whitespace-nowrap">
                   Shop now
                 </button>
                 <button
@@ -640,7 +640,7 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                   disabled={!facts.available}
                   aria-expanded={needsChoice ? pickerOpen : undefined}
                   aria-controls={needsChoice && pickerOpen ? `reel-options-${index}` : undefined}
-                  className="sag-btn-outline h-12 flex-1 px-3 text-[15px] whitespace-nowrap"
+                  className="sag-btn-outline h-12 flex-1 px-3 whitespace-nowrap"
                 >
                   {facts.available ? 'Add to bag' : 'Sold out'}
                 </button>
@@ -652,10 +652,10 @@ const ReelSlide: React.FC<SlideProps> = ({ reel, index, total, isActive, isNear,
                   aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'}
                   className={roundButton}
                 >
-                  <Heart className={`w-[22px] h-[22px] ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.75} />
+                  <Heart className={`w-[21px] h-[21px] ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.5} />
                 </button>
                 <button type="button" tabIndex={tab} onClick={share} aria-label="Share this style" className={roundButton}>
-                  <Share2 className="w-[22px] h-[22px]" strokeWidth={1.75} />
+                  <Share2 className="w-[21px] h-[21px]" strokeWidth={1.5} />
                 </button>
               </div>
             </>

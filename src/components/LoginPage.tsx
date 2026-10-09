@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { apiPost } from '../lib/api';
 import { GOOGLE_LOGIN_ENABLED, exchangeGoogleCredential, getGoogleId } from '../utils/googleSignIn';
 import { AlertCircle, ArrowLeft, Check, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { Ornament } from './SectionTitle';
 
 type AuthMode = 'login' | 'signup';
 
@@ -154,7 +155,7 @@ export const LoginPage: React.FC = () => {
         if (cancelled || !el) return;
         el.innerHTML = '';
         g.renderButton(el, {
-          type: 'standard', theme: 'filled_black', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center',
+          type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular', text: 'continue_with', logo_alignment: 'center',
           width: Math.min(400, Math.max(220, el.clientWidth || 320)),
         });
       })
@@ -187,13 +188,14 @@ export const LoginPage: React.FC = () => {
 
   if (user) {
     return (
-      <div className="min-h-[70vh] px-4 py-12 flex items-start sm:items-center justify-center">
-        <div className="w-full max-w-sm text-center sag-glass px-5 py-8">
-          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center !rounded-full sag-glass text-sale">
+      <div className="min-h-[70vh] px-4 py-10 flex items-start sm:items-center justify-center">
+        <div className="w-full max-w-[440px] text-center sag-glass rounded-xl! px-5 pt-8 pb-6">
+          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full border border-brand text-sale">
             <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
           </span>
-          <h1 className="mt-4 font-display text-[23px] leading-7 font-medium text-ink">You are signed in</h1>
-          <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted break-all">{user.email}</p>
+          <h1 className="mt-4 font-display text-[32px] leading-[1.05] text-ink">You are signed in</h1>
+          <Ornament className="mt-3.5" />
+          <p className="mt-3.5 text-[13px] leading-[18px] text-ink-muted break-all">{user.email}</p>
           <button type="button" onClick={() => setActivePage('account')} className="sag-btn-primary w-full mt-6">Go to my account</button>
         </div>
       </div>
@@ -202,27 +204,28 @@ export const LoginPage: React.FC = () => {
 
   const title = otpStep ? 'Check your email' : mode === 'login' ? 'Welcome' : 'Create your account';
   const changeEmail = () => { setOtpStep(false); setError(null); };
-  const label = 'sag-label text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted';
-  const note = 'text-[11.5px] leading-4 text-ink-muted';
+  const label = 'sag-label mb-1.5 block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted';
+  const note = 'text-[12.5px] leading-[18px] text-ink-muted';
+  const smallLink = 'inline-flex min-h-11 items-center gap-1.5 text-[10.5px] leading-none font-semibold uppercase tracking-[0.16em] text-brand underline underline-offset-4 cursor-pointer disabled:opacity-60';
 
   return (
-    <div className="min-h-[80vh] px-4 pt-1 pb-12 sm:py-12 flex items-start justify-center">
-      <div className="w-full max-w-[400px]">
-        <button type="button" onClick={() => setActivePage('home')} className="sag-link gap-1.5 text-[12.5px]">
+    <div className="min-h-[80vh] px-4 pt-2 pb-16 sm:py-12 flex items-start justify-center">
+      <div className="w-full max-w-[440px]">
+        <button type="button" onClick={() => setActivePage('home')} className={smallLink}>
           <ArrowLeft className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
           <span>Back to shop</span>
         </button>
 
-        <div className="mt-5 sm:mt-4 sag-glass px-5 py-7 sm:px-7 sm:py-8">
+        <div className="mt-3 sag-glass rounded-xl! px-5 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
           <div className="text-center">
-            <img src="/suit-aura-mark-132.webp" alt="" width="66" height="66" className="mx-auto h-[66px] w-[66px] rounded-full border border-line bg-surface object-cover" />
-            <h1 className="mt-[18px] font-display text-[23px] leading-7 font-medium text-ink lg:text-[28px] lg:leading-9">{title}</h1>
-            <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">
+            <Ornament />
+            <h1 className="mt-3.5 font-display text-[36px] leading-[1.05] text-ink lg:text-[40px]">{title}</h1>
+            <p className="mx-auto mt-2.5 max-w-[30ch] text-[13.5px] leading-5 text-ink-muted">
               {otpStep ? 'Enter the 6-digit code we emailed you.' : mode === 'login' ? 'Sign in to track orders and keep your wishlist.' : 'Track orders, request returns and save addresses.'}
             </p>
           </div>
 
-          <div className="mt-6 space-y-3">
+          <div key={otpStep ? 'code' : mode} className="sag-step-in mt-6 space-y-3.5">
             {!otpStep && (
               <div className="grid grid-cols-2 border-b border-line" role="tablist" aria-label="Sign in or create an account">
                 {(['login', 'signup'] as AuthMode[]).map((tab) => (
@@ -232,8 +235,8 @@ export const LoginPage: React.FC = () => {
                     role="tab"
                     aria-selected={mode === tab}
                     onClick={() => switchMode(tab)}
-                    className={`-mb-px h-11 border-b text-[11.5px] uppercase tracking-[0.1em] transition-colors cursor-pointer ${
-                      mode === tab ? 'border-brand font-semibold text-sale' : 'border-transparent text-ink-muted hover:text-ink'
+                    className={`-mb-px h-11 rounded-none border-b-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors cursor-pointer ${
+                      mode === tab ? 'border-brand text-brand' : 'border-transparent text-ink-muted hover:text-ink'
                     }`}
                   >
                     {tab === 'login' ? 'Sign in' : 'New account'}
@@ -243,7 +246,7 @@ export const LoginPage: React.FC = () => {
             )}
 
             {error && (
-              <div role="alert" className="flex items-start gap-2 border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger">
+              <div role="alert" className="flex items-start gap-2 rounded-lg border border-danger-line bg-surface px-3.5 py-3 text-left text-sm leading-5 text-danger">
                 <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />
                 <span>{error}</span>
               </div>
@@ -255,7 +258,7 @@ export const LoginPage: React.FC = () => {
                   <div id="auth-google" ref={googleButtonRef} className={`w-full flex justify-center ${googleLoading ? 'opacity-40 pointer-events-none' : ''}`} />
                   {googleLoading && <Loader2 className="absolute top-3 w-5 h-5 animate-spin text-ink" aria-label="Signing in with Google" />}
                 </div>
-                <div className={`flex items-center gap-2.5 ${note}`}>
+                <div className="flex items-center gap-3 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-ink-muted">
                   <span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" />
                 </div>
               </>
@@ -271,7 +274,7 @@ export const LoginPage: React.FC = () => {
                     </div>
                     <div>
                       <label htmlFor="signup-phone" className={label}>Mobile number</label>
-                      <div className="flex h-[52px] max-sm:h-[46px] !rounded-[16px] border border-line bg-surface overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
+                      <div className="flex h-[52px] max-sm:h-[46px] rounded-lg! border border-control bg-surface overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
                         <span className="flex items-center px-3.5 border-r border-line text-base text-ink-muted" aria-hidden="true">+91</span>
                         <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-transparent text-base text-ink placeholder:text-ink-faint focus:outline-none" />
                       </div>
@@ -292,12 +295,12 @@ export const LoginPage: React.FC = () => {
               </form>
             ) : (
               <form onSubmit={handleVerify} className="space-y-5">
-                <div className="flex items-center justify-between gap-3 rounded-[16px] border border-line bg-surface px-3.5 py-2.5">
+                <div className="flex items-center justify-between gap-3 border-b border-line pb-2 rounded-none!">
                   <div className="min-w-0">
                     <p className={note}>Code sent to</p>
-                    <p className="text-sm leading-5 font-medium text-ink break-all">{email}</p>
+                    <p className="text-sm leading-5 font-semibold text-ink break-all">{email}</p>
                   </div>
-                  <button type="button" onClick={changeEmail} aria-label="Change email" className="sag-link shrink-0 text-[12.5px]">Change</button>
+                  <button type="button" onClick={changeEmail} aria-label="Change email" className={`${smallLink} shrink-0`}>Change</button>
                 </div>
                 <fieldset>
                   <legend className={label}>6-digit code</legend>
@@ -317,8 +320,8 @@ export const LoginPage: React.FC = () => {
                         onKeyDown={(e) => {
                           if (e.key === 'Backspace' && !digit && idx > 0) document.getElementById(`otp-input-${idx - 1}`)?.focus();
                         }}
-                        className={`sag-num w-full min-w-0 h-14 px-0 text-center text-[22px] leading-7 font-medium text-ink bg-surface border rounded-[14px] transition-colors focus:border-brand ${
-                          digit ? 'border-brand' : 'border-line'
+                        className={`w-full min-w-0 h-[58px] px-0 text-center font-display text-[26px] leading-none font-semibold text-ink bg-surface border rounded-lg transition-[border-color,box-shadow,transform] duration-300 focus:border-brand focus:-translate-y-0.5 focus:shadow-[inset_0_-2px_0_var(--sag-brand)] motion-reduce:transition-none motion-reduce:focus:translate-y-0 ${
+                          digit ? 'border-brand' : 'border-control'
                         }`}
                       />
                     ))}
@@ -333,7 +336,7 @@ export const LoginPage: React.FC = () => {
                   {resendCooldown > 0 ? (
                     <span className="sag-num inline-flex items-center min-h-11 text-[12.5px] text-ink-muted">Resend in {resendCooldown}s</span>
                   ) : (
-                    <button type="button" disabled={loading} onClick={handleResend} className="sag-link gap-1.5 text-[12.5px] disabled:opacity-60">
+                    <button type="button" disabled={loading} onClick={handleResend} className={smallLink}>
                       <RefreshCw className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
                       Resend code
                     </button>

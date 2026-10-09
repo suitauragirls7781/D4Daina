@@ -141,7 +141,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
       {!status && <p className="mt-4 text-sm text-ink-muted inline-flex items-center gap-2"><RefreshCw className="w-4 h-4 animate-spin" /> Checking…</p>}
 
       {showKeyForm && (
-        <div className="mt-4 rounded-2xl bg-sunken border border-line p-4">
+        <div className="mt-4 rounded-[10px] bg-sunken border border-line p-4">
           <p className="text-sm font-semibold text-ink inline-flex items-center gap-2"><KeyRound className="w-4 h-4 text-ink-muted" /> {status?.configured ? 'Change your Gemini API key' : 'One-time setup: your free Gemini API key'}</p>
           <ol className="mt-2 text-[13px] text-ink-muted list-decimal pl-5 space-y-1">
             <li>Open <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-brand font-semibold underline underline-offset-[3px] inline-flex items-center gap-0.5">aistudio.google.com <ExternalLink className="w-3 h-3" /></a> and sign in with your Google account.</li>
@@ -178,11 +178,11 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
           </div>
           {images.length > 0 && (
             <div className="flex gap-2 overflow-x-auto sag-scroll-x pb-1">
-              {images.slice(0, 6).map((url) => <img key={url} src={getCleanImageUrl(url, 160)} alt="" className="w-12 aspect-[4/5] shrink-0 rounded-xl object-cover object-top bg-sunken" />)}
+              {images.slice(0, 6).map((url) => <img key={url} src={getCleanImageUrl(url, 160)} alt="" className="w-12 aspect-[4/5] shrink-0 rounded-lg object-cover object-top bg-sunken" />)}
             </div>
           )}
           {done && (
-            <div className="rounded-2xl bg-ok-tint border border-ok-line p-3.5 text-sm text-ok">
+            <div className="rounded-[10px] bg-ok-tint border border-ok-line p-3.5 text-sm text-ok">
               <p className="font-semibold inline-flex items-center gap-1.5"><Check className="w-4 h-4" /> Details filled from {done.photos} photo{done.photos === 1 ? '' : 's'}.</p>
               <p className="mt-1 text-ink-muted">Now add <b>{ownFields.replace(/^P/, 'p')}</b>, check the text once and save.{done.notes ? ` Please check: ${done.notes}` : checkHint}</p>
             </div>
@@ -197,7 +197,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
       )}
 
       {error && (
-        <p role="alert" className="mt-3 rounded-2xl bg-danger-tint border border-danger-line px-3.5 py-2.5 text-sm text-danger flex items-start gap-2">
+        <p role="alert" className="mt-3 rounded-[10px] bg-danger-tint border border-danger-line px-3.5 py-2.5 text-sm text-danger flex items-start gap-2">
           <X className="w-4 h-4 mt-0.5 shrink-0" /> <span>{error}</span>
         </p>
       )}

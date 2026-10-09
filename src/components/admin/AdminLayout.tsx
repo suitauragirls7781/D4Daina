@@ -196,14 +196,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const quickItems = quickIds.map((id) => navItems.find((item) => item.id === id)!).filter(Boolean);
 
   const Monogram: React.FC<{ size?: string }> = ({ size = 'w-9 h-9 text-[13px]' }) => (
-    <div className={`${size} shrink-0 rounded-full border border-brand-line text-sale flex items-center justify-center font-medium tracking-[0.06em]`} aria-hidden="true">
+    <div className={`${size} shrink-0 rounded-full border border-current text-sale flex items-center justify-center font-medium tracking-[0.06em]`} aria-hidden="true">
       SA
     </div>
   );
 
   const iconButton = 'rounded-full flex items-center justify-center text-ink hover:bg-sunken transition-colors cursor-pointer';
   // Quick actions: a glass pill with its words on wide screens, the icon alone below that
-  const quickPill = 'shrink-0 w-10 h-10 xl:w-auto xl:px-3.5 rounded-full border border-line bg-sunken hover:bg-sunken-deep text-ink text-[13px] leading-[18px] font-medium inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer';
+  const quickPill = 'shrink-0 w-10 h-10 xl:w-auto xl:px-3.5 rounded-lg border border-line bg-surface hover:bg-sunken text-ink text-[13px] leading-[18px] font-medium inline-flex items-center justify-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer';
   const quickActions: Array<{ id: string; label: string; title: string; icon: LucideIcon; run: () => void }> = [
     { id: 'admin-quick-add-product', label: 'Add product', title: 'Add a new product', icon: PlusCircle, run: () => handleNavClick('add-product') },
     { id: 'admin-quick-new-coupon', label: 'New coupon', title: 'Open Coupons to add a coupon', icon: Tag, run: () => handleNavClick('coupons') },
@@ -224,9 +224,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         return (
           <div key={group} role="group" aria-label={group}>
             {collapsed ? (
-              groupIndex > 0 && <div className="mx-auto mb-2 h-px w-6 bg-line" />
+              groupIndex > 0 && <div className="mx-auto mb-2 h-px w-6 bg-highlight opacity-40" />
             ) : (
-              <div className="px-4 pb-1.5 text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-ink-muted">
+              <div className="px-4 pb-1.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-highlight">
                 {group}
               </div>
             )}
@@ -240,8 +240,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                   onClick={() => handleNavClick(item.id)}
                   className={`relative w-full flex items-center ${collapsed ? 'justify-center h-10' : `justify-between pl-3.5 pr-3 ${withIds ? 'h-9' : 'h-11'}`} border-l-2 text-sm transition-colors cursor-pointer ${
                     isActive
-                      ? 'border-brand bg-brand-wash text-sale font-medium'
-                      : 'border-transparent text-ink-muted font-normal hover:text-ink hover:bg-sunken'
+                      ? 'border-highlight bg-page text-brand-dark font-semibold'
+                      : 'border-transparent text-on-dark font-normal hover:bg-brand-dark'
                   }`}
                   title={collapsed ? item.label : undefined}
                   aria-label={collapsed ? item.label : undefined}
@@ -252,22 +252,22 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </span>
                   {!collapsed && typeof item.live === 'number' && (
-                    <span className="ml-2 inline-flex items-center gap-1.5 text-xs leading-4 font-medium tabular-nums text-sale" title="People on the site right now" aria-label={`${item.live} on the site right now`}>
+                    <span className={`ml-2 inline-flex items-center gap-1.5 text-xs leading-4 font-medium tabular-nums ${isActive ? 'text-brand-dark' : 'text-highlight'}`} title="People on the site right now" aria-label={`${item.live} on the site right now`}>
                       <span className="relative inline-flex w-1.5 h-1.5" aria-hidden="true">
-                        {item.live > 0 && <span className="absolute inset-0 rounded-full bg-brand opacity-60 motion-safe:animate-ping" />}
-                        <span className="relative w-1.5 h-1.5 rounded-full bg-brand" />
+                        {item.live > 0 && <span className={`absolute inset-0 rounded-full opacity-60 motion-safe:animate-ping ${isActive ? 'bg-brand-dark' : 'bg-highlight'}`} />}
+                        <span className={`relative w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand-dark' : 'bg-highlight'}`} />
                       </span>
                       {item.live} live
                     </span>
                   )}
                   {!collapsed && item.badge !== undefined && (
-                    <span className={`ml-2 inline-flex items-center gap-1.5 text-xs leading-4 tabular-nums ${item.alert ? 'text-sale font-medium' : 'text-ink-muted font-normal'}`}>
-                      {item.alert && <span className="w-1.5 h-1.5 rounded-full bg-sale" aria-hidden="true" />}
+                    <span className={`ml-2 inline-flex items-center gap-1.5 text-xs leading-4 tabular-nums ${isActive ? 'text-brand-dark font-medium' : item.alert ? 'text-highlight font-medium' : 'text-on-dark-muted font-normal'}`}>
+                      {item.alert && <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand-dark' : 'bg-highlight'}`} aria-hidden="true" />}
                       {item.badge}
                     </span>
                   )}
                   {collapsed && item.alert && (
-                    <span className="absolute top-2 right-3 w-1.5 h-1.5 rounded-full bg-sale" />
+                    <span className={`absolute top-2 right-3 w-1.5 h-1.5 rounded-full ${isActive ? 'bg-brand-dark' : 'bg-highlight'}`} />
                   )}
                 </button>
               );
@@ -301,8 +301,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             >
               <span className="hidden sm:block"><Monogram /></span>
               <div className="min-w-0">
-                <h1 className="font-sans text-base leading-5 font-semibold text-ink truncate">Suit Aura Girls</h1>
-                <span className="block text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-sale truncate">Store admin</span>
+                <h1 className="font-display text-[20px] leading-6 font-medium text-ink truncate">Suit Aura Girls</h1>
+                <span className="block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale truncate">Store admin</span>
               </div>
             </div>
 
@@ -345,7 +345,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               aria-label="Sound for new orders"
               title={soundOn ? 'Sound for new orders: on. Tap to switch it off.' : 'Sound for new orders: off. Tap to hear a soft chime when an order is paid.'}
               onClick={toggleSound}
-              className={`shrink-0 w-10 h-10 sm:w-11 sm:h-11 2xl:w-auto 2xl:px-3.5 rounded-full inline-flex items-center justify-center gap-1.5 text-[13px] leading-[18px] font-medium whitespace-nowrap transition-colors cursor-pointer hover:bg-sunken ${soundOn ? 'text-sale' : 'text-ink-muted'}`}
+              className={`shrink-0 w-10 h-10 sm:w-11 sm:h-11 2xl:w-auto 2xl:px-3.5 rounded-lg inline-flex items-center justify-center gap-1.5 text-[13px] leading-[18px] font-medium whitespace-nowrap transition-colors cursor-pointer hover:bg-sunken ${soundOn ? 'text-sale' : 'text-ink-muted'}`}
             >
               {soundOn ? <Volume2 className="w-5 h-5 shrink-0" strokeWidth={THIN} aria-hidden="true" /> : <VolumeX className="w-5 h-5 shrink-0" strokeWidth={THIN} aria-hidden="true" />}
               <span className="hidden 2xl:inline">Sound for new orders: {soundOn ? 'On' : 'Off'}</span>
@@ -423,7 +423,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
         {/* Desktop sidebar */}
         <aside className={`hidden lg:block shrink-0 transition-[width] duration-200 ${isSidebarCollapsed ? 'w-[68px]' : 'w-60'}`}>
-          <div className="bg-surface border border-line rounded-[22px] pt-4 pb-2 sticky top-[5rem] max-h-[calc(100vh-6rem)] overflow-y-auto space-y-4">
+          <div className="sag-on-emerald rounded-[10px] overflow-hidden pt-4 pb-2 sticky top-[5rem] max-h-[calc(100vh-6rem)] overflow-y-auto space-y-4">
 
             {renderNav(isSidebarCollapsed, true)}
 
@@ -431,7 +431,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <button
                 id="admin-sidebar-logout-btn"
                 onClick={handleLogout}
-                className={`w-full h-10 flex items-center border-l-2 border-transparent ${isSidebarCollapsed ? 'justify-center' : 'gap-3 pl-3.5 pr-3'} text-sm font-normal text-ink-muted hover:text-ink hover:bg-sunken transition-colors cursor-pointer`}
+                className={`w-full h-10 flex items-center border-l-2 border-transparent ${isSidebarCollapsed ? 'justify-center' : 'gap-3 pl-3.5 pr-3'} text-sm font-normal text-on-dark hover:bg-brand-dark transition-colors cursor-pointer`}
                 title="Logout"
                 aria-label="Logout"
               >
@@ -446,18 +446,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         {/* Phone menu */}
         {mobileSidebarOpen && (
           <div className="fixed inset-0 z-50 lg:hidden bg-[color:var(--sag-scrim)] flex animate-in fade-in" role="dialog" aria-modal="true" aria-label="Admin menu">
-            <div className="w-[86vw] max-w-xs bg-surface border-r border-line h-full flex flex-col overflow-hidden animate-in slide-in-from-left">
+            <div className="sag-on-emerald w-[86vw] max-w-xs h-full flex flex-col overflow-hidden animate-in slide-in-from-left">
               <div className="flex items-center justify-between pl-4 pr-1.5 h-14 border-b border-line shrink-0">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <Monogram />
                   <div className="min-w-0">
-                    <h3 className="font-sans text-[15px] leading-5 font-medium text-ink truncate">Suit Aura Girls</h3>
+                    <h3 className="font-display text-[19px] leading-6 font-medium text-ink truncate">Suit Aura Girls</h3>
                     <p className="text-xs leading-4 text-ink-muted truncate">{adminEmail || 'Admin'}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setMobileSidebarOpen(false)}
-                  className={`w-11 h-11 shrink-0 ${iconButton}`}
+                  className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-on-dark hover:bg-brand-dark transition-colors cursor-pointer"
                   aria-label="Close menu"
                 >
                   <X className="w-5 h-5" strokeWidth={THIN} />
@@ -471,13 +471,13 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
               <div className="px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line flex gap-2 shrink-0">
                 <button
                   onClick={handleViewStorefront}
-                  className="flex-1 h-11 px-3 rounded-full bg-surface text-sale border border-brand-line text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:bg-sunken transition-colors"
+                  className="sag-btn-light flex-1 !h-11 !px-3"
                 >
                   <Store className="w-4 h-4" strokeWidth={THIN} /> View store
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex-1 h-11 px-3 rounded-full bg-surface text-ink-muted border border-line text-sm font-medium flex items-center justify-center gap-2 cursor-pointer hover:text-ink hover:bg-sunken transition-colors"
+                  className="flex-1 h-11 px-3 rounded-lg border border-highlight text-on-dark text-xs font-semibold uppercase tracking-[0.12em] flex items-center justify-center gap-2 cursor-pointer hover:bg-brand-dark transition-colors"
                 >
                   <LogOut className="w-4 h-4" strokeWidth={THIN} /> Logout
                 </button>
@@ -497,7 +497,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       {orderAlerts.length > 0 && (
         <div className="fixed z-40 top-[116px] lg:top-[72px] right-3 left-3 sm:left-auto sm:w-[380px] space-y-2" role="status" aria-live="polite">
           {orderAlerts.map((alert) => (
-            <div key={alert.orderNumber} className="bg-surface border border-brand-line rounded-[18px] pl-4 pr-1.5 py-2 flex items-center gap-2 animate-in fade-in">
+            <div key={alert.orderNumber} className="bg-surface border border-brand rounded-[10px] shadow-[var(--sag-shadow-pop)] pl-4 pr-1.5 py-2 flex items-center gap-2 animate-in fade-in">
               <span className="w-2 h-2 shrink-0 rounded-full bg-brand" aria-hidden="true" />
               <p className="min-w-0 flex-1 text-sm leading-5 text-ink break-words sag-num">{alert.text}</p>
               <button

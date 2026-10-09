@@ -161,9 +161,9 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
   primeStylePrefs(key, value);
 };
 
-// Square outline chips; the selected one carries an ink border and a small tick (never a fill)
-const chipClass = 'sag-chip h-[38px] min-w-[44px] gap-1.5 px-3.5 text-[13px] font-normal aria-pressed:font-semibold';
-const legendClass = 'text-[11px] leading-4 font-semibold uppercase tracking-[0.14em] text-ink';
+// Outline chips with 8px corners; the selected one is filled emerald with a small tick
+const chipClass = 'sag-chip h-11 min-w-[44px] gap-1.5 px-3.5 text-[13px] font-normal aria-pressed:font-semibold';
+const legendClass = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-ink-muted';
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
   <fieldset className="space-y-2">
@@ -183,7 +183,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'sag-input sag-num h-[46px]';
+const inputClass = 'sag-input sag-num h-12';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -296,9 +296,9 @@ export const StyleProfile: React.FC = () => {
     <section className="space-y-6" aria-labelledby="style-profile-title">
       <form onSubmit={handleSave} className="space-y-6">
         <div className="flex gap-3 border-b border-line pb-5">
-          <span className="mt-0.5 shrink-0 text-sale" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
+          <span className="mt-1 shrink-0 text-brand" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
           <div className="min-w-0">
-            <h2 id="style-profile-title" className="font-display text-[19px] leading-6 lg:text-[23px] lg:leading-7 text-ink">Your style profile</h2>
+            <h2 id="style-profile-title" className="font-display text-[26px] leading-8 lg:text-[32px] lg:leading-9 text-ink">Your style profile</h2>
             <p className="mt-1 text-[13px] leading-[19px] text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
           </div>
         </div>
@@ -350,7 +350,7 @@ export const StyleProfile: React.FC = () => {
         )}
 
         {error && (
-          <p role="alert" className="flex items-start gap-2 border border-danger px-3.5 py-3 text-[13px] leading-5 text-danger">
+          <p role="alert" className="flex items-start gap-2 rounded-lg border border-danger px-3.5 py-3 text-[13px] leading-5 text-danger">
             <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />{error}
           </p>
         )}
@@ -376,8 +376,8 @@ export const StyleProfile: React.FC = () => {
 
       {anySelected && matches.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-display text-[19px] leading-6 text-ink">Matching styles</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+          <h3 className="font-display text-[24px] leading-7 text-ink">Matching styles</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-4 lg:gap-x-5">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>

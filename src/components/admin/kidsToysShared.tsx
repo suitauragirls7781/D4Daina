@@ -23,11 +23,11 @@ const MAX_COLOURS = 8;
 // Swatch shown until a colour is picked (a neutral grey from the design tokens)
 const FALLBACK_HEX = '#857F74';
 
-const FIELD_BASE = 'border border-line bg-sunken text-base sm:text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand disabled:text-ink-faint disabled:cursor-not-allowed transition-colors';
+const FIELD_BASE = 'border border-control bg-surface text-base sm:text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand disabled:text-ink-faint disabled:cursor-not-allowed transition-colors';
 const BTN_BASE = 'inline-flex items-center justify-center gap-2 font-semibold cursor-pointer transition-colors disabled:cursor-not-allowed';
 
 /**
- * The admin look in one place ("Midnight glass"): glass panels on the dark backdrop, light text, gold for the one
+ * The admin look in one place ("Emerald Heritage"): glass panels on the dark backdrop, light text, gold for the one
  * main action (always with dark text on it), glass pills for everything else. Every admin page builds from these.
  */
 export const ui = {
@@ -38,24 +38,24 @@ export const ui = {
   optional: 'font-normal text-ink-faint',
   hint: 'mt-1.5 text-[13px] leading-[18px] text-ink-muted',
   // 16px on phones so the browser does not zoom into the field
-  field: `w-full h-12 sm:h-11 px-3.5 rounded-2xl ${FIELD_BASE}`,
-  textarea: `w-full px-3.5 py-3 rounded-2xl ${FIELD_BASE}`,
-  search: `w-full h-12 sm:h-11 pl-10 pr-3.5 rounded-full ${FIELD_BASE}`,
+  field: `w-full h-12 sm:h-11 px-3.5 rounded-[10px] ${FIELD_BASE}`,
+  textarea: `w-full px-3.5 py-3 rounded-[10px] ${FIELD_BASE}`,
+  search: `w-full h-12 sm:h-11 pl-10 pr-3.5 rounded-lg ${FIELD_BASE}`,
   /** Native select. Add the left padding yourself: pl-3.5, or pl-10 when an icon sits inside. */
-  select: `w-full h-12 sm:h-11 pr-8 rounded-2xl cursor-pointer ${FIELD_BASE}`,
+  select: `w-full h-12 sm:h-11 pr-8 rounded-[10px] cursor-pointer ${FIELD_BASE}`,
   iconBtn: 'w-11 h-11 shrink-0 rounded-full flex items-center justify-center cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed',
   /** The one main action of a screen: a gold pill with dark text. */
   primary: 'sag-btn-primary h-11 px-5 text-sm gap-2',
   outline: 'sag-btn-outline h-11 px-5 text-sm gap-2 disabled:opacity-50',
   /** Destructive or "say no" action: always with words, never colour alone. */
-  danger: `h-11 px-5 rounded-full border border-danger-line bg-danger-tint text-sm text-danger hover:bg-sunken ${BTN_BASE} disabled:opacity-50`,
+  danger: `h-11 px-5 rounded-lg border border-danger-line bg-danger-tint text-sm text-danger hover:bg-sunken ${BTN_BASE} disabled:opacity-50`,
   /** Compact button: 44px tall on a phone, 36px in table rows on wide screens. */
-  small: `h-11 md:h-9 px-3.5 rounded-full border border-line bg-sunken text-[13px] text-ink hover:bg-sunken-deep ${BTN_BASE} disabled:opacity-50`,
+  small: `h-11 md:h-9 px-3.5 rounded-lg border border-line bg-sunken text-[13px] text-ink hover:bg-sunken-deep ${BTN_BASE} disabled:opacity-50`,
   /** Text link inside lists (order numbers, "View all"). */
   link: 'font-semibold text-brand underline underline-offset-[3px] hover:text-brand-dark cursor-pointer',
   chip: (on: boolean) => `sag-chip h-11 px-3.5 text-sm inline-flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${on ? 'is-selected' : 'font-medium'}`,
   /** Status pill shell; add one of the `tone` fills. */
-  badge: 'inline-flex items-center gap-1 min-h-[22px] px-2.5 py-0.5 rounded-full text-[11px] leading-[14px] font-semibold whitespace-nowrap',
+  badge: 'inline-flex items-center gap-1 min-h-[22px] px-2.5 py-0.5 rounded-lg text-[11px] leading-[14px] font-semibold whitespace-nowrap',
   /** Small label above a value (stat tiles, detail lists): small muted capitals. */
   eyebrow: 'text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted',
   /** Page title: the one place the serif is used. */
@@ -70,7 +70,7 @@ export const ui = {
   /** Honest empty state. */
   empty: 'sag-glass px-5 py-10 text-center',
   /** Error banner: use with role="alert". */
-  alert: 'px-4 py-3 rounded-2xl bg-danger-tint border border-danger-line text-sm font-medium text-danger',
+  alert: 'px-4 py-3 rounded-[10px] bg-danger-tint border border-danger-line text-sm font-medium text-danger',
 };
 
 /** Status pills: gold text for good / current, muted for done, red (always with words) for problems. */
@@ -78,7 +78,7 @@ export const tone = {
   neutral: 'bg-sunken-deep text-ink',
   muted: 'bg-sunken text-ink-muted',
   ok: 'bg-ok-tint text-ok',
-  warn: 'bg-sale-tint text-sale',
+  warn: 'border border-danger-line bg-surface text-danger',
   danger: 'bg-danger-tint text-danger',
   brand: 'bg-brand-wash text-brand',
 };
@@ -107,7 +107,7 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({ eyebrow, title
     <div className="min-w-0 flex-1 flex items-start gap-3.5">
       {/* The icon is for wide screens; on a phone the title gets the full width */}
       {icon && (
-        <span className="hidden sm:flex w-12 h-12 rounded-2xl bg-sunken border border-line text-brand items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5" aria-hidden="true">
+        <span className="hidden sm:flex w-12 h-12 rounded-[10px] bg-sunken border border-line text-brand items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5" aria-hidden="true">
           {icon}
         </span>
       )}
@@ -309,7 +309,7 @@ export const ColoursField: React.FC<ColoursFieldProps> = ({ idPrefix, rows, onCh
       </div>
       {showDetected && <p className={ui.hint}>Filled in from the first photo. Change it if it is not right.</p>}
       {suggestion && (
-        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-2xl bg-brand-wash border border-brand-line pl-3 pr-1 py-1">
+        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[10px] bg-brand-wash border border-brand-line pl-3 pr-1 py-1">
           <span className="w-6 h-6 rounded-full ring-1 ring-control shrink-0" style={{ backgroundColor: suggestion.hex }} aria-hidden="true" />
           <span className="text-[13px] leading-[18px] text-ink min-w-0 flex-1">Colour in the new photo: <span className="font-semibold">{suggestion.name}</span></span>
           <button type="button" onClick={onUseSuggestion} className={ui.small}>Add</button>
@@ -421,7 +421,7 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({ id, images, uploading, o
       {images.map((url, i) => (
         <div key={url} className="min-w-0">
           <img src={getCleanImageUrl(url, 240)} alt={`Photo ${i + 1}${i === 0 ? ' (cover)' : ''}`}
-            className="w-full aspect-[4/5] rounded-2xl object-cover object-top bg-sunken" />
+            className="w-full aspect-[4/5] rounded-[10px] object-cover object-top bg-sunken" />
           <div className="mt-1 flex items-center justify-between gap-1">
             {i === 0
               ? <span className={`${ui.badge} ${tone.brand}`}>Cover</span>
@@ -433,7 +433,7 @@ export const PhotoField: React.FC<PhotoFieldProps> = ({ id, images, uploading, o
           </div>
         </div>
       ))}
-      <label className={`w-full aspect-[4/5] rounded-2xl border-[1.5px] border-dashed border-control bg-sunken flex flex-col items-center justify-center gap-1 px-1 text-center text-[13px] font-semibold text-ink focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-sunken-deep'}`}>
+      <label className={`w-full aspect-[4/5] rounded-[10px] border-[1.5px] border-dashed border-control bg-sunken flex flex-col items-center justify-center gap-1 px-1 text-center text-[13px] font-semibold text-ink focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-sunken-deep'}`}>
         {uploading ? <Loader2 className="w-5 h-5 animate-spin text-brand" /> : <ImagePlus className="w-5 h-5 text-brand" />}
         {uploading ? 'Uploading…' : images.length ? 'Add more' : 'Add photos'}
         <input id={id} type="file" accept="image/*" multiple disabled={uploading} className="sr-only"
@@ -458,7 +458,7 @@ export const PriceHint: React.FC<{ price: string; mrp: string }> = ({ price, mrp
 };
 
 export const Toggle: React.FC<{ id: string; checked: boolean; onChange: (next: boolean) => void; label: string; hint: string }> = ({ id, checked, onChange, label, hint }) => (
-  <div className={`flex items-center justify-between gap-3 min-h-[56px] rounded-2xl border px-3.5 py-2.5 transition-colors ${checked ? 'bg-brand-wash border-brand-line' : 'bg-sunken border-line'}`}>
+  <div className={`flex items-center justify-between gap-3 min-h-[56px] rounded-[10px] border px-3.5 py-2.5 transition-colors ${checked ? 'bg-brand-wash border-brand-line' : 'bg-sunken border-line'}`}>
     <div className="min-w-0">
       <p id={`${id}-label`} className="text-sm leading-5 font-semibold text-ink">{label}</p>
       <p id={`${id}-hint`} className="text-[13px] leading-[18px] text-ink-muted">{hint}</p>
@@ -513,7 +513,7 @@ export const FormSheet: React.FC<FormSheetProps> = ({ titleId, title, subtitle, 
       onMouseDown={(e) => { pressedBackdrop.current = e.target === e.currentTarget; }}
       onClick={(e) => { if (pressedBackdrop.current && e.target === e.currentTarget) cancelRef.current(); pressedBackdrop.current = false; }}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
-        className="animate-in slide-in-from-bottom-5 fade-in bg-surface border border-line w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[90dvh] rounded-t-[28px] sm:rounded-[28px] flex flex-col overflow-hidden focus:outline-none">
+        className="animate-in slide-in-from-bottom-5 fade-in bg-surface border border-line w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[90dvh] rounded-t-[10px] sm:rounded-[10px] flex flex-col overflow-hidden focus:outline-none">
         <span className="sm:hidden mx-auto mt-2 w-9 h-1 rounded-full bg-sunken-deep shrink-0" aria-hidden="true" />
         <div className="flex items-center justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-3 py-2.5 border-b border-line">
           <div className="min-w-0 py-1">
@@ -538,7 +538,7 @@ export const FormSheet: React.FC<FormSheetProps> = ({ titleId, title, subtitle, 
 
 export const Thumb: React.FC<{ p: Product }> = ({ p }) => (
   <img src={getCleanImageUrl(p.images?.find(Boolean) || p.image, 160)} alt="" loading="lazy"
-    className="shrink-0 w-14 aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
+    className="shrink-0 w-14 aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
 );
 export const Price: React.FC<{ p: Product }> = ({ p }) => (
   <>
@@ -577,7 +577,7 @@ export const FilterChips: React.FC<{ label: string; value: string; options: Arra
 export const PublishButton: React.FC<{ p: Product; busy: boolean; onToggle: () => void }> = ({ p, busy, onToggle }) => (
   <button type="button" onClick={onToggle} disabled={busy} aria-pressed={!p.hidden}
     title={p.hidden ? 'Hidden: tap to show it on the store' : 'Published: tap to hide it from the store'}
-    className={`h-11 sm:h-9 px-3.5 rounded-full border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-sunken border-line text-ink-muted' : 'bg-ok-tint border-ok-line text-ok'}`}>
+    className={`h-11 sm:h-9 px-3.5 rounded-lg border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-sunken border-line text-ink-muted' : 'bg-ok-tint border-ok-line text-ok'}`}>
     <span className={`w-1.5 h-1.5 rounded-full ${p.hidden ? 'bg-ink-faint' : 'bg-ok'}`} aria-hidden="true" />
     {p.hidden ? 'Hidden' : 'Published'}
   </button>
@@ -645,7 +645,7 @@ export const CategoryStatus: React.FC<{ names: string[]; cats: StoreCategories; 
           {names.map((name) => {
             const cat = cats.find(name);
             return (
-              <li key={name} className={`min-h-9 pl-3 pr-1 py-1 rounded-full text-[13px] leading-[18px] inline-flex flex-wrap items-center gap-1.5 ${cat ? 'bg-ok-tint text-ok' : 'bg-sunken text-ink'}`}>
+              <li key={name} className={`min-h-9 pl-3 pr-1 py-1 rounded-lg text-[13px] leading-[18px] inline-flex flex-wrap items-center gap-1.5 ${cat ? 'bg-ok-tint text-ok' : 'bg-sunken text-ink'}`}>
                 {cats.loading ? (
                   <><Loader2 className="w-3.5 h-3.5 animate-spin text-current" aria-hidden="true" /> {name}: checking…</>
                 ) : cat ? (
@@ -654,7 +654,7 @@ export const CategoryStatus: React.FC<{ names: string[]; cats: StoreCategories; 
                   <>
                     <span><span className="font-semibold">{name}</span> · not in Categories yet</span>
                     <button type="button" onClick={() => add(name)} disabled={adding !== null}
-                      className="h-9 px-3 rounded-full bg-sunken-deep border border-line text-xs font-semibold text-ink hover:bg-sunken inline-flex items-center gap-1 cursor-pointer disabled:opacity-60">
+                      className="h-9 px-3 rounded-lg bg-sunken-deep border border-line text-xs font-semibold text-ink hover:bg-sunken inline-flex items-center gap-1 cursor-pointer disabled:opacity-60">
                       {adding === name ? <Loader2 className="w-3 h-3 animate-spin text-current" /> : <FolderPlus className="w-3 h-3 text-current" />} Add now
                     </button>
                   </>

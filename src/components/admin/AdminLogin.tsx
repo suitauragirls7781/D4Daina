@@ -62,7 +62,7 @@ export const AdminLogin: React.FC = () => {
   return (
     <div id="admin-login-page" className="min-h-screen flex flex-col">
       {/* Top bar */}
-      <div className="bg-[color:var(--sag-glass-bar)] backdrop-blur-xl border-b border-line">
+      <div className="bg-surface border-b border-line">
         <div className="max-w-5xl mx-auto h-14 pl-4 pr-2 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 shrink-0 rounded-full bg-brand text-[color:var(--sag-on-gold)] flex items-center justify-center text-sm font-semibold" aria-hidden="true">SA</div>
@@ -93,7 +93,7 @@ export const AdminLogin: React.FC = () => {
             </div>
 
             {errorMessage && (
-              <div role="alert" className="mt-5 px-3.5 py-3 rounded-[14px] bg-danger-tint border border-danger-line text-sm leading-5 text-danger font-medium flex items-start gap-2">
+              <div role="alert" className="mt-5 px-3.5 py-3 rounded-[10px] bg-danger-tint border border-danger-line text-sm leading-5 text-danger font-medium flex items-start gap-2">
                 <Lock className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
                 <span>{errorMessage}</span>
               </div>
@@ -190,7 +190,7 @@ export const AdminLogin: React.FC = () => {
                 role="switch"
                 aria-checked={remember}
                 onClick={toggleRemember}
-                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-[16px] border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-sunken'}`}
+                className={`w-full min-h-[52px] flex items-center justify-between gap-3 rounded-[10px] border px-3.5 py-2.5 text-left transition-colors cursor-pointer ${remember ? 'border-brand-line bg-brand-wash' : 'border-line bg-sunken'}`}
               >
                 <span className="min-w-0">
                   <span className="block text-sm leading-5 font-semibold text-ink">Save login on this phone</span>

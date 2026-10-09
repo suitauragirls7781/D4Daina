@@ -634,7 +634,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             {requiredSteps.map((step) => (
               <li key={step.label} className="lg:w-full">
                 <button type="button" onClick={() => goTo(step.target)}
-                  className={`w-full h-9 lg:h-10 pl-2 pr-3 lg:px-2 rounded-full lg:rounded-xl border lg:border-0 inline-flex items-center gap-2 text-[13px] text-left cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line' : 'border-line'}`}>
+                  className={`w-full h-9 lg:h-10 pl-2 pr-3 lg:px-2 rounded-lg border lg:border-0 inline-flex items-center gap-2 text-[13px] text-left cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line' : 'border-line'}`}>
                   <span className={`w-5 h-5 shrink-0 rounded-full flex items-center justify-center ${step.done ? `bg-brand ${ON_GOLD}` : 'border border-control'}`} aria-hidden="true">
                     {step.done && <Check className="w-3 h-3 text-current" strokeWidth={3} />}
                   </span>
@@ -650,7 +650,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             {optionalSteps.map((step) => (
               <li key={step.label}>
                 <button type="button" onClick={() => goTo(step.target)}
-                  className={`h-8 px-2.5 rounded-full border inline-flex items-center gap-1.5 text-xs cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line text-brand' : 'border-line text-ink-muted'}`}>
+                  className={`h-8 px-2.5 rounded-lg border inline-flex items-center gap-1.5 text-xs cursor-pointer transition-colors hover:bg-sunken-deep ${step.done ? 'border-brand-line text-brand' : 'border-line text-ink-muted'}`}>
                   {step.done && <Check className="w-3 h-3 text-current" aria-hidden="true" />}{step.label}
                   <span className="sr-only">{step.done ? ' (filled)' : ' (empty)'}</span>
                 </button>
@@ -679,7 +679,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
 
           <div className="space-y-4">
             {/* Upload Area */}
-            <label className="w-full flex flex-col items-center justify-center gap-1.5 px-4 py-7 rounded-2xl border-[1.5px] border-dashed border-control bg-sunken hover:bg-sunken-deep text-center cursor-pointer transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
+            <label className="w-full flex flex-col items-center justify-center gap-1.5 px-4 py-7 rounded-[10px] border-[1.5px] border-dashed border-control bg-sunken hover:bg-sunken-deep text-center cursor-pointer transition-colors focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand">
               <span className="w-11 h-11 mb-1 rounded-full bg-brand-wash text-brand flex items-center justify-center" aria-hidden="true">
                 <ImageIcon className="w-5 h-5 text-current" />
               </span>
@@ -700,9 +700,9 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 {images.map((imgUrl, idx) => (
                   <div key={idx} className="min-w-0">
                     {imgUrl && imgUrl.trim() !== "" ? (
-                      <img src={getCleanImageUrl(imgUrl, 320)} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-2xl object-cover object-top bg-sunken" />
+                      <img src={getCleanImageUrl(imgUrl, 320)} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-[10px] object-cover object-top bg-sunken" />
                     ) : (
-                      <div className="w-full aspect-[4/5] rounded-2xl bg-sunken" />
+                      <div className="w-full aspect-[4/5] rounded-[10px] bg-sunken" />
                     )}
                     <div className="mt-1 flex items-center justify-between gap-1">
                       {/* Image Badge */}
@@ -811,14 +811,14 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                   onChange={(e) => setDiscount(Number(e.target.value))}
                   className={`${ui.field} pr-20 font-semibold sag-num`}
                 />
-                <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${ui.badge} ${tone.warn}`}>% OFF</span>
+                <span className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${ui.badge} ${tone.brand}`}>% OFF</span>
               </div>
               <p className={ui.hint}>Filled in for you from the price and MRP.</p>
             </div>
           </div>
 
           {/* The result, read-only */}
-          <div id="apf-price-preview" aria-live="polite" className={`mt-4 rounded-2xl border px-4 py-3 ${mrpTooLow ? 'bg-danger-tint border-danger-line' : 'bg-brand-wash border-brand-line'}`}>
+          <div id="apf-price-preview" aria-live="polite" className={`mt-4 rounded-[10px] border px-4 py-3 ${mrpTooLow ? 'bg-danger-tint border-danger-line' : 'bg-brand-wash border-brand-line'}`}>
             {mrpTooLow ? (
               <p className="text-sm leading-5 font-medium text-danger">MRP cannot be lower than the selling price. Raise the MRP or lower the price.</p>
             ) : livePrice <= 0 ? (
@@ -889,7 +889,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             <p className="mb-3 text-[13px] leading-[18px] text-ink-muted">Link each colour to its photo: when a shopper taps that colour, the store shows that photo. The first colour is read from the first photo you upload.</p>
 
             {colourSuggestion && (
-              <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-2xl bg-brand-wash border border-brand-line pl-3 pr-1 py-1.5">
+              <div className="mb-3 flex flex-wrap items-center gap-2.5 rounded-[10px] bg-brand-wash border border-brand-line pl-3 pr-1 py-1.5">
                 <span
                   className="w-8 h-8 rounded-full ring-1 ring-control shrink-0"
                   style={{ backgroundColor: colourSuggestion.hex }}
@@ -919,20 +919,20 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             )}
 
             {colors.length === 0 && !colourSuggestion && (
-              <p className="rounded-2xl bg-sunken border border-line px-4 py-3 text-[13px] leading-[18px] text-ink-muted">No colours yet. Upload a photo and the colour is filled in, or tap Add colour.</p>
+              <p className="rounded-[10px] bg-sunken border border-line px-4 py-3 text-[13px] leading-[18px] text-ink-muted">No colours yet. Upload a photo and the colour is filled in, or tap Add colour.</p>
             )}
 
             <div className="space-y-3">
               {colors.map((color, idx) => {
                 const previewHex = color.hex.startsWith('#') ? color.hex : `#${color.hex}`;
                 return (
-                  <div key={idx} className="rounded-2xl border border-line bg-sunken p-3 sm:p-4 space-y-3">
+                  <div key={idx} className="rounded-[10px] border border-line bg-sunken p-3 sm:p-4 space-y-3">
                     <div className="flex items-center justify-between gap-2 -mt-1 -mr-1">
                       <p className={ui.eyebrow}>Colour {idx + 1}</p>
                       <button
                         type="button"
                         onClick={() => removeColor(idx)}
-                        className="h-11 md:h-9 px-3 rounded-full text-[13px] font-semibold text-danger hover:bg-danger-tint transition-colors cursor-pointer"
+                        className="h-11 md:h-9 px-3 rounded-lg text-[13px] font-semibold text-danger hover:bg-danger-tint transition-colors cursor-pointer"
                         title="Delete Color"
                       >
                         Delete
@@ -1029,7 +1029,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                               }}
                               className="w-12 flex flex-col items-center gap-0.5 cursor-pointer"
                             >
-                              <span className={`block w-full aspect-[4/5] rounded-xl overflow-hidden border-2 transition-colors ${synced ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}>
+                              <span className={`block w-full aspect-[4/5] rounded-lg overflow-hidden border-2 transition-colors ${synced ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}>
                                 <img src={getCleanImageUrl(imgUrl, 160)} className="w-full h-full object-cover object-top bg-sunken" alt={`Product ${imgIdx + 1}`} referrerPolicy="no-referrer" />
                               </span>
                               <span className={`text-[11px] leading-[14px] font-semibold ${synced ? 'text-brand' : 'invisible'}`}>Sync</span>
@@ -1171,7 +1171,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 "Complete the look" (bags, heels, jewellery... from Complete the Look in the menu) shows only on the pages of products with a set / combo type.
               </p>
               {!setType.trim() && !customSetType && nameHint.looksLikeSet && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-2xl bg-sale-tint border border-sale-line pl-3.5 pr-1.5 py-1.5 text-[13px] leading-[18px] text-ink">
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-[10px] bg-sale-tint border border-sale-line pl-3.5 pr-1.5 py-1.5 text-[13px] leading-[18px] text-ink">
                   <span className="min-w-0 flex-1 basis-56 py-1">This name looks like a set. Choose its set / combo type so accessories show on its page.</span>
                   {nameHint.suggestion && (
                     <button type="button" onClick={() => setSetType(nameHint.suggestion)} className={ui.small}>
@@ -1187,7 +1187,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             <p id="apf-labels-label" className={ui.label}>Labels <span className={ui.optional}>(switch on the ones that are true for this product)</span></p>
             <div role="group" aria-labelledby="apf-labels-label" className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 gap-2.5">
               {labelToggles.map((flag) => (
-                <label key={flag.id} className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-2xl border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
+                <label key={flag.id} className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-[10px] border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
                   <input
                     id={flag.id}
                     type="checkbox"
@@ -1312,7 +1312,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         <section id="apf-sec-visibility" className={`${ui.card} scroll-mt-24`}>
           <SectionTitle icon={num(9)} title="Visibility" hint="Whether shoppers can see this product." />
 
-          <label className="flex items-center justify-between gap-4 min-h-[64px] px-4 py-3 rounded-2xl border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
+          <label className="flex items-center justify-between gap-4 min-h-[64px] px-4 py-3 rounded-[10px] border border-line bg-sunken cursor-pointer transition-colors has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
             <input
               id="apf-flag-published"
               type="checkbox"
@@ -1333,7 +1333,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         </section>
 
         {/* The save bar stays at the bottom of the screen */}
-        <div className="sticky bottom-0 sm:bottom-3 z-20 -mx-4 sm:mx-0 sag-bar sm:border sm:border-line sm:rounded-full flex items-center gap-3 px-4 sm:pl-6 sm:pr-2.5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-2.5">
+        <div className="sticky bottom-0 sm:bottom-3 z-20 -mx-4 sm:mx-0 sag-bar sm:border sm:border-line sm:rounded-lg flex items-center gap-3 px-4 sm:pl-6 sm:pr-2.5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-2.5">
           <p className="hidden sm:block min-w-0 mr-auto text-[13px] leading-[18px] text-ink-muted truncate sag-num">
             {allDone
               ? <><span className="font-semibold text-brand">Ready to save.</span> {published ? 'It will be live on the store.' : 'It will be saved as a draft.'}</>

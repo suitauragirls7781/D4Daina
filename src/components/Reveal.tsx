@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-/** Fades its children up the first time they scroll into view. */
+/** Its children rise in once, the first time they scroll into view (the same sag-reveal / is-in pair as src/utils/reveal.ts). */
 export const Reveal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -31,7 +31,7 @@ export const Reveal: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   }, []);
 
   return (
-    <div ref={ref} className={`sag-reveal${visible ? ' is-visible' : ''}`}>
+    <div ref={ref} className={`sag-reveal${visible ? ' is-in' : ''}`}>
       {children}
     </div>
   );

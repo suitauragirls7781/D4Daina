@@ -6,12 +6,13 @@ import { SharedWishlistView, ShareWishlistButton, sharedWishlistId } from './Sha
 import { defaultSizeFor, sizesOf } from '../utils/looks';
 import { Product, ProductSize } from '../types';
 import { PackageIcon } from './StoreIcons';
+import { SectionTitle } from './SectionTitle';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
-const label = 'text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em]';
-const quietLink = 'inline-flex items-center gap-1.5 min-h-11 text-[12.5px] font-medium text-sale underline decoration-1 underline-offset-4 hover:text-ink cursor-pointer';
-const grid = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5';
+const label = 'text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.2em]';
+const quietLink = 'sag-lnk';
+const grid = 'sag-stagger grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9';
 
 /** "Move to bag" under a wishlist card; styles with several sizes show the size chips first. */
 const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: ProductSize) => void }> = ({ product, onMove }) => {
@@ -20,7 +21,7 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
   const single = defaultSizeFor(product);
   if (!product.inStock) {
     return (
-      <p className="h-[38px] px-2 rounded-full border border-line text-[11.5px] font-medium uppercase tracking-[0.12em] text-ink-muted flex items-center justify-center">
+      <p className="h-11 px-2 rounded-lg border border-line text-[11.5px] font-semibold uppercase tracking-[0.12em] text-ink-muted flex items-center justify-center">
         Sold out
       </p>
     );
@@ -30,14 +31,14 @@ const MoveToBag: React.FC<{ product: Product; onMove: (product: Product, size?: 
       <button
         type="button"
         onClick={() => (single ? onMove(product, single) : setChoosing(true))}
-        className="sag-btn-primary w-full h-[38px] px-2"
+        className="sag-btn-outline w-full h-11 px-2"
       >
         Move to bag
       </button>
     );
   }
   return (
-    <div className="rounded-[16px] border border-line bg-sunken p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
+    <div className="rounded-lg border border-line bg-sunken p-2 sag-pop" role="group" aria-label={`Choose a size for ${product.name}`}>
       <div className="flex items-center justify-between pl-1">
         <span className={`${label} text-ink-muted`}>Choose a size</span>
         <button type="button" onClick={() => setChoosing(false)} aria-label="Cancel" className="w-11 h-11 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
@@ -68,12 +69,12 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
   const mrp = Math.max(product.price, Number(product.originalPrice) || product.price);
   const off = mrp > product.price ? Math.round((1 - product.price / mrp) * 100) : 0;
   return (
-    // A glass card at every width: the photo, the name, the price and a gold "Move to bag" pill
-    <article className="sag-glass relative flex h-full min-w-0 flex-col p-2 !rounded-[24px]">
+    // No card chrome: the photo, the name, the price and an outline "Move to bag"
+    <article className="relative flex h-full min-w-0 flex-col">
       <button
         type="button"
         onClick={() => navigateToProduct(product.id)}
-        className="block aspect-[4/5] w-full shrink-0 rounded-[18px] bg-sunken overflow-hidden cursor-pointer"
+        className="sag-zoom block aspect-[4/5] w-full shrink-0 rounded-lg bg-sunken overflow-hidden cursor-pointer"
         aria-label={`View ${product.name}`}
       >
         {image && (
@@ -96,23 +97,23 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
         onClick={() => toggleWishlist(product)}
         aria-label={`Remove ${product.name} from wishlist`}
         title="Remove from wishlist"
-        className="absolute top-[10px] right-[10px] w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
+        className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] bg-[rgba(255,255,255,0.74)] text-[color:var(--sag-on-gold)] backdrop-blur-md">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface text-accent">
           <Heart className="w-[15px] h-[15px] fill-current" strokeWidth={1.5} aria-hidden="true" />
         </span>
       </button>
-      <div className="flex min-w-0 flex-1 flex-col gap-[5px] px-1 pt-[9px] pb-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-3">
         {!product.inStock && <span className={`${label} text-ink-muted`}>Sold out</span>}
-        <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-[13px] leading-[1.35] font-normal text-ink line-clamp-2 hover:underline underline-offset-2 cursor-pointer">
+        <button type="button" onClick={() => navigateToProduct(product.id)} className="text-left text-[13.5px] leading-[1.35] font-normal text-ink line-clamp-2 hover:underline underline-offset-2 cursor-pointer">
           {product.name}
         </button>
         <p className="sag-num flex flex-wrap items-baseline gap-x-[7px]">
           <span className={`text-[14.5px] leading-5 font-semibold ${product.inStock ? 'text-ink' : 'text-ink-muted'}`}>{inr(product.price)}</span>
           {off > 0 && <span className="text-[12.5px] text-ink-muted line-through">{inr(mrp)}</span>}
-          {off > 0 && <span className="text-[12.5px] font-medium text-sale whitespace-nowrap">{off}% off</span>}
+          {off > 0 && <span className="text-[12.5px] font-semibold text-accent whitespace-nowrap">{off}% off</span>}
         </p>
-        <div className="mt-auto pt-1">
+        <div className="mt-auto pt-2">
           <MoveToBag product={product} onMove={moveToCartFromWishlist} />
         </div>
       </div>
@@ -163,11 +164,15 @@ export const WishlistPage: React.FC = () => {
     return (
       <div id="wishlist-empty-state" className="py-12 sm:py-20 px-4">
         <div className="max-w-md mx-auto text-center">
-          <span className="mx-auto flex w-fit text-ink-muted" aria-hidden="true">
-            <Heart className="w-7 h-7" strokeWidth={1.25} />
+          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-line bg-surface text-brand" aria-hidden="true">
+            <Heart className="w-6 h-6" strokeWidth={1.25} />
           </span>
-          <h1 className="mt-5 font-display text-[23px] leading-[1.18] lg:text-[32px] text-ink">Your wishlist is empty</h1>
-          <p className="mt-2 text-[14px] leading-[21px] text-ink-muted">Tap the heart on any style to save it here. Saved styles stay on every device you sign in to.</p>
+          <SectionTitle
+            as="h1"
+            className="mt-5"
+            title="Your wishlist is empty"
+            sub="Tap the heart on any style to save it here. Saved styles stay on every device you sign in to."
+          />
           <button
             id="empty-wishlist-shop-btn"
             onClick={() => navigateToCategory('All')}
@@ -178,7 +183,7 @@ export const WishlistPage: React.FC = () => {
 
           {collections.length > 0 && (
             <div className="mt-10 text-left">
-              <p className={`${label} mb-1 text-sale`}>Browse collections</p>
+              <p className={`${label} mb-2 text-sale`}>Browse collections</p>
               <div className="sag-glass px-4">
                 {collections.map(([name, count]) => (
                   <button
@@ -211,21 +216,23 @@ export const WishlistPage: React.FC = () => {
         </nav>
 
         {/* Title with the real count; what the saved styles cost together today sits under it in quiet text */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-x-6 gap-y-3 border-b border-line pb-4 mb-4 sm:mb-6">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-              <h1 className="font-display text-[23px] leading-[1.18] lg:text-[32px] text-ink">My wishlist</h1>
-              <p className="sag-num text-[13px] text-ink-muted">{wishlist.length} saved {wishlist.length === 1 ? 'style' : 'styles'}</p>
-            </div>
+        <div className="flex flex-col items-center gap-y-4 border-b border-line pb-5 mb-6 sm:mb-8 rounded-none!">
+          <div className="min-w-0 text-center">
+            <SectionTitle
+              as="h1"
+              eyebrow="Saved styles"
+              title="My wishlist"
+              sub={<span className="sag-num">{wishlist.length} saved {wishlist.length === 1 ? 'style' : 'styles'}</span>}
+            />
             {liveSaved.length > 0 && (
               <p className="sag-num mt-1 text-[13px] leading-[18px] text-ink-muted">
                 Total {inr(savedTotal)}{liveSaved.length < wishlist.length ? ` for the ${liveSaved.length} still available` : ''}
               </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+          <div className="flex w-full flex-wrap items-center justify-center gap-x-6 gap-y-1">
             {canMove.length > 0 && (
-              <button type="button" onClick={moveAll} className="sag-btn-outline h-[38px] px-4 w-full sm:w-auto">
+              <button type="button" onClick={moveAll} className="sag-btn-outline h-11 px-5 w-full sm:w-auto">
                 Move all to bag
               </button>
             )}
@@ -242,16 +249,16 @@ export const WishlistPage: React.FC = () => {
             const live = allProducts.find((p) => String(p.id) === String(saved.id));
             if (live) return <WishlistCard key={saved.id} product={live} />;
             return (
-              <article key={saved.id} className="sag-glass flex h-full min-w-0 flex-col p-2 !rounded-[24px]">
-                <div className="aspect-[4/5] w-full shrink-0 rounded-[18px] bg-sunken flex flex-col items-center justify-center gap-2 px-3 text-center text-ink-muted">
+              <article key={saved.id} className="flex h-full min-w-0 flex-col">
+                <div className="aspect-[4/5] w-full shrink-0 rounded-lg border border-line bg-sunken flex flex-col items-center justify-center gap-2 px-3 text-center text-ink-muted">
                   <PackageIcon className="w-6 h-6" mono live={false} />
                   <p className="text-[12.5px] leading-4">No longer available</p>
                 </div>
-                <div className="flex min-w-0 flex-1 flex-col gap-[5px] px-1 pt-[9px] pb-1">
-                  <p className="text-[13px] leading-[1.35] text-ink line-clamp-2">{saved.name}</p>
+                <div className="flex min-w-0 flex-1 flex-col gap-[5px] pt-3">
+                  <p className="text-[13.5px] leading-[1.35] text-ink line-clamp-2">{saved.name}</p>
                   <p className="text-[12.5px] leading-[17px] text-ink-muted">This style has left our collection.</p>
-                  <div className="mt-auto pt-1">
-                    <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-[38px] px-2">Remove</button>
+                  <div className="mt-auto pt-2">
+                    <button onClick={() => toggleWishlist(saved)} className="sag-btn-outline w-full h-11 px-2">Remove</button>
                   </div>
                 </div>
               </article>

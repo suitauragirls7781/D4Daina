@@ -29,10 +29,10 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     return smartSearch(products, q, 12);
   }, [products, occasion, budget, colour, size]);
 
-  const select = 'sag-input h-[46px] pr-9 appearance-none truncate cursor-pointer';
+  const select = 'sag-input h-12 pr-9 appearance-none truncate cursor-pointer';
   const field = (id: string, label: string, control: React.ReactNode, wide = false) => (
     <div className={wide ? 'col-span-2 md:col-span-1' : ''}>
-      <label htmlFor={id} className="block mb-1.5 text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em] text-ink-muted">{label}</label>
+      <label htmlFor={id} className="block mb-1.5 text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.2em] text-ink-muted">{label}</label>
       <div className="relative">
         {control}
         <ChevronDown strokeWidth={1.5} className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
@@ -42,10 +42,10 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label="Shop as a gift" onClick={(e) => e.stopPropagation()}
-        className="bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x md:border-b border-line rounded-t-[26px] md:rounded-[26px] w-full md:max-w-4xl max-h-[85dvh] flex flex-col animate-in slide-in-from-bottom-5 fade-in">
+        className="bg-surface text-ink border-t border-x md:border-b border-line rounded-t-[10px] rounded-b-none md:rounded-[10px] w-full md:max-w-4xl max-h-[85dvh] flex flex-col animate-in slide-in-from-bottom-5 fade-in">
         <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-control" /></div>
-        <div className="flex items-center justify-between pl-4 pr-2 min-h-[52px] border-b border-line shrink-0">
-          <p className="font-display text-[19px] leading-6 text-ink flex items-center gap-2.5"><Gift className="w-[18px] h-[18px] text-sale" strokeWidth={1.5} /> Shop as a gift</p>
+        <div className="flex items-center justify-between pl-4 pr-2 min-h-[60px] border-b border-line shrink-0">
+          <p className="font-display text-[24px] leading-7 text-ink flex items-center gap-2.5"><Gift className="w-[19px] h-[19px] text-brand" strokeWidth={1.25} /> Shop as a gift</p>
           <button onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full text-ink hover:text-ink-muted flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
         </div>
         <div className="overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
@@ -64,7 +64,7 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 : `No exact match — closest in-stock styles within your budget and size:`}
           </p>
           {size === '' && result.products.length > 0 && <p className="text-[13px] leading-[18px] text-ink-muted mt-1">Not sure of the size? Every product page has a size chart and “Find my size”.</p>}
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-5 sm:gap-y-8">
             {result.products.map((p) => <div key={p.id} className="min-w-0" onClickCapture={onClose}><ProductCard product={p} compact /></div>)}
           </div>
         </div>

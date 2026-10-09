@@ -59,13 +59,13 @@ export const PendingPayment: React.FC<{ order: Order }> = ({ order }) => {
   };
 
   return (
-    <div className="sag-glass p-4 space-y-3.5" role="region" aria-label="Payment pending">
+    <div className="sag-glass px-4 py-[18px] space-y-4" role="region" aria-label="Payment pending">
       <div className="min-w-0">
-        <p className="flex items-center gap-1.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">
+        <p className="flex items-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-brand">
           <LockIcon className="w-[15px] h-[15px] shrink-0" mono live={false} /> Payment pending
         </p>
-        <p className="sag-num mt-1.5 text-[17px] leading-6 font-semibold text-ink">₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}</p>
-        <p className="mt-1 text-[13px] leading-5 text-ink-muted">
+        <p className="sag-num mt-2 text-[21px] leading-6 font-semibold text-ink">₹{Number(order.finalTotal || 0).toLocaleString('en-IN')}</p>
+        <p className="mt-1.5 text-[13px] leading-5 text-ink-muted">
           This order is confirmed only after the payment is verified. If money was already deducted, tap “Check payment” instead of paying again.
         </p>
       </div>

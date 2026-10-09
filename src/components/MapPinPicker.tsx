@@ -24,13 +24,12 @@ const MapPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
       width="36"
       height="46"
       viewBox="0 0 36 46"
-      className={`block transition-transform duration-200 ${lifted ? '-translate-y-2' : ''}`}
-      style={{ filter: 'drop-shadow(0 2px 3px rgba(27, 26, 23, 0.35))' }}
+      className={`block drop-shadow-md transition-transform duration-200 ${lifted ? '-translate-y-2' : ''}`}
     >
-      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" fill="#161514" stroke="#FFFFFF" strokeWidth="2" />
-      <circle cx="18" cy="17.5" r="6" fill="#FFFFFF" />
+      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" strokeWidth="2" className="fill-brand stroke-surface" />
+      <circle cx="18" cy="17.5" r="6" className="fill-surface" />
     </svg>
-    <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-[color:var(--sag-scrim)]" />
+    <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-ink/40" />
   </div>
 );
 
@@ -202,8 +201,8 @@ export const MapPinPicker: React.FC<{
     ? 'Search or use your current location, then drag the map so the pin sits on your door.'
     : '';
 
-  // Caution note: a glass panel, light text
-  const note = 'sag-glass px-3.5 py-3 text-sm leading-5 text-ink';
+  // Caution note: a warm tinted panel
+  const note = 'sag-glass sag-glass-strong px-3.5 py-3 text-[13.5px] leading-5 text-ink';
 
   return (
     <div className="space-y-4">
@@ -227,7 +226,7 @@ export const MapPinPicker: React.FC<{
         <ul className="sag-glass divide-y divide-line overflow-hidden" aria-label="Places found">
           {results.map((place) => (
             <li key={place.id}>
-              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-[color:var(--sag-glass-strong)] cursor-pointer transition-colors">
+              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-sunken cursor-pointer transition-colors">
                 <PinIcon className="w-5 h-5 shrink-0 text-sale" live={false} />
                 <span className="min-w-0 text-sm leading-5 text-ink break-words">{place.label}</span>
               </button>
@@ -236,7 +235,7 @@ export const MapPinPicker: React.FC<{
         </ul>
       )}
 
-      <button type="button" onClick={useCurrentLocation} disabled={locating} className="sag-btn-outline w-full h-12 px-4 gap-2 text-[15px]">
+      <button type="button" onClick={useCurrentLocation} disabled={locating} className="sag-btn-outline w-full h-12 px-4 gap-2">
         {locating ? <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" /> : <Crosshair className="w-[18px] h-[18px] text-current" strokeWidth={1.75} aria-hidden="true" />}
         {locating ? 'Finding your location…' : 'Use current location'}
       </button>
@@ -248,7 +247,7 @@ export const MapPinPicker: React.FC<{
           The map could not load right now. You can still search above, use your current location, or enter the address manually.
         </p>
       ) : (
-        <div className="relative isolate h-[260px] sm:h-[320px] rounded-[22px] overflow-hidden border border-[color:var(--sag-edge)] bg-[color:var(--sag-glass)]">
+        <div className="relative isolate h-[260px] sm:h-[320px] rounded-[10px] overflow-hidden border border-line bg-sunken">
           <div ref={mapEl} className="absolute inset-0 z-0" role="application" aria-label="Map. Drag to move the pin to your delivery spot." />
           {mapState === 'loading' && (
             <div className="absolute inset-0 z-[600] flex items-center justify-center gap-2 text-sm text-ink-muted">
@@ -257,7 +256,7 @@ export const MapPinPicker: React.FC<{
           )}
           {mapState === 'ready' && <MapPin lifted={moving} />}
           {tilesBlocked && (
-            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-[14px] bg-[color:var(--sag-glass-sheet)] backdrop-blur-md px-3 py-2 text-[13px] leading-[18px] text-ink border border-[color:var(--sag-edge)]">
+            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-lg! bg-surface px-3 py-2 text-[13px] leading-[18px] text-ink border border-line">
               Map images could not load on this network. You can still search, use your location, or enter the address manually.
             </p>
           )}
@@ -268,7 +267,7 @@ export const MapPinPicker: React.FC<{
 
       {(detected || detecting || detectError) && (
         <div className="sag-card p-4 space-y-3" aria-live="polite">
-          <p className="flex items-center gap-2 text-sm leading-5 font-semibold text-ink"><PinIcon className="w-5 h-5 shrink-0 text-sale" live={false} /> Deliver to</p>
+          <p className="flex items-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-ink"><PinIcon className="w-[18px] h-[18px] shrink-0 text-brand" live={false} /> Deliver to</p>
           {detecting ? (
             <p className="flex items-center gap-2 text-sm leading-5 text-ink-muted"><Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted" aria-hidden="true" /> Finding the address at the pin…</p>
           ) : detectError ? (
@@ -301,9 +300,11 @@ export const MapPinPicker: React.FC<{
         </div>
       )}
 
-      <button type="button" onClick={onManual} className="sag-link w-full justify-center">
-        Enter address manually
-      </button>
+      <div className="flex justify-center">
+        <button type="button" onClick={onManual} className="sag-lnk">
+          Enter address manually
+        </button>
+      </div>
     </div>
   );
 };

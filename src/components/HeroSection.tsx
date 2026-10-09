@@ -98,16 +98,12 @@ export const HeroSection: React.FC = () => {
     return [];
   }, [heroConfig, products]);
 
+
   const slides = liveProductSlides;
   const [currentSlideIdx, setCurrentSlideIdx] = useState(0);
-  const stripRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef(0);
-  const ignoreScrollUntil = useRef(0);
   const idxRef = useRef(0);
   idxRef.current = currentSlideIdx;
-  // curtain: the slide whose photo opens like a curtain (changes by button or timer, not by swipe);
-  // leaving: the slide just left, which keeps its drift so it does not jump while it glides away
-  const [fx, setFx] = useState({ curtain: -1, leaving: -1 });
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const [hold, setHold] = useState(() => ({
     hover: false,
     touch: false,
@@ -116,19 +112,10 @@ export const HeroSection: React.FC = () => {
   }));
   const [reduced, setReduced] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches));
 
-  /** Shows slide `index`: the photo strip scrolls to it and the text follows. */
+  /** Shows slide `index`: its photo fades in over the last one and its words follow. */
   const goTo = useCallback((index: number) => {
     const total = slides.length || 1;
-    const target = ((index % total) + total) % total;
-    if (target !== idxRef.current) setFx({ curtain: target, leaving: idxRef.current });
-    setCurrentSlideIdx(target);
-    const strip = stripRef.current;
-    const slide = strip?.children[target] as HTMLElement | undefined;
-    if (!strip || !slide) return;
-    const reduced = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-    // While the strip glides to its new place, its scroll events must not pick a slide on the way
-    ignoreScrollUntil.current = Date.now() + 700;
-    strip.scrollTo({ left: slide.offsetLeft - (strip.children[0] as HTMLElement).offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
+    setCurrentSlideIdx(((index % total) + total) % total);
   }, [slides.length]);
 
   // Slides change by themselves every 6 seconds, except while the shopper is pointing at, touching or
@@ -158,30 +145,22 @@ export const HeroSection: React.FC = () => {
     }
   }, [slides.length, currentSlideIdx]);
 
-  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
-
   const handlePrev = () => goTo(idxRef.current - 1);
   const handleNext = () => goTo(idxRef.current + 1);
 
-  // A swipe on the strip: the slide nearest the left edge becomes the current one
-  const onStripScroll = () => {
-    if (Date.now() < ignoreScrollUntil.current) return;
-    cancelAnimationFrame(frameRef.current);
-    frameRef.current = requestAnimationFrame(() => {
-      const strip = stripRef.current;
-      if (!strip || strip.children.length === 0) return;
-      const origin = (strip.children[0] as HTMLElement).offsetLeft;
-      let nearest = 0;
-      let best = Infinity;
-      Array.from(strip.children).forEach((child, index) => {
-        const distance = Math.abs((child as HTMLElement).offsetLeft - origin - strip.scrollLeft);
-        if (distance < best) { best = distance; nearest = index; }
-      });
-      if (nearest !== idxRef.current) {
-        setFx({ curtain: -1, leaving: idxRef.current });
-        setCurrentSlideIdx(nearest);
-      }
-    });
+  // A sideways swipe on the photo shows the next or the previous slide
+  const onSwipeStart = (event: React.TouchEvent) => {
+    const touch = event.touches[0];
+    swipeStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+  const onSwipeEnd = (event: React.TouchEvent) => {
+    const start = swipeStart.current;
+    const touch = event.changedTouches[0];
+    swipeStart.current = null;
+    if (!start || !touch) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(dy) * 1.4) goTo(idxRef.current + (dx < 0 ? 1 : -1));
   };
 
   const handleSlideClick = (slide: LiveHeroSlide) => {
@@ -199,17 +178,22 @@ export const HeroSection: React.FC = () => {
     }
   };
 
+  const FRAME = 'mx-auto max-w-7xl lg:grid lg:grid-cols-12 lg:items-stretch';
+  const PHOTO = 'relative aspect-[4/5] w-full overflow-hidden rounded-none bg-sunken lg:col-span-7 lg:aspect-auto lg:h-[min(78vh,760px)]';
+  const BODY = 'flex min-w-0 flex-col px-4 pt-4 pb-2 sm:px-6 lg:col-span-5 lg:justify-center lg:px-14 lg:py-12';
+
   if (isLoading && (!slides || slides.length === 0)) {
     return (
-      <div className="w-full px-3 pt-3 pb-[18px] sm:px-6 lg:px-8 lg:py-10" aria-hidden="true">
-        <div className="sag-glass rounded-[28px]! mx-auto max-w-2xl p-2.5 sm:p-4 lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12 lg:p-8">
-          <div className="pb-[22%] pl-7">
-            <div className="aspect-[4/5] w-[78%] rounded-[20px]! bg-sunken" />
-          </div>
-          <div className="mt-4 flex flex-col items-start gap-3 px-1.5 pb-1.5 lg:mt-0 lg:p-0">
-            <div className="h-8 w-3/4 bg-sunken" />
-            <div className="h-6 w-1/3 bg-sunken" />
-            <div className="h-12 w-40 rounded-full! bg-sunken" />
+      <div className="w-full" aria-hidden="true">
+        <div className={FRAME}>
+          <div className={PHOTO} />
+          <div className={BODY}>
+            <div className="mt-3 flex flex-col items-start gap-3.5">
+              <div className="h-3 w-24 rounded-none bg-sunken" />
+              <div className="h-10 w-3/4 rounded-none bg-sunken" />
+              <div className="h-6 w-1/3 rounded-none bg-sunken" />
+              <div className="h-[52px] w-44 rounded-lg bg-sunken" />
+            </div>
           </div>
         </div>
       </div>
@@ -219,36 +203,14 @@ export const HeroSection: React.FC = () => {
   const currentSlide = slides[currentSlideIdx] || slides[0];
   if (!currentSlide) return null;
 
-  const slidePrice = Number(currentSlide.price) || 0;
-  const originalPrice = Math.max(slidePrice, Number(currentSlide.originalPrice) || slidePrice);
-  const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
   const count = slides.length;
-  // The admin's own badge text as the vertical caption, or the plain "New season"
-  const caption = plainWords(ownerBadge(currentSlide.badge)) || 'New season';
-  // The percent offer is shown only when this product's price qualifies for it
-  const onlineOffer = slidePrice <= 0
-    ? ''
-    : prepaidPercentApplies(storeOffers, slidePrice)
-    ? `Extra ${storeOffers.prepaidPercent}% off with online payment`
-    : storeOffers.prepaidDiscount > 0
-    ? `Extra ₹${storeOffers.prepaidDiscount} off on online payment`
-    : '';
-  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white/[0.08] text-ink hover:bg-white/[0.16] transition-colors cursor-pointer';
-
-  /** The second picture of a slide's collage, always a real one: another photo of the same product, else the next slide's photo. */
-  const secondPhoto = (slide: LiveHeroSlide, index: number): string => {
-    const product = slide.rawProduct || (slide.productId ? products.find((p) => String(p.id) === String(slide.productId)) : undefined);
-    const own = (product?.images || []).find((url) => url && url !== slide.image);
-    if (own) return own;
-    const next = count > 1 ? slides[(index + 1) % count]?.image : '';
-    return next && next !== slide.image ? next : '';
-  };
+  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink hover:border-brand hover:text-brand transition-colors cursor-pointer';
 
   return (
     <section
       id="haute-couture-hero"
       aria-label="Featured collection"
-      className="w-full px-3 pt-3 pb-[18px] sm:px-6 lg:px-8 lg:py-10"
+      className="w-full"
       onPointerEnter={(event) => { if (event.pointerType === 'mouse') setHold((h) => ({ ...h, hover: true })); }}
       onPointerLeave={() => setHold((h) => (h.hover ? { ...h, hover: false } : h))}
       onTouchStart={() => setHold((h) => ({ ...h, touch: true }))}
@@ -257,126 +219,50 @@ export const HeroSection: React.FC = () => {
       onFocus={(event) => { if ((event.target as HTMLElement).matches?.(':focus-visible')) setHold((h) => ({ ...h, focus: true })); }}
       onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setHold((h) => (h.focus ? { ...h, focus: false } : h)); }}
     >
-      <div className="sag-glass rounded-[28px]! mx-auto max-w-2xl p-2.5 sm:p-4 lg:grid lg:max-w-7xl lg:grid-cols-[55fr_45fr] lg:items-center lg:gap-12 lg:p-8">
-        {/* Collage: the vertical caption, then a swipeable strip of two-photo compositions. Nothing is drawn on a photo. */}
-        <div className="flex min-w-0 items-stretch gap-3 lg:gap-4">
-          <div className="relative w-4 shrink-0" aria-hidden="true">
-            <span className="absolute left-0 top-0 max-h-full truncate text-[11px] font-medium uppercase leading-4 tracking-[0.3em] text-sale [writing-mode:vertical-rl] rotate-180">
-              {caption}
-            </span>
-          </div>
-          <div
-            ref={stripRef}
-            onScroll={onStripScroll}
-            className="sag-scroll-x scroll-px-0! flex min-w-0 flex-1 items-start overflow-x-auto"
-          >
-            {slides.map((slide, index) => {
-              const small = getCleanImageUrl(slide.image, 640);
-              const mid = getCleanImageUrl(slide.image, 828);
-              const wide = getCleanImageUrl(slide.image, 1100);
-              const second = secondPhoto(slide, index);
-              const secondSmall = second ? getCleanImageUrl(second, 320) : '';
-              const secondMid = second ? getCleanImageUrl(second, 480) : '';
-              const secondWide = second ? getCleanImageUrl(second, 640) : '';
-              return (
-                <button
-                  key={slide.id || index}
-                  type="button"
-                  onClick={() => handleSlideClick(slide)}
-                  className={`relative block w-full shrink-0 cursor-pointer text-left ${second ? 'pb-[22%]' : ''}`}
-                  aria-label={`View ${slide.title}`}
-                >
-                  <span className={`block aspect-[4/5] overflow-hidden rounded-[20px] bg-sunken ${second ? 'w-[78%]' : 'w-full'}`}>
-                    <span className={`block h-full w-full overflow-hidden ${index === fx.curtain && index === currentSlideIdx ? 'sag-curtain' : ''}`}>
-                      <img
-                        src={small || ELEGANT_PLACEHOLDER_SVG}
-                        srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
-                        sizes="(min-width: 1280px) 520px, (min-width: 1024px) 40vw, (min-width: 768px) 500px, 70vw"
-                        alt={slide.title || 'Featured Suit Aura Girls design'}
-                        className={`h-full w-full rounded-none object-cover object-top ${index === currentSlideIdx || index === fx.leaving ? 'sag-drift' : ''}`}
-                        loading={index === 0 ? 'eager' : 'lazy'}
-                        fetchPriority={index === 0 ? 'high' : 'auto'}
-                        decoding="async"
-                        onError={(event) => {
-                          if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
-                        }}
-                      />
-                    </span>
-                  </span>
-                  {second && (
-                    <span className="absolute bottom-0 right-0 block aspect-[4/5] w-[46%] overflow-hidden rounded-[16px] border border-white/45 bg-page lg:rounded-[20px]">
-                      <img
-                        src={secondMid || ELEGANT_PLACEHOLDER_SVG}
-                        srcSet={secondSmall && secondSmall !== secondWide ? `${secondSmall} 320w, ${secondMid} 480w, ${secondWide} 640w` : undefined}
-                        sizes="(min-width: 1280px) 310px, (min-width: 1024px) 24vw, (min-width: 768px) 300px, 42vw"
-                        alt=""
-                        className="h-full w-full rounded-none object-cover object-top"
-                        loading={index === 0 ? 'eager' : 'lazy'}
-                        decoding="async"
-                        onError={(event) => {
-                          if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
-                        }}
-                      />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      <div className={FRAME}>
+        {/* The photos lie on top of one another and cross-fade; the one shown zooms very slowly. Nothing is drawn on a photo. */}
+        <div className={PHOTO} onTouchStart={onSwipeStart} onTouchEnd={onSwipeEnd}>
+          {slides.map((slide, index) => {
+            const small = getCleanImageUrl(slide.image, 640);
+            const mid = getCleanImageUrl(slide.image, 828);
+            const wide = getCleanImageUrl(slide.image, 1100);
+            const on = index === currentSlideIdx;
+            return (
+              <button
+                key={slide.id || index}
+                type="button"
+                onClick={() => handleSlideClick(slide)}
+                className={`sag-hero-slide absolute inset-0 block h-full w-full cursor-pointer overflow-hidden ${on ? 'is-on' : 'pointer-events-none'}`}
+                aria-label={`View ${slide.title}`}
+                aria-hidden={on ? undefined : true}
+                tabIndex={on ? undefined : -1}
+              >
+                <img
+                  src={small || ELEGANT_PLACEHOLDER_SVG}
+                  srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
+                  sizes="(min-width: 1280px) 750px, (min-width: 1024px) 58vw, 100vw"
+                  alt={slide.title || 'Featured Suit Aura Girls design'}
+                  className="h-full w-full rounded-none object-cover object-top"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
+                  decoding="async"
+                  onError={(event) => {
+                    if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
+                  }}
+                />
+              </button>
+            );
+          })}
         </div>
 
-        {/* Words: left-aligned under the collage; beside it and vertically centred on desktop */}
-        <div className="mt-3.5 min-w-0 px-1.5 pb-1.5 lg:mt-0 lg:p-0">
-          {/* Re-made per slide, so the title, price and buttons arrive one after another */}
-          <div key={currentSlide.id || currentSlideIdx} className="sag-stagger">
-          {/* Three lines are reserved below desktop so a change of slide never moves the buttons */}
-          <h1 className="sag-lines font-display font-medium text-[30px] leading-[1.12] text-ink min-h-[3.36em] md:text-[36px] lg:min-h-0 lg:text-[44px] lg:leading-[1.1]">
-            <span className="sr-only">Suit Aura Girls: </span>
-            <span className="sag-line-up" style={{ '--sag-line-delay': '120ms' } as React.CSSProperties}>
-              <span className="line-clamp-3">{currentSlide.title}</span>
-            </span>
-          </h1>
-          {currentSlide.subtitle && (
-            <p className="mt-3 max-w-xl text-[15px] leading-[22px] text-ink-muted line-clamp-2 max-lg:hidden">
-              {currentSlide.subtitle}
-            </p>
-          )}
-
-          {slidePrice > 0 && (
-            <p className="sag-num mt-2.5 flex flex-wrap items-baseline gap-x-[7px] gap-y-1 lg:mt-5">
-              <span className="text-[22px] font-semibold leading-7 text-ink lg:text-[28px] lg:leading-8">₹{slidePrice.toLocaleString('en-IN')}</span>
-              {originalPrice > slidePrice && <span className="text-[12.5px] text-ink-muted line-through lg:text-sm">₹{originalPrice.toLocaleString('en-IN')}</span>}
-              {discountPercent > 0 && <span className="text-[12.5px] font-semibold text-sale lg:text-sm">{discountPercent}% off</span>}
-            </p>
-          )}
-          {onlineOffer && <p className="mt-1 text-xs leading-[18px] text-sale">{onlineOffer}</p>}
-
-          <div className="mt-4 flex items-center gap-2.5 lg:mt-7">
-            <button
-              type="button"
-              id="hero-view-style-btn"
-              onClick={() => handleSlideClick(currentSlide)}
-              className="sag-btn-primary min-w-0 flex-1 gap-2 px-6 whitespace-nowrap sm:flex-none"
-            >
-              Shop now
-              <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.25} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              id="hero-explore-btn"
-              onClick={() => navigateToCategory('All')}
-              aria-label="Explore collection"
-              className="sag-btn-outline shrink-0 px-6 whitespace-nowrap"
-            >
-              Explore
-            </button>
-          </div>
-          </div>
-
-          {/* Place marks: thin lines, the current one fills while its slide is shown; then the slide number */}
+        <div className={BODY}>
+          {/* Place marks: the slide number, then thin lines; the current one fills while its slide is shown */}
           {count > 1 && (
-            <div className="mt-3 flex items-center gap-3 lg:mt-6 lg:max-w-md">
-              <div className="flex min-w-0 flex-1 gap-1.5">
+            <div className="flex items-center gap-2.5">
+              <span className="sag-num min-w-[46px] shrink-0 text-[11px] font-semibold leading-4 tracking-[0.14em] text-ink-muted" aria-hidden="true">
+                {String(currentSlideIdx + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
+              </span>
+              <div className="flex min-w-0 flex-1 gap-2">
                 {slides.map((slide, index) => (
                   <button
                     key={slide.id || index}
@@ -384,13 +270,14 @@ export const HeroSection: React.FC = () => {
                     onClick={() => goTo(index)}
                     aria-label={`Show design ${index + 1} of ${count}: ${slide.title}`}
                     aria-current={index === currentSlideIdx ? 'true' : undefined}
-                    className="flex h-8 min-w-0 flex-1 cursor-pointer items-center"
+                    className="flex h-11 min-w-0 flex-1 cursor-pointer items-center"
                   >
-                    <span className="relative block h-0.5 w-full overflow-hidden rounded-full bg-line">
+                    <span className="relative block h-0.5 w-full overflow-hidden rounded-none bg-line">
+                      {index < currentSlideIdx && <span className="absolute inset-0 bg-brand" />}
                       {index === currentSlideIdx && (
                         <span
                           key={`${currentSlideIdx}-${running}`}
-                          className={`absolute inset-0 rounded-full bg-brand ${running ? 'sag-progress' : ''}`}
+                          className={`absolute inset-0 bg-brand ${running ? 'sag-progress' : ''}`}
                           style={{ '--sag-progress-time': `${SLIDE_MS / 1000}s` } as React.CSSProperties}
                         />
                       )}
@@ -398,14 +285,84 @@ export const HeroSection: React.FC = () => {
                   </button>
                 ))}
               </div>
-              <span className="sag-num shrink-0 text-[11px] leading-4 tracking-[0.08em] text-ink-muted" aria-hidden="true">
-                {String(currentSlideIdx + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-              </span>
             </div>
           )}
 
+          {/* The words of every slide share one place, so a change of slide never moves the page; the ones
+              shown are made again each time, so the eyebrow, title, price and actions rise in one after another */}
+          <div className={`grid ${count > 1 ? 'mt-2 lg:mt-5' : 'mt-1'}`}>
+            {slides.map((slide, index) => {
+              const on = index === currentSlideIdx;
+              const slidePrice = Number(slide.price) || 0;
+              const originalPrice = Math.max(slidePrice, Number(slide.originalPrice) || slidePrice);
+              const discountPercent = originalPrice > slidePrice ? Math.round(((originalPrice - slidePrice) / originalPrice) * 100) : 0;
+              // The admin's own badge text as the eyebrow, or the plain "New season"
+              const caption = plainWords(ownerBadge(slide.badge)) || 'New season';
+              // The percent offer is shown only when this product's price qualifies for it
+              const onlineOffer = slidePrice <= 0
+                ? ''
+                : prepaidPercentApplies(storeOffers, slidePrice)
+                ? `Extra ${storeOffers.prepaidPercent}% off with online payment`
+                : storeOffers.prepaidDiscount > 0
+                ? `Extra ₹${storeOffers.prepaidDiscount} off on online payment`
+                : '';
+              const Title = on ? 'h1' : 'p';
+              const short = String(slide.title || '').length <= 26;
+              return (
+                <div
+                  key={`${slide.id || index}-${on ? 'on' : 'off'}`}
+                  aria-hidden={on ? undefined : true}
+                  className={`[grid-area:1/1] flex min-w-0 flex-col items-start ${on ? 'sag-stagger' : 'invisible'}`}
+                >
+                  <p className="sag-eyebrow sag-caps text-[10.5px] font-semibold uppercase leading-4 tracking-[0.24em]">{caption}</p>
+                  <Title className={`mt-2.5 font-display text-ink ${short ? 'text-[38px] leading-[1.03] lg:text-[60px] lg:leading-none' : 'text-[30px] leading-[1.08] lg:text-[44px] lg:leading-[1.05]'}`}>
+                    {on && <span className="sr-only">Suit Aura Girls: </span>}
+                    <span className="line-clamp-3">{slide.title}</span>
+                  </Title>
+                  {slide.subtitle && (
+                    <p className="mt-3 max-w-[36ch] text-[15px] leading-[22px] text-ink-muted line-clamp-2 max-lg:hidden">
+                      {slide.subtitle}
+                    </p>
+                  )}
+
+                  {slidePrice > 0 && (
+                    <p className="sag-num mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1 lg:mt-5">
+                      <span className="text-[20px] font-semibold leading-7 text-ink lg:text-[24px] lg:leading-8">₹{slidePrice.toLocaleString('en-IN')}</span>
+                      {originalPrice > slidePrice && <span className="text-[13px] text-ink-muted line-through lg:text-sm">₹{originalPrice.toLocaleString('en-IN')}</span>}
+                      {discountPercent > 0 && <span className="text-[13px] font-semibold text-accent lg:text-sm">{discountPercent}% off</span>}
+                    </p>
+                  )}
+                  {onlineOffer && <p className="mt-1 text-[13px] leading-[18px] text-sale">{onlineOffer}</p>}
+
+                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 lg:mt-7">
+                    <button
+                      type="button"
+                      id={on ? 'hero-view-style-btn' : undefined}
+                      tabIndex={on ? undefined : -1}
+                      onClick={() => handleSlideClick(slide)}
+                      className="sag-btn-primary gap-2.5 px-6 whitespace-nowrap"
+                    >
+                      Shop now
+                      <ArrowRight className="h-4 w-4 shrink-0" strokeWidth={1.25} aria-hidden="true" />
+                    </button>
+                    <button
+                      type="button"
+                      id={on ? 'hero-explore-btn' : undefined}
+                      tabIndex={on ? undefined : -1}
+                      onClick={() => navigateToCategory('All')}
+                      aria-label="Explore collection"
+                      className="sag-lnk"
+                    >
+                      Explore
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
           {count > 1 && (
-            <div className="mt-6 hidden items-center gap-4 lg:flex">
+            <div className="mt-8 hidden items-center gap-4 lg:flex">
               <div className="flex flex-wrap gap-2.5" role="tablist" aria-label="Featured designs">
                 {slides.map((slide, index) => (
                   <button
@@ -415,7 +372,7 @@ export const HeroSection: React.FC = () => {
                     aria-selected={index === currentSlideIdx}
                     aria-label={`Show ${slide.title}`}
                     onClick={() => goTo(index)}
-                    className={`h-20 w-16 cursor-pointer overflow-hidden rounded-[12px] border bg-sunken transition-opacity ${index === currentSlideIdx ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                    className={`h-[70px] w-14 cursor-pointer overflow-hidden rounded-lg border bg-sunken transition-opacity ${index === currentSlideIdx ? 'border-brand' : 'border-transparent opacity-60 hover:opacity-100'}`}
                   >
                     <img src={getCleanImageUrl(slide.image, 160)} alt="" className="h-full w-full rounded-none object-cover object-top" loading="lazy" decoding="async" />
                   </button>

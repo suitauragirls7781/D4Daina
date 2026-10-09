@@ -3,8 +3,7 @@ import { preloadImage } from '../utils/pageTransition';
 import { Product, ProductSize } from '../types';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
-import { Check, Heart, Star, X } from 'lucide-react';
-import { BagIcon } from './BrandIcons';
+import { Check, Heart, Plus, Star, X } from 'lucide-react';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 
 interface ProductCardProps {
@@ -50,6 +49,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   const fav = isInWishlist(product.id);
   // The % off already sits next to the price, so the badge only carries status.
   const badge = soldOut ? 'Sold out' : product.isNewArrival ? 'New' : product.isBestSeller ? 'Bestseller' : product.isTrending ? 'Trending' : '';
+  // Without a status the label is the style's own category (as entered in Admin)
+  const label = badge || String(product.category || '').trim();
 
   // Stars only from approved customer reviews (never a typed-in number).
   const rating = useMemo(() => {
@@ -94,9 +95,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
   };
 
   return (
-    <article id={`product-card-${product.id}`} className="sag-glass group relative flex h-full min-w-0 flex-col p-2 !rounded-[24px]">
-      {/* A glass card: the photo, then the text under it. The heart sits on the photo's top-right corner (the watermark is top-left). */}
-      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="sag-zoom relative block aspect-[4/5] w-full shrink-0 overflow-hidden rounded-[18px] bg-sunken">
+    <article id={`product-card-${product.id}`} className="group relative flex h-full min-w-0 flex-col">
+      {/* No box: the photo, then the text under it. The heart sits on the photo's top-right corner (the watermark is top-left). */}
+      <a href={href} onClick={openProduct} tabIndex={-1} aria-hidden="true" className="sag-zoom relative block aspect-[4/5] w-full shrink-0 overflow-hidden rounded-lg bg-sunken">
         <img
           src={getCleanImageUrl(primary, 480)}
           // Two columns on phones (about 170px wide), about 280px on a desktop. The phone value is kept a little
@@ -117,7 +118,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             src={getCleanImageUrl(secondary, compact ? 420 : 600)}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 w-full h-full rounded-none object-cover object-top opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block"
+            className="absolute inset-0 w-full h-full rounded-none object-cover object-top opacity-0 group-hover:opacity-100 transition-opacity duration-700 motion-reduce:transition-none hidden md:block"
             loading="lazy"
             decoding="async"
           />
@@ -129,20 +130,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
         onClick={(e) => { e.stopPropagation(); if (!fav) setBeat(true); toggleWishlist(product); }}
         aria-label={fav ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
         aria-pressed={fav}
-        className="absolute top-[10px] right-[10px] w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
+        className="absolute top-0.5 right-0.5 w-11 h-11 flex items-center justify-center rounded-full cursor-pointer"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[rgba(255,255,255,0.5)] bg-[rgba(255,255,255,0.74)] text-[color:var(--sag-on-gold)] backdrop-blur-md">
-          <Heart className={`w-[15px] h-[15px] ${fav ? 'fill-current' : ''} ${beat ? 'sag-beat' : ''}`} strokeWidth={1.5} aria-hidden="true" />
+        <span className={`flex h-8 w-8 items-center justify-center rounded-full bg-surface text-ink ${beat ? 'sag-beat' : ''}`}>
+          <Heart className={`w-[17px] h-[17px] transition-colors duration-300 ${fav ? 'fill-accent text-accent' : ''}`} strokeWidth={1.5} aria-hidden="true" />
         </span>
       </button>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1 px-1 pt-[9px] pb-1">
-        {/* A real status only (new, bestseller, trending, sold out): a small label, a tiny gold label */}
-        {badge && (
-          <span className={`text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.16em] ${soldOut ? 'text-ink-muted' : 'text-sale'}`}>{badge}</span>
+      <div className="flex min-w-0 flex-1 flex-col gap-[5px] px-0.5 pt-3">
+        {/* A real status (new, bestseller, trending, sold out), else the style's own category: a tiny quiet label */}
+        {label && (
+          <span className="truncate text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.2em] text-ink-muted">{label}</span>
         )}
 
-        <h3 className="text-[13px] leading-[1.35] font-normal text-ink line-clamp-2" title={product.name}>
+        <h3 className="min-h-[2.76em] text-[13.5px] leading-[1.38] font-medium text-ink line-clamp-2" title={product.name}>
           <a href={href} onClick={openProduct} className="hover:underline underline-offset-2 focus-visible:underline">{product.name}</a>
         </h3>
 
@@ -154,17 +155,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
           </span>
         )}
 
-        <div className="sag-num flex flex-wrap items-baseline gap-x-[7px] gap-y-0">
-          <span className={`text-[14.5px] leading-5 font-semibold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
+        <div className="sag-num flex flex-wrap items-baseline gap-x-[7px] gap-y-0.5">
+          <span className={`text-[15.5px] leading-[1.2] font-semibold ${soldOut ? 'text-ink-muted' : 'text-ink'}`}>₹{price.toLocaleString('en-IN')}</span>
           {mrp > price && <span className="text-[12.5px] text-ink-muted line-through">₹{mrp.toLocaleString('en-IN')}</span>}
-          {discount > 0 && <span className="text-[12.5px] font-medium text-sale whitespace-nowrap">{discount}% off</span>}
+          {discount > 0 && <span className="text-[12px] leading-[1.2] font-semibold text-accent whitespace-nowrap">{discount}% off</span>}
         </div>
 
         {picking ? (
-          <div className="mt-1 rounded-[16px] border border-line bg-sunken p-1.5 sm:p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
+          <div className="mt-1.5 rounded-lg border border-line bg-surface p-1.5 sm:p-2" onClick={(e) => e.stopPropagation()} role="group" aria-label={`Choose a size for ${product.name}`}>
             <div className="flex items-center justify-between pl-1">
-              <span className="min-w-0 truncate text-[10.5px] font-semibold uppercase tracking-[0.16em] text-ink-muted">Choose a size</span>
-              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-10 h-10 sm:w-11 sm:h-11 shrink-0 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
+              <span className="min-w-0 truncate text-[10.5px] font-semibold uppercase tracking-[0.18em] text-ink-muted">Choose a size</span>
+              <button type="button" onClick={() => setPicking(false)} aria-label="Cancel" className="w-11 h-11 shrink-0 -my-1 -mr-1 rounded-full flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer">
                 <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
             </div>
@@ -174,7 +175,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
                   key={size}
                   type="button"
                   onClick={() => add(size)}
-                  className="sag-chip min-w-0 h-10 px-1 text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis"
+                  className="sag-chip min-w-0 h-11 px-1 text-[13px] font-normal whitespace-nowrap overflow-hidden text-ellipsis"
                 >
                   {size}
                 </button>
@@ -182,7 +183,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             </div>
           </div>
         ) : (
-          // A small glass pill under the price (same handler, id and label as before), 36-40px tall so it is easy to tap
+          // The quiet row under the price (same handler, id and label as before): a thin line on top that draws in
+          // emerald under the pointer, small capitals at the left and the icon at the right, 44px tall
           <button
             id={`add-to-bag-${product.id}`}
             type="button"
@@ -190,12 +192,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
             onClick={onQuickAdd}
             aria-label={soldOut ? `${product.name} is sold out` : justAdded ? `${product.name} is in your bag. Open bag` : `Add ${product.name} to bag`}
             // Sold out is already said by the label above the name, so the disabled control is kept for screen readers only
-            className={soldOut ? 'sr-only' : `mt-auto w-full h-9 sm:h-10 px-3 inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full border text-[12.5px] leading-4 font-medium transition-colors cursor-pointer ${justAdded ? 'border-brand bg-transparent text-sale' : 'border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)]'}`}
+            className={soldOut ? 'sr-only' : 'relative mt-auto flex h-11 w-full shrink-0 items-center justify-between gap-2 whitespace-nowrap border-t border-line text-[10.5px] leading-none font-semibold uppercase tracking-[0.18em] text-brand cursor-pointer after:absolute after:left-0 after:-top-px after:h-px after:w-full after:origin-left after:scale-x-0 after:bg-brand after:transition-transform after:duration-500 hover:after:scale-x-100 active:after:scale-x-100 motion-reduce:after:transition-none'}
           >
             {soldOut ? 'Sold out' : justAdded ? (
-              <><Check className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /><span key={flashAdded ? 'added' : 'in-bag'} className={flashAdded ? 'sag-settle' : ''}>{flashAdded ? 'Added' : 'In bag · View'}</span></>
+              <><span key={flashAdded ? 'added' : 'in-bag'} className={`min-w-0 truncate ${flashAdded ? 'sag-settle' : ''}`}>{flashAdded ? 'Added' : 'In bag · View'}</span><Check className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" /></>
             ) : (
-              <><BagIcon mono className="w-3.5 h-3.5" /><span>Add to bag</span></>
+              <><span>Add to bag</span><Plus className="w-[17px] h-[17px] shrink-0" strokeWidth={1.5} aria-hidden="true" /></>
             )}
           </button>
         )}

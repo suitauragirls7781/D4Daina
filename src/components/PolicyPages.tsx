@@ -9,6 +9,7 @@ import { GmailIcon, WhatsAppIcon } from './BrandIcons';
 import {
   HelpIcon, LockIcon, OrdersIcon, PackageIcon, PinIcon, QualityIcon, ReturnIcon, StoreIconProps, SupportIcon, TagIcon, TruckIcon, UserIcon,
 } from './StoreIcons';
+import { SectionTitle } from './SectionTitle';
 
 type IconType = React.FC<StoreIconProps>;
 
@@ -31,7 +32,7 @@ interface PolicyWrapperProps {
   facts?: KeyFact[];
   /** "In short": two to four points, each one a statement the policy text below already makes. */
   short?: string[];
-  /** Small gold label above the title. */
+  /** Small letter-spaced label above the title. */
   eyebrow?: string;
   sections: PolicySection[];
   intro?: React.ReactNode;
@@ -63,7 +64,7 @@ const List: React.FC<{ items: React.ReactNode[] }> = ({ items }) => (
   </ul>
 );
 const ActionLink: React.FC<{ onClick?: () => void; href?: string; children: React.ReactNode }> = ({ onClick, href, children }) => {
-  const cls = 'sag-btn-outline h-11 px-4 gap-2 text-sm';
+  const cls = 'sag-btn-outline h-11 px-4 gap-2';
   return href
     ? <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className={cls}>{children}</a>
     : <button type="button" onClick={onClick} className={cls}>{children}</button>;
@@ -83,10 +84,9 @@ export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: 
           <ChevronRight className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
           <span aria-current="page" className="text-ink truncate px-2">{crumb}</span>
         </nav>
-        {eyebrow && <p className="mt-3 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{eyebrow}</p>}
-        <h1 className={`font-display font-medium text-[23px] leading-7 lg:text-[36px] lg:leading-[44px] text-ink ${eyebrow ? 'mt-1.5' : 'mt-2'}`}>{title}</h1>
-        {subtitle && <p className="mt-1.5 text-[13px] leading-[18px] lg:text-[15px] lg:leading-[22px] text-ink-muted max-w-2xl">{subtitle}</p>}
-        {children}
+        <SectionTitle as="h1" eyebrow={eyebrow} title={title} className="mt-4 lg:mt-6" />
+        {subtitle && <p className="mx-auto mt-3 max-w-2xl text-center text-[13.5px] leading-5 lg:text-[15px] lg:leading-[22px] text-ink-muted">{subtitle}</p>}
+        {children && <div className="flex flex-col items-center text-center">{children}</div>}
       </div>
     </div>
   );
@@ -97,18 +97,18 @@ export const HelpCard: React.FC<{ topic: string; showContactLink?: boolean }> = 
   const { setActivePage } = useShop();
   const SUPPORT_EMAIL = useSupportEmail();
   return (
-    <section aria-labelledby="info-help-title" className="sag-glass p-4 sm:p-5">
+    <section aria-labelledby="info-help-title" className="sag-glass p-4 sm:p-6">
       <div className="flex items-center gap-3">
         <span className="shrink-0 flex text-sale"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
         <div className="min-w-0 flex-1">
-          <h2 id="info-help-title" className="font-sans text-sm leading-5 font-semibold text-ink">Need help?</h2>
-          <p className="text-[11.5px] leading-4 text-ink-muted">Chat with us on WhatsApp. Our team replies during support hours.</p>
+          <h2 id="info-help-title" className="font-display text-[22px] leading-7 text-ink">Need help?</h2>
+          <p className="text-[12.5px] leading-[18px] text-ink-muted">Chat with us on WhatsApp. Our team replies during support hours.</p>
         </div>
-        <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls! I have a question about your ${topic}.`)} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="sag-btn-primary shrink-0 h-10 px-4">
+        <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls! I have a question about your ${topic}.`)} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="sag-btn-primary shrink-0 h-11 px-5">
           Chat
         </a>
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-5 border-t border-line pt-1">
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 border-t border-line pt-1 rounded-none!">
         <a href={`mailto:${SUPPORT_EMAIL}`} className="sag-link gap-1.5 text-[12.5px]">
           <GmailIcon mono className="w-4 h-4" /> Email us
         </a>
@@ -150,8 +150,8 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
         {sections.length > 1 && (
           <aside className="lg:col-span-4 mb-4 lg:mb-0 min-w-0">
             <div className="lg:sticky lg:top-20">
-              <p className="hidden lg:block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale mb-3">On this page</p>
-              <nav aria-label="On this page" className="flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:overflow-visible lg:border-l lg:border-line">
+              <p className="hidden lg:block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale mb-3">On this page</p>
+              <nav aria-label="On this page" className="flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:overflow-visible lg:border-l lg:border-line rounded-none!">
                 {sections.map((s, i) => {
                   const active = activeId === s.id;
                   return (
@@ -160,13 +160,13 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
                       type="button"
                       onClick={() => jump(s.id)}
                       aria-current={active ? 'true' : undefined}
-                      className={`shrink-0 text-left cursor-pointer transition-colors inline-flex items-center h-[34px] px-3.5 max-lg:rounded-full border text-[12.5px] whitespace-nowrap lg:h-auto lg:min-h-11 lg:py-2 lg:pl-4 lg:pr-2 lg:border-0 lg:border-l lg:-ml-px lg:text-sm lg:whitespace-normal ${
+                      className={`shrink-0 text-left cursor-pointer transition-colors inline-flex items-center h-10 px-3.5 max-lg:rounded-lg lg:rounded-none border text-[12.5px] whitespace-nowrap lg:h-auto lg:min-h-11 lg:py-2 lg:pl-4 lg:pr-2 lg:border-0 lg:border-l lg:-ml-px lg:text-sm lg:whitespace-normal ${
                         active
-                          ? 'bg-brand-wash border-brand font-semibold text-sale lg:bg-transparent lg:border-brand'
-                          : 'bg-surface border-line text-ink lg:text-ink-muted lg:border-transparent hover:text-ink'
+                          ? 'max-lg:bg-brand max-lg:text-[color:var(--sag-on-gold)] border-brand font-semibold lg:bg-transparent lg:text-sale lg:border-brand'
+                          : 'bg-surface border-control text-ink lg:bg-transparent lg:text-ink-muted lg:border-transparent hover:text-ink'
                       }`}
                     >
-                      <span className="hidden lg:inline font-normal mr-2.5 text-[11.5px] text-ink-muted sag-num">{i + 1}</span>{s.title}
+                      <span className="hidden lg:inline font-normal mr-2.5 text-[11.5px] text-ink-muted sag-num">{String(i + 1).padStart(2, '0')}</span>{s.title}
                     </button>
                   );
                 })}
@@ -175,12 +175,12 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
           </aside>
         )}
 
-        <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-5 min-w-0`}>
+        <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-6 min-w-0`}>
           {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
           {short.length > 0 && (
-            <section aria-labelledby={`${page}-short-title`} className={`sag-glass sag-glass-strong p-4 sm:p-5 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
-              <h2 id={`${page}-short-title`} className="font-sans text-[13.5px] leading-5 font-semibold text-ink">In short</h2>
-              <ul className="mt-2 space-y-2">
+            <section aria-labelledby={`${page}-short-title`} className={`sag-glass sag-glass-strong p-5 sm:p-6 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
+              <h2 id={`${page}-short-title`} className="font-display text-[24px] leading-7 text-ink">In short</h2>
+              <ul className="sag-stagger mt-3 space-y-2.5">
                 {short.map((point) => (
                   <li key={point} className="flex items-start gap-2.5 text-[13.5px] leading-5 text-ink">
                     <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} />
@@ -208,13 +208,13 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
 
           {intro && <div className="sag-glass p-4 sm:p-6">{intro}</div>}
 
-          <div className="border-b border-line">
+          <div className="border-b border-line rounded-none!">
             {sections.map((s, i) => (
-              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="border-t border-line py-5 sm:py-6 scroll-mt-20">
-                <h2 id={`${s.id}-title`} className="flex items-baseline gap-3 font-sans text-[15px] leading-[22px] lg:text-[17px] lg:leading-6 font-medium text-ink">
-                  <span className="w-[18px] shrink-0 text-[11.5px] font-normal text-ink-muted sag-num">{i + 1}</span><span className="min-w-0">{s.title}</span>
+              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="border-t border-line py-6 sm:py-7 scroll-mt-20 rounded-none!">
+                <h2 id={`${s.id}-title`} className="flex items-baseline gap-3 font-display text-[23px] leading-7 lg:text-[27px] lg:leading-8 text-ink">
+                  <span className="w-[22px] shrink-0 font-sans text-[11px] font-semibold tracking-[0.1em] text-sale sag-num" style={{ fontSizeAdjust: 'none' }}>{String(i + 1).padStart(2, '0')}</span><span className="min-w-0">{s.title}</span>
                 </h2>
-                <div className="mt-3 space-y-4 pl-[30px]">{s.body}</div>
+                <div className="mt-3 space-y-4 pl-[34px]">{s.body}</div>
               </section>
             ))}
           </div>
@@ -222,7 +222,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
           <HelpCard topic={title} />
 
           <nav aria-labelledby={`${page}-more-title`} className="sag-glass px-4 pt-4 pb-1">
-            <h2 id={`${page}-more-title`} className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale pb-1">More policies</h2>
+            <h2 id={`${page}-more-title`} className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale pb-1">More policies</h2>
             {POLICY_LINKS.filter(([p]) => p !== page).map(([p, label]) => (
               <button key={p} type="button" onClick={() => setActivePage(p)} className="sag-row w-full text-left font-normal cursor-pointer !border-t-0 border-b border-line last:border-b-0">
                 <span className="flex-1 min-w-0">{label}</span>
@@ -281,7 +281,7 @@ export const ShippingPolicyPage: React.FC = () => {
           id: 'delivery-days',
           title: 'Estimated delivery days',
           body: (
-            <dl className="border border-line divide-y divide-line overflow-hidden">
+            <dl className="rounded-[10px] border border-line divide-y divide-line overflow-hidden">
               {[
                 ['Metro cities (Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata)', '2 to 4 business days.'],
                 ['Rest of India (tier 2 and tier 3 cities)', '3 to 6 business days.'],
@@ -513,13 +513,13 @@ export const SizeGuidePage: React.FC = () => (
         body: (
           <>
             <p className={P}>To find your size, measure yourself with a flexible tape over your undergarments. If your measurements fall between two sizes, we recommend choosing the larger size for a relaxed, comfortable fit.</p>
-            <div className="overflow-x-auto border border-line">
+            <div className="overflow-x-auto rounded-[10px] border border-line">
               <table className="w-full min-w-[540px] text-left text-sm border-collapse">
                 <caption className="sr-only">Garment measurements in inches by size</caption>
                 <thead>
                   <tr className="bg-sunken">
                     {['Size', 'Bust', 'Waist', 'Hip', 'Kurta length', 'Bottom length'].map((h, i) => (
-                      <th key={h} scope="col" className={`px-3.5 py-3 text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-[color:var(--sag-glass-sheet)] border-r border-line' : ''}`}>{h}</th>
+                      <th key={h} scope="col" className={`px-3.5 py-3 text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-sunken border-r border-line' : ''}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -548,7 +548,7 @@ export const SizeGuidePage: React.FC = () => (
               ['Hips', 'Measure around the fullest part of your hips and seat area.'],
             ].map(([k, v]) => (
               <div key={k} className="sag-glass p-4">
-                <dt className="text-sm leading-5 font-semibold text-ink">{k}</dt>
+                <dt className="font-display text-[20px] leading-6 font-semibold text-ink">{k}</dt>
                 <dd className="mt-1 text-sm leading-5 text-ink-muted">{v}</dd>
               </div>
             ))}

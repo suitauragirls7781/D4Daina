@@ -87,9 +87,10 @@ export const useTimeLeft = (endsAt: number | null) => {
 const two = (value: number) => String(value).padStart(2, '0');
 
 /**
- * `full` is one glass panel on the homepage: the real festive photo on top, edge to edge (nothing is written on
- * it), then the offer, a live countdown to the coupon's real last day as four small glass tiles and the two
- * pills. On desktop the photo sits at the right. `strip` is one slim glass row for the shop page and the bag.
+ * `full` is one white panel with the thin line on the homepage: the real festive photo on top, edge to edge
+ * (nothing is written on it), then the eyebrow, the serif title, the offer, a live countdown to the coupon's real
+ * last day as four small white boxes with serif digits and the two buttons. On desktop the photo sits at the
+ * right. `strip` is one slim white row for the shop page and the bag.
  * (The announcement line under the header reads the same round, in Header.)
  */
 export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: string }> = ({ variant = 'full', className = '' }) => {
@@ -111,8 +112,8 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
 
   if (variant === 'strip') {
     return (
-      <aside id="festive-strip" aria-label={round.title} className={`sag-glass flex items-center gap-3 py-2 pl-4 pr-2 text-ink ${className}`}>
-        <p className="min-w-0 flex-1 text-[12.5px] leading-[18px]">
+      <aside id="festive-strip" aria-label={round.title} className={`sag-glass flex items-center gap-3 py-2.5 pl-4 pr-2.5 text-ink ${className}`}>
+        <p className="min-w-0 flex-1 text-[13px] leading-[18px]">
           <span className="block text-[13.5px] leading-5 font-medium">{round.title}: {round.offer.toLowerCase()} with code <span className="font-semibold text-sale">{round.code}</span></span>
           <span className="sag-num block text-ink-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
           {left && (
@@ -121,7 +122,7 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
             </span>
           )}
         </p>
-        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-sheen sag-num h-10 shrink-0 gap-1.5 px-3.5 text-[13px]">
+        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num h-11 shrink-0 gap-1.5 px-3.5">
           {copyIcon}
           {copyLabel}
         </button>
@@ -134,7 +135,7 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
     : [];
 
   return (
-    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass rounded-[26px]! overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
+    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
       {round.imageUrl ? (
         // The owner's own photo (often a banner with words on it): shown whole at its own shape, never cut and
         // never moving. On desktop it sits at the right, centred beside the words.
@@ -163,10 +164,10 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
         </div>
       )}
 
-      <div className="min-w-0 flex-1 p-4 sm:p-7 lg:self-center lg:p-10">
-        <p className="sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">{round.eyebrow}</p>
-        <h2 id="festive-banner-title" className="mt-1.5 font-display text-[23px] leading-[1.18] font-medium text-ink sm:text-[30px] lg:text-[36px]">{round.title}</h2>
-        <p className="sag-num mt-1.5 text-[15px] leading-6 text-ink lg:text-[17px]">
+      <div className="min-w-0 flex-1 px-4 py-6 sm:p-8 lg:self-center lg:p-12">
+        <p className="sag-eyebrow sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.24em]">{round.eyebrow}</p>
+        <h2 id="festive-banner-title" className="mt-2.5 font-display text-[32px] leading-[1.06] text-ink sm:text-[38px] lg:text-[46px]">{round.title}</h2>
+        <p className="sag-num mt-4 text-[15px] leading-6 text-ink lg:text-[17px]">
           {round.offer} with code <span className="font-semibold text-sale">{round.code}</span>
         </p>
         <ul className="sag-num mt-0.5 space-y-0.5 text-[13px] leading-5 text-ink-muted">
@@ -174,22 +175,22 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
           {round.prepaidPercent > 0 && <li>Plus {round.prepaidPercent}% off when you pay online</li>}
         </ul>
 
-        <p className="sag-num mt-3.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.14em] text-sale">{left ? `Offer ends ${round.lastDay}` : ends}</p>
+        <p className="sag-num mt-5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale">{left ? `Offer ends ${round.lastDay}` : ends}</p>
         {/* The clock is drawn only in the browser, after mounting; its space is kept so the panel does not jump */}
-        <div role="timer" aria-label={spoken} className="mt-2 flex min-h-[56px] gap-[7px] lg:max-w-[340px]">
+        <div role="timer" aria-label={spoken} className="mt-2.5 flex min-h-[64px] gap-2 lg:max-w-[340px]">
           {boxes.map(([label, value]) => (
-            <div key={label} aria-hidden="true" className="flex min-w-0 flex-1 flex-col items-center rounded-[14px]! border border-line bg-white/[0.08] pt-[9px] pb-[7px]">
-              <span className="sag-digit text-[20px] leading-6 font-semibold text-ink">{value}</span>
-              <span className="mt-0.5 text-[9.5px] leading-3 uppercase tracking-[0.14em] text-ink-muted">{label}</span>
+            <div key={label} aria-hidden="true" className="flex min-w-0 flex-1 flex-col items-center rounded-lg! border border-line bg-surface pt-2.5 pb-2">
+              <span className="sag-digit font-display text-[28px] leading-7 font-semibold text-ink">{value}</span>
+              <span className="mt-1 text-[10.5px] leading-3 uppercase tracking-[0.16em] text-ink-muted">{label}</span>
             </div>
           ))}
         </div>
 
-        <div className="mt-3.5 flex gap-2.5 lg:mt-5">
+        <div className="mt-5 flex gap-2.5 lg:mt-7">
           <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="sag-btn-primary min-w-0 flex-1 px-5 whitespace-nowrap sm:flex-none sm:px-8">
             Shop the sale
           </button>
-          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-sheen sag-num min-w-0 flex-1 gap-2 px-5 whitespace-nowrap sm:flex-none sm:px-7">
+          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num min-w-0 flex-1 gap-2 px-5 whitespace-nowrap sm:flex-none sm:px-7">
             {copyIcon}
             {copyLabel}
           </button>

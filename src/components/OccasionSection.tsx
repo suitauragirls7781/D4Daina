@@ -4,7 +4,7 @@ import { useRouter } from '../context/RouterContext';
 import { liveOccasions, useDiscovery } from '../utils/discovery';
 import { isAvailable } from '../utils/smartQuery';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
-import { HOME_SECTION, HomeSectionHeader } from './HomeSections';
+import { HOME_SECTION, HomeMore, HomeSectionHeader } from './HomeSections';
 import { GiftFinder } from './GiftFinder';
 import { withPageTransition } from '../utils/pageTransition';
 
@@ -36,31 +36,33 @@ export const OccasionSection: React.FC = () => {
             titleId="shop-by-occasion-title"
             eyebrow="Occasions"
             title="Dress for the moment"
-            action={discovery.features.giftMode ? { label: 'Shop as a gift', onClick: () => setGiftOpen(true) } : undefined}
           />
         </div>
         {list.length > 0 && (
-          <ul className="sag-scroll-x flex gap-3 lg:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pt-1 pb-6 -mb-5">
+          <ul className="sag-scroll-x flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-5 sm:px-6 lg:gap-7 lg:px-8 lg:[justify-content:safe_center]">
             {list.map(({ occasion, items }) => {
               const cover = items.find(isAvailable) || items[0];
               const count = items.filter(isAvailable).length;
               const photoUrl = cover?.images?.[0] || cover?.image || '';
               return (
-                <li key={occasion.id} className="shrink-0">
+                <li key={occasion.id} className="w-[38%] shrink-0 sm:w-[170px] lg:w-[200px]">
                   {/* Nothing is drawn on the photo: the name and the real in-stock count sit below it */}
                   <button type="button" onClick={() => openOccasion(occasion.id, { setSelectedCategory, setActivePage, navigate })}
-                    className="sag-glass block h-full w-[108px] sm:w-[140px] lg:w-[180px] p-1.5 lg:p-2 text-center cursor-pointer">
-                    <span className="block aspect-square w-full overflow-hidden rounded-[16px] bg-sunken">
+                    className="group flex w-full cursor-pointer flex-col items-center text-center">
+                    <span className="sag-zoom block aspect-[3/4] w-full overflow-hidden rounded-lg bg-sunken">
                       <img src={photoUrl ? getCleanImageUrl(photoUrl, 400) : ELEGANT_PLACEHOLDER_SVG} alt="" loading="lazy" decoding="async"
                         className="w-full h-full rounded-none object-cover object-top" />
                     </span>
-                    <span className="block px-0.5 pt-[7px] text-[12.5px] font-medium leading-[18px] text-ink line-clamp-1">{occasion.name}</span>
-                    <span className="sag-num block pb-[3px] text-[11.5px] leading-4 text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
+                    <span className="mt-3 block font-display text-[19px] font-semibold leading-[1.12] text-ink line-clamp-2 lg:text-[22px]">{occasion.name}</span>
+                    <span className="sag-num mt-1 block text-[13px] leading-[18px] text-ink-muted">{count} {count === 1 ? 'style' : 'styles'}</span>
                   </button>
                 </li>
               );
             })}
           </ul>
+        )}
+        {discovery.features.giftMode && (
+          <HomeMore onClick={() => setGiftOpen(true)} className={list.length > 0 ? undefined : 'mt-0'}>Shop as a gift</HomeMore>
         )}
       </div>
       {giftOpen && <GiftFinder onClose={() => setGiftOpen(false)} />}

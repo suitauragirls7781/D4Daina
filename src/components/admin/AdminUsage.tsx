@@ -490,7 +490,7 @@ export const AdminUsage: React.FC = () => {
         >
           {planError && <p role="alert" className="mb-3 text-sm leading-5 font-semibold text-danger">{planError}</p>}
           {confirmPaid ? (
-            <div className="rounded-2xl border border-brand-line bg-brand-wash px-4 py-3">
+            <div className="rounded-[10px] border border-brand-line bg-brand-wash px-4 py-3">
               <p className="text-sm leading-5 font-semibold text-ink">Have you already bought Workers Paid in Cloudflare?</p>
               <p className="mt-1 text-sm leading-5 text-ink">
                 Switch only after buying it. On a free account this would let visitor counting use up the day's free writes, and orders would stop until 5:30 am.

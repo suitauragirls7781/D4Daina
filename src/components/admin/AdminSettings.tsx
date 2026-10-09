@@ -911,7 +911,7 @@ export const AdminSettings: React.FC = () => {
         </form>
 
         {/* Section 4: Emergency Session Revocation (Danger Zone) */}
-        <section className="rounded-[22px] border border-danger-line bg-danger-tint p-4 sm:p-6 space-y-4">
+        <section className="rounded-[10px] border border-danger-line bg-danger-tint p-4 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-6 h-6 shrink-0 text-danger" aria-hidden="true" />
             <div className="min-w-0 space-y-1">

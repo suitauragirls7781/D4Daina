@@ -6,6 +6,7 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { STORE_ADDRESS_LINES, STORE_MAPS_URL } from '../utils/storeContact';
 import { LockIcon, PinIcon, ReturnIcon, StoreIconProps, SupportIcon, TruckIcon } from './StoreIcons';
 import { HelpCard, InfoPageHeader } from './PolicyPages';
+import { SectionTitle } from './SectionTitle';
 
 type PromiseItem = { icon: React.FC<StoreIconProps>; title: string; text: string; page: ActivePage; link: string };
 
@@ -40,20 +41,20 @@ export const AboutUsPage: React.FC = () => {
         <section className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 md:gap-8 lg:gap-12 md:items-center" aria-labelledby="about-story-title">
           <div className="w-full max-w-[320px] md:max-w-none mx-auto">
             {storyImage ? (
-              <div className="aspect-[4/5] overflow-hidden rounded-[22px] border border-line bg-sunken">
+              <div className="sag-zoom aspect-[4/5] overflow-hidden rounded-lg border border-line bg-sunken">
                 <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
               </div>
             ) : (
               <div className="aspect-[4/5] sag-glass flex items-center justify-center p-8">
-                <img src="/suit-aura-mark-132.webp" alt="Suit Aura Girls" width={132} height={132} className="h-[132px] w-[132px] !rounded-full border border-line object-cover" />
+                <img src="/suit-aura-mark-132.webp" alt="Suit Aura Girls" width={132} height={132} className="h-[132px] w-[132px] rounded-full! border border-line object-cover" />
               </div>
             )}
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Who we are</p>
-            <h2 id="about-story-title" className="font-display font-medium text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1.5">A boutique from Asansol, for women across India</h2>
-            <p className="mt-3 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
+            <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale">Who we are</p>
+            <h2 id="about-story-title" className="font-display text-[28px] leading-[1.1] lg:text-[38px] text-ink mt-2">A boutique from Asansol, for women across India</h2>
+            <p className="mt-4 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
               We bring together suits, kurtis, anarkalis and co-ord sets chosen for how they look, feel and move, from easy everyday pieces to festive favourites.
             </p>
             <p className="mt-3 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
@@ -72,14 +73,13 @@ export const AboutUsPage: React.FC = () => {
 
         {/* Promises (all backed by the store's policies) */}
         <section aria-labelledby="about-promises-title">
-          <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale">Shopping with us</p>
-          <h2 id="about-promises-title" className="font-display font-medium text-[22px] leading-7 lg:text-[28px] lg:leading-9 text-ink mt-1.5">What you can count on</h2>
-          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <SectionTitle eyebrow="Shopping with us" title="What you can count on" id="about-promises-title" />
+          <ul className="sag-stagger mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
             {PROMISES.map(({ icon: Icon, title, text, page, link }) => (
               <li key={title} className="sag-glass flex gap-3 p-4">
                 <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm leading-5 font-medium text-ink">{title}</h3>
+                  <h3 className="font-display text-[20px] leading-6 font-semibold text-ink">{title}</h3>
                   <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{text}</p>
                   <button type="button" onClick={() => setActivePage(page)} className="sag-link gap-0.5 text-[12.5px]">
                     {link} <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
@@ -95,7 +95,7 @@ export const AboutUsPage: React.FC = () => {
           <div className="flex items-start gap-3">
             <span className="shrink-0 flex text-sale mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
             <div className="min-w-0">
-              <h2 id="about-visit-title" className="font-sans text-sm leading-5 font-semibold text-ink">Find our store</h2>
+              <h2 id="about-visit-title" className="font-display text-[22px] leading-7 text-ink">Find our store</h2>
               <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{STORE_ADDRESS_LINES.join(' ')}</p>
             </div>
           </div>

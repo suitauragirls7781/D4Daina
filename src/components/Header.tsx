@@ -17,21 +17,21 @@ import { useFestiveRound } from './FestiveBanner';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
 
-// The small champagne label above a group (sag-caps keeps the capitals inside the storefront's main area)
-const EYEBROW = 'sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
-// The wordmark: the brand name in the display face, capitals, letter-spaced
-const WORDMARK = 'sag-caps font-display font-medium uppercase whitespace-nowrap text-ink';
+// The small emerald label above a group (sag-caps keeps the capitals inside the storefront's main area)
+const EYEBROW = 'sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale';
+// The wordmark: the brand name in the display face, capitals, letter-spaced; it takes the colour of its bar
+const WORDMARK = 'sag-caps font-display font-semibold uppercase whitespace-nowrap leading-none';
 
 /**
- * The one announcement line. It shows the festive round that is live right now (a real coupon inside its dates,
- * read by useFestiveRound) and nothing at all when no round is live. A small glass line with gold text:
- * above the header on desktop, under the search row on phones and tablets.
+ * The announcement strip above the header. It shows the festive round that is live right now (a real coupon
+ * inside its dates, read by useFestiveRound), the online payment percent and cash on delivery when on, and
+ * nothing at all when no round is live. The messages move slowly in champagne capitals; the track holds the
+ * list twice, so the loop has no seam. It is part of the page (it scrolls away) and stands still with
+ * reduced motion.
  */
-const AnnouncementLine: React.FC<{ soft?: boolean }> = ({ soft = false }) => {
+const AnnouncementLine: React.FC = () => {
   const round = useFestiveRound();
   const { storeOffers } = useShop();
-  const [turn, setTurn] = useState(0);
-  const [still, setStill] = useState(false);
 
   // Up to three real messages: the round itself, the online payment percent and cash on delivery (both from settings)
   const messages: string[] = [];
@@ -43,25 +43,15 @@ const AnnouncementLine: React.FC<{ soft?: boolean }> = ({ soft = false }) => {
   }
   const count = messages.length;
 
-  // One message at a time, changed every 4 seconds; with reduced motion only the first is shown
-  useEffect(() => {
-    if (count < 2) return;
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (query.matches) { setStill(true); return; }
-    const timer = window.setInterval(() => setTurn((value) => value + 1), 4000);
-    return () => window.clearInterval(timer);
-  }, [count]);
-
   if (!round || count === 0) return null;
-  const current = still ? 0 : turn % count;
+  // One half of the track must be wider than any screen, so a short list is repeated inside each half
+  const repeats = Math.max(1, Math.ceil(6 / count));
+  const half = Array.from({ length: repeats }, () => messages).flat();
   return (
-    <div id="festive-announcement" role="region" aria-label="Store announcement" className={`w-full ${soft ? 'pt-2' : 'px-6 pt-3'}`}>
-      {/* Every message sits in the same cell, so the line keeps the height of the longest one and never jumps */}
-      <div className={`sag-glass sag-num mx-auto grid max-w-full rounded-[18px]! px-4 py-1.5 text-center text-[11.5px] font-medium leading-4 tracking-[0.06em] text-sale shadow-none! ${soft ? 'w-full max-w-2xl' : 'w-fit'}`}>
-        {(still ? messages.slice(0, 1) : messages).map((message, index) => (
-          index === current
-            ? <p key={`${index}-${turn}`} className="sag-settle col-start-1 row-start-1 min-w-0">{message}</p>
-            : <p key={index} aria-hidden="true" className="invisible col-start-1 row-start-1 min-w-0">{message}</p>
+    <div id="festive-announcement" role="region" aria-label="Store announcement" className="sag-marquee sag-num w-full">
+      <div className="sag-marquee-track">
+        {[...half, ...half].map((message, index) => (
+          <span key={index} aria-hidden={index >= count ? true : undefined}>{message}</span>
         ))}
       </div>
     </div>
@@ -105,10 +95,10 @@ const HeaderPinCheck: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div id="header-pin-panel" className="sag-drop relative mt-2">
       <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={onClose} aria-hidden="true" />
-      <div className="relative mx-auto max-w-2xl rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl p-4">
+      <div className="relative mx-auto max-w-2xl rounded-[10px] border border-line bg-surface p-4 text-ink">
         <div className="flex items-start justify-between gap-2">
           <p className="text-base font-medium leading-6 text-ink">Check delivery to your PIN code</p>
-          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 -mt-1.5 -mr-1.5 shrink-0 flex items-center justify-center rounded-full border border-line bg-white/10 text-ink-muted hover:text-ink cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 -mt-1.5 -mr-1.5 shrink-0 flex items-center justify-center rounded-full text-ink-muted hover:text-ink cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
         <form onSubmit={check} className="mt-2 flex gap-2">
           <input
@@ -162,27 +152,6 @@ export const Header: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [pinOpen, setPinOpen] = useState(false);
-  // Desktop keeps the announcement above the header; phones and tablets show it under the search row
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1024px)').matches);
-  useEffect(() => {
-    const query = window.matchMedia('(min-width: 1024px)');
-    const onChange = () => setIsDesktop(query.matches);
-    onChange();
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
-  }, []);
-  // Phones and tablets: the search row and the announcement sit at the top of the page and scroll away with it.
-  // Once they are out of sight the header pill shows the menu and search buttons instead. Only those two icons
-  // change; the fixed header keeps its height, so the page never moves by itself.
-  const [compact, setCompact] = useState(false);
-  useEffect(() => {
-    let frame = 0;
-    const read = () => { frame = 0; setCompact(window.scrollY > 110); };
-    const onScroll = () => { if (!frame) frame = window.requestAnimationFrame(read); };
-    read();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => { window.removeEventListener('scroll', onScroll); if (frame) window.cancelAnimationFrame(frame); };
-  }, []);
   // The phone's Back button closes the search panel or the PIN check instead of leaving the page
   useBackToClose(isSearchOpen, () => setIsSearchOpen(false));
   useBackToClose(pinOpen, () => setPinOpen(false));
@@ -270,55 +239,63 @@ export const Header: React.FC = () => {
     ...(hasKidsToys ? [{ label: KIDS_TOYS, action: () => navigateToCategory(KIDS_TOYS as any), active: activePage === 'shop' && isKidsToysListing(selectedCategory) }] : []),
   ];
 
-  // One look for every header control: a thin icon in a round glass circle
-  const iconButton = 'relative shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-ink hover:bg-white/15 cursor-pointer transition-colors';
-  const phoneIcon = `${iconButton} h-[38px] w-[38px]`;
+  // Header controls sit on the emerald bar: a thin ivory icon that turns champagne under the pointer
+  const iconButton = 'relative shrink-0 items-center justify-center rounded-lg cursor-pointer transition-[color,transform] duration-200 hover:text-highlight active:scale-90';
+  const phoneIcon = `${iconButton} h-11 w-9 min-[360px]:w-10`;
   const deskIcon = `${iconButton} h-11 w-11`;
-  // The real count as a small gold dot with dark figures
-  const badge = 'sag-num absolute min-w-[16px] h-[16px] px-[3px] rounded-full bg-brand text-[color:var(--sag-on-gold)] text-[10px] font-semibold leading-none flex items-center justify-center';
-  const navLink = (active: boolean) => `sag-caps relative h-11 inline-flex items-center text-[12px] uppercase tracking-[0.12em] cursor-pointer transition-colors ${active ? 'text-brand font-medium' : 'text-ink-muted hover:text-ink'}`;
-  const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-1.5 h-px bg-brand ${active ? '' : 'hidden'}`;
+  // The real count as a small ivory badge with emerald figures
+  const badge = 'sag-num absolute top-1 right-0 min-w-[17px] h-[17px] px-1 rounded-full bg-page text-dark text-[10px] font-bold leading-none flex items-center justify-center overflow-hidden';
+  const navLink = 'sag-caps relative h-[42px] inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.2em] cursor-pointer transition-colors hover:text-highlight';
+  const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-2 h-px bg-highlight ${active ? '' : 'hidden'}`;
+  // The small champagne ornament under the wordmark
+  const ornament = <span className="sag-orn sag-hdr-orn" aria-hidden="true"><i /></span>;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
   // A collection in the search panel: one plain row with its real count and a chevron
   const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-brand';
   const searchLabel = 'Search suits, kurtis & more';
   const closeSearch = () => setIsSearchOpen(false);
-  // True once the search row has scrolled out of sight
-  const tucked = compact;
   const showAnnouncement = activePage !== 'checkout';
   const count = (value: number) => (value > 99 ? '99+' : value);
 
   return (
     <>
-      {/* Desktop: the small glass line sits above the header and scrolls away; checkout stays free of offers */}
-      {showAnnouncement && isDesktop && <AnnouncementLine />}
-      <header className="sticky top-0 z-50 w-full select-none px-2.5 pt-2 lg:px-6 lg:pt-3">
-        {/* Phones and tablets: one floating glass pill. The round mark and the wordmark on the left; search (while the
-            search row is tucked away), wishlist and bag as round glass buttons on the right. */}
-        <div className="sag-glass-bar lg:hidden mx-auto flex h-[54px] max-w-2xl items-center justify-between gap-2 px-2">
-          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="flex min-w-0 items-center gap-2 text-left cursor-pointer" aria-label="Suit Aura Girls home">
-            <img src="/suit-aura-mark-132.webp" width={36} height={36} alt="" className="h-9 w-9 shrink-0 rounded-full! border border-line object-cover" />
-            <span className="min-w-0">
-              <span className={`${WORDMARK} block truncate text-[15px] leading-5 tracking-[0.1em] sm:text-[16px] sm:tracking-[0.12em]`}>Suit Aura Girls</span>
-              <span className="sag-caps block truncate text-[9.5px] leading-[14px] uppercase tracking-[0.04em] text-ink-muted sm:text-[10.5px] sm:tracking-[0.12em]">Ethnic wear · Delivery across India</span>
-            </span>
+      {/* The announcement strip sits above the header on every width and scrolls away with the page; checkout stays free of offers */}
+      {showAnnouncement && <AnnouncementLine />}
+      <header className="sticky top-0 z-50 w-full select-none">
+        {/* Phones and tablets: one emerald bar, edge to edge, always the same height. Menu and search on the left,
+            the wordmark with its ornament in the centre, wishlist and bag with their real counts on the right. */}
+        <div className="sag-on-emerald lg:hidden grid h-[60px] grid-cols-[1fr_auto_1fr] items-center px-1.5 sm:px-3.5">
+          <div className="flex items-center">
+            <button
+              id="mobile-menu-trigger"
+              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+              className={`${phoneIcon} flex`}
+              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? <X className="w-[21px] h-[21px]" strokeWidth={1.5} /> : <Menu className="w-[21px] h-[21px]" strokeWidth={1.5} />}
+            </button>
+            {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
+            <button
+              type="button"
+              id="header-search-btn"
+              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+              className={`${phoneIcon} flex`}
+              aria-label={searchLabel}
+              aria-expanded={isSearchOpen}
+            >
+              <Search className="w-[21px] h-[21px]" strokeWidth={1.5} aria-hidden="true" />
+            </button>
+          </div>
+          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="sag-hdr-wm flex flex-col items-center gap-1.5 cursor-pointer" aria-label="Suit Aura Girls home">
+            <span className={`${WORDMARK} pl-[0.08em] text-[14px] tracking-[0.08em]! min-[360px]:pl-[0.14em] min-[360px]:text-[15px] min-[360px]:tracking-[0.14em]! min-[380px]:pl-[0.17em] min-[380px]:text-[17px] min-[380px]:tracking-[0.17em]! sm:pl-[0.22em] sm:text-[21px] sm:tracking-[0.22em]!`}>Suit Aura Girls</span>
+            {ornament}
           </button>
-          <div className="flex shrink-0 items-center gap-1.5">
-            {tucked && (
-              <button type="button" id="header-menu-icon-btn" onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }} className={`${phoneIcon} flex`} aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'} aria-expanded={isMobileMenuOpen}>
-                <Menu className="w-[18px] h-[18px]" strokeWidth={1.5} />
-              </button>
-            )}
-            {tucked && !isSearchOpen && (
-              <button type="button" id="header-search-icon-btn" onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }} className={`${phoneIcon} flex`} aria-label="Search">
-                <Search className="w-[18px] h-[18px]" strokeWidth={1.5} />
-              </button>
-            )}
-            {/* On a narrow phone the heart makes room for the two buttons above (Wishlist is in the bottom bar too) */}
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} ${tucked ? 'hidden sm:flex' : 'flex'}`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-[18px] h-[18px]" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={`${badge} -top-1 -right-1`}>{count(wishlist.length)}</span>}
+          <div className="flex items-center justify-end">
+            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
+              <Heart className="w-[21px] h-[21px]" strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className={badge}>{count(wishlist.length)}</span>}
             </button>
             <button
               id="header-cart-btn-mobile"
@@ -326,50 +303,52 @@ export const Header: React.FC = () => {
               className={`${phoneIcon} flex`}
               aria-label={`Bag, ${cartCount} items`}
             >
-              <ShoppingBag className="w-[18px] h-[18px]" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={`${badge} -top-1 -right-1`}>{count(cartCount)}</span>}
+              <ShoppingBag className="w-[21px] h-[21px]" strokeWidth={1.5} />
+              {cartCount > 0 && <span className={badge}><span key={cartCount} className="sag-settle">{count(cartCount)}</span></span>}
             </button>
           </div>
         </div>
 
-        {/* Desktop: one wide glass bar: the mark and wordmark, a glass pill search field, the icons, then the menu row */}
-        <div className="sag-glass-bar hidden lg:block max-w-7xl mx-auto rounded-[26px]!">
-        <div className="flex px-6 h-[66px] items-center justify-between gap-3">
-          <div className="flex items-center min-w-0">
-            <button
-              id="header-brand-logo"
-              onClick={() => setActivePage('home')}
-              className="flex shrink-0 items-center gap-3 cursor-pointer"
-              aria-label="Suit Aura Girls home"
-            >
-              <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full! border border-line object-cover" />
-              <span className={`${WORDMARK} text-[22px] leading-7 tracking-[0.14em]`}>Suit Aura Girls</span>
-            </button>
-          </div>
-
-          <div className="hidden lg:block relative flex-1 max-w-xl mx-6 xl:mx-12">
+        {/* Desktop: the emerald bar: the search field, the mark and wordmark in the centre, the icons; then the menu row */}
+        <div className="hidden lg:block bg-dark text-on-dark">
+        <div className="sag-on-emerald">
+        <div className="mx-auto grid h-[76px] max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-6">
+          <div className="relative w-full max-w-[340px]">
             <button
               type="button"
               id="desktop-search-field"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="w-full h-11 pl-11 pr-12 rounded-full border border-line bg-white/[0.08] hover:bg-white/[0.12] text-left text-sm text-ink-muted truncate cursor-pointer transition-colors"
+              className="w-full h-11 pl-11 pr-12 rounded-lg border border-line bg-brand-dark text-left text-sm text-ink-muted truncate cursor-pointer"
             >
               {searchLabel}
             </button>
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex text-ink-muted">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex text-highlight">
               <Search className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
             </span>
             <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <button
+            id="header-brand-logo"
+            onClick={() => setActivePage('home')}
+            className="sag-hdr-wm flex shrink-0 items-center gap-3.5 cursor-pointer"
+            aria-label="Suit Aura Girls home"
+          >
+            <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full! border border-line object-cover" />
+            <span className="flex flex-col items-center gap-2">
+              <span className={`${WORDMARK} pl-[0.22em] text-[24px] tracking-[0.22em]!`}>Suit Aura Girls</span>
+              {ornament}
+            </span>
+          </button>
+
+          <div className="flex items-center justify-end gap-1 shrink-0">
             <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className={`${deskIcon} hidden md:flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-5 h-5" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={`${badge} -top-0.5 -right-0.5`}>{count(wishlist.length)}</span>}
+              <Heart className="w-[22px] h-[22px]" strokeWidth={1.5} />
+              {wishlist.length > 0 && <span className={badge}>{count(wishlist.length)}</span>}
             </button>
             <button id="header-account-btn" onClick={() => setActivePage('account')} className={`${deskIcon} hidden md:flex`} aria-label={user ? 'My account' : 'Sign in'}>
-              <User className="w-5 h-5" strokeWidth={1.5} />
-              {user && <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-brand" />}
+              <User className="w-[22px] h-[22px]" strokeWidth={1.5} />
+              {user && <span className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-highlight" />}
             </button>
             <button
               id="header-cart-btn"
@@ -377,22 +356,24 @@ export const Header: React.FC = () => {
               className={`${deskIcon} flex`}
               aria-label={`Bag, ${cartCount} items`}
             >
-              <ShoppingBag className="w-5 h-5" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={`${badge} -top-0.5 -right-0.5`}>{count(cartCount)}</span>}
+              <ShoppingBag className="w-[22px] h-[22px]" strokeWidth={1.5} />
+              {cartCount > 0 && <span className={badge}><span key={cartCount} className="sag-settle">{count(cartCount)}</span></span>}
             </button>
           </div>
         </div>
+        </div>
 
-        {/* Desktop: the menu on its own row, in small letter-spaced capitals; the current one in gold */}
-        <div className="border-t border-line">
-          <nav className="px-6 h-11 flex items-center justify-center gap-9 xl:gap-11" aria-label="Main">
+        {/* Desktop: the menu on its own row under a thin champagne line, in small letter-spaced capitals;
+            the current page carries a thin champagne underline */}
+        <div className="border-t border-highlight/30">
+          <nav className="px-6 h-[42px] flex items-center justify-center gap-9 xl:gap-11" aria-label="Main">
             {navItems.map((item) => (
               <button
                 key={item.label}
                 id={`nav-link-${item.label.toLowerCase().replace(/&/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`}
                 onClick={item.action}
                 aria-current={item.active ? 'page' : undefined}
-                className={navLink(item.active)}
+                className={navLink}
               >
                 {item.label}
                 <span aria-hidden="true" className={navUnderline(item.active)} />
@@ -405,13 +386,13 @@ export const Header: React.FC = () => {
                 aria-expanded={collectionsOpen}
                 aria-haspopup="true"
                 aria-controls="collections-menu"
-                className={`${navLink(collectionActive)} gap-1`}
+                className={`${navLink} gap-1`}
               >
-                Collections <ChevronDown className={`w-3.5 h-3.5 ${collectionsOpen ? 'rotate-180' : ''}`} strokeWidth={1.5} />
+                Collections <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${collectionsOpen ? 'rotate-180' : ''}`} strokeWidth={1.5} />
                 <span aria-hidden="true" className={navUnderline(collectionActive)} />
               </button>
               {collectionsOpen && (
-                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+10px)] w-[460px] rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl p-5 z-50 sag-pop">
+                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] w-[460px] rounded-[10px] border border-line bg-surface p-5 text-ink shadow-[var(--sag-shadow-pop)] z-50 sag-pop">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className={EYEBROW}>Shop by collection</p>
                     {collections.length > 0 && <span className="sag-num text-[12px] text-ink-muted">{collections.length} {collections.length === 1 ? 'collection' : 'collections'}</span>}
@@ -425,10 +406,10 @@ export const Header: React.FC = () => {
                           key={name}
                           onClick={() => { navigateToCategory(name as any); setCollectionsOpen(false); }}
                           aria-current={current ? 'page' : undefined}
-                          className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left text-sm transition-colors cursor-pointer ${current ? 'text-brand font-medium' : 'text-ink hover:text-brand'}`}
+                          className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left font-display text-[19px] leading-6 transition-colors cursor-pointer ${current ? 'text-brand font-semibold' : 'text-ink hover:text-brand'}`}
                         >
                           <span className="truncate">{name}</span>
-                          <span className="sag-num shrink-0 text-[12px] text-ink-muted">{count}</span>
+                          <span className="sag-num shrink-0 font-sans text-[12px] font-normal text-ink-muted">{count}</span>
                         </button>
                       );
                     })}
@@ -448,22 +429,22 @@ export const Header: React.FC = () => {
               id="nav-link-offers"
               onClick={() => navigateToCategory('Sale')}
               aria-current={offersActive ? 'page' : undefined}
-              className={`sag-caps relative h-11 inline-flex items-center text-[12px] uppercase tracking-[0.12em] text-sale cursor-pointer ${offersActive ? 'font-semibold' : 'font-medium'}`}
+              className={`${navLink} text-highlight`}
             >
               Offers
-              <span aria-hidden="true" className={`absolute left-0 right-0 bottom-0 h-px bg-sale ${offersActive ? '' : 'hidden'}`} />
+              <span aria-hidden="true" className={navUnderline(offersActive)} />
             </button>
           </nav>
         </div>
         </div>
 
         {isSearchOpen && (
-          <div id="search-drawer-overlay" className="sag-drop absolute left-2.5 right-2.5 top-full mt-2 lg:left-6 lg:right-6">
+          <div id="search-drawer-overlay" className="sag-drop absolute left-2.5 right-2.5 top-full mt-2 text-ink lg:left-6 lg:right-6">
             {/* Dim the page under the panel; a tap outside closes it */}
             <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={closeSearch} aria-hidden="true" />
-            <div className="relative max-w-3xl mx-auto rounded-[22px] border border-line bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl px-4 sm:px-8 pt-3 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
-              {/* The field: a glass pill whose edge turns gold while typing */}
-              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="flex items-center gap-2 rounded-full border border-line bg-white/[0.08] pl-4 pr-3 focus-within:border-brand">
+            <div className="relative max-w-3xl mx-auto rounded-[10px] border border-line bg-surface shadow-[var(--sag-shadow-pop)] px-4 sm:px-8 pt-4 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
+              {/* The field: a white box whose edge turns emerald while typing */}
+              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="flex items-center gap-2 rounded-lg border border-control bg-surface pl-4 pr-2 focus-within:border-brand">
                 <Search className="w-5 h-5 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
                 <input
                   ref={searchInputRef}
@@ -478,7 +459,7 @@ export const Header: React.FC = () => {
                   className="h-[52px] min-w-0 flex-1 border-0 bg-transparent text-[16px] text-ink outline-none focus:outline-none focus-visible:outline-none [&::-webkit-search-cancel-button]:appearance-none"
                 />
                 {searchInput && (
-                  <button type="button" onClick={() => { setSearchInput(''); searchInputRef.current?.focus(); }} aria-label="Clear search" className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-ink-muted hover:bg-white/10 hover:text-ink cursor-pointer">
+                  <button type="button" onClick={() => { setSearchInput(''); searchInputRef.current?.focus(); }} aria-label="Clear search" className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-ink-muted hover:bg-sunken hover:text-ink cursor-pointer">
                     <X className="w-4 h-4" strokeWidth={1.5} />
                   </button>
                 )}
@@ -487,7 +468,7 @@ export const Header: React.FC = () => {
                 <button type="submit" id="search-submit-btn" className={`sag-btn-primary h-10 shrink-0 px-4 text-sm ${searchInput ? '' : 'hidden sm:inline-flex'}`}>
                   Search
                 </button>
-                <button type="button" onClick={closeSearch} className={`h-10 shrink-0 pr-1 text-[12.5px] font-medium text-brand underline underline-offset-4 decoration-1 cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
+                <button type="button" onClick={closeSearch} className={`sag-caps h-10 shrink-0 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
                   Cancel
                 </button>
               </form>
@@ -509,14 +490,14 @@ export const Header: React.FC = () => {
                               onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
                               className="w-full min-w-0 flex items-center gap-3 border-b border-line py-2.5 text-left cursor-pointer"
                             >
-                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 rounded-[12px]! object-cover object-top bg-sunken" />
+                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 rounded-lg! object-cover object-top bg-sunken" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm leading-5 text-ink truncate">{prod.name}</p>
                                 <p className="text-[12px] text-ink-muted truncate">{prod.category}</p>
                                 <p className="mt-0.5 flex items-baseline gap-1.5 text-[12.5px] sag-num">
                                   <span className="text-sm font-semibold text-ink">₹{prod.price.toLocaleString('en-IN')}</span>
                                   {off > 0 && <span className="text-ink-muted line-through">₹{mrp.toLocaleString('en-IN')}</span>}
-                                  {off > 0 && <span className="font-semibold text-sale">{off}% off</span>}
+                                  {off > 0 && <span className="font-semibold text-accent">{off}% off</span>}
                                 </p>
                               </div>
                               <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} />
@@ -529,8 +510,8 @@ export const Header: React.FC = () => {
                       </button>
                     </>
                   ) : (
-                    <div className="sag-glass px-4 py-6 text-center shadow-none!">
-                      <p className="font-display text-[19px] font-medium leading-7 text-ink break-words">No styles match “{searchTrimmed}”</p>
+                    <div className="sag-glass sag-glass-strong px-4 py-6 text-center">
+                      <p className="font-display text-[22px] font-semibold leading-7 text-ink break-words">No styles match “{searchTrimmed}”</p>
                       <p className="mt-1 text-[13px] text-ink-muted">Check the spelling or pick a collection below.</p>
                     </div>
                   )}
@@ -570,7 +551,7 @@ export const Header: React.FC = () => {
                           aria-label={`${prod.name}, ₹${prod.price.toLocaleString('en-IN')}`}
                           className="flex w-[112px] shrink-0 flex-col gap-[7px] text-left cursor-pointer"
                         >
-                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-[18px]! bg-sunken object-cover object-top" />
+                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-lg! bg-sunken object-cover object-top" />
                           <span className="sag-num text-[13px] font-semibold leading-4 text-ink">₹{prod.price.toLocaleString('en-IN')}</span>
                         </button>
                       ))}
@@ -612,42 +593,6 @@ export const Header: React.FC = () => {
         )}
       </header>
 
-      {/* Phones and tablets: the menu button and the search field, then the announcement. They belong to the page,
-          not to the fixed header: they scroll away with the page, so nothing changes height or jumps while
-          scrolling. Once they are out of sight the header pill itself offers the menu and search. */}
-      {!isDesktop && (
-        <div className={`sag-header-row lg:hidden px-2.5 ${isSearchOpen ? 'invisible' : ''}`}>
-          <div className="mx-auto flex max-w-2xl items-center gap-2 pt-2">
-            <button
-              id="mobile-menu-trigger"
-              onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className={`${iconButton} sag-glass-bar flex h-11 w-11 shadow-none!`}
-              aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isMobileMenuOpen}
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" strokeWidth={1.5} /> : <Menu className="w-5 h-5" strokeWidth={1.5} />}
-            </button>
-            <div className="relative min-w-0 flex-1">
-              {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
-              <button
-                type="button"
-                id="header-search-btn"
-                onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-                className="sag-glass-bar h-11 w-full truncate pl-10 pr-12 text-left text-sm text-ink-muted shadow-none! hover:text-ink cursor-pointer transition-colors"
-                aria-label={searchLabel}
-                aria-expanded={isSearchOpen}
-              >
-                Search suits, dresses…
-              </button>
-              <span className="pointer-events-none absolute left-3.5 top-1/2 flex -translate-y-1/2 text-ink-muted">
-                <Search className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />
-              </span>
-              <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
-            </div>
-          </div>
-          {showAnnouncement && <AnnouncementLine soft />}
-        </div>
-      )}
     </>
   );
 };

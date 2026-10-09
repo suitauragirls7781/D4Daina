@@ -55,7 +55,7 @@ const sizeSummary = (p: Product) => {
 };
 
 const Thumb: React.FC<{ p: Product }> = ({ p }) => (
-  <img src={getCleanImageUrl(p.images?.find(Boolean) || p.image, 120)} alt="" loading="lazy" className="shrink-0 w-12 aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
+  <img src={getCleanImageUrl(p.images?.find(Boolean) || p.image, 120)} alt="" loading="lazy" className="shrink-0 w-12 aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
 );
 const Status: React.FC<{ p: Product }> = ({ p }) => (
   <span className={`sag-num ${p.hidden ? 'text-ink-muted' : !isAvailable(p) ? 'text-danger font-semibold' : 'text-ink-muted'}`}>
@@ -372,13 +372,13 @@ export const AdminLooks: React.FC = () => {
         icon={<Layers className="text-current" />}
         description={<>Accessories (bag, heels, jewellery, earrings, watch...) are shown only on combo product pages, inside "Complete the look". Customers can buy them only together with that outfit — never on their own, and never from the shop, search or home page.</>}
         actions={<>
-          {dirty && <span className="h-8 px-3 rounded-full bg-sale-tint text-xs font-semibold text-sale inline-flex items-center">Unsaved changes</span>}
+          {dirty && <span className="h-8 px-3 rounded-lg bg-sale-tint text-xs font-semibold text-sale inline-flex items-center">Unsaved changes</span>}
           {saveButton}
         </>}
       />
       <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-sm text-ink-muted">
         {['Add accessories', 'Mark your combo products', 'Choose accessories for a combo (optional), then save'].map((step, i) => (
-          <li key={step} className="flex items-center gap-3 rounded-2xl bg-sunken border border-line px-4 py-3">
+          <li key={step} className="flex items-center gap-3 rounded-[10px] bg-sunken border border-line px-4 py-3">
             <span className="w-7 h-7 rounded-full bg-brand-wash text-brand text-sm font-semibold sag-num flex items-center justify-center shrink-0">{i + 1}</span>
             <span className="min-w-0 text-ink">{step}</span>
           </li>
@@ -386,10 +386,10 @@ export const AdminLooks: React.FC = () => {
       </ol>
 
       {loadError && (
-        <p role="alert" className="rounded-2xl border border-danger-line bg-danger-tint px-4 py-3 text-sm text-danger">The saved choices could not be loaded, so saving is turned off to avoid overwriting them. Please refresh the page.</p>
+        <p role="alert" className="rounded-[10px] border border-danger-line bg-danger-tint px-4 py-3 text-sm text-danger">The saved choices could not be loaded, so saving is turned off to avoid overwriting them. Please refresh the page.</p>
       )}
       {!featureOn && (
-        <p className="rounded-2xl bg-sale-tint border border-sale-line px-4 py-3 text-sm text-ink">Complete the Look is switched off in the Discovery settings, so shoppers will not see it until it is turned on there.</p>
+        <p className="rounded-[10px] bg-sale-tint border border-sale-line px-4 py-3 text-sm text-ink">Complete the Look is switched off in the Discovery settings, so shoppers will not see it until it is turned on there.</p>
       )}
 
       <dl className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3" aria-label="Complete the Look in numbers">
@@ -423,7 +423,7 @@ export const AdminLooks: React.FC = () => {
           {!catalogueReady && isLoading ? (
             <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
           ) : accessories.length === 0 ? (
-            <div className="mt-4 rounded-2xl bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
+            <div className="mt-4 rounded-[10px] bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
               No accessories yet. Use the buttons above to add a bag, heels, jewellery, earrings or a watch.
             </div>
           ) : accResults.length === 0 ? (
@@ -442,7 +442,7 @@ export const AdminLooks: React.FC = () => {
                   <div className="flex items-center gap-1 ml-auto">
                     <button type="button" onClick={() => togglePublished(p)} disabled={busyId === p.id} aria-pressed={!p.hidden}
                       title={p.hidden ? 'Hidden: tap to show it in Complete the look' : 'Published: tap to hide it'}
-                      className={`h-11 sm:h-9 px-3.5 rounded-full border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-sunken border-line text-ink-muted' : 'bg-ok-tint border-ok-line text-ok'}`}>
+                      className={`h-11 sm:h-9 px-3.5 rounded-lg border text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 ${p.hidden ? 'bg-sunken border-line text-ink-muted' : 'bg-ok-tint border-ok-line text-ok'}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${p.hidden ? 'bg-ink-faint' : 'bg-ok'}`} aria-hidden="true" />
                       {p.hidden ? 'Hidden' : 'Published'}
                     </button>
@@ -466,11 +466,11 @@ export const AdminLooks: React.FC = () => {
           </p>
 
           {/* Make a product a combo: its set / combo type is saved on the product */}
-          <div role="group" className="mt-4 rounded-2xl border border-line bg-sunken p-3.5 sm:p-4" aria-labelledby="ctl-make-title">
+          <div role="group" className="mt-4 rounded-[10px] border border-line bg-sunken p-3.5 sm:p-4" aria-labelledby="ctl-make-title">
             <p id="ctl-make-title" className="text-sm font-semibold text-ink">Make a product a combo</p>
             <p className="text-[13px] text-ink-muted mt-0.5">Find the outfit, choose its set type, then tap Make combo.</p>
             {comboPick ? (
-              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl bg-sunken-deep border border-line p-2">
+              <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[10px] bg-sunken-deep border border-line p-2">
                 <Thumb p={comboPick} />
                 <div className="min-w-0 flex-1 basis-40">
                   <p className="text-sm font-medium text-ink line-clamp-1">{comboPick.name}</p>
@@ -496,7 +496,7 @@ export const AdminLooks: React.FC = () => {
                   <ul className="mt-2 max-h-72 overflow-y-auto grid gap-1" aria-label="Matching products">
                     {outfitResults.slice(0, PICK_LIMIT).map((p) => (
                       <li key={p.id}>
-                        <button type="button" onClick={() => chooseForCombo(p)} className="w-full flex items-center gap-3 p-1.5 rounded-2xl text-left hover:bg-sunken-deep cursor-pointer">
+                        <button type="button" onClick={() => chooseForCombo(p)} className="w-full flex items-center gap-3 p-1.5 rounded-[10px] text-left hover:bg-sunken-deep cursor-pointer">
                           <Thumb p={p} />
                           <span className="min-w-0 flex-1">
                             <span className="block text-sm text-ink line-clamp-1">{p.name}</span>
@@ -540,7 +540,7 @@ export const AdminLooks: React.FC = () => {
           </div>
 
           {combos.length === 0 ? (
-            <div className="mt-4 rounded-2xl bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
+            <div className="mt-4 rounded-[10px] bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
               No combo products yet. Use <span className="font-semibold">Make a product a combo</span> above to mark an outfit with its set type.
             </div>
           ) : (
@@ -552,20 +552,20 @@ export const AdminLooks: React.FC = () => {
                 const deletedPicks = catalogueReady ? picks.filter((id) => !isAccessory(byId.get(id))).length : 0;
                 const open = editing === key;
                 return (
-                  <li key={key} className={`py-3 ${open ? 'bg-sunken -mx-2 px-2 rounded-2xl' : ''}`}>
+                  <li key={key} className={`py-3 ${open ? 'bg-sunken -mx-2 px-2 rounded-[10px]' : ''}`}>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                       <Thumb p={p} />
                       <div className="min-w-0 flex-1 basis-40">
                         <p className="text-sm font-semibold text-ink line-clamp-1">{p.name}</p>
                         <p className="mt-0.5 text-[13px] text-ink-muted">
-                          <span className="inline-block px-2 rounded-full bg-sale-tint text-sale text-xs font-semibold">{setTypeOf(p)}</span>{' '}
+                          <span className="inline-block px-2 rounded-lg bg-sale-tint text-sale text-xs font-semibold">{setTypeOf(p)}</span>{' '}
                           {p.hidden ? 'Product hidden — not on the store'
                             : `${picks.length ? `${picks.length} chosen` : 'All accessories'} · ${showing} showing now`}
                         </p>
                       </div>
                       <div className="ml-auto flex items-center gap-1">
                         <button type="button" onClick={() => removeCombo(p)} disabled={busyId === p.id} aria-label={`Remove combo: ${p.name}`}
-                          className="h-11 md:h-9 px-3 rounded-full text-[13px] font-semibold text-danger hover:bg-danger-tint inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                          className="h-11 md:h-9 px-3 rounded-lg text-[13px] font-semibold text-danger hover:bg-danger-tint inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                           {busyId === p.id && <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />} Remove combo
                         </button>
                         <button type="button" onClick={() => { setEditing(open ? null : key); setPickQuery(''); }} aria-expanded={open}
@@ -603,7 +603,7 @@ export const AdminLooks: React.FC = () => {
                                 const full = !on && picks.length >= MAX_LOOK_ITEMS;
                                 return (
                                   <li key={id}>
-                                    <label className={`flex items-center gap-3 p-1.5 rounded-2xl ${full ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sunken-deep cursor-pointer'}`}>
+                                    <label className={`flex items-center gap-3 p-1.5 rounded-[10px] ${full ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sunken-deep cursor-pointer'}`}>
                                       <input type="checkbox" checked={on} disabled={full} onChange={() => togglePick(key, id)} className="w-4 h-4 accent-brand shrink-0" />
                                       <Thumb p={a} />
                                       <span className="min-w-0 flex-1">
@@ -627,7 +627,7 @@ export const AdminLooks: React.FC = () => {
           )}
 
           {setLike.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-line bg-sunken p-3.5">
+            <div className="mt-4 rounded-[10px] border border-line bg-sunken p-3.5">
               <p className="text-[13px] font-semibold text-ink">These look like sets but have no set / combo type yet</p>
               <ul className="mt-2 grid gap-1">
                 {setLike.map((p) => (
@@ -846,7 +846,7 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
   return (
     <div className={`fixed inset-0 z-[80] ${SCRIM} flex items-end sm:items-center justify-center sm:p-4`} onClick={cancel}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="acc-form-title" onClick={(e) => e.stopPropagation()}
-        className="bg-surface border border-line w-full sm:max-w-lg max-h-[92dvh] rounded-t-[28px] sm:rounded-[28px] flex flex-col overflow-hidden">
+        className="bg-surface border border-line w-full sm:max-w-lg max-h-[92dvh] rounded-t-[10px] sm:rounded-[10px] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between gap-3 pl-5 pr-3 py-3 border-b border-line">
           <p id="acc-form-title" className="font-display text-[20px] leading-7 text-ink">{isEdit ? 'Edit accessory' : `Add ${kindLabel}`}</p>
           <button type="button" onClick={cancel} aria-label="Close" className="w-11 h-11 rounded-full hover:bg-sunken-deep text-ink flex items-center justify-center cursor-pointer"><X className="w-5 h-5 text-current" /></button>
@@ -922,7 +922,7 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
             <div className="flex flex-wrap gap-2">
               {d.images.map((url, i) => (
                 <div key={url} className="w-20">
-                  <img src={getCleanImageUrl(url, 200)} alt={`Photo ${i + 1}`} className="w-20 aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
+                  <img src={getCleanImageUrl(url, 200)} alt={`Photo ${i + 1}`} className="w-20 aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
                   <div className="mt-1 flex items-center justify-between">
                     {i === 0 ? <span className="text-[11px] font-semibold text-brand">Cover</span>
                       : <button type="button" onClick={() => makeCover(url)} className="text-[13px] text-brand underline underline-offset-2 cursor-pointer">Make cover</button>}
@@ -930,7 +930,7 @@ const AccessoryForm: React.FC<AccessoryFormProps> = ({ draft: initial, existing,
                   </div>
                 </div>
               ))}
-              <label className={`w-20 aspect-[4/5] rounded-2xl border-[1.5px] border-dashed border-control bg-sunken flex flex-col items-center justify-center gap-1 text-[11px] text-ink ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-sunken-deep'}`}>
+              <label className={`w-20 aspect-[4/5] rounded-[10px] border-[1.5px] border-dashed border-control bg-sunken flex flex-col items-center justify-center gap-1 text-[11px] text-ink ${uploading ? 'opacity-60 cursor-wait' : 'cursor-pointer hover:bg-sunken-deep'}`}>
                 {uploading ? <Loader2 className="w-5 h-5 animate-spin text-current" /> : <ImagePlus className="w-5 h-5 text-current" />}
                 {uploading ? 'Uploading' : 'Add photo'}
                 <input type="file" accept="image/*" multiple disabled={uploading} onChange={upload} className="sr-only" />

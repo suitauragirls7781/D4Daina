@@ -335,7 +335,7 @@ export const AdminReviews: React.FC = () => {
       {editor && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-dark/70 p-0 sm:p-4 sag-fade" onClick={() => closeEditor()}>
           <form role="dialog" aria-modal="true" aria-labelledby="review-editor-title" onSubmit={saveForm} onClick={(e) => e.stopPropagation()}
-            className="bg-surface border border-line w-full sm:max-w-2xl max-h-[92dvh] rounded-t-[28px] sm:rounded-[22px] flex flex-col overflow-hidden shadow-[var(--sag-shadow-pop)] animate-in slide-in-from-bottom-5 fade-in">
+            className="bg-surface border border-line w-full sm:max-w-2xl max-h-[92dvh] rounded-t-[10px] sm:rounded-[10px] flex flex-col overflow-hidden shadow-[var(--sag-shadow-pop)] animate-in slide-in-from-bottom-5 fade-in">
             <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-line">
               <h3 id="review-editor-title" className="font-display text-xl leading-7 text-ink">{editor.id ? 'Edit review' : 'Add a review you received'}</h3>
               <button type="button" onClick={() => closeEditor()} disabled={saving} aria-label="Close" autoFocus className={adminUi.iconBtn}><X className="w-5 h-5" /></button>
@@ -398,7 +398,7 @@ export const AdminReviews: React.FC = () => {
                 <div className="flex items-start gap-3 min-w-0">
                   {formData.imageUrl && (
                     <img src={getCleanImageUrl(formData.imageUrl, 240)} alt="Photo preview"
-                      className="shrink-0 w-28 aspect-[4/5] rounded-xl object-contain border border-line bg-sunken" />
+                      className="shrink-0 w-28 aspect-[4/5] rounded-lg object-contain border border-line bg-sunken" />
                   )}
                   <div className="min-w-0 flex-1 grid gap-2">
                     <div className="flex flex-wrap gap-2">
@@ -475,7 +475,7 @@ export const AdminReviews: React.FC = () => {
                 </div>
                 {review.imageUrl && (
                   <a href={review.imageUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open the photo from ${review.userName}'s review`}
-                    className="shrink-0 w-16 aspect-[4/5] rounded-xl overflow-hidden border border-line bg-sunken">
+                    className="shrink-0 w-16 aspect-[4/5] rounded-lg overflow-hidden border border-line bg-sunken">
                     <img src={getCleanImageUrl(review.imageUrl, 160)} alt="" loading="lazy" className="w-full h-full object-cover object-top" />
                   </a>
                 )}

@@ -7,14 +7,14 @@ import { AdminPageHeader } from './kidsToysShared';
 
 // ---------------------------------------------------------------- shared pieces of the admin's "storefront & settings" pages
 // (Coupons, Deal, Combo, Homepage, Hero, Banners, Reels, Instagram, Discovery, Payments, Usage, Settings.)
-// Midnight glass: glass panels, light text, gold for "on", red only for real problems.
+// Emerald Heritage: glass panels, light text, gold for "on", red only for real problems.
 
 /** Class strings used by every one of those pages, so they read as one system. */
 export const kit = {
   /** A titled glass panel. */
   panel: 'sag-glass p-4 sm:p-6',
   /** A quiet box inside a panel (a row, an option, a note). */
-  inset: 'rounded-2xl border border-line bg-sunken p-3.5 sm:p-4',
+  inset: 'rounded-[10px] border border-line bg-sunken p-3.5 sm:p-4',
   h2: 'text-[17px] leading-6 font-semibold text-ink',
   hint: 'text-[13px] leading-[18px] text-ink-muted',
   field: 'sag-input h-12',
@@ -25,12 +25,12 @@ export const kit = {
   /** Smaller glass button for rows. */
   small: 'sag-btn-outline h-11 px-4 text-[13px] gap-1.5 disabled:opacity-50',
   /** Words-and-colour button for a destructive action. */
-  danger: 'h-12 px-5 rounded-full border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-sunken disabled:opacity-50 disabled:cursor-not-allowed',
+  danger: 'h-12 px-5 rounded-lg border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-sunken disabled:opacity-50 disabled:cursor-not-allowed',
   /** Dim layer behind a dialog, and the dialog sheet itself. */
   scrim: 'fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4',
-  sheet: 'w-full bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl border border-line rounded-t-[22px] sm:rounded-[22px] shadow-[var(--sag-shadow-pop)]',
-  alert: 'rounded-2xl border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 text-danger',
-  note: 'rounded-2xl border border-line bg-sunken px-4 py-3 text-sm leading-5 text-ink-muted',
+  sheet: 'w-full bg-surface border border-line rounded-t-[10px] sm:rounded-[10px] shadow-[var(--sag-shadow-pop)]',
+  alert: 'rounded-[10px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 text-danger',
+  note: 'rounded-[10px] border border-line bg-sunken px-4 py-3 text-sm leading-5 text-ink-muted',
   th: 'px-4 py-3 text-left text-[11px] leading-4 font-semibold uppercase tracking-[0.08em] text-ink-muted',
 };
 
@@ -44,7 +44,7 @@ const PILL_TONE: Record<PillTone, string> = {
 
 /** Status in words: gold fill = live now, gold outline = waiting, grey = off, red = a real problem. */
 export const Pill: React.FC<{ tone?: PillTone; children: React.ReactNode; className?: string; role?: string }> = ({ tone = 'off', children, className = '', role }) => (
-  <span role={role} className={`inline-flex items-center gap-1.5 min-h-7 px-3 py-1 rounded-full text-xs leading-4 font-semibold shrink-0 ${PILL_TONE[tone]} ${className}`}>
+  <span role={role} className={`inline-flex items-center gap-1.5 min-h-7 px-3 py-1 rounded-lg text-xs leading-4 font-semibold shrink-0 ${PILL_TONE[tone]} ${className}`}>
     {tone === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--sag-on-gold)]" aria-hidden="true" />}
     {children}
   </span>
@@ -139,7 +139,7 @@ export const CheckRow: React.FC<RowProps> = ({ label, hint, checked, onChange, o
 
 /** The page's one save bar: stays at the bottom of the screen while the page scrolls. */
 export const SaveBar: React.FC<{ note?: React.ReactNode; children: React.ReactNode }> = ({ note, children }) => (
-  <div className="sticky bottom-3 z-20 sag-glass-bar !rounded-[22px] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-4 pr-2 py-2">
+  <div className="sticky bottom-3 z-20 sag-glass-bar !rounded-[10px] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-4 pr-2 py-2">
     <div className="min-w-0 flex-1 basis-40 text-[13px] leading-[18px] text-ink-muted" aria-live="polite">{note}</div>
     <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>*]:flex-1">{children}</div>
   </div>
@@ -516,7 +516,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
             {recentPayu.length === 0 ? (
               <p className={kit.note}>No PayU orders among the orders loaded here.</p>
             ) : (
-              <div className="divide-y divide-line rounded-2xl border border-line">
+              <div className="divide-y divide-line rounded-[10px] border border-line">
                 {recentPayu.map((order) => (
                   <div key={order.orderNumber} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-[13px] sag-num">
                     <span className="font-mono text-ink">{order.orderNumber}</span>
@@ -537,7 +537,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
             {payments && (
               <>
               {/* Phone: stacked rows */}
-              <ul className="sm:hidden mt-3 rounded-2xl border border-line divide-y divide-line">
+              <ul className="sm:hidden mt-3 rounded-[10px] border border-line divide-y divide-line">
                 {payments.length === 0 && <li className="px-4 py-3 text-ink-muted">No payments yet.</li>}
                 {payments.map((p, index) => (
                   <li key={`${p.orderId}-${index}`} className="px-4 py-3 text-[13px]">
@@ -550,7 +550,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
                   </li>
                 ))}
               </ul>
-              <div className="hidden sm:block mt-3 overflow-x-auto rounded-2xl border border-line">
+              <div className="hidden sm:block mt-3 overflow-x-auto rounded-[10px] border border-line">
                 <table className="w-full text-[13px]">
                   <thead className="border-b border-line">
                     <tr><th className={kit.th}>Time</th><th className={kit.th}>Amount</th><th className={kit.th}>Method</th><th className={kit.th}>Status</th><th className={kit.th}>Order / reason</th></tr>

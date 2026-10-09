@@ -53,8 +53,8 @@ export const cancelClosedNote = (order: OrderWithRequests, windowHours = 0) => {
   return '';
 };
 
-/** Small champagne label above a title (Noir & Champagne). */
-const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
+/** Small letter-spaced emerald label above a title. */
+const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale';
 
 // ---- Dates (only real timestamps from the order; nothing is estimated) ----
 
@@ -180,7 +180,7 @@ export const latestUpdate = (order: Order): { label: string; at: string } | null
 /** The status pill for an order: customer wording in the brand colours. */
 export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ order, className = '' }) => {
   let text: string = order.status;
-  // Outline badges: placed and confirmed are hairline; on the way is champagne; delivered is ink; cancelled is red.
+  // Outline badges: placed and confirmed carry the thin line; on the way and delivered are emerald; cancelled is red.
   let tone = 'border-line text-ink';
   if (awaitingPayment(order) && order.status !== 'Cancelled') {
     text = paymentFailed(order) ? 'Payment failed' : 'Awaiting payment';
@@ -202,7 +202,7 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
     tone = 'border-line text-ink-muted';
   }
   return (
-    <span className={`sag-badge !rounded-full border bg-surface font-semibold ${tone} ${className}`}>
+    <span className={`sag-badge border bg-surface font-semibold ${tone} ${className}`}>
       <span className="sr-only">Order status: </span>{text}
     </span>
   );
@@ -212,8 +212,7 @@ export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ ord
 
 const STEPS = [{ label: 'Ordered' }, { label: 'Confirmed' }, { label: 'Packed' }, { label: 'Shipped' }, { label: 'In transit' }, { label: 'Out for delivery' }, { label: 'Delivered' }] as const;
 const DELIVERED_STEP = STEPS.length - 1;
-// The four names under the phone progress strip, and the current stage said in words (in the order of STEPS)
-const STRIP = ['Placed', 'Packed', 'Shipped', 'Delivered'] as const;
+// The current stage said in words (in the order of STEPS)
 const STATE_HEADING = ['Your order is placed', 'Your order is confirmed', 'Your order is packed', 'Your order is shipped', 'Your order is in transit', 'Your order is out for delivery', 'Your order is delivered'] as const;
 
 /** Where each order status sits on the tracker (an older 'Refund Requested' order, and a 'Returned' one, had been delivered). */
@@ -273,7 +272,7 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
       <div>
         <div className="flex gap-1" aria-hidden="true">
           {STEPS.map((item, index) => (
-            <span key={item.label} className={`h-[3px] flex-1 rounded-full ${index <= current ? 'bg-brand' : 'bg-line'}`} />
+            <span key={item.label} className={`h-[2px] flex-1 ${index <= current ? 'bg-brand' : 'bg-line'}`} />
           ))}
         </div>
         <p className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm leading-5" aria-hidden="true">
@@ -291,65 +290,49 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
     );
   }
 
-  // One hairline box at every width: the state in words, a thin strip of four parts (reached parts ink) with the
-  // stage names under it, then the real time of every stage reached as a plain timeline.
-  const group = current >= DELIVERED_STEP ? 3 : current >= 3 ? 2 : current >= 2 ? 1 : current >= 0 ? 0 : -1;
+  // One white panel at every width: the state in words as a serif title, then every stage as a vertical timeline:
+  // reached stages on an emerald circle with a tick and their real time, the current one an emerald ring, later ones grey.
   const eyebrow = waiting ? 'Order placed' : STEPS[Math.max(0, current)].label;
   const heading = waiting
     ? (paymentFailed(order) ? 'Payment failed' : 'Awaiting payment')
     : ['Refund Requested', 'Returned', 'Refunded'].includes(order.status)
       ? timelineLabel(order.status)
       : STATE_HEADING[Math.max(0, current)];
-  const reachedList = STEPS.map((step, index) => ({ label: step.label, index, when: formatDateTime(times[index]) })).filter((item) => item.index <= current);
+  const rows = STEPS.map((step, index) => ({ label: step.label, index, when: index <= current ? formatDateTime(times[index]) : '' }));
 
   return (
-    <div className="space-y-3">
-      <div className="sag-glass p-4 sm:p-5">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className={EYEBROW}>{eyebrow}</span>
-          <span className="sag-num min-w-0 text-xs leading-4 text-ink-muted break-all">#{order.orderNumber}</span>
-        </div>
-        <p className="mt-1.5 font-display text-[19px] leading-6 font-medium text-ink sm:text-[22px] sm:leading-7">{heading}</p>
-        <div className="mt-4" aria-hidden="true">
-          <div className="flex gap-1">
-            {STRIP.map((name, index) => (
-              <span key={name} className={`h-[3px] flex-1 rounded-full ${index <= group ? 'bg-brand' : 'bg-line'}`} />
-            ))}
-          </div>
-          <div className="mt-2 flex gap-1 text-[11.5px] leading-4">
-            {STRIP.map((name, index) => (
-              <span
-                key={name}
-                className={`flex-1 ${index === 0 ? 'text-left' : index === STRIP.length - 1 ? 'text-right' : 'text-center'} ${index === group ? 'font-semibold text-ink' : 'text-ink-muted'}`}
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </div>
+    <div className="sag-glass px-4 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className={EYEBROW}>{eyebrow}</span>
+        <span className="sag-num min-w-0 text-xs leading-4 text-ink-muted break-all">#{order.orderNumber}</span>
       </div>
-      {reachedList.length > 0 && (
-        <ol className="grid gap-x-8 sm:grid-cols-2" aria-label="Order progress">
-          {reachedList.map((item) => {
-            const isCurrent = item.index === current;
-            return (
-              <li key={item.label} className="flex items-start gap-3 py-2.5" aria-current={isCurrent ? 'step' : undefined}>
-                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${isCurrent ? 'border border-brand' : 'bg-brand text-[color:var(--sag-on-gold)]'}`} aria-hidden="true">
-                  {isCurrent ? <span className="block h-2 w-2 rounded-full bg-brand" /> : <Check className="h-[11px] w-[11px]" strokeWidth={2} />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm leading-5 text-ink ${isCurrent ? 'font-semibold' : ''}`}>{item.label}<span className="sr-only"> (done)</span></p>
-                  {item.when && <p className="sag-num text-[11.5px] leading-4 text-ink-muted">{item.when}</p>}
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
+      <p className="mt-2 font-display text-[26px] leading-[1.1] text-ink sm:text-[30px]">{heading}</p>
+      <ol className="sag-tl mt-5" aria-label="Order progress">
+        {rows.map((item) => {
+          const reached = item.index <= current;
+          const done = item.index < current || (reached && current >= DELIVERED_STEP);
+          const isCurrent = reached && !done;
+          return (
+            <li
+              key={item.label}
+              className={done ? 'is-done' : isCurrent ? 'is-current' : ''}
+              style={{ '--i': item.index } as React.CSSProperties}
+              aria-current={item.index === current ? 'step' : undefined}
+            >
+              <span className="sag-tl-dot" aria-hidden="true">
+                {done && <Check className="h-3 w-3" strokeWidth={2.2} />}
+              </span>
+              <p className={`text-[15px] leading-6 ${reached ? 'font-semibold text-ink' : 'font-medium text-ink-muted'}`}>
+                {item.label}<span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span>
+              </p>
+              {item.when && <p className="sag-num text-[13px] leading-[18px] text-ink-muted">{item.when}</p>}
+            </li>
+          );
+        })}
+      </ol>
     </div>
   );
 };
-
 // ---- Return / exchange progress (customer side) ----
 
 const RETURN_STEPS: Record<'return' | 'exchange', ReturnRequestStatus[]> = {
@@ -401,7 +384,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
   const settled = status === 'refunded' || status === 'exchanged';
   const tone = status === 'rejected' ? 'border-danger-line' : settled ? 'border-brand-line' : 'border-line';
   return (
-    <section className={`border bg-surface ${tone} p-3.5 space-y-3`} aria-label={`${title} request`}>
+    <section className={`rounded-[10px] border bg-surface ${tone} p-4 space-y-3`} aria-label={`${title} request`}>
       <div className="flex items-start gap-3">
         <span className="shrink-0 flex mt-0.5 text-ink"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
@@ -410,7 +393,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
           </p>
           <p className="mt-0.5 text-sm leading-5 text-ink-muted">{RETURN_MESSAGE[status](kind)}</p>
           {request.adminNote && (status === 'approved' || status === 'rejected' || status === 'received' || status === 'refunded' || status === 'exchanged') && (
-            <p className="mt-2 sag-glass px-3 py-2 text-sm leading-5 text-ink break-words">
+            <p className="mt-2 sag-glass sag-glass-strong px-3 py-2 text-sm leading-5 text-ink break-words">
               <span className="text-ink-muted">{status === 'rejected' ? 'Reason: ' : 'From our team: '}</span>{request.adminNote}
             </p>
           )}
@@ -447,7 +430,7 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
       {(request.photos || []).length > 0 && (
         <div className="flex gap-2" aria-label="Photos you sent">
           {(request.photos || []).map((url) => (
-            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] overflow-hidden border border-line bg-sunken">
+            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] overflow-hidden rounded-lg border border-line bg-sunken">
               <img src={getCleanImageUrl(url, 160)} alt="Photo you sent" className="w-full h-full object-cover" loading="lazy" />
             </a>
           ))}
@@ -525,13 +508,13 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
   const link = trackingLinkFor(order);
   const delivery = deliveryDateOf(order);
   return (
-    <section className="sag-glass p-3.5 space-y-3" aria-label="Shipment">
+    <section className="sag-glass p-4 space-y-3" aria-label="Shipment">
       <div className="flex items-center gap-3">
         <span className="shrink-0 flex text-sale"><TruckIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
           <p className={EYEBROW}>{order.courierPartner || awb ? 'Courier partner' : 'Delivery'}</p>
-          {(order.courierPartner || awb) && <p className="text-[15px] leading-[22px] font-medium text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
-          {!order.courierPartner && !awb && delivery && <p className="text-[15px] leading-[22px] font-medium text-ink">On its way to you</p>}
+          {(order.courierPartner || awb) && <p className="font-display text-[20px] leading-6 text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
+          {!order.courierPartner && !awb && delivery && <p className="font-display text-[20px] leading-6 text-ink">On its way to you</p>}
         </div>
       </div>
       {awb && (
@@ -563,7 +546,7 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => { if (!link.hasAwb && awb) copy(awb); }}
-            className="sag-btn-outline w-full sm:w-auto h-auto min-h-11 py-2.5 px-4 gap-2 text-center text-sm"
+            className="sag-btn-outline w-full sm:w-auto h-auto min-h-12 py-2.5 px-4 gap-2 text-center"
           >
             {link.label} <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
           </a>
@@ -656,14 +639,14 @@ export const DeliveryAgentCard: React.FC<{ order: Order }> = ({ order }) => {
   const phone = String(order.deliveryAgentPhone || '').replace(/[^\d+]/g, '');
   if (!isOutForDelivery(order) || (!name && !phone)) return null;
   return (
-    <section className="sag-glass p-3.5 flex items-center gap-3" aria-label="Delivery executive">
+    <section className="sag-glass p-4 flex items-center gap-3" aria-label="Delivery executive">
       <span className="shrink-0 flex text-sale"><UserIcon className="w-5 h-5" mono live={false} /></span>
       <div className="min-w-0 flex-1">
         <p className={EYEBROW}>Delivery executive</p>
         {name ? <p className="text-[15px] leading-[22px] font-medium text-ink break-words">{name}</p> : <p className="text-sm leading-5 text-ink-muted">Out for delivery today</p>}
       </div>
       {phone && (
-        <a href={`tel:${phone}`} aria-label={`Call ${name || 'the delivery executive'}`} className="sag-btn-outline shrink-0 h-11 px-4 gap-2 text-sm">
+        <a href={`tel:${phone}`} aria-label={`Call ${name || 'the delivery executive'}`} className="sag-btn-outline shrink-0 h-11 px-4 gap-2">
           <Phone className="w-4 h-4" aria-hidden="true" /> Call
         </a>
       )}
@@ -678,7 +661,7 @@ export const OrderProgress: React.FC<{ order: OrderWithRequests; compact?: boole
   const delivered = wasDelivered(order);
   const paidOrRefunded = order.paymentStatus === 'Paid' || order.paymentStatus === 'Refunded';
 
-  const note = 'px-3.5 py-3 text-sm leading-5';
+  const note = 'rounded-[10px] px-4 py-3 text-sm leading-5';
 
   if (order.status === 'Cancelled') {
     const at = latestUpdate(order)?.at;

@@ -6,7 +6,7 @@ import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 type Part = { text: string; highlight?: boolean };
 
 /**
- * Announcement bar: one still line on a dark strip above the header (rendered by Header on every page
+ * Announcement bar: one still line in champagne capitals on the dark emerald strip above the header (rendered by Header on every page
  * except checkout; it scrolls away with the page). It shows the owner's announcement text or, without one,
  * the first offer that is really live in the store settings. With neither, nothing is rendered.
  * Nothing here is invented and nothing scrolls. (The file keeps its old name so imports stay valid.)
@@ -29,11 +29,11 @@ export const LuxuryAnnouncementMarquee: React.FC = () => {
   if (!parts) return null;
 
   return (
-    <div id="luxury-announcement-marquee" role="region" aria-label="Store announcement" className="w-full bg-dark text-on-dark">
-      <p className="max-w-7xl mx-auto h-8 px-4 flex items-center justify-center text-[13px] font-medium leading-none">
+    <div id="luxury-announcement-marquee" role="region" aria-label="Store announcement" className="sag-marquee w-full justify-center">
+      <p className="sag-caps max-w-7xl mx-auto px-4 flex items-center justify-center text-[10.5px] font-semibold uppercase leading-none tracking-[0.2em]">
         <span className="truncate">
           {parts.map((part, index) => (
-            <span key={index} className={part.highlight ? 'text-highlight font-semibold' : undefined}>{part.text}</span>
+            <span key={index} className={part.highlight ? 'text-on-dark' : undefined}>{part.text}</span>
           ))}
         </span>
       </p>

@@ -61,7 +61,7 @@ export const AdminStockHistory: React.FC = () => {
 
 
   const diffBadge = (diff: number) => (
-    <span className={`inline-flex items-center min-h-[22px] px-2.5 py-0.5 rounded-full text-xs font-semibold sag-num shrink-0 ${diff > 0 ? 'bg-ok-tint text-ok' : 'bg-sunken-deep text-ink'}`}>{diff > 0 ? `+${diff} added` : `${diff} removed`}</span>
+    <span className={`inline-flex items-center min-h-[22px] px-2.5 py-0.5 rounded-lg text-xs font-semibold sag-num shrink-0 ${diff > 0 ? 'bg-ok-tint text-ok' : 'bg-sunken-deep text-ink'}`}>{diff > 0 ? `+${diff} added` : `${diff} removed`}</span>
   );
 
   return (
@@ -101,7 +101,7 @@ export const AdminStockHistory: React.FC = () => {
       </div>
 
       {error ? (
-        <p role="alert" className="m-4 px-4 py-3 rounded-2xl bg-danger-tint border border-danger-line text-sm text-danger">{error}</p>
+        <p role="alert" className="m-4 px-4 py-3 rounded-[10px] bg-danger-tint border border-danger-line text-sm text-danger">{error}</p>
       ) : loading && entries.length === 0 ? (
         <div className="p-5 space-y-3" aria-label="Loading stock history">
           {[70, 55, 64, 48].map((w) => (

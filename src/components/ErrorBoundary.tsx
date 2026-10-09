@@ -2,6 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HelpIcon } from './StoreIcons';
 import { WhatsAppIcon } from './BrandIcons';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
+import { SectionTitle } from './SectionTitle';
 
 interface Props {
   children: ReactNode;
@@ -42,16 +43,15 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!this.state.hasError) return this.props.children;
     return (
       <div className="min-h-[60vh] flex items-center justify-center px-4 sm:px-6 py-10 lg:py-16" role="alert">
-        <div className="max-w-md w-full sag-glass p-5 sm:p-8">
-          <span className="flex text-sale"><HelpIcon mono className="w-7 h-7" /></span>
-          <h1 className="font-display text-[28px] leading-8 text-ink mt-3">Something went wrong</h1>
-          <p className="text-[15px] leading-[22px] text-ink-muted mt-2">This page could not be shown. Your bag and account are safe.</p>
-          <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-5">
+        <div className="max-w-md w-full sag-glass rounded-xl! px-5 py-9 sm:px-8 text-center">
+          <span className="flex justify-center text-sale"><HelpIcon mono className="w-7 h-7" /></span>
+          <SectionTitle as="h1" className="mt-3" title="Something went wrong" sub="This page could not be shown. Your bag and account are safe." />
+          <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-6">
             <button type="button" onClick={this.retry} className="sag-btn-primary min-[420px]:flex-1">Try again</button>
             <a href="/" className="sag-btn-outline min-[420px]:flex-1">Homepage</a>
           </div>
           <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls! A page on your website is not opening for me.')} target="_blank" rel="noopener noreferrer"
-            className="sag-link mt-3 gap-2">
+            className="sag-link mt-4 justify-center gap-2">
             <WhatsAppIcon className="w-[18px] h-[18px]" /> Tell us on WhatsApp
           </a>
         </div>

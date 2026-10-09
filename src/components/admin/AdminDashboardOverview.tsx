@@ -133,7 +133,7 @@ const DailyChart: React.FC<{
             <button key={r.day} type="button" title={words} aria-label={words} aria-pressed={on}
               onClick={() => setPicked(r.day)} onMouseEnter={() => setPicked(r.day)} onFocus={() => setPicked(r.day)}
               className={`flex-1 min-w-0 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken-deep' : 'hover:bg-sunken'}`}>
-              <span className={`block w-full rounded-t-[4px] ${on ? 'bg-brand' : r.day === best?.day ? 'bg-ink' : 'bg-control'}`} style={{ height: `${height}%` }} />
+              <span className={`block w-full rounded-t-[4px] ${on ? 'bg-brand' : r.day === best?.day ? 'bg-star' : 'bg-control'}`} style={{ height: `${height}%` }} />
             </button>
           );
         })}

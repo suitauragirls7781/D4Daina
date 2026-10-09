@@ -38,7 +38,7 @@ const mrpOf = (p: Product) => Math.max(p.price, Number(p.originalPrice) || p.pri
 const firstImage = (p: Product) => p.images?.find(Boolean) || p.image || '';
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
-/** Pill button that opens the "Build your look" bundle builder (only when the feature is switched on). */
+/** Button that opens the "Build your look" bundle builder (only when the feature is switched on). */
 export const BuildYourLookButton: React.FC<{ className?: string }> = ({ className }) => {
   const { features } = useDiscovery();
   const { products = [] } = useShop();
@@ -53,8 +53,8 @@ export const BuildYourLookButton: React.FC<{ className?: string }> = ({ classNam
   return (
     <>
       <button ref={triggerRef} type="button" onClick={() => setOpen(true)} aria-haspopup="dialog"
-        className={className || 'h-10 px-4 rounded-full border border-line bg-[rgba(255,255,255,0.08)] text-ink hover:bg-[rgba(255,255,255,0.14)] backdrop-blur-md text-sm font-medium inline-flex items-center gap-1.5 cursor-pointer'}>
-        <Layers className="w-4 h-4" /> Build your look
+        className={className || 'h-11 px-4 rounded-lg border border-control bg-surface text-ink hover:border-brand text-[13px] font-medium inline-flex items-center gap-2 cursor-pointer'}>
+        <Layers className="w-4 h-4" strokeWidth={1.5} /> Build your look
       </button>
       {open && <BuildYourLook onClose={close} />}
     </>
@@ -161,19 +161,21 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     onClose();
   };
 
-  const chip = (active: boolean) => `shrink-0 h-10 px-4 rounded-full border text-sm transition-colors cursor-pointer ${active ? 'bg-brand border-transparent text-[color:var(--sag-on-gold)] font-semibold' : 'bg-[rgba(255,255,255,0.08)] border-line text-ink hover:bg-sunken-deep'}`;
-  const control = 'h-10 max-w-full pl-3 pr-8 rounded-full border bg-[rgba(255,255,255,0.06)] text-sm text-ink focus:outline-none focus:border-brand cursor-pointer';
+  // White boxes with 8px corners; the chosen one sits on an emerald fill
+  const chip = (active: boolean) => `shrink-0 h-11 px-4 rounded-lg border text-[13px] transition-colors duration-300 cursor-pointer ${active ? 'bg-brand border-brand text-[color:var(--sag-on-gold)] font-semibold' : 'bg-surface border-control text-ink hover:bg-sunken'}`;
+  const control = 'h-11 max-w-full pl-3 pr-8 rounded-lg border bg-surface text-[16px] text-ink focus:outline-none focus:border-brand cursor-pointer';
+  const caps = 'text-[11px] font-semibold uppercase tracking-[0.14em]';
 
   return (
     <div className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={onClose}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="byl-title" onClick={(e) => e.stopPropagation()}
-        className="bg-[color:var(--sag-glass-sheet)] backdrop-blur-xl text-ink border-t border-x md:border-b border-line rounded-t-[26px] md:rounded-[26px] w-full md:max-w-5xl h-[94dvh] md:h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
+        className="bg-surface text-ink border-t md:border border-line rounded-t-[10px] md:rounded-[10px] w-full md:max-w-5xl h-[94dvh] md:h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
         <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-line">
           <div className="min-w-0">
-            <p id="byl-title" className="font-display text-[21px] leading-7 text-ink flex items-center gap-2"><Layers className="w-5 h-5 shrink-0 text-sale" /> Build your look</p>
-            <p className="text-xs text-ink-muted">Combine in-stock styles and see the real total as you go.</p>
+            <p id="byl-title" className="font-display text-[26px] leading-8 text-ink flex items-center gap-2.5"><Layers className="w-5 h-5 shrink-0 text-brand" strokeWidth={1.5} /> Build your look</p>
+            <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Combine in-stock styles and see the real total as you go.</p>
           </div>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="w-10 h-10 shrink-0 rounded-full text-ink hover:bg-sunken-deep flex items-center justify-center cursor-pointer"><X className="w-5 h-5" /></button>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full text-ink hover:text-brand flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
         </div>
 
         <div className="md:hidden grid grid-cols-2 gap-2 px-4 pt-3" role="group" aria-label="Builder view">
@@ -188,31 +190,31 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
               <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
               <label htmlFor="byl-search" className="sr-only">Search styles</label>
               <input id="byl-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, colour, fabric"
-                className="w-full h-11 pl-10 pr-4 rounded-full border border-line bg-[rgba(255,255,255,0.06)] text-[16px] text-ink placeholder:text-ink-faint focus:outline-none focus:border-brand" />
+                className="sag-input h-12 pl-10 pr-4" />
             </div>
             {categories.length > 2 && (
               <div className="sag-scroll-x mt-3 -mx-4 sm:-mx-5 px-4 sm:px-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Categories">
                 {categories.map((c) => <button key={c} type="button" onClick={() => setCategory(c)} aria-pressed={category === c} className={chip(category === c)}>{c}</button>)}
               </div>
             )}
-            <p className="mt-3 text-sm text-ink-muted" aria-live="polite">
+            <p className="sag-num mt-3 text-[13px] text-ink-muted" aria-live="polite">
               {results.length === 0 ? 'No in-stock styles match. Try another word or category.' : `${results.length} ${results.length === 1 ? 'style' : 'styles'} in stock`}
             </p>
-            <ul className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <ul className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-6">
               {results.slice(0, visible).map((p) => {
                 const added = inLook(p);
                 return (
-                  <li key={p.id} className="rounded-[20px] bg-sunken border border-line overflow-hidden flex flex-col">
-                    <img src={getCleanImageUrl(firstImage(p), 360)} alt={p.name} loading="lazy" className="w-full aspect-[4/5] rounded-none object-cover object-top bg-sunken" />
-                    <div className="p-2.5 flex flex-col flex-1">
-                      <p className="text-sm text-ink line-clamp-2 leading-snug">{p.name}</p>
-                      <p className="mt-1 mb-2.5 text-sm">
+                  <li key={p.id} className="flex flex-col min-w-0">
+                    <img src={getCleanImageUrl(firstImage(p), 360)} alt={p.name} loading="lazy" className="w-full aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
+                    <div className="pt-2.5 flex flex-col flex-1">
+                      <p className="text-[13.5px] text-ink line-clamp-2 leading-snug">{p.name}</p>
+                      <p className="sag-num mt-1 mb-2.5 text-sm">
                         <span className="font-semibold text-ink">{inr(p.price)}</span>
-                        {mrpOf(p) > p.price && <span className="ml-1.5 text-xs text-ink-faint line-through">{inr(mrpOf(p))}</span>}
+                        {mrpOf(p) > p.price && <span className="ml-1.5 text-[12.5px] text-ink-muted line-through">{inr(mrpOf(p))}</span>}
                       </p>
                       <button type="button" onClick={() => toggle(p)} aria-pressed={added} aria-label={added ? `Remove ${p.name} from your look` : `Add ${p.name} to your look`}
-                        className={`mt-auto h-10 w-full rounded-full text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center justify-center gap-1.5 cursor-pointer ${added ? 'border border-brand text-sale hover:bg-sunken' : 'sag-btn-primary'}`}>
-                        {added ? <><Check className="w-4 h-4" /> Added</> : <><Plus className="w-4 h-4" /> Add</>}
+                        className={`mt-auto h-11 w-full px-2 gap-1.5 ${added ? 'sag-btn-outline' : 'sag-btn-primary'}`}>
+                        {added ? <><Check className="w-4 h-4" strokeWidth={1.5} /> Added</> : <><Plus className="w-4 h-4" strokeWidth={1.5} /> Add</>}
                       </button>
                     </div>
                   </li>
@@ -220,21 +222,21 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
               })}
             </ul>
             {results.length > visible && (
-              <div className="mt-4 flex justify-center">
-                <button type="button" onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Show more</button>
+              <div className="mt-6 flex justify-center">
+                <button type="button" onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline h-11 px-8 cursor-pointer">Show more</button>
               </div>
             )}
           </div>
 
           {/* The look being built */}
-          <div className={`${view === 'look' ? 'block' : 'hidden'} md:block w-full md:w-[380px] shrink-0 overflow-y-auto p-4 sm:p-5 bg-sunken md:border-l border-line`}>
-            <p className="font-display text-xl text-ink">Your look</p>
+          <div className={`${view === 'look' ? 'block' : 'hidden'} md:block w-full md:w-[380px] shrink-0 overflow-y-auto rounded-none p-4 sm:p-5 bg-sunken md:border-l border-line`}>
+            <p className="font-display text-[24px] leading-7 text-ink">Your look</p>
             {lines.length === 0 ? (
               <div className="mt-6 text-center px-2">
-                <span className="mx-auto w-14 h-14 rounded-full border border-line bg-sunken flex items-center justify-center"><Layers className="w-6 h-6 text-sale" strokeWidth={1.5} /></span>
+                <span className="mx-auto w-14 h-14 rounded-full border border-line bg-surface flex items-center justify-center"><Layers className="w-6 h-6 text-brand" strokeWidth={1.25} /></span>
                 <p className="mt-3 text-sm font-medium text-ink">Nothing added yet</p>
                 <p className="mt-1 text-sm text-ink-muted">Add styles from the list to build your outfit. The total updates as you go.</p>
-                <button type="button" onClick={() => setView('browse')} className="md:hidden mt-4 sag-btn-outline h-11 px-6 text-xs font-semibold uppercase tracking-[0.12em] cursor-pointer">Browse styles</button>
+                <button type="button" onClick={() => setView('browse')} className="md:hidden mt-4 sag-btn-outline h-11 px-6 cursor-pointer">Browse styles</button>
               </div>
             ) : (
               <>
@@ -245,7 +247,7 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                       return (
                         <li key={line.productId} className="flex items-center gap-3 py-3">
                           <p className="flex-1 text-sm text-ink-muted">A style in your look is no longer available.</p>
-                          <button type="button" onClick={() => remove(line.productId)} className="h-10 px-4 rounded-full border border-line text-sm text-ink hover:bg-sunken cursor-pointer">Remove</button>
+                          <button type="button" onClick={() => remove(line.productId)} className={`h-11 px-4 rounded-lg border border-control bg-surface text-ink hover:border-brand cursor-pointer ${caps}`}>Remove</button>
                         </li>
                       );
                     }
@@ -256,23 +258,23 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                     const sizeMissing = showMissing && !row.size;
                     return (
                       <li key={line.productId} className="flex gap-3 py-3">
-                        <img src={getCleanImageUrl(firstImage(p), 160)} alt="" className="shrink-0 w-16 aspect-[4/5] rounded-xl object-cover object-top bg-sunken" />
+                        <img src={getCleanImageUrl(firstImage(p), 160)} alt="" className="shrink-0 w-16 aspect-[4/5] rounded-lg object-cover object-top bg-surface" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-1">
                             <p className="flex-1 min-w-0 text-sm text-ink line-clamp-2 leading-snug">{p.name}</p>
-                            <button type="button" onClick={() => remove(line.productId)} aria-label={`Remove ${p.name}`} className="w-10 h-10 -mt-2 -mr-2 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center cursor-pointer">
-                              <Trash2 className="w-4 h-4 text-ink" />
+                            <button type="button" onClick={() => remove(line.productId)} aria-label={`Remove ${p.name}`} className="w-11 h-11 -mt-2.5 -mr-2.5 shrink-0 rounded-full text-ink-muted hover:text-ink flex items-center justify-center cursor-pointer">
+                              <Trash2 className="w-4 h-4" strokeWidth={1.5} />
                             </button>
                           </div>
                           {row.cap <= 0 ? (
                             <p className="text-xs text-ink-muted">Your bag already has the most we can add of this style — not included.</p>
                           ) : (
-                            <p className="text-sm text-ink-muted">{inr(p.price)} × {row.qty} = <span className="font-semibold text-ink">{inr(p.price * row.qty)}</span></p>
+                            <p className="sag-num text-sm text-ink-muted">{inr(p.price)} × {row.qty} = <span className="font-semibold text-ink">{inr(p.price * row.qty)}</span></p>
                           )}
                           <div className="mt-2 flex flex-wrap items-center gap-2">
                             {needsSizeChoice(p) ? (
                               <select value={row.size} onChange={(e) => setSize(row, e.target.value)} aria-label={`Size for ${p.name}`} aria-invalid={sizeMissing}
-                                className={`${control} ${sizeMissing ? 'border-danger' : 'border-line'}`}>
+                                className={`${control} ${sizeMissing ? 'border-danger' : 'border-control'}`}>
                                 <option value="">Size</option>
                                 {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
                               </select>
@@ -281,17 +283,17 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                             )}
                             {colours.length > 1 && (
                               <select value={row.colour?.name || ''} onChange={(e) => update(line.productId, { colour: e.target.value })} aria-label={`Colour for ${p.name}`}
-                                className={`${control} border-line`}>
+                                className={`${control} border-control`}>
                                 {colours.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
                               </select>
                             )}
                             {row.cap > 0 && (
-                              <div className="inline-flex items-center px-0 rounded-full border border-line text-ink">
+                              <div className="inline-flex h-11 items-center rounded-lg border border-control bg-surface text-ink">
                                 <button type="button" onClick={() => update(line.productId, { qty: Math.max(1, row.qty - 1) })} disabled={row.qty <= 1} aria-label={`Decrease quantity of ${p.name}`}
-                                  className="w-10 h-10 flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Minus className="w-4 h-4" /></button>
-                                <span className="w-7 text-center text-sm tabular-nums" aria-live="polite">{row.qty}</span>
+                                  className="w-10 h-[42px] flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Minus className="w-4 h-4" /></button>
+                                <span className="sag-num w-7 text-center text-sm font-semibold" aria-live="polite">{row.qty}</span>
                                 <button type="button" onClick={() => update(line.productId, { qty: Math.min(row.cap, row.qty + 1) })} disabled={row.qty >= row.cap} aria-label={`Increase quantity of ${p.name}`}
-                                  className="w-10 h-10 flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Plus className="w-4 h-4" /></button>
+                                  className="w-10 h-[42px] flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Plus className="w-4 h-4" /></button>
                               </div>
                             )}
                           </div>
@@ -307,14 +309,14 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                   })}
                 </ul>
 
-                <div className="mt-3 rounded-2xl bg-sunken p-4 text-sm text-ink" aria-live="polite">
+                <div className="sag-glass sag-num mt-3 p-4 text-sm text-ink" aria-live="polite">
                   <p className="flex justify-between gap-3"><span>Subtotal ({pieces} {pieces === 1 ? 'piece' : 'pieces'})</span><span className="font-semibold">{inr(subtotal)}</span></p>
                   {comboOffer && (
                     <p className="mt-2 text-ink-muted">Combo offer: {comboOffer.percent}% off when you buy {comboOffer.minItems} or more outfits — applied at checkout.</p>
                   )}
                   {saving > 0 && (
                     <>
-                      <p className="mt-1 flex justify-between gap-3 text-sale"><span>Combo saving (estimate)</span><span className="shrink-0">−{inr(saving)}</span></p>
+                      <p className="mt-1 flex justify-between gap-3 font-medium text-brand"><span>Combo saving (estimate)</span><span className="shrink-0">−{inr(saving)}</span></p>
                       {viaBag && <p className="text-xs text-ink-muted">Counted with the {comboPieces} {comboPieces === 1 ? 'outfit' : 'outfits'} already in your bag.</p>}
                     </>
                   )}
@@ -327,9 +329,9 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
           </div>
         </div>
 
-        <div className="border-t border-line px-4 sm:px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3">
+        <div className="border-t border-line bg-surface px-4 sm:px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="text-sm text-ink truncate">
+            <p className="sag-num text-sm text-ink truncate">
               {pieces > 0 ? <>{pieces} {pieces === 1 ? 'piece' : 'pieces'} · <span className="font-semibold text-ink">Est. {inr(subtotal - saving)}</span></> : 'Your look is empty'}
             </p>
             {missingSizes > 0 ? (
@@ -341,8 +343,8 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             )}
           </div>
           <button type="button" onClick={addBundle} disabled={!canAdd}
-            className="sag-btn-primary shrink-0 h-12 px-4 sm:px-5 text-xs font-semibold uppercase tracking-[0.12em] inline-flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-            <ShoppingBag className="w-4 h-4 hidden sm:block" /> Add bundle to bag
+            className="sag-btn-primary shrink-0 h-12 px-4 sm:px-5 gap-2 cursor-pointer disabled:cursor-not-allowed">
+            <ShoppingBag className="w-4 h-4 hidden sm:block" strokeWidth={1.5} /> Add bundle to bag
           </button>
         </div>
       </div>

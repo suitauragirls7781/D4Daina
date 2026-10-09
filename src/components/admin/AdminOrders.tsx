@@ -107,7 +107,7 @@ const nextStepOf = (order: Order, bucket: Bucket): NextStep | null => {
 };
 
 // The status is a pill you can change: 44px tall on a phone so it is easy to tap, compact in the desktop table
-const STATUS_SELECT = 'h-11 md:h-9 max-w-full pl-3 pr-7 rounded-full border text-[13px] leading-5 font-medium cursor-pointer transition-colors';
+const STATUS_SELECT = 'h-11 md:h-9 max-w-full pl-3 pr-7 rounded-lg border text-[13px] leading-5 font-medium cursor-pointer transition-colors';
 const STATUS_SELECT_TONE = {
   good: 'border-brand-line bg-brand-wash text-brand',
   plain: 'border-line bg-sunken text-ink',
@@ -269,7 +269,7 @@ export const AdminOrders: React.FC = () => {
 
       <PageTitle
         title={<>Orders <span className="font-sans text-ink-muted font-normal text-lg sag-num">({counts.all})</span></>}
-        line="Every order sits in one tab, from “To pack” to “Delivered”. Tap the gold button to move an order one step on, or open it to add tracking and message the customer."
+        line="Every order sits in one tab, from “To pack” to “Delivered”. Tap the green button to move an order one step on, or open it to add tracking and message the customer."
       />
 
       <KeyNumbers

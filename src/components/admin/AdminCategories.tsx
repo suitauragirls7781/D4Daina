@@ -196,7 +196,7 @@ export const AdminCategories: React.FC = () => {
               className="min-w-0 sag-glass overflow-hidden flex flex-col"
             >
               {/* Category Image Banner */}
-              <div className="m-2.5 mb-0 aspect-[4/5] overflow-hidden rounded-2xl bg-sunken flex items-center justify-center">
+              <div className="m-2.5 mb-0 aspect-[4/5] overflow-hidden rounded-[10px] bg-sunken flex items-center justify-center">
                 <img
                   src={cat.image ? getCleanImageUrl(cat.image, 480) : undefined}
                   alt={cat.title}
@@ -268,7 +268,7 @@ export const AdminCategories: React.FC = () => {
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
         <div className={`fixed inset-0 z-50 ${SCRIM} flex items-end sm:items-center justify-center sm:p-4`}>
-          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-surface border border-line rounded-t-[28px] sm:rounded-[28px] sm:max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
+          <div role="dialog" aria-modal="true" aria-label={editingCatId ? 'Edit category' : 'Add new category'} className="bg-surface border border-line rounded-t-[10px] sm:rounded-[10px] sm:max-w-lg w-full max-h-[92dvh] overflow-y-auto overscroll-contain p-5 sm:p-7 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
 
             <div className="sticky top-0 z-10 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 px-5 sm:px-7 py-3 bg-surface flex items-center justify-between border-b border-line">
               <h3 className="font-display text-[20px] leading-7 text-ink">
@@ -320,7 +320,7 @@ export const AdminCategories: React.FC = () => {
                 <p className="sag-label">Category photo <span className="font-normal text-ink-muted">(optional)</span></p>
                 <div className="flex items-start gap-3">
                   {/* The whole photo is shown, uncropped, so you can check what was uploaded */}
-                  <div className="w-28 aspect-[4/5] shrink-0 rounded-2xl overflow-hidden border border-line bg-sunken flex items-center justify-center">
+                  <div className="w-28 aspect-[4/5] shrink-0 rounded-[10px] overflow-hidden border border-line bg-sunken flex items-center justify-center">
                     {formData.image ? (
                       <img src={getCleanImageUrl(formData.image, 320)} alt="Category photo preview" className="w-full h-full object-contain" />
                     ) : (
@@ -364,7 +364,7 @@ export const AdminCategories: React.FC = () => {
               </div>
 
               <div className="pt-1">
-                <label className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-2xl border border-line bg-sunken cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
+                <label className="flex items-center justify-between gap-3 min-h-[56px] px-3.5 py-2.5 rounded-[10px] border border-line bg-sunken cursor-pointer text-sm font-semibold text-ink has-[:checked]:border-brand-line has-[:checked]:bg-brand-wash">
                   <input
                     type="checkbox"
                     checked={formData.isActive}

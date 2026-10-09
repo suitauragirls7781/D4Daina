@@ -20,8 +20,8 @@ const barPath = (width: number, height: number, x: number, rise: number) => {
 };
 
 /**
- * Phone navigation (owner's pick 2, 2026-10-08, "rising bump"): a floating dark bar a little above the bottom
- * edge. The bar itself swells up around the current tab and a gold bubble with that tab's icon sits in the
+ * Phone navigation (owner's pick 2, 2026-10-08, "rising bump"): a floating white bar with a thin warm line, a
+ * little above the bottom edge. The bar itself swells up around the current tab and an emerald bubble with that tab's ivory icon sits in the
  * swell; when the tab changes, the swell and the bubble glide across together. Five items with their names
  * always shown: Home, Shop, Wishlist, Bag, Account. The bag and the wishlist carry their real counts.
  * On a page that is none of the five (a policy page, say) the bar is flat and no bubble shows.
@@ -125,7 +125,7 @@ export const MobileAppNavbar: React.FC = () => {
         <path ref={pathRef} />
       </svg>
 
-      {/* The gold bubble that rides in the swell, with the current tab's icon and its real count */}
+      {/* The emerald bubble that rides in the swell, with the current tab's icon and its real count */}
       <div ref={bubbleRef} aria-hidden="true" className="absolute left-0 top-[2px] -ml-[25px] flex h-[50px] w-[50px] items-center justify-center rounded-full bg-brand text-[color:var(--sag-on-gold)] opacity-0 will-change-transform">
         {CurrentIcon && (
           <span className="relative flex">
@@ -148,7 +148,7 @@ export const MobileAppNavbar: React.FC = () => {
             onClick={() => go(id)}
             aria-current={active ? 'page' : undefined}
             aria-label={count ? `${label}, ${count} ${count === 1 ? 'item' : 'items'}` : label}
-            className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-[3px] rounded-[20px] transition-colors ${active ? 'text-brand' : 'text-ink-muted'}`}
+            className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-[3px] rounded-lg transition-colors ${active ? 'text-brand' : 'text-ink-muted'}`}
           >
             {/* The current tab's icon has moved up into the bubble; its place is kept so the name does not jump */}
             <span className={`relative flex transition-[opacity,transform] duration-300 ${active ? '-translate-y-3 opacity-0' : ''}`}>

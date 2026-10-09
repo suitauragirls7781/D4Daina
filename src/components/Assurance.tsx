@@ -38,11 +38,11 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
   ];
   return (
     <div className={`sag-glass p-4 lg:p-5 ${className}`}>
-      <h3 className="font-display text-[17px] leading-6 text-ink">How your order works</h3>
+      <h3 className="font-display text-[21px] leading-7 text-ink">How your order works</h3>
       <ol className="mt-1.5">
         {steps.map(([title, text], index) => (
-          <li key={title} className="flex items-start gap-3 border-t border-line py-2.5 first:border-t-0 last:pb-0">
-            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12.5px] font-semibold leading-[18px] text-sale">{index + 1}</span>
+          <li key={title} className="flex items-start gap-3 border-t border-line py-3 first:border-t-0 last:pb-0">
+            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12.5px] font-semibold leading-[18px] text-brand">{index + 1}</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[13.5px] font-medium leading-[18px] text-ink">{title}</span>
               <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
@@ -85,19 +85,20 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
     { key: 'delivery', icon: <TruckIcon className="w-[19px] h-[19px]" mono />, text: facts.delivery, onClick: () => open('shipping-policy') },
     { key: 'help', icon: <WhatsAppIcon className="w-[18px] h-[18px]" mono />, text: facts.help, href: createSupportWhatsAppUrl(whatsappMessage) },
   ];
-  const iconColour = onDark ? 'text-highlight' : 'text-sale';
+  const iconColour = onDark ? 'text-highlight' : 'text-brand';
 
   if (variant === 'grid') {
-    // Four small glass tiles: a thin gold icon and the fact in normal text. No circles, no ticks.
-    const cell = `sag-glass rounded-[16px]! flex min-h-[52px] w-full items-center gap-2 px-[11px] py-2.5 text-left ${onDark ? 'text-on-dark' : 'text-ink'}`;
+    // One white band with thin lines between its cells (two columns on phones, four in a row on desktop): in each
+    // cell a thin emerald icon and the fact as a short serif title, centred. No circles, no ticks.
+    const cell = `flex h-full w-full flex-col items-center justify-center gap-2.5 px-3 py-6 text-center lg:px-5 lg:py-9 ${onDark ? 'text-on-dark' : 'bg-surface text-ink'}`;
     const body = (row: (typeof rows)[number]) => (
       <>
-        <span className={`flex shrink-0 ${iconColour}`}>{row.icon}</span>
-        <span className="min-w-0 text-[12px] leading-[1.3] lg:text-[13px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
+        <span className={`flex shrink-0 [&>svg]:h-[26px] [&>svg]:w-[26px] ${iconColour}`}>{row.icon}</span>
+        <span className="min-w-0 font-display text-[18px] leading-[1.15] lg:text-[21px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
       </>
     );
     return (
-      <ul className={`grid grid-cols-2 gap-2.5 lg:grid-cols-4 lg:gap-4 ${className}`}>
+      <ul className={`grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-line lg:grid-cols-4 ${onDark ? '' : 'bg-line'} ${className}`}>
         {rows.map((row) => (
           <li key={row.key} className="flex min-w-0">
             {row.href ? (
@@ -113,15 +114,15 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
     );
   }
 
-  // full: plain rows between hairlines
-  const rowLine = `sag-row font-normal ${onDark ? 'border-line text-on-dark' : ''}`;
+  // full: plain rows between thin lines, each a thin emerald icon and the fact (the caller's panel is the white box)
+  const rowLine = `sag-row min-h-[52px]! gap-3! font-medium! ${onDark ? 'border-line text-on-dark' : ''}`;
   return (
     <div className={`border-y border-line ${className}`}>
       {rows.map((row) => {
         const inner = (
           <>
-            <span className={`shrink-0 flex ${iconColour}`}>{row.icon}</span>
-            <span className="flex-1 min-w-0">{row.text}</span>
+            <span className={`shrink-0 flex w-7 [&>svg]:h-[22px] [&>svg]:w-[22px] ${iconColour}`}>{row.icon}</span>
+            <span className="flex-1 min-w-0 text-[14px] leading-[1.35]">{row.text}</span>
             {(row.onClick || row.href) && <ChevronRight className={`w-4 h-4 shrink-0 ${onDark ? 'text-on-dark-muted' : 'text-ink-muted'}`} strokeWidth={1.5} aria-hidden="true" />}
           </>
         );

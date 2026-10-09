@@ -12,10 +12,11 @@ type Item = { key: string; label: string; icon: LucideIcon; count?: number; curr
 type Group = { key: string; title: string; items: Item[] };
 
 /**
- * The phone menu (owner's pick 2 of the "sleek sidebar" previews, 2026-10-08): a floating dark glass sidebar.
- * On top the logo mark, the name and close; a search pill; then the menu in groups that fold (Shop,
- * Collections, Your account, Help), each line an icon, its name and a real count where there is one; the
- * page the shopper is on is a gold pill. At the bottom, the shopper: sign in, or their name and account.
+ * The phone menu (Emerald Heritage, 2026-10-09): an emerald panel from the left, the full height of the screen.
+ * On top a champagne "Menu" label and close; the brand row (home) and a search row; then the menu in groups
+ * that fold (Shop, Collections, Your account, Help) as serif rows between thin champagne lines, each with its
+ * real count where there is one; the page the shopper is on is in champagne. At the bottom, the shopper:
+ * sign in, or their name and account. Rows slide in one after another when the menu opens.
  * Every number is counted from the products the store has right now.
  */
 export const MobileMenuDrawer: React.FC = () => {
@@ -78,85 +79,91 @@ export const MobileMenuDrawer: React.FC = () => {
   const [folded, setFolded] = useState<Record<string, boolean>>({});
   const toggle = (key: string) => setFolded((state) => ({ ...state, [key]: !state[key] }));
 
-  const itemClass = (current?: boolean) => `flex w-full min-h-[42px] items-center gap-[11px] rounded-full px-3 py-1.5 text-left text-sm cursor-pointer transition-colors ${current ? 'bg-brand font-semibold text-[color:var(--sag-on-gold)]' : 'text-ink-muted hover:bg-white/5 hover:text-ink'}`;
-  const renderItem = (item: Item) => {
+  // Rows slide in one after another each time the menu opens (sag-menu-row reads --i; late rows share one step)
+  let rowIndex = 0;
+  const renderItem = (item: Item, large: boolean) => {
     const Icon = item.icon;
+    const step = Math.min(rowIndex++, 14);
+    const rowClass = `${isMobileMenuOpen ? 'sag-menu-row' : ''} flex w-full items-center justify-between gap-3 border-b border-line text-left font-display cursor-pointer transition-colors hover:text-highlight ${large ? 'min-h-[52px] text-[22px] leading-7' : 'min-h-[46px] text-[18px] leading-6'} ${item.current ? 'text-highlight' : ''}`;
+    const rowStyle = { '--i': step } as React.CSSProperties;
     const inner = (
       <>
-        <Icon className="h-[19px] w-[19px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
-        <span className="min-w-0 flex-1">
+        <span className="min-w-0 flex-1 py-2">
           <span className="block truncate">{item.label}</span>
-          {item.note && <span className={`block truncate text-[11px] leading-4 ${item.current ? '' : 'text-ink-faint'}`}>{item.note}</span>}
+          {item.note && <span className="block truncate font-sans text-[11.5px] font-normal leading-4 text-on-dark-muted">{item.note}</span>}
         </span>
-        {Boolean(item.count) && (
-          <span className={`sag-num flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold leading-none ${item.current ? 'bg-black/15 text-[color:var(--sag-on-gold)]' : 'bg-brand-wash text-brand'}`}>{item.count}</span>
-        )}
+        {item.count
+          ? <span className="sag-num shrink-0 font-sans text-[12px] font-medium leading-none text-on-dark-muted">{item.count}</span>
+          : <Icon className="h-[17px] w-[17px] shrink-0 text-highlight" strokeWidth={1.5} aria-hidden="true" />}
       </>
     );
     return item.href
-      ? <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" className={itemClass(false)}>{inner}</a>
-      : <button key={item.key} type="button" onClick={item.onClick} aria-current={item.current ? 'page' : undefined} className={itemClass(item.current)}>{inner}</button>;
+      ? <a key={item.key} href={item.href} target="_blank" rel="noopener noreferrer" className={rowClass} style={rowStyle}>{inner}</a>
+      : <button key={item.key} type="button" onClick={item.onClick} aria-current={item.current ? 'page' : undefined} className={rowClass} style={rowStyle}>{inner}</button>;
   };
 
   return (
-    <div className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-200 ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isMobileMenuOpen}>
+    <div className={`lg:hidden fixed inset-0 z-[60] transition-opacity duration-300 motion-reduce:transition-none ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} aria-hidden={!isMobileMenuOpen}>
       <div className="absolute inset-0 bg-[color:var(--sag-scrim)]" onClick={close} />
       <nav
         aria-label="Mobile menu"
-        className={`sag-glass-bar absolute bottom-3 left-3 top-3 flex w-[84%] max-w-[320px] flex-col overflow-hidden rounded-[24px]! transition-transform duration-[320ms] ease-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-[110%]'}`}
+        className={`sag-on-emerald absolute inset-y-0 left-0 flex w-[84%] max-w-[340px] flex-col overflow-hidden transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        {/* Head: the logo mark, the name and close */}
-        <div className="flex shrink-0 items-center gap-2.5 px-3.5 pb-3 pt-3.5">
-          <button type="button" onClick={() => goPage('home')} aria-current={activePage === 'home' ? 'page' : undefined} aria-label="Suit Aura Girls home" className="flex min-w-0 flex-1 items-center gap-2.5 text-left cursor-pointer">
-            <img src="/suit-aura-mark-132.webp" alt="" width={36} height={36} className="h-9 w-9 shrink-0 rounded-full! bg-white object-cover" />
-            <span className="min-w-0">
-              <span className="sag-caps block truncate font-display text-[13.5px] font-medium uppercase leading-5 tracking-[0.1em] text-ink">Suit Aura Girls</span>
-              <span className="sag-caps block truncate text-[10px] uppercase leading-4 tracking-[0.08em] text-ink-muted">Ethnic wear · Delivery across India</span>
-            </span>
-          </button>
-          <button type="button" onClick={close} aria-label="Close menu" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-ink cursor-pointer hover:bg-white/15">
-            <X className="h-5 w-5" strokeWidth={1.5} />
+        {/* Top: the small champagne label and close */}
+        <div className="flex h-14 shrink-0 items-center justify-between pl-6 pr-2.5">
+          <span className="sag-caps text-[10.5px] font-semibold uppercase leading-none tracking-[0.24em] text-highlight">Menu</span>
+          <button type="button" onClick={close} aria-label="Close menu" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg cursor-pointer transition-[color,transform] duration-200 hover:text-highlight active:scale-90">
+            <X className="h-[21px] w-[21px]" strokeWidth={1.5} />
           </button>
         </div>
 
+        {/* The brand: the logo mark and the name; it leads home */}
+        <button type="button" onClick={() => goPage('home')} aria-current={activePage === 'home' ? 'page' : undefined} aria-label="Suit Aura Girls home" className="flex shrink-0 items-center gap-3 px-6 pb-4 text-left cursor-pointer">
+          <img src="/suit-aura-mark-132.webp" alt="" width={40} height={40} className="h-10 w-10 shrink-0 rounded-full! border border-line object-cover" />
+          <span className="min-w-0">
+            <span className="sag-caps block truncate font-display text-[17px] uppercase leading-5 tracking-[0.16em]!">Suit Aura Girls</span>
+            <span className="mt-1 block truncate text-[11.5px] leading-4 text-on-dark-muted">Ethnic wear · Delivery across India</span>
+          </span>
+        </button>
+
         {/* Search: opens the store's search */}
-        <button type="button" onClick={() => { close(); setIsSearchOpen(true); }} aria-label="Search styles" className="mx-3 mb-1.5 flex h-[38px] shrink-0 items-center gap-2 rounded-full border border-line bg-white/5 px-3 text-left text-[13px] text-ink-muted cursor-pointer hover:bg-white/10">
-          <Search className="h-[17px] w-[17px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
+        <button type="button" onClick={() => { close(); setIsSearchOpen(true); }} aria-label="Search styles" className="mx-6 flex h-11 shrink-0 items-center gap-2.5 rounded-lg border border-line bg-brand-dark px-3.5 text-left text-[13.5px] text-on-dark-muted cursor-pointer">
+          <Search className="h-[18px] w-[18px] shrink-0 text-highlight" strokeWidth={1.5} aria-hidden="true" />
           Search suits, dresses…
         </button>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2">
-          {groups.map((group) => {
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-4">
+          {groups.map((group, groupIndex) => {
             const holdsCurrent = group.items.some((item) => item.current);
             const shut = Boolean(folded[group.key]) && !holdsCurrent;
             return (
               <div key={group.key}>
-                <button type="button" onClick={() => toggle(group.key)} aria-expanded={!shut} className="sag-caps flex w-full items-center px-2.5 pb-1.5 pt-3 text-left text-[10px] font-bold uppercase leading-4 tracking-[0.16em] text-ink-muted cursor-pointer">
+                <button type="button" onClick={() => toggle(group.key)} aria-expanded={!shut} className="sag-caps flex min-h-11 w-full items-end border-b border-line pb-2.5 pt-5 text-left text-[10.5px] font-semibold uppercase leading-none tracking-[0.24em] text-highlight cursor-pointer">
                   <span className="flex-1">{group.title}</span>
-                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform duration-300 ${shut ? '-rotate-90' : ''}`} strokeWidth={1.8} aria-hidden="true" />
+                  <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform duration-300 ${shut ? '-rotate-90' : ''}`} strokeWidth={1.5} aria-hidden="true" />
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${shut ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}>
-                  <div className={`min-h-0 overflow-hidden ${isMobileMenuOpen && !shut ? 'sag-stagger' : ''}`} inert={shut || undefined}>
-                    {group.items.map(renderItem)}
+                <div className={`grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none ${shut ? 'grid-rows-[0fr]' : 'grid-rows-[1fr]'}`}>
+                  <div className="min-h-0 overflow-hidden" inert={shut || undefined}>
+                    {group.items.map((item) => renderItem(item, groupIndex === 0))}
                   </div>
                 </div>
               </div>
             );
           })}
           {/* One small muted line: two of the store's facts, worded in Assurance */}
-          <p className="px-2.5 pb-1 pt-4 text-[11px] leading-4 tracking-[0.03em] text-ink-faint">{facts.payment} · {facts.returns}</p>
+          <p className="pt-5 text-[13px] leading-5 text-on-dark-muted">{facts.payment} · {facts.returns}</p>
         </div>
 
         {/* The shopper: sign in, or their account */}
-        <button type="button" onClick={() => goPage('account')} className="flex shrink-0 items-center gap-2.5 border-t border-line px-3.5 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 text-left cursor-pointer hover:bg-white/5">
-          <span className="sag-num flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border border-line bg-white/10 text-xs font-bold text-ink" aria-hidden="true">
-            {user ? initials : <User className="h-[17px] w-[17px]" strokeWidth={1.6} />}
+        <button type="button" onClick={() => goPage('account')} className="flex shrink-0 items-center gap-3 border-t border-line px-6 pb-[calc(0.875rem+env(safe-area-inset-bottom))] pt-3.5 text-left cursor-pointer">
+          <span className="sag-num flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line text-xs font-semibold text-highlight" aria-hidden="true">
+            {user ? initials : <User className="h-[18px] w-[18px]" strokeWidth={1.5} />}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-sm font-semibold leading-5 text-ink">{user ? `Hello${firstName ? `, ${firstName}` : ''}` : 'Sign in'}</span>
-            <span className="block truncate text-[11px] leading-4 text-ink-muted">{user ? 'Orders, addresses and returns' : 'Track orders and keep your wishlist'}</span>
+            <span className="block truncate font-display text-[19px] leading-6">{user ? `Hello${firstName ? `, ${firstName}` : ''}` : 'Sign in'}</span>
+            <span className="block truncate text-[12px] leading-4 text-on-dark-muted">{user ? 'Orders, addresses and returns' : 'Track orders and keep your wishlist'}</span>
           </span>
-          <span className="shrink-0 text-[12.5px] font-semibold text-brand">{user ? 'My account' : 'Sign in'}</span>
+          <span className="sag-caps shrink-0 text-[10.5px] font-semibold uppercase leading-none tracking-[0.18em] text-highlight">{user ? 'My account' : 'Sign in'}</span>
         </button>
       </nav>
     </div>
