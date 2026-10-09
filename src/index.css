@@ -1137,3 +1137,8 @@ h1, h2, .font-display { font-weight: 600; font-size-adjust: 0.455; }
 
 /* A title that already has the ornament under it does not also get the drawn line */
 #main-content section.sag-reveal :is(h1, h2).font-display:has(+ .sag-orn)::after { content: none; }
+
+/* A page change from the phone navigation is a plain one (utils/pageTransition.ts): the new page rises in
+   by itself, so the navigation's bubble is seen gliding to the tapped tab */
+.sag-vt.sag-novt .sag-page { animation: sag-enter 420ms var(--sag-ease) both; }
+@media (prefers-reduced-motion: reduce) { .sag-vt.sag-novt .sag-page { animation: none; } }

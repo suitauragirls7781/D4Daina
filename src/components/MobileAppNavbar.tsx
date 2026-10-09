@@ -3,6 +3,7 @@ import { Heart, Home, LayoutGrid, ShoppingBag, User, type LucideIcon } from 'luc
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
+import { nextPageChangePlain } from '../utils/pageTransition';
 
 type Tab = 'home' | 'shop' | 'wishlist' | 'cart' | 'account';
 
@@ -97,7 +98,15 @@ export const MobileAppNavbar: React.FC = () => {
     };
     if (state.x < 0 || still) jump();
     else if (!state.frame) state.frame = requestAnimationFrame(step);
-    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(jump) : null;
+    // Only a real change of the bar's width redraws at once. (An observer also reports once when it starts
+    // watching: that first report must not cut the glide short.)
+    let seenWidth = nav.clientWidth;
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => {
+      if (nav.clientWidth === seenWidth) return;
+      seenWidth = nav.clientWidth;
+      if (state.frame) { cancelAnimationFrame(state.frame); state.frame = 0; }
+      jump();
+    }) : null;
     observer?.observe(nav);
     return () => { observer?.disconnect(); if (state.frame) { cancelAnimationFrame(state.frame); state.frame = 0; } };
   }, [activeIndex, hidden, tabs.length]);
@@ -106,7 +115,9 @@ export const MobileAppNavbar: React.FC = () => {
 
   const go = (tab: Tab) => {
     if (tab === 'cart') { setIsCartDrawerOpen(true); return; }
-    // setActivePage changes the URL inside the page transition
+    // setActivePage changes the URL inside the page transition. From this bar the change is a plain one (the
+    // new page rises in by itself), so the bubble is seen gliding to the tapped tab while the page changes.
+    nextPageChangePlain();
     setActivePage(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

@@ -16,7 +16,24 @@ if (typeof document !== 'undefined' && supported()) document.documentElement.cla
  * a product photo marked `pdp-hero` grows into the product page photo). Browsers without
  * support, or with reduced motion, just change the page (the CSS fade still applies there).
  */
+// A view transition shows still pictures of the old and the new page while it runs, so anything that should
+// keep moving through a page change (the phone navigation's bubble gliding to the tapped tab) would stand
+// still under it. A caller that needs live motion asks for the next page change to be a plain one: the new
+// page then rises in with the CSS enter animation instead (class "sag-novt", see the end of index.css).
+let plainNext = false;
+let plainTimer = 0;
+export const nextPageChangePlain = () => { plainNext = true; };
+
 export const withPageTransition = (update: () => void) => {
+  if (plainNext) {
+    plainNext = false;
+    const root = document.documentElement;
+    root.classList.add('sag-novt');
+    window.clearTimeout(plainTimer);
+    plainTimer = window.setTimeout(() => root.classList.remove('sag-novt'), 700);
+    update();
+    return;
+  }
   if (running || !supported()) {
     update();
     return;
