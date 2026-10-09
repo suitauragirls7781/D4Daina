@@ -4,72 +4,73 @@
 
 /* ------------------------------------------------------------------
    Suit Aura Girls design system: three colours (owner, 2026-10-07): jet black, amber, white
-   Jet black, amber and white. Black is text, buttons, the header band, the footer
+   Emerald Heritage (owner, 2026-10-09): deep emerald, ivory and a little champagne. The values below are that look;
+   the token NAMES are unchanged from the earlier systems.
    and the bottom navigation; amber is "Buy now", money saved, stars, the current
    tab and highlights; everything else is white or a pale tint of green or gold.
    Red stays for errors only. Token names are unchanged from the earlier systems.
 ------------------------------------------------------------------- */
 @theme {
   /* Surfaces */
-  --color-page: #0F0D12;
-  --color-surface: rgba(255, 255, 255, 0.07);
-  --color-sunken: rgba(255, 255, 255, 0.05);
-  --color-sunken-deep: rgba(255, 255, 255, 0.12);
+  --color-page: #F8F4EC;
+  --color-surface: #FFFFFF;
+  --color-sunken: #F1ECE0;
+  --color-sunken-deep: #E5DDCC;
   /* Text and lines */
-  --color-ink: #F6F1EA;
-  --color-ink-muted: #B9AFA6;
-  --color-ink-faint: #9A9088;
-  --color-line: rgba(255, 255, 255, 0.14);
-  --color-control: rgba(255, 255, 255, 0.32);
+  --color-ink: #1B1B19;
+  --color-ink-muted: #5E5B55;
+  --color-ink-faint: #77736B;
+  --color-line: #E5DDCC;
+  --color-control: #B4AC9C;
   /* Brand (peacock teal): buy, continue, pay, links, active nav */
-  --color-brand: #E0BB7C;
-  --color-brand-dark: #EBCB95;
-  --color-brand-wash: rgba(224, 187, 124, 0.12);
-  --color-brand-line: rgba(224, 187, 124, 0.40);
+  --color-brand: #0F3D33;
+  --color-brand-dark: #0A2C25;
+  --color-brand-wash: rgba(15, 61, 51, 0.06);
+  --color-brand-line: rgba(15, 61, 51, 0.32);
   /* Accent (rani): filled wishlist heart and count badges only */
-  --color-accent: #E0BB7C;
-  --color-accent-tint: rgba(224, 187, 124, 0.12);
+  --color-accent: #9B2C3B;
+  --color-accent-tint: rgba(155, 44, 59, 0.08);
   /* Sale: "% off", "You save", "Free" */
-  --color-sale: #E0BB7C;
-  --color-sale-tint: rgba(224, 187, 124, 0.12);
-  --color-sale-line: rgba(224, 187, 124, 0.40);
-  --color-star: #D2A961;
+  --color-sale: #0F3D33;
+  --color-sale-tint: rgba(15, 61, 51, 0.06);
+  --color-sale-line: rgba(15, 61, 51, 0.32);
+  --color-star: #A8894F;
   /* Confirmed states */
-  --color-ok: #E0BB7C;
-  --color-ok-tint: rgba(224, 187, 124, 0.12);
-  --color-ok-line: rgba(224, 187, 124, 0.40);
+  --color-ok: #0F3D33;
+  --color-ok-tint: rgba(15, 61, 51, 0.06);
+  --color-ok-line: rgba(15, 61, 51, 0.32);
   /* Errors */
-  --color-danger: #FF8A80;
-  --color-danger-tint: rgba(255, 138, 128, 0.12);
-  --color-danger-line: rgba(255, 138, 128, 0.45);
+  --color-danger: #B3261E;
+  --color-danger-tint: rgba(179, 38, 30, 0.07);
+  --color-danger-line: rgba(179, 38, 30, 0.42);
   /* Dark surfaces: footer, announcement bar, lightbox */
-  --color-dark: #09080B;
-  --color-on-dark: #F6F1EA;
-  --color-on-dark-muted: #B9AFA6;
-  --color-highlight: #E0BB7C;
+  --color-dark: #0F3D33;
+  --color-on-dark: #F8F4EC;
+  --color-on-dark-muted: #B9C7C2;
+  --color-highlight: #CDB58A;
   /* Pastel blocks: section backgrounds and tiles. Each has an ink for text placed on it. */
-  --color-lilac: rgba(255, 255, 255, 0.06);
-  --color-lilac-ink: #F6F1EA;
-  --color-peach: rgba(224, 187, 124, 0.12);
-  --color-peach-ink: #E0BB7C;
-  --color-mint: rgba(255, 255, 255, 0.09);
-  --color-mint-ink: #F6F1EA;
-  --color-sky: rgba(255, 255, 255, 0.05);
-  --color-sky-ink: #F6F1EA;
-  --color-butter: rgba(224, 187, 124, 0.08);
-  --color-butter-ink: #E0BB7C;
-  --color-sun: #D2A961;
+  --color-lilac: #FFFFFF;
+  --color-lilac-ink: #1B1B19;
+  --color-peach: #F1ECE0;
+  --color-peach-ink: #0F3D33;
+  --color-mint: #F1ECE0;
+  --color-mint-ink: #1B1B19;
+  --color-sky: #FFFFFF;
+  --color-sky-ink: #1B1B19;
+  --color-butter: #F6F0E2;
+  --color-butter-ink: #0F3D33;
+  --color-sun: #A8894F;
 
   /* Old palette names kept for one release as aliases of the new values */
-  --color-bottle-maroon: #E0BB7C;
-  --color-brand-maroon: #E0BB7C;
-  --color-plum: #E0BB7C;
-  --color-antique-gold: #D2A961;
-  --color-ivory: #0F0D12;
-  --color-dusty-rose: rgba(224, 187, 124, 0.12);
-  --color-blush: rgba(224, 187, 124, 0.12);
-  --color-charcoal: #F6F1EA;
-  --color-lavender: rgba(255, 255, 255, 0.05);
+  --color-bottle-maroon: #0F3D33;
+  --color-brand-maroon: #0F3D33;
+  --color-plum: #0F3D33;
+  --color-antique-gold: #A8894F;
+  --color-ivory: #F8F4EC;
+  --color-dusty-rose: #F1ECE0;
+  --color-blush: #F1ECE0;
+  --color-charcoal: #1B1B19;
+  --color-lavender: #F1ECE0;
 
   /* Two families only: Inter for text, Playfair Display for main headings.
      Why Playfair Display: compared in the browser on this site's real headings at 390px against
@@ -83,14 +84,14 @@
      font-serif class can never fall back to Times. */
   --font-sans: 'Figtree', 'Inter Fallback', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Figtree', 'Inter Fallback', system-ui, sans-serif;
-  --font-display: 'Fraunces', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
+  --font-display: 'Cormorant Garamond', 'Playfair Fallback', Georgia, 'Times New Roman', serif;
 
   /* Soft, round shapes. Buttons and chips are pills through their helper classes (sag-btn-*, sag-chip). */
-  --radius-badge: 8px;
-  --radius-chip: 14px;
-  --radius-control: 16px;
-  --radius-card: 22px;
-  --radius-sheet: 28px;
+  --radius-badge: 3px;
+  --radius-chip: 8px;
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --radius-sheet: 14px;
 }
 
 /* Fallback faces sized to the web fonts, so the swap does not move the layout */
@@ -113,53 +114,53 @@
 }
 
 :root {
-  --sag-page: #0F0D12;
-  --sag-surface: rgba(255, 255, 255, 0.07);
-  --sag-sunken: rgba(255, 255, 255, 0.05);
-  --sag-sunken-deep: rgba(255, 255, 255, 0.12);
-  --sag-ink: #F6F1EA;
-  --sag-ink-muted: #B9AFA6;
-  --sag-ink-faint: #9A9088;
-  --sag-line: rgba(255, 255, 255, 0.14);
-  --sag-control: rgba(255, 255, 255, 0.32);
-  --sag-brand: #E0BB7C;
-  --sag-brand-dark: #EBCB95;
-  --sag-brand-wash: rgba(224, 187, 124, 0.12);
-  --sag-brand-line: rgba(224, 187, 124, 0.40);
-  --sag-accent: #E0BB7C;
-  --sag-accent-tint: rgba(224, 187, 124, 0.12);
-  --sag-sale: #E0BB7C;
-  --sag-sale-tint: rgba(224, 187, 124, 0.12);
-  --sag-sale-line: rgba(224, 187, 124, 0.40);
-  --sag-star: #D2A961;
-  --sag-ok: #E0BB7C;
-  --sag-ok-tint: rgba(224, 187, 124, 0.12);
-  --sag-ok-line: rgba(224, 187, 124, 0.40);
-  --sag-danger: #FF8A80;
-  --sag-danger-tint: rgba(255, 138, 128, 0.12);
-  --sag-danger-line: rgba(255, 138, 128, 0.45);
-  --sag-dark: #09080B;
-  --sag-on-dark: #F6F1EA;
-  --sag-on-dark-muted: #B9AFA6;
-  --sag-highlight: #E0BB7C;
-  --sag-lilac: rgba(255, 255, 255, 0.06);
-  --sag-peach: rgba(224, 187, 124, 0.12);
-  --sag-mint: rgba(255, 255, 255, 0.09);
-  --sag-sky: rgba(255, 255, 255, 0.05);
-  --sag-butter: rgba(224, 187, 124, 0.08);
-  --sag-sun: #D2A961;
-  --sag-scrim: rgba(22, 21, 20, 0.5);
+  --sag-page: #F8F4EC;
+  --sag-surface: #FFFFFF;
+  --sag-sunken: #F1ECE0;
+  --sag-sunken-deep: #E5DDCC;
+  --sag-ink: #1B1B19;
+  --sag-ink-muted: #5E5B55;
+  --sag-ink-faint: #77736B;
+  --sag-line: #E5DDCC;
+  --sag-control: #B4AC9C;
+  --sag-brand: #0F3D33;
+  --sag-brand-dark: #0A2C25;
+  --sag-brand-wash: rgba(15, 61, 51, 0.06);
+  --sag-brand-line: rgba(15, 61, 51, 0.32);
+  --sag-accent: #9B2C3B;
+  --sag-accent-tint: rgba(155, 44, 59, 0.08);
+  --sag-sale: #0F3D33;
+  --sag-sale-tint: rgba(15, 61, 51, 0.06);
+  --sag-sale-line: rgba(15, 61, 51, 0.32);
+  --sag-star: #A8894F;
+  --sag-ok: #0F3D33;
+  --sag-ok-tint: rgba(15, 61, 51, 0.06);
+  --sag-ok-line: rgba(15, 61, 51, 0.32);
+  --sag-danger: #B3261E;
+  --sag-danger-tint: rgba(179, 38, 30, 0.07);
+  --sag-danger-line: rgba(179, 38, 30, 0.42);
+  --sag-dark: #0F3D33;
+  --sag-on-dark: #F8F4EC;
+  --sag-on-dark-muted: #B9C7C2;
+  --sag-highlight: #CDB58A;
+  --sag-lilac: #FFFFFF;
+  --sag-peach: #F1ECE0;
+  --sag-mint: #F1ECE0;
+  --sag-sky: #FFFFFF;
+  --sag-butter: #F6F0E2;
+  --sag-sun: #A8894F;
+  --sag-scrim: rgba(10, 20, 17, 0.5);
 
   /* Cards carry no shadow. --sag-shadow stays defined so older references keep working. */
-  --sag-shadow: 0 2px 10px rgba(22, 21, 20, 0.07);
+  --sag-shadow: none;
   --sag-shadow-bar: 0 -4px 16px rgba(22, 21, 20, 0.08);
   --sag-shadow-pop: 0 8px 24px -12px rgba(22, 21, 20, 0.18);
 
   /* Old variable names, aliased for one release */
-  --sag-lavender: rgba(255, 255, 255, 0.05);
+  --sag-lavender: #F1ECE0;
   --sag-lavender-deep: var(--sag-sunken-deep);
-  --sag-blush: rgba(224, 187, 124, 0.12);
-  --sag-plum: #E0BB7C;
+  --sag-blush: #F1ECE0;
+  --sag-plum: #0F3D33;
   --sag-plum-dark: var(--sag-brand-dark);
   --sag-gold: var(--sag-star);
   --marketplace-surface: var(--sag-surface);
@@ -220,13 +221,13 @@
   :is(h1, h2).font-sans { letter-spacing: 0; }
 
   ::selection {
-    background: rgba(224, 187, 124, 0.38);
-    color: #FFFFFF;
+    background: rgba(15, 61, 51, 0.18);
+    color: #1B1B19;
   }
 
   input, select, textarea {
     color: var(--sag-ink);
-    background-color: rgba(255, 255, 255, 0.06);
+    background-color: #FFFFFF;
     /* Sticky buy / pay bars stay on screen while typing; keep the focused field clear of them */
     scroll-margin-bottom: 96px;
   }
@@ -237,16 +238,16 @@
   }
 
   select option {
-    background-color: #1B1721;
-    color: #F6F1EA;
+    background-color: #FFFFFF;
+    color: #1B1B19;
   }
 
   input[type="checkbox"], input[type="radio"] {
-    accent-color: #E0BB7C;
+    accent-color: #0F3D33;
   }
 
   :focus-visible {
-    outline: 2px solid #E0BB7C;
+    outline: 2px solid #0F3D33;
     outline-offset: 2px;
   }
 
@@ -255,10 +256,10 @@
   }
 }
 
-/* Focus on a gold fill is a light ring */
+/* Focus on an emerald fill is a champagne ring */
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark, footer#main-footer) :focus-visible,
 :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark):focus-visible {
-  outline-color: #F6F1EA;
+  outline-color: #CDB58A;
 }
 
 /* Storefront copy is sentence case: older "uppercase tracking-[…]" labels and buttons are neutralised here.
@@ -275,22 +276,22 @@
   }
 }
 
-/* The admin panel shares the dark theme */
+/* The admin panel shares the light theme */
 #admin-root-container {
   color: var(--sag-ink);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 #admin-root-container input,
 #admin-root-container select,
 #admin-root-container textarea {
   color: var(--sag-ink);
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: #FFFFFF;
 }
 
 #admin-root-container input::placeholder,
 #admin-root-container textarea::placeholder {
-  color: #9CA3AF;
+  color: #77736B;
 }
 
 ::-webkit-scrollbar {
@@ -937,106 +938,124 @@
 }
 
 /* ------------------------------------------------------------------
-   Midnight glass (owner's pick, 2026-10-08, replaces Noir & Champagne).
-   Unlayered and last on purpose: these rules win over everything above.
+   Emerald Heritage (owner's pick "B", 2026-10-09, replaces Midnight glass).
+   Ivory pages, white panels with a thin warm line, deep emerald for the
+   header, the footer, buttons and links, champagne only as thin rules and
+   on emerald. Unlayered and last on purpose: these rules win over
+   everything above. The helper NAMES (sag-glass…) are kept from the
+   earlier look: they are plain white panels now.
 ------------------------------------------------------------------- */
 :root {
-  color-scheme: dark;
-  --sag-glass: rgba(255, 255, 255, 0.07);
-  --sag-glass-strong: rgba(255, 255, 255, 0.11);
-  --sag-glass-bar: rgba(20, 17, 25, 0.72);
-  --sag-glass-sheet: rgba(24, 20, 30, 0.9);
-  --sag-edge: rgba(255, 255, 255, 0.16);
-  --sag-on-gold: #16110B;
-  --sag-shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
-  --sag-shadow-bar: 0 -8px 24px rgba(0, 0, 0, 0.35);
-  --sag-shadow-pop: 0 18px 40px rgba(0, 0, 0, 0.5);
-  --sag-scrim: rgba(5, 4, 8, 0.66);
+  color-scheme: light;
+  --sag-glass: #FFFFFF;
+  --sag-glass-strong: #F6F1E6;
+  --sag-glass-bar: #FFFFFF;
+  --sag-glass-sheet: #FFFFFF;
+  --sag-edge: #E5DDCC;
+  /* The text colour on an emerald fill (the name is from the earlier look) */
+  --sag-on-gold: #F8F4EC;
+  --sag-champagne: #CDB58A;
+  --sag-shadow: none;
+  --sag-shadow-bar: 0 -8px 24px rgba(27, 27, 25, 0.07);
+  --sag-shadow-pop: 0 14px 34px rgba(27, 27, 25, 0.14);
+  --sag-scrim: rgba(10, 20, 17, 0.5);
+  --sag-nav-fill: #FFFFFF;
 }
-html, body, #root { background-color: #0F0D12; color: var(--sag-ink); }
-/* The backdrop: three soft lights that stay in place while the page scrolls */
-body::before {
-  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(520px 520px at -8% 12%, rgba(184, 137, 74, 0.34), transparent 70%),
-    radial-gradient(560px 560px at 108% 48%, rgba(122, 39, 66, 0.42), transparent 70%),
-    radial-gradient(520px 520px at 20% 96%, rgba(39, 51, 90, 0.42), transparent 70%),
-    #0F0D12;
-}
+html, body, #root { background-color: #F8F4EC; color: var(--sag-ink); }
+body::before { content: none; }
 #app-main-content, #app-main-content.bg-page { background-color: transparent; }
 
-/* Glass pieces the components use */
-.sag-glass { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 22px; box-shadow: var(--sag-shadow); -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%); }
+/* Panels: white, a thin warm line, a small radius, no shadow and no blur */
+.sag-glass { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 10px; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
 .sag-glass-strong { background: var(--sag-glass-strong); }
-/* Floating bars (header, bottom navigation, buy bar): darker so what scrolls under them never fights the text */
-.sag-glass-bar { background: var(--sag-glass-bar); border: 1px solid var(--sag-edge); border-radius: 9999px; box-shadow: var(--sag-shadow); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); }
-.sag-card { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 22px; box-shadow: none; }
-.sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) { border-color: var(--sag-brand); box-shadow: 0 0 0 1px var(--sag-brand); }
+/* Bars that stay on screen (buy bar, save bar, the checkout bar): white with the line */
+.sag-glass-bar { background: var(--sag-glass-bar); border: 1px solid var(--sag-edge); border-radius: 10px; box-shadow: 0 6px 20px rgba(27, 27, 25, 0.06); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sag-card { background: var(--sag-glass); border: 1px solid var(--sag-edge); border-radius: 10px; box-shadow: none; }
+.sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) { border-color: var(--sag-brand); box-shadow: inset 0 0 0 1px var(--sag-brand); }
 
-/* Anything that floats over the page (sticky / fixed bars, drawers, sheets, dialogs, menus) is a darker, blurred glass */
+/* Anything that floats over the page (sticky / fixed bars, drawers, sheets, dialogs, menus) is solid white */
 :is(.sticky, .fixed):is(.bg-surface, .bg-page, .bg-white), .fixed :is(.bg-surface, .bg-page, .bg-white), [role="dialog"] :is(.bg-surface, .bg-page, .bg-white), [role="menu"], [role="listbox"] {
-  background-color: var(--sag-glass-sheet); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+  background-color: #FFFFFF; -webkit-backdrop-filter: none; backdrop-filter: none;
 }
-.fixed .fixed :is(.bg-surface, .bg-page, .bg-white), .fixed .bg-surface .bg-surface { -webkit-backdrop-filter: none; backdrop-filter: none; background-color: rgba(255, 255, 255, 0.06); }
-.bg-white { background-color: var(--sag-glass-strong); }
+[class*="backdrop-blur"] { -webkit-backdrop-filter: none; backdrop-filter: none; }
 
-/* Round corners again: boxes with a full border, tinted boxes, photos in boxes */
-#app-main-content :where([class~="border"], .bg-sunken, .bg-lilac, .bg-peach, .bg-mint, .bg-sky, .bg-butter):where(div, section, aside, article, li, label, a, p, ul, details, fieldset, form) { border-radius: 18px; }
-#app-main-content :where(img):where(.object-cover) { border-radius: 14px; }
+/* Corners: boxes 10px, photos 8px, pills only where the shape is a circle */
+#app-main-content :where([class~="border"], .bg-sunken, .bg-lilac, .bg-peach, .bg-mint, .bg-sky, .bg-butter):where(div, section, aside, article, li, label, a, p, ul, details, fieldset, form) { border-radius: 10px; }
+#app-main-content :where(img):where(.object-cover) { border-radius: 8px; }
 #app-main-content :where(.rounded-none) { border-radius: 0; }
+:where(button, a, label, span, p, div).rounded-full[class*="px-"] { border-radius: 8px; }
 
-/* Buttons: gold pill with dark text; the quiet one is a glass pill */
-.sag-btn-primary, .sag-btn-outline { border-radius: 9999px; text-transform: none; letter-spacing: 0; font-size: 14.5px; font-weight: 600; }
-.sag-btn-primary, .sag-btn-primary.sag-btn-buy { background: var(--sag-brand); color: var(--sag-on-gold); box-shadow: 0 8px 22px rgba(0, 0, 0, 0.3); }
+/* Buttons: emerald with ivory small capitals; the quiet one is an emerald outline that fills on hover */
+.sag-btn-primary, .sag-btn-outline { border-radius: 8px; text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; font-weight: 600; }
+.sag-btn-primary, .sag-btn-primary.sag-btn-buy { background: var(--sag-brand); color: var(--sag-on-gold); box-shadow: none; }
 .sag-btn-primary:hover, .sag-btn-primary:active, .sag-btn-primary.sag-btn-buy:hover, .sag-btn-primary.sag-btn-buy:active { background: var(--sag-brand); }
 .sag-btn-primary::before { background: var(--sag-brand-dark); }
-.sag-btn-primary:is(:disabled, [aria-disabled="true"]) { background: rgba(255, 255, 255, 0.14); color: var(--sag-ink-faint); box-shadow: none; }
-.sag-btn-outline { background: var(--sag-glass); border: 1px solid var(--sag-edge); color: var(--sag-ink); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-.sag-btn-outline::before { background: rgba(255, 255, 255, 0.12); }
-@media (hover: hover) { .sag-btn-outline:not(:disabled):hover { color: var(--sag-ink); background: var(--sag-glass); } }
-/* Pills written with rounded-full are pills again */
-:where(button, a, label, span, p, div).rounded-full[class*="px-"] { border-radius: 9999px; }
-/* Light-on-gold never: any filled gold, cream or red control carries dark text */
-:is(.bg-brand, .bg-ink, .bg-sun, .bg-star, .bg-highlight, .bg-ok, .bg-accent, .bg-sale, .bg-danger):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) { color: var(--sag-on-gold); }
-:is(.bg-brand, .bg-ink, .bg-sun, .bg-star, .bg-highlight, .bg-ok):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) svg { color: inherit; }
+.sag-btn-primary:is(:disabled, [aria-disabled="true"]) { background: #DCD5C5; color: #77736B; box-shadow: none; }
+.sag-btn-outline { background: transparent; border: 1px solid var(--sag-brand); color: var(--sag-brand); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sag-btn-outline::before { background: var(--sag-brand); }
+@media (hover: hover) { .sag-btn-outline:not(:disabled):hover { color: var(--sag-on-gold); background: transparent; } }
+.sag-btn-outline:not(:disabled):active { color: var(--sag-on-gold); }
+.sag-btn-outline:is(:disabled, [aria-disabled="true"]) { border-color: var(--sag-control); color: #77736B; }
+/* An emerald (or dark) fill always carries ivory text */
+:is(.bg-brand, .bg-ink, .bg-dark, .bg-ok, .bg-accent, .bg-sale, .bg-danger, .bg-sun, .bg-star):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) { color: var(--sag-on-gold); }
+:is(.bg-brand, .bg-ink, .bg-dark, .bg-ok):is(.text-white, .text-surface, .text-on-dark, .text-page, .text-ink) svg { color: inherit; }
 
 /* Fields and chips */
-.sag-input { background: rgba(255, 255, 255, 0.06); color: var(--sag-ink); border: 1px solid var(--sag-edge); border-radius: 16px; }
+.sag-input { background: #FFFFFF; color: var(--sag-ink); border: 1px solid var(--sag-control); border-radius: 8px; }
 .sag-input::placeholder { color: var(--sag-ink-faint); }
-.sag-input:focus { border-color: var(--sag-brand); box-shadow: 0 0 0 1px var(--sag-brand); }
-.sag-input:disabled { background: rgba(255, 255, 255, 0.03); color: var(--sag-ink-faint); }
-select.sag-input option, select option { background: #1B1721; color: #F6F1EA; }
+.sag-input:focus { border-color: var(--sag-brand); box-shadow: inset 0 -2px 0 var(--sag-brand); }
+.sag-input:disabled { background: var(--sag-sunken); color: var(--sag-ink-faint); }
+select.sag-input option, select option { background: #FFFFFF; color: var(--sag-ink); }
 .sag-label { color: var(--sag-ink-muted); }
-.sag-chip { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--sag-edge); border-radius: 9999px; color: var(--sag-ink); }
-.sag-chip:hover { background: rgba(255, 255, 255, 0.13); }
-.sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: var(--sag-brand); color: var(--sag-on-gold); border-color: transparent; box-shadow: none; font-weight: 600; }
-.sag-badge { border-radius: 8px; }
-.sag-bar { background: var(--sag-glass-bar); border-top: 1px solid var(--sag-edge); -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%); box-shadow: var(--sag-shadow-bar); }
-.sag-link { color: var(--sag-brand); text-decoration-color: rgba(224, 187, 124, 0.5); }
+.sag-chip { background: #FFFFFF; border: 1px solid var(--sag-control); border-radius: 8px; color: var(--sag-ink); }
+.sag-chip:hover { background: var(--sag-sunken); }
+.sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: var(--sag-brand); color: var(--sag-on-gold); border-color: var(--sag-brand); box-shadow: none; font-weight: 600; }
+.sag-badge { border-radius: 3px; }
+.sag-bar { background: #FFFFFF; border-top: 1px solid var(--sag-edge); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: var(--sag-shadow-bar); }
+.sag-link { color: var(--sag-brand); text-decoration-color: rgba(15, 61, 51, 0.45); }
 .sag-link:hover { color: var(--sag-brand-dark); }
 .sag-eyebrow { color: var(--sag-brand); }
-.font-display { font-weight: 500; }
-#main-content section.sag-reveal h2.font-display::after { background: var(--sag-brand); }
-.sag-sheen::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent); }
-.sag-photo-spinner { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2); }
-/* Focus: a gold ring reads on the dark backdrop */
+/* Headings: Cormorant Garamond, sized up to the height the pages were laid out for */
+h1, h2, .font-display { font-weight: 600; font-size-adjust: 0.455; }
+:is(h1, h2).font-sans { font-size-adjust: none; }
+#main-content section.sag-reveal h2.font-display::after { background: var(--sag-champagne); }
+.sag-sheen::after { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent); }
+.sag-photo-spinner { box-shadow: 0 0 0 1px rgba(27, 27, 25, 0.12); }
 :focus-visible { outline-color: var(--sag-brand); }
+:is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark, footer#main-footer, .sag-on-emerald) :focus-visible,
+:is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark):focus-visible { outline-color: var(--sag-champagne); }
 
-/* Phones that ask for less transparency, and browsers without backdrop blur, get solid dark panels */
-@media (prefers-reduced-transparency: reduce) {
-  .sag-glass, .sag-glass-bar, .sag-card, .sag-bar, .sag-btn-outline { -webkit-backdrop-filter: none; backdrop-filter: none; background: #1B1721; }
-}
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .sag-glass, .sag-card { background: #1B1721; }
-  .sag-glass-bar, .sag-bar { background: #17141C; }
-  :is(.sticky, .fixed):is(.bg-surface, .bg-page, .bg-white), .fixed :is(.bg-surface, .bg-page, .bg-white) { background-color: #17141C; }
-}
-/* The backdrop lights sit between the html colour and the app, so the app's own wrappers stay see-through */
-html { background-color: #0F0D12; }
-body, #root { background-color: transparent; }
-/* Phone navigation "rising bump" (MobileAppNavbar.tsx): the bar is one drawn shape that swells around the current tab */
-:root { --sag-nav-fill: rgba(24, 20, 30, 0.9); }
-.sag-blobnav-shape { filter: drop-shadow(0 12px 22px rgba(0, 0, 0, 0.45)); }
+/* Emerald surfaces (header, menu, footer, the editorial band): ivory text, champagne labels and thin rules */
+.sag-on-emerald { background: var(--sag-brand); color: var(--sag-on-gold); }
+.sag-on-emerald :is(.text-ink, h1, h2, h3) { color: var(--sag-on-gold); }
+.sag-on-emerald :is(.text-ink-muted, .text-ink-faint) { color: #B9C7C2; }
+.sag-on-emerald :is(.text-sale, .text-brand, .text-accent, .sag-eyebrow, .sag-link) { color: var(--sag-champagne); }
+.sag-on-emerald :is(.border-line, .border-t, .border-b) { border-color: rgba(205, 181, 138, 0.28); }
+/* The small ornament under a centred title: two champagne rules with a diamond between them */
+.sag-orn { display: flex; align-items: center; justify-content: center; gap: 6px; height: 7px; color: var(--sag-champagne); }
+.sag-orn::before, .sag-orn::after { content: ""; width: 40px; height: 1px; background: currentColor; }
+.sag-orn > i { width: 5px; height: 5px; border: 1px solid currentColor; transform: rotate(45deg); }
+/* Arch frame for category photos */
+.sag-arch { border-radius: 999px 999px 8px 8px !important; }
+
+/* Phone navigation "rising bump" (MobileAppNavbar.tsx): a white drawn bar with the line, the current tab in an emerald bubble */
+.sag-blobnav-shape { filter: drop-shadow(0 8px 18px rgba(27, 27, 25, 0.14)); }
 .sag-blobnav .sag-blobnav-shape path { fill: var(--sag-nav-fill) !important; stroke: var(--sag-edge) !important; stroke-width: 1; }
-/* The frosted layer under the drawn shape (the straight part of the bar) */
-.sag-blobnav-blur { -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); border-radius: 26px; }
+.sag-blobnav-blur { -webkit-backdrop-filter: none; backdrop-filter: none; border-radius: 26px; }
+
+/* A small-capitals link with a thin underline that draws in (the "View all" of a section) */
+.sag-lnk { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 11.5px; line-height: 1; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--sag-brand); cursor: pointer; }
+.sag-lnk::after { content: ""; position: absolute; left: 0; right: 0; bottom: 11px; height: 1px; background: currentColor; transform-origin: left; transition: transform 0.6s var(--sag-ease); }
+@media (hover: hover) { .sag-lnk:hover::after { transform: scaleX(0.4); } .sag-lnk svg { transition: transform 0.35s var(--sag-ease); } .sag-lnk:hover svg { transform: translateX(4px); } }
+.sag-on-emerald .sag-lnk { color: var(--sag-champagne); }
+/* The ivory button used on an emerald band */
+.sag-btn-light { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 22px; border-radius: 8px; background: #F8F4EC; color: var(--sag-brand); font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; cursor: pointer; transition: background 0.3s var(--sag-ease), transform 0.2s var(--sag-ease); }
+.sag-btn-light:hover { background: #E9E2D2; }
+.sag-btn-light:active { transform: scale(0.975); }
+/* The announcement strip above the header: the store's real facts moving slowly in champagne capitals */
+.sag-marquee { background: var(--sag-brand-dark); color: var(--sag-champagne); overflow: hidden; height: 34px; display: flex; align-items: center; }
+.sag-marquee-track { display: flex; width: max-content; animation: sag-marquee 38s linear infinite; }
+.sag-marquee-track > span { display: flex; align-items: center; gap: 18px; padding-right: 18px; font-size: 10.5px; line-height: 1; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; white-space: nowrap; }
+.sag-marquee-track > span::after { content: ""; width: 5px; height: 5px; border: 1px solid currentColor; transform: rotate(45deg); flex: none; }
+@keyframes sag-marquee { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .sag-marquee-track { animation: none; } .sag-lnk::after { transition: none; } }
