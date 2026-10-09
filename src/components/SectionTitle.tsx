@@ -1,14 +1,27 @@
 import React from 'react';
+import { AuraTitle } from '../aura/AuraTitle';
 
-/** The small champagne ornament of the Emerald Heritage look: two thin rules with a diamond between them. */
-export const Ornament: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <span aria-hidden="true" className={`sag-orn ${className}`}><i /></span>
-);
+/** The ornament of the earlier look. It is not part of Aura: the export stays and draws nothing. */
+export const Ornament: React.FC<{ className?: string }> = () => null;
+
+// "Shop by category" -> "Shop by" + the accent word "category". Only for a plain text title of two words or
+// more whose last word is a real word; anything else is shown as it is, without an accent.
+const splitAccent = (title: React.ReactNode): [React.ReactNode, string | undefined] => {
+  if (typeof title !== 'string') return [title, undefined];
+  const text = title.trim();
+  const cut = text.lastIndexOf(' ');
+  if (cut < 1) return [title, undefined];
+  const last = text.slice(cut + 1);
+  if (!/^[\p{L}][\p{L}'’-]{2,}[?!.]?$/u.test(last)) return [title, undefined];
+  return [text.slice(0, cut), last];
+};
 
 /**
- * A section's heading in the Emerald Heritage look: a small letter-spaced eyebrow, the serif title and the
- * ornament under it, centred. `align="left"` keeps the same pieces at the left (inside panels and forms).
- * `as` picks the heading level (the page title is an h1, a section title an h2).
+ * A page's or a section's heading. It is a thin wrapper around the Aura title (src/aura/AuraTitle.tsx) with
+ * the props it always had: the small capitals label (`eyebrow`), the big bold title whose last word is set in
+ * the serif italic, and an optional line under it. Left-aligned unless `align="center"`. `as` picks the
+ * heading level, `id` goes on the heading itself. `ornament` is accepted and ignored.
+ * A title inside a panel or a form (it used to pass align="left") is set one step smaller.
  */
 export const SectionTitle: React.FC<{
   eyebrow?: React.ReactNode;
@@ -19,11 +32,7 @@ export const SectionTitle: React.FC<{
   align?: 'center' | 'left';
   ornament?: boolean;
   className?: string;
-}> = ({ eyebrow, title, sub, id, as: Tag = 'h2', align = 'center', ornament = true, className = '' }) => (
-  <div className={`flex flex-col gap-2.5 ${align === 'center' ? 'items-center text-center' : 'items-start text-left'} ${className}`}>
-    {eyebrow && <p className="sag-eyebrow sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.24em]">{eyebrow}</p>}
-    <Tag id={id} className="font-display text-[30px] leading-[1.08] text-ink sm:text-[36px] lg:text-[44px]">{title}</Tag>
-    {ornament && <Ornament className={align === 'center' ? '' : 'justify-start!'} />}
-    {sub && <p className="max-w-[36ch] text-[13.5px] leading-5 text-ink-muted">{sub}</p>}
-  </div>
-);
+}> = ({ eyebrow, title, sub, id, as = 'h2', align, className = '' }) => {
+  const [main, accent] = splitAccent(title);
+  return <AuraTitle label={eyebrow} title={main} accent={accent} sub={sub} id={id} as={as} align={align ?? 'left'} size={align === 'left' ? 'lg' : 'xl'} className={className} />;
+};
