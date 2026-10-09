@@ -1142,3 +1142,51 @@ h1, h2, .font-display { font-weight: 600; font-size-adjust: 0.455; }
    by itself, so the navigation's bubble is seen gliding to the tapped tab */
 .sag-vt.sag-novt .sag-page { animation: sag-enter 420ms var(--sag-ease) both; }
 @media (prefers-reduced-motion: reduce) { .sag-vt.sag-novt .sag-page { animation: none; } }
+
+/* ------------------------------------------------------------------
+   Shop by category, alive (owner, 2026-10-09). The arches rise in one after
+   another and their photos unveil from below; then one category at a time is
+   "in the light": it lifts, a second champagne line opens around its arch,
+   its photo cross-fades to the next real photo and zooms slowly, its name
+   turns emerald and a thin line fills under it.
+------------------------------------------------------------------- */
+.sag-cat { opacity: 0; transform: translateY(26px); transition: opacity 700ms var(--sag-ease), transform 900ms var(--sag-ease); transition-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.sag-cats[data-in="true"] .sag-cat { opacity: 1; transform: none; }
+.sag-cat-photo { clip-path: inset(100% 0 0 0 round 999px 999px 8px 8px); transition: clip-path 1100ms cubic-bezier(0.65, 0, 0.35, 1); transition-delay: calc(var(--i, 0) * 90ms + 200ms); }
+.sag-cats[data-in="true"] .sag-cat-photo { clip-path: inset(0 round 999px 999px 8px 8px); }
+.sag-cat-frame { transition: transform 700ms var(--sag-ease); }
+.sag-cat[data-lit="true"] .sag-cat-frame { transform: translateY(-8px); }
+#main-content .sag-cat-img, .sag-cat-img { opacity: 0; transform: scale(1.02); transition: opacity 900ms cubic-bezier(0.6, 0, 0.2, 1), transform 3200ms cubic-bezier(0.2, 0.4, 0.3, 1); border-radius: 0; }
+#main-content .sag-cat-img[data-on="true"], .sag-cat-img[data-on="true"] { opacity: 1; }
+#main-content .sag-cat[data-lit="true"] .sag-cat-img[data-on="true"], .sag-cat[data-lit="true"] .sag-cat-img[data-on="true"] { transform: scale(1.09); }
+/* The second champagne line: it opens outwards from the first one while the category is in the light */
+.sag-cat-ring { position: absolute; left: -6px; right: -6px; top: -6px; bottom: 0; border: 1px solid var(--sag-champagne); border-bottom: 0; border-radius: 999px 999px 0 0; opacity: 0; pointer-events: none; transition: opacity 500ms var(--sag-ease), left 700ms var(--sag-ease), right 700ms var(--sag-ease), top 700ms var(--sag-ease); }
+.sag-cat[data-lit="true"] .sag-cat-ring { opacity: 0.75; left: -11px; right: -11px; top: -11px; }
+.sag-cat[data-lit="true"] .sag-arch-line { border-color: var(--sag-brand); }
+.sag-arch-line { transition-property: clip-path, border-color; }
+.sag-cat-name { transition: color 500ms var(--sag-ease); }
+.sag-cat[data-lit="true"] .sag-cat-name { color: var(--sag-brand); }
+.sag-cat-bar { width: 34px; height: 2px; background: var(--sag-line); overflow: hidden; border-radius: 2px; opacity: 0; transition: opacity 400ms var(--sag-ease), width 600ms var(--sag-ease); }
+.sag-cat[data-lit="true"] .sag-cat-bar { opacity: 1; width: 52px; }
+.sag-cat-bar > i { display: block; height: 100%; background: var(--sag-brand); transform: scaleX(0); transform-origin: left; }
+.sag-cat[data-lit="true"] .sag-cat-bar > i { animation: sag-cat-fill 2800ms linear forwards; }
+@keyframes sag-cat-fill { to { transform: scaleX(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .sag-cat, .sag-cat-photo, .sag-cat-frame, .sag-cat-img, .sag-cat-ring, .sag-cat-bar, .sag-cat-name { transition: none !important; }
+  .sag-cat { opacity: 1; transform: none; }
+  .sag-cat-photo { clip-path: none; }
+  .sag-cat[data-lit="true"] .sag-cat-frame { transform: none; }
+  .sag-cat[data-lit="true"] .sag-cat-img[data-on="true"] { transform: none; }
+  .sag-cat-ring, .sag-cat-bar { display: none; }
+  .sag-cat-bar > i { animation: none !important; }
+}
+
+/* The running border line of a category arch: a short emerald stroke that travels along the champagne line.
+   It runs only while the row is on screen; each arch starts a little after the one before it. */
+.sag-cat-run { position: absolute; left: -6px; top: -6px; width: calc(100% + 12px); height: calc(100% + 6px); overflow: visible; pointer-events: none; opacity: 0; transition: opacity 600ms var(--sag-ease) 900ms; }
+.sag-cat-run path { fill: none; stroke: var(--sag-brand); stroke-width: 2; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 0.2 0.8; stroke-dashoffset: 1; }
+.sag-cats[data-run="true"] .sag-cat-run { opacity: 1; }
+.sag-cats[data-run="true"] .sag-cat-run path { animation: sag-cat-run 4200ms linear infinite; animation-delay: calc(var(--i, 0) * -700ms); }
+.sag-cat[data-lit="true"] .sag-cat-run path { stroke-width: 2.5; }
+@keyframes sag-cat-run { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .sag-cat-run { display: none; } }
