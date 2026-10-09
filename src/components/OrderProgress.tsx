@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Check, CheckCircle2, ChevronDown, Copy, ExternalLink, Phone, XCircle } from 'lucide-react';
 import { PackageIcon, ReturnIcon, TruckIcon, UserIcon } from './StoreIcons';
 import { Order, ReturnRequest, ReturnRequestStatus } from '../types';
@@ -53,8 +53,8 @@ export const cancelClosedNote = (order: OrderWithRequests, windowHours = 0) => {
   return '';
 };
 
-/** Small letter-spaced emerald label above a title. */
-const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale';
+/** Small capitals label above a title. */
+const EYEBROW = 'aura-lbl';
 
 // ---- Dates (only real timestamps from the order; nothing is estimated) ----
 
@@ -180,29 +180,30 @@ export const latestUpdate = (order: Order): { label: string; at: string } | null
 /** The status pill for an order: customer wording in the brand colours. */
 export const StatusPill: React.FC<{ order: Order; className?: string }> = ({ order, className = '' }) => {
   let text: string = order.status;
-  // Outline badges: placed and confirmed carry the thin line; on the way and delivered are emerald; cancelled is red.
-  let tone = 'border-line text-ink';
+  // Pills: placed and confirmed are blush; waiting for payment is rose; on the way is ink; delivered is forest;
+  // returned and refunded are sand; cancelled is a red outline.
+  let tone = '';
   if (awaitingPayment(order) && order.status !== 'Cancelled') {
     text = paymentFailed(order) ? 'Payment failed' : 'Awaiting payment';
-    tone = 'border-sale-line text-sale';
+    tone = 'is-wait';
   } else if (order.status === 'Processing') {
     text = 'Confirmed';
   } else if (order.status === 'Packed' || order.status === 'Shipped' || order.status === 'In Transit' || order.status === 'Out for Delivery') {
-    tone = 'border-sale-line text-sale';
+    tone = 'is-go';
   } else if (order.status === 'Delivered') {
-    tone = 'border-brand-line text-sale';
+    tone = 'is-ok';
   } else if (order.status === 'Returned') {
-    tone = 'border-line text-ink-muted';
+    tone = 'is-mu';
   } else if (order.status === 'Cancelled') {
-    tone = 'border-danger-line text-danger';
+    tone = 'is-no';
   } else if (order.status === 'Refund Requested') {
     text = 'Return requested';
-    tone = 'border-sale-line text-sale';
+    tone = 'is-wait';
   } else if (order.status === 'Refunded') {
-    tone = 'border-line text-ink-muted';
+    tone = 'is-mu';
   }
   return (
-    <span className={`sag-badge border bg-surface font-semibold ${tone} ${className}`}>
+    <span className={`aa-pill ${tone} ${className}`}>
       <span className="sr-only">Order status: </span>{text}
     </span>
   );
@@ -258,10 +259,43 @@ const wasDelivered = (order: Order) => {
   return Boolean(stepTimes(order)[DELIVERED_STEP]);
 };
 
+/** Height of one timeline row (the same number as grid-auto-rows of .aa-tl > ol in src/index.css). */
+const TL_ROW = 60;
+
+/** The line of the timeline: a soft S between every two dots, from the first dot to the last. */
+const timelinePath = (count: number) => {
+  let d = `M14 ${TL_ROW / 2}`;
+  for (let i = 1; i < count; i += 1) {
+    const a = TL_ROW / 2 + (i - 1) * TL_ROW;
+    const b = a + TL_ROW;
+    const k = i % 2 ? 9 : -9;
+    d += ` C${14 + k} ${a + (b - a) * 0.3} ${14 + k} ${a + (b - a) * 0.7} 14 ${b}`;
+  }
+  return d;
+};
+
 const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact }) => {
   const times = stepTimes(order);
   const current = reachedStep(order, times);
   const waiting = awaitingPayment(order);
+
+  // The timeline plays once, when it comes into view: the stages appear one after another and the rose line
+  // draws down to the current stage.
+  const lineRef = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    const el = lineRef.current;
+    if (!el || seen) return undefined;
+    if (typeof IntersectionObserver === 'undefined') {
+      setSeen(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) setSeen(true);
+    }, { rootMargin: '0px 0px -12% 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [seen, compact]);
 
   // In a list of orders: one slim bar and a line of text, so several orders fit on a phone screen.
   if (compact) {
@@ -272,11 +306,11 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
       <div>
         <div className="flex gap-1" aria-hidden="true">
           {STEPS.map((item, index) => (
-            <span key={item.label} className={`h-[2px] flex-1 ${index <= current ? 'bg-brand' : 'bg-line'}`} />
+            <span key={item.label} className={`h-1 flex-1 rounded-full ${index <= current ? 'bg-accent' : 'bg-line'}`} />
           ))}
         </div>
-        <p className="mt-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-sm leading-5" aria-hidden="true">
-          <span className="font-semibold text-ink">{step.label}{when ? <span className="font-normal text-ink-muted"> · {when}</span> : null}</span>
+        <p className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[15px] leading-5" aria-hidden="true">
+          <span className="font-bold text-ink">{step.label}{when ? <span className="aura-num font-normal text-ink-muted"> · {when}</span> : null}</span>
           {next && <span className="text-[13px] text-ink-muted">Next: {next.label}</span>}
         </p>
         <ol className="sr-only" aria-label="Order progress">
@@ -290,8 +324,8 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
     );
   }
 
-  // One white panel at every width: the state in words as a serif title, then every stage as a vertical timeline:
-  // reached stages on an emerald circle with a tick and their real time, the current one an emerald ring, later ones grey.
+  // One ink card at every width: the state in big words, then every stage as a vertical timeline: reached stages
+  // are rose dots with their real time, the later ones hollow rings.
   const eyebrow = waiting ? 'Order placed' : STEPS[Math.max(0, current)].label;
   const heading = waiting
     ? (paymentFailed(order) ? 'Payment failed' : 'Awaiting payment')
@@ -299,37 +333,46 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
       ? timelineLabel(order.status)
       : STATE_HEADING[Math.max(0, current)];
   const rows = STEPS.map((step, index) => ({ label: step.label, index, when: index <= current ? formatDateTime(times[index]) : '' }));
+  const reachedTo = Math.max(0, current);
+  const path = timelinePath(rows.length);
 
   return (
-    <div className="sag-glass px-4 pt-5 pb-5 sm:px-6 sm:pt-6 sm:pb-6">
+    <div className="aa-tlc aura-dk">
       <div className="flex items-baseline justify-between gap-3">
         <span className={EYEBROW}>{eyebrow}</span>
-        <span className="sag-num min-w-0 text-xs leading-4 text-ink-muted break-all">#{order.orderNumber}</span>
+        <span className="aura-num min-w-0 text-[13px] leading-4 text-on-dark-muted break-all">#{order.orderNumber}</span>
       </div>
-      <p className="mt-2 font-display text-[26px] leading-[1.1] text-ink sm:text-[30px]">{heading}</p>
-      <ol className="sag-tl mt-5" aria-label="Order progress">
-        {rows.map((item) => {
-          const reached = item.index <= current;
-          const done = item.index < current || (reached && current >= DELIVERED_STEP);
-          const isCurrent = reached && !done;
-          return (
-            <li
-              key={item.label}
-              className={done ? 'is-done' : isCurrent ? 'is-current' : ''}
-              style={{ '--i': item.index } as React.CSSProperties}
-              aria-current={item.index === current ? 'step' : undefined}
-            >
-              <span className="sag-tl-dot" aria-hidden="true">
-                {done && <Check className="h-3 w-3" strokeWidth={2.2} />}
-              </span>
-              <p className={`text-[15px] leading-6 ${reached ? 'font-semibold text-ink' : 'font-medium text-ink-muted'}`}>
-                {item.label}<span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span>
-              </p>
-              {item.when && <p className="sag-num text-[13px] leading-[18px] text-ink-muted">{item.when}</p>}
-            </li>
-          );
-        })}
-      </ol>
+      <p className="aa-tlc-h">{heading}</p>
+      <div
+        ref={lineRef}
+        className={`aa-tl${seen ? ' in' : ''}`}
+        style={{ '--f': (reachedTo / (rows.length - 1)).toFixed(4), '--c': reachedTo } as React.CSSProperties}
+      >
+        <svg viewBox={`0 0 28 ${rows.length * TL_ROW}`} preserveAspectRatio="none" aria-hidden="true">
+          <path d={path} />
+          <path d={path} pathLength={1} />
+        </svg>
+        <ol aria-label="Order progress">
+          {rows.map((item) => {
+            const reached = item.index <= current;
+            const done = item.index < current || (reached && current >= DELIVERED_STEP);
+            const isCurrent = reached && !done;
+            return (
+              <li
+                key={item.label}
+                className={`${reached ? 'on' : ''}${isCurrent ? ' cur' : ''}`}
+                style={{ '--i': item.index } as React.CSSProperties}
+                aria-current={item.index === current ? 'step' : undefined}
+              >
+                <div className="min-w-0">
+                  <b>{item.label}<span className="sr-only">{reached ? ' (done)' : ' (not yet)'}</span></b>
+                  {item.when && <small className="aura-num">{item.when}</small>}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 };
@@ -382,31 +425,30 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
   const steps = status === 'closed' ? [] : returnSteps(request, status);
   const earlier = (order.pastReturnRequests || []).filter((past) => past?.status);
   const settled = status === 'refunded' || status === 'exchanged';
-  const tone = status === 'rejected' ? 'border-danger-line' : settled ? 'border-brand-line' : 'border-line';
   return (
-    <section className={`rounded-[10px] border bg-surface ${tone} p-4 space-y-3`} aria-label={`${title} request`}>
+    <section className="aura-card p-4 space-y-3.5" aria-label={`${title} request`}>
       <div className="flex items-start gap-3">
-        <span className="shrink-0 flex mt-0.5 text-ink"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
+        <span className="aa-ic aa-ic-blush"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm leading-5 font-semibold text-ink">
-            {title} request · <span className={status === 'rejected' ? 'text-danger' : settled ? 'text-ink' : 'text-sale'}>{RETURN_STATUS_LABEL[status]}</span>
+          <p className="text-[17px] leading-6 font-extrabold tracking-[-0.02em] text-ink">
+            {title} request · <span className={status === 'rejected' ? 'text-danger' : settled ? 'text-ok' : 'text-sale'}>{RETURN_STATUS_LABEL[status]}</span>
           </p>
           <p className="mt-0.5 text-sm leading-5 text-ink-muted">{RETURN_MESSAGE[status](kind)}</p>
           {request.adminNote && (status === 'approved' || status === 'rejected' || status === 'received' || status === 'refunded' || status === 'exchanged') && (
-            <p className="mt-2 sag-glass sag-glass-strong px-3 py-2 text-sm leading-5 text-ink break-words">
+            <p className="aa-note mt-2 break-words">
               <span className="text-ink-muted">{status === 'rejected' ? 'Reason: ' : 'From our team: '}</span>{request.adminNote}
             </p>
           )}
         </div>
       </div>
       {steps.length > 0 && (
-        <ol className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] leading-[18px]" aria-label={`${title} progress`}>
+        <ol className="flex flex-wrap gap-x-4 gap-y-2 text-[13.5px] leading-[18px]" aria-label={`${title} progress`}>
           {steps.map(({ state, done }) => {
             const when = done ? formatDay(timeOf(state)) : '';
             return (
-              <li key={state} className={`inline-flex items-center gap-1.5 ${done ? 'text-ink' : 'text-ink-muted'}`}>
-                <span className={`w-4 h-4 shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger' : 'bg-brand') : 'border border-control bg-surface'}`}>
-                  {done && (state === 'rejected' ? <XCircle className="w-3 h-3 text-[color:var(--sag-on-gold)]" aria-hidden="true" /> : <Check className="w-2.5 h-2.5 text-[color:var(--sag-on-gold)]" strokeWidth={3} aria-hidden="true" />)}
+              <li key={state} className={`inline-flex items-center gap-1.5 ${done ? 'font-semibold text-ink' : 'text-ink-muted'}`}>
+                <span className={`w-[18px] h-[18px] shrink-0 rounded-full flex items-center justify-center ${done ? (state === 'rejected' ? 'bg-danger text-on-dark' : 'bg-accent text-ink') : 'border-[1.5px] border-control'}`}>
+                  {done && (state === 'rejected' ? <XCircle className="w-3 h-3" aria-hidden="true" /> : <Check className="w-2.5 h-2.5" strokeWidth={3} aria-hidden="true" />)}
                 </span>
                 {RETURN_STATUS_LABEL[state]}{when ? ` · ${when}` : ''}
                 <span className="sr-only">{done ? ' (done)' : ' (not yet)'}</span>
@@ -430,8 +472,8 @@ export const ReturnProgress: React.FC<{ order: Order }> = ({ order }) => {
       {(request.photos || []).length > 0 && (
         <div className="flex gap-2" aria-label="Photos you sent">
           {(request.photos || []).map((url) => (
-            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] overflow-hidden rounded-lg border border-line bg-sunken">
-              <img src={getCleanImageUrl(url, 160)} alt="Photo you sent" className="w-full h-full object-cover" loading="lazy" />
+            <a key={url} href={getCleanImageUrl(url, 1200)} target="_blank" rel="noopener noreferrer" className="w-12 aspect-[4/5] overflow-hidden rounded-[12px] bg-sunken">
+              <img src={getCleanImageUrl(url, 160)} alt="Photo you sent" className="w-full h-full rounded-none object-cover" loading="lazy" />
             </a>
           ))}
         </div>
@@ -508,25 +550,25 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
   const link = trackingLinkFor(order);
   const delivery = deliveryDateOf(order);
   return (
-    <section className="sag-glass p-4 space-y-3" aria-label="Shipment">
+    <section className="aura-card p-4 space-y-3.5" aria-label="Shipment">
       <div className="flex items-center gap-3">
-        <span className="shrink-0 flex text-sale"><TruckIcon className="w-5 h-5" mono live={false} /></span>
+        <span className="aa-ic aa-ic-blush"><TruckIcon className="w-5 h-5" mono live={false} /></span>
         <div className="min-w-0 flex-1">
           <p className={EYEBROW}>{order.courierPartner || awb ? 'Courier partner' : 'Delivery'}</p>
-          {(order.courierPartner || awb) && <p className="font-display text-[20px] leading-6 text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
-          {!order.courierPartner && !awb && delivery && <p className="font-display text-[20px] leading-6 text-ink">On its way to you</p>}
+          {(order.courierPartner || awb) && <p className="mt-0.5 text-[20px] leading-6 font-extrabold tracking-[-0.02em] text-ink break-words">{courier?.name || order.courierPartner || 'Courier partner'}</p>}
+          {!order.courierPartner && !awb && delivery && <p className="mt-0.5 text-[20px] leading-6 font-extrabold tracking-[-0.02em] text-ink">On its way to you</p>}
         </div>
       </div>
       {awb && (
-        <div className="flex items-center justify-between gap-2 border-y border-line">
-          <p className="min-w-0 py-2 text-sm leading-5 text-ink-muted">
-            <span className="mr-2">Tracking no. (AWB)</span>
-            <span className="sag-num font-semibold text-ink break-all select-all">{awb}</span>
+        <div className="flex items-center justify-between gap-2 rounded-[16px] bg-sunken py-1.5 pl-4 pr-1.5">
+          <p className="min-w-0 py-1 text-[13px] leading-[18px] text-ink-muted">
+            <span className="block">Tracking no. (AWB)</span>
+            <span className="aura-num text-[15px] font-bold text-ink break-all select-all">{awb}</span>
           </p>
           <button
             type="button"
             onClick={() => copy(awb)}
-            className="sag-link shrink-0 gap-1.5 px-2"
+            className="aura-btn aura-btn-line aura-btn-sm shrink-0 px-4"
             aria-label="Copy AWB number"
           >
             {copied === awb ? <CheckCircle2 className="w-4 h-4 text-ok" aria-hidden="true" /> : <Copy className="w-4 h-4" aria-hidden="true" />}
@@ -546,7 +588,7 @@ export const CourierCard: React.FC<{ order: Order }> = ({ order }) => {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => { if (!link.hasAwb && awb) copy(awb); }}
-            className="sag-btn-outline w-full sm:w-auto h-auto min-h-12 py-2.5 px-4 gap-2 text-center"
+            className="aura-btn aura-btn-w h-auto py-2.5 text-center whitespace-normal sm:inline-flex sm:w-auto"
           >
             {link.label} <ExternalLink className="w-4 h-4 shrink-0" aria-hidden="true" />
           </a>
@@ -602,25 +644,25 @@ export const StatusHistory: React.FC<{ order: Order }> = ({ order }) => {
   if (entries.length === 0) return null;
   const listId = `status-history-${order.orderNumber}`;
   return (
-    <div className="border-t border-line">
+    <div className="aura-card px-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls={listId}
-        className="w-full min-h-14 py-2 flex items-center justify-between gap-3 text-left text-sm leading-5 font-medium text-ink cursor-pointer"
+        className="w-full min-h-14 py-2 flex items-center justify-between gap-3 text-left text-[15px] leading-5 font-bold text-ink cursor-pointer"
       >
         <span>{open ? 'Hide updates' : `See all updates (${entries.length})`}</span>
         <ChevronDown className={`w-5 h-5 shrink-0 text-ink-muted transition-transform duration-200 ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
       {open && (
-        <ol id={listId} className="pb-2 space-y-3.5 sag-fade" aria-label="All order updates">
+        <ol id={listId} className="pb-4 space-y-3.5 sag-fade" aria-label="All order updates">
           {entries.map((entry, index) => (
             <li key={`${entry.status}-${entry.at}-${index}`} className="relative flex gap-3">
               {index < entries.length - 1 && <span aria-hidden="true" className="absolute left-[4.5px] top-4 -bottom-3.5 w-px bg-line" />}
-              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-brand' : 'bg-control'}`} aria-hidden="true" />
+              <span className={`relative mt-1.5 w-2.5 h-2.5 shrink-0 rounded-full ${index === 0 ? 'bg-accent' : 'bg-control'}`} aria-hidden="true" />
               <div className="min-w-0 text-sm leading-5">
-                <p className={index === 0 ? 'font-semibold text-ink' : 'text-ink'}>{timelineLabel(entry.status)}</p>
+                <p className={index === 0 ? 'font-bold text-ink' : 'text-ink'}>{timelineLabel(entry.status)}</p>
                 <p className="text-[13px] leading-[18px] text-ink-muted">{formatDateTime(entry.at)}</p>
                 {entry.note && <p className="text-[13px] leading-[18px] text-ink-muted break-words">{entry.note}</p>}
               </div>
@@ -639,14 +681,14 @@ export const DeliveryAgentCard: React.FC<{ order: Order }> = ({ order }) => {
   const phone = String(order.deliveryAgentPhone || '').replace(/[^\d+]/g, '');
   if (!isOutForDelivery(order) || (!name && !phone)) return null;
   return (
-    <section className="sag-glass p-4 flex items-center gap-3" aria-label="Delivery executive">
-      <span className="shrink-0 flex text-sale"><UserIcon className="w-5 h-5" mono live={false} /></span>
+    <section className="aura-card p-4 flex items-center gap-3" aria-label="Delivery executive">
+      <span className="aa-ic aa-ic-blush"><UserIcon className="w-5 h-5" mono live={false} /></span>
       <div className="min-w-0 flex-1">
         <p className={EYEBROW}>Delivery executive</p>
-        {name ? <p className="text-[15px] leading-[22px] font-medium text-ink break-words">{name}</p> : <p className="text-sm leading-5 text-ink-muted">Out for delivery today</p>}
+        {name ? <p className="text-[17px] leading-[22px] font-extrabold tracking-[-0.02em] text-ink break-words">{name}</p> : <p className="text-sm leading-5 text-ink-muted">Out for delivery today</p>}
       </div>
       {phone && (
-        <a href={`tel:${phone}`} aria-label={`Call ${name || 'the delivery executive'}`} className="sag-btn-outline shrink-0 h-11 px-4 gap-2">
+        <a href={`tel:${phone}`} aria-label={`Call ${name || 'the delivery executive'}`} className="aura-btn aura-btn-sm shrink-0">
           <Phone className="w-4 h-4" aria-hidden="true" /> Call
         </a>
       )}
@@ -661,16 +703,16 @@ export const OrderProgress: React.FC<{ order: OrderWithRequests; compact?: boole
   const delivered = wasDelivered(order);
   const paidOrRefunded = order.paymentStatus === 'Paid' || order.paymentStatus === 'Refunded';
 
-  const note = 'rounded-[10px] px-4 py-3 text-sm leading-5';
+  const note = 'aa-note';
 
   if (order.status === 'Cancelled') {
     const at = latestUpdate(order)?.at;
     return (
       <div className="space-y-3">
-        <div className={`${note} border border-danger-line bg-surface flex items-start gap-2.5`}>
-          <XCircle className="w-[18px] h-[18px] shrink-0 text-danger mt-px" aria-hidden="true" />
+        <div className="aa-alert font-normal">
+          <XCircle aria-hidden="true" />
           <div className="text-ink space-y-0.5">
-            <p className="font-semibold text-danger">This order was cancelled{at ? ` · ${formatDateTime(at)}` : ''}</p>
+            <p className="font-bold text-danger">This order was cancelled{at ? ` · ${formatDateTime(at)}` : ''}</p>
             {order.paymentStatus === 'Refunded' && <p>The payment has been refunded to your original payment method.</p>}
             {order.paymentStatus === 'Paid' && <p>The amount paid will be refunded to your original payment method.</p>}
           </div>
@@ -682,28 +724,28 @@ export const OrderProgress: React.FC<{ order: OrderWithRequests; compact?: boole
   return (
     <div className="space-y-3">
       {awaitingPayment(order) && (
-        <p className={`${note} border border-sale-line bg-surface text-ink`}>
+        <p className={note}>
           {paymentFailed(order) ? 'Your last payment attempt for this order failed. ' : ''}We have not received payment for this order yet. If money was deducted, it is usually confirmed within a few minutes — or contact us and we will check it for you.
         </p>
       )}
       {order.status === 'Returned' && (
-        <p className={`${note} border border-line bg-surface text-ink-muted`}>
+        <p className={note}>
           This order was returned to us{latestUpdate(order) ? ` · ${formatDateTime(latestUpdate(order)?.at)}` : ''}.
         </p>
       )}
       {(order.status !== 'Refunded' || delivered) && <Stepper order={order} compact={compact} />}
       {order.status === 'Refunded' && !order.returnRequest && (
-        <p className={`${note} border border-line bg-surface text-ink-muted`}>
+        <p className={note}>
           This order was refunded to your original payment method{paidOrRefunded && latestUpdate(order) ? ` · ${formatDateTime(latestUpdate(order)?.at)}` : ''}.
         </p>
       )}
       {request && !request.handledAt && CANCELLABLE_STATUSES.includes(order.status) && (
-        <p className={`${note} border border-sale-line bg-surface text-ink`}>
+        <p className={note}>
           You asked to cancel this order{formatDay(request.at) ? ` on ${formatDay(request.at)}` : ''}. Our team is reviewing it and will email you.
         </p>
       )}
       {request?.handledAt && request.outcome === 'kept' && !delivered && (
-        <p className={`${note} border border-line bg-surface text-ink-muted`}>
+        <p className={note}>
           Your cancellation request was reviewed and this order is going ahead. Contact us on WhatsApp if you still need help.
         </p>
       )}

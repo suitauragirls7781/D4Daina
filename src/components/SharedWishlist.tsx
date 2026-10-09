@@ -5,7 +5,7 @@ import { apiPost } from '../lib/api';
 import { Product } from '../types';
 import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle } from '../aura';
 
 export const sharedWishlistId = () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('shared') || '';
 
@@ -31,32 +31,38 @@ export const SharedWishlistView: React.FC<{ id: string }> = ({ id }) => {
   };
 
   return (
-    <div className="pt-6 pb-14 sm:pt-8 lg:pb-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionTitle as="h1" eyebrow="Shared with you" title="A wishlist from a friend" />
+    <div data-aura className="px-3 pt-6 pb-16 sm:px-6 sm:pt-8 lg:pb-20">
+      <div className="max-w-[1120px] mx-auto">
+        <AuraTitle
+          as="h1"
+          className="px-1"
+          label="Shared with you"
+          title="A wishlist from a"
+          accent="friend"
+          sub={ids !== null && !error ? <span className="aura-num">{items.length} {items.length === 1 ? 'style' : 'styles'}</span> : undefined}
+        />
         {error ? (
-          <div role="alert" className="sag-glass mt-6 px-4 py-8 text-center">
-            <p className="text-[14px] leading-[21px] text-ink">{error}</p>
-            <div className="mt-4 flex flex-col sm:flex-row justify-center gap-2.5">
-              <button onClick={() => navigateToCategory('All')} className="sag-btn-primary h-12 px-6">Shop all styles</button>
-              <button onClick={load} className="sag-btn-outline h-12 px-6">Try again</button>
+          <div role="alert" className="aura-card aura-blk mt-6 px-5 py-9 text-center">
+            <p className="text-[16px] leading-[23px] font-semibold text-ink">{error}</p>
+            <div className="mt-5 flex flex-col sm:flex-row justify-center gap-2.5">
+              <button onClick={() => navigateToCategory('All')} className="aura-btn">Shop all styles</button>
+              <button onClick={load} className="aura-btn aura-btn-line">Try again</button>
             </div>
           </div>
         ) : ids === null ? (
           <div className="py-20 flex justify-center" role="status" aria-label="Loading wishlist"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
         ) : (
           <>
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3 border-b border-line pb-4 rounded-none!">
-              <p className="sag-num text-[13px] text-ink-muted">{items.length} {items.length === 1 ? 'style' : 'styles'}</p>
-              {items.length > 0 && <button onClick={saveAll} className="sag-btn-outline h-11 px-4 gap-2"><Heart className="w-3.5 h-3.5" strokeWidth={1.5} /> Save all to my wishlist</button>}
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 px-1 empty:hidden">
+              {items.length > 0 && <button onClick={saveAll} className="aura-btn aura-btn-w sm:inline-flex sm:w-auto"><Heart strokeWidth={1.6} /> Save all to my wishlist</button>}
             </div>
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
+            <div className="aura-pc-grid mt-6">
               {items.map((p) => <ProductCard key={p.id} product={p} />)}
             </div>
             {items.length === 0 && (
-              <div className="sag-glass mt-6 px-4 py-8 text-center">
-                <p className="text-[14px] leading-[21px] text-ink">These styles are no longer available.</p>
-                <button onClick={() => navigateToCategory('All')} className="mt-4 sag-btn-primary h-12 px-6 w-full sm:w-auto">Shop all styles</button>
+              <div className="aura-card aura-blk mt-6 px-5 py-9 text-center">
+                <p className="text-[16px] leading-[23px] font-semibold text-ink">These styles are no longer available.</p>
+                <button onClick={() => navigateToCategory('All')} className="aura-btn mt-5 w-full sm:w-auto">Shop all styles</button>
               </div>
             )}
           </>
@@ -92,8 +98,8 @@ export const ShareWishlistButton: React.FC = () => {
   };
 
   return (
-    <button onClick={share} disabled={busy} className="sag-lnk disabled:opacity-60">
-      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5" strokeWidth={1.5} />} Share wishlist
+    <button onClick={share} disabled={busy} className="aura-btn aura-btn-line aura-btn-sm">
+      {busy ? <Loader2 className="animate-spin" /> : <Share2 strokeWidth={1.6} />} Share wishlist
     </button>
   );
 };

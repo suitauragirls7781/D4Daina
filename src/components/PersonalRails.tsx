@@ -8,20 +8,21 @@ import { ProductCard } from './ProductCard';
 import { useDiscovery } from '../utils/discovery';
 import { recommendedForYou, useStylePrefs } from './StyleProfile';
 import { HOME_RAIL, HOME_RAIL_ITEM, HOME_SECTION } from './HomeSections';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle, Icon } from '../aura';
 
-const Rail: React.FC<{ title: string; note?: string; items: Product[]; action?: { label: string; onClick: () => void } }> = ({ title, note, items, action }) => (
-  <section className={HOME_SECTION} aria-label={title}>
+// A rail: the title (its last word is the serif accent), the real number of styles in it, then the cards in a swipe row
+const Rail: React.FC<{ title: string; accent: string; label: string; note?: string; items: Product[]; action?: { label: string; onClick: () => void } }> = ({ title, accent, label, note, items, action }) => (
+  <section className={HOME_SECTION} aria-label={label}>
     <div className="max-w-7xl mx-auto">
-      <SectionTitle eyebrow="For you" title={title} sub={note} className="mb-6 px-4 sm:px-6 lg:mb-9 lg:px-8" />
+      <AuraTitle label={`For you · ${items.length} ${items.length === 1 ? 'style' : 'styles'}`} title={title} accent={accent} sub={note} size="lg" className="mb-5 px-4 sm:px-6 lg:mb-8 lg:px-8" />
       <ul className={HOME_RAIL}>
         {items.map((p) => (
           <li key={p.id} className={HOME_RAIL_ITEM}><ProductCard product={p} compact /></li>
         ))}
       </ul>
       {action && (
-        <div className="mt-4 flex justify-center px-4 lg:mt-7">
-          <button type="button" onClick={action.onClick} className="sag-lnk">{action.label}</button>
+        <div className="mt-3 flex px-4 sm:px-6 lg:mt-5 lg:px-8">
+          <button type="button" onClick={action.onClick} className="aura-lk">{action.label}<Icon name="arrow" /></button>
         </div>
       )}
     </div>
@@ -59,14 +60,16 @@ export const PersonalRails: React.FC = () => {
     <>
       {forYou.length > 0 && (
         <Rail
-          title="Recommended for you"
+          label="Recommended for you"
+          title="Recommended for"
+          accent="you"
           note="Based on your saved style profile"
           items={forYou}
           action={{ label: 'Edit my style', onClick: () => { navigate('/account?tab=style'); window.scrollTo(0, 0); } }}
         />
       )}
-      {features.personalRails && picked.length > 0 && <Rail title="Similar to what you viewed" items={picked} />}
-      {features.personalRails && recent.length > 0 && <Rail title="Recently viewed" items={recent} />}
+      {features.personalRails && picked.length > 0 && <Rail label="Similar to what you viewed" title="Similar to what you" accent="viewed" items={picked} />}
+      {features.personalRails && recent.length > 0 && <Rail label="Recently viewed" title="Recently" accent="viewed" items={recent} />}
     </>
   );
 };

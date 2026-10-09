@@ -31,10 +31,10 @@ const checkoutAttemptKey = (signature: string) => {
   }
 };
 
-import { AlertCircle, ArrowLeft, Check, ChevronDown, Clock, Gift, Info, Loader2, Lock, MapPin, ShieldCheck, Tag, X } from 'lucide-react';
+import { AlertCircle, Check, ChevronDown, Clock, Gift, Info, Loader2, Lock, ShieldCheck, Tag } from 'lucide-react';
+import { Icon } from '../aura';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { BagIcon } from './BrandIcons';
 import { assuranceFacts, assuranceLine } from './Assurance';
 import { CouponError, PriceDetails, useBagSavings, useCouponApply } from './CartContents';
 
@@ -84,16 +84,16 @@ const inScreenOrder = (errors: Array<{ field: CheckoutField; message: string }>)
     .filter((entry, index) => errors.findIndex((other) => other.field === entry.field) === index)
     .sort((a, b) => FIELD_SCREEN_ORDER.indexOf(a.field) - FIELD_SCREEN_ORDER.indexOf(b.field));
 
-// Emerald Heritage: the shared pieces of this page. Small letter-spaced labels above white fields, a round
-// icon button, an emerald text link, the small-capitals link with a thin underline, and the small-capitals heading of a panel.
-const LABEL = 'sag-label mb-[6px] text-[10.5px] leading-4 font-semibold uppercase tracking-[0.14em] text-ink-muted';
+// Aura: the shared pieces of this page. Small capitals labels above white 58px fields, a round icon button,
+// a bold underlined link, the small underlined control of a card ("Change", "Remove") and the small capitals label.
+const LABEL = 'aco-lbl';
 const INPUT = 'sag-input aria-[invalid=true]:border-danger!';
 // Round icon button (back, close)
-const ROUND_BTN = 'rounded-full text-ink hover:bg-sunken transition-colors cursor-pointer';
-const LINK = 'sag-link text-[12.5px] font-semibold decoration-1 underline-offset-4';
-const CAPS_LINK = 'inline-flex min-h-11 items-center text-[10.5px] leading-none font-semibold uppercase tracking-[0.18em] text-brand underline decoration-1 underline-offset-4 transition-colors hover:text-brand-dark cursor-pointer';
-const EYEBROW = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-ink';
-const FIELD_ERROR = 'mt-1.5 flex items-start gap-1.5 text-[13px] leading-[18px] font-medium text-danger';
+const ROUND_BTN = 'aco-x';
+const LINK = 'sag-link text-[14px] font-bold';
+const CAPS_LINK = 'aco-edit';
+const EYEBROW = 'aura-lbl';
+const FIELD_ERROR = 'mt-1.5 flex items-start gap-1.5 text-[14px] leading-5 font-medium text-danger';
 
 /** Label above, field, then one line below: the error (with an icon) or the helper text. */
 const Field: React.FC<{ id: string; label: string; error?: string; helper?: React.ReactNode; className?: string; children: React.ReactNode }> = ({ id, label, error, helper, className = '', children }) => (
@@ -102,10 +102,10 @@ const Field: React.FC<{ id: string; label: string; error?: string; helper?: Reac
     {children}
     {error ? (
       <p id={`${id}-error`} role="alert" className={FIELD_ERROR}>
-        <AlertCircle className="w-4 h-4 shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" /><span>{error}</span>
+        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={1.6} aria-hidden="true" /><span>{error}</span>
       </p>
     ) : helper ? (
-      <p id={`${id}-help`} className="mt-1.5 text-[11.5px] leading-4 text-ink-muted">{helper}</p>
+      <p id={`${id}-help`} className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">{helper}</p>
     ) : null}
   </div>
 );
@@ -717,7 +717,7 @@ export const CheckoutPage: React.FC = () => {
     setPaymentReturn(null);
     // Short "Order placed" moment, then the full confirmation page
     setCelebrating(true);
-    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#0F3D33', '#0A2C25', '#CDB58A', '#F8F4EC'], zIndex: 10001 });
+    confetti({ particleCount: 120, spread: 70, origin: { y: 0.55 }, colors: ['#111013', '#B76E79', '#EAD7D1', '#F5F2EC'], zIndex: 10001 });
     window.setTimeout(() => {
       setActivePage('order-confirmation');
       window.scrollTo({ top: 0, behavior: 'auto' });
@@ -885,7 +885,7 @@ export const CheckoutPage: React.FC = () => {
         image: '/suit-aura-logo-512.png',
         prefill: { name: fullName, email: address.email, contact: address.mobile },
         notes: { order_number: created.orderNumber },
-        theme: { color: '#0F3D33' },
+        theme: { color: '#111013' },
         config: razorpayDisplayConfig(paymentSettings, payApp),
         retry: { enabled: true },
         handler: async (response: any) => {
@@ -930,41 +930,41 @@ export const CheckoutPage: React.FC = () => {
 
   if (paymentReturn) {
     return (
-      <div className="min-h-[80vh] flex items-center justify-center p-4">
-        <div className="sag-glass w-full max-w-md p-6 text-center">
+      <div data-aura className="min-h-[80vh] flex items-center justify-center p-4">
+        <div className="aura-card aura-blk w-full max-w-md px-6 py-8 text-center">
           {paymentReturn.state === 'checking' ? (
             <>
-              <Loader2 className="mx-auto h-7 w-7 animate-spin text-sale" strokeWidth={1.5} />
-              <h2 className="mt-4 font-display text-[26px] leading-8 text-ink">Confirming your payment…</h2>
-              <p className="mt-2 text-[13px] leading-5 text-ink-muted">Please keep this page open. This takes a few seconds.</p>
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-ink" strokeWidth={1.6} />
+              <h2 className="aco-sheet-h mt-5">Confirming your payment…</h2>
+              <p className="mt-3 text-[15px] leading-[1.5] text-ink-muted">Please keep this page open. This takes a few seconds.</p>
             </>
           ) : (
             <>
-              <div className={`mx-auto flex h-7 w-7 items-center justify-center ${paymentReturn.state === 'pending' ? 'text-sale' : 'text-danger'}`}>
-                {paymentReturn.state === 'pending' ? <Info className="h-7 w-7" strokeWidth={1.5} /> : <AlertCircle className="h-7 w-7" strokeWidth={1.5} />}
+              <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${paymentReturn.state === 'pending' ? 'bg-blush text-ink' : 'bg-danger-tint text-danger'}`}>
+                {paymentReturn.state === 'pending' ? <Info className="h-7 w-7" strokeWidth={1.6} /> : <AlertCircle className="h-7 w-7" strokeWidth={1.6} />}
               </div>
-              <h2 className="mt-4 font-display text-[26px] leading-8 text-ink">{paymentReturn.state === 'pending' ? 'Payment pending' : 'Payment not completed'}</h2>
-              <p className="mt-2 text-[13px] leading-5 text-ink-muted">{paymentReturn.message}</p>
-              <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">Order number: <span className="font-semibold text-ink">{paymentReturn.orderNumber}</span></p>
-              <div className="mt-5 flex flex-col gap-2.5">
+              <h2 className="aco-sheet-h mt-5">{paymentReturn.state === 'pending' ? 'Payment pending' : 'Payment not completed'}</h2>
+              <p className="mt-3 text-[15px] leading-[1.5] text-ink-muted">{paymentReturn.message}</p>
+              <p className="mt-3 text-[14px] leading-5 text-ink-muted">Order number: <span className="font-bold text-ink aura-num">{paymentReturn.orderNumber}</span></p>
+              <div className="mt-6 flex flex-col gap-2.5">
                 {paymentReturn.state === 'pending' && (
-                  <button type="button" onClick={() => checkPaymentResult(paymentReturn.orderNumber, paymentReturn.token)} className="sag-btn-primary w-full">
+                  <button type="button" onClick={() => checkPaymentResult(paymentReturn.orderNumber, paymentReturn.token)} className="aura-btn aura-btn-w">
                     Check payment status
                   </button>
                 )}
                 {paymentReturn.state === 'failed' && cart.length > 0 && (
-                  <button type="button" onClick={() => { setPaymentReturn(null); setCheckoutStep('payment'); }} className="sag-btn-primary w-full">
+                  <button type="button" onClick={() => { setPaymentReturn(null); setCheckoutStep('payment'); }} className="aura-btn aura-btn-w">
                     Try payment again
                   </button>
                 )}
-                <button type="button" onClick={() => { setPaymentReturn(null); setActivePage(cart.length > 0 ? 'cart' : 'shop'); }} className="sag-btn-outline w-full">
+                <button type="button" onClick={() => { setPaymentReturn(null); setActivePage(cart.length > 0 ? 'cart' : 'shop'); }} className="aura-btn aura-btn-line aura-btn-w">
                   {cart.length > 0 ? 'Back to bag' : 'Continue shopping'}
                 </button>
                 <a
                   href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I need help with the payment for order ${paymentReturn.orderNumber}.`)}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`${LINK} justify-center`}
+                  className={`${LINK} mt-1 inline-flex min-h-11 items-center justify-center`}
                 >
                   Contact support on WhatsApp
                 </a>
@@ -978,13 +978,11 @@ export const CheckoutPage: React.FC = () => {
 
   if (!cart || cart.length === 0) {
     return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center px-6 py-16 text-center">
-        <BagIcon className="w-7 h-7 text-brand" />
-        <h1 className="mt-5 font-display text-[30px] leading-[1.08] text-ink">Your bag is empty</h1>
-        <span aria-hidden="true" className="sag-orn mt-3.5"><i /></span>
-        <p className="mt-3.5 max-w-sm text-[13.5px] leading-5 text-ink-muted">Add a style to your bag and come back here to check out.</p>
-        <button onClick={() => setActivePage('shop')} className="mt-6 sag-btn-primary w-full max-w-xs">
-          Start shopping
+      <div data-aura className="min-h-[70vh] flex flex-col items-center justify-center px-6 py-16 text-center">
+        <h1 className="abag-empty-h">Your bag is empty</h1>
+        <p className="mt-3 max-w-sm text-[15px] leading-[1.5] text-ink-muted">Add a style to your bag and come back here to check out.</p>
+        <button onClick={() => setActivePage('shop')} className="aura-btn aura-btn-w mt-6 max-w-xs">
+          Start shopping <Icon name="arrow" />
         </button>
       </div>
     );
@@ -1099,45 +1097,41 @@ export const CheckoutPage: React.FC = () => {
     'Confirmed at once',
     'Receipt on email',
   ].filter(Boolean);
-  // A UPI app tile: white with the 8px corners, the chosen one with an emerald line
-  const appTile = (on: boolean) => `flex min-h-12 flex-1 items-center justify-center gap-2 rounded-lg border bg-surface px-2 text-center text-[13px] leading-4 font-semibold transition-colors cursor-pointer disabled:opacity-60 ${on ? 'border-brand text-brand ring-1 ring-inset ring-brand' : 'border-control text-ink hover:bg-sunken'}`;
-  // The small radio dot inside a UPI app tile
-  const appDot = (on: boolean) => (
-    <span aria-hidden="true" className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border transition-colors ${on ? 'border-brand' : 'border-control'}`}>
-      <span className={`h-1.5 w-1.5 rounded-full bg-brand transition-[scale] duration-300 ${on ? 'scale-100' : 'scale-0'}`} />
-    </span>
-  );
+  // A UPI app tile: a white 16px tile that turns ink when chosen
+  const appTile = (on: boolean) => `aco-upi${on ? ' on' : ''}`;
+  // The radio dot inside a UPI app tile: it fills when the tile is chosen (drawn by CSS from the tile's class)
+  const appDot = (_on: boolean) => <i aria-hidden="true" />;
   // "Secure payment by <gateway> · 7-day returns & exchange": the store's own wording (Assurance), with the
   // gateway's name only once it is known (the cash-on-delivery advance always goes through Razorpay)
   const securedByText = assuranceLine(gatewayKnown ? (codChosen ? 'razorpay' : gateway) : undefined);
   // Display only: the online-payment option's detail line, the same words whether or not cash on delivery is offered
   const prepaidDetail = [storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off` : '', shippingFee === 0 ? 'Free delivery' : ''].filter(Boolean).join(' · ');
-  // A way to pay: a white panel (an emerald line when chosen) with the radio dot, title, detail and amount
-  const optionBox = (on: boolean) => `flex items-start gap-3 rounded-[10px] border bg-surface p-4 transition-colors ${on ? 'border-brand ring-1 ring-inset ring-brand' : 'border-line'}`;
+  // A way to pay: a white card (an ink line when chosen) with the radio dot, title, detail and amount
+  const optionBox = (on: boolean) => `aco-opt${on ? ' on' : ''}`;
   const kvRow = 'flex justify-between gap-4 py-[7px]';
 
   // Compact bag lines, shown inside the order summary
   const itemLines = (
-    <ul className="divide-y divide-line">
+    <ul>
       {cart.map((item) => {
         const unit = Number(item.product?.price) || 0;
         const mrp = Math.max(unit, Number(item.product?.originalPrice) || unit);
         const off = mrp > unit ? Math.round(((mrp - unit) / mrp) * 100) : 0;
         const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? item.selectedColor.name : '';
         return (
-          <li key={`${item.id}-${item.selectedSize}-${colour}`} className="grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-            <img src={getCleanImageUrl(lineImage(item), 200)} alt="" width={52} height={69} className="aspect-[3/4] w-[52px] self-start rounded-[4px]! object-cover object-top bg-sunken" loading="lazy" />
+          <li key={`${item.id}-${item.selectedSize}-${colour}`} className="grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-3 py-2 first:pt-0 last:pb-0">
+            <img src={getCleanImageUrl(lineImage(item), 200)} alt="" width={48} height={60} className="aco-si-ph" loading="lazy" />
             <div className="min-w-0">
-              <p className="text-[13px] leading-[18px] font-medium text-ink line-clamp-2">{item.product?.name}</p>
-              {item.lookParentName && <p className="mt-0.5 text-[12px] leading-4 text-ink-muted">Complete the look · with {item.lookParentName}</p>}
-              <p className="mt-0.5 text-[12px] leading-4 text-ink-muted">
+              <p className="text-[14px] leading-[1.3] font-medium text-ink line-clamp-2">{item.product?.name}</p>
+              {item.lookParentName && <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Complete the look · with {item.lookParentName}</p>}
+              <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">
                 {item.selectedSize && !/free/i.test(item.selectedSize) ? `Size ${item.selectedSize}` : 'One size'}{colour ? ` · ${colour}` : ''} · Qty {item.quantity}
               </p>
             </div>
-            <p className="self-start text-right sag-num">
-              <span className="block text-[14px] leading-[18px] font-semibold text-ink">{rupees(unit * item.quantity)}</span>
-              {mrp > unit && <span className="block text-[12px] leading-4 text-ink-muted line-through">{rupees(mrp * item.quantity)}</span>}
-              {off > 0 && <span className="block text-[12px] leading-4 font-semibold text-accent">{off}% off</span>}
+            <p className="self-start text-right aura-num">
+              <span className="block text-[14.5px] leading-[18px] font-bold text-ink">{rupees(unit * item.quantity)}</span>
+              {mrp > unit && <span className="block text-[13px] leading-[18px] text-ink-muted line-through">{rupees(mrp * item.quantity)}</span>}
+              {off > 0 && <span className="block text-[13px] leading-[18px] font-bold text-sale">{off}% off</span>}
             </p>
           </li>
         );
@@ -1146,83 +1140,93 @@ export const CheckoutPage: React.FC = () => {
   );
 
   return (
-    <div className={`sag-checkout min-h-screen text-ink font-sans text-left pb-12`}>
+    <div data-aura className={`sag-checkout min-h-screen text-ink font-sans text-left pb-12`}>
 
-      {/* Checkout bar: a white bar with the line: round back button, "Secure checkout" with a thin lock, WhatsApp help. Then the two steps, always visible.
-          The site header is hidden while this page is open (".sag-checkout" rule at the end of index.css). */}
-      <div className="rounded-none! border-b border-line bg-surface">
-        <div className="max-w-[1040px] mx-auto flex h-[52px] items-center gap-2 pl-1.5 pr-4 sm:pl-4 sm:pr-6">
-          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className={`w-11 h-11 shrink-0 flex items-center justify-center ${ROUND_BTN}`}>
-            <ArrowLeft className="w-[18px] h-[18px]" strokeWidth={1.5} />
+      {/* The top: one forest block. A row with the round back button and WhatsApp help, the shield that assembles
+          itself beside "Secure checkout" as the big heading, then the two steps, always visible.
+          The site header is hidden while this page is open (".sag-checkout" rule in index.css). */}
+      <div className="mx-auto max-w-[1088px] px-3 pt-3 sm:px-6 sm:pt-5">
+      <div className="aco-top">
+        <div className="flex h-[58px] items-center justify-between gap-2 pl-2 pr-5">
+          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className="grid h-11 w-11 shrink-0 place-items-center rounded-full cursor-pointer transition-transform duration-300 active:scale-90 motion-reduce:transition-none">
+            <Icon name="arrow" className="rotate-180" />
           </button>
-          <p className="flex-1 flex items-center justify-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-brand">
-            <Lock className="w-[15px] h-[15px]" strokeWidth={1.25} aria-hidden="true" /> Secure checkout
-          </p>
-          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className="sag-lnk">
+          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className="aura-lk">
             Help
           </a>
         </div>
-      </div>
+        <div className="aco-band">
+          <svg className="aco-shd" viewBox="0 0 96 96" aria-hidden="true">
+            <path className="s-l" d="M48 8 18 20v26c0 20 13 34 30 42" /><path className="s-r" d="M48 8l30 12v26c0 20-13 34-30 42" />
+            <rect className="s-b" x="34" y="44" width="28" height="22" rx="5" /><path className="s-k" pathLength={1} d="M39 44v-7a9 9 0 0 1 18 0v7" /><circle className="s-d" cx="48" cy="55" r="3" />
+          </svg>
+          <div className="min-w-0">
+            <p className="aura-lbl">{itemsText} · step {stepIndex + 1} of 2</p>
+            <p className="aura-h2 mt-2 text-[clamp(30px,8.6vw,48px)]! leading-none!">Secure <em>checkout</em></p>
+          </div>
+          <p className="aura-sub col-span-2 mt-2">{assuranceLine()}</p>
+        </div>
 
-      {/* The two steps as numbered circles joined by a thin line that fills in emerald; a done step shows a tick
-          on an emerald circle. A step that is not open is a button (back to the address, or on to payment once
-          the address is complete). */}
-      <nav aria-label="Checkout steps" className="mx-auto max-w-[420px] px-4 pt-7 sag-num">
-        <div className="relative grid grid-cols-2">
-          <span aria-hidden="true" className="absolute left-1/4 right-1/4 top-[15px] h-px bg-control">
-            <span className={`sag-steps-fill absolute inset-x-0 -top-px h-0.5 bg-brand ${stepIndex > 0 ? 'scale-x-100' : 'scale-x-0'}`} />
-          </span>
+      {/* The two steps as round nodes joined by a line that draws to the current step; the current node pulses
+          once, a done step shows a tick. A step that is not open is a button (back to the address, or on to
+          payment once the address is complete). */}
+      <nav aria-label="Checkout steps" className="aco-stp aura-num" style={{ '--f': stepIndex } as React.CSSProperties}>
+          <svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 10C50 2 100 18 150 10s100-8 150 0" vectorEffect="non-scaling-stroke" />
+            <path pathLength={1} d="M0 10C50 2 100 18 150 10s100-8 150 0" vectorEffect="non-scaling-stroke" />
+          </svg>
           {stepBlocks.map((block, index) => {
             const on = index === stepIndex;
             const dn = index < stepIndex;
             const dot = (
-              <span className={`sag-step-dot flex h-[30px] w-[30px] items-center justify-center rounded-full border text-[12.5px] leading-none font-semibold ${dn ? 'border-brand bg-brand text-[color:var(--sag-on-gold)]' : on ? 'scale-110 border-brand bg-surface text-brand ring-4 ring-page' : 'border-control bg-page text-ink-muted'}`}>
-                {dn ? <><Check className="sag-tick-draw h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" /><span className="sr-only">{index + 1}</span></> : index + 1}
-              </span>
+              <b>
+                {dn ? <><Check className="sag-tick-draw h-4 w-4" strokeWidth={2.4} aria-hidden="true" /><span className="sr-only">{index + 1}</span></> : index + 1}
+              </b>
             );
-            const label = <span className={`text-[10.5px] leading-none font-semibold uppercase tracking-[0.2em] transition-colors duration-500 ${on || dn ? 'text-brand' : 'text-ink-muted'}`}>{block.label}</span>;
+            const label = <span>{block.label}</span>;
             return (
-              <div key={block.step} className="relative z-[1] flex justify-center">
+              <React.Fragment key={block.step}>
                 {on ? (
-                  <span aria-current="step" className="flex min-h-14 flex-col items-center gap-2">{dot}{' '}{label}</span>
+                  <span aria-current="step" className="aco-stp-b on pl">{dot}{' '}{label}</span>
                 ) : (
-                  <button type="button" onClick={() => goToStep(block.step)} className="flex min-h-14 flex-col items-center gap-2 cursor-pointer">
+                  <button type="button" onClick={() => goToStep(block.step)} className={`aco-stp-b${dn ? ' on' : ''}`}>
                     {dot}{' '}{label}{dn && <span className="sr-only"> (done)</span>}
                   </button>
                 )}
-              </div>
+              </React.Fragment>
             );
           })}
-        </div>
       </nav>
+      </div>
+      </div>
 
-      <div className="max-w-[1040px] mx-auto px-4 sm:px-6 pt-5 sm:pt-7 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12 items-start">
+      <div className="max-w-[1040px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-start">
 
         {/* Left column: the current step */}
         <div className="lg:col-span-7 min-w-0">
 
           {errorMessage && (
-            <div role="alert" className="mb-4 rounded-[10px] border border-danger bg-surface p-3.5 text-[13px] leading-5 text-danger flex items-start gap-2.5">
-              <AlertCircle className="w-[18px] h-[18px] shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" />
+            <div role="alert" className="aco-bad mb-4 text-[14.5px] leading-5 text-danger flex items-start gap-2.5">
+              <AlertCircle className="w-5 h-5 shrink-0" strokeWidth={1.6} aria-hidden="true" />
               <div>
-                <p className="font-semibold">{bannerTitle}</p>
+                <p className="font-bold">{bannerTitle}</p>
                 <p className="mt-0.5">{bannerText}</p>
               </div>
             </div>
           )}
 
-          {/* STEP 1: ADDRESS. The serif title, white fields with small letter-spaced labels straight on the ivory page,
-              one emerald button and a small facts line. The same at every width. The step slides in once. */}
+          {/* STEP 1: ADDRESS. The big bold title, white 58px fields with small capitals labels straight on the paper page,
+              one ink pill button and a small facts line. The same at every width. The step slides in once. */}
           {checkoutStep === 'details' && (
             <div className="sag-co-step-in">
-              <h1 className="font-display text-[28px] leading-[1.1] text-ink lg:text-[34px]">Where should we deliver?</h1>
+              <h1 className="aco-h">Where should we deliver?</h1>
 
-              <section className="mt-5" aria-labelledby="co-contact-title">
+              <section className="mt-6" aria-labelledby="co-contact-title">
                 <h2 id="co-contact-title" className={`font-sans ${EYEBROW}`}>Contact</h2>
                 <div className="mt-3 space-y-3.5">
                   <Field id="co-mobile" label="Mobile number" error={mobileError}>
-                    <div className={`relative flex h-[46px] sm:h-[52px] border overflow-hidden focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand rounded-lg! transition-colors ${mobileError ? 'border-danger bg-danger-tint' : 'border-control bg-surface focus-within:border-brand focus-within:shadow-[inset_0_-2px_0_var(--color-brand)]'}`}>
-                      <span className="flex items-center px-3.5 border-r border-line text-base text-ink-muted shrink-0" aria-hidden="true">+91</span>
+                    <div className={`aco-tel${mobileError ? ' bad' : ''}`}>
+                      <span className="flex items-center rounded-none! pl-4 pr-3 border-r border-line text-base font-medium text-ink-muted shrink-0" aria-hidden="true">+91</span>
                       <input
                         id="co-mobile"
                         name="mobile"
@@ -1237,9 +1241,9 @@ export const CheckoutPage: React.FC = () => {
                         placeholder="10-digit mobile number"
                         aria-invalid={mobileError ? true : undefined}
                         aria-describedby={mobileError ? 'co-mobile-error' : undefined}
-                        className="flex-1 min-w-0 h-full pl-3.5 pr-10 bg-transparent text-base text-ink placeholder:text-ink-faint outline-none focus:outline-none focus-visible:outline-none"
+                        className="flex-1 min-w-0 h-full pl-3.5 pr-10 bg-transparent text-base font-medium text-ink placeholder:font-normal placeholder:text-ink-faint outline-none focus:outline-none focus-visible:outline-none"
                       />
-                      {mobileValid && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" />}
+                      {mobileValid && <Check className="sag-tick-draw absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ok" strokeWidth={2} aria-hidden="true" />}
                     </div>
                   </Field>
 
@@ -1247,20 +1251,19 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               {hasSavedAddresses && (
-                <section className="mt-6 border-t border-line pt-5 space-y-3" aria-labelledby="co-saved-title">
+                <section className="mt-8 space-y-3" aria-labelledby="co-saved-title">
                   <h2 id="co-saved-title" className={`font-sans ${EYEBROW}`}>Deliver to a saved address</h2>
                   <AddressBook onSelect={applySavedAddress} selectedId={selectedAddressId} />
                 </section>
               )}
 
-              <section className="mt-6 border-t border-line pt-5" aria-labelledby="co-address-title">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 id="co-address-title" className={`font-sans ${EYEBROW}`}>Delivery address</h2>
-                  <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="inline-flex h-11 shrink-0 items-center gap-[7px] rounded-lg border border-brand px-3 text-[10.5px] leading-none font-semibold uppercase tracking-[0.14em] text-brand whitespace-nowrap transition-colors hover:bg-brand hover:text-[color:var(--sag-on-gold)] active:bg-brand active:text-[color:var(--sag-on-gold)] cursor-pointer disabled:opacity-60">
-                    {isDetectingLocation ? <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} /> : <MapPin className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />}
-                    Use my location
-                  </button>
-                </div>
+              <section className="mt-8" aria-labelledby="co-address-title">
+                <h2 id="co-address-title" className={`font-sans ${EYEBROW}`}>Delivery address</h2>
+                {/* "Use my location": a dashed pill above the fields */}
+                <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="aco-loc mt-3">
+                  {isDetectingLocation ? <Loader2 className="w-[18px] h-[18px] animate-spin" strokeWidth={1.6} /> : <Icon name="pin" size={18} />}
+                  Use my location
+                </button>
 
                 <div className="mt-3 space-y-3.5">
                   {/* PIN code and city side by side; the state follows on its own line */}
@@ -1283,8 +1286,8 @@ export const CheckoutPage: React.FC = () => {
                           aria-describedby={pinError ? 'co-pincode-error' : 'co-pincode-help'}
                           className={`${INPUT} pr-10`}
                         />
-                        {pincodeLoading && <Loader2 className="absolute right-3.5 top-1/2 -mt-2 w-4 h-4 animate-spin text-ink-muted" strokeWidth={1.5} aria-label="Checking PIN code" />}
-                        {pinFound && <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-sale" strokeWidth={1.5} aria-hidden="true" />}
+                        {pincodeLoading && <Loader2 className="absolute right-4 top-1/2 -mt-2 w-4 h-4 animate-spin text-ink-muted" strokeWidth={1.6} aria-label="Checking PIN code" />}
+                        {pinFound && <Check className="sag-tick-draw absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ok" strokeWidth={2} aria-hidden="true" />}
                       </div>
                     </Field>
 
@@ -1330,7 +1333,7 @@ export const CheckoutPage: React.FC = () => {
                           <option key={s} value={s}>{s}</option>
                         ))}
                       </select>
-                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
+                      <ChevronDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ink" strokeWidth={1.6} aria-hidden="true" />
                     </div>
                   </Field>
 
@@ -1353,7 +1356,7 @@ export const CheckoutPage: React.FC = () => {
                     />
                     {nameError && (
                       <p id="co-name-error" role="alert" className={FIELD_ERROR}>
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-px" strokeWidth={1.5} aria-hidden="true" /><span>{nameError}</span>
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={1.6} aria-hidden="true" /><span>{nameError}</span>
                       </p>
                     )}
                   </div>
@@ -1413,43 +1416,43 @@ export const CheckoutPage: React.FC = () => {
                     />
                   </Field>
 
-                  <label htmlFor="saveAddr" className="flex items-center gap-2.5 min-h-11 text-[13px] leading-5 text-ink cursor-pointer">
+                  <label htmlFor="saveAddr" className="flex items-center gap-3 min-h-12 text-[15px] leading-5 text-ink cursor-pointer">
                     <input
                       type="checkbox"
                       id="saveAddr"
                       checked={saveAddressOption}
                       onChange={(e) => setSaveAddressOption(e.target.checked)}
-                      className="w-[18px] h-[18px] shrink-0 accent-brand cursor-pointer"
+                      className="w-[22px] h-[22px] shrink-0 accent-brand cursor-pointer"
                     />
                     Save this address for future orders
                   </label>
                 </div>
 
-                {/* One emerald button at the end of the form at every width (this step has no fixed bar), then a small facts line.
+                {/* One ink pill button at the end of the form at every width (this step has no fixed bar), then a small facts line.
                     Its accessible name keeps "Deliver here" (the e2e test in worker/test/e2e finds the button by it). */}
                 {/* The coupon on this order, in sight before paying (the best one is applied by itself) */}
                 {appliedCoupon && discountAmount > 0 && (
-                  <div id="co-coupon-strip" className="mt-2.5 flex items-center gap-2.5 rounded-lg! border border-dashed border-[color:var(--sag-champagne)] bg-surface px-3.5 py-1.5">
-                    <Tag className="h-4 w-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden="true" />
-                    <p className="min-w-0 flex-1 text-[12.5px] leading-[18px] text-ink-muted">
-                      <span className="block font-semibold text-ink">{couponIsAuto ? 'Best coupon applied' : 'Coupon applied'}: {appliedCoupon.code}</span>
-                      <span className="sag-num">You save {rupees(discountAmount)}</span>
+                  <div id="co-coupon-strip" className="mt-3 flex items-center gap-3 rounded-[20px] border-[1.5px] border-dashed border-ink px-4 py-1.5">
+                    <Tag className="h-[18px] w-[18px] shrink-0 text-ink" strokeWidth={1.6} aria-hidden="true" />
+                    <p className="min-w-0 flex-1 text-[13.5px] leading-[18px] text-ink-muted">
+                      <span className="block font-bold text-ink">{couponIsAuto ? 'Best coupon applied' : 'Coupon applied'}: {appliedCoupon.code}</span>
+                      <span className="aura-num font-semibold text-sale">You save {rupees(discountAmount)}</span>
                     </p>
                     <button type="button" onClick={removeCouponHere} aria-label={`Remove coupon ${appliedCoupon.code}`} className={`${CAPS_LINK} shrink-0`}>Remove</button>
                   </div>
                 )}
 
-                <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="sag-btn-primary flex w-full mt-4 h-[54px] gap-2 px-3">
-                  <Lock className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Continue to secure payment
+                <button type="button" onClick={handleProceedToPaymentStep} aria-label="Deliver here: continue to secure payment" className="aura-btn aura-btn-w mt-4 px-4!">
+                  <Lock className="w-[18px] h-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" /> Continue to secure payment <Icon name="arrow" size={19} className="max-[359px]:hidden" />
                 </button>
-                <p className="mt-2.5 text-center text-[11.5px] leading-4 text-ink-muted">
-                  {assuranceFacts().returns} · <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center font-semibold text-brand underline decoration-1 underline-offset-4 hover:text-brand-dark">Help on WhatsApp</a>
+                <p className="aco-fine mt-2">
+                  {assuranceFacts().returns} · <a href={helpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-bold text-ink underline decoration-[1.5px] underline-offset-4">Help on WhatsApp</a>
                 </p>
               </section>
             </div>
           )}
 
-          {/* STEP 2: PAY. White panels: where it goes, the ways to pay, the price rows ending in one emerald pay
+          {/* STEP 2: PAY. White cards: where it goes, the ways to pay, the price rows ending in one big ink pay
               button, and WhatsApp help. Every number is the page's own preview; the pay button is the one
               existing pay action. The step slides in once. */}
           {checkoutStep === 'payment' && (
@@ -1457,91 +1460,91 @@ export const CheckoutPage: React.FC = () => {
 
               {/* The finished address step: a white panel with a small-capitals heading, its summary and an
                   underlined "Change". The delivery date shows only when the owner has set delivery days. */}
-              <div className="sag-glass px-4 pb-4 pt-2">
+              <div className="aco-sum pt-2.5!">
                 <div className="flex items-center justify-between gap-3">
-                  <p className={`flex items-center gap-1.5 ${EYEBROW}`}><Check className="w-[15px] h-[15px] shrink-0 text-brand" strokeWidth={1.75} aria-hidden="true" /> Deliver to</p>
+                  <p className="aco-sum-h flex items-center gap-2"><Check className="sag-tick-draw w-[18px] h-[18px] shrink-0 text-ok" strokeWidth={2.2} aria-hidden="true" /> Deliver to</p>
                   <button type="button" onClick={() => setCheckoutStep('details')} aria-label="Change address" className={`${CAPS_LINK} shrink-0`}>Change</button>
                 </div>
-                <p className="sag-num text-[14px] leading-[22px] text-ink">{[fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</p>
-                {addressLine && <p className="mt-0.5 text-[13px] leading-5 text-ink-muted line-clamp-2">{addressLine}</p>}
-                {deliveryEstimateText && <p className="mt-1.5 text-[12.5px] leading-[18px] text-ink-muted">Estimated delivery by <span className="text-ink">{deliveryEstimateText}</span></p>}
+                <p className="aura-num text-[15px] leading-[22px] font-medium text-ink">{[fullNameText, [address.city, address.pincode].filter(Boolean).join(' ')].filter(Boolean).join(', ')}</p>
+                {addressLine && <p className="mt-0.5 text-[14.5px] leading-5 text-ink-muted line-clamp-2">{addressLine}</p>}
+                {deliveryEstimateText && <p className="mt-1.5 text-[13.5px] leading-[18px] text-ink-muted">Estimated delivery by <span className="text-ink">{deliveryEstimateText}</span></p>}
               </div>
 
-              <section className="mt-6" aria-labelledby="co-pay-title">
-                <h2 id="co-pay-title" className="font-display text-[28px] leading-[1.1] text-ink lg:text-[34px]">How would you like to pay?</h2>
+              <section className="mt-7" aria-labelledby="co-pay-title">
+                <h2 id="co-pay-title" className="aco-h">How would you like to pay?</h2>
 
                 {/* A payment that failed in the payment window: the same order, ready to be paid again */}
                 {payFail && (
-                  <div id="co-pay-fail" role="alert" className="mt-4 rounded-[10px]! border border-danger bg-surface p-4">
+                  <div id="co-pay-fail" role="alert" className="aco-bad mt-4">
                     <div className="flex items-start gap-2.5">
                       <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-danger" strokeWidth={1.5} aria-hidden="true" />
                       <div className="min-w-0">
-                        <p className="text-[15px] leading-5 font-semibold text-ink">The payment did not go through</p>
-                        <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{payFail.reason ? `${payFail.reason.replace(/[.\s]+$/, '')}. ` : ''}Your bag, address and offer are saved. You can pay for the same order again.</p>
+                        <p className="text-[17px] leading-[22px] font-extrabold tracking-[-0.01em] text-ink">The payment did not go through</p>
+                        <p className="mt-1 text-[14px] leading-5 text-ink-muted">{payFail.reason ? `${payFail.reason.replace(/[.\s]+$/, '')}. ` : ''}Your bag, address and offer are saved. You can pay for the same order again.</p>
                       </div>
                     </div>
-                    <dl className="mt-3 rounded-lg! border border-line bg-sunken px-3.5 py-1 text-[13.5px] leading-5 sag-num">
+                    <dl className="mt-3 rounded-[16px] bg-sunken px-4 py-1.5 text-[14.5px] leading-5 aura-num">
                       <div className={kvRow}><dt className="text-ink-muted">Order</dt><dd className="text-ink">{payFail.orderNumber}</dd></div>
-                      <div className={kvRow}><dt className="text-ink-muted">To pay now</dt><dd className="font-semibold text-ink">{rupees(codChosen ? codCharge : finalCartTotal)}</dd></div>
+                      <div className={kvRow}><dt className="text-ink-muted">To pay now</dt><dd className="font-extrabold text-ink">{rupees(codChosen ? codCharge : finalCartTotal)}</dd></div>
                     </dl>
-                    <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary mt-3 flex h-[50px] w-full gap-2 px-3 disabled:opacity-60">
-                      {isProcessing && <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={1.5} />}
+                    <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="aura-btn aura-btn-w mt-3">
+                      {isProcessing && <Loader2 className="h-[18px] w-[18px] shrink-0 animate-spin" strokeWidth={1.6} />}
                       Try again{pickedApp ? ` with ${pickedApp.name}` : ''}
                     </button>
                     {showUpiApps && (
                       <div className="mt-2.5 flex gap-2">
                         {UPI_APPS.filter((app) => app.id !== upiApp).map((app) => (
-                          <button type="button" key={app.id} onClick={(e) => handlePlacePrepaidOrder(e, app.id)} disabled={payDisabled} className={appTile(false)}>{app.name}</button>
+                          <button type="button" key={app.id} onClick={(e) => handlePlacePrepaidOrder(e, app.id)} disabled={payDisabled} className={`${appTile(false)} justify-center px-2!`}>{app.name}</button>
                         ))}
-                        {upiApp && <button type="button" onClick={(e) => handlePlacePrepaidOrder(e, '')} disabled={payDisabled} className={appTile(false)}>{upiOnly ? 'Any UPI app' : 'Other ways'}</button>}
+                        {upiApp && <button type="button" onClick={(e) => handlePlacePrepaidOrder(e, '')} disabled={payDisabled} className={`${appTile(false)} justify-center px-2!`}>{upiOnly ? 'Any UPI app' : 'Other ways'}</button>}
                       </div>
                     )}
                     <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, my payment for order ${payFail.orderNumber} did not go through. Please help.`)} target="_blank" rel="noopener noreferrer"
-                      className="mt-3 block border-t border-line pt-3 text-[12.5px] leading-[18px] text-ink-muted">
-                      Money was taken but this still shows? <span className="font-semibold text-brand underline decoration-1 underline-offset-4">Message us on WhatsApp with this order number</span>
+                      className="mt-3 block rounded-none! border-t border-line pt-3 text-[13.5px] leading-5 text-ink-muted">
+                      Money was taken but this still shows? <span className="font-bold text-ink underline decoration-[1.5px] underline-offset-4">Message us on WhatsApp with this order number</span>
                     </a>
                   </div>
                 )}
 
-                {/* The two ways to pay. Online payment is the large card on an emerald fill with ivory text, chosen
-                    from the start; cash on delivery (when the owner has it on) is the white row under it with its full cost. */}
+                {/* The two ways to pay. Online payment is the large ink card with paper text and blush accents, chosen
+                    from the start; cash on delivery (when the owner has it on) is the white card under it with its full cost. */}
                 <div id="co-pay-mode" className="mt-4 grid gap-2.5" role={codOn ? 'radiogroup' : undefined} aria-label={codOn ? 'How would you like to pay?' : undefined}>
-                  <label className={`block rounded-[10px]! p-4 transition-colors duration-300 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand ${codOn ? 'cursor-pointer' : ''} ${codChosen ? 'border border-line bg-surface text-ink' : 'border border-brand bg-brand text-[color:var(--sag-on-gold)]'}`}>
+                  <label className={`aco-pay ${codOn ? 'cursor-pointer' : ''} ${codChosen ? '' : 'on'}`}>
                     {(codOn || prepaidDiscount > 0) && (
                       <span className="mb-2.5 flex items-center justify-between gap-3">
                         {(prepaidSaving > 0 || prepaidDiscount > 0) ? (
-                          <span className={`inline-flex h-[22px] items-center rounded-[3px] border px-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] ${codChosen ? 'border-brand-line text-brand' : 'border-[color:var(--sag-champagne)] text-[color:var(--sag-champagne)]'}`}>Best price</span>
+                          <span className="aco-pay-tag">Best price</span>
                         ) : <span />}
-                        {codOn && <input type="radio" name="payMode" value="prepaid" checked={!codChosen} onChange={() => choosePayMode('prepaid')} disabled={isProcessing} className="h-[18px] w-[18px] shrink-0 accent-[color:var(--sag-champagne)]" />}
+                        {codOn && <span className="aco-rd"><input type="radio" name="payMode" value="prepaid" checked={!codChosen} onChange={() => choosePayMode('prepaid')} disabled={isProcessing} /><i /></span>}
                       </span>
                     )}
                     <span className="flex items-end justify-between gap-3">
                       <span className="min-w-0">
-                        <span className="block font-display text-[23px] leading-7 font-semibold">Pay online now</span>
-                        {codOn && prepaidSaving > 0 && <span className="mt-0.5 block text-[13px] leading-[18px] font-medium sag-num">You save {rupees(prepaidSaving)} against cash on delivery</span>}
+                        <span className="block text-[25px] leading-7 font-extrabold tracking-[-0.03em]">Pay online now</span>
+                        {codOn && prepaidSaving > 0 && <span className="mt-1 block text-[14px] leading-[18px] font-semibold aura-ac aura-num">You save {rupees(prepaidSaving)} against cash on delivery</span>}
                       </span>
-                      <span className="shrink-0 text-right sag-num">
-                        <span className="block text-[26px] leading-7 font-semibold">{rupees(finalCartTotal)}</span>
-                        {codOn && prepaidSaving > 0 && <span className="block text-[13px] leading-[18px] line-through opacity-80">{rupees(codTotal)}</span>}
+                      <span className="shrink-0 text-right aura-num">
+                        <span className="block text-[28px] leading-7 font-extrabold tracking-[-0.02em]">{rupees(finalCartTotal)}</span>
+                        {codOn && prepaidSaving > 0 && <span className="mt-1 block text-[14px] leading-[18px] line-through aura-mu">{rupees(codTotal)}</span>}
                       </span>
                     </span>
-                    <span className={`mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-t pt-3 text-[13px] leading-[18px] sag-num ${codChosen ? 'border-line' : 'border-[color:var(--sag-champagne)]'}`}>
+                    <span className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 rounded-none! border-t aura-hl pt-3.5 text-[14px] leading-[18px] font-medium aura-num">
                       {prepaidPerks.map((perk) => (
-                        <span key={perk} className="flex items-center gap-2"><Check className={`h-4 w-4 shrink-0 ${codChosen ? 'text-brand' : 'text-[color:var(--sag-champagne)]'}`} strokeWidth={1.75} aria-hidden="true" />{perk}</span>
+                        <span key={perk} className="flex items-center gap-2"><Check className="h-[18px] w-[18px] shrink-0 aura-ac" strokeWidth={2} aria-hidden="true" />{perk}</span>
                       ))}
                     </span>
                   </label>
 
                   {codOn && (
                     <label className={`cursor-pointer ${optionBox(codChosen)}`}>
-                      <input type="radio" name="payMode" value="cod" checked={codChosen} onChange={() => choosePayMode('cod')} disabled={isProcessing} className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-brand" />
+                      <span className="aco-rd"><input type="radio" name="payMode" value="cod" checked={codChosen} onChange={() => choosePayMode('cod')} disabled={isProcessing} /><i /></span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[14px] leading-5 font-semibold text-ink">Cash on delivery</span>
-                        <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted sag-num">Pay {rupees(codCharge)} now, {rupees(codDue)} in cash at delivery{prepaidDiscount > 0 ? ' · no online discount' : ''}</span>
+                        <span className="block text-[16px] leading-[22px] font-bold text-ink">Cash on delivery</span>
+                        <span className="mt-0.5 block text-[13.5px] leading-[18px] text-ink-muted aura-num">Pay {rupees(codCharge)} now, {rupees(codDue)} in cash at delivery{prepaidDiscount > 0 ? ' · no online discount' : ''}</span>
                       </span>
-                      <span className="shrink-0 text-right sag-num">
-                        <span className="block text-[14px] leading-5 font-semibold text-ink">{rupees(codTotal)}</span>
-                        {prepaidSaving > 0 && <span className="block text-[11.5px] leading-4 font-semibold text-danger">{rupees(prepaidSaving)} more</span>}
+                      <span className="shrink-0 text-right aura-num">
+                        <span className="block text-[16px] leading-[22px] font-bold text-ink">{rupees(codTotal)}</span>
+                        {prepaidSaving > 0 && <span className="block text-[13px] leading-[18px] font-bold text-danger">{rupees(prepaidSaving)} more</span>}
                       </span>
                     </label>
                   )}
@@ -1549,18 +1552,18 @@ export const CheckoutPage: React.FC = () => {
 
                 {/* Both totals side by side, to scale */}
                 {codOn && prepaidSaving > 0 && codTotal > 0 && (
-                  <div className="sag-glass mt-2.5 px-4 py-3" aria-hidden="true">
-                    <div className="flex justify-between gap-3 text-[12px] leading-4 sag-num">
-                      <span className="font-semibold text-sale">Online {rupees(finalCartTotal)}</span>
+                  <div className="aura-card mt-2.5 px-[18px] py-3.5" aria-hidden="true">
+                    <div className="flex justify-between gap-3 text-[13px] leading-4 aura-num">
+                      <span className="font-bold text-ink">Online {rupees(finalCartTotal)}</span>
                       <span className="text-ink-muted">Cash on delivery {rupees(codTotal)}</span>
                     </div>
-                    <div className="mt-2 h-[3px] overflow-hidden rounded-full! bg-line"><div className="h-full rounded-full! bg-brand" style={{ width: `${Math.round((finalCartTotal / codTotal) * 100)}%` }} /></div>
+                    <div className="aco-bar mt-2.5"><div style={{ width: `${Math.round((finalCartTotal / codTotal) * 100)}%` }} /></div>
                   </div>
                 )}
 
                 {/* One-tap UPI apps (phones): the payment window then opens with that app first */}
                 {showUpiApps && (
-                  <div id="co-upi-apps" className="mt-5">
+                  <div id="co-upi-apps" className="mt-6">
                     <p className={EYEBROW}>Pay with</p>
                     <div className="mt-2.5 grid grid-cols-2 gap-2" role="group" aria-label="Pay with">
                       {UPI_APPS.map((app) => (
@@ -1572,47 +1575,47 @@ export const CheckoutPage: React.FC = () => {
                 )}
 
                 {codChosen && prepaidSaving > 0 && (
-                  <div id="co-prepaid-nudge" className="sag-glass sag-glass-strong mt-2.5 p-4 text-ink">
-                    <p className="text-[13.5px] leading-5 font-semibold sag-num">{storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off on prepaid orders` : 'Pay online and save'}</p>
-                    <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted sag-num">Pay {rupees(finalCartTotal)} online instead of {rupees(codTotal)} and save <span className="font-semibold text-sale">{rupees(prepaidSaving)}</span>.</p>
-                    <button type="button" onClick={() => setPayMode('prepaid')} className="sag-btn-primary mt-3 h-11 px-4 sag-num">Pay online and save {rupees(prepaidSaving)}</button>
+                  <div id="co-prepaid-nudge" className="aco-note mt-2.5 block!">
+                    <p className="text-[16px] leading-[22px] font-extrabold aura-num">{storeOffers.prepaidPercent > 0 ? `${storeOffers.prepaidPercent}% off on prepaid orders` : 'Pay online and save'}</p>
+                    <p className="mt-0.5 text-[14px] leading-5 aura-num">Pay {rupees(finalCartTotal)} online instead of {rupees(codTotal)} and save <span className="font-bold text-sale">{rupees(prepaidSaving)}</span>.</p>
+                    <button type="button" onClick={() => setPayMode('prepaid')} className="aura-btn aura-btn-sm mt-3 aura-num">Pay online and save {rupees(prepaidSaving)}</button>
                   </div>
                 )}
 
                 <div className="mt-4 space-y-2.5">
                   {gateways === null ? (
-                    <div className="sag-glass min-h-[52px] flex items-center justify-center gap-2 text-[13px] text-ink-muted" aria-busy="true" aria-label="Loading payment options">
-                      <Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} /> Loading payment options…
+                    <div className="aura-card min-h-[56px] flex items-center justify-center gap-2 text-[14px] text-ink-muted" aria-busy="true" aria-label="Loading payment options">
+                      <Loader2 className="h-[18px] w-[18px] animate-spin" strokeWidth={1.6} /> Loading payment options…
                     </div>
                   ) : !gateways.razorpay && !gateways.payu ? (
-                    <p className="sag-glass flex items-start gap-2 px-3.5 py-3 text-[13px] leading-5 text-ink">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="aco-note">
+                      <Info className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
                       <span>Online payment is paused for a few minutes. Please try again shortly or message us on WhatsApp.</span>
                     </p>
                   ) : (
                     <>
                       {codChosen ? (
-                        <p className="text-[12.5px] leading-[18px] text-ink-muted sag-num">The {rupees(codCharge)} is paid by UPI through Razorpay. It is not refunded if the parcel is refused at delivery.</p>
+                        <p className="px-1 text-[13.5px] leading-[19px] text-ink-muted aura-num">The {rupees(codCharge)} is paid by UPI through Razorpay. It is not refunded if the parcel is refused at delivery.</p>
                       ) : paymentOptions.length === 1 ? (
-                        // One way to pay: named in a quiet line (the emerald button below is the action)
-                        <p className="text-[12.5px] leading-[18px] text-ink-muted">
-                          <span className="font-semibold text-ink">{paymentOptions[0][1]}</span> · {paymentOptions[0][2]}
+                        // One way to pay: named in a quiet line (the pay button below is the action)
+                        <p className="px-1 text-[13.5px] leading-[19px] text-ink-muted">
+                          <span className="font-bold text-ink">{paymentOptions[0][1]}</span> · {paymentOptions[0][2]}
                         </p>
                       ) : (
                         <div className="space-y-2.5" role="radiogroup" aria-label="Payment method">
                           {paymentOptions.map(([id, title, detail]) => (
                             <label key={id} data-selected={gateway === id ? 'true' : undefined} className={`cursor-pointer ${optionBox(gateway === id)}`}>
-                              <input type="radio" name="gateway" value={id} checked={gateway === id} onChange={() => setGateway(id)} className="mt-0.5 h-[18px] w-[18px] shrink-0 accent-brand" />
+                              <span className="aco-rd"><input type="radio" name="gateway" value={id} checked={gateway === id} onChange={() => setGateway(id)} /><i /></span>
                               <span className="flex-1 min-w-0">
-                                <span className="block text-[14.5px] leading-5 font-semibold text-ink">{title}</span>
-                                <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted">{detail}</span>
+                                <span className="block text-[16px] leading-[22px] font-bold text-ink">{title}</span>
+                                <span className="mt-0.5 block text-[13.5px] leading-[18px] text-ink-muted">{detail}</span>
                               </span>
                             </label>
                           ))}
                         </div>
                       )}
                       {prepaidDiscount > 0 && !codChosen && (
-                        <p className="text-[12.5px] leading-[18px] font-semibold text-sale sag-num">
+                        <p className="px-1 text-[14px] leading-5 font-bold text-sale aura-num">
                           Online payment discount of ₹{prepaidDiscount.toLocaleString('en-IN')} applied.
                         </p>
                       )}
@@ -1620,8 +1623,8 @@ export const CheckoutPage: React.FC = () => {
                   )}
 
                   {inAppBrowser && (
-                    <p className="sag-glass flex items-start gap-2 px-3.5 py-3 text-[13px] leading-5 text-ink">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+                    <p className="aco-note">
+                      <Info className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
                       <span>
                         You are inside the {inAppBrowser} app. UPI apps (Google Pay, PhonePe, Paytm) open best in your phone's browser:
                         tap <span className="font-semibold">⋮</span> (top right) → <span className="font-semibold">Open in browser / Chrome</span>, then pay.
@@ -1630,65 +1633,65 @@ export const CheckoutPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* The gift note: a white checkbox row. Nothing here has to be touched to pay. */}
-                <div className="sag-glass mt-4 px-4">
-                  <label className="flex items-center gap-2.5 min-h-[48px] text-[13.5px] leading-5 text-ink cursor-pointer">
-                    <input type="checkbox" checked={addGiftNote} onChange={(e) => setAddGiftNote(e.target.checked)} className="w-[18px] h-[18px] shrink-0 accent-brand cursor-pointer" />
-                    <Gift className="w-4 h-4 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> Add a gift note to the parcel
+                {/* The gift note: a white card with a checkbox row. Nothing here has to be touched to pay. */}
+                <div className="aura-card mt-4 px-[18px]">
+                  <label className="flex items-center gap-3 min-h-[56px] text-[15px] leading-5 font-medium text-ink cursor-pointer">
+                    <input type="checkbox" checked={addGiftNote} onChange={(e) => setAddGiftNote(e.target.checked)} className="w-[22px] h-[22px] shrink-0 accent-brand cursor-pointer" />
+                    <Gift className="w-[18px] h-[18px] shrink-0 text-ink" strokeWidth={1.6} aria-hidden="true" /> Add a gift note to the parcel
                   </label>
                   {addGiftNote && (
                     <textarea aria-label="Gift note" rows={2} maxLength={300} value={giftNoteText} onChange={(e) => setGiftNoteText(e.target.value)}
                       placeholder="Write a short message for the recipient"
-                      className={`${INPUT} mb-3.5`} />
+                      className={`${INPUT} mb-[18px] h-auto! py-3 border-control!`} />
                   )}
                 </div>
 
-                {/* Price rows in a white panel that ends in the emerald pay button, with a hairline above what is paid now. Cash on delivery: the advance is "Pay now"
+                {/* Price rows in a white card that ends in the big ink pay button, with a hairline above what is paid now. Cash on delivery: the advance is "Pay now"
                     and the cash amount is stated under it. Online: the bag's own price details (phones and tablets;
                     on desktop they are in the order summary beside this column, so only the amount is repeated). */}
-                <div className="sag-glass mt-4 px-4 py-[18px]">
+                <div className="abag-pdt mt-4">
                   {codChosen ? (
                     <>
-                      <dl className="text-[14px] leading-5 text-ink sag-num">
+                      <dl className="text-[15px] leading-5 text-ink aura-num">
                         <div className={kvRow}><dt className="text-ink-muted">Cash when the parcel arrives</dt><dd>{rupees(codDue)}</dd></div>
                         <div className={kvRow}><dt className="text-ink-muted">Cash on delivery shipping</dt><dd>{rupees(codCharge)}</dd></div>
                         <div className={kvRow}><dt className="text-ink-muted">Order total</dt><dd>{rupees(codTotal)}</dd></div>
-                        <div className="mt-2 flex items-baseline justify-between gap-4 border-t border-line pt-3.5 text-[21px] leading-6 font-semibold">
-                          <dt className="font-display">Pay now</dt><dd>{rupees(codCharge)}</dd>
+                        <div className="mt-2 flex items-center justify-between gap-4 rounded-none! border-t border-line pt-3.5">
+                          <dt className="text-[16px] leading-5 font-bold">Pay now</dt><dd className="text-[26px] leading-[30px] font-extrabold tracking-[-0.02em]">{rupees(codCharge)}</dd>
                         </div>
                       </dl>
-                      <p className="sag-num mt-1.5 text-[13px] leading-[18px] text-ink">+ {rupees(codDue)} in cash when the parcel arrives</p>
+                      <p className="aura-num mt-1.5 text-[14px] leading-5 font-medium text-ink">+ {rupees(codDue)} in cash when the parcel arrives</p>
                     </>
                   ) : (
                     <>
                       <div className="lg:hidden"><PriceDetails totalLabel="To pay" /></div>
-                      <div className="hidden lg:block sag-num">
-                        <p className="flex items-baseline justify-between gap-4 text-[21px] leading-6 font-semibold text-ink"><span className="font-display">To pay</span><span>{rupees(finalCartTotal)}</span></p>
-                        {totalSavings > 0 && <p className="mt-1.5 text-[12.5px] leading-4 font-semibold text-sale">You saved {rupees(Math.round(totalSavings))}</p>}
+                      <div className="hidden lg:block aura-num">
+                        <p className="flex items-center justify-between gap-4 text-ink"><span className="text-[16px] leading-5 font-bold">To pay</span><span className="text-[26px] leading-[30px] font-extrabold tracking-[-0.02em]">{rupees(finalCartTotal)}</span></p>
+                        {totalSavings > 0 && <p className="mt-1.5 text-[14px] leading-5 font-bold text-sale">You saved {rupees(Math.round(totalSavings))}</p>}
                       </div>
                     </>
                   )}
 
-                  {/* The one pay button at every width (this step has no fixed bar): the emerald button, with a thin lock */}
-                  <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="sag-btn-primary flex w-full mt-4 h-[54px] gap-2 px-3 disabled:opacity-60">
+                  {/* The one pay button at every width (this step has no fixed bar): the big ink pill, with a thin lock */}
+                  <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="aura-btn aura-btn-w aco-paybtn mt-4 px-4!">
                     {payButtonContent}
                   </button>
-                  <p className="mt-3 flex items-start justify-center gap-2 text-center text-[12.5px] leading-[18px] text-ink-muted">
-                    <ShieldCheck className="mt-px h-4 w-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden="true" />
+                  <p className="aco-fine mt-3 flex items-start justify-center gap-2">
+                    <ShieldCheck className="mt-px h-[18px] w-[18px] shrink-0 text-ok" strokeWidth={1.6} aria-hidden="true" />
                     <span>{securedByText}{upiOn && (codChosen || gateway === 'razorpay') ? '. Your UPI PIN is entered only in your own UPI app.' : ''}</span>
                   </p>
                   {/* The festive coupon on this order and the real time left on it */}
                   {festiveClock && festiveRound && !codChosen && (
-                    <p className="mt-3 flex items-center gap-2 rounded-lg! border border-line bg-sunken px-3 py-2 text-[12.5px] leading-[18px] text-ink-muted">
-                      <Clock className="h-4 w-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden="true" />
-                      <span>{festiveRound.title} offer ends in <span className="sag-num font-semibold text-ink">{festiveClock}</span></span>
+                    <p className="aco-note mt-3 items-center! py-3!">
+                      <Clock className="h-[18px] w-[18px]" strokeWidth={1.6} aria-hidden="true" />
+                      <span>{festiveRound.title} offer ends in <span className="aura-num font-extrabold">{festiveClock}</span></span>
                     </p>
                   )}
                 </div>
 
-                <p className="mt-3.5 text-center text-[12px] leading-[18px] text-ink-muted">Your order is confirmed only after the payment is verified. Receipt on your email.</p>
+                <p className="aco-fine mt-4">Your order is confirmed only after the payment is verified. Receipt on your email.</p>
                 <p className="mt-1 text-center">
-                  <a href={helpUrl} target="_blank" rel="noopener noreferrer" className={`${LINK} text-[13px]`}>
+                  <a href={helpUrl} target="_blank" rel="noopener noreferrer" className={`${LINK} inline-flex min-h-11 items-center`}>
                     Trouble paying? Chat with us on WhatsApp
                   </a>
                 </p>
@@ -1698,49 +1701,49 @@ export const CheckoutPage: React.FC = () => {
 
         </div>
 
-        {/* Order summary (items, coupon, price details). Phones: one collapsed white row on top that opens in
+        {/* Order summary (items, coupon, price details). Phones: one collapsed white card on top that opens in
             place, on both steps. Desktop: the right column. It holds no <select>. */}
         <aside className="lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 order-first" aria-label="Order summary">
-          <div className="sag-glass overflow-hidden">
+          <div className="aura-card overflow-hidden rounded-[24px]!">
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
-                className="lg:hidden w-full flex items-center gap-3 p-3 pr-4 text-left cursor-pointer">
+                className="lg:hidden w-full flex items-center gap-3 p-3 pr-[18px] text-left cursor-pointer">
                 {/* The first photos, the count and total, the real saving */}
                 <span className="flex shrink-0 items-center gap-1" aria-hidden="true">
                   {cart.slice(0, 3).map((item) => (
                     <img key={item.id} src={getCleanImageUrl(lineImage(item), 200)} alt="" width={44} height={55}
-                      className="aspect-[3/4] w-10 rounded-[4px]! object-cover object-top bg-sunken" />
+                      className="aspect-[3/4] w-10 rounded-[10px]! object-cover object-top bg-sunken" />
                   ))}
                 </span>
                 <span className="flex-1 min-w-0">
-                  <span className="block text-[14px] leading-5 font-semibold text-ink sag-num">{itemsText} · {rupees(codChosen ? codTotal : finalCartTotal)}</span>
-                  <span className="mt-0.5 block text-[12px] leading-4 text-ink-muted">
-                    {summarySavings > 0 && <span className="sag-num font-semibold text-sale">You save {rupees(Math.round(summarySavings))}</span>}
+                  <span className="block text-[15.5px] leading-5 font-extrabold text-ink aura-num">{itemsText} · {rupees(codChosen ? codTotal : finalCartTotal)}</span>
+                  <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted">
+                    {summarySavings > 0 && <span className="aura-num font-bold text-sale">You save {rupees(Math.round(summarySavings))}</span>}
                     {summarySavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
                   </span>
                 </span>
-                <span className="shrink-0 text-[10.5px] leading-none font-semibold uppercase tracking-[0.18em] text-brand underline decoration-1 underline-offset-4">
+                <span className="shrink-0 text-[14px] leading-none font-semibold text-ink underline decoration-[1.5px] underline-offset-4">
                   {summaryOpen ? 'Hide' : 'View'}
                 </span>
               </button>
 
-            <div id="co-order-summary" className={`${summaryOpen ? 'block' : 'hidden'} lg:block rounded-none! border-t border-line lg:border-t-0 px-4 pb-4 pt-1.5 sm:px-5 sm:pb-5 space-y-4`}>
+            <div id="co-order-summary" className={`${summaryOpen ? 'block' : 'hidden'} lg:block rounded-none! border-t border-line lg:border-t-0 px-4 pb-[18px] pt-2 sm:px-5 sm:pb-5 space-y-4`}>
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
-                    <h2 className={`font-sans ${EYEBROW}`}>Order summary <span className="font-normal normal-case tracking-normal text-ink-muted sag-num">· {itemsText}</span></h2>
+                    <h2 className="aco-sum-h font-sans">Order summary <span className="text-[14px] font-normal tracking-normal text-ink-muted aura-num">· {itemsText}</span></h2>
                     <button type="button" onClick={() => setActivePage('cart')} className={`${CAPS_LINK} shrink-0`}>Edit bag</button>
                   </div>
                   <div className="max-h-80 overflow-y-auto">{itemLines}</div>
                 </div>
 
               {/* Coupon */}
-              <div className="pt-4 border-t border-line">
+              <div className="rounded-none! pt-4 border-t border-line">
                 {appliedCoupon ? (
                   <div className="flex items-center justify-between gap-3 text-ink">
                     <span className="flex items-center gap-2.5 min-w-0">
-                      <Check className="sag-tick-draw w-5 h-5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden="true" />
+                      <Check className="sag-tick-draw w-5 h-5 shrink-0 text-ok" strokeWidth={2} aria-hidden="true" />
                       <span className="min-w-0">
-                        <span className="block text-[13.5px] leading-5 truncate">Code <span className="font-semibold">{appliedCoupon.code}</span> applied</span>
-                        <span className="block text-[12px] leading-4 text-ink-muted sag-num">You save ₹{discountAmount.toLocaleString('en-IN')} with this coupon</span>
+                        <span className="block text-[15px] leading-5 truncate">Code <span className="font-bold">{appliedCoupon.code}</span> applied</span>
+                        <span className="block text-[13px] leading-[18px] text-ink-muted aura-num">You save ₹{discountAmount.toLocaleString('en-IN')} with this coupon</span>
                       </span>
                     </span>
                     <button type="button" onClick={removeCouponHere} className={`${CAPS_LINK} shrink-0`}>
@@ -1749,7 +1752,7 @@ export const CheckoutPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <div className="-mt-2.5 flex items-center justify-between gap-2">
+                    <div className="-mt-2 flex items-center justify-between gap-2">
                       <p className={`${LABEL} mb-0`}>Coupon code</p>
                       {coupons.length > 0 && (
                         <button type="button" onClick={() => setShowCouponsModal(true)} className={CAPS_LINK}>
@@ -1757,7 +1760,7 @@ export const CheckoutPage: React.FC = () => {
                         </button>
                       )}
                     </div>
-                    <form onSubmit={handleCouponApply} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                    <form onSubmit={handleCouponApply} className="abag-cpn">
                       <input aria-label="Coupon code"
                         id="co-coupon"
                         aria-invalid={couponError ? true : undefined}
@@ -1771,9 +1774,9 @@ export const CheckoutPage: React.FC = () => {
                         value={couponCodeInput}
                         onChange={(e) => { setCouponCodeInput(e.target.value.toUpperCase()); if (couponError) clearCouponError(); }}
                         placeholder="Enter coupon code"
-                        className={`${INPUT} sag-caps min-w-0 h-[50px] uppercase placeholder:normal-case`}
+                        className={`${INPUT} sag-caps px-4 font-semibold uppercase placeholder:font-normal placeholder:normal-case`}
                       />
-                      <button type="submit" className="sag-btn-outline h-[50px] px-[18px]">
+                      <button type="submit" className="aura-btn">
                         Apply
                       </button>
                     </form>
@@ -1783,7 +1786,7 @@ export const CheckoutPage: React.FC = () => {
               </div>
 
               {/* Price details: a preview; the server recalculates before payment */}
-              <div className="pt-4 border-t border-line">
+              <div className="rounded-none! pt-[18px] border-t border-line">
                 <PriceDetails />
               </div>
             </div>
@@ -1794,17 +1797,17 @@ export const CheckoutPage: React.FC = () => {
 
       {/* Asked once when cash on delivery is picked: both totals, and both answers one tap away */}
       {codAsk && (
-        <div className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center p-3 sm:p-4 animate-fadeIn" onClick={() => setCodAsk(false)}>
-          <div id="co-cod-ask" role="dialog" aria-modal="true" aria-labelledby="co-cod-ask-title" onClick={(e) => e.stopPropagation()} className="bg-surface w-full sm:max-w-md rounded-[10px]! border border-line p-5 mb-[env(safe-area-inset-bottom)]">
-            <p className={`${EYEBROW} text-brand`}>Before you choose cash on delivery</p>
-            <h2 id="co-cod-ask-title" className="mt-2 font-display text-[28px] leading-[1.1] text-ink sag-num">Pay online and keep {rupees(prepaidSaving)}</h2>
-            <dl className="mt-4 rounded-lg! border border-line bg-sunken px-3.5 py-2 text-[14px] leading-5 sag-num">
-              <div className={`${kvRow} font-semibold text-sale`}><dt>Pay online</dt><dd>{rupees(finalCartTotal)}</dd></div>
+        <div className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn" onClick={() => setCodAsk(false)}>
+          <div id="co-cod-ask" role="dialog" aria-modal="true" aria-labelledby="co-cod-ask-title" onClick={(e) => e.stopPropagation()} className="aco-sheet w-full sm:max-w-md px-5 pt-7 pb-[max(1.25rem,env(safe-area-inset-bottom))] animate-in slide-in-from-bottom-5">
+            <p className={EYEBROW}>Before you choose cash on delivery</p>
+            <h2 id="co-cod-ask-title" className="aco-sheet-h mt-3 text-[32px]! aura-num">Pay online and keep {rupees(prepaidSaving)}</h2>
+            <dl className="mt-5 rounded-[18px] bg-sunken px-4 py-2.5 text-[15px] leading-5 aura-num">
+              <div className={`${kvRow} font-extrabold text-ink`}><dt>Pay online</dt><dd>{rupees(finalCartTotal)}</dd></div>
               <div className={`${kvRow} text-ink-muted`}><dt>Cash on delivery</dt><dd>{rupees(codTotal)}</dd></div>
-              <p className="mt-1.5 rounded-none! border-t border-line pt-2.5 text-[12.5px] leading-[18px] text-ink-muted">With cash on delivery you still pay {rupees(codCharge)} online now, and {rupees(codDue)} in cash at the door.</p>
+              <p className="mt-1.5 rounded-none! border-t border-control pt-2.5 text-[13.5px] leading-[19px] text-ink-muted">With cash on delivery you still pay {rupees(codCharge)} online now, and {rupees(codDue)} in cash at the door.</p>
             </dl>
-            <button type="button" autoFocus onClick={() => { setCodAsk(false); setPayMode('prepaid'); }} className="sag-btn-primary mt-4 flex h-[54px] w-full px-3 sag-num">Pay {rupees(finalCartTotal)} online</button>
-            <button type="button" onClick={() => { setCodAsk(false); setPayFail(null); setPayMode('cod'); }} className="sag-btn-outline mt-2.5 flex h-12 w-full px-3 sag-num">Keep cash on delivery ({rupees(codTotal)})</button>
+            <button type="button" autoFocus onClick={() => { setCodAsk(false); setPayMode('prepaid'); }} className="aura-btn aura-btn-w mt-5 aura-num">Pay {rupees(finalCartTotal)} online</button>
+            <button type="button" onClick={() => { setCodAsk(false); setPayFail(null); setPayMode('cod'); }} className="aura-btn aura-btn-line aura-btn-w mt-2.5 aura-num">Keep cash on delivery ({rupees(codTotal)})</button>
           </div>
         </div>
       )}
@@ -1812,19 +1815,19 @@ export const CheckoutPage: React.FC = () => {
       {/* Available coupons: a sheet on phones, a dialog on wider screens */}
       {showCouponsModal && (
         <div className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 animate-fadeIn" onClick={() => setShowCouponsModal(false)}>
-          <div role="dialog" aria-modal="true" aria-label="Available coupons" onClick={(e) => e.stopPropagation()} className="bg-surface w-full sm:max-w-lg max-h-[85dvh] overflow-hidden rounded-t-[14px]! rounded-b-none! sm:rounded-[10px]! border-t sm:border border-line flex flex-col">
+          <div role="dialog" aria-modal="true" aria-label="Available coupons" onClick={(e) => e.stopPropagation()} className="aco-sheet w-full sm:max-w-lg max-h-[85dvh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5">
 
-            <div className="flex items-center justify-between gap-3 rounded-none! pl-4 pr-1.5 min-h-16 border-b border-line">
-              <div className="py-3">
-                <h2 className="font-display text-[26px] leading-7 text-ink">Available coupons</h2>
-                <p className="mt-1 text-[12.5px] leading-[18px] text-ink-muted">Tap Apply to use a coupon on this order</p>
+            <div className="flex items-start justify-between gap-3 pl-5 pr-3 pt-5 pb-3">
+              <div className="min-w-0">
+                <h2 className="aco-sheet-h">Available coupons</h2>
+                <p className="mt-2 text-[14px] leading-5 text-ink-muted">Tap Apply to use a coupon on this order</p>
               </div>
-              <button type="button" onClick={() => setShowCouponsModal(false)} aria-label="Close coupons" className={`w-11 h-11 mr-1 shrink-0 flex items-center justify-center ${ROUND_BTN}`}>
-                <X className="w-5 h-5" strokeWidth={1.5} />
+              <button type="button" onClick={() => setShowCouponsModal(false)} aria-label="Close coupons" className={ROUND_BTN}>
+                <Icon name="close" size={20} />
               </button>
             </div>
 
-            <div className="p-4 overflow-y-auto space-y-2.5 flex-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+            <div className="px-3 pt-1 overflow-y-auto space-y-2.5 flex-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
               {coupons && coupons.length > 0 ? (
                 coupons.map((cp) => {
                   const isApplied = appliedCoupon?.code === cp.code;
@@ -1834,16 +1837,16 @@ export const CheckoutPage: React.FC = () => {
                     : `₹${cp.discountValue} off`;
 
                   return (
-                    <div key={cp.id} className={`rounded-[10px] border bg-surface p-4 space-y-2 ${isApplied ? 'border-brand ring-1 ring-inset ring-brand' : 'border-dashed border-[color:var(--sag-champagne)]'}`}>
+                    <div key={cp.id} className={`aco-cp space-y-2${isApplied ? ' on' : ''}`}>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="min-w-0 sag-num">
-                          <span className="break-all font-display text-[20px] leading-6 font-semibold tracking-[0.06em] text-brand">{cp.code}</span>
-                          <span className="ml-2.5 align-middle text-[12.5px] leading-[18px] font-semibold text-accent whitespace-nowrap">{discountLabel}</span>
+                        <p className="min-w-0 aura-num">
+                          <span className="aco-cp-code">{cp.code}</span>
+                          <span className="ml-2.5 align-middle text-[14px] leading-5 font-bold text-sale whitespace-nowrap">{discountLabel}</span>
                         </p>
 
                         {isApplied ? (
-                          <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-ink">
-                            <Check className="sag-tick-draw w-4 h-4 text-brand" strokeWidth={1.75} aria-hidden="true" /> Applied
+                          <span className="inline-flex items-center gap-1 text-[14px] font-bold text-ink">
+                            <Check className="sag-tick-draw w-[18px] h-[18px]" strokeWidth={2} aria-hidden="true" /> Applied
                           </span>
                         ) : (
                           <button
@@ -1854,21 +1857,21 @@ export const CheckoutPage: React.FC = () => {
                               setShowCouponsModal(false);
                             }}
                             disabled={!isEligible}
-                            className="sag-btn-outline h-11 px-4 shrink-0"
+                            className="aura-btn aura-btn-sm shrink-0"
                           >
                             Apply
                           </button>
                         )}
                       </div>
 
-                      <p className="text-[12.5px] leading-[18px] text-ink-muted">
+                      <p className="text-[13.5px] leading-5 text-ink-muted">
                         {cp.description || (cp.minOrderValue > 0
                           ? `Save ${discountLabel} on orders above ₹${cp.minOrderValue.toLocaleString('en-IN')}`
                           : `Save ${discountLabel} on your entire cart with no minimum order limit.`)}
                       </p>
 
                       {!isEligible && (
-                        <p className="text-[12.5px] leading-[18px] font-semibold text-ink">
+                        <p className="text-[13.5px] leading-5 font-bold text-ink">
                           Add ₹{(cp.minOrderValue - cartSubtotal).toLocaleString('en-IN')} more to unlock this coupon.
                         </p>
                       )}
@@ -1876,7 +1879,7 @@ export const CheckoutPage: React.FC = () => {
                   );
                 })
               ) : (
-                <p className="text-center text-[13px] text-ink-muted py-8">No coupons available right now.</p>
+                <p className="text-center text-[15px] text-ink-muted py-8">No coupons available right now.</p>
               )}
             </div>
 

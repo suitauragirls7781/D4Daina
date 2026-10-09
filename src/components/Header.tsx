@@ -10,22 +10,21 @@ import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { isAvailable, searchQueryMatcher } from '../utils/smartQuery';
 import { getCleanImageUrl } from '../utils/imageHelper';
-import { ChevronDown, ChevronRight, CircleAlert, CircleCheck, Clock, Heart, Loader2, Menu, Search, ShoppingBag, Trash2, User, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, CircleAlert, CircleCheck, Clock, Loader2, Search, Trash2, X } from 'lucide-react';
+import { Icon, Odometer, addScrollFx, clamp, prefersReducedMotion, setVar } from '../aura';
 import { PIN_KEY, PIN_RE, lookupPincode } from './DeliveryCheck';
 import { useBackToClose } from '../utils/backClose';
 import { useFestiveRound } from './FestiveBanner';
 
 const RECENT_KEY = 'sag_recent_searches_v1';
 
-// The small emerald label above a group (sag-caps keeps the capitals inside the storefront's main area)
-const EYEBROW = 'sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale';
-// The wordmark: the brand name in the display face, capitals, letter-spaced; it takes the colour of its bar
-const WORDMARK = 'sag-caps font-display font-semibold uppercase whitespace-nowrap leading-none';
+// The small capitals label above a group
+const EYEBROW = 'aura-lbl';
 
 /**
- * The announcement strip above the header. It shows the festive round that is live right now (a real coupon
+ * The announcement band. It shows the festive round that is live right now (a real coupon
  * inside its dates, read by useFestiveRound), the online payment percent and cash on delivery when on, and
- * nothing at all when no round is live. The messages move slowly in champagne capitals; the track holds the
+ * nothing at all when no round is live. It is one slim ink band of bold capitals on the homepage only, right under the header; the track holds the
  * list twice, so the loop has no seam. It is part of the page (it scrolls away) and stands still with
  * reduced motion.
  */
@@ -239,212 +238,220 @@ export const Header: React.FC = () => {
     ...(hasKidsToys ? [{ label: KIDS_TOYS, action: () => navigateToCategory(KIDS_TOYS as any), active: activePage === 'shop' && isKidsToysListing(selectedCategory) }] : []),
   ];
 
-  // Header controls sit on the emerald bar: a thin ivory icon that turns champagne under the pointer
-  const iconButton = 'relative shrink-0 items-center justify-center rounded-lg cursor-pointer transition-[color,transform] duration-200 hover:text-highlight active:scale-90';
-  const phoneIcon = `${iconButton} h-11 w-9 min-[360px]:w-10`;
-  const deskIcon = `${iconButton} h-11 w-11`;
-  // The real count as a small ivory badge with emerald figures
-  const badge = 'sag-num absolute top-1 right-0 min-w-[17px] h-[17px] px-1 rounded-full bg-page text-dark text-[10px] font-bold leading-none flex items-center justify-center overflow-hidden';
-  const navLink = 'sag-caps relative h-[42px] inline-flex items-center text-[11px] font-semibold uppercase tracking-[0.2em] cursor-pointer transition-colors hover:text-highlight';
-  const navUnderline = (active: boolean) => `absolute left-0 right-0 bottom-2 h-px bg-highlight ${active ? '' : 'hidden'}`;
-  // The small champagne ornament under the wordmark
-  const ornament = <span className="sag-orn sag-hdr-orn" aria-hidden="true"><i /></span>;
+  // Header controls: round 46px icon buttons in the bar's own text colour
+  const count = (value: number) => (value > 99 ? '99+' : value);
+  const badge = (value: number) => (value > 0 ? <span className="aura-cnt"><Odometer value={count(value)} roll={false} /></span> : null);
+  const navLink = 'aura-hd-lk';
+  const wordmark = <span className="aura-wm">Suit <em>Aura</em> Girls</span>;
   const collectionActive = collectionsOpen || (activePage === 'shop' && collections.some(([c]) => c === selectedCategory));
   const offersActive = activePage === 'shop' && selectedCategory === 'Sale';
   // A collection in the search panel: one plain row with its real count and a chevron
-  const listRow = 'flex min-h-[46px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-sm text-ink cursor-pointer hover:text-brand';
+  const listRow = 'flex min-h-[48px] w-full min-w-0 items-center gap-3 border-b border-line py-2.5 text-left text-[15px] font-semibold text-ink cursor-pointer';
   const searchLabel = 'Search suits, kurtis & more';
   const closeSearch = () => setIsSearchOpen(false);
-  const showAnnouncement = activePage !== 'checkout';
-  const count = (value: number) => (value > 99 ? '99+' : value);
+  // The store's messages are one slim moving band at the top of the homepage only
+  const showAnnouncement = activePage === 'home';
+
+  // The bar and the scroll. The <header> box itself never changes size (pages measure it and keep a constant
+  // top padding of the same height), so nothing on the page moves: only the bar inside it gets a little lower
+  // (56 -> 48px) and the whole box slides away with a transform while the shopper scrolls down the homepage or
+  // a product page, and comes back as soon as they scroll up. The thin line at the bar's bottom edge shows how
+  // far the page is scrolled. Classes are written from the scroll engine's frame, never through React state.
+  const headerRef = useRef<HTMLElement>(null);
+  const progressRef = useRef<HTMLElement>(null);
+  const scrollRange = useRef(1);
+  const canHide = useRef(false);
+  const somethingOpen = isMobileMenuOpen || isSearchOpen || collectionsOpen || pinOpen;
+  canHide.current = (activePage === 'home' || activePage === 'product-detail') && !somethingOpen;
+  useEffect(() => addScrollFx(document.body, ({ rawY, velocity }) => {
+    const bar = headerRef.current;
+    if (!bar) return;
+    setVar(progressRef.current, 'transform', `scaleX(${clamp(rawY / scrollRange.current).toFixed(4)})`);
+    if (!canHide.current || prefersReducedMotion()) { bar.classList.remove('hide', 'sm'); return; }
+    bar.classList.toggle('sm', rawY > 40);
+    if (velocity > 11 && rawY > 500) bar.classList.add('hide');
+    else if (velocity < -1.5 || rawY < 200) bar.classList.remove('hide');
+  }, { measure: (_el, { vh }) => { scrollRange.current = Math.max(1, document.documentElement.scrollHeight - vh); } }), []);
+  // Anything opening, a page change, the bag count going up (a photo may be flying to the bag) and keyboard
+  // focus inside the bar all bring it back
+  useEffect(() => { headerRef.current?.classList.remove('hide'); }, [somethingOpen, activePage, cartCount]);
 
   return (
     <>
-      {/* The announcement strip sits above the header on every width and scrolls away with the page; checkout stays free of offers */}
-      {showAnnouncement && <AnnouncementLine />}
-      <header className="sticky top-0 z-50 w-full select-none">
-        {/* Phones and tablets: one emerald bar, edge to edge, always the same height. Menu and search on the left,
-            the wordmark with its ornament in the centre, wishlist and bag with their real counts on the right. */}
-        <div className="sag-on-emerald lg:hidden grid h-[60px] grid-cols-[1fr_auto_1fr] items-center px-1.5 sm:px-3.5">
-          <div className="flex items-center">
+      <header
+        ref={headerRef}
+        id="site-header"
+        data-menu={isMobileMenuOpen ? 'open' : undefined}
+        onFocus={() => headerRef.current?.classList.remove('hide')}
+        className="aura-hd fixed inset-x-0 top-0 z-50 select-none"
+      >
+        <div className="aura-hd-bar">
+          {/* Phones and tablets: menu, the wordmark in the centre, search and the bag with its real count */}
+          <div className="aura-hd-row lg:hidden flex items-center px-1 sm:px-3">
             <button
               id="mobile-menu-trigger"
               onClick={() => { setIsSearchOpen(false); setIsMobileMenuOpen(!isMobileMenuOpen); }}
-              className={`${phoneIcon} flex`}
+              className="aura-hb"
               aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-[21px] h-[21px]" strokeWidth={1.5} /> : <Menu className="w-[21px] h-[21px]" strokeWidth={1.5} />}
+              <Icon name={isMobileMenuOpen ? 'close' : 'menu'} />
+            </button>
+            <button id="header-brand-logo-mobile" onClick={() => { setIsMobileMenuOpen(false); setActivePage('home'); }} className="min-w-0 flex-1 cursor-pointer text-center" aria-label="Suit Aura Girls home">
+              {wordmark}
             </button>
             {/* The accessible name starts with "Search suits" (the storefront check looks for it) */}
             <button
               type="button"
               id="header-search-btn"
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className={`${phoneIcon} flex`}
+              className="aura-hb"
               aria-label={searchLabel}
               aria-expanded={isSearchOpen}
             >
-              <Search className="w-[21px] h-[21px]" strokeWidth={1.5} aria-hidden="true" />
+              <Icon name="search" />
             </button>
-          </div>
-          <button id="header-brand-logo-mobile" onClick={() => setActivePage('home')} className="sag-hdr-wm flex flex-col items-center gap-1.5 cursor-pointer" aria-label="Suit Aura Girls home">
-            <span className={`${WORDMARK} pl-[0.08em] text-[14px] tracking-[0.08em]! min-[360px]:pl-[0.14em] min-[360px]:text-[15px] min-[360px]:tracking-[0.14em]! min-[380px]:pl-[0.17em] min-[380px]:text-[17px] min-[380px]:tracking-[0.17em]! sm:pl-[0.22em] sm:text-[21px] sm:tracking-[0.22em]!`}>Suit Aura Girls</span>
-            {ornament}
-          </button>
-          <div className="flex items-center justify-end">
-            <button id="header-wishlist-btn-mobile" onClick={() => setActivePage('wishlist')} className={`${phoneIcon} flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-[21px] h-[21px]" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={badge}>{count(wishlist.length)}</span>}
+            {/* Tablets have no tab bar: the wishlist stays one tap away (on phones it is in the tab bar and the menu) */}
+            <button id="header-wishlist-btn-tablet" onClick={() => setActivePage('wishlist')} className="aura-hb" aria-label={`Wishlist, ${wishlist.length} items`}>
+              <Icon name="heart" />
+              {badge(wishlist.length)}
             </button>
             <button
               id="header-cart-btn-mobile"
+              data-bag-target=""
               onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
-              className={`${phoneIcon} flex`}
+              className="aura-hb"
               aria-label={`Bag, ${cartCount} items`}
             >
-              <ShoppingBag className="w-[21px] h-[21px]" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={badge}><span key={cartCount} className="sag-settle">{count(cartCount)}</span></span>}
+              <Icon name="bag" />
+              {badge(cartCount)}
             </button>
           </div>
-        </div>
 
-        {/* Desktop: the emerald bar: the search field, the mark and wordmark in the centre, the icons; then the menu row */}
-        <div className="hidden lg:block bg-dark text-on-dark">
-        <div className="sag-on-emerald">
-        <div className="mx-auto grid h-[76px] max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-6">
-          <div className="relative w-full max-w-[340px]">
-            <button
-              type="button"
-              id="desktop-search-field"
-              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
-              className="w-full h-11 pl-11 pr-12 rounded-lg border border-line bg-brand-dark text-left text-sm text-ink-muted truncate cursor-pointer"
-            >
-              {searchLabel}
-            </button>
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none flex text-highlight">
-              <Search className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
-            </span>
-            <VoiceSearchButton onResult={executeSearch} className="absolute right-1 top-1/2 -translate-y-1/2" />
-          </div>
+          {/* Desktop: the search field, the wordmark in the centre, the account buttons; then the menu row */}
+          <div className="hidden lg:block">
+            <div className="aura-hd-row mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center gap-6 px-7">
+              <div className="relative w-full max-w-[320px]">
+                <button
+                  type="button"
+                  id="desktop-search-field"
+                  onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(true); }}
+                  className="aura-hd-search"
+                >
+                  {searchLabel}
+                </button>
+                <span className="pointer-events-none absolute left-4 top-1/2 flex -translate-y-1/2">
+                  <Icon name="search" size={19} />
+                </span>
+                <VoiceSearchButton onResult={executeSearch} className="absolute right-0.5 top-1/2 -translate-y-1/2" />
+              </div>
 
-          <button
-            id="header-brand-logo"
-            onClick={() => setActivePage('home')}
-            className="sag-hdr-wm flex shrink-0 items-center gap-3.5 cursor-pointer"
-            aria-label="Suit Aura Girls home"
-          >
-            <img src="/suit-aura-mark-132.webp" width={40} height={40} alt="" className="h-10 w-10 shrink-0 rounded-full! border border-line object-cover" />
-            <span className="flex flex-col items-center gap-2">
-              <span className={`${WORDMARK} pl-[0.22em] text-[24px] tracking-[0.22em]!`}>Suit Aura Girls</span>
-              {ornament}
-            </span>
-          </button>
-
-          <div className="flex items-center justify-end gap-1 shrink-0">
-            <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className={`${deskIcon} hidden md:flex`} aria-label={`Wishlist, ${wishlist.length} items`}>
-              <Heart className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {wishlist.length > 0 && <span className={badge}>{count(wishlist.length)}</span>}
-            </button>
-            <button id="header-account-btn" onClick={() => setActivePage('account')} className={`${deskIcon} hidden md:flex`} aria-label={user ? 'My account' : 'Sign in'}>
-              <User className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {user && <span className="absolute bottom-1.5 right-1.5 w-2 h-2 rounded-full bg-highlight" />}
-            </button>
-            <button
-              id="header-cart-btn"
-              onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
-              className={`${deskIcon} flex`}
-              aria-label={`Bag, ${cartCount} items`}
-            >
-              <ShoppingBag className="w-[22px] h-[22px]" strokeWidth={1.5} />
-              {cartCount > 0 && <span className={badge}><span key={cartCount} className="sag-settle">{count(cartCount)}</span></span>}
-            </button>
-          </div>
-        </div>
-        </div>
-
-        {/* Desktop: the menu on its own row under a thin champagne line, in small letter-spaced capitals;
-            the current page carries a thin champagne underline */}
-        <div className="border-t border-highlight/30">
-          <nav className="px-6 h-[42px] flex items-center justify-center gap-9 xl:gap-11" aria-label="Main">
-            {navItems.map((item) => (
-              <button
-                key={item.label}
-                id={`nav-link-${item.label.toLowerCase().replace(/&/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`}
-                onClick={item.action}
-                aria-current={item.active ? 'page' : undefined}
-                className={navLink}
-              >
-                {item.label}
-                <span aria-hidden="true" className={navUnderline(item.active)} />
+              <button id="header-brand-logo" onClick={() => setActivePage('home')} className="shrink-0 cursor-pointer" aria-label="Suit Aura Girls home">
+                {wordmark}
               </button>
-            ))}
-            <div className="relative" ref={collectionsRef}>
-              <button
-                id="nav-link-collections"
-                onClick={() => setCollectionsOpen(!collectionsOpen)}
-                aria-expanded={collectionsOpen}
-                aria-haspopup="true"
-                aria-controls="collections-menu"
-                className={`${navLink} gap-1`}
-              >
-                Collections <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${collectionsOpen ? 'rotate-180' : ''}`} strokeWidth={1.5} />
-                <span aria-hidden="true" className={navUnderline(collectionActive)} />
-              </button>
-              {collectionsOpen && (
-                <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] w-[460px] rounded-[10px] border border-line bg-surface p-5 text-ink shadow-[var(--sag-shadow-pop)] z-50 sag-pop">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <p className={EYEBROW}>Shop by collection</p>
-                    {collections.length > 0 && <span className="sag-num text-[12px] text-ink-muted">{collections.length} {collections.length === 1 ? 'collection' : 'collections'}</span>}
-                  </div>
-                  {collections.length === 0 && <p className="mt-3 text-sm text-ink-muted">Collections appear as products are added.</p>}
-                  <div className="mt-2 grid grid-cols-2 gap-x-6">
-                    {collections.map(([name, count]) => {
-                      const current = activePage === 'shop' && selectedCategory === name;
-                      return (
-                        <button
-                          key={name}
-                          onClick={() => { navigateToCategory(name as any); setCollectionsOpen(false); }}
-                          aria-current={current ? 'page' : undefined}
-                          className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left font-display text-[19px] leading-6 transition-colors cursor-pointer ${current ? 'text-brand font-semibold' : 'text-ink hover:text-brand'}`}
-                        >
-                          <span className="truncate">{name}</span>
-                          <span className="sag-num shrink-0 font-sans text-[12px] font-normal text-ink-muted">{count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <button onClick={() => { navigateToCategory('All'); setCollectionsOpen(false); }} className="sag-btn-primary flex-1 h-11 px-4 text-sm">
-                      View all styles
-                    </button>
-                    <button onClick={() => { navigateToCategory('New Arrivals'); setCollectionsOpen(false); }} className="sag-btn-outline flex-1 h-11 px-4 text-sm">
-                      New arrivals
-                    </button>
-                  </div>
-                </div>
-              )}
+
+              <div className="flex shrink-0 items-center justify-end gap-1">
+                <button id="header-wishlist-btn" onClick={() => setActivePage('wishlist')} className="aura-hb" aria-label={`Wishlist, ${wishlist.length} items`}>
+                  <Icon name="heart" />
+                  {badge(wishlist.length)}
+                </button>
+                <button id="header-account-btn" onClick={() => setActivePage('account')} className="aura-hb" aria-label={user ? 'My account' : 'Sign in'}>
+                  <Icon name="user" />
+                  {user && <span className="absolute bottom-2 right-2 h-2 w-2 rounded-full bg-accent" />}
+                </button>
+                <button
+                  id="header-cart-btn"
+                  data-bag-target=""
+                  onClick={() => { setIsMobileMenuOpen(false); setIsSearchOpen(false); setIsCartDrawerOpen(true); }}
+                  className="aura-hb"
+                  aria-label={`Bag, ${cartCount} items`}
+                >
+                  <Icon name="bag" />
+                  {badge(cartCount)}
+                </button>
+              </div>
             </div>
-            <button
-              id="nav-link-offers"
-              onClick={() => navigateToCategory('Sale')}
-              aria-current={offersActive ? 'page' : undefined}
-              className={`${navLink} text-highlight`}
-            >
-              Offers
-              <span aria-hidden="true" className={navUnderline(offersActive)} />
-            </button>
-          </nav>
-        </div>
+
+            {/* The menu on its own row under a hairline; the current page carries a short line */}
+            <nav className="aura-hd-nav" aria-label="Main">
+              {navItems.map((item) => (
+                <button
+                  key={item.label}
+                  id={`nav-link-${item.label.toLowerCase().replace(/&/g, '').replace(/\s+/g, '-').replace(/-+/g, '-')}`}
+                  onClick={item.action}
+                  aria-current={item.active ? 'page' : undefined}
+                  className={navLink}
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="relative" ref={collectionsRef}>
+                <button
+                  id="nav-link-collections"
+                  onClick={() => setCollectionsOpen(!collectionsOpen)}
+                  aria-expanded={collectionsOpen}
+                  aria-haspopup="true"
+                  aria-controls="collections-menu"
+                  data-on={collectionActive ? '' : undefined}
+                  className={`${navLink} gap-1`}
+                >
+                  Collections <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${collectionsOpen ? 'rotate-180' : ''}`} strokeWidth={1.6} />
+                </button>
+                {collectionsOpen && (
+                  <div id="collections-menu" className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+8px)] w-[460px] rounded-[22px] bg-surface p-5 text-ink shadow-[var(--sag-shadow-pop)] z-50 sag-pop">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <p className={EYEBROW}>Shop by collection</p>
+                      {collections.length > 0 && <span className="sag-num text-[13px] text-ink-muted">{collections.length} {collections.length === 1 ? 'collection' : 'collections'}</span>}
+                    </div>
+                    {collections.length === 0 && <p className="mt-3 text-sm text-ink-muted">Collections appear as products are added.</p>}
+                    <div className="mt-2 grid grid-cols-2 gap-x-6">
+                      {collections.map(([name, count]) => {
+                        const current = activePage === 'shop' && selectedCategory === name;
+                        return (
+                          <button
+                            key={name}
+                            onClick={() => { navigateToCategory(name as any); setCollectionsOpen(false); }}
+                            aria-current={current ? 'page' : undefined}
+                            className={`w-full min-h-11 flex items-center justify-between gap-2 border-b border-line py-2 text-left text-[17px] leading-6 transition-colors cursor-pointer ${current ? 'text-sale font-extrabold' : 'text-ink font-bold hover:text-sale'}`}
+                          >
+                            <span className="truncate">{name}</span>
+                            <span className="sag-num shrink-0 text-[13px] font-normal text-ink-muted">{count}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4 flex items-center gap-2">
+                      <button onClick={() => { navigateToCategory('All'); setCollectionsOpen(false); }} className="sag-btn-primary flex-1 h-11 px-4 text-sm">
+                        View all styles
+                      </button>
+                      <button onClick={() => { navigateToCategory('New Arrivals'); setCollectionsOpen(false); }} className="sag-btn-outline flex-1 h-11 px-4 text-sm">
+                        New arrivals
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <button
+                id="nav-link-offers"
+                onClick={() => navigateToCategory('Sale')}
+                aria-current={offersActive ? 'page' : undefined}
+                className={`${navLink} aura-sa`}
+              >
+                Offers
+              </button>
+            </nav>
+          </div>
+          {/* How far the page is scrolled */}
+          <i ref={progressRef} id="header-progress" className="aura-hd-p" aria-hidden="true" />
         </div>
 
         {isSearchOpen && (
-          <div id="search-drawer-overlay" className="sag-drop absolute left-2.5 right-2.5 top-full mt-2 text-ink lg:left-6 lg:right-6">
-            {/* Dim the page under the panel; a tap outside closes it */}
+          <div id="search-drawer-overlay" className="sag-drop pointer-events-auto absolute left-2.5 right-2.5 top-full mt-2 text-ink lg:left-6 lg:right-6">
+            {/* Dim the page under the sheet; a tap outside closes it */}
             <div className="absolute -left-2.5 -right-2.5 top-0 h-screen bg-[color:var(--sag-scrim)] sag-fade lg:-left-6 lg:-right-6" onClick={closeSearch} aria-hidden="true" />
-            <div className="relative max-w-3xl mx-auto rounded-[10px] border border-line bg-surface shadow-[var(--sag-shadow-pop)] px-4 sm:px-8 pt-4 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
-              {/* The field: a white box whose edge turns emerald while typing */}
-              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="flex items-center gap-2 rounded-lg border border-control bg-surface pl-4 pr-2 focus-within:border-brand">
+            <div className="relative max-w-3xl mx-auto rounded-[28px] bg-surface shadow-[var(--sag-shadow-pop)] px-4 sm:px-8 pt-4 pb-6 max-h-[calc(100vh-6.5rem)] supports-[height:100dvh]:max-h-[calc(100dvh-6.5rem)] overflow-y-auto overscroll-contain">
+              {/* The field: a paper pill whose edge turns ink while typing */}
+              <form role="search" onSubmit={(e) => { e.preventDefault(); executeSearch(searchInput); }} className="flex items-center gap-2 rounded-full border border-line bg-page pl-4 pr-2 focus-within:border-ink">
                 <Search className="w-5 h-5 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
                 <input
                   ref={searchInputRef}
@@ -468,7 +475,7 @@ export const Header: React.FC = () => {
                 <button type="submit" id="search-submit-btn" className={`sag-btn-primary h-10 shrink-0 px-4 text-sm ${searchInput ? '' : 'hidden sm:inline-flex'}`}>
                   Search
                 </button>
-                <button type="button" onClick={closeSearch} className={`sag-caps h-10 shrink-0 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
+                <button type="button" onClick={closeSearch} className={`h-10 shrink-0 px-2.5 text-[14px] font-bold text-ink cursor-pointer ${searchInput ? 'hidden sm:inline-flex sm:items-center' : 'inline-flex items-center'}`}>
                   Cancel
                 </button>
               </form>
@@ -490,7 +497,7 @@ export const Header: React.FC = () => {
                               onClick={() => { navigateToProduct(prod.id); setIsSearchOpen(false); setSearchInput(''); }}
                               className="w-full min-w-0 flex items-center gap-3 border-b border-line py-2.5 text-left cursor-pointer"
                             >
-                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 rounded-lg! object-cover object-top bg-sunken" />
+                              <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 120)} alt="" className="w-12 h-[60px] shrink-0 rounded-[12px]! object-cover object-top bg-sunken" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm leading-5 text-ink truncate">{prod.name}</p>
                                 <p className="text-[12px] text-ink-muted truncate">{prod.category}</p>
@@ -511,7 +518,7 @@ export const Header: React.FC = () => {
                     </>
                   ) : (
                     <div className="sag-glass sag-glass-strong px-4 py-6 text-center">
-                      <p className="font-display text-[22px] font-semibold leading-7 text-ink break-words">No styles match “{searchTrimmed}”</p>
+                      <p className="text-[22px] font-extrabold leading-7 tracking-[-0.02em] text-ink break-words">No styles match “{searchTrimmed}”</p>
                       <p className="mt-1 text-[13px] text-ink-muted">Check the spelling or pick a collection below.</p>
                     </div>
                   )}
@@ -551,7 +558,7 @@ export const Header: React.FC = () => {
                           aria-label={`${prod.name}, ₹${prod.price.toLocaleString('en-IN')}`}
                           className="flex w-[112px] shrink-0 flex-col gap-[7px] text-left cursor-pointer"
                         >
-                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-lg! bg-sunken object-cover object-top" />
+                          <img src={getCleanImageUrl(prod.images?.[0] || prod.image || '', 320)} alt="" loading="lazy" className="aspect-[4/5] w-full rounded-[17px]! bg-sunken object-cover object-top" />
                           <span className="sag-num text-[13px] font-semibold leading-4 text-ink">₹{prod.price.toLocaleString('en-IN')}</span>
                         </button>
                       ))}
@@ -592,7 +599,8 @@ export const Header: React.FC = () => {
           </div>
         )}
       </header>
-
+      {/* The store's real messages: one slim moving band, the first thing of the homepage under the header */}
+      {showAnnouncement && <AnnouncementLine />}
     </>
   );
 };

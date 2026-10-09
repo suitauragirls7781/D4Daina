@@ -26,9 +26,9 @@ export const PrepaidPerks: React.FC = () => {
     <section aria-label="Why pay online" className="w-full py-2">
       <ul className="sag-scroll-x sag-num max-w-7xl mx-auto flex items-center gap-2 overflow-x-auto px-4 sm:px-6 lg:px-8">
         {perks.map(({ icon: Icon, text, sale }) => (
-          <li key={text} className="flex h-11 shrink-0 items-center gap-2.5 rounded-lg border border-line bg-surface px-3.5 text-[13px] leading-[18px] whitespace-nowrap text-ink">
-            <span className="flex shrink-0 text-brand"><Icon className="w-[18px] h-[18px]" mono /></span>
-            <span className={sale ? 'font-medium' : undefined}>{text}</span>
+          <li key={text} className="aura-lt flex h-11 shrink-0 items-center gap-2.5 rounded-full bg-surface pl-1.5 pr-4 text-[14px] leading-[18px] whitespace-nowrap text-ink">
+            <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${sale ? 'bg-blush text-ink' : 'bg-sunken text-ink'}`}><Icon className="w-[17px] h-[17px]" mono /></span>
+            <span className={sale ? 'font-bold' : 'font-semibold'}>{text}</span>
           </li>
         ))}
       </ul>

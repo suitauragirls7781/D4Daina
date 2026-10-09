@@ -1,6 +1,6 @@
 import { useScrollReveal } from './utils/reveal';
 import { usePresence } from './utils/presence';
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { RouterProvider, useRouter } from './context/RouterContext';
 import { ProductProvider } from './context/ProductContext';
 import { ShopProvider, useShop } from './context/ShopContext';
@@ -28,6 +28,7 @@ import { ActivePage } from './types';
 
 import { slugToCategory } from './utils/slugHelper';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { Backdrop } from './aura';
 
 // Pages other than home load on demand so shoppers never download the admin panel.
 const AccountPage = lazy(() => import('./components/AccountPage').then((m) => ({ default: m.AccountPage })));
@@ -180,6 +181,20 @@ const MainContent: React.FC = () => {
     search: currentPage === 'shop' ? searchQuery : '',
   });
 
+  // The loader never waits for its own animation: the moment the store has loaded the page is shown, and the
+  // loader's two ink panels part over it once (about half a second, taps go through to the page)
+  const sawLoader = useRef(isLoading);
+  const [loaderLeaving, setLoaderLeaving] = useState(false);
+  useLayoutEffect(() => {
+    if (isLoading) { sawLoader.current = true; return undefined; }
+    if (!sawLoader.current) return undefined;
+    sawLoader.current = false;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    setLoaderLeaving(true);
+    const timer = window.setTimeout(() => setLoaderLeaving(false), 650);
+    return () => window.clearTimeout(timer);
+  }, [isLoading]);
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -199,8 +214,10 @@ const MainContent: React.FC = () => {
 
   // Customer-facing Storefront
   return (
-    <div id="app-main-content" className="min-h-screen flex flex-col bg-page text-ink w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
-      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10001] focus:rounded-full focus:bg-brand focus:px-5 focus:py-3 focus:text-white">Skip to content</a>
+    <div id="app-main-content" className="min-h-screen flex flex-col w-full max-w-full overflow-x-hidden supports-[overflow:clip]:overflow-x-clip">
+      {/* The one fixed layer behind the page: it takes the colour of the section under the reader's eye (data-th) */}
+      <Backdrop watch={`${currentPage}|${currentPath}`} />
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[10001] focus:rounded-full focus:bg-brand focus:px-5 focus:py-3 focus:text-on-dark">Skip to content</a>
       <Header />
       <MobileMenuDrawer />
 
@@ -250,7 +267,7 @@ const MainContent: React.FC = () => {
       </Suspense>
       <LiveVisitorTracker />
       <Toast />
-
+      {loaderLeaving && <LuxuryLoadingScreen leaving />}
     </div>
   );
 };

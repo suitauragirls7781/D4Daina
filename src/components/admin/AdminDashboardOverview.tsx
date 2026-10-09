@@ -72,8 +72,8 @@ const FunnelPanel: React.FC<{
                   {ready && moved !== null && <span className="ml-2 sag-num text-xs leading-4 text-ink-muted">{moved}% moved on</span>}
                 </span>
               </div>
-              <div className="mt-1.5 h-3 rounded-full bg-sunken-deep overflow-hidden" aria-hidden="true">
-                <div className={`h-full rounded-full ${i === steps.length - 1 ? 'bg-brand' : 'bg-control'}`} style={{ width: `${ready ? width : 0}%` }} />
+              <div className="mt-1.5 h-3 rounded-full bg-line overflow-hidden" aria-hidden="true">
+                <div className={`h-full rounded-full ${i === steps.length - 1 ? 'bg-accent' : 'bg-brand'}`} style={{ width: `${ready ? width : 0}%` }} />
               </div>
             </li>
           );
@@ -118,7 +118,7 @@ const DailyChart: React.FC<{
           <span className="sag-num text-xl leading-7 font-semibold text-ink">{ready ? show(valueOf(focused)) : '…'}</span>
         </p>
         {ready && (
-          <p className="text-[13px] leading-[18px] text-sale">
+          <p className="text-[13px] leading-[18px] text-star">
             {best ? <>Best day: {dayLabel(best.day)} with <span className="sag-num font-medium">{show(valueOf(best))}</span></> : <span className="text-ink-muted">Nothing to show in these 30 days yet.</span>}
           </p>
         )}
@@ -132,8 +132,8 @@ const DailyChart: React.FC<{
           return (
             <button key={r.day} type="button" title={words} aria-label={words} aria-pressed={on}
               onClick={() => setPicked(r.day)} onMouseEnter={() => setPicked(r.day)} onFocus={() => setPicked(r.day)}
-              className={`flex-1 min-w-0 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken-deep' : 'hover:bg-sunken'}`}>
-              <span className={`block w-full rounded-t-[4px] ${on ? 'bg-brand' : r.day === best?.day ? 'bg-star' : 'bg-control'}`} style={{ height: `${height}%` }} />
+              className={`flex-1 min-w-0 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken' : 'hover:bg-sunken'}`}>
+              <span className={`block w-full rounded-t-[4px] ${on ? 'bg-accent' : r.day === best?.day ? 'bg-star' : 'bg-brand'}`} style={{ height: `${height}%` }} />
             </button>
           );
         })}
@@ -270,7 +270,7 @@ export const AdminDashboardOverview: React.FC = () => {
       {/* 1. Right now */}
       <section aria-labelledby="admin-now-title" className="sag-glass sag-glass-strong p-4 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-          <h3 id="admin-now-title" className="inline-flex items-center gap-2 text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-sale">
+          <h3 id="admin-now-title" className="inline-flex items-center gap-2 text-[11px] leading-4 font-bold uppercase tracking-[0.14em] text-sale">
             <LiveDot on={live.status === 'ok'} /> Right now
           </h3>
           <p className={small}>{live.status === 'ok' ? <UpdatedAgo at={live.fetchedAt} stale={live.stale} /> : live.status === 'loading' ? 'Connecting…' : ''}</p>
@@ -307,14 +307,14 @@ export const AdminDashboardOverview: React.FC = () => {
             </div>
             <div className="min-w-0">
               <dt className={small}>Sales today</dt>
-              <dd className={`${figure} ${ordersLoaded && (todayOrders?.sales || 0) > 0 ? '!text-sale' : ''}`}>{ordersLoaded ? rupees(todayOrders?.sales || 0) : '…'}</dd>
+              <dd className={`${figure} ${ordersLoaded && (todayOrders?.sales || 0) > 0 ? '!text-ok' : ''}`}>{ordersLoaded ? rupees(todayOrders?.sales || 0) : '…'}</dd>
               <dd className={small}>From paid orders</dd>
             </div>
           </dl>
         </div>
 
         {view?.paused && (
-          <p className="mt-4 px-4 py-3 border border-line text-sm leading-5 text-ink">Visitor counting is paused for today to keep orders safe (free plan limit).</p>
+          <p className="mt-4 px-4 py-3 rounded-[16px] bg-surface text-sm leading-5 text-ink">Visitor counting is paused for today to keep orders safe (free plan limit).</p>
         )}
         {analytics.error && <p className={`mt-3 ${small}`}>{analytics.error}</p>}
       </section>
@@ -326,7 +326,7 @@ export const AdminDashboardOverview: React.FC = () => {
             <EmptyNote>Loading…</EmptyNote>
           ) : todo.length === 0 ? (
             <p className="px-4 py-8 flex items-center justify-center gap-2 text-sm leading-5 text-ink">
-              <CheckCircle2 className="w-5 h-5 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" /> Nothing waiting. All caught up.
+              <CheckCircle2 className="w-5 h-5 shrink-0 text-ok" strokeWidth={1.5} aria-hidden="true" /> Nothing waiting. All caught up.
             </p>
           ) : (
             <ul className="divide-y divide-line">

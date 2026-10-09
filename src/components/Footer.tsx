@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
@@ -6,12 +6,15 @@ import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPL
 import { Mail } from 'lucide-react';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
 import { assuranceFacts } from './Assurance';
+import { clamp, noPin, requestMeasure, setVar, useScrollFx } from '../aura';
 
 /**
- * The footer (Emerald Heritage): one emerald band, edge to edge. On top, centred: the serif wordmark with its
- * small ornament, one muted line and the social marks as round champagne outlines. Then the help and policy
- * links in columns under small champagne headings, with the store address beside them, and one row of small
- * print built from the store's own facts.
+ * The footer (Aura): an ink block that lies UNDER the page and is uncovered as the last section scrolls away.
+ * A wrapper of the footer's own height keeps its place in the page and clips it (clip-path), the footer itself
+ * is fixed to the bottom of the screen. Where that cannot work (the footer is taller than the screen, reduced
+ * motion, no sticky support) it is a normal block at the end of the page.
+ * Inside: a small rose knot that is drawn as the footer comes up, the giant wordmark, the help and policy
+ * links as pills, the social marks, the address and one row of small print from the store's own facts.
  */
 export const Footer: React.FC = () => {
   const { setActivePage, activePage } = useShop();
@@ -27,14 +30,13 @@ export const Footer: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const plainIcon = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full! border border-highlight/50 text-highlight transition-colors duration-300 hover:bg-highlight hover:text-dark active:bg-highlight active:text-dark';
   const socials = [
     { icon: InstagramIcon, href: storeSettings?.instagramUrl || STORE_INSTAGRAM_URL, label: 'Instagram' },
     { icon: FacebookIcon, href: storeSettings?.facebookUrl || '', label: 'Facebook' },
     { icon: XIcon, href: storeSettings?.twitterUrl || '', label: 'X (Twitter)' },
   ].filter((s) => s.href);
 
-  // The same ten links as before, in three columns under plain headings
+  // The same ten links as before (kept in their three groups; shown as one row of pills)
   const columns: Array<{ title: string; links: Array<[ActivePage, string]> }> = [
     { title: 'Orders', links: [
       ['track-order', 'Track order'],
@@ -53,59 +55,88 @@ export const Footer: React.FC = () => {
       ['terms-policy', 'Terms'],
     ] },
   ];
-  const heading = 'sag-caps mb-2 text-[10.5px] font-semibold uppercase leading-4 tracking-[0.24em] text-highlight';
 
-  // Phones: room under the footer for whichever fixed bar the page shows (bottom navigation, bag bar or buy bar)
-  const bottomRoom = activePage === 'cart' ? 'pb-28' : activePage === 'product-detail' ? 'pb-40' : 'pb-[calc(5.75rem+env(safe-area-inset-bottom))]';
+  // The footer's own height is the wrapper's height (measured, never guessed). "Under the page" only when the
+  // whole footer fits on the screen; the choice is written straight to the element, not through React state.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const footRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    const foot = footRef.current;
+    if (!wrap || !foot) return undefined;
+    let seen = -1;
+    const fit = () => {
+      const height = foot.offsetHeight;
+      const under = !noPin() && height > 0 && height <= window.innerHeight;
+      const key = under ? height : 0;
+      if (key === seen) return;
+      seen = key;
+      wrap.style.setProperty('--fh', `${height}px`);
+      if (under) wrap.setAttribute('data-under', ''); else wrap.removeAttribute('data-under');
+      requestMeasure();
+    };
+    fit();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(fit) : null;
+    observer?.observe(foot);
+    // A phone's address bar sliding away changes the screen height a little: that must not flip the choice
+    let width = window.innerWidth;
+    let screenHeight = window.innerHeight;
+    const onResize = () => {
+      if (window.innerWidth === width && Math.abs(window.innerHeight - screenHeight) <= 120) return;
+      width = window.innerWidth;
+      screenHeight = window.innerHeight;
+      fit();
+    };
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => { observer?.disconnect(); window.removeEventListener('resize', onResize); };
+  }, []);
+  // As the footer comes up: the knot draws (--fp) and the wordmark settles from a little higher (--fy)
+  useScrollFx(wrapRef, ({ el, y, vh, top, height }) => {
+    const shown = clamp((y + vh - top) / Math.max(1, height));
+    setVar(el, '--fp', clamp((shown - 0.25) / 0.7));
+    setVar(el, '--fy', `${((1 - shown) * -46).toFixed(1)}px`);
+  });
+
+  // Phones: room under the footer for whichever fixed bar the page shows (tab bar, bag bar or buy bar)
+  const room = activePage === 'cart' ? 'room-bag' : activePage === 'product-detail' ? 'room-buy' : '';
+  const links = columns.flatMap((column) => column.links);
 
   return (
-    <footer id="main-footer" className={`sag-on-emerald w-full px-4 pt-12 sm:px-6 md:pt-16 md:pb-0 ${bottomRoom}`}>
-      <div className="mx-auto max-w-7xl">
-        <div className="flex flex-col items-center gap-3.5 pb-9 text-center">
-          <button type="button" onClick={() => go('home')} className="sag-caps max-w-full truncate pl-[0.2em] font-display text-[22px] uppercase leading-none tracking-[0.2em]! cursor-pointer sm:text-[26px]" aria-label="Suit Aura Girls home">
-            Suit Aura Girls
+    <div ref={wrapRef} className="aura-ftw">
+      <footer ref={footRef} id="main-footer" className={`aura-ft ${room}`}>
+        <div className="mx-auto max-w-7xl">
+          <svg className="aura-ft-k" viewBox="0 0 40 74" aria-hidden="true" focusable="false">
+            <path pathLength={1} d="M20 0v26l14 14-14 14L6 40l14-14M20 54c-9 4-9 14 0 14s9-10 0-14v20" />
+          </svg>
+          <button type="button" onClick={() => go('home')} className="aura-ft-w" aria-label="Suit Aura Girls home">
+            Suit <em>Aura</em> Girls
           </button>
-          <span className="sag-orn" aria-hidden="true"><i /></span>
-          <p className="text-[13.5px] leading-5 text-on-dark-muted">Ethnic wear · {facts.delivery}</p>
-          <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
-            {socials.map(({ icon: Icon, href, label }) => (
-              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className={plainIcon}><Icon className="w-[19px] h-[19px]" mono /></a>
-            ))}
-            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className={plainIcon}><WhatsAppIcon className="w-[19px] h-[19px]" mono /></a>
-            <a href={`mailto:${email}`} aria-label={`Email ${email}`} className={plainIcon}><Mail className="w-[19px] h-[19px]" strokeWidth={1.5} aria-hidden="true" /></a>
-          </div>
-        </div>
+          <p className="aura-ft-s">Ethnic wear · {facts.delivery}</p>
 
-        <div className="grid gap-x-4 gap-y-8 border-t border-line py-8 md:grid-cols-[3fr_1.6fr]">
-          <nav aria-label="Help and policies" className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3">
-            {columns.map((column) => (
-              <div key={column.title}>
-                <p className={heading}>{column.title}</p>
-                <ul>
-                  {column.links.map(([page, label]) => (
-                    <li key={page}>
-                      <button type="button" onClick={() => go(page)} className="flex min-h-10 items-center text-left text-[14px] leading-5 cursor-pointer">
-                        <span className="sag-underline">{label}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          <nav aria-label="Help and policies" className="aura-ft-ln">
+            {links.map(([page, label]) => (
+              <button key={page} type="button" onClick={() => go(page)}>{label}</button>
             ))}
           </nav>
-          <div className="text-[13.5px] leading-[1.65] text-on-dark-muted">
-            <p className={heading}>Address</p>
-            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="block py-1.5 transition-colors hover:text-on-dark">
-              {storeSettings?.address?.trim() || STORE_ADDRESS}
-            </a>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {socials.map(({ icon: Icon, href, label }) => (
+              <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="aura-ft-so"><Icon className="w-[19px] h-[19px]" mono /></a>
+            ))}
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="aura-ft-so"><WhatsAppIcon className="w-[19px] h-[19px]" mono /></a>
+            <a href={`mailto:${email}`} aria-label={`Email ${email}`} className="aura-ft-so"><Mail className="w-[19px] h-[19px]" strokeWidth={1.6} aria-hidden="true" /></a>
+          </div>
+
+          <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="aura-ft-ad">
+            {storeSettings?.address?.trim() || STORE_ADDRESS}
+          </a>
+
+          <div className="aura-ft-b">
+            <span>© {new Date().getFullYear()} Suit Aura Girls</span>
+            <span>{facts.payment} · {facts.returns}</span>
           </div>
         </div>
-
-        <div className="flex flex-wrap justify-between gap-x-4 gap-y-2 border-t border-line pb-6 pt-[18px] text-[12px] leading-[18px] text-on-dark-muted">
-          <p>© {new Date().getFullYear()} Suit Aura Girls</p>
-          <p className="text-highlight">{facts.payment} · {facts.returns}</p>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </div>
   );
 };

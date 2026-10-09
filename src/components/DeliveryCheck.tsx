@@ -156,7 +156,7 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
       aria-busy={status === 'loading'}
       noValidate
     >
-      <label htmlFor={inputId} className="block mb-2.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-ink">Check delivery to your PIN code</label>
+      <label htmlFor={inputId} className="aura-lbl mb-2.5 block">Check delivery to your PIN code</label>
       <div className="flex gap-2">
         <input
           id={inputId}
@@ -169,38 +169,39 @@ export const DeliveryCheck: React.FC<DeliveryCheckProps> = ({ product, quantity 
           placeholder="6-digit PIN code"
           aria-describedby={status === 'idle' ? undefined : resultId}
           aria-invalid={failed}
-          className="sag-input sag-num flex-1 min-w-0 h-12 px-4 aria-invalid:border-danger!"
+          className="sag-input aura-num flex-1 min-w-0 aria-invalid:border-danger!"
         />
-        <button type="submit" disabled={status === 'loading'} className="sag-btn-primary shrink-0 h-12 min-w-[88px] px-5 cursor-pointer disabled:cursor-wait">
-          {status === 'loading' ? <><Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.5} aria-hidden="true" /><span className="sr-only">Checking</span></> : 'Check'}
+        <button type="submit" disabled={status === 'loading'} className="aura-btn shrink-0 min-h-[58px] min-w-[96px] px-7 disabled:cursor-wait">
+          {status === 'loading' ? <><Loader2 className="w-[18px] h-[18px] animate-spin" strokeWidth={1.6} aria-hidden="true" /><span className="sr-only">Checking</span></> : 'Check'}
         </button>
       </div>
 
-      <div id={resultId} aria-live="polite" className="sag-num text-[12.5px] leading-[18px]">
+      <div id={resultId} aria-live="polite" className="aura-num text-[13.5px] leading-5">
         {status === 'invalid' && (
-          <p className="mt-2.5 flex items-start gap-1.5 text-danger"><CircleAlert className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Enter a valid 6-digit PIN code.</p>
+          <p className="mt-3 flex items-start gap-2 text-danger"><CircleAlert className="mt-0.5 w-4 h-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /> Enter a valid 6-digit PIN code.</p>
         )}
         {status === 'not-found' && (
-          <p className="mt-2.5 flex items-start gap-1.5 text-danger"><CircleAlert className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> We could not find this PIN code. Please check it.</p>
+          <p className="mt-3 flex items-start gap-2 text-danger"><CircleAlert className="mt-0.5 w-4 h-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /> We could not find this PIN code. Please check it.</p>
         )}
         {status === 'error' && (
-          <div className="mt-2.5">
-            <p className="flex items-start gap-1.5 text-danger">
-              <CircleAlert className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> Could not check this PIN code right now.
+          <div className="mt-3">
+            <p className="flex items-start gap-2 text-danger">
+              <CircleAlert className="mt-0.5 w-4 h-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /> Could not check this PIN code right now.
             </p>
             <p className="flex flex-wrap items-center gap-x-3 text-ink-muted">
               <span>You can still place your order. We ship across India.</span>
-              <button type="button" onClick={() => check(pincode)} className="sag-link text-[12.5px] underline-offset-4 decoration-1 gap-1.5">
-                <RotateCw className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /> Retry
+              <button type="button" onClick={() => check(pincode)} className="sag-link text-[13.5px] gap-1.5">
+                <RotateCw className="w-4 h-4" strokeWidth={1.6} aria-hidden="true" /> Retry
               </button>
             </p>
           </div>
         )}
         {status === 'ok' && (
-          <p className="mt-2.5 flex items-start gap-1.5 text-ink-muted">
-            <CircleCheck className="w-4 h-4 shrink-0 text-brand" strokeWidth={1.5} aria-hidden="true" />
+          <p className="mt-3 flex items-start gap-2 text-ink-muted">
+            <CircleCheck className="mt-0.5 w-4 h-4 shrink-0 text-ok" strokeWidth={1.6} aria-hidden="true" />
             <span>
-              <span className="font-medium text-ink">We ship to {placeName ? <>{placeName} ({pincode})</> : pincode}.</span>{' '}
+              <span className="font-bold text-ink">We ship
+ to {placeName ? <>{placeName} ({pincode})</> : pincode}.</span>{' '}
               {shippingLine()}
             </span>
           </p>

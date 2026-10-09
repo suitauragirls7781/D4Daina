@@ -4,29 +4,29 @@ import { paymentFailed } from '../OrderProgress';
 
 /**
  * The shared pieces of the admin sales pages (orders, order details, returns, cancellations, abandoned
- * checkouts, customers, leads, reviews) in the "Emerald Heritage" look: status pills, the page title, the row
- * of key numbers, titled glass panels, and the class names for buttons, fields, chips and tables.
+ * checkouts, customers, leads, reviews) in the "Aura" look: status pills, the page title, the row
+ * of key numbers, titled white cards, and the class names for buttons, fields, chips and tables.
  * Every page is built in the same order: title, key numbers, filters, the list, an honest empty state.
  */
 
 // ---------------------------------------------------------------- class names
 
 export const adminUi = {
-  /** A few large panels per page (blurred glass). */
+  /** A few large panels per page (white cards, 22px corners, no line). */
   panel: 'sag-glass p-4 sm:p-5',
   /** Panel without padding, for tables and lists that run edge to edge. */
   panelFlush: 'sag-glass overflow-hidden',
-  /** One of many repeated cards in a list (same glass, without the blur, so long lists stay smooth). */
+  /** One of many repeated cards in a list (the same white card). */
   card: 'sag-card p-4 sm:p-5',
-  /** A quiet box inside a panel. */
-  inset: 'rounded-[10px] border border-line bg-sunken p-3.5',
+  /** A quiet box inside a panel: paper, 16px corners. */
+  inset: 'rounded-[16px] bg-page p-3.5',
   primary: 'sag-btn-primary h-11 px-5 gap-2 whitespace-nowrap disabled:cursor-not-allowed',
   outline: 'sag-btn-outline h-11 px-5 gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed',
   /** Compact buttons for table rows. */
   primarySmall: 'sag-btn-primary h-10 px-4 gap-1.5 whitespace-nowrap disabled:cursor-not-allowed',
   outlineSmall: 'sag-btn-outline h-10 px-4 gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed',
   /** "Say no" or delete: always with words, kept apart from the main action. */
-  danger: 'h-11 px-5 rounded-lg border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-50 disabled:cursor-not-allowed',
+  danger: 'h-11 px-5 rounded-full border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-50 disabled:cursor-not-allowed',
   iconBtn: 'w-11 h-11 shrink-0 rounded-full inline-flex items-center justify-center text-ink cursor-pointer transition-colors hover:bg-sunken-deep disabled:opacity-40',
   field: 'sag-input h-11',
   search: 'sag-input h-11 pl-10',
@@ -34,35 +34,35 @@ export const adminUi = {
   textarea: 'sag-input min-h-[76px]',
   label: 'sag-label',
   hint: 'mt-1.5 text-[13px] leading-[18px] text-ink-muted',
-  /** Filter chip: pass aria-pressed, or data-selected for a tab. Selected is gold with dark text. */
+  /** Filter chip: pass aria-pressed, or data-selected for a tab. Selected is an ink pill with paper text. */
   chip: 'sag-chip h-10 shrink-0 gap-1.5 whitespace-nowrap',
   chipRow: 'flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0',
-  link: 'font-medium text-brand underline underline-offset-[3px] decoration-brand-line hover:text-brand-dark cursor-pointer',
-  h2: 'font-sans text-[17px] leading-6 font-semibold text-ink',
+  link: 'font-bold text-brand underline underline-offset-[3px] decoration-brand-line hover:text-brand-dark cursor-pointer',
+  h2: 'font-sans text-[18px] leading-6 font-extrabold tracking-[-0.015em] text-ink',
   /** Table header cell: small muted capitals that stay in view while the list scrolls. */
-  th: 'sticky top-0 z-10 bg-surface py-3 px-3 text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted border-b border-line whitespace-nowrap',
+  th: 'sticky top-0 z-10 bg-surface py-3 px-3 text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted border-b border-line whitespace-nowrap',
   td: 'py-3.5 px-3 align-top',
   row: 'transition-colors hover:bg-sunken',
   check: 'w-[22px] h-[22px] shrink-0 accent-brand',
   checkRow: 'min-h-11 flex items-center gap-2.5 text-sm leading-5 text-ink cursor-pointer',
-  alert: 'rounded-[10px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 font-medium text-danger',
-  avatar: 'shrink-0 rounded-full border border-line bg-sunken text-ink text-sm font-semibold flex items-center justify-center',
-  photo: 'shrink-0 aspect-[4/5] rounded-lg object-cover object-top bg-sunken',
+  alert: 'rounded-[16px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 font-medium text-danger',
+  avatar: 'shrink-0 rounded-full bg-sunken text-ink text-sm font-semibold flex items-center justify-center',
+  photo: 'shrink-0 aspect-[4/5] rounded-[12px] object-cover object-top bg-sunken',
 };
 
 // ---------------------------------------------------------------- pills
 
-/** good = fine or the current step (gold), muted = finished or nothing to do, danger = a real problem. */
+/** good = fine or the current step (forest), plain = done (sand with ink text), muted = finished or nothing to do, danger = a real problem. */
 export type PillTone = 'good' | 'plain' | 'muted' | 'danger';
 
 const PILL_TONE: Record<PillTone, string> = {
-  good: 'border-brand-line bg-brand-wash text-brand',
-  plain: 'border-line bg-sunken text-ink',
-  muted: 'border-line bg-sunken text-ink-muted',
+  good: 'border-ok-line bg-ok-tint text-ok',
+  plain: 'border-transparent bg-sunken text-ink',
+  muted: 'border-transparent bg-sunken text-ink-muted',
   danger: 'border-danger-line bg-danger-tint text-danger',
 };
-const PILL_DOT: Record<PillTone, string> = { good: 'bg-brand', plain: 'bg-ink', muted: 'bg-control', danger: 'bg-danger' };
-const PILL = 'inline-flex items-center gap-1.5 min-h-6 px-2.5 py-0.5 rounded-lg border text-xs leading-4 font-medium whitespace-nowrap';
+const PILL_DOT: Record<PillTone, string> = { good: 'bg-ok', plain: 'bg-ink', muted: 'bg-ink-faint', danger: 'bg-danger' };
+const PILL = 'inline-flex items-center gap-1.5 min-h-6 px-2.5 py-0.5 rounded-full border text-xs leading-4 font-semibold whitespace-nowrap';
 
 export const pillClass = (tone: PillTone) => `${PILL} ${PILL_TONE[tone]}`;
 
@@ -87,7 +87,7 @@ interface PageTitleProps {
 export const PageTitle: React.FC<PageTitleProps> = ({ title, line, actions, id }) => (
   <header id={id} className="flex flex-col lg:flex-row lg:items-end gap-3 lg:gap-6">
     <div className="min-w-0 flex-1">
-      <h2 className="font-display text-[26px] leading-8 sm:text-[30px] sm:leading-9 text-ink break-words">{title}</h2>
+      <h2 className="font-display text-[28px] leading-8 sm:text-[32px] sm:leading-9 text-ink break-words">{title}</h2>
       {line && <p className="mt-1.5 text-sm leading-5 text-ink-muted max-w-2xl">{line}</p>}
     </div>
     {actions && <div className="flex flex-wrap items-center gap-2 lg:justify-end lg:shrink-0">{actions}</div>}
@@ -99,7 +99,7 @@ export interface KeyNumber {
   value: React.ReactNode;
   /** A short line under the number, in plain words. */
   note?: React.ReactNode;
-  /** Gold when the number asks for attention. */
+  /** Dark rose when the number asks for attention. */
   highlight?: boolean;
 }
 
@@ -108,15 +108,15 @@ export const KeyNumbers: React.FC<{ items: KeyNumber[]; label?: string }> = ({ i
   <dl aria-label={label} className={`grid grid-cols-2 gap-2.5 sm:gap-3 ${items.length >= 4 ? 'lg:grid-cols-4' : items.length === 3 ? 'sm:grid-cols-3' : ''}`}>
     {items.map((item) => (
       <div key={item.label} className="sag-glass min-w-0 px-4 py-3.5">
-        <dt className="text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted">{item.label}</dt>
-        <dd className={`mt-1 text-[26px] leading-8 font-semibold sag-num break-words ${item.highlight ? 'text-brand' : 'text-ink'}`}>{item.value}</dd>
+        <dt className="text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted">{item.label}</dt>
+        <dd className={`mt-1 text-[28px] leading-8 font-extrabold tracking-[-0.02em] sag-num break-words ${item.highlight ? 'text-sale' : 'text-ink'}`}>{item.value}</dd>
         {item.note && <dd className="mt-0.5 text-xs leading-4 text-ink-muted">{item.note}</dd>}
       </div>
     ))}
   </dl>
 );
 
-/** A titled glass panel: the building block of forms and detail pages. */
+/** A titled white card: the building block of forms and detail pages. */
 export const Panel: React.FC<{ title: React.ReactNode; icon?: React.ReactNode; hint?: React.ReactNode; action?: React.ReactNode; id?: string; className?: string; children: React.ReactNode }> = ({ title, icon, hint, action, id, className = '', children }) => (
   <section id={id} className={`${adminUi.panel} ${className}`}>
     <div className="flex flex-wrap items-start justify-between gap-3 pb-3 mb-4 border-b border-line">
@@ -137,7 +137,7 @@ export const Panel: React.FC<{ title: React.ReactNode; icon?: React.ReactNode; h
 export const EmptyState: React.FC<{ icon?: React.ReactNode; title: React.ReactNode; line?: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, line, children }) => (
   <div className="sag-glass px-5 py-12 text-center">
     {icon && <span className="mx-auto mb-3 flex justify-center text-ink-muted [&>svg]:w-7 [&>svg]:h-7" aria-hidden="true">{icon}</span>}
-    <p className="text-base leading-6 font-medium text-ink">{title}</p>
+    <p className="text-base leading-6 font-bold text-ink">{title}</p>
     {line && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-md mx-auto">{line}</p>}
     {children && <div className="mt-4 flex justify-center">{children}</div>}
   </div>
@@ -185,7 +185,7 @@ export const PaymentBadge: React.FC<{ order: Order; className?: string }> = ({ o
   );
 };
 
-/** Tone of an order's status: gold while it is moving or needs you, muted once finished or stopped. */
+/** Tone of an order's status: forest while it is moving or needs you, plain once delivered, muted once stopped. */
 export const orderStatusPillTone = (status: string): PillTone => {
   switch (status) {
     case 'Pending':

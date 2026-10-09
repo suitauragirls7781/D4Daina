@@ -1,22 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { useShop } from '../context/ShopContext';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
-import { SectionTitle } from './SectionTitle';
+import { Star } from 'lucide-react';
+import { AuraTitle, Icon } from '../aura';
 
 /** Small star row filled to exactly the value (one decimal, same rule as the product page): 4.7 is four and seven tenths stars. */
 const Stars: React.FC<{ value: number }> = ({ value }) => {
   const shown = Math.max(0, Math.min(5, Math.round((Number(value) || 0) * 10) / 10));
   return (
-    <span className="flex gap-0.5" aria-hidden="true">
+    <span className="aura-ac flex gap-0.5" aria-hidden="true">
       {[1, 2, 3, 4, 5].map((i) => {
         const fill = Math.max(0, Math.min(1, shown - (i - 1)));
         return (
-          <span key={i} className="relative block h-[14px] w-[14px] shrink-0">
-            <Star className="block h-[14px] w-[14px] text-star" strokeWidth={1.25} />
+          <span key={i} className="relative block h-[15px] w-[15px] shrink-0">
+            <Star className="block h-[15px] w-[15px]" strokeWidth={1.4} />
             {fill > 0 && (
               <span className="absolute inset-y-0 left-0 overflow-hidden" style={{ width: `${fill * 100}%` }}>
-                <Star className="block h-[14px] w-[14px] max-w-none fill-star text-star" strokeWidth={1.25} />
+                <Star className="block h-[15px] w-[15px] max-w-none fill-current" strokeWidth={1.4} />
               </span>
             )}
           </span>
@@ -32,18 +32,26 @@ const reviewPlace = (location?: string) => {
   return text && text !== 'Artisan, India' ? text : '';
 };
 
+// The customer's own words, untouched. Only the SETTING of a short quote changes: its last word is the serif
+// accent, where that reads naturally (a real word of four letters or more at the end of a short review).
+const quoteParts = (comment: string): [string, string] => {
+  const text = comment.trim();
+  if (text.length > 110) return [text, ''];
+  const match = text.match(/^(.*\s)([\p{L}][\p{L}'’-]{3,}[.!?…]*)$/su);
+  return match ? [match[1], match[2]] : [text, ''];
+};
+const quoteSize = (length: number) => (length <= 70 ? 'xl' : length <= 150 ? 'lg' : length <= 260 ? 'md' : 'sm');
+
 /**
  * Approved customer reviews. Hidden entirely until there is at least one.
- * One review at a time as a centred serif italic quote on a warm tinted band (verified purchases first, the others one
- * swipe or arrow away), then the real average and count. The same at every width.
+ * One review at a time as a very large quote on a blush section (verified purchases first, the others one swipe or
+ * arrow away); the next one rises in behind a mask. Then the real average and count. The same at every width.
  */
 export const CustomerReviews: React.FC = () => {
   const { reviewsList = [] } = useAdmin();
   const { navigateToProduct, products = [] } = useShop();
-  const stripRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef(0);
   const [shown, setShown] = useState(0);
-  useEffect(() => () => cancelAnimationFrame(frameRef.current), []);
+  const swipe = useRef<{ x: number; y: number } | null>(null);
 
   const reviews = reviewsList
     .filter((r) => r.status === 'approved' && String(r.comment || '').trim())
@@ -61,59 +69,55 @@ export const CustomerReviews: React.FC = () => {
   const productOf = (review: (typeof quotes)[number]) => products.find((p) => String(p.id) === String(review.productId));
   // "Read all reviews" opens the style the shown review is about: its page lists every review of it
   const linked = productOf(quotes[at]) || quotes.map(productOf).find(Boolean);
-  const step = (to: number) => {
-    const strip = stripRef.current;
-    const target = strip?.children[Math.max(0, Math.min(quotes.length - 1, to))] as HTMLElement | undefined;
-    if (!strip || !target) return;
-    const reduced = Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-    strip.scrollTo({ left: target.offsetLeft - (strip.children[0] as HTMLElement).offsetLeft, behavior: reduced ? 'auto' : 'smooth' });
+  const step = (to: number) => setShown(Math.max(0, Math.min(quotes.length - 1, to)));
+  // A sideways swipe on the quote brings the next or the previous one (the page's own scroll is never touched)
+  const onDown = (e: React.PointerEvent) => { swipe.current = { x: e.clientX, y: e.clientY }; };
+  const onUp = (e: React.PointerEvent) => {
+    const from = swipe.current;
+    swipe.current = null;
+    if (!from || e.pointerType === 'mouse') return;
+    const dx = e.clientX - from.x;
+    if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(e.clientY - from.y) * 1.4) step(at + (dx < 0 ? 1 : -1));
   };
-  const onScroll = () => {
-    cancelAnimationFrame(frameRef.current);
-    frameRef.current = requestAnimationFrame(() => {
-      const strip = stripRef.current;
-      if (!strip || strip.children.length === 0) return;
-      const origin = (strip.children[0] as HTMLElement).offsetLeft;
-      let nearest = 0;
-      let best = Infinity;
-      Array.from(strip.children).forEach((child, index) => {
-        const distance = Math.abs((child as HTMLElement).offsetLeft - origin - strip.scrollLeft);
-        if (distance < best) { best = distance; nearest = index; }
-      });
-      setShown(nearest);
-    });
-  };
-  const arrow = 'flex h-11 w-11 items-center justify-center rounded-full border border-control bg-surface text-ink cursor-pointer transition-colors hover:border-brand hover:text-brand disabled:opacity-30 disabled:cursor-not-allowed';
 
   return (
-    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" className="w-full rounded-none bg-sunken py-12 text-center lg:py-20">
-      <div className="mx-auto max-w-3xl px-3 sm:px-6">
-       <div className="px-1 sm:px-8 lg:px-12">
-        <SectionTitle id="customer-reviews-title" eyebrow="Real customers" title="Customer reviews" />
+    <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" data-th="blush" className="w-full py-20 lg:py-28">
+      <div className="mx-auto max-w-[1120px] px-5 sm:px-6 lg:px-8">
+        <AuraTitle id="customer-reviews-title" label="Real customers" title="Customer" accent="reviews" size="lg" />
 
-        {/* One review per view; a swipe or the arrows bring the next real one */}
-        <div ref={stripRef} onScroll={onScroll} className="sag-scroll-x scroll-px-0! mt-7 flex overflow-x-auto lg:mt-9">
-          {quotes.map((review) => {
+        {/* Every review is in the page; one is shown at a time, in the same place, so nothing jumps when it changes */}
+        <div
+          className="aura-rvq-wrap mt-9 lg:mt-12"
+          onPointerDown={onDown}
+          onPointerUp={onUp}
+          onPointerCancel={() => { swipe.current = null; }}
+        >
+          {quotes.map((review, index) => {
             const product = productOf(review);
             const rating = Number(review.rating) || 0;
             const place = reviewPlace(review.location);
+            const comment = String(review.comment).trim();
+            const [lead, accent] = quoteParts(comment);
+            const on = index === at;
             return (
-              <figure key={review.id} className="flex w-full shrink-0 flex-col items-center px-1">
+              <figure key={review.id} className="aura-rvq" data-on={on ? '' : undefined} data-size={quoteSize(comment.length)} aria-hidden={on ? undefined : true}>
                 {rating > 0 && (
-                  <div className="flex items-center">
+                  <div className="aura-rvq-s flex items-center">
                     <Stars value={rating} />
                     <span className="sr-only">Rated {rating} out of 5</span>
                   </div>
                 )}
-                <blockquote className="mt-4 font-display text-[23px] font-medium italic leading-[1.32] text-ink line-clamp-6 lg:text-[32px] lg:leading-[1.28]">“{String(review.comment).trim()}”</blockquote>
-                <figcaption className="mt-4 text-[13px] leading-[19px] text-ink-muted">
-                  {review.userName}
+                <blockquote className="aura-rvq-q">
+                  <span>“{lead}{accent && <em>{accent}</em>}”</span>
+                </blockquote>
+                <figcaption className="aura-rvq-c aura-mu">
+                  <span className="aura-fg font-bold">{review.userName}</span>
                   {place ? `, ${place}` : ''}
                   {review.verifiedPurchase === true ? ' · Verified purchase' : ''}
                   {product ? (
-                    <button type="button" onClick={() => navigateToProduct(product.id)} className="mx-auto mt-0.5 block min-h-6 cursor-pointer text-brand underline decoration-1 underline-offset-4 hover:text-brand-dark transition-colors line-clamp-1">{product.name}</button>
+                    <button type="button" onClick={() => navigateToProduct(product.id)} tabIndex={on ? 0 : -1} className="aura-fg mt-1 block min-h-6 max-w-full cursor-pointer text-left font-semibold underline decoration-[1.5px] underline-offset-4 line-clamp-1">{product.name}</button>
                   ) : review.productName ? (
-                    <span className="mt-0.5 block line-clamp-1">{review.productName}</span>
+                    <span className="mt-1 block line-clamp-1">{review.productName}</span>
                   ) : null}
                 </figcaption>
               </figure>
@@ -121,33 +125,33 @@ export const CustomerReviews: React.FC = () => {
           })}
         </div>
 
-        {quotes.length > 1 && (
-          <div className="mt-5 flex items-center justify-center gap-4">
-            <button type="button" onClick={() => step(at - 1)} disabled={at === 0} aria-label="Previous review" className={arrow}>
-              <ChevronLeft className="h-[18px] w-[18px]" strokeWidth={1.25} />
-            </button>
-            <span className="sag-num text-[11.5px] tracking-[0.04em] text-ink-muted" aria-hidden="true">{at + 1} / {quotes.length}</span>
-            <button type="button" onClick={() => step(at + 1)} disabled={at === quotes.length - 1} aria-label="Next review" className={arrow}>
-              <ChevronRight className="h-[18px] w-[18px]" strokeWidth={1.25} />
-            </button>
-          </div>
-        )}
+        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4 lg:mt-12">
+          {quotes.length > 1 && (
+            <div className="flex items-center gap-2.5">
+              <button type="button" onClick={() => step(at - 1)} disabled={at === 0} aria-label="Previous review" className="aura-rnd disabled:cursor-not-allowed disabled:opacity-30">
+                <Icon name="arrow" className="rotate-180" />
+              </button>
+              <button type="button" onClick={() => step(at + 1)} disabled={at === quotes.length - 1} aria-label="Next review" className="aura-rnd disabled:cursor-not-allowed disabled:opacity-30">
+                <Icon name="arrow" />
+              </button>
+              <span className="aura-num aura-mu ml-1.5 text-[14px] font-bold" aria-hidden="true">{at + 1} / {quotes.length}</span>
+            </div>
+          )}
 
-        {approved.length > 0 && (
-          <p className="sag-num mt-5 text-[12.5px] leading-[18px] text-ink-muted">
-            {allAverage.toFixed(1)} out of 5 from {approved.length} {approved.length === 1 ? 'review' : 'reviews'}
-          </p>
-        )}
-        {linked && (
-          <button
-            type="button"
-            onClick={() => navigateToProduct(linked.id)}
-            className="sag-lnk mt-1"
-          >
-            Read all reviews
-          </button>
-        )}
-       </div>
+          <div className="min-w-0 sm:ml-auto sm:text-right">
+            {approved.length > 0 && (
+              <p className="aura-num aura-mu text-[15px] leading-[1.4]">
+                <b className="aura-fg text-[26px] font-extrabold leading-none tracking-[-0.03em]">{allAverage.toFixed(1)}</b> out of 5 from {approved.length} {approved.length === 1 ? 'review' : 'reviews'}
+              </p>
+            )}
+            {linked && (
+              <button type="button" onClick={() => navigateToProduct(linked.id)} className="aura-lk">
+                Read all reviews
+                <Icon name="arrow" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

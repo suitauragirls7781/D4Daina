@@ -98,7 +98,7 @@ export const AdminInsights: React.FC<AdminInsightsProps> = ({ days, periodWords,
 
   const byId = useMemo(() => new Map(products.map((p) => [String(p.id), p])), [products]);
   const counted = loading ? 'Loading…' : failed ? 'These counts could not be read right now.' : `No data for ${periodWords}.`;
-  const head = 'text-[11px] leading-4 font-medium uppercase tracking-[0.12em] text-ink-muted';
+  const head = 'text-[11px] leading-4 font-bold uppercase tracking-[0.12em] text-ink-muted';
 
   const productList = (rows: Array<[string, number]>, unit: (n: number) => string, empty: string) => (rows.length === 0
     ? <p className="py-5 text-sm leading-5 text-ink-muted">{empty}</p>

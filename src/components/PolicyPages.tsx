@@ -9,7 +9,7 @@ import { GmailIcon, WhatsAppIcon } from './BrandIcons';
 import {
   HelpIcon, LockIcon, OrdersIcon, PackageIcon, PinIcon, QualityIcon, ReturnIcon, StoreIconProps, SupportIcon, TagIcon, TruckIcon, UserIcon,
 } from './StoreIcons';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle } from '../aura';
 
 type IconType = React.FC<StoreIconProps>;
 
@@ -51,69 +51,77 @@ const POLICY_LINKS: Array<[ActivePage, string]> = [
 ];
 
 /* Shared text styles for policy copy */
-const P = 'text-sm leading-[22px] text-ink lg:text-[15px] lg:leading-6';
-const S: React.FC<{ children: React.ReactNode }> = ({ children }) => <strong className="font-semibold text-ink">{children}</strong>;
+const P = 'text-[15px] leading-[23px] text-ink lg:text-[16px] lg:leading-[25px]';
+const S: React.FC<{ children: React.ReactNode }> = ({ children }) => <strong className="font-bold text-ink">{children}</strong>;
 const List: React.FC<{ items: React.ReactNode[] }> = ({ items }) => (
-  <ul className="space-y-2">
+  <ul className="space-y-2.5">
     {items.map((item, i) => (
       <li key={i} className={`${P} flex gap-3`}>
-        <span aria-hidden="true" className="mt-[11px] h-px w-2.5 bg-brand shrink-0" />
+        <span aria-hidden="true" className="mt-[9px] h-[7px] w-[7px] rounded-full bg-accent shrink-0" />
         <span className="min-w-0">{item}</span>
       </li>
     ))}
   </ul>
 );
 const ActionLink: React.FC<{ onClick?: () => void; href?: string; children: React.ReactNode }> = ({ onClick, href, children }) => {
-  const cls = 'sag-btn-outline h-11 px-4 gap-2';
+  const cls = 'aura-btn aura-btn-line aura-btn-sm';
   return href
     ? <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className={cls}>{children}</a>
     : <button type="button" onClick={onClick} className={cls}>{children}</button>;
 };
 
+// "Shipping & delivery policy" -> "Shipping & delivery" + the accent word "policy" (a one-word title has no accent)
+const accentOf = (title: string): [string, string | undefined] => {
+  const text = title.trim();
+  const cut = text.lastIndexOf(' ');
+  return cut < 1 ? [text, undefined] : [text.slice(0, cut), text.slice(cut + 1)];
+};
+
 /**
- * Title band shared by the policy, About and Contact pages: breadcrumb, serif page title and one plain sentence.
- * Anything passed as children (support hours, for example) sits under the sentence.
+ * The band shared by the policy, About and Contact pages: breadcrumb, the small label, the huge page title and
+ * one plain sentence. Anything passed as children (support hours, for example) sits under the sentence.
  */
 export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: string; subtitle?: React.ReactNode; children?: React.ReactNode }> = ({ crumb, eyebrow, title, subtitle, children }) => {
   const { setActivePage } = useShop();
+  const [head, accent] = accentOf(title);
   return (
-    <div className="">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-1 pb-2 lg:pt-3 lg:pb-4">
-        <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-[13px] leading-[18px] text-ink-muted -ml-2">
+    <div className="px-3 pt-3 sm:px-6 lg:pt-6">
+      <div className="aa-band mx-auto max-w-[1120px]">
+        <nav aria-label="Breadcrumb" className="-ml-2 mb-4 flex items-center gap-1 text-[13.5px] leading-[18px] aura-mu">
           <button type="button" onClick={() => setActivePage('home')} className="inline-flex items-center min-h-11 px-2 hover:text-ink cursor-pointer">Home</button>
-          <ChevronRight className="w-3.5 h-3.5 shrink-0" strokeWidth={1.5} aria-hidden="true" />
-          <span aria-current="page" className="text-ink truncate px-2">{crumb}</span>
+          <ChevronRight className="w-3.5 h-3.5 shrink-0" strokeWidth={1.6} aria-hidden="true" />
+          <span aria-current="page" className="font-semibold text-ink truncate px-2">{crumb}</span>
         </nav>
-        <SectionTitle as="h1" eyebrow={eyebrow} title={title} className="mt-4 lg:mt-6" />
-        {subtitle && <p className="mx-auto mt-3 max-w-2xl text-center text-[13.5px] leading-5 lg:text-[15px] lg:leading-[22px] text-ink-muted">{subtitle}</p>}
-        {children && <div className="flex flex-col items-center text-center">{children}</div>}
+        <AuraTitle as="h1" label={eyebrow} title={head} accent={accent} />
+        {subtitle && <p className="aura-sub mt-4 max-w-[54ch] lg:text-[17px]">{subtitle}</p>}
+        {children && <div className="flex flex-col items-start">{children}</div>}
       </div>
     </div>
   );
 };
 
-/** "Still have a question?" card: WhatsApp, email and the contact page. Sits at the foot of the info pages. */
+/** "Need help?" card: WhatsApp, email and the contact page. Sits at the foot of the info pages. */
 export const HelpCard: React.FC<{ topic: string; showContactLink?: boolean }> = ({ topic, showContactLink = true }) => {
   const { setActivePage } = useShop();
   const SUPPORT_EMAIL = useSupportEmail();
   return (
-    <section aria-labelledby="info-help-title" className="sag-glass p-4 sm:p-6">
-      <div className="flex items-center gap-3">
-        <span className="shrink-0 flex text-sale"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
+    <section aria-labelledby="info-help-title" className="aa-tlc aura-dk sm:p-7">
+      <div className="flex items-start gap-3.5">
+        <span className="aa-ic aa-ic-blush"><WhatsAppIcon mono className="w-[22px] h-[22px]" /></span>
         <div className="min-w-0 flex-1">
-          <h2 id="info-help-title" className="font-display text-[22px] leading-7 text-ink">Need help?</h2>
-          <p className="text-[12.5px] leading-[18px] text-ink-muted">Chat with us on WhatsApp. Our team replies during support hours.</p>
+          <h2 id="info-help-title" className="text-[28px] leading-[1.05] font-extrabold tracking-[-0.03em]">Need help?</h2>
+          <p className="mt-1.5 text-[14.5px] leading-[21px] text-on-dark-muted">Chat with us on WhatsApp. Our team replies during support hours.</p>
         </div>
-        <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls! I have a question about your ${topic}.`)} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="sag-btn-primary shrink-0 h-11 px-5">
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls! I have a question about your ${topic}.`)} target="_blank" rel="noopener noreferrer" aria-label="Chat on WhatsApp" className="aura-btn aura-btn-sm">
           Chat
         </a>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-5 border-t border-line pt-1 rounded-none!">
-        <a href={`mailto:${SUPPORT_EMAIL}`} className="sag-link gap-1.5 text-[12.5px]">
+        <a href={`mailto:${SUPPORT_EMAIL}`} className="aura-btn aura-btn-line aura-btn-sm">
           <GmailIcon mono className="w-4 h-4" /> Email us
         </a>
         {showContactLink && (
-          <button type="button" onClick={() => setActivePage('contact')} className="sag-link text-[12.5px]">All contact details</button>
+          <button type="button" onClick={() => setActivePage('contact')} className="aura-btn aura-btn-line aura-btn-sm">All contact details</button>
         )}
       </div>
     </section>
@@ -142,16 +150,16 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
   };
 
   return (
-    <div id={`${page}-page`} className="pb-12 lg:pb-16">
+    <div id={`${page}-page`} data-aura className="pb-14 lg:pb-20">
       <InfoPageHeader crumb={title} eyebrow={eyebrow} title={title} subtitle={subtitle} />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 lg:grid lg:grid-cols-12 lg:gap-10">
-        {/* Contents: chips on phones, sticky list on desktop */}
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-7 pt-5 lg:pt-10 lg:grid lg:grid-cols-12 lg:gap-12">
+        {/* Contents: a swipe row of pills on phones, a sticky list of pills on desktop */}
         {sections.length > 1 && (
-          <aside className="lg:col-span-4 mb-4 lg:mb-0 min-w-0">
-            <div className="lg:sticky lg:top-20">
-              <p className="hidden lg:block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale mb-3">On this page</p>
-              <nav aria-label="On this page" className="flex lg:flex-col gap-2 lg:gap-0 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 lg:overflow-visible lg:border-l lg:border-line rounded-none!">
+          <aside className="lg:col-span-4 mb-5 lg:mb-0 min-w-0">
+            <div className="lg:sticky lg:top-24">
+              <p className="hidden lg:block aura-lbl mb-3">On this page</p>
+              <nav aria-label="On this page" className="flex lg:flex-col gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:-mx-7 sm:px-7 lg:mx-0 lg:px-0 lg:overflow-visible">
                 {sections.map((s, i) => {
                   const active = activeId === s.id;
                   return (
@@ -160,13 +168,10 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
                       type="button"
                       onClick={() => jump(s.id)}
                       aria-current={active ? 'true' : undefined}
-                      className={`shrink-0 text-left cursor-pointer transition-colors inline-flex items-center h-10 px-3.5 max-lg:rounded-lg lg:rounded-none border text-[12.5px] whitespace-nowrap lg:h-auto lg:min-h-11 lg:py-2 lg:pl-4 lg:pr-2 lg:border-0 lg:border-l lg:-ml-px lg:text-sm lg:whitespace-normal ${
-                        active
-                          ? 'max-lg:bg-brand max-lg:text-[color:var(--sag-on-gold)] border-brand font-semibold lg:bg-transparent lg:text-sale lg:border-brand'
-                          : 'bg-surface border-control text-ink lg:bg-transparent lg:text-ink-muted lg:border-transparent hover:text-ink'
-                      }`}
+                      data-selected={active}
+                      className="sag-chip shrink-0 h-11 px-4 text-left text-[14px] font-semibold whitespace-nowrap cursor-pointer lg:h-auto lg:min-h-12 lg:w-full lg:justify-start lg:py-2.5 lg:whitespace-normal lg:rounded-[18px]! lg:border-transparent!"
                     >
-                      <span className="hidden lg:inline font-normal mr-2.5 text-[11.5px] text-ink-muted sag-num">{String(i + 1).padStart(2, '0')}</span>{s.title}
+                      <span className="hidden lg:inline mr-3 text-[13px] font-extrabold opacity-60 aura-num">{String(i + 1).padStart(2, '0')}</span>{s.title}
                     </button>
                   );
                 })}
@@ -178,12 +183,12 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
         <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-6 min-w-0`}>
           {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
           {short.length > 0 && (
-            <section aria-labelledby={`${page}-short-title`} className={`sag-glass sag-glass-strong p-5 sm:p-6 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
-              <h2 id={`${page}-short-title`} className="font-display text-[24px] leading-7 text-ink">In short</h2>
-              <ul className="sag-stagger mt-3 space-y-2.5">
+            <section aria-labelledby={`${page}-short-title`} className={`rounded-[26px] bg-blush p-5 sm:p-7 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
+              <h2 id={`${page}-short-title`} className="text-[28px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">In short</h2>
+              <ul className="sag-stagger mt-4 space-y-3">
                 {short.map((point) => (
-                  <li key={point} className="flex items-start gap-2.5 text-[13.5px] leading-5 text-ink">
-                    <Check aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-sale" strokeWidth={1.5} />
+                  <li key={point} className="flex items-start gap-3 text-[15px] leading-[22px] text-ink">
+                    <span aria-hidden="true" className="mt-px flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-ink text-on-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
                     <span className="min-w-0">{point}</span>
                   </li>
                 ))}
@@ -191,14 +196,14 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
             </section>
           )}
           {facts.length > 0 && (
-            <section aria-label="Key facts" className={`sag-glass sag-glass-strong px-4 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
+            <section aria-label="Key facts" className={`rounded-[26px] bg-blush px-4 py-2 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
               <dl>
-                {facts.map(({ icon: Icon, label, value }) => (
-                  <div key={label} className="sag-row border-line items-start py-3">
-                    <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
+                {facts.map(({ icon: FactIcon, label, value }) => (
+                  <div key={label} className="flex items-center gap-3.5 border-t border-[color:var(--hl)] py-3 first:border-t-0">
+                    <span className="aa-ic"><FactIcon mono className="w-5 h-5" /></span>
                     <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
-                      <dt className="text-[13px] leading-[18px] font-normal text-ink-muted">{label}</dt>
-                      <dd className="text-sm leading-5 font-medium text-ink sm:text-right">{value}</dd>
+                      <dt className="text-[14px] leading-5 text-ink-muted">{label}</dt>
+                      <dd className="text-[15.5px] leading-[22px] font-bold text-ink sm:text-right">{value}</dd>
                     </div>
                   </div>
                 ))}
@@ -206,29 +211,30 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
             </section>
           )}
 
-          {intro && <div className="sag-glass p-4 sm:p-6">{intro}</div>}
+          {intro && <div className="aura-card aura-blk p-4 sm:p-6">{intro}</div>}
 
-          <div className="border-b border-line rounded-none!">
+          <div>
             {sections.map((s, i) => (
-              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="border-t border-line py-6 sm:py-7 scroll-mt-20 rounded-none!">
-                <h2 id={`${s.id}-title`} className="flex items-baseline gap-3 font-display text-[23px] leading-7 lg:text-[27px] lg:leading-8 text-ink">
-                  <span className="w-[22px] shrink-0 font-sans text-[11px] font-semibold tracking-[0.1em] text-sale sag-num" style={{ fontSizeAdjust: 'none' }}>{String(i + 1).padStart(2, '0')}</span><span className="min-w-0">{s.title}</span>
+              <section key={s.id} id={s.id} aria-labelledby={`${s.id}-title`} className="aa-sec first:border-t-0 first:pt-2">
+                <h2 id={`${s.id}-title`} className="aura-h2 aura-h-sm text-[28px] lg:text-[36px]">
+                  <span className="aa-sec-n" style={{ fontSizeAdjust: 'none' }}>{String(i + 1).padStart(2, '0')}</span><span className="block min-w-0">{s.title}</span>
                 </h2>
-                <div className="mt-3 space-y-4 pl-[34px]">{s.body}</div>
+                <div className="mt-4 space-y-4">{s.body}</div>
               </section>
             ))}
           </div>
 
           <HelpCard topic={title} />
 
-          <nav aria-labelledby={`${page}-more-title`} className="sag-glass px-4 pt-4 pb-1">
-            <h2 id={`${page}-more-title`} className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale pb-1">More policies</h2>
-            {POLICY_LINKS.filter(([p]) => p !== page).map(([p, label]) => (
-              <button key={p} type="button" onClick={() => setActivePage(p)} className="sag-row w-full text-left font-normal cursor-pointer !border-t-0 border-b border-line last:border-b-0">
-                <span className="flex-1 min-w-0">{label}</span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
-              </button>
-            ))}
+          <nav aria-labelledby={`${page}-more-title`}>
+            <h2 id={`${page}-more-title`} className="aura-lbl mb-3" style={{ fontSizeAdjust: 'none' }}>More policies</h2>
+            <div className="flex flex-wrap gap-2">
+              {POLICY_LINKS.filter(([p]) => p !== page).map(([p, label]) => (
+                <button key={p} type="button" onClick={() => setActivePage(p)} className="aura-btn aura-btn-line aura-btn-sm">
+                  {label}
+                </button>
+              ))}
+            </div>
           </nav>
         </div>
       </div>
@@ -281,15 +287,15 @@ export const ShippingPolicyPage: React.FC = () => {
           id: 'delivery-days',
           title: 'Estimated delivery days',
           body: (
-            <dl className="rounded-[10px] border border-line divide-y divide-line overflow-hidden">
+            <dl className="rounded-[22px] bg-surface divide-y divide-line overflow-hidden">
               {[
                 ['Metro cities (Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata)', '2 to 4 business days.'],
                 ['Rest of India (tier 2 and tier 3 cities)', '3 to 6 business days.'],
                 ['Northeast and remote locations', '5 to 7 business days.'],
               ].map(([where, days]) => (
-                <div key={where} className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-6 bg-surface px-4 py-3">
-                  <dt className="text-sm leading-5 text-ink-muted">{where}</dt>
-                  <dd className="text-sm leading-5 font-medium text-ink shrink-0">{days}</dd>
+                <div key={where} className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5 sm:gap-6 px-4 py-3.5 sm:px-5">
+                  <dt className="text-[14px] leading-5 text-ink-muted">{where}</dt>
+                  <dd className="text-[15.5px] leading-[22px] font-bold text-ink shrink-0">{days}</dd>
                 </div>
               ))}
             </dl>
@@ -513,27 +519,27 @@ export const SizeGuidePage: React.FC = () => (
         body: (
           <>
             <p className={P}>To find your size, measure yourself with a flexible tape over your undergarments. If your measurements fall between two sizes, we recommend choosing the larger size for a relaxed, comfortable fit.</p>
-            <div className="overflow-x-auto rounded-[10px] border border-line">
-              <table className="w-full min-w-[540px] text-left text-sm border-collapse">
+            <div className="overflow-x-auto rounded-[22px] bg-surface">
+              <table className="w-full min-w-[540px] text-left text-[14.5px] border-collapse">
                 <caption className="sr-only">Garment measurements in inches by size</caption>
                 <thead>
                   <tr className="bg-sunken">
                     {['Size', 'Bust', 'Waist', 'Hip', 'Kurta length', 'Bottom length'].map((h, i) => (
-                      <th key={h} scope="col" className={`px-3.5 py-3 text-[11.5px] leading-4 font-normal uppercase tracking-[0.06em] text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-sunken border-r border-line' : ''}`}>{h}</th>
+                      <th key={h} scope="col" className={`px-4 py-3.5 text-[13px] leading-4 font-bold text-ink-muted whitespace-nowrap ${i === 0 ? 'sticky left-0 bg-sunken border-r border-line' : ''}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line">
                   {SIZE_ROWS.map(([size, ...cells]) => (
                     <tr key={size} className="bg-surface">
-                      <th scope="row" className="px-3.5 py-3 font-medium text-ink whitespace-nowrap sticky left-0 bg-surface border-r border-line">{size}</th>
-                      {cells.map((c, i) => <td key={i} className="px-3.5 py-3 text-ink sag-num">{c}</td>)}
+                      <th scope="row" className="px-4 py-3.5 font-bold text-ink whitespace-nowrap sticky left-0 bg-surface border-r border-line">{size}</th>
+                      {cells.map((c, i) => <td key={i} className="px-4 py-3.5 text-ink aura-num">{c}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="text-[13px] leading-[18px] text-ink-muted sm:hidden">Swipe the table sideways to see every measurement.</p>
+            <p className="text-[13.5px] leading-[19px] text-ink-muted sm:hidden">Swipe the table sideways to see every measurement.</p>
           </>
         ),
       },
@@ -547,9 +553,9 @@ export const SizeGuidePage: React.FC = () => (
               ['Waist', 'Measure around your natural waistline, typically an inch above the belly button.'],
               ['Hips', 'Measure around the fullest part of your hips and seat area.'],
             ].map(([k, v]) => (
-              <div key={k} className="sag-glass p-4">
-                <dt className="font-display text-[20px] leading-6 font-semibold text-ink">{k}</dt>
-                <dd className="mt-1 text-sm leading-5 text-ink-muted">{v}</dd>
+              <div key={k} className="aura-card p-4 sm:p-5">
+                <dt className="text-[22px] leading-6 font-extrabold tracking-[-0.025em] text-ink">{k}</dt>
+                <dd className="mt-1.5 text-[14px] leading-5 text-ink-muted">{v}</dd>
               </div>
             ))}
           </dl>

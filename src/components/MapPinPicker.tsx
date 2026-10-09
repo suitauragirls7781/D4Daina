@@ -26,7 +26,7 @@ const MapPin: React.FC<{ lifted: boolean }> = ({ lifted }) => (
       viewBox="0 0 36 46"
       className={`block drop-shadow-md transition-transform duration-200 ${lifted ? '-translate-y-2' : ''}`}
     >
-      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" strokeWidth="2" className="fill-brand stroke-surface" />
+      <path d="M18 1C8.6 1 1 8.5 1 17.8 1 30.4 18 45 18 45s17-14.6 17-27.2C35 8.5 27.4 1 18 1z" strokeWidth="2" className="fill-accent stroke-surface" />
       <circle cx="18" cy="17.5" r="6" className="fill-surface" />
     </svg>
     <span className="absolute left-1/2 -bottom-1 w-2 h-2 -translate-x-1/2 rounded-full bg-ink/40" />
@@ -201,41 +201,41 @@ export const MapPinPicker: React.FC<{
     ? 'Search or use your current location, then drag the map so the pin sits on your door.'
     : '';
 
-  // Caution note: a warm tinted panel
-  const note = 'sag-glass sag-glass-strong px-3.5 py-3 text-[13.5px] leading-5 text-ink';
+  // Caution note: a blush card
+  const note = 'aco-note';
 
   return (
     <div className="space-y-4">
       <label className="block">
-        <span className="sag-label">Search area, street or locality</span>
+        <span className="aco-lbl">Search area, street or locality</span>
         <span className="relative block">
-          <Search className="w-5 h-5 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.75} aria-hidden="true" />
+          <Search className="w-5 h-5 text-ink absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" strokeWidth={1.6} aria-hidden="true" />
           <input
             data-autofocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g. Sector 21, Gurugram"
             autoComplete="off"
-            className="sag-input pl-11 pr-11"
+            className="sag-input pl-12 pr-11"
           />
           {searching && <Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted absolute right-3.5 top-1/2 -translate-y-1/2" aria-label="Searching" />}
         </span>
       </label>
 
       {results.length > 0 && (
-        <ul className="sag-glass divide-y divide-line overflow-hidden" aria-label="Places found">
+        <ul className="overflow-hidden rounded-[20px] bg-page divide-y divide-line" aria-label="Places found">
           {results.map((place) => (
             <li key={place.id}>
-              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[52px] text-left flex items-start gap-3 px-3.5 py-3 text-ink hover:bg-sunken cursor-pointer transition-colors">
-                <PinIcon className="w-5 h-5 shrink-0 text-sale" live={false} />
-                <span className="min-w-0 text-sm leading-5 text-ink break-words">{place.label}</span>
+              <button type="button" onClick={() => pickResult(place)} className="w-full min-h-[54px] rounded-none! text-left flex items-start gap-3 px-4 py-3.5 text-ink hover:bg-sunken cursor-pointer transition-colors">
+                <PinIcon className="w-5 h-5 shrink-0 text-ink" live={false} />
+                <span className="min-w-0 text-[15px] leading-5 font-medium text-ink break-words">{place.label}</span>
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      <button type="button" onClick={useCurrentLocation} disabled={locating} className="sag-btn-outline w-full h-12 px-4 gap-2">
+      <button type="button" onClick={useCurrentLocation} disabled={locating} className="aco-loc">
         {locating ? <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" /> : <Crosshair className="w-[18px] h-[18px] text-current" strokeWidth={1.75} aria-hidden="true" />}
         {locating ? 'Finding your location…' : 'Use current location'}
       </button>
@@ -247,7 +247,7 @@ export const MapPinPicker: React.FC<{
           The map could not load right now. You can still search above, use your current location, or enter the address manually.
         </p>
       ) : (
-        <div className="relative isolate h-[260px] sm:h-[320px] rounded-[10px] overflow-hidden border border-line bg-sunken">
+        <div className="relative isolate h-[260px] sm:h-[320px] rounded-[22px] overflow-hidden bg-sunken">
           <div ref={mapEl} className="absolute inset-0 z-0" role="application" aria-label="Map. Drag to move the pin to your delivery spot." />
           {mapState === 'loading' && (
             <div className="absolute inset-0 z-[600] flex items-center justify-center gap-2 text-sm text-ink-muted">
@@ -256,24 +256,24 @@ export const MapPinPicker: React.FC<{
           )}
           {mapState === 'ready' && <MapPin lifted={moving} />}
           {tilesBlocked && (
-            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-lg! bg-surface px-3 py-2 text-[13px] leading-[18px] text-ink border border-line">
+            <p role="status" className="absolute left-3 right-3 top-3 z-[600] rounded-[16px]! bg-surface px-3.5 py-2.5 text-[13.5px] leading-[18px] text-ink">
               Map images could not load on this network. You can still search, use your location, or enter the address manually.
             </p>
           )}
         </div>
       )}
 
-      {hint && <p className="text-[13px] leading-[18px] text-ink-muted">{hint}</p>}
+      {hint && <p className="text-[14px] leading-5 text-ink-muted">{hint}</p>}
 
       {(detected || detecting || detectError) && (
-        <div className="sag-card p-4 space-y-3" aria-live="polite">
-          <p className="flex items-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em] text-ink"><PinIcon className="w-[18px] h-[18px] shrink-0 text-brand" live={false} /> Deliver to</p>
+        <div className="rounded-[22px] bg-page p-[18px] space-y-3" aria-live="polite">
+          <p className="aco-sum-h flex items-center gap-2"><PinIcon className="w-5 h-5 shrink-0 text-ink" live={false} /> Deliver to</p>
           {detecting ? (
             <p className="flex items-center gap-2 text-sm leading-5 text-ink-muted"><Loader2 className="w-[18px] h-[18px] animate-spin text-ink-muted" aria-hidden="true" /> Finding the address at the pin…</p>
           ) : detectError ? (
             <p className="flex items-start gap-2 text-sm leading-5 font-medium text-danger"><AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" />{detectError}</p>
           ) : detected ? (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm leading-5">
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-[15px] leading-5">
               {([
                 ['Area', [detected.street, detected.area].filter(Boolean).join(', ')],
                 ['City', detected.city],
@@ -283,17 +283,17 @@ export const MapPinPicker: React.FC<{
               ] as const).map(([label, value]) => (
                 <React.Fragment key={label}>
                   <dt className="text-ink-muted">{label}</dt>
-                  <dd className="text-ink min-w-0 break-words">{value || <span className="text-ink-faint">Not found</span>}</dd>
+                  <dd className="font-semibold text-ink min-w-0 break-words">{value || <span className="text-ink-faint">Not found</span>}</dd>
                 </React.Fragment>
               ))}
             </dl>
           ) : null}
-          <p className="text-[13px] leading-[18px] text-ink-muted">You can correct anything on the next step.</p>
+          <p className="text-[13.5px] leading-[18px] text-ink-muted">You can correct anything on the next step.</p>
           <button
             type="button"
             disabled={!detected || detecting}
             onClick={() => detected && onConfirm(detected)}
-            className="sag-btn-primary w-full h-12 px-4"
+            className="aura-btn aura-btn-w"
           >
             Confirm location
           </button>
@@ -301,7 +301,7 @@ export const MapPinPicker: React.FC<{
       )}
 
       <div className="flex justify-center">
-        <button type="button" onClick={onManual} className="sag-lnk">
+        <button type="button" onClick={onManual} className="aura-lk">
           Enter address manually
         </button>
       </div>

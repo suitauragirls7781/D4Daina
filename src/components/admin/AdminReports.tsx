@@ -213,7 +213,7 @@ export const AdminReports: React.FC = () => {
                 {rowLabel(focused)}{holdsToday(focused) ? ' (so far)' : ''}:{' '}
                 <span className="sag-num text-xl leading-7 font-semibold text-ink">{metricReady ? show(valueOf(focused)) : '…'}</span>
               </p>
-              {best && <p className="text-[13px] leading-[18px] text-sale">Best {groupInfo.one}: {rowLabel(best, false)} with <span className="sag-num font-medium">{show(valueOf(best))}</span></p>}
+              {best && <p className="text-[13px] leading-[18px] text-ink-muted">Best {groupInfo.one}: {rowLabel(best, false)} with <span className="sag-num font-medium">{show(valueOf(best))}</span></p>}
             </div>
             <div className="mt-3 flex gap-3">
               <div className="shrink-0 h-40 flex flex-col justify-between text-right text-[11px] leading-4 text-ink-muted sag-num" aria-hidden="true">
@@ -230,8 +230,8 @@ export const AdminReports: React.FC = () => {
                     return (
                       <button key={r.key} type="button" title={words} aria-label={words} aria-pressed={on}
                         onClick={() => setFocusKey(r.key)} onMouseEnter={() => setFocusKey(r.key)} onFocus={() => setFocusKey(r.key)}
-                        className={`flex-1 min-w-0 max-w-16 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken-deep' : 'hover:bg-sunken'}`}>
-                        <span className={`block w-full rounded-t-[4px] ${on ? 'bg-brand' : 'bg-control'}`} style={{ height: `${height}%` }} />
+                        className={`flex-1 min-w-0 max-w-16 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken' : 'hover:bg-sunken'}`}>
+                        <span className={`block w-full rounded-t-[4px] ${on ? 'bg-accent' : 'bg-brand'}`} style={{ height: `${height}%` }} />
                       </button>
                     );
                   })}
@@ -264,7 +264,7 @@ export const AdminReports: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-line">
                   {tableRows.slice(0, shown).map((r) => (
-                    <tr key={r.key} className={r.key === focusKey ? 'bg-sunken-deep' : 'hover:bg-sunken'}>
+                    <tr key={r.key} className={r.key === focusKey ? 'bg-sunken' : 'hover:bg-sunken'}>
                       <th scope="row" className="py-3 pl-4 sm:pl-5 pr-3 font-normal text-left whitespace-nowrap">{rowLabel(r)}{holdsToday(r) ? <span className="text-ink-muted"> · {group === 'day' ? 'today so far' : 'so far'}</span> : null}</th>
                       <td className={td}>
                         {visitCell(r.visits)}
@@ -274,7 +274,7 @@ export const AdminReports: React.FC = () => {
                       {hasCheckout && <td className={td}>{visitCell(r.checkouts)}</td>}
                       <td className={td}>{orderCell(r.paid)}</td>
                       <td className={td}>{orderCell(r.cod)}</td>
-                      <td className={`${td} ${r.sales > 0 ? 'font-semibold text-sale' : ''}`}>{orderCell(r.sales, true)}</td>
+                      <td className={`${td} ${r.sales > 0 ? 'font-semibold text-ok' : ''}`}>{orderCell(r.sales, true)}</td>
                       <td className={td}>{orderCell(r.cancelled)}</td>
                       <td className={`${td} pr-4 sm:pr-5`}>{orderCell(r.refunded)}</td>
                     </tr>

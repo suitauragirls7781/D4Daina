@@ -67,7 +67,7 @@ const toCheckout = (row: any): Checkout => {
   };
 };
 
-const eyebrow = 'text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted';
+const eyebrow = 'text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted';
 
 /** Checkouts that were started but not paid, so the owner can message those shoppers on WhatsApp. */
 export const AdminAbandoned: React.FC = () => {
@@ -282,8 +282,8 @@ export const AdminAbandoned: React.FC = () => {
                     {row.items.map((item, index) => (
                       <li key={`${item.id}-${index}`} className="flex items-center gap-2.5 min-w-0">
                         {item.image
-                          ? <img src={getCleanImageUrl(item.image, 160)} alt="" loading="lazy" className="w-10 aspect-[4/5] rounded-lg object-cover object-top shrink-0 bg-sunken" />
-                          : <span className="w-10 aspect-[4/5] rounded-lg shrink-0 bg-sunken-deep" aria-hidden="true" />}
+                          ? <img src={getCleanImageUrl(item.image, 160)} alt="" loading="lazy" className="w-10 aspect-[4/5] rounded-[12px] object-cover object-top shrink-0 bg-sunken" />
+                          : <span className="w-10 aspect-[4/5] rounded-[12px] shrink-0 bg-sunken-deep" aria-hidden="true" />}
                         <p className="min-w-0 text-sm leading-5 text-ink">
                           <span className="line-clamp-1">{item.name}</span>
                           <span className="block text-xs leading-4 text-ink-muted sag-num">{item.size ? `Size ${item.size} · ` : ''}Qty {item.quantity}</span>
@@ -302,7 +302,7 @@ export const AdminAbandoned: React.FC = () => {
                 {row.source && <div className="flex gap-2 min-w-0"><dt className="shrink-0 w-[5.5rem] text-ink-muted">Came from</dt><dd className="truncate text-ink">{row.source}</dd></div>}
                 <div className="flex gap-2 min-w-0">
                   <dt className="shrink-0 w-[5.5rem] text-ink-muted">Reminder</dt>
-                  <dd className={`min-w-0 inline-flex items-start gap-1.5 ${row.reminderSentAt ? 'text-sale font-medium' : 'text-ink-muted'}`}>
+                  <dd className={`min-w-0 inline-flex items-start gap-1.5 ${row.reminderSentAt ? 'text-ok font-semibold' : 'text-ink-muted'}`}>
                     <Mail className="w-3.5 h-3.5 shrink-0 mt-0.5" aria-hidden="true" />
                     {row.reminderSentAt
                       ? `Email sent ${formatOrderDate(row.reminderSentAt)}`

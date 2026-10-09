@@ -33,7 +33,7 @@ export const SortableHomepageSection: React.FC<SortableSectionProps> = ({
     <div
       ref={setNodeRef}
       style={style}
-      className={`pl-1 pr-3 py-2.5 rounded-[10px] border transition-colors duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-x-3 gap-y-2 ${
+      className={`pl-1 pr-3 py-2.5 rounded-[16px] border transition-colors duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-x-3 gap-y-2 ${
         isDragging ? 'shadow-[var(--sag-shadow-pop)] border-brand-line' : 'border-line'
       } ${isEnabled ? 'bg-sunken-deep' : 'bg-sunken'}`}
     >

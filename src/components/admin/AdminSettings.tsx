@@ -306,7 +306,7 @@ export const AdminSettings: React.FC = () => {
 
       {/* In-page index */}
       <nav aria-label="Settings sections" className={`${kit.panel} !py-4`}>
-        <p className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-ink-muted">On this page</p>
+        <p className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted">On this page</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {SECTIONS.map((section) => (
             <button
@@ -911,11 +911,11 @@ export const AdminSettings: React.FC = () => {
         </form>
 
         {/* Section 4: Emergency Session Revocation (Danger Zone) */}
-        <section className="rounded-[10px] border border-danger-line bg-danger-tint p-4 sm:p-6 space-y-4">
+        <section className="rounded-[16px] border border-danger-line bg-danger-tint p-4 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-6 h-6 shrink-0 text-danger" aria-hidden="true" />
             <div className="min-w-0 space-y-1">
-              <p className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-danger">Emergency</p>
+              <p className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-danger">Emergency</p>
               <h4 className="text-[17px] leading-6 font-semibold text-ink">
                 Revoke all active sessions (disconnect friends &amp; other devices)
               </h4>

@@ -1,8 +1,9 @@
 import React from 'react';
 import { ProductCard } from './ProductCard';
 import { useShop } from '../context/ShopContext';
-import { HOME_GRID, HOME_SECTION, HOME_WRAP } from './HomeSections';
-import { SectionTitle } from './SectionTitle';
+import { HOME_SECTION, HOME_WRAP } from './HomeSections';
+import { editLayout } from './BestSellersSection';
+import { AuraTitle, Icon } from '../aura';
 
 export const TrendingNowSection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
@@ -20,14 +21,14 @@ export const TrendingNowSection: React.FC = () => {
   return (
     <section id="trending-now-section" aria-labelledby="trending-now-title" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
-        <SectionTitle id="trending-now-title" title="Trending now" className="mb-6 lg:mb-9" />
-        <div className={HOME_GRID}>
-          {trendingProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <AuraTitle id="trending-now-title" label={`${trendingProducts.length} ${trendingProducts.length === 1 ? 'style' : 'styles'}`} title="Trending" accent="now" className="mb-6 lg:mb-9" />
+        <div className="aura-pc-grid">
+          {trendingProducts.map((product, index) => (
+            <ProductCard key={product.id} product={product} layout={editLayout(index, trendingProducts.length)} />
           ))}
         </div>
-        <div className="mt-5 flex justify-center lg:mt-8">
-          <button type="button" id="view-all-trending-btn" onClick={() => navigateToCategory('Trending')} className="sag-lnk">View all</button>
+        <div className="mt-4 flex lg:mt-7">
+          <button type="button" id="view-all-trending-btn" onClick={() => navigateToCategory('Trending')} className="aura-lk">View all<Icon name="arrow" /></button>
         </div>
       </div>
     </section>

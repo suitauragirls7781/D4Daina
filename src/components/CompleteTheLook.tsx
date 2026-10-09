@@ -6,7 +6,7 @@ import { useDiscovery } from '../utils/discovery';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { trackItem } from '../utils/visitorTracker';
 import { BagIcon } from './BrandIcons';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle, Odometer } from '../aura';
 import {
   ACCESSORY_TYPES, SET_TYPES, accessoryTypeOf, colourByName, coloursOf, defaultSizeFor, inr, lookFor, needsSizeChoice, outfitQtyIn,
   setTypeOf, sizesOf, useLookRelations,
@@ -121,36 +121,36 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
     : 'Add complete look to bag';
 
   return (
-    <section id="complete-the-look" aria-labelledby="ctl-title" className="mt-12 lg:mt-16 border-t border-line pt-12 lg:pt-14">
-      <SectionTitle id="ctl-title" title="Complete the look" />
-      <p className="mx-auto mt-3 max-w-2xl text-center text-[13.5px] leading-[21px] text-ink-muted">
+    <section id="complete-the-look" data-aura aria-labelledby="ctl-title" className="mt-12 lg:mt-16 border-t border-line pt-12 lg:pt-14">
+      <AuraTitle id="ctl-title" title="Complete the" accent="look" size="lg" />
+      <p className="aura-sub mt-3.5 max-w-2xl">
         Add the matching {kindsLabel(items)} to make it the full {setLabel(setType)} look. These pieces come only with this outfit and can't be bought on their own.
       </p>
 
-      <div className="sag-glass mt-7 p-4 lg:p-6">
+      <div className="aura-card mt-7 p-4 sm:p-5 lg:p-7">
       {/* The outfit is always part of the look */}
       <div className="flex items-center gap-3">
         <img src={getCleanImageUrl(firstImage(product), 240)} alt="" loading="lazy"
-          className="w-14 shrink-0 aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
+          className="w-16 shrink-0 aspect-[4/5] rounded-[17px] object-cover object-top bg-sunken" />
         <div className="min-w-0 flex-1">
-          <p className="sag-eyebrow text-[10.5px] leading-4 font-semibold uppercase tracking-[0.22em]">Your outfit</p>
-          <p className="mt-1 text-[13px] leading-5 text-ink line-clamp-1">{product.name}</p>
-          <p className="sag-num text-[12.5px] leading-[18px] text-ink-muted">
-            <span className="font-semibold text-ink">{inr(product.price)}</span>
+          <p className="aura-lbl text-[12px]">Your outfit</p>
+          <p className="mt-1.5 text-[14.5px] leading-5 font-medium text-ink line-clamp-1">{product.name}</p>
+          <p className="aura-num mt-0.5 text-[13px] leading-[19px] text-ink-muted">
+            <span className="font-bold text-ink">{inr(product.price)}</span>
             {' · '}
             {outfitInBag ? (
-              <span className="inline-flex items-center gap-1 font-medium text-brand"><Check className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" /> In your bag</span>
+              <span className="inline-flex items-center gap-1 font-bold text-ok"><Check className="w-3.5 h-3.5" strokeWidth={2} aria-hidden="true" /> In your bag</span>
             ) : outfitSize ? (
               <>Size {outfitSize}{outfitPieces > 1 ? ` · ${outfitPieces} pieces` : ''}</>
             ) : (
-              <button type="button" onClick={onNeedSize} className="sag-link text-[12.5px] underline-offset-4 decoration-1">Choose your size above</button>
+              <button type="button" onClick={onNeedSize} className="sag-link text-[13px]">Choose your size above</button>
             )}
           </p>
         </div>
       </div>
 
       {/* Matching accessories: tap to add them to the look */}
-      <ul aria-label="Matching accessories" className="mt-6 border-t border-line pt-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 gap-y-6">
+      <ul aria-label="Matching accessories" className="mt-5 border-t border-line pt-5 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 gap-y-7">
         {items.map((p) => {
           const added = inLook(p);
           const picked = Boolean(picks[p.id]) && !added;
@@ -158,31 +158,31 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
           const sizes = sizesOf(p);
           const colours = coloursOf(p);
           return (
-            <li key={p.id} className="flex flex-col min-w-0">
+            <li key={p.id} data-rv className="flex flex-col min-w-0">
               <button type="button" onClick={() => toggle(p)} disabled={added} aria-pressed={picked}
                 aria-label={added ? `${p.name} is in your bag with this outfit` : `${picked ? 'Remove' : 'Add'} ${p.name} ${picked ? 'from' : 'to'} this look`}
                 className="block w-full text-left cursor-pointer disabled:cursor-default active:[transform:none]!">
-                <span className={`sag-zoom block overflow-hidden rounded-lg bg-sunken transition-shadow duration-300 ${picked || added ? 'shadow-[0_0_0_1px_var(--sag-brand),0_0_0_2px_var(--sag-brand)]' : ''}`}>
-                  <img src={getCleanImageUrl(firstImage(p), 360)} alt="" loading="lazy" className="w-full aspect-[4/5] object-cover object-top" />
+                <span className={`sag-zoom block overflow-hidden rounded-[20px] bg-sunken outline-2 outline-offset-2 ${picked || added ? 'outline-brand' : 'outline-transparent'}`}>
+                  <img src={getCleanImageUrl(firstImage(p), 360)} alt="" loading="lazy" className="w-full aspect-[4/5] rounded-none object-cover object-top" />
                 </span>
-                <span className="mt-[9px] flex items-center justify-between gap-2">
-                  <span className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.18em] text-ink-muted truncate">{accessoryTypeOf(p)}</span>
-                  <span aria-hidden="true" className={`w-5 h-5 shrink-0 rounded-full border flex items-center justify-center transition-colors duration-300 ${picked || added ? 'bg-brand border-brand text-[color:var(--sag-on-gold)]' : 'bg-surface border-control'}`}>
-                    {(picked || added) && <Check className="w-3.5 h-3.5" strokeWidth={2} />}
+                <span className="mt-3 flex items-center justify-between gap-2">
+                  <span className="aura-lbl text-[12px] truncate">{accessoryTypeOf(p)}</span>
+                  <span aria-hidden="true" className={`w-6 h-6 shrink-0 rounded-full border flex items-center justify-center transition-colors duration-300 ${picked || added ? 'bg-brand border-brand text-[color:var(--sag-on-gold)]' : 'bg-surface border-control'}`}>
+                    {(picked || added) && <Check className="w-3.5 h-3.5" strokeWidth={2.2} />}
                   </span>
                 </span>
-                <span className="mt-1 block text-[13px] leading-[18px] font-normal text-ink line-clamp-2">{p.name}</span>
-                <span className="sag-num mt-1 flex items-baseline gap-[7px]">
-                  <span className="text-[14.5px] leading-5 font-semibold text-ink">{inr(p.price)}</span>
-                  {mrp > p.price && <span className="text-[12.5px] text-ink-muted line-through">{inr(mrp)}</span>}
+                <span className="mt-1.5 block text-[14px] leading-[19px] font-medium text-ink line-clamp-2">{p.name}</span>
+                <span className="aura-num mt-1 flex items-baseline gap-[7px]">
+                  <span className="text-[15px] leading-5 font-bold text-ink">{inr(p.price)}</span>
+                  {mrp > p.price && <span className="text-[13px] text-ink-muted line-through">{inr(mrp)}</span>}
                 </span>
               </button>
 
               {!added && sizes.length > 1 && (
-                <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} size`}>
+                <div className="mt-2.5 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} size`}>
                   {sizes.map((sz) => (
                     <button key={sz} type="button" onClick={() => choose(p, { size: sz })} aria-pressed={picks[p.id]?.size === sz}
-                      className="sag-chip rounded-lg h-11 min-w-11 px-3 text-[13px] leading-5">
+                      className="sag-chip min-w-[46px] px-3.5 text-[13.5px]">
                       {sz}
                     </button>
                   ))}
@@ -192,14 +192,14 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
                 <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label={`${p.name} colour`}>
                   {colours.map((c) => (
                     <button key={c.name} type="button" onClick={() => choose(p, { colour: c.name })} aria-pressed={picks[p.id]?.colour === c.name}
-                      className="sag-chip rounded-lg h-11 min-w-11 px-3 text-[13px] leading-5 gap-1.5">
+                      className="sag-chip min-w-[46px] px-3.5 text-[13.5px] gap-1.5">
                       <span className="w-3.5 h-3.5 shrink-0 rounded-full border border-control bg-sunken" style={c.hex ? { background: c.hex } : undefined} /> {c.name}
                     </button>
                   ))}
                 </div>
               )}
 
-              <p className={`mt-auto pt-2 text-[12.5px] leading-[18px] ${added || picked ? 'text-brand font-medium' : 'text-ink-muted'}`}>
+              <p className={`mt-auto pt-2 text-[13px] leading-[18px] ${added || picked ? 'text-ink font-bold' : 'text-ink-muted'}`}>
                 {added ? 'In your bag with this outfit' : picked ? (needsSizeChoice(p) && !picks[p.id]?.size ? 'Choose a size' : 'Added to your look') : 'Tap to add'}
               </p>
             </li>
@@ -208,21 +208,22 @@ export const CompleteTheLook: React.FC<CompleteTheLookProps> = ({ product, selec
       </ul>
 
       {/* Summary and the one button that adds the look */}
-      <div className="mt-6 border-t border-line pt-5 flex flex-col sm:flex-row sm:items-center gap-3.5" aria-live="polite">
-        <div className="sag-num min-w-0 flex-1 text-[13.5px] leading-5 text-ink">
+      <div className="mt-6 border-t border-line pt-5 flex flex-col sm:flex-row sm:items-center gap-4" aria-live="polite">
+        <div className="aura-num min-w-0 flex-1 text-[14.5px] leading-[22px] text-ink">
           {count > 0 ? (
             <p>
               {outfitInBag ? '' : <>Outfit {inr(outfitTotal)} + </>}
               {count} {count === 1 ? 'piece' : 'pieces'} {inr(accessoriesTotal)}
-              {' = '}<span className="font-semibold text-ink">{inr(outfitTotal + accessoriesTotal)}</span>
+              {' = '}<Odometer value={inr(outfitTotal + accessoriesTotal)} roll={false} className="font-extrabold text-ink" />
               <span className="text-ink-muted"> (preview)</span>
             </p>
           ) : (
             <p>Tap the pieces you want in your look.</p>
           )}
-          <p className="text-[12.5px] leading-[18px] text-ink-muted">Final price is confirmed at checkout.</p>
+          <p className="text-[13px] leading-[19px] text-ink-muted">Final price is confirmed at checkout.</p>
         </div>
-        <button type="button" onClick={addLook} disabled={count === 0} className="sag-btn-primary shrink-0 h-12 px-6 gap-2">
+        <button type="button" onClick={addLook} disabled={count === 0} className="aura-btn shrink-0 gap-2">
+
           <BagIcon mono className="w-4 h-4" /> {count === 0 ? 'Choose pieces' : cta}
         </button>
       </div>

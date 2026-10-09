@@ -298,7 +298,7 @@ export const AdminHero: React.FC = () => {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
                     <div className="flex items-center gap-3 min-w-0 flex-1 basis-64">
-                      <span className="shrink-0 text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">
+                      <span className="shrink-0 text-xs leading-4 font-bold uppercase tracking-[0.08em] text-brand sag-num">
                         Slide {index + 1}
                       </span>
                       <h3 className="text-[17px] leading-6 font-semibold text-ink min-w-0 truncate">
@@ -361,7 +361,7 @@ export const AdminHero: React.FC = () => {
                     {/* Left: 1:1 Square Image Preview & Upload */}
                     <div className="lg:col-span-4 space-y-3">
                       <p className="sag-label">Photo</p>
-                      <div className="w-full aspect-square max-w-[260px] mx-auto bg-sunken rounded-[10px] overflow-hidden border border-line relative group">
+                      <div className="w-full aspect-square max-w-[260px] mx-auto bg-sunken rounded-[16px] overflow-hidden border border-line relative group">
                         {slideImg ? (
                           <img
                             src={slideImg}
@@ -406,7 +406,7 @@ export const AdminHero: React.FC = () => {
                         />
 
                         {slide.bannerImage ? (
-                          <div className="flex flex-wrap items-center justify-between gap-2 rounded-[10px] bg-brand-wash border border-brand-line px-3 py-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2 rounded-[16px] bg-brand-wash border border-brand-line px-3 py-2">
                             <span className="text-[13px] leading-[18px] font-medium text-brand">Custom banner photo (not used on the product page)</span>
                             {slide.productId && (
                               <button
@@ -628,13 +628,13 @@ export const AdminHero: React.FC = () => {
                     <div
                       key={p.id}
                       onClick={() => handleSelectProductForSlide(productPickerSlideId, p)}
-                      className="flex items-center justify-between gap-3 p-2.5 hover:bg-sunken-deep rounded-[10px] cursor-pointer transition-colors group"
+                      className="flex items-center justify-between gap-3 p-2.5 hover:bg-sunken-deep rounded-[16px] cursor-pointer transition-colors group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <img
                           src={pImg}
                           alt={p.name}
-                          className="w-12 aspect-[4/5] rounded-lg object-cover object-top border border-line shrink-0"
+                          className="w-12 aspect-[4/5] rounded-[12px] object-cover object-top border border-line shrink-0"
                         />
                         <div className="min-w-0">
                           <h4 className="text-sm font-medium text-ink line-clamp-1">

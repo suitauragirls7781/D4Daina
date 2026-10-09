@@ -789,7 +789,9 @@
   --sag-champagne: #B76E79;
   --sag-nav-fill: #FFFFFF;
 
-  /* Section variables. They follow the section under the reader's eye (body[data-th], set by <Backdrop />):
+  /* Section variables. They follow the section under the reader's eye. <Backdrop /> writes the colour in force as
+     data-on on the backdrop, the header, the thread and the themed sections near the screen (never on <body>:
+     that would restyle the whole page at every change):
      --fg text, --inv text on a filled button, --mu muted text, --hl hairline, --ac accent word,
      --sa "% off" and savings, --th the thread, --bg the backdrop colour. */
   --fg: #111013;
@@ -801,18 +803,20 @@
   --th: #B76E79;
   --bg: #F5F2EC;
 }
-body[data-th="blush"] { --bg: #EAD7D1; }
-body[data-th="sand"] { --bg: #E2D8C8; }
-body[data-th="blush"], body[data-th="sand"] { --mu: #5C5650; --hl: rgba(17, 16, 19, 0.16); --ac: #8E4C58; --th: #8E4C58; }
-body[data-th="ink"] { --bg: #111013; }
-body[data-th="forest"] { --bg: #1E3A34; }
-body[data-th="ink"], body[data-th="forest"] { --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.22); --th: #F5F2EC; --ac: #EAD7D1; --sa: #EAD7D1; }
-body[data-th="rose"] { --bg: #B76E79; --mu: #35272A; --hl: rgba(17, 16, 19, 0.3); --th: #111013; --ac: #F5F2EC; --sa: #111013; }
+[data-on="blush"] { --bg: #EAD7D1; }
+[data-on="sand"] { --bg: #E2D8C8; }
+[data-on="blush"], [data-on="sand"] { --mu: #5C5650; --hl: rgba(17, 16, 19, 0.16); --ac: #8E4C58; --th: #8E4C58; }
+[data-on="ink"] { --bg: #111013; }
+[data-on="forest"] { --bg: #1E3A34; }
+[data-on="ink"], [data-on="forest"] { --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.22); --th: #F5F2EC; --ac: #EAD7D1; --sa: #EAD7D1; }
+[data-on="rose"] { --bg: #B76E79; --mu: #35272A; --hl: rgba(17, 16, 19, 0.3); --th: #111013; --ac: #F5F2EC; --sa: #111013; }
 
 /* The page: paper under everything, and the fixed backdrop (src/aura/Backdrop.tsx) that takes the section's colour */
 html { background-color: #F5F2EC; }
 body, #root { background-color: transparent; }
-body { color: var(--fg); transition: color 300ms ease; }
+body { color: var(--fg); }
+[data-on] { color: var(--fg); }
+[data-th][data-on] { transition: color 300ms ease; }
 body::before { content: none; }
 #app-main-content, #app-main-content.bg-page { background-color: transparent; }
 .aura-bg { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: -1; pointer-events: none; background-color: var(--bg); transition: background-color 450ms var(--aura-e); }
@@ -1236,3 +1240,965 @@ html.aura-nopin .aura-pin { position: static; height: auto; }
 .sag-cat[data-lit="true"] .sag-cat-run path { stroke-width: 2.5; }
 @keyframes sag-cat-run { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 @media (prefers-reduced-motion: reduce) { .sag-cat-run { display: none; } }
+
+/* Aura: bag and checkout (CartPage, CartContents, CartDrawer, CouponDrawer, CheckoutPage, OrderPlacedOverlay, OrderConfirmationPage, PendingPayment, AddressBook, MapPinPicker) */
+/* The band on top of the bag: a sand block with the label, the big heading and the real count */
+.abag-band { padding: 34px 20px 30px; border-radius: 28px; background: var(--aura-sand); color: var(--aura-ink); --fg: #111013; --mu: #5C5650; --ac: #8E4C58; --hl: rgba(17, 16, 19, 0.16); }
+/* A bag line: a white 22px card over a rose layer that a swipe to the left uncovers */
+.abag-l { position: relative; margin-bottom: 10px; border-radius: 22px; overflow: hidden; transition: height 450ms var(--aura-e), margin 450ms var(--aura-e), opacity 300ms; }
+.abag-l.out { opacity: 0; margin-bottom: 0; pointer-events: none; }
+.abag-x { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 4px; padding-right: 22px; border-radius: 22px; background: var(--aura-rose); color: var(--aura-ink); font-size: 13px; line-height: 1; font-weight: 700; opacity: 0; transition: opacity 200ms; }
+.abag-l.rev .abag-x { opacity: 1; }
+.abag-in { position: relative; display: flex; gap: 12px; padding: 8px; border-radius: 22px; background: #FFFFFF; touch-action: pan-y; transition: transform 500ms var(--aura-e); }
+.abag-in.dg { transition: none; will-change: transform; }
+.abag-ph { flex: none; align-self: flex-start; width: 84px; aspect-ratio: 3 / 4; border-radius: 15px; overflow: hidden; background: #E6DFD3; cursor: pointer; }
+.abag-ph img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 0; transition: transform 900ms var(--aura-eo); }
+@media (hover: hover) { .abag-ph:hover img { transform: scale(1.06); } }
+.abag-nm { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-align: left; font-size: 14.5px; line-height: 1.35; font-weight: 600; color: var(--aura-ink); cursor: pointer; }
+.abag-sm { font-size: 13px; line-height: 1.4; color: #6A645E; }
+.abag-pr { font-size: 17px; line-height: 1.2; font-weight: 800; color: var(--aura-ink); }
+.abag-mini { display: inline-flex; align-items: center; min-height: 44px; font-size: 13px; line-height: 1; font-weight: 600; color: #6A645E; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; cursor: pointer; transition: color 300ms; }
+.abag-mini:hover { color: var(--aura-ink); }
+.abag-hint { display: none; margin: 4px 0 20px; text-align: center; font-size: 13px; line-height: 1.4; color: #6A645E; }
+@media (hover: none) and (pointer: coarse) {
+  .abag-hint { display: block; }
+  .abag-l.nudge .abag-in { animation: abag-nudge 1500ms var(--aura-e) 1000ms; }
+  .abag-l.nudge .abag-x { animation: abag-nx 1500ms linear 1000ms; }
+}
+@keyframes abag-nudge { 30%, 55% { transform: translate3d(-70px, 0, 0); } }
+@keyframes abag-nx { 8%, 75% { opacity: 1; } }
+/* The pill quantity control with a rolling number */
+.abag-qty { flex: none; display: inline-flex; align-items: center; border-radius: 999px; background: var(--aura-paper); color: var(--aura-ink); }
+.abag-qty > button { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; transition: transform 300ms var(--aura-sp), opacity 300ms; }
+.abag-qty > button:not(:disabled):active { transform: scale(0.8); }
+.abag-qty > button:disabled { opacity: 0.3; cursor: not-allowed; }
+.abag-qty > span { display: inline-flex; justify-content: center; min-width: 26px; font-size: 17px; line-height: 1.2; font-weight: 800; }
+/* The coupon: a field and a pill button; the store's real coupons as dashed pill chips */
+.abag-cpn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; }
+.abag-cpn > .sag-input { height: 58px; min-width: 0; }
+.abag-cpn > button { min-height: 58px; min-width: 96px; padding: 0 24px; }
+.abag-chip { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; min-height: 44px; padding: 6px 15px; border-radius: 999px; border: 1.5px dashed var(--aura-ink); background: transparent; color: var(--aura-ink); font-size: 14px; line-height: 1.25; font-weight: 600; text-align: left; cursor: pointer; transition: background-color 300ms, transform 350ms var(--aura-sp), opacity 300ms; }
+.abag-chip > b { font-weight: 800; letter-spacing: 0.02em; word-break: break-all; }
+.abag-chip:not(:disabled):active { transform: scale(0.96); }
+.abag-chip:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (hover: hover) { .abag-chip:not(:disabled):hover { background: #FFFFFF; } }
+/* Price details: a white 26px card, plain rows, the total in big bold type, reductions in dark rose */
+.abag-pdt { padding: 20px 18px; border-radius: 26px; background: #FFFFFF; color: var(--aura-ink); }
+.abag-pdt-h { margin-bottom: 12px; font-size: 20px; line-height: 1; font-weight: 800; letter-spacing: -0.02em; color: var(--aura-ink); }
+.abag-rows { font-variant-numeric: tabular-nums lining-nums; }
+.abag-rows > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 7px 0; font-size: 15px; line-height: 1.35; color: #6A645E; }
+.abag-rows > div > dd { flex: none; font-weight: 600; color: var(--aura-ink); text-align: right; }
+.abag-rows > div.sv > dd { color: var(--aura-drose); }
+.abag-rows > div.tt { align-items: center; margin-top: 8px; padding-top: 14px; border-top: 1px solid #DDD6CC; border-radius: 0; font-size: 16px; font-weight: 700; color: var(--aura-ink); }
+.abag-rows > div.tt > dd { font-size: 26px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+/* The store's facts as three small tiles: sand, blush, sand */
+.abag-facts { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; text-align: center; font-size: 13px; line-height: 1.3; font-weight: 600; color: var(--aura-ink); }
+.abag-facts > li { display: grid; justify-items: center; align-content: start; gap: 8px; padding: 16px 6px; border-radius: 20px; background: var(--aura-sand); }
+.abag-facts > li:nth-child(2) { background: var(--aura-blush); }
+/* A small blush note (what the bag saves, a nudge) and the big bold line of an empty state */
+.abag-note { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--aura-blush); color: var(--aura-ink); font-size: 14.5px; line-height: 1.4; font-weight: 500; }
+.abag-note > svg { flex: none; margin-top: 1px; }
+.abag-empty-h { font-size: 30px; line-height: 1.1; font-weight: 800; letter-spacing: -0.03em; color: var(--aura-ink); }
+/* The bag drawer is a white sheet: its cards are paper, so they still read as cards */
+.abag-sheet { background: #FFFFFF; color: var(--aura-ink); }
+.abag-sheet :is(.abag-in, .abag-pdt, .aura-card) { background: var(--aura-paper); }
+.abag-sheet .abag-qty { background: #FFFFFF; }
+.abag-sheet .abag-facts > li:nth-child(odd) { background: var(--aura-sand); }
+/* Phones: the total and the checkout button, on one ink pill bar */
+.abag-bar { display: flex; align-items: center; gap: 14px; padding: 8px 8px 8px 22px; border-radius: 32px; background: var(--aura-ink); color: var(--aura-paper); --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --sa: #EAD7D1; }
+.abag-bar .aura-btn { min-height: 48px; padding: 0 22px; }
+/* Sheets and dialogs: white, 28px corners, a big heading */
+.aco-sheet { background: #FFFFFF; color: var(--aura-ink); border: 0; border-radius: 28px 28px 0 0; }
+@media (min-width: 640px) { .aco-sheet { border-radius: 28px; } }
+.aco-sheet-h { font-size: 28px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; color: var(--aura-ink); }
+.aco-x { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--aura-paper); color: var(--aura-ink); cursor: pointer; transition: transform 300ms var(--aura-sp); }
+.aco-x:active { transform: scale(0.88); }
+.aco-cp { padding: 16px; border-radius: 22px; background: var(--aura-paper); border: 1.5px dashed var(--aura-ink); }
+.aco-cp.on { border-style: solid; background: var(--aura-blush); }
+.aco-cp-code { font-size: 18px; line-height: 1.25; font-weight: 800; letter-spacing: 0.03em; word-break: break-all; color: var(--aura-ink); }
+
+/* Checkout: the forest band with the shield that assembles itself, and the two steps */
+.aco-top { border-radius: 28px; background: var(--aura-forest); color: var(--aura-paper); --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.22); --ac: #EAD7D1; --th: #F5F2EC; }
+.aco-top :focus-visible { outline-color: #EAD7D1; }
+.aco-band { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; align-items: center; padding: 10px 20px 28px; }
+.aco-shd { display: block; width: 64px; height: 64px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+.aco-shd * { transform-box: fill-box; transform-origin: 50% 50%; }
+.aco-shd .s-b { fill: currentColor; stroke: none; }
+.aco-shd .s-d { fill: var(--aura-forest); stroke: none; }
+.aco-stp { position: relative; display: flex; justify-content: space-between; max-width: 420px; margin: 0 auto; padding: 0 40px 26px; }
+.aco-stp > svg { position: absolute; left: 60px; right: 60px; top: 9px; width: calc(100% - 120px); height: 20px; overflow: visible; }
+.aco-stp > svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke: var(--hl); }
+.aco-stp > svg path + path { stroke: var(--th); stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--f, 0)); transition: stroke-dashoffset 900ms var(--aura-e); }
+.aco-stp-b { position: relative; z-index: 1; display: grid; justify-items: center; gap: 8px; min-width: 44px; min-height: 56px; font-size: 13px; line-height: 1; font-weight: 700; color: var(--mu); transition: color 400ms; }
+button.aco-stp-b { cursor: pointer; }
+.aco-stp-b > b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--aura-forest); box-shadow: inset 0 0 0 1.5px var(--hl); font-size: 14px; line-height: 1; font-weight: 800; transition: background-color 400ms 350ms, color 400ms 350ms, box-shadow 400ms 350ms; }
+.aco-stp-b.on { color: var(--aura-paper); }
+.aco-stp-b.on > b { background: var(--aura-paper); color: var(--aura-forest); box-shadow: none; }
+/* Step titles, labels above the fields, cards */
+.aco-h { font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; color: var(--aura-ink); text-wrap: balance; }
+@media (min-width: 900px) { .aco-h { font-size: 38px; } }
+.aco-lbl { display: block; margin-bottom: 6px; font-size: 12px; line-height: 1.3; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #6A645E; }
+.aco-loc { display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border-radius: 999px; border: 1.5px dashed var(--aura-ink); font-size: 15px; line-height: 1; font-weight: 700; color: var(--aura-ink); cursor: pointer; transition: background-color 300ms, transform 350ms var(--aura-e), opacity 300ms; }
+.aco-loc:not(:disabled):active { transform: scale(0.97); }
+.aco-loc:disabled { opacity: 0.6; cursor: wait; }
+@media (hover: hover) { .aco-loc:not(:disabled):hover { background: #FFFFFF; } }
+.aco-sum { padding: 18px 16px; border-radius: 24px; background: #FFFFFF; color: var(--aura-ink); }
+.aco-sum-h { font-size: 18px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; color: var(--aura-ink); }
+.aco-edit { flex: none; display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px; min-width: 44px; font-size: 14px; line-height: 1; font-weight: 600; color: var(--aura-ink); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: pointer; }
+.aco-si-ph { flex: none; align-self: flex-start; width: 48px; height: 60px; border-radius: 11px; object-fit: cover; object-position: top; background: #E6DFD3; }
+/* The mobile number field keeps its +91 in front: one white 58px field */
+.aco-tel { position: relative; display: flex; height: 58px; overflow: hidden; border: 1px solid #DDD6CC; border-radius: 16px; background: #FFFFFF; transition: border-color 300ms; }
+.aco-tel::after { content: ""; position: absolute; left: 16px; right: 16px; bottom: 0; height: 2px; background: var(--aura-ink); transform: scaleX(0); transform-origin: 0 50%; transition: transform 500ms var(--aura-e); pointer-events: none; }
+.aco-tel:focus-within { border-color: var(--aura-ink); }
+.aco-tel:focus-within::after { transform: scaleX(1); }
+.aco-tel.bad { border-color: var(--sag-danger); }
+.aco-tel.bad::after { background: var(--sag-danger); }
+/* The two ways to pay: online is the ink card with paper text and blush accents, cash on delivery the white card */
+.aco-pay { display: block; padding: 18px; border-radius: 24px; background: #FFFFFF; color: var(--aura-ink); box-shadow: inset 0 0 0 1px #DDD6CC; --fg: #111013; --mu: #6A645E; --hl: #DDD6CC; --ac: #8E4C58; transition: background-color 400ms, color 400ms, box-shadow 400ms; }
+.aco-pay.on { background: var(--aura-ink); color: var(--aura-paper); box-shadow: none; --fg: #F5F2EC; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.22); --ac: #EAD7D1; }
+.aco-pay:has(:focus-visible), .aco-opt:has(:focus-visible) { outline: 2px solid var(--aura-rose); outline-offset: 3px; }
+.aco-pay-tag { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 9px; background: var(--aura-blush); color: var(--aura-ink); font-size: 13px; line-height: 1; font-weight: 700; }
+.aco-opt { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 22px; background: #FFFFFF; color: var(--aura-ink); box-shadow: inset 0 0 0 1px #DDD6CC; cursor: pointer; transition: box-shadow 300ms; }
+.aco-opt.on { box-shadow: inset 0 0 0 2px var(--aura-ink); }
+/* A radio drawn as a dot that fills (the real input stays in place, invisible, for the keyboard and the tests) */
+.aco-rd { position: relative; flex: none; display: inline-grid; place-items: center; width: 22px; height: 22px; }
+.aco-rd > input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: inherit; }
+.aco-rd > i { width: 20px; height: 20px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--fg, #111013); transition: box-shadow 350ms var(--aura-sp); pointer-events: none; }
+.aco-rd > input:checked + i { box-shadow: inset 0 0 0 6px var(--fg, #111013); }
+/* UPI app tiles: white 16px tiles that turn ink when chosen, with a radio dot that fills */
+.aco-upi { display: flex; align-items: center; gap: 10px; flex: 1; min-height: 56px; padding: 0 14px; border-radius: 16px; background: #FFFFFF; color: var(--aura-ink); box-shadow: inset 0 0 0 1px #DDD6CC; font-size: 15px; line-height: 1.2; font-weight: 700; text-align: left; cursor: pointer; transition: box-shadow 300ms, background-color 300ms, color 300ms, opacity 300ms; }
+.aco-upi > i { flex: none; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--aura-ink); transition: box-shadow 350ms var(--aura-sp); }
+.aco-upi.on { background: var(--aura-ink); color: var(--aura-paper); box-shadow: none; }
+.aco-upi.on > i { box-shadow: inset 0 0 0 5px var(--aura-paper); }
+.aco-upi:disabled { opacity: 0.6; cursor: not-allowed; }
+/* Note boxes: blush cards. The fine print under the pay button. The big pay button. */
+.aco-note { display: flex; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 18px; background: var(--aura-blush); color: var(--aura-ink); font-size: 14.5px; line-height: 1.4; font-weight: 500; }
+.aco-note > svg { flex: none; margin-top: 1px; }
+.aco-fine { font-size: 13px; line-height: 1.45; color: #6A645E; text-align: center; }
+.aco-paybtn { min-height: 60px; font-size: 17px; }
+.aco-bad { padding: 16px; border-radius: 22px; background: #FFFFFF; box-shadow: inset 0 0 0 1.5px var(--sag-danger); }
+.aco-bar { height: 4px; overflow: hidden; border-radius: 999px; background: #DDD6CC; }
+.aco-bar > div { height: 100%; border-radius: 999px; background: var(--aura-ink); transform-origin: 0 50%; animation: aco-grow 900ms var(--aura-e) both; }
+@keyframes aco-grow { from { transform: scaleX(0); } }
+/* Order placed: the parts rise in one after another */
+.aco-rise { animation: aco-rise 700ms var(--aura-eo) both; animation-delay: var(--d, 0ms); }
+@keyframes aco-rise { from { opacity: 0; transform: translate3d(0, 22px, 0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .aco-shd .s-l { animation: aco-sl 1000ms var(--aura-eo) 100ms both; }
+  .aco-shd .s-r { animation: aco-sr 1000ms var(--aura-eo) 100ms both; }
+  .aco-shd .s-b { animation: aco-sb 800ms var(--aura-sp) 550ms both; }
+  .aco-shd .s-k { stroke-dasharray: 1; animation: aco-sk 700ms var(--aura-e) 950ms both; }
+  .aco-shd .s-d { animation: aco-sd 500ms var(--aura-sp) 1300ms both; }
+  .aco-stp-b.pl > b { animation: aco-node 700ms var(--aura-sp) 450ms; }
+}
+@keyframes aco-sl { from { opacity: 0; transform: translate(-20px, -6px) rotate(-8deg); } }
+@keyframes aco-sr { from { opacity: 0; transform: translate(20px, -6px) rotate(8deg); } }
+@keyframes aco-sb { from { opacity: 0; transform: translateY(16px) scale(0.5); } }
+@keyframes aco-sk { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes aco-sd { from { transform: scale(0); } }
+@keyframes aco-node { 40% { transform: scale(1.3); } }
+@media (prefers-reduced-motion: reduce) {
+  .abag-l, .abag-in, .abag-x, .abag-ph img, .abag-qty > button, .abag-chip, .abag-mini, .aco-x, .aco-loc, .aco-pay, .aco-opt, .aco-rd > i, .aco-upi, .aco-upi > i, .aco-stp-b, .aco-stp-b > b, .aco-stp > svg path + path, .aco-tel, .aco-tel::after { transition: none !important; }
+  .abag-l.nudge .abag-in, .abag-l.nudge .abag-x, .aco-bar > div, .aco-rise, .aco-shd *, .aco-stp-b.pl > b { animation: none !important; }
+  .abag-ph:hover img, .abag-qty > button:active, .abag-chip:active, .aco-x:active, .aco-loc:active { transform: none !important; }
+}
+
+/* Aura: sign in, track order and the order timeline, my account, wishlist, policy / contact / about / 404 / error pages (classes aa-*) In the components layer, so a utility on the same element wins. */
+@layer components {
+  /* The band at the top of a page: a flat sand (or blush) block with the label, the huge heading and one line */
+  .aa-band { border-radius: 28px; padding: 22px 20px 30px; background: var(--aura-sand); color: var(--aura-ink); --fg: #111013; --inv: #F5F2EC; --mu: #5C5650; --hl: rgba(17, 16, 19, 0.16); --ac: #8E4C58; --sa: #8E4C58; }
+  .aa-band-blush { background: var(--aura-blush); }
+  @media (min-width: 900px) { .aa-band { padding: 34px 44px 46px; } }
+  /* A centred page (sign in, track order): on desktop the heading sits left and the card right */
+  .aa-cen { min-height: calc(100vh - 94px); padding: 30px 16px 80px; }
+  .aa-cen-in { max-width: 1120px; margin: 0 auto; }
+  @media (min-width: 900px) {
+    .aa-cen { padding-top: 56px; }
+    .aa-cen-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 50px; align-items: start; }
+  }
+  /* Sign in or new account: two pills, the ink one slides */
+  .aa-tabs { position: relative; isolation: isolate; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: var(--aura-paper); }
+  .aa-tabs::before { content: ""; position: absolute; z-index: -1; left: 4px; top: 4px; bottom: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--aura-ink); transition: transform 500ms var(--aura-e); }
+  .aa-tabs[data-on="1"]::before { transform: translateX(100%); }
+  .aa-tabs > button { min-height: 46px; padding: 0 8px; border-radius: 999px; font-size: 15px; line-height: 1; font-weight: 700; color: var(--aura-ink); cursor: pointer; transition: color 350ms; }
+  .aa-tabs > button[aria-selected="true"] { color: var(--aura-paper); }
+  .aa-tabs > button:focus-visible { outline-offset: -3px; }
+  /* The six boxes of the code: a filled box turns ink with a paper digit and lifts */
+  .aa-otp { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+  .aa-otp input { width: 100%; min-width: 0; height: 60px; padding: 0; border: 1px solid #DDD6CC; border-radius: 16px; background: var(--aura-paper); color: var(--aura-ink); text-align: center; font-family: var(--font-sans); font-size: 24px !important; line-height: 1; font-weight: 800; transition: background-color 350ms, color 350ms, border-color 300ms, transform 450ms var(--aura-sp); }
+  .aa-otp input:focus { border-color: var(--aura-ink); }
+  .aa-otp input.f { background: var(--aura-ink); border-color: var(--aura-ink); color: var(--aura-paper); transform: translateY(-4px); }
+  /* A mobile number field: "+91" appears with the typed digits */
+  .aa-tel > input { padding-left: 54px; }
+  .aa-tel > b { position: absolute; left: 16px; top: 26px; font-size: 16px; line-height: 22px; font-weight: 500; color: var(--sag-ink-muted); pointer-events: none; transition: opacity 200ms; }
+  .aa-tel > input:placeholder-shown:not(:focus) ~ b { opacity: 0; }
+  /* A plain label over a white field */
+  .aa-flbl { display: block; margin-bottom: 7px; font-size: 13.5px; line-height: 18px; font-weight: 600; color: var(--sag-ink-muted); }
+  /* An error (always an icon and words), a note, a status pill, a round icon chip */
+  .aa-alert { display: flex; align-items: flex-start; gap: 10px; padding: 13px 15px; border-radius: 16px; background: #FFFFFF; box-shadow: inset 0 0 0 1.5px var(--sag-danger); color: var(--sag-danger); font-size: 14px; line-height: 20px; font-weight: 600; text-align: left; }
+  .aa-alert > svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+  .aa-note { padding: 13px 16px; border-radius: 18px; background: var(--aura-blush); color: var(--aura-ink); font-size: 14px; line-height: 20px; --mu: #5C5650; }
+  .aa-pill { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 5px 12px; border-radius: 999px; background: var(--aura-blush); color: var(--aura-ink); font-size: 13px; line-height: 1.2; font-weight: 700; white-space: nowrap; }
+  .aa-pill.is-go { background: var(--aura-ink); color: var(--aura-paper); }
+  .aa-pill.is-ok { background: var(--aura-forest); color: var(--aura-paper); }
+  .aa-pill.is-wait { background: var(--aura-rose); color: var(--aura-ink); }
+  .aa-pill.is-mu { background: #ECE5D8; color: var(--sag-ink-muted); }
+  .aa-pill.is-no { background: transparent; color: var(--sag-danger); box-shadow: inset 0 0 0 1.5px var(--sag-danger); }
+  .aa-ic { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--aura-paper); color: var(--aura-ink); }
+  .aa-ic-blush { background: var(--aura-blush); }
+  .aa-ic-ink { background: var(--aura-ink); color: var(--aura-paper); }
+  button.aa-ic { cursor: pointer; transition: transform 300ms var(--aura-sp), background-color 300ms; }
+  button.aa-ic:active { transform: scale(0.9); }
+  /* A row that leads somewhere: a white 22px card with a round icon chip, two lines and an arrow */
+  .aa-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 12px 16px 12px 12px; border-radius: 22px; background: #FFFFFF; color: var(--aura-ink); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 350ms var(--aura-e), background-color 300ms, color 300ms; }
+  .aa-row:is(a, button):active { transform: scale(0.985); }
+  .aa-row-t { min-width: 0; flex: 1; }
+  .aa-row-t > b { display: block; font-size: 15.5px; line-height: 20px; font-weight: 700; }
+  .aa-row-t > small { display: block; margin-top: 1px; font-size: 13px; line-height: 18px; font-weight: 400; color: var(--sag-ink-muted); }
+  .aa-row > svg:last-child { flex: none; width: 18px; height: 18px; color: var(--sag-ink-muted); transition: transform 350ms var(--aura-e); }
+  @media (hover: hover) { .aa-row:is(a, button):hover > svg:last-child { transform: translateX(4px); } }
+  @media (min-width: 1024px) {
+    .aa-row[aria-selected="true"] { background: var(--aura-ink); color: var(--aura-paper); }
+    .aa-row[aria-selected="true"] .aa-row-t > small, .aa-row[aria-selected="true"] > svg:last-child { color: #BDB6AD; }
+    .aa-row[aria-selected="true"] .aa-ic { background: var(--aura-rose); }
+    .aa-row[aria-selected="true"]:focus-visible { outline-color: var(--aura-rose); }
+  }
+  /* The ink card of an order's progress: the state in big words, then the stages as a timeline whose rose line
+     draws down to the current stage (every row is 60px high, so the line needs no measuring) */
+  .aa-tlc { border-radius: 28px; padding: 20px 18px 24px; background: var(--aura-ink); color: var(--aura-paper); }
+  .aa-tlc .aura-lbl { color: var(--aura-blush); }
+  .aa-tlc .aa-pill { background: var(--aura-blush); color: var(--aura-ink); box-shadow: none; }
+  .aa-tlc-h { margin-top: 10px; font-size: clamp(28px, 8.4vw, 40px); line-height: 1; font-weight: 800; letter-spacing: -0.03em; text-wrap: balance; }
+  .aa-tl { position: relative; margin-top: 14px; }
+  .aa-tl > svg { position: absolute; left: 0; top: 0; width: 28px; height: 100%; overflow: visible; pointer-events: none; }
+  .aa-tl > svg path { fill: none; stroke: rgba(245, 242, 236, 0.2); stroke-width: 1.5; }
+  .aa-tl > svg path + path { stroke: var(--aura-rose); stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--f, 0)); }
+  .aa-tl > ol { display: grid; grid-auto-rows: 60px; }
+  .aa-tl li { position: relative; display: flex; align-items: center; gap: 16px; color: #8F8981; }
+  .aa-tl li::before { content: ""; position: relative; z-index: 1; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--aura-ink); box-shadow: inset 0 0 0 2px rgba(245, 242, 236, 0.3); }
+  .aa-tl li.on { color: var(--aura-paper); }
+  .aa-tl li.on::before { background: var(--aura-rose); box-shadow: none; }
+  .aa-tl li.cur::before { box-shadow: 0 0 0 5px rgba(183, 110, 121, 0.32); transform: scale(1.1); }
+  .aa-tl b { display: block; font-size: 19px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+  .aa-tl small { display: block; margin-top: 3px; font-size: 14px; line-height: 1.2; color: #BDB6AD; }
+  @media (prefers-reduced-motion: no-preference) {
+    .aa-tl li { transition: opacity 600ms var(--aura-e) calc(var(--i, 0) * 90ms), transform 800ms var(--aura-eo) calc(var(--i, 0) * 90ms), color 400ms calc(var(--i, 0) * 260ms + 300ms); }
+    .aa-tl li::before { transition: background-color 400ms calc(var(--i, 0) * 260ms + 300ms), box-shadow 400ms calc(var(--i, 0) * 260ms + 300ms), transform 500ms var(--aura-sp) calc(var(--i, 0) * 260ms + 300ms); }
+    .aa-tl > svg path + path { transition: stroke-dashoffset calc(var(--c, 0) * 260ms) linear 300ms; }
+    .aa-tl:not(.in) li { opacity: 0; transform: translate3d(0, 14px, 0); }
+    .aa-tl:not(.in) li.on { color: #8F8981; }
+    .aa-tl:not(.in) li.on::before { background: var(--aura-ink); box-shadow: inset 0 0 0 2px rgba(245, 242, 236, 0.3); transform: none; }
+    .aa-tl:not(.in) > svg path + path { stroke-dashoffset: 1; }
+  }
+  /* The same progress as a row of seven dots (the latest order in My account) */
+  .aa-dots { display: flex; align-items: center; }
+  .aa-dots > i { flex: none; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(245, 242, 236, 0.4); }
+  .aa-dots > i.on { background: var(--aura-rose); box-shadow: none; }
+  .aa-dots > i.cur { box-shadow: 0 0 0 4px rgba(183, 110, 121, 0.32); }
+  .aa-dots > s { flex: 1; height: 1.5px; background: rgba(245, 242, 236, 0.2); }
+  .aa-dots > s.on { background: var(--aura-rose); }
+  /* Policy text: a numbered section with a big title */
+  .aa-sec { padding: 30px 0 32px; border-top: 1px solid var(--sag-line); scroll-margin-top: 96px; }
+  .aa-sec-n { display: block; margin-bottom: 8px; font-size: 13px; line-height: 1; font-weight: 800; letter-spacing: 0.16em; color: var(--aura-rose); font-variant-numeric: tabular-nums lining-nums; }
+  @media (prefers-reduced-motion: reduce) {
+    .aa-tabs::before, .aa-tabs > button, .aa-otp input, .aa-tel > b, .aa-row, .aa-row > svg:last-child, button.aa-ic { transition: none; }
+    .aa-otp input.f, .aa-row:active, button.aa-ic:active { transform: none; }
+  }
+}
+
+/* ------------------------------------------------------------------
+   Aura, shared product pieces: the product card (ProductCard.tsx), the trust facts (Assurance.tsx), customer
+   reviews (CustomerReviews.tsx), the reels row (AuraReels.tsx) and the grid the rails use.
+------------------------------------------------------------------- */
+/* Product card: a white card, 22px corners, 6px padding; the photo 3:4 with 17px corners */
+.aura-pc { position: relative; display: flex; flex-direction: column; min-width: 0; height: 100%; padding: 6px; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+/* The lean towards the pointer or the finger (the script writes the transform) and the way back */
+.aura-pc.aura-pc-tl { transition: transform 120ms linear; will-change: transform; }
+.aura-pc.aura-pc-back { transition: transform 600ms var(--aura-e); }
+.aura-pc-m { position: relative; flex: none; min-width: 0; }
+.aura-pc-ph { display: block; aspect-ratio: 3 / 4; border-radius: 17px; --rv-r: 17px; -webkit-user-select: none; user-select: none; }
+.aura-pc[data-two] .aura-pc-ph { -webkit-touch-callout: none; }
+.aura-pc .aura-pc-ph.aura-sk img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; border-radius: 0; object-fit: cover; object-position: 50% 0; transition: opacity 600ms, transform 1400ms var(--aura-eo) var(--d, 0s); }
+/* The second photo wipes in from the side: under the pointer, or while a finger rests on the photo (data-alt) */
+.aura-pc .aura-pc-ph.aura-sk img.aura-pc-i2 { clip-path: inset(0 0 0 100%); transition: opacity 100ms, clip-path 900ms var(--aura-io); }
+.aura-pc[data-alt] .aura-pc-ph.aura-sk img.aura-pc-i2 { clip-path: inset(0 0 0 0); }
+@media (hover: hover) {
+  .aura-pc:hover .aura-pc-ph.aura-sk img.aura-pc-i2 { clip-path: inset(0 0 0 0); }
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .aura-pc:hover .aura-pc-ph.aura-sk.in img:first-child { transform: scale(1.04); }
+}
+
+/* The heart: a white circle on the photo's top right corner. Saved = rose; it draws itself and pops with a ring of dots. */
+.aura-hrt { position: absolute; right: 0; top: 0; z-index: 2; display: grid; place-items: center; width: 46px; height: 46px; color: var(--aura-ink); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.aura-hrt::before { content: ""; position: absolute; left: 6px; top: 6px; right: 6px; bottom: 6px; border-radius: 50%; background: #FFFFFF; transition: transform 300ms var(--aura-sp); }
+.aura-hrt:active::before { transform: scale(0.88); }
+.aura-hrt > svg { position: relative; transition: color 250ms; }
+.aura-hrt.on > svg { color: var(--aura-rose); }
+.aura-hrt.on > svg path { fill: var(--aura-rose); }
+.aura-hrt > i { position: absolute; left: 50%; top: 50%; width: 4px; height: 4px; margin: -2px; border-radius: 50%; color: var(--aura-rose); opacity: 0; pointer-events: none; box-shadow: 0 -17px, 12px -12px, 17px 0, 12px 12px, 0 17px, -12px 12px, -17px 0, -12px -12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .aura-hrt.pop > svg { animation: aura-hrt-pop 550ms var(--aura-sp); }
+  .aura-hrt.pop > svg path { stroke-dasharray: 1; animation: aura-hrt-draw 500ms var(--aura-e); }
+  .aura-hrt.pop > i { animation: aura-hrt-ring 650ms ease-out; }
+}
+@keyframes aura-hrt-draw { from { stroke-dashoffset: 1; fill: transparent; } 60% { fill: transparent; } to { stroke-dashoffset: 0; } }
+@keyframes aura-hrt-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes aura-hrt-ring { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(1.25); opacity: 0; } }
+
+/* Under the photo: the tag or the category, the name in two lines, the rating, the price row, the button */
+.aura-pc-b { display: flex; flex: 1; flex-direction: column; min-width: 0; padding: 10px 6px 6px; }
+.aura-pc-l { display: block; min-width: 0; min-height: 23px; margin-bottom: 6px; font-size: 13px; line-height: 23px; font-weight: 600; color: var(--sag-ink-muted); }
+.aura-pc-l > .aura-tag { vertical-align: top; }
+.aura-pc-n { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; min-height: 2.7em; font-family: var(--font-sans); font-size: 14px; line-height: 1.35; font-weight: 500; letter-spacing: 0; color: var(--sag-ink); }
+.aura-pc-pr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; margin: 6px 0 10px; }
+/* "Add to bag": a full-width pill with an inset ink line. ok = the moment after adding: the words slide up,
+   the tick draws itself (the shared .aura-draw rule) and the pill is ink. */
+.aura-pc-add { position: relative; display: block; flex: none; width: 100%; height: 46px; margin-top: auto; padding: 0 10px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--aura-ink); font-family: var(--font-sans); font-size: 14px; line-height: 1; font-weight: 700; white-space: nowrap; color: var(--aura-ink); overflow: hidden; isolation: isolate; cursor: pointer; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; transition: background-color 350ms, color 350ms, transform 300ms var(--aura-e); }
+.aura-pc-add:active { transform: scale(0.96); }
+.aura-pc-add > span:first-child { display: block; overflow: hidden; text-overflow: ellipsis; transition: transform 450ms var(--aura-e), opacity 300ms; }
+.aura-pc-add > svg { position: absolute; left: 50%; top: 50%; margin: -10px; opacity: 0; transition: opacity 200ms; }
+.aura-pc-add.ok { background-color: var(--aura-ink); color: var(--aura-paper); }
+.aura-pc-add.ok > span:first-child { transform: translate3d(0, -130%, 0); opacity: 0; }
+.aura-pc-add.ok > svg { opacity: 1; }
+@media (hover: hover) { .aura-pc-add:hover { background-color: var(--aura-ink); color: var(--aura-paper); } }
+/* The size choice takes the button's place */
+.aura-pc-pick { margin-top: auto; padding: 2px 6px 8px; border-radius: 18px; background: var(--sag-sunken); }
+
+/* big: across the two phone columns, a taller photo and a bigger name. wide: across two columns, the photo at the left. */
+.aura-pc[data-layout="big"], .aura-pc[data-layout="wide"] { grid-column: 1 / -1; }
+.aura-pc[data-layout="big"] .aura-pc-ph { aspect-ratio: 1 / 1.08; --rv-r: 19px; border-radius: 19px; }
+.aura-pc[data-layout="big"] .aura-pc-n { min-height: 0; font-size: 17px; font-weight: 600; }
+.aura-pc[data-layout="big"] .aura-pc-b { padding: 14px 8px 8px; }
+.aura-pc[data-layout="wide"] { flex-direction: row; }
+.aura-pc[data-layout="wide"] .aura-pc-m { width: 44%; }
+.aura-pc[data-layout="wide"] .aura-pc-b { justify-content: center; padding: 8px 6px 6px 14px; }
+.aura-pc[data-layout="wide"] .aura-pc-n { -webkit-line-clamp: 3; min-height: 0; font-size: 15px; }
+.aura-pc[data-layout="wide"] :is(.aura-pc-add, .aura-pc-pick) { margin-top: 6px; }
+/* The grid of a product section: two columns on phones, four on desktop; a big or a wide card takes two */
+.aura-pc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 900px) {
+  .aura-pc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .aura-pc[data-layout="big"] { grid-column: span 2; grid-row: span 2; }
+  .aura-pc[data-layout="big"] .aura-pc-m { display: flex; flex: 1; min-height: 0; }
+  .aura-pc[data-layout="big"] .aura-pc-ph { flex: 1; width: 100%; min-height: 360px; aspect-ratio: auto; }
+  .aura-pc[data-layout="big"] .aura-pc-n { font-size: 20px; }
+  .aura-pc[data-layout="big"] .aura-pc-b { flex: none; }
+  .aura-pc[data-layout="wide"] { grid-column: span 2; }
+}
+
+/* Trust facts: the round chip takes the section's text colour, its icon the section's ground */
+.aura-fact { color: inherit; -webkit-tap-highlight-color: transparent; }
+.aura-fact-chip { background: var(--fg); color: var(--inv); transition: transform 450ms var(--aura-sp); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  :is(a, button).aura-fact:hover .aura-fact-chip { transform: scale(1.08) rotate(-6deg); }
+}
+:is(a, button).aura-fact:active .aura-fact-chip { transform: scale(0.92); }
+
+/* Customer reviews: every quote sits in the same grid cell, one is shown; the shown one rises in behind a mask */
+.aura-rvq-wrap { display: grid; touch-action: pan-y; }
+.aura-rvq { grid-area: 1 / 1; align-self: start; min-width: 0; visibility: hidden; opacity: 0; transition: opacity 200ms, visibility 0s 200ms; }
+.aura-rvq[data-on] { visibility: visible; opacity: 1; transition: opacity 300ms; }
+.aura-rvq-q { margin-top: 18px; overflow: hidden; font-family: var(--font-sans); font-size: clamp(32px, 9.2vw, 60px); line-height: 1.03; font-weight: 800; letter-spacing: -0.035em; font-synthesis: none; text-wrap: balance; color: var(--fg); }
+.aura-rvq-q > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 7; overflow: hidden; padding-bottom: 0.14em; }
+.aura-rvq-q em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.08em; letter-spacing: -0.01em; color: var(--ac); }
+.aura-rvq[data-size="lg"] .aura-rvq-q { font-size: clamp(27px, 7.4vw, 46px); line-height: 1.07; }
+.aura-rvq[data-size="md"] .aura-rvq-q { font-size: clamp(22px, 6vw, 34px); line-height: 1.13; letter-spacing: -0.028em; }
+.aura-rvq[data-size="sm"] .aura-rvq-q { font-size: clamp(19px, 5.1vw, 26px); line-height: 1.22; font-weight: 700; letter-spacing: -0.02em; }
+@media (min-width: 900px) {
+  .aura-rvq-q { max-width: 22ch; }
+  .aura-rvq[data-size="lg"] .aura-rvq-q { max-width: 30ch; }
+  .aura-rvq[data-size="md"] .aura-rvq-q { max-width: 40ch; }
+  .aura-rvq[data-size="sm"] .aura-rvq-q { max-width: 52ch; }
+}
+.aura-rvq-c { margin-top: 18px; font-size: 15px; line-height: 1.45; }
+@media (prefers-reduced-motion: no-preference) {
+  .aura-rvq-q > span { transform: translate3d(0, 108%, 0); }
+  .aura-rvq[data-on] .aura-rvq-q > span { transform: none; transition: transform 1000ms var(--aura-eo) 80ms; }
+  .aura-rvq :is(.aura-rvq-s, .aura-rvq-c) { opacity: 0; transform: translate3d(0, 14px, 0); }
+  .aura-rvq[data-on] :is(.aura-rvq-s, .aura-rvq-c) { opacity: 1; transform: none; transition: opacity 600ms 260ms, transform 800ms var(--aura-eo) 260ms; }
+}
+
+/* Reels: a swipe row of ink cards (24px corners), the 9:16 poster (19px corners) and under it the round rose
+   play button with the caption. The script leans the cards like a fan and drifts the row with the page scroll. */
+.aura-rl { padding: 80px 0 84px; }
+.aura-rl-hd { max-width: 1120px; margin-left: auto; margin-right: auto; padding-left: 18px; padding-right: 18px; }
+.aura-rl-vp { position: relative; display: flex; margin-top: 10px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.aura-rl-vp::-webkit-scrollbar { display: none; }
+.aura-rl-tr { display: flex; gap: 12px; width: max-content; margin: 0 auto; padding: 18px 18px 22px; will-change: transform; }
+.aura-rc-li { flex: none; width: min(52vw, 230px); }
+.aura-rc { display: block; width: 100%; padding: 6px 6px 0; border-radius: 24px; background: var(--aura-ink); color: var(--aura-paper); text-align: left; overflow: hidden; cursor: pointer; will-change: transform; -webkit-tap-highlight-color: transparent; }
+.aura-rc-ph { display: block; aspect-ratio: 9 / 16; border-radius: 19px; }
+.aura-rc-ph.aura-sk, .aura-rc-ph.aura-sk:not(.ok) { background-color: #2A282D; animation: none; }
+.aura-rc .aura-rc-ph.aura-sk img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; border-radius: 0; object-fit: cover; object-position: 50% 0; transition: opacity 600ms, transform 1200ms var(--aura-eo); }
+.aura-rc-b { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px; }
+.aura-rc-pl { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--aura-rose); color: var(--aura-ink); }
+.aura-rc-pl > svg { margin-left: 2px; }
+@keyframes aura-rc-pulse { 0%, 60%, 100% { transform: scale(1); } 30% { transform: scale(1.16); } }
+@media (prefers-reduced-motion: no-preference) {
+  .aura-rc-pl { animation: aura-rc-pulse 2400ms var(--aura-e) infinite; }
+  @media (hover: hover) { .aura-rc:hover .aura-rc-ph.aura-sk img { transform: scale(1.04); } }
+}
+@media (min-width: 900px) {
+  .aura-rl { padding: 110px 0 110px; }
+  .aura-rl-hd { padding-left: 32px; padding-right: 32px; }
+  .aura-rl-tr { gap: 16px; padding-left: 32px; padding-right: 32px; }
+  .aura-rc-li { width: 230px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aura-pc, .aura-pc.aura-pc-tl, .aura-pc.aura-pc-back { transform: none !important; transition: none; }
+  .aura-pc .aura-pc-ph.aura-sk img, .aura-pc .aura-pc-ph.aura-sk img.aura-pc-i2 { transition: none; transform: none !important; }
+  .aura-hrt::before, .aura-hrt > svg, .aura-pc-add, .aura-pc-add > span:first-child, .aura-pc-add > svg, .aura-fact-chip { transition: none; }
+  .aura-pc-add:active, .aura-hrt:active::before, :is(a, button).aura-fact:active .aura-fact-chip { transform: none; }
+  .aura-pc-add.ok > span:first-child { transform: none; }
+  .aura-rvq, .aura-rvq[data-on] { transition: none; }
+  .aura-rl-tr, .aura-rc { transform: none !important; will-change: auto; }
+  .aura-rc .aura-rc-ph.aura-sk img { transition: none; }
+}
+
+/* Aura site frame: header, phone tab bar, rose menu, page-change curtain, toast, footer (App.tsx, Header.tsx, MobileAppNavbar.tsx, MobileMenuDrawer.tsx, Toast.tsx, Footer.tsx, utils/pageTransition.ts) */
+:root { --aura-hh: 56px; --aura-tb: calc(62px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { :root { --aura-hh: 108px; } }
+
+/* The header is fixed and takes no part in the layout. The page keeps a constant top padding of the header's
+   full height (--aura-hh), so nothing moves when the bar gets lower or slides away. Checkout has its own bar. */
+#app-main-content { padding-top: var(--aura-hh); }
+#app-main-content:has(.sag-checkout) { padding-top: 0; }
+#app-main-content:has(.sag-checkout) > header.fixed { display: none; }
+
+/* The <header> box never changes size (pages measure it); the bar inside does, and the box slides away */
+.aura-hd { height: var(--aura-hh); pointer-events: none; transition: transform 500ms var(--aura-e); will-change: transform; }
+.aura-hd.hide { transform: translate3d(0, -105%, 0); }
+.aura-hd-bar { position: relative; pointer-events: auto; background-color: var(--bg); color: var(--fg); border-bottom: 1px solid var(--hl); transition: background-color 450ms var(--aura-e), color 300ms, border-color 300ms; }
+.aura-hd-row { height: 55px; transition: height 350ms var(--aura-e); }
+.aura-hd.sm .aura-hd-row { height: 47px; }
+/* With the menu open the bar is part of the rose panel */
+.aura-hd[data-menu="open"] .aura-hd-bar { background-color: var(--aura-rose); color: var(--aura-ink); border-bottom-color: transparent; --fg: #111013; --ac: #F5F2EC; --th: #111013; transition-duration: 200ms; }
+.aura-hb { position: relative; flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform 200ms var(--aura-e); }
+.aura-hb:active { transform: scale(0.9); }
+/* Tablets have no tab bar, so the wishlist is in the bar there; phones have it in the tab bar and the menu */
+@media (max-width: 767px) { #header-wishlist-btn-tablet { display: none; } }
+.aura-wm { display: inline-block; font-family: var(--font-sans); font-size: 15px; line-height: 1; font-weight: 800; letter-spacing: 0.2em; padding-left: 0.2em; text-transform: uppercase; white-space: nowrap; font-synthesis: none; }
+.aura-wm em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.4em; line-height: 0; letter-spacing: 0; text-transform: none; color: var(--ac); margin-left: -0.1em; transition: color 300ms; }
+@media (max-width: 359px) { .aura-wm { font-size: 12.5px; letter-spacing: 0.14em; padding-left: 0.14em; } }
+.aura-hd-p { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: var(--th); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; transition: background-color 300ms; }
+/* The real count: a rose badge whose figures roll */
+.aura-cnt { position: absolute; top: 4px; right: 1px; display: flex; align-items: center; justify-content: center; min-width: 19px; height: 19px; padding: 0 5px; border-radius: 10px; background: var(--aura-rose); color: var(--aura-ink); font-family: var(--font-sans); font-size: 12px; line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums lining-nums; pointer-events: none; }
+.aura-cnt .aura-odo { line-height: 1.2; }
+@media (min-width: 1024px) {
+  .aura-hd-row { height: 63px; }
+  .aura-hd.sm .aura-hd-row { height: 51px; }
+  .aura-wm { font-size: 19px; }
+  .aura-hd-search { display: block; width: 100%; height: 44px; padding: 0 48px 0 46px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--hl); color: var(--mu); font-size: 14.5px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: box-shadow 300ms, color 300ms; }
+  .aura-hd-search:hover { box-shadow: inset 0 0 0 1px var(--fg); }
+  .aura-hd-nav { display: flex; align-items: center; justify-content: center; gap: 34px; height: 44px; padding: 0 24px; border-top: 1px solid var(--hl); transition: border-color 300ms; }
+  .aura-hd-lk { position: relative; display: inline-flex; align-items: center; height: 44px; font-size: 14.5px; line-height: 1; font-weight: 600; white-space: nowrap; cursor: pointer; }
+  .aura-hd-lk::after { content: ""; position: absolute; left: 0; right: 0; bottom: 8px; height: 1.5px; background: currentColor; transform: scaleX(0); transform-origin: 0 50%; transition: transform 500ms var(--aura-eo); }
+  .aura-hd-lk:is([aria-current="page"], [data-on])::after { transform: scaleX(1); }
+  .aura-hd-lk[aria-current="page"] { font-weight: 800; }
+}
+@media (min-width: 1024px) and (hover: hover) { .aura-hd-lk:hover::after { transform: scaleX(1); } }
+
+/* The announcement band sits in the page, right under the header (homepage only) */
+#app-main-content > .sag-marquee { flex: none; }
+
+/* Phone tab bar: solid ink, a paper pill behind the current item that slides to the tapped one */
+.aura-tb { position: fixed; left: 0; right: 0; bottom: 0; z-index: 45; height: var(--aura-tb); padding-bottom: env(safe-area-inset-bottom); background: var(--aura-ink); color: var(--aura-paper); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); transition: transform 500ms var(--aura-e), visibility 0s; }
+.aura-tb.off { transform: translate3d(0, 105%, 0); visibility: hidden; transition: transform 500ms var(--aura-e), visibility 0s 500ms; }
+@media (min-width: 768px) { .aura-tb { display: none; } }
+.aura-tb > i { position: absolute; left: 0; top: 6px; width: 20%; height: 50px; pointer-events: none; transition: transform 500ms var(--aura-e), opacity 300ms; will-change: transform; }
+.aura-tb > i::before { content: ""; position: absolute; top: 0; bottom: 0; left: 5px; right: 5px; border-radius: 16px; background: var(--aura-paper); }
+.aura-tb > button { position: relative; z-index: 1; display: grid; justify-items: center; align-content: center; gap: 3px; height: 62px; min-width: 0; color: #CFC9C1; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: color 300ms; }
+.aura-tb > button[aria-current="page"] { color: var(--aura-ink); }
+.aura-tb > button:focus-visible { outline-offset: -4px; }
+.aura-tb-ic { position: relative; display: flex; }
+.aura-tb-lb { font-family: var(--font-sans); font-size: 13px; line-height: 1; font-weight: 600; white-space: nowrap; }
+.aura-tb .aura-cnt { top: -7px; right: -13px; min-width: 18px; height: 18px; padding: 0 4px; font-size: 11.5px; }
+.aura-tb-dot { position: absolute; right: -3px; bottom: -1px; width: 7px; height: 7px; border-radius: 50%; background: var(--aura-rose); }
+
+/* Menu: a full-screen rose panel that wipes down from the top; it lies under the header and over the tab bar */
+.aura-menu { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 46; display: flex; flex-direction: column; padding-top: calc(var(--aura-hh) + 14px); background: var(--aura-rose); clip-path: inset(0 0 100% 0); visibility: hidden; transition: clip-path 600ms var(--aura-io), visibility 0s 600ms; }
+.aura-menu.on { clip-path: inset(0); visibility: visible; transition: clip-path 600ms var(--aura-io); }
+@media (min-width: 1024px) { .aura-menu { display: none; } }
+.aura-menu-big { display: flex; align-items: baseline; gap: 10px; width: 100%; text-align: left; cursor: pointer; font-family: var(--font-sans); font-size: clamp(34px, 11.4vw, 48px); line-height: 1.12; font-weight: 800; letter-spacing: -0.03em; -webkit-tap-highlight-color: transparent; }
+.aura-menu-big > .l { display: block; min-width: 0; overflow: hidden; padding-bottom: 0.08em; }
+.aura-menu-big > .l > span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transform: translate3d(0, 115%, 0); transition: transform 0s 600ms; }
+.aura-menu.on .aura-menu-big > .l > span { transform: none; transition: transform 700ms var(--aura-eo) calc(var(--i, 0) * 60ms + 150ms); }
+.aura-menu-big > small { flex: none; font-size: 13px; line-height: 1; font-weight: 700; letter-spacing: 0; color: var(--mu); opacity: 0; transition: opacity 0s 600ms; }
+.aura-menu.on .aura-menu-big > small { opacity: 1; transition: opacity 400ms calc(var(--i, 0) * 60ms + 450ms); }
+.aura-menu-big[aria-current="page"] { color: var(--aura-paper); }
+.aura-menu-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 48px; border-bottom: 1px solid var(--hl); text-align: left; font-size: 17px; line-height: 1.3; font-weight: 600; cursor: pointer; }
+.aura-menu-row[aria-current="page"] { font-weight: 800; color: var(--aura-paper); }
+.aura-menu-search { display: flex; align-items: center; gap: 10px; width: 100%; height: 50px; padding: 0 18px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--aura-ink); font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; }
+
+/* Page change: two layers (rose, then ink) wipe up over the page and away, the wordmark in the middle */
+.aura-cur { position: fixed; left: 0; right: 0; top: 0; bottom: 0; z-index: 90; display: grid; place-items: center; pointer-events: none; visibility: hidden; }
+.aura-cur.a, .aura-cur.b { visibility: visible; }
+.aura-cur > i { position: absolute; left: 0; right: 0; top: -2px; bottom: -2px; transform: translate3d(0, 102%, 0); will-change: transform; }
+.aura-cur > i.x { background: var(--aura-rose); }
+.aura-cur > i.y { background: var(--aura-ink); }
+.aura-cur.a > i { transform: none; transition: transform 230ms var(--aura-io); }
+.aura-cur.a > i.y { transition-delay: 60ms; }
+.aura-cur.b > i { transform: translate3d(0, -102%, 0); transition: transform 350ms var(--aura-io); }
+.aura-cur.b > i.x { transition-delay: 70ms; }
+.aura-cur > span { position: relative; font-family: var(--font-sans); font-size: 15px; line-height: 1; font-weight: 800; letter-spacing: 0.24em; text-transform: uppercase; white-space: nowrap; color: var(--aura-paper); opacity: 0; transition: opacity 150ms; }
+.aura-cur > span em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 22px; line-height: 0; letter-spacing: 0; text-transform: none; color: var(--aura-blush); }
+.aura-cur.a > span { opacity: 1; transition: opacity 200ms 180ms; }
+
+/* Toast: an ink pill that drops from under the header; the tick draws itself */
+.aura-toast { position: fixed; left: 50%; z-index: 10000; display: flex; align-items: center; gap: 10px; width: max-content; max-width: min(calc(100vw - 24px), 460px); padding: 2px 4px 2px 18px; border-radius: 28px; background: var(--aura-ink); color: var(--aura-paper); box-shadow: inset 0 0 0 1px rgba(245, 242, 236, 0.25); transform: translate3d(-50%, 0, 0); animation: aura-toast-in 600ms var(--aura-sp) both; }
+@keyframes aura-toast-in { from { transform: translate3d(-50%, -90px, 0); opacity: 0; } 40% { opacity: 1; } }
+.aura-toast-ic { flex: none; width: 19px; height: 19px; color: var(--aura-rose); }
+.aura-toast.is-error { box-shadow: inset 0 0 0 1.5px var(--sag-danger); }
+.aura-toast.is-error .aura-toast-ic { color: #FF9C94; }
+.aura-toast-tick path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: aura-toast-tick 450ms var(--aura-e) 280ms forwards; }
+@keyframes aura-toast-tick { to { stroke-dashoffset: 0; } }
+
+/* Footer: an ink block. The wrapper keeps its place in the page; with data-under (set by Footer.tsx when the
+   whole footer fits on the screen) the footer itself is fixed to the bottom edge and the wrapper's clip-path
+   shows only the part the page has uncovered. Without it the footer is a normal block. */
+.aura-ftw { position: relative; flex: none; }
+.aura-ftw[data-under] { height: var(--fh, auto); clip-path: inset(0); }
+.aura-ft { background: var(--aura-ink); color: var(--aura-paper); padding: 34px 20px calc(var(--aura-tb) + 18px); overflow: hidden; --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.2); --ac: #EAD7D1; }
+.aura-ft.room-bag { padding-bottom: 112px; }
+.aura-ft.room-buy { padding-bottom: 160px; }
+.aura-ftw[data-under] > .aura-ft { position: fixed; left: 0; right: 0; bottom: 0; }
+.aura-ft-k { display: block; width: 40px; height: 74px; margin: 0 0 6px; overflow: visible; }
+.aura-ft-k path { fill: none; stroke: var(--aura-rose); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--fp, 1)); }
+.aura-ft-w { display: block; max-width: 100%; text-align: left; cursor: pointer; font-family: var(--font-sans); font-size: clamp(54px, 19vw, 230px); line-height: 0.84; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; font-synthesis: none; transform: translate3d(0, var(--fy, 0px), 0); will-change: transform; }
+.aura-ft-w em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.12em; line-height: 0.8; letter-spacing: -0.02em; text-transform: none; color: var(--aura-blush); }
+.aura-ft-s { margin-top: 16px; color: var(--mu); font-size: 14px; line-height: 1.5; }
+.aura-ft-ln { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 16px; }
+.aura-ft-ln > button { display: inline-flex; align-items: center; min-height: 44px; padding: 0 15px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--hl); font-size: 14px; line-height: 1; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background-color 300ms, color 300ms; }
+.aura-ft-ln > button:first-child { background: var(--aura-paper); color: var(--aura-ink); box-shadow: none; }
+.aura-ft-so { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--hl); transition: background-color 300ms, color 300ms; }
+.aura-ft-ad { display: block; max-width: 36em; margin-top: 16px; color: var(--mu); font-size: 13.5px; line-height: 1.5; }
+.aura-ft-b { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 18px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--hl); color: var(--mu); font-size: 13px; line-height: 1.5; }
+@media (hover: hover) {
+  .aura-ft-ln > button:hover, .aura-ft-so:hover { background: var(--aura-paper); color: var(--aura-ink); }
+  .aura-ft-ad:hover { color: var(--aura-paper); }
+}
+@media (min-width: 768px) {
+  .aura-ft, .aura-ft.room-bag, .aura-ft.room-buy { padding: 44px 6vw 30px; }
+  .aura-ft-w { font-size: min(13.5vw, 24vh, 230px); }
+}
+/* No pin (short screens, no sticky support): the footer is a plain block and everything in it is shown */
+html.aura-nopin .aura-ftw { --fp: 1 !important; --fy: 0px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .aura-hd, .aura-hd-bar, .aura-hd-row, .aura-hb, .aura-wm em, .aura-hd-p, .aura-hd-lk::after, .aura-hd-search, .aura-hd-nav { transition: none !important; }
+  .aura-hd.hide { transform: none; }
+  .aura-hd.sm .aura-hd-row { height: 55px; }
+  .aura-tb, .aura-tb.off, .aura-tb > i, .aura-tb > button { transition: none !important; }
+  .aura-menu, .aura-menu.on, .aura-menu-big > .l > span, .aura-menu.on .aura-menu-big > .l > span, .aura-menu-big > small, .aura-menu.on .aura-menu-big > small { transition: none !important; }
+  .aura-cur { display: none !important; }
+  .aura-toast { animation: none; }
+  .aura-toast-tick path { animation: none; stroke-dashoffset: 0; }
+  .aura-ftw { --fp: 1 !important; --fy: 0px !important; }
+  .aura-ft-ln > button, .aura-ft-so { transition: none; }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 1024px) { .aura-hd.sm .aura-hd-row { height: 63px; } }
+
+/* Aura: the shop page and the product page (ShopPage.tsx, ProductDetailPage.tsx, ShimmerPDP.tsx; classes shop-* and pdp-*) */
+.shop-w { width: 100%; max-width: 1160px; margin-left: auto; margin-right: auto; }
+/* The band: the label, the collection's name as the big title, the real count; then the search pill and the tools */
+.shop-band { padding: 22px 16px 22px; }
+.shop-search { position: relative; margin-top: 22px; max-width: 480px; }
+.shop-search > input { display: block; width: 100%; height: 54px; padding: 0 100px 0 50px; border: 1px solid var(--sag-line); border-radius: 999px; background: #FFFFFF; color: var(--sag-ink); font-family: var(--font-sans); font-size: 16px; font-weight: 500; outline: 0; transition: border-color 300ms; }
+.shop-search > input:focus { border-color: var(--sag-ink); }
+.shop-search > input::placeholder { color: var(--sag-ink-faint); }
+.shop-search > input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.shop-tools { display: flex; gap: 8px; margin: 12px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+.shop-tools::-webkit-scrollbar { display: none; }
+.shop-tool { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; background: #FFFFFF; color: var(--sag-ink); font-size: 14px; line-height: 1; font-weight: 600; white-space: nowrap; cursor: pointer; transition: transform 350ms var(--aura-sp); }
+.shop-tool:active { transform: scale(0.95); }
+/* The filter bar: sticks under the header; when the header slides away (class up) it moves into the header's place */
+.shop-fbar { position: sticky; top: var(--shop-top, 56px); z-index: 30; margin-bottom: 12px; }
+.shop-fbar-in { background: #F5F2EC; border-top: 1px solid var(--sag-line); border-bottom: 1px solid var(--sag-line); transition: transform 500ms var(--aura-e); }
+.shop-fbar.up > .shop-fbar-in { transform: translate3d(0, calc(-1 * var(--shop-top, 56px)), 0); }
+.shop-fbar-r { display: flex; align-items: center; gap: 8px; padding: 8px 0 8px 12px; }
+.shop-fbtn { position: relative; overflow: hidden; isolation: isolate; flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; background: var(--aura-ink); color: var(--aura-paper); font-size: 14px; line-height: 1; font-weight: 700; cursor: pointer; transition: transform 350ms var(--aura-e); }
+.shop-fbtn:active { transform: scale(0.95); }
+.shop-fbtn-n { display: grid; place-items: center; min-width: 22px; height: 22px; margin-right: -6px; padding: 0 5px; border-radius: 999px; background: var(--aura-rose); color: var(--aura-ink); font-size: 13px; font-weight: 800; }
+.shop-seg-sc { flex: 1; min-width: 0; padding-right: 12px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.shop-seg-sc::-webkit-scrollbar { display: none; }
+.shop-seg { width: max-content; }
+.shop-seg > button[aria-selected="true"] { color: var(--inv); }
+.shop-kinds { display: flex; gap: 8px; padding: 0 12px 8px; overflow-x: auto; scrollbar-width: none; }
+.shop-kinds::-webkit-scrollbar { display: none; }
+/* The count and Sort as a white pill */
+.shop-sortw { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 0 6px 14px; font-size: 14px; color: var(--sag-ink-muted); }
+.shop-sort { flex: none; display: inline-flex; align-items: center; gap: 8px; max-width: 62%; height: 44px; padding: 0 16px 0 18px; border: 1px solid var(--sag-line); border-radius: 999px; background: #FFFFFF; color: var(--sag-ink); font-family: var(--font-sans); font-size: 14px; line-height: 1; font-weight: 600; cursor: pointer; }
+select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; padding-right: 42px; outline-offset: 3px; }
+/* The bento grid: two columns on phones, four on desktop (the card places itself: ProductCard, data-layout) */
+.shop-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+/* The switch of "In stock only" */
+.shop-switch { flex: none; display: block; width: 48px; height: 28px; padding: 3px; border-radius: 999px; background: var(--sag-control); transition: background-color 300ms; }
+.shop-switch > i { display: block; width: 22px; height: 22px; border-radius: 50%; background: #FFFFFF; transition: transform 400ms var(--aura-sp); }
+/* Back to top: a round ink button; its rose ring is shown as a pie slice that grows with the page read (--pie, a clip-path) */
+.shop-orb { position: fixed; right: 12px; bottom: calc(var(--aura-tb, 62px) + 12px); z-index: 30; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--aura-ink); color: var(--aura-paper); opacity: 0; transform: translate3d(0, 20px, 0) scale(0.8); pointer-events: none; cursor: pointer; transition: opacity 400ms, transform 500ms var(--aura-sp); }
+.shop-orb.on { opacity: 1; transform: none; pointer-events: auto; }
+.shop-orb > i { position: absolute; left: 0; top: 0; right: 0; bottom: 0; border-radius: 50%; box-shadow: inset 0 0 0 2.5px var(--aura-rose); clip-path: var(--pie, polygon(50% 50%, 50% -50%, 50% -50%)); }
+@media (min-width: 900px) {
+  .shop-band { padding: 30px 20px 26px; }
+  .shop-tools { margin: 12px 0 0; padding: 0; }
+  .shop-fbar-r { justify-content: center; padding-right: 12px; }
+  .shop-seg-sc { flex: 0 1 auto; padding-right: 0; }
+  .shop-kinds { justify-content: center; flex-wrap: wrap; }
+  .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  button.shop-sort { display: none; }
+  /* The large card: its photo takes all the height the two rows give, the text keeps its own */
+  .shop-grid > .aura-pc[data-layout="big"] .aura-pc-b { flex: none; }
+  .shop-orb { right: 24px; bottom: 24px; }
+}
+
+/* Product page. Phones: the gallery, then the details in one column. Desktop: the gallery stays at the left. */
+.pdp-w { width: 100%; max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; }
+.pdp-crumb { order: 9; display: flex; align-items: center; gap: 4px; margin-top: 16px; padding: 0 16px; overflow: hidden; font-size: 13px; color: var(--sag-ink-muted); }
+.pdp-g { min-width: 0; padding: 10px 10px 6px; }
+/* The frame: 26px corners; on phones it becomes a little smaller as the page scrolls (--s, written by the scroll engine) */
+.pdp-st { transform: scale(var(--s, 1)); transform-origin: 50% 100%; will-change: transform; }
+.pdp-fr { border-radius: 26px; overflow: hidden; background: #E6DFD3; }
+.pdp-sl { display: flex; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.pdp-sl::-webkit-scrollbar { display: none; }
+.pdp-s { position: relative; flex: none; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; scroll-snap-align: center; cursor: zoom-in; }
+.pdp-s > span { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; }
+.pdp-s img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; border-radius: 0; }
+.pdp-m { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 6px 0; font-size: 13px; color: var(--sag-ink-muted); }
+.pdp-m > span:first-child { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.pdp-ix { flex: none; display: flex; align-items: baseline; gap: 4px; font-size: 16px; line-height: 1.2; font-weight: 800; color: var(--sag-ink); font-variant-numeric: tabular-nums lining-nums; }
+.pdp-th { display: flex; gap: 8px; padding: 12px 4px 6px; overflow-x: auto; scrollbar-width: none; }
+.pdp-th::-webkit-scrollbar { display: none; }
+.pdp-th > button { position: relative; flex: none; width: 58px; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: #E6DFD3; cursor: pointer; transition: box-shadow 300ms, transform 400ms var(--aura-e); }
+.pdp-th > button[aria-current="true"] { box-shadow: 0 0 0 2px #F5F2EC, 0 0 0 3.5px var(--aura-ink); transform: translate3d(0, -3px, 0); }
+.pdp-th img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 0; }
+.pdp-d { min-width: 0; padding: 22px 16px 0; }
+.pdp-n { flex: 1; min-width: 0; margin: 0; font-family: var(--font-sans); font-size: clamp(28px, 7.8vw, 44px); line-height: 1.04; font-weight: 800; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.pdp-ic { flex: none; display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: #FFFFFF; color: var(--sag-ink); cursor: pointer; transition: transform 300ms var(--aura-sp); }
+.pdp-ic:active { transform: scale(0.86); }
+.pdp-pr { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 12px; margin-top: 16px; }
+.pdp-big { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: var(--sag-ink); }
+.pdp-tax { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--sag-ink-muted); }
+.pdp-fld { margin-top: 26px; }
+.pdp-fld-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-bottom: 4px; }
+.pdp-fld-h b { font-size: 14px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--sag-ink); }
+/* Colours: white pills with a round swatch; the chosen one has the ink ring and grows a little */
+.pdp-sw { display: flex; flex-wrap: wrap; gap: 8px; }
+.pdp-sw > button { display: flex; align-items: center; gap: 8px; max-width: 100%; min-height: 46px; padding: 0 15px 0 8px; border-radius: 999px; background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--sag-line); color: var(--sag-ink); font-size: 14px; font-weight: 600; cursor: pointer; transition: box-shadow 300ms, transform 350ms var(--aura-sp); }
+.pdp-sw > button > i { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #E6DFD3; box-shadow: inset 0 0 0 1px rgba(17, 16, 19, 0.2); }
+.pdp-sw > button[aria-pressed="true"] { box-shadow: inset 0 0 0 2px var(--aura-ink); transform: scale(1.04); }
+/* Sizes: one white pill with the sliding ink indicator (Seg); a red ring only after going on without a size */
+.pdp-size { border-radius: 999px; }
+.pdp-size.err { box-shadow: 0 0 0 2px var(--sag-danger); }
+.pdp-size.wrap { display: flex; flex-wrap: wrap; gap: 8px; border-radius: 22px; }
+.pdp-size.wrap.err { box-shadow: 0 0 0 2px var(--sag-danger), 0 0 0 6px transparent; outline: 6px solid transparent; }
+/* Quantity: a white pill with round minus and plus and a number that rolls; the line total at the right */
+.pdp-qrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pdp-qty { display: inline-flex; align-items: center; border-radius: 999px; background: #FFFFFF; }
+.pdp-qty > button { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; color: var(--sag-ink); cursor: pointer; transition: transform 300ms var(--aura-sp), opacity 300ms; }
+.pdp-qty > button:not(:disabled):active { transform: scale(0.8); }
+.pdp-qty > button:disabled { opacity: 0.35; cursor: not-allowed; }
+.pdp-qty > span { display: flex; justify-content: center; min-width: 26px; font-size: 17px; font-weight: 800; color: var(--sag-ink); }
+.pdp-tt { text-align: right; font-size: 14px; line-height: 1.3; color: var(--sag-ink-muted); }
+.pdp-tt > b { display: flex; justify-content: flex-end; font-size: 20px; font-weight: 800; color: var(--sag-ink); }
+.pdp-cta { display: grid; gap: 10px; margin-top: 28px; }
+/* What the store stands behind: a forest card; the first fact with a round paper chip, the others with small round chips */
+.pdp-conf { margin-top: 28px; padding: 20px 18px 10px; border-radius: 26px; background: var(--aura-forest); color: var(--aura-paper); }
+.pdp-conf-h { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; margin-bottom: 6px; border-bottom: 1px solid rgba(245, 242, 236, 0.22); font-size: 19px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+.pdp-conf-h > span:first-child { flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: var(--aura-paper); color: var(--aura-forest); }
+.pdp-conf-r { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 5px 0; text-align: left; font-size: 15px; line-height: 1.35; font-weight: 500; color: var(--aura-paper); }
+.pdp-conf-r > span:first-child { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(245, 242, 236, 0.12); color: var(--aura-blush); }
+.pdp-conf-r > svg:last-child { flex: none; margin-left: auto; opacity: 0.6; transition: transform 350ms var(--aura-e); }
+:is(a, button).pdp-conf-r { cursor: pointer; }
+/* Details: rows whose plus turns into a minus; the panel opens with a springy ease */
+@media (min-width: 768px) { .shop-orb { right: 24px; bottom: 24px; } }
+.pdp-acc { margin-top: 26px; border-top: 1px solid var(--sag-line); }
+.pdp-acc > div { border-bottom: 1px solid var(--sag-line); }
+.pdp-acc-b { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 58px; text-align: left; font-family: var(--font-sans); font-size: 16px; line-height: 1.25; font-weight: 700; letter-spacing: 0; color: var(--sag-ink); cursor: pointer; }
+.pdp-acc-b > i { position: relative; flex: none; width: 14px; height: 14px; }
+.pdp-acc-b > i::before, .pdp-acc-b > i::after { content: ""; position: absolute; left: 0; top: 6px; width: 14px; height: 2px; border-radius: 2px; background: currentColor; transition: transform 500ms var(--aura-sp); }
+.pdp-acc-b > i::after { transform: rotate(90deg); }
+.pdp-acc-b[aria-expanded="true"] > i::after { transform: rotate(0deg); }
+.pdp-acc-p { display: grid; grid-template-rows: 0fr; visibility: hidden; transition: grid-template-rows 550ms var(--aura-sp), visibility 550ms; }
+.pdp-acc-p.on { grid-template-rows: 1fr; visibility: visible; }
+.pdp-acc-p > div { min-height: 0; overflow: hidden; }
+.pdp-acc-p > div > div { padding: 0 0 18px; font-size: 15px; line-height: 1.6; color: var(--sag-ink-muted); }
+/* Rails of cards under the page */
+.pdp-sec { margin-top: 48px; padding: 0 16px; }
+.pdp-rail { display: flex; gap: 10px; margin: 16px -16px 0; padding: 4px 16px 12px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.pdp-rail::-webkit-scrollbar { display: none; }
+.pdp-rail > div { flex: none; width: 44vw; max-width: 210px; scroll-snap-align: start; }
+/* The buy bar. Phones: a solid ink bar at the bottom. Desktop: an ink pill at the bottom right, there once the main buttons are out of sight. */
+.pdp-buy { position: fixed; left: 0; right: 0; bottom: 0; z-index: 44; display: flex; align-items: center; gap: 8px; padding: 9px 10px calc(9px + env(safe-area-inset-bottom)) 12px; background: var(--aura-ink); color: var(--aura-paper); --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; }
+.pdp-buy > img { flex: none; width: 44px; height: 44px; border-radius: 12px; object-fit: cover; object-position: top; }
+.pdp-buy > p { flex: 1; min-width: 0; line-height: 1.25; }
+.pdp-buy > p > span:first-child { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 13px; color: #BDB6AD; }
+.pdp-buy > p > span:last-child { display: flex; font-size: 17px; font-weight: 800; color: var(--aura-paper); }
+.pdp-buy .aura-btn { flex: none; min-height: 48px; padding: 0 16px; font-size: 14.5px; }
+@media (max-width: 379px) { .pdp-buy > img { display: none; } .pdp-buy .aura-btn { padding: 0 13px; } }
+.pdp-page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+@media (min-width: 900px) {
+  .pdp-page { padding-bottom: 96px; }
+  .pdp-w { padding: 0 20px; }
+  .pdp-crumb { order: 0; margin-top: 0; padding: 4px 0; }
+  .pdp { display: grid; grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr); column-gap: 44px; align-items: start; }
+  .pdp-g { grid-column: 1; grid-row: 1; align-self: stretch; padding: 6px 0; }
+  /* The photo is kept short enough for the small photos to stay on screen while it sticks */
+  .pdp-gi { position: sticky; top: var(--pdp-top, 72px); max-width: max(380px, calc((100dvh - var(--pdp-top, 72px) - 160px) * 0.8)); margin: 0 auto; }
+  .pdp-st { transform: none; will-change: auto; }
+  .pdp-d { grid-column: 2; grid-row: 1; padding: 8px 0 0; }
+  .pdp-wide { grid-column: 1 / -1; grid-row: 2; }
+  .pdp-sec { padding: 0; margin-top: 64px; }
+  .pdp-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 20px 0 0; padding: 0; overflow: visible; }
+  .pdp-rail > div { width: auto; max-width: none; }
+  .pdp-buy { left: auto; right: 24px; bottom: 24px; width: 470px; padding: 9px 10px 9px 12px; border-radius: 40px; transform: translate3d(0, 180%, 0); visibility: hidden; transition: transform 500ms var(--aura-e), visibility 500ms; }
+  .pdp-buy.on { transform: none; visibility: visible; }
+  @media (hover: hover) {
+    :is(a, button).pdp-conf-r:hover > svg:last-child { transform: translateX(4px); }
+    .pdp-ic:hover { transform: scale(1.06); }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shop-fbar-in, .shop-orb, .shop-tool, .shop-fbtn, .shop-switch, .shop-switch > i, .pdp-th > button, .pdp-ic, .pdp-sw > button, .pdp-qty > button, .pdp-acc-b > i::before, .pdp-acc-b > i::after, .pdp-acc-p, .pdp-buy, .pdp-conf-r > svg:last-child { transition: none; }
+  .pdp-st { transform: none; }
+  .pdp-s > span { transform: none !important; }
+  .pdp-th > button[aria-current="true"], .pdp-sw > button[aria-pressed="true"] { transform: none; }
+}
+/* end of the shop and product page block */
+
+/* ------------------------------------------------------------------
+   Homepage, Aura: the scroll story (HomePage.tsx and its sections).
+   Pinned hero, kinetic bands, the sideways gallery of new arrivals, the
+   stacking category cards, the bento grid, trust on forest, the coupon
+   ticket, the festive block and the deal. Scroll-linked motion here reads
+   only CSS variables written by the shared scroll engine (src/aura/scroll.ts)
+   and turns them into transform, opacity and clip-path. --hs is the header
+   that stays on screen, --tb the phone tab bar, --hx what scrolls away above
+   the hero (all three set in a measure pass, never on a scroll frame).
+------------------------------------------------------------------- */
+.hm-part { width: 100%; min-width: 0; }
+
+/* ---- Hero ---- */
+.hm-hero { position: relative; height: 165vh; height: 165svh; }
+.hm-hero-pin { position: sticky; top: var(--hs, 0px); height: calc(100vh - var(--hs, 0px) - var(--hx, 0px)); height: calc(100svh - var(--hs, 0px) - var(--hx, 0px)); overflow: hidden; --o: 0; --wt: 0; --b: 0; --c: 1; --fz: min(15.6vw, 8.4vh, 96px, calc((100vw - 28px) / (var(--n, 8) * 0.55))); --hb: calc(var(--fz) * 1.84 + 58px); --bz: 172px; }
+.hm-hero-txt { position: absolute; z-index: 2; left: 14px; right: 14px; top: 14px; text-align: center; }
+.hm-hl { margin-top: 10px; font-family: var(--font-sans); font-size: var(--fz); line-height: 0.92; font-weight: calc(300 + var(--wt, 1) * 600); letter-spacing: calc(0.005em - var(--wt, 1) * 0.045em); white-space: nowrap; font-synthesis: none; color: var(--fg); }
+.hm-hl em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.12em; letter-spacing: -0.01em; color: var(--ac); }
+.hm-hero-fr { position: absolute; left: 12px; right: 12px; top: var(--hb); bottom: calc(var(--tb, 0px) + var(--bz)); }
+.hm-hero-clip { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; padding: 0; background: #E6DFD3; cursor: pointer; clip-path: inset(0 calc((1 - var(--o)) * 19%) 0 calc((1 - var(--o)) * 19%) round calc(26px + (1 - var(--o)) * 240px) calc(26px + (1 - var(--o)) * 240px) 26px 26px); }
+.hm-hero-clip img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; transform-origin: 50% 20%; transform: scale(calc(1.16 - var(--o) * 0.16)); will-change: transform; }
+.hm-hero-th { width: 100%; height: 100%; z-index: 0; }
+.hm-hero-th path { stroke-dasharray: 1; stroke-dashoffset: 1; animation: hm-dash 1800ms var(--aura-e) 500ms forwards; }
+@keyframes hm-dash { to { stroke-dashoffset: 0; } }
+.hm-hero-bot { position: absolute; left: 16px; right: 16px; bottom: var(--tb, 0px); height: var(--bz); }
+.hm-hero-a, .hm-hero-b { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.hm-hero-a { gap: 14px; opacity: var(--c); transform: translate3d(0, calc((1 - var(--c)) * -20px), 0); }
+.hm-hero-b { gap: 6px; opacity: var(--b); transform: translate3d(0, calc((1 - var(--b)) * 40px), 0); pointer-events: none; }
+.hm-hero-pin.cta .hm-hero-b { pointer-events: auto; }
+/* A keyboard user who tabs to the button before scrolling sees it */
+.hm-hero-pin:has(.hm-hero-b :focus-visible) { --b: 1 !important; --c: 0 !important; }
+.hm-hero-pin:has(.hm-hero-b :focus-visible) .hm-hero-b { pointer-events: auto; }
+.hm-facts { font-size: 13px; line-height: 1.6; font-weight: 700; letter-spacing: 0.02em; text-wrap: balance; color: var(--fg); }
+.hm-facts i { display: inline-block; width: 5px; height: 5px; margin: 0 7px 2px; background: var(--aura-rose); transform: rotate(45deg); }
+.hm-cue { display: flex; align-items: center; gap: 10px; font-size: 13px; line-height: 1; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--mu); }
+.hm-cue span { position: relative; width: 1.5px; height: 34px; overflow: hidden; background: var(--hl); }
+.hm-cue span::after { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: var(--fg); animation: hm-cue 1900ms var(--aura-e) infinite; }
+@keyframes hm-cue { 0% { transform: translateY(-100%); } 60%, 100% { transform: translateY(100%); } }
+/* The hero without pinning: a plain block, everything visible */
+.hm-hero-still .hm-hl { --fz: min(15.6vw, 96px, calc((100vw - 28px) / (var(--n, 8) * 0.55))); --wt: 1; }
+.hm-hero-ph { display: block; width: 100%; aspect-ratio: 4 / 5; max-height: 76vh; border-radius: 26px; cursor: pointer; }
+.hm-hero-ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+/* The other slides: a swipe row of large round-cornered cards */
+.hm-hs { display: flex; gap: 14px; overflow-x: auto; padding: 0 18px 4px; scroll-padding-inline: 18px; }
+.hm-hs-c { flex: none; width: min(72vw, 320px); }
+.hm-hs-ph { display: block; aspect-ratio: 4 / 5; border-radius: 24px; --rv-r: 24px; }
+.hm-hs-ph img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 0; }
+@media (hover: hover) { .hm-hs-ph img { transition: transform 1200ms var(--aura-eo), opacity 600ms; } .hm-hs-c:hover .hm-hs-ph img { transform: scale(1.04); } }
+
+/* The still form of a kinetic band (reduced motion): the words as wrapped lines */
+.hm-mq-still { padding: 30px 16px 26px; }
+.hm-mq-still .aura-mq-i { display: flex; flex-wrap: wrap; gap: 4px 0; font-size: clamp(30px, 9vw, 64px); line-height: 1.04; }
+.hm-mq-still .aura-mq-i + .aura-mq-i { margin-top: 10px; }
+
+/* ---- New arrivals: the pinned sideways gallery ---- */
+.hm-hg { position: relative; }
+.hm-hg-pin { display: flex; flex-direction: column; justify-content: center; justify-content: safe center; overflow: hidden; padding-top: calc(var(--hs, 0px) + 16px); padding-bottom: calc(var(--tb, 0px) + 12px); --cw: min(76vw, 36vh, 360px); --cw: min(76vw, 36svh, 360px); }
+.hm-hg-hd { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 18px 16px; }
+.hm-hg-h { font-size: clamp(40px, 12vw, 72px); }
+.hm-hg-ix { display: flex; flex: none; align-items: baseline; gap: 5px; font-size: 26px; line-height: 1.2; font-weight: 800; letter-spacing: -0.02em; }
+.hm-hg-ix small { font-size: 14px; font-weight: 600; color: var(--mu); }
+.hm-hg-vp { touch-action: pan-y; }
+.hm-hg-tr { display: flex; gap: 14px; width: max-content; padding: 0 18px; will-change: transform; }
+.hm-gc { flex: none; width: var(--cw); }
+.hm-gc-f { display: block; aspect-ratio: 3 / 4; border-radius: 24px; -webkit-user-drag: none; }
+.hm-gc-f img { position: absolute; top: 0; left: -12%; width: 124%; max-width: none; height: 100%; object-fit: cover; object-position: 50% 0; -webkit-user-drag: none; }
+.hm-gc-b { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 12px 2px 0; }
+.hm-gc-n { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.7em; font-size: 14px; line-height: 1.35; font-weight: 500; }
+.hm-gc-p { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin-top: 4px; font-size: 15px; }
+.hm-gc-p b { font-weight: 800; }
+.hm-gc-p s { font-size: 13px; color: var(--mu); }
+.hm-gc-p em { font-style: normal; font-size: 13px; font-weight: 700; color: var(--sa); }
+.hm-gc .aura-rnd.ok > svg.aura-draw path { stroke-dashoffset: 0; }
+.hm-gc-sz { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.hm-gc-sz::-webkit-scrollbar { display: none; }
+.hm-gc-s { flex: none; min-width: 44px; height: 44px; padding: 0 12px; border-radius: 999px; font-size: 14px; font-weight: 700; white-space: nowrap; color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--hl); cursor: pointer; transition: background-color 300ms, color 300ms; }
+.hm-gc-s:active { background: var(--fg); color: var(--inv); }
+@media (hover: hover) { .hm-gc-s:hover { background: var(--fg); color: var(--inv); } }
+.hm-gc-x { align-self: flex-end; }
+.hm-gc-all { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; align-self: flex-start; width: calc(var(--cw) * 0.62); height: calc(var(--cw) * 4 / 3); border-radius: 24px; font-size: 15px; font-weight: 700; color: var(--fg); box-shadow: inset 0 0 0 1.5px var(--hl); cursor: pointer; }
+.hm-hg-bar { height: 2px; margin: 18px 18px 0; overflow: hidden; background: var(--hl); }
+.hm-hg-bar i { display: block; height: 100%; background: var(--fg); transform-origin: 0 50%; transform: scaleX(0); }
+/* Without pinning: a normal swipe row with snap */
+.hm-hg-still { padding: 64px 0 56px; --cw: min(76vw, 360px); }
+.hm-hg-still .hm-hg-vp { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; touch-action: auto; }
+.hm-hg-still .hm-hg-vp::-webkit-scrollbar { display: none; }
+.hm-hg-still .hm-gc, .hm-hg-still .hm-gc-all { scroll-snap-align: center; }
+.hm-hg-still .hm-gc-f img { left: 0; width: 100%; }
+
+/* ---- Shop by category: the cards that stack ---- */
+.hm-cs { position: relative; }
+.hm-cs-mq { padding: 30px 0 26px; }
+.hm-cs-in { width: 100%; max-width: 1120px; margin: 0 auto; padding: 60px 10px 0; }
+.hm-cs-st { padding-bottom: 10px; }
+.hm-cc { position: sticky; top: calc(var(--hs, 0px) + 10px + var(--i, 0) * 9px); height: min(62vh, 560px); height: min(62svh, 560px); margin-bottom: 18px; }
+.hm-cc-in { position: relative; display: flex; flex-direction: column; width: 100%; height: 100%; overflow: hidden; border-radius: 28px; text-align: left; cursor: pointer; transform-origin: 50% 0; transform: scale(calc(1 - var(--q, 0) * 0.07)); will-change: transform; }
+.hm-cc-t { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 18px 18px 12px; }
+.hm-cc-t > span:first-child { display: flex; flex-direction: column-reverse; }
+.hm-cc-ix { font-size: 13px; line-height: 1; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.hm-cc-name { display: block; margin-top: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: clamp(38px, 11.4vw, 60px); line-height: 1; font-weight: 800; letter-spacing: -0.035em; padding-bottom: 0.08em; }
+.hm-cc-go { flex: none; display: grid; place-items: center; width: 50px; height: 50px; border-radius: 50%; background: var(--fg); color: var(--inv); transition: transform 400ms var(--aura-sp); }
+@media (hover: hover) { .hm-cc-in:hover .hm-cc-go { transform: translateX(4px) scale(1.06); } }
+.hm-cc-ph { position: relative; flex: 1; display: grid; place-items: center; min-height: 0; margin: 0 10px 10px; }
+.hm-cc-ph > span { display: block; width: 100%; height: 100%; overflow: hidden; }
+.hm-cc-ph img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 8%; }
+.hm-m0 > span { border-radius: 999px 999px 20px 20px; }
+.hm-m1 > span { width: auto; max-width: 100%; aspect-ratio: 1; border-radius: 50%; }
+.hm-m2 > span { border-radius: 22px; }
+.hm-m3 > span { border-radius: 999px 22px 999px 22px; }
+.hm-m4 > span { border-radius: 22px 22px 999px 999px; }
+.hm-cc-dim { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--aura-ink); opacity: calc(var(--q, 0) * 0.3); pointer-events: none; }
+.hm-cs-more { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 8px 0; }
+.hm-cs-pill { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: var(--aura-ink); font-size: 15px; font-weight: 700; cursor: pointer; }
+.hm-cs-pill span { font-size: 13px; font-weight: 500; color: #6A645E; }
+html.aura-nopin .hm-cc { position: relative; top: 0; }
+
+/* ---- Featured collection: the bento grid of product cards ---- */
+.hm-ed-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+/* ---- Why shop with us (forest) ---- */
+.hm-shw { width: 84px; height: 84px; margin-bottom: 26px; }
+.hm-shd { display: block; width: 84px; height: 84px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hm-shd .s-b { fill: currentColor; stroke: none; }
+.hm-shd .s-d { fill: var(--aura-forest); stroke: none; }
+.hm-tr-l { position: relative; display: grid; gap: 30px; }
+.hm-tr-l::before { content: ""; position: absolute; left: 26px; top: 27px; bottom: 40px; width: 1.5px; background: var(--th); transform-origin: 50% 0; transform: scaleY(var(--tl, 1)); }
+.hm-tr-l > li > :is(a, button, div) { position: relative; display: flex; align-items: flex-start; gap: 16px; width: 100%; text-align: left; }
+.hm-tr-l > li > :is(a, button) { cursor: pointer; }
+.hm-tr-ic { flex: none; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background: var(--aura-paper); color: var(--aura-forest); }
+.hm-tr-l b { display: block; margin: 4px 0 5px; font-size: 21px; line-height: 1.15; font-weight: 800; letter-spacing: -0.02em; }
+.hm-tr-l b + span { display: block; max-width: 30em; font-size: 15px; line-height: 1.45; color: var(--mu); }
+.hm-tr-l .hm-tr-go { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; color: var(--fg); font-weight: 600; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; }
+.hm-stmt { margin-top: 96px; padding-right: 14px; font-size: clamp(32px, 9.2vw, 58px); line-height: 1.06; font-weight: 800; letter-spacing: -0.035em; }
+.hm-stmt span { opacity: 0.26; transition: opacity 350ms; }
+.hm-stmt span.lit { opacity: 1; }
+.hm-stmt span.k { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.1em; line-height: 1; letter-spacing: -0.01em; }
+.hm-stmt span.k.lit { color: var(--ac); }
+
+/* ---- Offers: the coupon as a ticket (rose) ---- */
+.hm-tk { position: relative; padding: 30px 20px 26px; border-radius: 28px; text-align: center; background: var(--aura-ink); }
+.hm-tk::before, .hm-tk::after { content: ""; position: absolute; top: 58%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: var(--bg); transition: background-color 450ms var(--aura-e); }
+.hm-tk::before { left: -13px; }
+.hm-tk::after { right: -13px; }
+.hm-tk-code { margin: 10px 0 6px; font-size: min(22vw, 120px, calc((100vw - 84px) / (var(--n, 5) * 0.66)), calc(556px / (var(--n, 5) * 0.66))); line-height: 1; font-weight: 900; letter-spacing: -0.03em; white-space: nowrap; font-variant-numeric: lining-nums; }
+.hm-tk-code b { display: inline-block; font-weight: 900; }
+.hm-tk-code u { display: inline-block; width: 3px; height: 0.72em; margin-left: 6px; background: var(--aura-rose); text-decoration: none; animation: hm-caret 1000ms steps(2) infinite; }
+@keyframes hm-caret { 50% { opacity: 0; } }
+.hm-tk-note { margin: 18px 0 20px; padding-top: 18px; border-top: 1.5px dashed var(--hl); font-size: 14px; line-height: 1.45; color: var(--mu); }
+.hm-tk-copy { background: var(--aura-paper); color: var(--aura-ink); }
+.hm-of { display: grid; gap: 2px; }
+.hm-of li { display: flex; align-items: flex-start; gap: 12px; padding: 12px 4px; border-bottom: 1.5px solid var(--hl); font-size: 16px; line-height: 1.4; font-weight: 600; }
+.hm-of li > i { flex: none; width: 7px; height: 7px; margin-top: 8px; background: var(--fg); transform: rotate(45deg); }
+
+/* ---- Deal of the day and the festive block: big round ink blocks ---- */
+.hm-deal { display: flex; flex-direction: column; width: 100%; max-width: 1120px; margin: 0 auto; padding: 8px; overflow: hidden; }
+.hm-deal-l { display: flex; flex-direction: column; align-items: flex-start; padding: 22px 16px 22px; }
+.hm-deal-pc { display: block; margin-top: 10px; font-size: clamp(120px, 40vw, 250px); line-height: 0.82; font-weight: 900; letter-spacing: -0.06em; }
+.hm-deal-pc small { font-size: 0.42em; font-weight: 800; letter-spacing: -0.02em; }
+.hm-deal-pc em { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 0.34em; letter-spacing: -0.01em; color: var(--ac); }
+.hm-deal-pr { font-size: clamp(64px, 20vw, 140px); line-height: 0.9; }
+.hm-deal-r { display: flex; flex-direction: column; padding: 6px; }
+.hm-deal-ph { display: block; width: 100%; aspect-ratio: 4 / 4.4; border-radius: 17px; }
+.hm-fest { display: flex; flex-direction: column; padding: 8px; overflow: hidden; }
+.hm-fest-ph { overflow: hidden; border-radius: 22px; }
+.hm-fest-ph img { border-radius: 0; }
+
+@media (min-width: 640px) {
+  .hm-deal-r { flex-direction: row; align-items: stretch; }
+  .hm-deal-ph { width: 44%; flex: none; aspect-ratio: 4 / 5; }
+}
+
+@media (min-width: 900px) {
+  .hm-hero-pin { --fz: min(7.6vw, 14vh, 150px, calc(40vw / (var(--n, 8) * 0.55))); --bz: 200px; }
+  .hm-hero-txt { left: 6vw; right: 54%; top: 13vh; text-align: left; }
+  .hm-hero-fr { left: 52%; right: 5vw; top: 26px; bottom: 36px; }
+  .hm-hero-bot { left: 6vw; right: 54%; bottom: 6vh; }
+  .hm-hero-a, .hm-hero-b { align-items: flex-start; text-align: left; }
+  .hm-hero-still .hm-hl { --fz: min(7vw, 110px, calc(46vw / (var(--n, 8) * 0.55)), calc(520px / (var(--n, 8) * 0.55))); }
+  .hm-hs { max-width: 1120px; margin: 0 auto; padding-left: 0; padding-right: 0; scroll-padding-inline: 0; }
+  .hm-hg-pin, .hm-hg-still { --cw: min(22vw, 42vh); }
+  .hm-hg-hd { padding-left: 6vw; padding-right: 6vw; }
+  .hm-hg-tr { padding: 0 6vw; }
+  .hm-hg-bar { margin: 22px 6vw 0; }
+  .hm-cc { height: min(70vh, 560px); }
+  .hm-cc-in { flex-direction: row; }
+  .hm-cc-t { flex: 1; flex-direction: column; align-items: flex-start; justify-content: space-between; padding: 34px; }
+  .hm-cc-name { font-size: clamp(48px, 5.4vw, 76px); white-space: normal; }
+  .hm-cc-ph { flex: 1; margin: 12px; }
+  .hm-ed-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .hm-tr-l { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .hm-tr-l::before { display: none; }
+  .hm-stmt { max-width: 18em; }
+  .hm-deal { flex-direction: row; align-items: stretch; padding: 10px; }
+  .hm-deal-l { flex: 1; justify-content: center; padding: 40px; }
+  .hm-deal-pc { font-size: clamp(160px, 19vw, 260px); }
+  .hm-deal-r { flex: 1; }
+  .hm-fest { flex-direction: row; align-items: stretch; padding: 10px; }
+  .hm-fest-ph { order: 2; width: 46%; flex: none; }
+  .hm-fest-own { display: flex; align-items: center; background: transparent; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The shield assembles itself when it comes into view */
+  .hm-shd * { transform-box: fill-box; transform-origin: 50% 50%; }
+  .hm-shw:not(.in) .hm-shd .s-l { transform: translate(-20px, -6px) rotate(-8deg); opacity: 0; }
+  .hm-shw:not(.in) .hm-shd .s-r { transform: translate(20px, -6px) rotate(8deg); opacity: 0; }
+  .hm-shw:not(.in) .hm-shd .s-b { transform: translateY(16px) scale(0.5); opacity: 0; }
+  .hm-shw:not(.in) .hm-shd .s-k { stroke-dashoffset: 1; }
+  .hm-shw:not(.in) .hm-shd .s-d { transform: scale(0); }
+  .hm-shd .s-l, .hm-shd .s-r { transition: transform 1000ms var(--aura-eo) 100ms, opacity 500ms 100ms; }
+  .hm-shd .s-b { transition: transform 800ms var(--aura-sp) 550ms, opacity 300ms 550ms; }
+  .hm-shd .s-k { stroke-dasharray: 1; stroke-dashoffset: 0; transition: stroke-dashoffset 700ms var(--aura-e) 950ms; }
+  .hm-shd .s-d { transition: transform 500ms var(--aura-sp) 1300ms; }
+  /* The icon in a chip draws itself with its row */
+  .hm-tr-l > li.in .aura-draw path { stroke-dashoffset: 0; }
+  /* The coupon code is written letter by letter */
+  .hm-tk-code:not(.wr) b { opacity: 0; transform: translateY(0.3em); }
+  .hm-tk-code.wr b { animation: hm-write 500ms var(--aura-eo) calc(var(--i, 0) * 170ms + 200ms) backwards; }
+  @keyframes hm-write { from { opacity: 0; transform: translateY(0.3em); } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hm-hero-th path { stroke-dashoffset: 0; animation: none; }
+  .hm-cue { display: none; }
+  .hm-cc { position: relative; top: 0; }
+  .hm-cc-in { transform: none; }
+  .hm-cc-dim { display: none; }
+  .hm-cc-go, .hm-hs-ph img, .hm-gc-s { transition: none; }
+  .hm-tr-l::before { transform: none; }
+  .hm-stmt span { opacity: 1; transition: none; }
+  .hm-stmt span.k { color: var(--ac); }
+  .hm-tk-code u { display: none; }
+  .hm-tk::before, .hm-tk::after { transition: none; }
+  .hm-gc .aura-rnd:not(.ok) > svg.aura-draw, .hm-gc .aura-rnd.ok > svg:not(.aura-draw) { display: none; }
+}

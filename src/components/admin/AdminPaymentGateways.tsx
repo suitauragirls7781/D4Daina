@@ -7,44 +7,44 @@ import { AdminPageHeader } from './kidsToysShared';
 
 // ---------------------------------------------------------------- shared pieces of the admin's "storefront & settings" pages
 // (Coupons, Deal, Combo, Homepage, Hero, Banners, Reels, Instagram, Discovery, Payments, Usage, Settings.)
-// Emerald Heritage: glass panels, light text, gold for "on", red only for real problems.
+// Aura: white cards on the paper page, ink text, an ink pill for "on", red only for real problems.
 
 /** Class strings used by every one of those pages, so they read as one system. */
 export const kit = {
-  /** A titled glass panel. */
+  /** A titled white card. */
   panel: 'sag-glass p-4 sm:p-6',
   /** A quiet box inside a panel (a row, an option, a note). */
-  inset: 'rounded-[10px] border border-line bg-sunken p-3.5 sm:p-4',
-  h2: 'text-[17px] leading-6 font-semibold text-ink',
+  inset: 'rounded-[16px] bg-page p-3.5 sm:p-4',
+  h2: 'text-[18px] leading-6 font-extrabold tracking-[-0.015em] text-ink',
   hint: 'text-[13px] leading-[18px] text-ink-muted',
   field: 'sag-input h-12',
   iconBtn: 'w-11 h-11 shrink-0 rounded-full inline-flex items-center justify-center text-ink hover:bg-sunken-deep transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed',
   iconBtnDanger: 'w-11 h-11 shrink-0 rounded-full inline-flex items-center justify-center text-danger hover:bg-danger-tint transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed',
   primary: 'sag-btn-primary h-12 px-6 text-sm gap-2',
   outline: 'sag-btn-outline h-12 px-5 text-sm gap-2 disabled:opacity-50',
-  /** Smaller glass button for rows. */
+  /** Smaller outline pill for rows. */
   small: 'sag-btn-outline h-11 px-4 text-[13px] gap-1.5 disabled:opacity-50',
   /** Words-and-colour button for a destructive action. */
-  danger: 'h-12 px-5 rounded-lg border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-sunken disabled:opacity-50 disabled:cursor-not-allowed',
+  danger: 'h-12 px-5 rounded-full border border-danger-line bg-danger-tint text-danger text-sm font-semibold inline-flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-sunken disabled:opacity-50 disabled:cursor-not-allowed',
   /** Dim layer behind a dialog, and the dialog sheet itself. */
   scrim: 'fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4',
-  sheet: 'w-full bg-surface border border-line rounded-t-[10px] sm:rounded-[10px] shadow-[var(--sag-shadow-pop)]',
-  alert: 'rounded-[10px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 text-danger',
-  note: 'rounded-[10px] border border-line bg-sunken px-4 py-3 text-sm leading-5 text-ink-muted',
-  th: 'px-4 py-3 text-left text-[11px] leading-4 font-semibold uppercase tracking-[0.08em] text-ink-muted',
+  sheet: 'w-full bg-surface rounded-t-[28px] sm:rounded-[28px] shadow-[var(--sag-shadow-pop)]',
+  alert: 'rounded-[16px] border border-danger-line bg-danger-tint px-4 py-3 text-sm leading-5 text-danger',
+  note: 'rounded-[16px] bg-page px-4 py-3 text-sm leading-5 text-ink-muted',
+  th: 'px-4 py-3 text-left text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted',
 };
 
 type PillTone = 'live' | 'soon' | 'off' | 'problem';
 const PILL_TONE: Record<PillTone, string> = {
   live: 'bg-brand text-[color:var(--sag-on-gold)]',
   soon: 'border border-brand-line bg-brand-wash text-brand',
-  off: 'border border-line bg-sunken text-ink-muted',
+  off: 'bg-sunken text-ink-muted',
   problem: 'border border-danger-line bg-danger-tint text-danger',
 };
 
-/** Status in words: gold fill = live now, gold outline = waiting, grey = off, red = a real problem. */
+/** Status in words: ink fill = live now, ink outline = waiting, sand = off, red = a real problem. */
 export const Pill: React.FC<{ tone?: PillTone; children: React.ReactNode; className?: string; role?: string }> = ({ tone = 'off', children, className = '', role }) => (
-  <span role={role} className={`inline-flex items-center gap-1.5 min-h-7 px-3 py-1 rounded-lg text-xs leading-4 font-semibold shrink-0 ${PILL_TONE[tone]} ${className}`}>
+  <span role={role} className={`inline-flex items-center gap-1.5 min-h-7 px-3 py-1 rounded-full text-xs leading-4 font-semibold shrink-0 ${PILL_TONE[tone]} ${className}`}>
     {tone === 'live' && <span className="w-1.5 h-1.5 rounded-full bg-[color:var(--sag-on-gold)]" aria-hidden="true" />}
     {children}
   </span>
@@ -57,12 +57,12 @@ export const Tiles: React.FC<{ children: React.ReactNode; className?: string }> 
 export const Tile: React.FC<{ label: React.ReactNode; value: React.ReactNode; note?: React.ReactNode; danger?: boolean }> = ({ label, value, note, danger }) => (
   <div className="sag-glass min-w-0 px-4 py-3.5">
     <dt className="text-xs leading-4 font-medium text-ink-muted break-words">{label}</dt>
-    <dd className={`mt-1 text-[26px] leading-8 font-semibold sag-num break-words ${danger ? 'text-danger' : 'text-ink'}`}>{value}</dd>
+    <dd className={`mt-1 text-[28px] leading-8 font-extrabold tracking-[-0.02em] sag-num break-words ${danger ? 'text-danger' : 'text-ink'}`}>{value}</dd>
     {note && <dd className="mt-0.5 text-xs leading-4 text-ink-muted break-words">{note}</dd>}
   </div>
 );
 
-/** A glass panel with a title, one plain line of help and an optional action at the right. */
+/** A white card with a title, one plain line of help and an optional action at the right. */
 export const Panel: React.FC<{
   id?: string; title: React.ReactNode; hint?: React.ReactNode; action?: React.ReactNode; titleId?: string; className?: string; children?: React.ReactNode;
 }> = ({ id, title, hint, action, titleId, className = '', children }) => (
@@ -78,7 +78,7 @@ export const Panel: React.FC<{
   </section>
 );
 
-/** On/off switch used across the settings pages: 44px tall hit area, gold when on. */
+/** On/off switch used across the settings pages: 44px tall hit area, ink when on. */
 export const Switch: React.FC<{ checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean; id?: string }> = ({ checked, onChange, label: aria, disabled, id }) => (
   <button
     type="button"
@@ -139,7 +139,7 @@ export const CheckRow: React.FC<RowProps> = ({ label, hint, checked, onChange, o
 
 /** The page's one save bar: stays at the bottom of the screen while the page scrolls. */
 export const SaveBar: React.FC<{ note?: React.ReactNode; children: React.ReactNode }> = ({ note, children }) => (
-  <div className="sticky bottom-3 z-20 sag-glass-bar !rounded-[10px] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-4 pr-2 py-2">
+  <div className="sticky bottom-3 z-20 sag-glass-bar shadow-[var(--sag-shadow-bar)] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-5 pr-2 py-2">
     <div className="min-w-0 flex-1 basis-40 text-[13px] leading-[18px] text-ink-muted" aria-live="polite">{note}</div>
     <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>*]:flex-1">{children}</div>
   </div>
@@ -155,7 +155,7 @@ export const Empty: React.FC<{ icon?: React.ReactNode; title: React.ReactNode; c
   </div>
 );
 
-/** A thin usage / progress line: grey track, gold fill (red only when a real limit is nearly reached). */
+/** A thin usage / progress line: hairline track, ink fill (red only when a real limit is nearly reached). */
 export const Meter: React.FC<{ percent: number; danger?: boolean; label: string; valueText?: string }> = ({ percent, danger, label, valueText }) => (
   <div role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(100, Math.max(0, percent)))} aria-valuetext={valueText}
     className="h-2 w-full overflow-hidden rounded-full bg-line">
@@ -516,7 +516,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
             {recentPayu.length === 0 ? (
               <p className={kit.note}>No PayU orders among the orders loaded here.</p>
             ) : (
-              <div className="divide-y divide-line rounded-[10px] border border-line">
+              <div className="divide-y divide-line rounded-[16px] border border-line">
                 {recentPayu.map((order) => (
                   <div key={order.orderNumber} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 text-[13px] sag-num">
                     <span className="font-mono text-ink">{order.orderNumber}</span>
@@ -537,7 +537,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
             {payments && (
               <>
               {/* Phone: stacked rows */}
-              <ul className="sm:hidden mt-3 rounded-[10px] border border-line divide-y divide-line">
+              <ul className="sm:hidden mt-3 rounded-[16px] border border-line divide-y divide-line">
                 {payments.length === 0 && <li className="px-4 py-3 text-ink-muted">No payments yet.</li>}
                 {payments.map((p, index) => (
                   <li key={`${p.orderId}-${index}`} className="px-4 py-3 text-[13px]">
@@ -550,7 +550,7 @@ export const AdminPaymentGateways: React.FC<{ asPage?: boolean }> = ({ asPage = 
                   </li>
                 ))}
               </ul>
-              <div className="hidden sm:block mt-3 overflow-x-auto rounded-[10px] border border-line">
+              <div className="hidden sm:block mt-3 overflow-x-auto rounded-[16px] border border-line">
                 <table className="w-full text-[13px]">
                   <thead className="border-b border-line">
                     <tr><th className={kit.th}>Time</th><th className={kit.th}>Amount</th><th className={kit.th}>Method</th><th className={kit.th}>Status</th><th className={kit.th}>Order / reason</th></tr>

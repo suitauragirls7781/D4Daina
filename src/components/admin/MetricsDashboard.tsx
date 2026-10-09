@@ -23,7 +23,7 @@ interface Period {
 export const percent = (ratio: number) => `${(ratio * 100).toFixed(ratio * 100 >= 10 ? 1 : 2)}%`;
 
 type Change = { text: string; up: boolean } | null;
-/** "12 more than yesterday" / "₹2,300 less than last week": plain words, gold when up. */
+/** "12 more than yesterday" / "₹2,300 less than last week": plain words, forest when up. */
 const change = (now: number, before: number, than: string, show: (value: number) => string): Change => {
   const gap = Math.round(now) - Math.round(before);
   if (gap === 0) return { text: `Same as ${than}`, up: false };
@@ -118,7 +118,7 @@ export const MetricsDashboard: React.FC<MetricsDashboardProps> = ({ today, analy
                   <div key={tile.label} className={`min-w-0 ${tile.wide ? 'col-span-2 py-3 border-y border-line rounded-none' : ''}`}>
                     <dt className="text-xs leading-4 text-ink-muted">{tile.label}</dt>
                     <dd className={`mt-1 sag-num truncate ${noData ? 'text-base leading-8 text-ink-muted' : tile.wide ? 'text-[28px] leading-9 font-semibold text-ink' : 'text-2xl leading-8 font-semibold text-ink'}`}>{tile.value}</dd>
-                    {note && <dd className={`mt-0.5 text-xs leading-4 ${note.up ? 'text-sale font-medium' : 'text-ink-muted'}`}>{note.up ? '▲ ' : ''}{note.text}</dd>}
+                    {note && <dd className={`mt-0.5 text-xs leading-4 ${note.up ? 'text-ok font-semibold' : 'text-ink-muted'}`}>{note.up ? '▲ ' : ''}{note.text}</dd>}
                     {tile.hint && <dd className="text-xs leading-4 text-ink-muted">{tile.hint}</dd>}
                   </div>
                 );

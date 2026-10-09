@@ -55,7 +55,7 @@ const isSoldOut = (product: Product) => !product.inStock || (product.stockQuanti
 
 const ICON_BTN = 'w-11 h-11 md:w-9 md:h-9 shrink-0 rounded-full inline-flex items-center justify-center text-ink-muted hover:text-ink hover:bg-sunken-deep transition-colors cursor-pointer disabled:opacity-50';
 // A small on / off label under the product name (bestseller, new arrival)
-const flagChip = (on: boolean) => `inline-flex items-center gap-1 h-11 md:h-7 px-3 md:px-2.5 rounded-lg border text-[13px] md:text-xs font-medium cursor-pointer transition-colors ${
+const flagChip = (on: boolean) => `inline-flex items-center gap-1 h-11 md:h-7 px-3 md:px-2.5 rounded-full border text-[13px] md:text-xs font-medium cursor-pointer transition-colors ${
   on ? 'bg-brand-wash border-brand-line text-brand' : 'border-dashed border-line text-ink-muted hover:text-ink hover:bg-sunken'
 }`;
 
@@ -385,7 +385,7 @@ export const AdminProducts: React.FC = () => {
                       {/* 1. Photo, name, SKU, rating and labels */}
                       <td className="contents md:table-cell md:py-3 md:pl-4 md:pr-3 align-middle">
                         <div className="contents md:flex md:items-center md:gap-3.5">
-                          <div className="row-span-5 md:row-auto w-[72px] md:w-14 aspect-[4/5] rounded-lg overflow-hidden bg-sunken shrink-0 self-start">
+                          <div className="row-span-5 md:row-auto w-[72px] md:w-14 aspect-[4/5] rounded-[12px] overflow-hidden bg-sunken shrink-0 self-start">
                             {cover ? (
                               <img
                                 src={getCleanImageUrl(cover, 160)}
@@ -467,7 +467,7 @@ export const AdminProducts: React.FC = () => {
                       {/* 4. Stock */}
                       <td className="md:table-cell md:py-3 md:px-3 align-middle">
                         <div className="flex flex-wrap items-center gap-2">
-                          <div className="inline-flex items-center gap-0.5 rounded-lg border border-line bg-sunken p-0.5">
+                          <div className="inline-flex items-center gap-0.5 rounded-full bg-sunken p-0.5">
                             <button
                               onClick={() => run(product.id, () => adjustStock(product.id, -1), `Stock of "${product.name}" reduced by 1.`)}
                               disabled={busyId === product.id || stockQty <= 0}
@@ -507,7 +507,7 @@ export const AdminProducts: React.FC = () => {
                           disabled={busyId === product.id}
                           aria-pressed={!product.hidden}
                           title={product.hidden ? 'Click to publish on the store' : 'Click to make it a draft (hidden)'}
-                          className={`inline-flex items-center gap-1.5 h-11 md:h-8 px-3.5 md:px-3 rounded-lg border text-[13px] md:text-xs font-semibold cursor-pointer disabled:opacity-50 ${
+                          className={`inline-flex items-center gap-1.5 h-11 md:h-8 px-3.5 md:px-3 rounded-full border text-[13px] md:text-xs font-semibold cursor-pointer disabled:opacity-50 ${
                             status === 'published'
                               ? 'bg-ok-tint text-ok border-ok-line'
                               : 'bg-sunken text-ink-muted border-line'
@@ -648,7 +648,7 @@ export const AdminProducts: React.FC = () => {
       {/* Delete Confirmation Modal */}
       {deleteConfirmId && (
         <div className={`fixed inset-0 z-50 ${SCRIM} flex items-end sm:items-center justify-center sm:p-4`}>
-          <div role="alertdialog" aria-modal="true" aria-labelledby="delete-product-title" className="bg-surface border border-line rounded-t-[10px] sm:rounded-[10px] sm:max-w-sm w-full p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="delete-product-title" className="bg-surface rounded-t-[28px] sm:rounded-[28px] sm:max-w-sm w-full p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] sm:p-6 shadow-[var(--sag-shadow-pop)] space-y-4 animate-in fade-in slide-in-from-bottom-5">
             <div className="w-14 h-14 rounded-full bg-danger-tint border border-danger-line text-danger flex items-center justify-center mx-auto">
               <Trash2 className="w-6 h-6 text-current" />
             </div>

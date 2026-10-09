@@ -54,7 +54,7 @@ export const FestiveComboOffers: React.FC = () => {
   };
 
   return (
-    <section id="festive-combo-offers-section" aria-labelledby="combo-offer-title" className={HOME_SECTION}>
+    <section id="festive-combo-offers-section" aria-labelledby="combo-offer-title" data-th="paper" className={HOME_SECTION}>
       <div className={HOME_WRAP}>
         <HomeSectionHeader
           titleId="combo-offer-title"
@@ -64,18 +64,18 @@ export const FestiveComboOffers: React.FC = () => {
         />
 
         <div className="grid lg:grid-cols-12 gap-4 lg:gap-8">
-          <div className="sag-glass lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-6 p-3 sm:p-4 lg:gap-x-5 lg:gap-y-8 lg:p-5">
+          <div className="aura-card aura-blk aura-lt lg:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-x-2.5 gap-y-6 p-2 sm:p-4 lg:gap-x-4 lg:gap-y-8 lg:p-5">
             {available.map((product) => {
               const selected = Boolean(picked[product.id]);
               const sizes = product.sizes?.length ? product.sizes : (['Free Size'] as unknown as ProductSize[]);
               return (
                 <div key={product.id} className="flex flex-col min-w-0">
-                  <button type="button" onClick={() => navigateToProduct(product)} className="sag-zoom block overflow-hidden rounded-lg bg-sunken cursor-pointer" aria-label={`View ${product.name}`}>
-                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] rounded-none object-cover object-top" loading="lazy" decoding="async" />
+                  <button type="button" onClick={() => navigateToProduct(product)} className="aura-sk block overflow-hidden rounded-[17px] cursor-pointer" aria-label={`View ${product.name}`}>
+                    <img src={getCleanImageUrl(product.images?.[0] || product.image || '', 420)} alt={product.name} className="w-full aspect-[4/5] object-cover object-top" loading="lazy" decoding="async" />
                   </button>
-                  <div className="pt-[9px] flex-1 flex flex-col gap-1.5">
-                    <p className="text-[13.5px] leading-[1.38] font-medium text-ink line-clamp-2 min-h-[2.76em]">{product.name}</p>
-                    <p className="sag-num text-[14.5px] leading-5 font-semibold text-ink">₹{product.price.toLocaleString('en-IN')}</p>
+                  <div className="px-1 pt-2.5 flex-1 flex flex-col gap-1.5">
+                    <p className="text-[14px] leading-[1.35] font-medium text-ink line-clamp-2 min-h-[2.7em]">{product.name}</p>
+                    <p className="aura-num text-[16px] leading-5 font-extrabold text-ink">₹{product.price.toLocaleString('en-IN')}</p>
                     {selected && (
                       <select
                         aria-label={`Size for ${product.name}`}
@@ -90,7 +90,7 @@ export const FestiveComboOffers: React.FC = () => {
                       type="button"
                       onClick={() => toggle(product.id, sizes[0])}
                       aria-pressed={selected}
-                      className="sag-chip mt-auto w-full h-11 min-w-0 px-2 gap-1.5 text-[13px] font-medium"
+                      className="sag-chip mt-auto w-full h-[46px] min-w-0 px-2 gap-1.5 text-[14px] font-bold"
                     >
                       {selected && <Check className="w-4 h-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />}
                       {selected ? 'Added to combo' : 'Add to combo'}
@@ -101,29 +101,29 @@ export const FestiveComboOffers: React.FC = () => {
             })}
           </div>
 
-          <aside className="sag-glass sag-glass-strong lg:col-span-4 p-4 sm:p-5 h-fit lg:sticky lg:top-24">
-            <h3 className="font-display text-[24px] leading-7 text-ink">Your combo</h3>
-            <p className={`mt-1 text-[13px] leading-5 ${qualifies ? 'text-ink font-medium' : 'text-ink-muted'}`} role="status">
+          <aside className="aura-blk aura-dk bg-dark lg:col-span-4 p-5 sm:p-6 h-fit">
+            <h3 className="aura-h2 aura-h-sm">Your <em>combo</em></h3>
+            <p className={`mt-2 text-[14px] leading-5 ${qualifies ? 'font-bold' : 'aura-mu'}`} role="status">
               {pickedProducts.length} of {minItems} pieces picked{qualifies ? '. Offer unlocked.' : ''}
             </p>
-            <div className="sag-num mt-3 space-y-2 text-sm leading-5">
-              <div className="flex justify-between text-ink-muted"><span>Items</span><span>₹{rawTotal.toLocaleString('en-IN')}</span></div>
-              <div className="flex justify-between text-sale"><span>Combo {comboOffer.percent}% off</span><span>{discount ? `−₹${discount.toLocaleString('en-IN')}` : '—'}</span></div>
-              <div className="flex items-baseline justify-between text-ink pt-3 border-t border-line">
-                <span className="font-medium">Combo price</span>
-                <span className="text-[17px] leading-[22px] font-semibold">₹{(rawTotal - discount).toLocaleString('en-IN')}</span>
+            <div className="aura-num mt-4 space-y-2 text-[15px] leading-5">
+              <div className="aura-mu flex justify-between"><span>Items</span><span>₹{rawTotal.toLocaleString('en-IN')}</span></div>
+              <div className="aura-sa flex justify-between font-semibold"><span>Combo {comboOffer.percent}% off</span><span>{discount ? `−₹${discount.toLocaleString('en-IN')}` : '—'}</span></div>
+              <div className="aura-hl flex items-baseline justify-between pt-3 border-t">
+                <span className="font-bold">Combo price</span>
+                <span className="text-[22px] leading-7 font-extrabold">₹{(rawTotal - discount).toLocaleString('en-IN')}</span>
               </div>
             </div>
-            <div className="mt-4 space-y-2.5">
-              <button type="button" onClick={() => addAll(false)} disabled={!qualifies} className="sag-btn-primary w-full h-12 gap-2">
+            <div className="mt-5 space-y-2.5">
+              <button type="button" onClick={() => addAll(false)} disabled={!qualifies} className="aura-btn aura-btn-w">
                 <BagIcon mono className="w-[18px] h-[18px]" />
                 Add combo to bag
               </button>
-              <button type="button" onClick={() => addAll(true)} disabled={!qualifies} className="sag-btn-outline w-full h-12">
+              <button type="button" onClick={() => addAll(true)} disabled={!qualifies} className="aura-btn aura-btn-line aura-btn-w">
                 Buy combo now
               </button>
             </div>
-            <p className="mt-3 text-[13px] leading-[18px] text-ink-muted">The discount is applied to your whole bag at checkout whenever it has {minItems}+ outfits.</p>
+            <p className="aura-mu mt-4 text-[13px] leading-[18px]">The discount is applied to your whole bag at checkout whenever it has {minItems}+ outfits.</p>
           </aside>
         </div>
       </div>

@@ -104,7 +104,7 @@ export const AdminComboOffers: React.FC = () => {
               </label>
             </div>
 
-            <p className="rounded-[10px] border border-brand-line bg-brand-wash px-4 py-3 text-sm leading-5 text-ink sag-num">
+            <p className="rounded-[16px] border border-brand-line bg-brand-wash px-4 py-3 text-sm leading-5 text-ink sag-num">
               Example: with {form.percent}% and {form.minItems} pieces, two ₹1,499 suits cost ₹{Math.round(2998 * (1 - form.percent / 100)).toLocaleString('en-IN')} before any coupon.
             </p>
           </div>

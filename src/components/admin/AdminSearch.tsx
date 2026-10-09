@@ -187,11 +187,11 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage }) =
 
   return (
     <>
-      {/* Desktop: a glass field. Phones and tablets: the icon. */}
+      {/* Desktop: a sand pill field. Phones and tablets: the icon. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden lg:flex h-10 w-44 xl:w-52 pl-3.5 pr-2.5 items-center gap-2 rounded-lg border border-line bg-sunken hover:bg-sunken-deep text-sm text-ink-muted transition-colors cursor-pointer"
+        className="hidden lg:flex h-10 w-44 xl:w-52 pl-3.5 pr-2.5 items-center gap-2 rounded-full bg-sunken hover:text-ink text-sm text-ink-muted transition-colors cursor-pointer"
         aria-label="Search orders, customers, products and pages"
         aria-haspopup="dialog"
         title="Search everything ( / )"
@@ -219,7 +219,7 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage }) =
           aria-label="Search everything"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
         >
-          <div className="w-full max-w-xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[78vh] flex flex-col overflow-hidden bg-surface border border-line rounded-[10px] text-left">
+          <div className="w-full max-w-xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[78vh] flex flex-col overflow-hidden bg-surface rounded-[28px] shadow-[var(--sag-shadow-pop)] text-left">
             <div className="flex items-center gap-2 p-3 border-b border-line rounded-none shrink-0">
               <div className="relative flex-1 min-w-0">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-muted pointer-events-none" strokeWidth={1.5} aria-hidden="true" />
@@ -261,7 +261,7 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage }) =
               )}
               {groups.map(({ group, rows }) => (
                 <div key={group} role="group" aria-label={group}>
-                  <p className="px-4 pt-4 pb-1 text-[11px] leading-4 font-medium uppercase tracking-[0.14em] text-sale" aria-hidden="true">{typed || group !== 'Pages' ? group : 'Go to a page'}</p>
+                  <p className="px-4 pt-4 pb-1 text-[11px] leading-4 font-bold uppercase tracking-[0.14em] text-sale" aria-hidden="true">{typed || group !== 'Pages' ? group : 'Go to a page'}</p>
                   {rows.map(({ hit, index }) => {
                     const on = index === active;
                     return (
@@ -274,7 +274,7 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage }) =
                         tabIndex={-1}
                         onMouseMove={() => { if (!on) setActive(index); }}
                         onClick={() => choose(hit)}
-                        className={`w-full min-h-[48px] px-4 py-2 flex items-center gap-3 text-left cursor-pointer border-l-2 ${on ? 'border-brand bg-sunken' : 'border-transparent'}`}
+                        className={`w-[calc(100%-1rem)] mx-2 min-h-[48px] px-2 py-2 flex items-center gap-3 text-left cursor-pointer rounded-[14px] ${on ? 'bg-sunken' : ''}`}
                       >
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm leading-5 text-ink truncate">{hit.title}</span>

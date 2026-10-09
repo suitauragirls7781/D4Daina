@@ -278,10 +278,12 @@ export const ReturnRequestForm: React.FC<{
     }
   };
 
-  const legendClass = 'flex items-baseline gap-2.5 mb-3 font-display text-[21px] leading-7 font-semibold text-ink';
-  const stepDot = (n: number) => <span className="sag-num w-[20px] shrink-0 font-sans text-[11px] leading-5 font-semibold tracking-[0.1em] text-sale" style={{ fontSizeAdjust: 'none' }} aria-hidden="true">{String(n).padStart(2, '0')}</span>;
-  const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand';
-  const noteText = 'text-[12px] leading-[17px] text-ink-muted';
+  const legendClass = 'flex items-baseline gap-2.5 mb-3 text-[22px] leading-7 font-extrabold tracking-[-0.025em] text-ink';
+  const stepDot = (n: number) => <span className="aura-num w-[22px] shrink-0 text-[13px] leading-5 font-extrabold tracking-[0.1em] text-accent" style={{ fontSizeAdjust: 'none' }} aria-hidden="true">{String(n).padStart(2, '0')}</span>;
+  const focusRing = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent';
+  // A choice inside the white sheet: a paper box with 16px corners; the chosen one carries an ink line
+  const choiceBox = 'rounded-[16px] bg-page transition-shadow data-[selected=true]:shadow-[inset_0_0_0_2px_var(--aura-ink)]';
+  const noteText = 'text-[13px] leading-[18px] text-ink-muted';
 
   return createPortal(
     <div className="fixed inset-0 z-[80] bg-[color:var(--sag-scrim)] flex items-end sm:items-center justify-center sm:p-4 sag-fade" onClick={close}>
@@ -293,22 +295,22 @@ export const ReturnRequestForm: React.FC<{
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
         noValidate
-        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col border border-line rounded-t-xl! rounded-b-none! sm:rounded-xl! animate-in fade-in slide-in-from-bottom-5"
+        className="bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] flex flex-col rounded-t-[28px] sm:rounded-[28px] animate-in fade-in slide-in-from-bottom-5"
       >
-        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line rounded-none!">
-          <div className="min-w-0 pt-2">
-            <h2 id="return-form-title" className="font-display text-[26px] leading-8 text-ink">Return or exchange</h2>
-            <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted break-words">
+        <span className="sm:hidden mx-auto mt-2.5 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-3 pl-5 pr-3 sm:pl-7 sm:pr-5 pt-3 sm:pt-5 pb-3">
+          <div className="min-w-0 pt-1">
+            <h2 id="return-form-title" className="aura-h2 aura-h-sm">Return or exchange</h2>
+            <p className="aura-num mt-1.5 text-[13.5px] leading-[18px] text-ink-muted break-words">
               #{order.orderNumber}{windowEnds ? ` · request by ${windowEnds}` : ''}
             </p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-            <X className="w-5 h-5" strokeWidth={1.5} />
+          <button type="button" onClick={close} aria-label="Close" className="aa-ic">
+            <X className="w-5 h-5" strokeWidth={1.6} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-5 space-y-7">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-7 pt-2 pb-5 space-y-7">
           <fieldset>
             <legend className={legendClass}>{stepDot(1)} What would you like?</legend>
             <div className="grid gap-2 sm:grid-cols-2">
@@ -316,7 +318,7 @@ export const ReturnRequestForm: React.FC<{
                 { value: 'return', title: 'Return', text: 'Send it back for a refund to your original payment method.', icon: ReturnIcon },
                 { value: 'exchange', title: 'Exchange', text: 'Get a different size, or a replacement piece.', icon: RefreshCcw },
               ] as const).map(({ value, title, text, icon: Icon }, index) => (
-                <label key={value} data-selected={kind === value} className={`sag-card flex items-start gap-3 px-3.5 py-3 text-left cursor-pointer ${focusRing}`}>
+                <label key={value} data-selected={kind === value} className={`${choiceBox} flex items-start gap-3 px-4 py-3.5 text-left cursor-pointer ${focusRing}`}>
                   <input
                     type="radio"
                     name="return-kind"
@@ -326,18 +328,18 @@ export const ReturnRequestForm: React.FC<{
                     data-autofocus={index === 0 || undefined}
                     className="sr-only"
                   />
-                  <span className={`shrink-0 flex mt-0.5 ${kind === value ? 'text-sale' : 'text-ink-muted'}`}>
+                  <span className={`shrink-0 flex mt-0.5 ${kind === value ? 'text-ink' : 'text-ink-muted'}`}>
                     {Icon === ReturnIcon ? <ReturnIcon className="w-5 h-5" mono live={false} /> : <Icon className="w-5 h-5" aria-hidden="true" />}
                   </span>
                   <span className="min-w-0">
-                    <span className="block text-sm leading-5 font-semibold text-ink">{title}</span>
-                    <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
+                    <span className="block text-[16px] leading-5 font-bold text-ink">{title}</span>
+                    <span className="mt-0.5 block text-[13.5px] leading-[19px] text-ink-muted">{text}</span>
                   </span>
                 </label>
               ))}
             </div>
             {clearanceLines.length > 0 && (
-              <p className="mt-2.5 rounded-lg border border-sale-line bg-surface px-3.5 py-2.5 text-[13px] leading-[18px] text-ink">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
+              <p className="aa-note mt-2.5">Clearance pieces (50% or more off) can only be exchanged for another size.</p>
             )}
           </fieldset>
 
@@ -355,7 +357,7 @@ export const ReturnRequestForm: React.FC<{
                 const sizes = sizesFor(item.product?.id);
                 const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
                 return (
-                  <li key={item.id || index} data-selected={checked} className={`sag-card px-3 py-3 ${settled ? 'opacity-70' : ''}`}>
+                  <li key={item.id || index} data-selected={checked} className={`${choiceBox} px-3 py-3 ${settled ? 'opacity-70' : ''}`}>
                     <label className={`flex items-center gap-3 min-h-11 ${settled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                       <input
                         type="checkbox"
@@ -365,39 +367,39 @@ export const ReturnRequestForm: React.FC<{
                         className="w-[22px] h-[22px] shrink-0 accent-brand disabled:opacity-40"
                         aria-label={`Include ${item.product?.name || 'item'}`}
                       />
-                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-sunken ${settled ? 'opacity-50' : ''}`}>
+                      <span className={`w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[14px] bg-sunken ${settled ? 'opacity-50' : ''}`}>
                         {item.product?.images?.[0] && <img src={getCleanImageUrl(item.product.images[0], 120)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className={`block text-sm leading-5 font-medium line-clamp-2 ${settled ? 'text-ink-muted' : 'text-ink'}`}>{item.product?.name}</span>
+                        <span className={`block text-[14.5px] leading-5 font-semibold line-clamp-2 ${settled ? 'text-ink-muted' : 'text-ink'}`}>{item.product?.name}</span>
                         <span className={`block ${noteText}`}>
                           {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · Qty {bought}
                           {!settled && left < bought ? ` · ${left} can still be returned or exchanged` : ''}
                         </span>
-                        {settled && <span className="sag-badge mt-1 border bg-surface font-semibold border-line text-ink-muted">Already returned or exchanged</span>}
-                        {!settled && clearance && <span className="sag-badge mt-1 border bg-surface font-semibold border-sale-line text-sale">Clearance · exchange only</span>}
+                        {settled && <span className="aa-pill is-mu mt-1.5 bg-surface">Already returned or exchanged</span>}
+                        {!settled && clearance && <span className="aa-pill mt-1.5">Clearance · exchange only</span>}
                       </span>
                     </label>
                     {checked && (left > 1 || kind === 'exchange') && (
-                      <div className="mt-3 pt-3 border-t border-line rounded-none! flex flex-wrap items-center gap-3">
+                      <div className="mt-3 pt-3 border-t border-line flex flex-wrap items-center gap-3">
                         {left > 1 && (
-                          <div className="inline-flex items-center rounded-lg! border border-control bg-surface" role="group" aria-label="Quantity">
-                            <button type="button" onClick={() => setLine(index, { qty: Math.max(1, qty - 1) })} disabled={qty <= 1} aria-label="One less" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
-                              <Minus className="w-4 h-4" strokeWidth={1.5} />
+                          <div className="inline-flex items-center rounded-full bg-surface" role="group" aria-label="Quantity">
+                            <button type="button" onClick={() => setLine(index, { qty: Math.max(1, qty - 1) })} disabled={qty <= 1} aria-label="One less" className="w-11 h-11 rounded-full flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
+                              <Minus className="w-4 h-4" strokeWidth={1.6} />
                             </button>
-                            <span className="sag-num w-8 text-center text-sm font-medium text-ink" aria-live="polite">{qty}</span>
-                            <button type="button" onClick={() => setLine(index, { qty: Math.min(left, qty + 1) })} disabled={qty >= left} aria-label="One more" className="w-11 h-11 flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
-                              <Plus className="w-4 h-4" strokeWidth={1.5} />
+                            <span className="aura-num w-8 text-center text-[15px] font-bold text-ink" aria-live="polite">{qty}</span>
+                            <button type="button" onClick={() => setLine(index, { qty: Math.min(left, qty + 1) })} disabled={qty >= left} aria-label="One more" className="w-11 h-11 rounded-full flex items-center justify-center text-ink disabled:text-ink-faint disabled:opacity-50 cursor-pointer">
+                              <Plus className="w-4 h-4" strokeWidth={1.6} />
                             </button>
                           </div>
                         )}
                         {kind === 'exchange' && (sizes.length > 0 ? (
-                          <label className="inline-flex flex-wrap items-center gap-2 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">
+                          <label className="inline-flex flex-wrap items-center gap-2 text-[13.5px] leading-[18px] font-semibold text-ink-muted">
                             New size
                             <select
                               value={line?.exchangeSize || ''}
                               onChange={(e) => setLine(index, { exchangeSize: e.target.value })}
-                              className="h-11 max-w-full rounded-lg border border-control bg-surface px-3 text-base font-normal normal-case tracking-normal text-ink cursor-pointer focus:border-brand"
+                              className="h-12 max-w-full rounded-[14px] border border-line bg-surface px-3 text-base font-medium text-ink cursor-pointer focus:border-ink"
                             >
                               <option value="">{clearance ? 'Choose a size' : 'Choose (or add a note)'}</option>
                               {sizes.map((size) => <option key={size} value={size}>{size}{size === item.selectedSize ? ' (same size)' : ''}</option>)}
@@ -424,7 +426,7 @@ export const ReturnRequestForm: React.FC<{
             <legend className={legendClass}>{stepDot(3)} Why?</legend>
             <div className="flex flex-wrap gap-2">
               {REASONS.map((option) => (
-                <label key={option} data-selected={reason === option} className={`sag-chip h-11 min-w-0 text-sm ${focusRing}`}>
+                <label key={option} data-selected={reason === option} className={`sag-chip h-11 min-w-0 text-[14px] font-semibold ${focusRing}`}>
                   <input type="radio" name="return-reason" value={option} checked={reason === option} onChange={() => { setReason(option); setError(''); }} className="sr-only" />
                   {option}
                 </label>
@@ -433,7 +435,7 @@ export const ReturnRequestForm: React.FC<{
           </fieldset>
 
           <div>
-            <label htmlFor="return-details" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">
+            <label htmlFor="return-details" className="aa-flbl">
               {reason === 'Other' ? 'Tell us what is wrong' : kind === 'exchange' ? 'Note (optional) — e.g. the size or colour you would like' : 'More details (optional)'}
             </label>
             <textarea
@@ -448,7 +450,7 @@ export const ReturnRequestForm: React.FC<{
 
           {needsUpi && (
             <div>
-              <label htmlFor="return-refund-upi" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">UPI ID for your refund</label>
+              <label htmlFor="return-refund-upi" className="aa-flbl">UPI ID for your refund</label>
               <input
                 id="return-refund-upi"
                 type="text"
@@ -462,28 +464,28 @@ export const ReturnRequestForm: React.FC<{
                 onChange={(e) => { setRefundUpi(e.target.value); setError(''); }}
                 className="sag-input"
               />
-              <p className="mt-1.5 text-[12px] leading-[17px] text-ink-muted">This order was cash on delivery, so the refund is sent to this UPI ID after our quality check.</p>
+              <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">This order was cash on delivery, so the refund is sent to this UPI ID after our quality check.</p>
             </div>
           )}
 
           <div>
             <p className={legendClass}>
-              {stepDot(4)} Photos {photoRequired ? <span className="text-[13px] font-normal text-sale">(at least one needed)</span> : <span className="text-[13px] font-normal text-ink-muted">(optional)</span>}
+              {stepDot(4)} Photos {photoRequired ? <span className="text-[13.5px] font-semibold tracking-normal text-sale">(at least one needed)</span> : <span className="text-[13.5px] font-normal tracking-normal text-ink-muted">(optional)</span>}
             </p>
             <div className="grid grid-cols-4 gap-2">
               {photos.map((photo) => (
                 <div key={photo.id} className="min-w-0">
-                  <div className="aspect-[4/5] overflow-hidden rounded-lg bg-sunken flex items-center justify-center">
-                    {photo.preview ? <img src={photo.preview} alt="Your photo" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />}
+                  <div className="aspect-[4/5] overflow-hidden rounded-[14px] bg-sunken flex items-center justify-center">
+                    {photo.preview ? <img src={photo.preview} alt="Your photo" className="w-full h-full object-cover" /> : <Camera className="w-5 h-5 text-ink-muted" strokeWidth={1.6} aria-hidden="true" />}
                   </div>
                   {photo.status === 'uploading' && (
-                    <div className="mt-1.5 h-[2px] rounded-none! bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
-                      <div className="h-full bg-brand transition-[width]" style={{ width: `${Math.max(6, photo.progress)}%` }} />
+                    <div className="mt-1.5 h-1 rounded-full bg-line overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={photo.progress} aria-label="Uploading">
+                      <div className="h-full w-full origin-left rounded-full bg-accent transition-transform" style={{ transform: `scaleX(${Math.max(6, photo.progress) / 100})` }} />
                     </div>
                   )}
-                  {photo.status === 'done' && <p className="mt-1 text-[11px] leading-[14px] text-ink-muted">Uploaded</p>}
-                  {photo.status === 'error' && <p className="mt-1 text-[11px] leading-[14px] font-medium text-danger">{photo.error}</p>}
-                  <button type="button" onClick={() => removePhoto(photo.id)} aria-label="Remove photo" className="w-full min-h-11 text-[12.5px] text-brand underline decoration-1 underline-offset-4 cursor-pointer">
+                  {photo.status === 'done' && <p className="mt-1 text-[13px] leading-4 text-ink-muted">Uploaded</p>}
+                  {photo.status === 'error' && <p className="mt-1 text-[13px] leading-4 font-semibold text-danger">{photo.error}</p>}
+                  <button type="button" onClick={() => removePhoto(photo.id)} aria-label="Remove photo" className="w-full min-h-11 text-[13.5px] font-bold text-ink underline decoration-[1.5px] underline-offset-4 cursor-pointer">
                     Remove
                   </button>
                 </div>
@@ -492,10 +494,10 @@ export const ReturnRequestForm: React.FC<{
                 <button
                   type="button"
                   onClick={() => fileInput.current?.click()}
-                  className="aspect-[4/5] rounded-lg border border-dashed border-control bg-surface hover:bg-sunken flex flex-col items-center justify-center gap-1 text-ink transition-colors cursor-pointer"
+                  className="aspect-[4/5] rounded-[14px] bg-page hover:bg-sunken flex flex-col items-center justify-center gap-1.5 text-ink transition-colors cursor-pointer"
                 >
-                  <ImagePlus className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
-                  <span className="text-[11px] leading-[14px]">Add photo</span>
+                  <ImagePlus className="w-5 h-5" strokeWidth={1.6} aria-hidden="true" />
+                  <span className="text-[13px] leading-4 font-semibold">Add photo</span>
                 </button>
               )}
             </div>
@@ -503,25 +505,25 @@ export const ReturnRequestForm: React.FC<{
             <p className={`mt-2 ${noteText}`}>Up to {MAX_PHOTOS} clear photos of the piece, the problem and the tag. They are resized before upload.</p>
           </div>
 
-          <div className="rounded-lg bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
+          <div className="aa-note">
             Pieces must be unused and unwashed, with their original tags. Our team reviews every request and emails you the next steps.
             {kind === 'return' && ' Refunds go to your original payment method.'}{' '}
-            {onPolicy && <button type="button" onClick={onPolicy} className="text-brand underline decoration-1 underline-offset-4 cursor-pointer">Return policy</button>}
+            {onPolicy && <button type="button" onClick={onPolicy} className="font-bold text-ink underline decoration-[1.5px] underline-offset-4 cursor-pointer">Return policy</button>}
           </div>
 
           {error && (
-            <p role="alert" className="rounded-lg border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger flex items-start gap-2">
-              <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" aria-hidden="true" /> {error}
+            <p role="alert" className="aa-alert">
+              <AlertCircle aria-hidden="true" /> <span>{error}</span>
             </p>
           )}
 
         </div>
-        <div className="grid grid-cols-[auto_1fr] sm:grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line rounded-none!">
-          <button type="button" onClick={close} disabled={sending} className="sag-btn-outline h-12 px-4">
+        <div className="grid grid-cols-[auto_1fr] sm:grid-cols-2 gap-2 px-5 sm:px-7 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line">
+          <button type="button" onClick={close} disabled={sending} className="aura-btn aura-btn-line px-5">
             Not now
           </button>
-          <button type="submit" disabled={sending} className="sag-btn-primary h-12 px-4 gap-2">
-            {(sending || uploading) && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
+          <button type="submit" disabled={sending} className="aura-btn px-4">
+            {(sending || uploading) && <Loader2 className="animate-spin" aria-hidden="true" />}
             {sending ? 'Sending…' : uploading ? 'Uploading photos…' : 'Send request'}
           </button>
         </div>

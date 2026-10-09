@@ -250,7 +250,7 @@ export const AdminCoupons: React.FC = () => {
               <li key={coupon.id} className={`${kit.panel} flex flex-col gap-4 ${isExpired || state === 'off' ? 'opacity-80' : ''}`}>
                 {/* Code and status */}
                 <div className="flex items-start justify-between gap-3">
-                  <span className={`font-mono text-lg leading-7 font-semibold tracking-[0.08em] px-3 py-1 border border-dashed rounded-lg break-all ${isExpired ? 'text-ink-faint border-line line-through' : 'text-brand border-brand-line bg-brand-wash'}`}>
+                  <span className={`font-mono text-lg leading-7 font-semibold tracking-[0.08em] px-3 py-1 border border-dashed rounded-full break-all ${isExpired ? 'text-ink-faint border-line line-through' : 'text-brand border-brand-line bg-brand-wash'}`}>
                     {coupon.code}
                   </span>
                   {state === 'running' && <Pill tone="live">Running</Pill>}
@@ -530,7 +530,7 @@ export const AdminCoupons: React.FC = () => {
                         {(formData.allowedProductIds || []).map((id) => {
                           const product = products.find((p) => String(p.id) === id);
                           return (
-                            <span key={id} className="inline-flex items-center gap-1 pl-3.5 rounded-lg border border-brand-line bg-brand-wash text-[13px] text-ink font-medium">
+                            <span key={id} className="inline-flex items-center gap-1 pl-3.5 rounded-full border border-brand-line bg-brand-wash text-[13px] text-ink font-medium">
                               <span className="max-w-[180px] truncate">{product?.name || `Removed product (${id})`}</span>
                               <button
                                 type="button"
@@ -560,7 +560,7 @@ export const AdminCoupons: React.FC = () => {
                         .filter((p) => p.name.toLowerCase().includes(q) || String(p.sku || '').toLowerCase().includes(q))
                         .slice(0, 8);
                       return (
-                        <ul className="mt-1.5 max-h-56 overflow-y-auto rounded-[10px] border border-line divide-y divide-line">
+                        <ul className="mt-1.5 max-h-56 overflow-y-auto rounded-[16px] border border-line divide-y divide-line">
                           {matches.length === 0 ? (
                             <li className="px-3 py-3 text-[13px] text-ink-muted">No matching products.</li>
                           ) : matches.map((p) => (

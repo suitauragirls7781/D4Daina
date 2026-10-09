@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Copy } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { getCleanImageUrl } from '../utils/imageHelper';
+import { Icon, Odometer } from '../aura';
 
 // Festive month (owner, 2026-10-07; Dussehra replaced by Navratri on 2026-10-08): one sale in two rounds,
 // Navratri (till 20 Oct) and Diwali (21 Oct to 8 Nov).
@@ -87,10 +87,10 @@ export const useTimeLeft = (endsAt: number | null) => {
 const two = (value: number) => String(value).padStart(2, '0');
 
 /**
- * `full` is one white panel with the thin line on the homepage: the real festive photo on top, edge to edge
- * (nothing is written on it), then the eyebrow, the serif title, the offer, a live countdown to the coupon's real
- * last day as four small white boxes with serif digits and the two buttons. On desktop the photo sits at the
- * right. `strip` is one slim white row for the shop page and the bag.
+ * `full` is one big round ink block on the homepage: the real festive photo on top with round corners
+ * (nothing is written on it), then the label, the big title, the offer, a live countdown to the coupon's real
+ * last day as four boxes whose digits roll, and the two buttons. On desktop the photo sits at the right.
+ * `strip` is one slim white card for the shop page and the bag.
  * (The announcement line under the header reads the same round, in Header.)
  */
 export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: string }> = ({ variant = 'full', className = '' }) => {
@@ -107,22 +107,22 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
   };
   const ends = round.daysLeft <= 0 ? 'Ends today' : round.daysLeft === 1 ? `Ends tomorrow, ${round.lastDay}` : `Till ${round.lastDay}`;
   const copyLabel = copied ? 'Copied' : round.code;
-  const copyIcon = copied ? <Check className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden="true" />;
+  const copyIcon = copied ? <Icon name="check" draw className="in" strokeWidth={2.2} /> : <Icon name="copy" />;
   const spoken = left ? `Offer ends in ${left.days} days, ${left.hours} hours and ${left.minutes} minutes` : undefined;
 
   if (variant === 'strip') {
     return (
-      <aside id="festive-strip" aria-label={round.title} className={`sag-glass flex items-center gap-3 py-2.5 pl-4 pr-2.5 text-ink ${className}`}>
+      <aside id="festive-strip" aria-label={round.title} className={`aura-card aura-lt flex items-center gap-3 py-3 pl-5 pr-3 text-ink ${className}`}>
         <p className="min-w-0 flex-1 text-[13px] leading-[18px]">
-          <span className="block text-[13.5px] leading-5 font-medium">{round.title}: {round.offer.toLowerCase()} with code <span className="font-semibold text-sale">{round.code}</span></span>
-          <span className="sag-num block text-ink-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
+          <span className="block text-[14.5px] font-bold leading-5">{round.title}: {round.offer.toLowerCase()} with code <span className="text-sale">{round.code}</span></span>
+          <span className="aura-num block text-ink-muted">{[round.terms, ends].filter(Boolean).join(' · ')}</span>
           {left && (
-            <span role="timer" aria-label={spoken} className="sag-num block font-semibold text-sale">
+            <span role="timer" aria-label={spoken} className="aura-num block font-bold text-sale">
               {left.days}d {two(left.hours)}h {two(left.minutes)}m {two(left.seconds)}s
             </span>
           )}
         </p>
-        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num h-11 shrink-0 gap-1.5 px-3.5">
+        <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="aura-btn aura-btn-line aura-btn-sm aura-num shrink-0 gap-1.5 px-4">
           {copyIcon}
           {copyLabel}
         </button>
@@ -135,22 +135,22 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
     : [];
 
   return (
-    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`sag-glass overflow-hidden text-ink lg:flex lg:items-stretch ${className}`}>
+    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`hm-fest aura-blk aura-dk bg-dark ${className}`}>
       {round.imageUrl ? (
         // The owner's own photo (often a banner with words on it): shown whole at its own shape, never cut and
         // never moving. On desktop it sits at the right, centred beside the words.
-        <div className="lg:order-2 lg:flex lg:w-[46%] lg:shrink-0 lg:items-center">
+        <div className="hm-fest-ph hm-fest-own">
           <img
             src={getCleanImageUrl(round.imageUrl, 1100)}
             srcSet={`${getCleanImageUrl(round.imageUrl, 640)} 640w, ${getCleanImageUrl(round.imageUrl, 1100)} 1100w`}
             sizes="(min-width: 1024px) 560px, 96vw"
             alt={round.title}
             decoding="async"
-            className="block h-auto w-full rounded-none"
+            className="block h-auto w-full"
           />
         </div>
       ) : (
-        <div className="overflow-hidden lg:order-2 lg:w-[46%] lg:shrink-0">
+        <div className="hm-fest-ph">
           <img
             src={PHOTO.src}
             srcSet={`${PHOTO.small} 560w, ${PHOTO.src} 1000w`}
@@ -159,38 +159,38 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
             width={1000}
             height={544}
             decoding="async"
-            className="sag-drift h-[150px] w-full rounded-none object-cover sm:h-[230px] lg:h-full lg:min-h-[360px]"
+            className="sag-drift h-[170px] w-full object-cover sm:h-[240px] lg:h-full lg:min-h-[400px]"
           />
         </div>
       )}
 
-      <div className="min-w-0 flex-1 px-4 py-6 sm:p-8 lg:self-center lg:p-12">
-        <p className="sag-eyebrow sag-caps text-[10.5px] leading-4 font-semibold uppercase tracking-[0.24em]">{round.eyebrow}</p>
-        <h2 id="festive-banner-title" className="mt-2.5 font-display text-[32px] leading-[1.06] text-ink sm:text-[38px] lg:text-[46px]">{round.title}</h2>
-        <p className="sag-num mt-4 text-[15px] leading-6 text-ink lg:text-[17px]">
-          {round.offer} with code <span className="font-semibold text-sale">{round.code}</span>
+      <div className="min-w-0 flex-1 px-4 pb-6 pt-7 sm:p-9 lg:self-center lg:p-12">
+        <p className="aura-lbl">{round.eyebrow}</p>
+        <h2 id="festive-banner-title" className="aura-h2 aura-h-lg mt-3">{round.title}</h2>
+        <p className="aura-num mt-5 text-[17px] font-semibold leading-6 lg:text-[19px]">
+          {round.offer} with code <span className="aura-ac font-extrabold">{round.code}</span>
         </p>
-        <ul className="sag-num mt-0.5 space-y-0.5 text-[13px] leading-5 text-ink-muted">
+        <ul className="aura-num aura-mu mt-1 space-y-0.5 text-[14px] leading-5">
           {round.terms && <li className="first-letter:uppercase">{round.terms}</li>}
           {round.prepaidPercent > 0 && <li>Plus {round.prepaidPercent}% off when you pay online</li>}
         </ul>
 
-        <p className="sag-num mt-5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale">{left ? `Offer ends ${round.lastDay}` : ends}</p>
+        <p className="aura-lbl aura-num mt-6">{left ? `Offer ends ${round.lastDay}` : ends}</p>
         {/* The clock is drawn only in the browser, after mounting; its space is kept so the panel does not jump */}
-        <div role="timer" aria-label={spoken} className="mt-2.5 flex min-h-[64px] gap-2 lg:max-w-[340px]">
+        <div role="timer" aria-label={spoken} className="mt-3 flex min-h-[76px] gap-2 lg:max-w-[360px]">
           {boxes.map(([label, value]) => (
-            <div key={label} aria-hidden="true" className="flex min-w-0 flex-1 flex-col items-center rounded-lg! border border-line bg-surface pt-2.5 pb-2">
-              <span className="sag-digit font-display text-[28px] leading-7 font-semibold text-ink">{value}</span>
-              <span className="mt-1 text-[10.5px] leading-3 uppercase tracking-[0.16em] text-ink-muted">{label}</span>
+            <div key={label} aria-hidden="true" className="aura-hl flex min-w-0 flex-1 flex-col items-center rounded-[18px] border pb-2.5 pt-3">
+              <Odometer value={value} roll={false} className="text-[28px] font-extrabold" />
+              <span className="aura-mu mt-0.5 text-[13px] leading-4">{label}</span>
             </div>
           ))}
         </div>
 
-        <div className="mt-5 flex gap-2.5 lg:mt-7">
-          <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="sag-btn-primary min-w-0 flex-1 px-5 whitespace-nowrap sm:flex-none sm:px-8">
+        <div className="mt-6 flex gap-2.5 lg:mt-8">
+          <button type="button" onClick={() => { setActivePage('shop'); window.scrollTo(0, 0); }} className="aura-btn min-w-0 flex-1 px-5 sm:flex-none sm:px-9">
             Shop the sale
           </button>
-          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="sag-btn-outline sag-num min-w-0 flex-1 gap-2 px-5 whitespace-nowrap sm:flex-none sm:px-7">
+          <button type="button" onClick={copy} aria-label={`Copy code ${round.code}`} className="aura-btn aura-btn-line aura-num min-w-0 flex-1 gap-2 px-5 sm:flex-none sm:px-8">
             {copyIcon}
             {copyLabel}
           </button>

@@ -78,7 +78,7 @@ export const AdminDashboardPage: React.FC = () => {
         <img src="/suit-aura-logo-480.webp" alt="Suit Aura Girls" className="h-12 w-auto mb-6" />
         <div className="sag-card w-full max-w-xl p-5 sm:p-8">
           <p className="sag-eyebrow">Error 404</p>
-          <h1 className="font-display text-[28px] leading-8 lg:text-[40px] lg:leading-[46px] text-ink mt-1">This page could not be found</h1>
+          <h1 className="font-display text-[28px] leading-8 lg:text-[34px] lg:leading-10 text-ink mt-1">This page could not be found</h1>
           <p className="mt-2 text-[15px] leading-[22px] text-ink-muted">The link may be old or mistyped. Our latest styles are waiting in the store.</p>
           <a href="/" className="mt-5 sag-btn-primary w-full min-[420px]:w-auto">Back to the store</a>
         </div>

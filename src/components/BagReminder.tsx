@@ -29,7 +29,7 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
   };
 
   return (
-    <aside aria-label="Your bag" className={`sag-glass sag-glass-strong flex items-center gap-2.5 p-2 sm:gap-3 sm:p-2.5 ${className}`}>
+    <aside aria-label="Your bag" className={`aura-card aura-lt flex items-center gap-2.5 py-2 pl-2 pr-1 sm:gap-3 sm:pl-2.5 ${className}`}>
       <img
         src={getCleanImageUrl(photo, 160)}
         alt=""
@@ -37,16 +37,16 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
         height={55}
         loading="lazy"
         decoding="async"
-        className="h-[55px] w-11 shrink-0 rounded-lg bg-sunken object-cover object-top"
+        className="h-[58px] w-[46px] shrink-0 rounded-[14px] bg-sunken object-cover object-top"
       />
-      <p className="min-w-0 flex-1 text-[13.5px] leading-5 text-ink">
-        <span className="block font-medium">Your bag has {cartCount} {cartCount === 1 ? 'item' : 'items'}</span>
-        <span className="sag-num block text-[12.5px] leading-[18px] text-ink-muted">Total ₹{Math.round(cartTotal).toLocaleString('en-IN')}</span>
+      <p className="min-w-0 flex-1 text-[14.5px] leading-5 text-ink">
+        <span className="block font-bold">Your bag has {cartCount} {cartCount === 1 ? 'item' : 'items'}</span>
+        <span className="aura-num block text-[13px] leading-[18px] text-ink-muted">Total ₹{Math.round(cartTotal).toLocaleString('en-IN')}</span>
       </p>
       <button
         type="button"
         onClick={() => setActivePage('cart')}
-        className="sag-btn-primary h-11 shrink-0 px-4 sm:px-5"
+        className="aura-btn aura-btn-sm shrink-0 px-5"
       >
         Checkout
       </button>
@@ -54,9 +54,9 @@ export const BagReminder: React.FC<{ className?: string }> = ({ className = '' }
         type="button"
         onClick={close}
         aria-label="Hide this reminder"
-        className="flex h-11 w-9 shrink-0 items-center justify-center text-ink-muted cursor-pointer hover:text-ink sm:w-11"
+        className="flex h-11 w-10 shrink-0 items-center justify-center rounded-full text-ink-muted cursor-pointer hover:text-ink sm:w-11"
       >
-        <X className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
+        <X className="h-[18px] w-[18px]" strokeWidth={1.6} aria-hidden="true" />
       </button>
     </aside>
   );

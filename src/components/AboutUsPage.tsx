@@ -6,7 +6,7 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { STORE_ADDRESS_LINES, STORE_MAPS_URL } from '../utils/storeContact';
 import { LockIcon, PinIcon, ReturnIcon, StoreIconProps, SupportIcon, TruckIcon } from './StoreIcons';
 import { HelpCard, InfoPageHeader } from './PolicyPages';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle } from '../aura';
 
 type PromiseItem = { icon: React.FC<StoreIconProps>; title: string; text: string; page: ActivePage; link: string };
 
@@ -27,8 +27,10 @@ export const AboutUsPage: React.FC = () => {
     return withPhoto ? { src: getCleanImageUrl(withPhoto.images?.[0] || withPhoto.image, 900), alt: withPhoto.name } : null;
   }, [products]);
 
+  const body = 'text-[15px] leading-[23px] lg:text-[16px] lg:leading-[25px] text-ink';
+
   return (
-    <div id="about-us-page" className="pb-12 lg:pb-16">
+    <div id="about-us-page" data-aura className="pb-14 lg:pb-20">
       <InfoPageHeader
         crumb="About us"
         eyebrow="Our story"
@@ -36,35 +38,40 @@ export const AboutUsPage: React.FC = () => {
         subtitle="Suit Aura Girls celebrates modern Indian women with ethnic wear that brings together traditional style and everyday comfort."
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 lg:pt-8 space-y-8 lg:space-y-12">
+      <div className="max-w-[1120px] mx-auto px-3 sm:px-6 pt-8 lg:pt-14 space-y-12 lg:space-y-20">
         {/* Story */}
-        <section className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-5 md:gap-8 lg:gap-12 md:items-center" aria-labelledby="about-story-title">
-          <div className="w-full max-w-[320px] md:max-w-none mx-auto">
+        <section className="grid grid-cols-1 md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-7 md:gap-10 lg:gap-14 md:items-center px-1" aria-labelledby="about-story-title">
+          <div className="w-full max-w-[340px] md:max-w-none mx-auto">
             {storyImage ? (
-              <div className="sag-zoom aspect-[4/5] overflow-hidden rounded-lg border border-line bg-sunken">
+              <div data-rv="photo" style={{ '--rv-r': '24px' } as React.CSSProperties} className="aura-sk aspect-[4/5] rounded-[24px]">
                 <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
               </div>
             ) : (
-              <div className="aspect-[4/5] sag-glass flex items-center justify-center p-8">
-                <img src="/suit-aura-mark-132.webp" alt="Suit Aura Girls" width={132} height={132} className="h-[132px] w-[132px] rounded-full! border border-line object-cover" />
+              <div className="aspect-[4/5] rounded-[24px] bg-surface flex items-center justify-center p-8">
+                <img src="/suit-aura-mark-132.webp" alt="Suit Aura Girls" width={132} height={132} className="h-[132px] w-[132px] rounded-full object-cover" />
               </div>
             )}
           </div>
 
           <div className="min-w-0">
-            <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale">Who we are</p>
-            <h2 id="about-story-title" className="font-display text-[28px] leading-[1.1] lg:text-[38px] text-ink mt-2">A boutique from Asansol, for women across India</h2>
-            <p className="mt-4 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
+            <AuraTitle
+              label="Who we are"
+              id="about-story-title"
+              size="lg"
+              title="A boutique from Asansol, for women across"
+              accent="India"
+            />
+            <p data-rv className={`mt-5 ${body}`}>
               We bring together suits, kurtis, anarkalis and co-ord sets chosen for how they look, feel and move, from easy everyday pieces to festive favourites.
             </p>
-            <p className="mt-3 text-sm leading-[22px] lg:text-[15px] lg:leading-6 text-ink">
+            <p data-rv className={`mt-3 ${body}`}>
               We believe dressing well should never be uncomfortable. Our silhouettes are designed to flatter all Indian body shapes in sizes from S to 5XL, with graceful drapes that move easily with you.
             </p>
-            <div className="mt-5 flex flex-col min-[420px]:flex-row gap-2.5">
-              <button type="button" onClick={() => navigateToCategory('All')} className="sag-btn-primary gap-2">
-                Shop the collection <ArrowRight className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+            <div data-rv className="mt-6 flex flex-col min-[420px]:flex-row gap-2.5">
+              <button type="button" onClick={() => navigateToCategory('All')} className="aura-btn">
+                Shop the collection <ArrowRight strokeWidth={1.6} aria-hidden="true" />
               </button>
-              <button type="button" onClick={() => setActivePage('size-guide')} className="sag-btn-outline">
+              <button type="button" onClick={() => setActivePage('size-guide')} className="aura-btn aura-btn-line">
                 Size guide
               </button>
             </div>
@@ -73,16 +80,16 @@ export const AboutUsPage: React.FC = () => {
 
         {/* Promises (all backed by the store's policies) */}
         <section aria-labelledby="about-promises-title">
-          <SectionTitle eyebrow="Shopping with us" title="What you can count on" id="about-promises-title" />
-          <ul className="sag-stagger mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {PROMISES.map(({ icon: Icon, title, text, page, link }) => (
-              <li key={title} className="sag-glass flex gap-3 p-4">
-                <span className="shrink-0 flex text-sale mt-0.5"><Icon mono className="w-5 h-5" /></span>
+          <AuraTitle label="Shopping with us" title="What you can count" accent="on" id="about-promises-title" size="lg" className="px-1" />
+          <ul className="mt-7 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {PROMISES.map(({ icon: PromiseIcon, title, text, page, link }) => (
+              <li key={title} data-rv="card" className="aura-card flex gap-3.5 p-4 sm:p-5">
+                <span className="aa-ic aa-ic-blush"><PromiseIcon mono className="w-5 h-5" /></span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-[20px] leading-6 font-semibold text-ink">{title}</h3>
-                  <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{text}</p>
-                  <button type="button" onClick={() => setActivePage(page)} className="sag-link gap-0.5 text-[12.5px]">
-                    {link} <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
+                  <h3 className="text-[20px] leading-6 font-extrabold tracking-[-0.02em] text-ink">{title}</h3>
+                  <p className="mt-1.5 text-[14px] leading-5 text-ink-muted">{text}</p>
+                  <button type="button" onClick={() => setActivePage(page)} className="sag-link gap-0.5 text-[13.5px]">
+                    {link} <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.6} aria-hidden="true" />
                   </button>
                 </div>
               </li>
@@ -90,26 +97,28 @@ export const AboutUsPage: React.FC = () => {
           </ul>
         </section>
 
-        {/* Visit */}
-        <section className="sag-glass p-4 sm:p-6 grid gap-4 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
-          <div className="flex items-start gap-3">
-            <span className="shrink-0 flex text-sale mt-0.5"><PinIcon mono className="w-5 h-5" /></span>
-            <div className="min-w-0">
-              <h2 id="about-visit-title" className="font-display text-[22px] leading-7 text-ink">Find our store</h2>
-              <p className="mt-1 text-[13px] leading-[18px] text-ink-muted">{STORE_ADDRESS_LINES.join(' ')}</p>
+        <div className="space-y-2.5">
+          {/* Visit */}
+          <section className="aura-card aura-blk p-4 sm:p-7 grid gap-5 md:grid-cols-[1fr_auto] md:items-center" aria-labelledby="about-visit-title">
+            <div className="flex items-start gap-3.5">
+              <span className="aa-ic"><PinIcon mono className="w-5 h-5" /></span>
+              <div className="min-w-0">
+                <h2 id="about-visit-title" className="text-[28px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">Find our store</h2>
+                <p className="mt-1.5 text-[14.5px] leading-[21px] text-ink-muted">{STORE_ADDRESS_LINES.join(' ')}</p>
+              </div>
             </div>
-          </div>
-          <div className="flex flex-col min-[420px]:flex-row gap-2.5">
-            <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="sag-btn-outline h-12">
-              Open in Google Maps
-            </a>
-            <button type="button" onClick={() => setActivePage('contact')} className="sag-btn-outline h-12">
-              Contact us
-            </button>
-          </div>
-        </section>
+            <div className="flex flex-col min-[420px]:flex-row gap-2">
+              <a href={STORE_MAPS_URL} target="_blank" rel="noopener noreferrer" className="aura-btn aura-btn-sm">
+                Open in Google Maps
+              </a>
+              <button type="button" onClick={() => setActivePage('contact')} className="aura-btn aura-btn-line aura-btn-sm">
+                Contact us
+              </button>
+            </div>
+          </section>
 
-        <HelpCard topic="store" showContactLink={false} />
+          <HelpCard topic="store" showContactLink={false} />
+        </div>
       </div>
     </div>
   );

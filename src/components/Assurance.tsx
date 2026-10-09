@@ -26,7 +26,7 @@ export const assuranceLine = (gateway?: AssuranceGateway) =>
   gateway ? `Secure payment by ${GATEWAY_NAME[gateway]} · 7-day returns & exchange` : 'Secure online payment · 7-day returns & exchange';
 
 /**
- * "How your order works": three numbered steps on a glass panel. All three are true today: payment is online
+ * "How your order works": three big numbered steps on a white block. All three are true today: payment is online
  * only (UPI), the order email goes out once the payment is verified, and every order is tracked in the account.
  * The gateway is named only when the caller knows which one is active.
  */
@@ -37,15 +37,15 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
     ['Track it here', 'Every step shows in My orders.'],
   ];
   return (
-    <div className={`sag-glass p-4 lg:p-5 ${className}`}>
-      <h3 className="font-display text-[21px] leading-7 text-ink">How your order works</h3>
-      <ol className="mt-1.5">
+    <div className={`aura-card aura-blk aura-lt p-5 lg:p-7 ${className}`}>
+      <h3 className="aura-h2 aura-h-sm text-ink">How your order <em>works</em></h3>
+      <ol className="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-3 lg:gap-7">
         {steps.map(([title, text], index) => (
-          <li key={title} className="flex items-start gap-3 border-t border-line py-3 first:border-t-0 last:pb-0">
-            <span aria-hidden="true" className="sag-num w-4 shrink-0 text-[12.5px] font-semibold leading-[18px] text-brand">{index + 1}</span>
+          <li key={title} data-rv data-rv-delay={index * 90} className="flex items-start gap-4 lg:flex-col lg:gap-3">
+            <span aria-hidden="true" className="aura-num w-[46px] shrink-0 text-[54px] font-extrabold leading-[0.86] tracking-[-0.04em] text-accent lg:w-auto lg:text-[72px]">{index + 1}</span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13.5px] font-medium leading-[18px] text-ink">{title}</span>
-              <span className="block text-[13px] leading-[18px] text-ink-muted">{text}</span>
+              <span className="block text-[19px] font-extrabold leading-[1.15] tracking-[-0.02em] text-ink">{title}</span>
+              <span className="mt-1 block text-[15px] leading-[1.45] text-ink-muted">{text}</span>
             </span>
           </li>
         ))}
@@ -55,7 +55,7 @@ export const HowOrderWorks: React.FC<{ gateway?: AssuranceGateway; className?: s
 };
 
 interface AssuranceProps {
-  /** full = the four facts as plain rows between hairlines; line = one small line with a lock; grid = the home trust grid (two columns, four in a row on desktop: a thin icon and the fact). */
+  /** full = the four facts as rows with round icon chips; line = one small line with a lock; grid = the home trust grid (two columns, four in a row on desktop: a big round icon chip and the fact in bold). */
   variant?: 'full' | 'line' | 'grid';
   gateway?: AssuranceGateway;
   /** Text for the WhatsApp message, so the store knows which page the shopper wrote from. */
@@ -71,8 +71,8 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
 
   if (variant === 'line') {
     return (
-      <p className={`flex items-center justify-center gap-1.5 text-xs leading-4 ${onDark ? 'text-on-dark-muted' : 'text-ink-muted'} ${className}`}>
-        <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+      <p className={`flex items-center justify-center gap-1.5 text-[13px] leading-[18px] ${onDark ? 'text-on-dark-muted' : 'aura-mu'} ${className}`}>
+        <Lock className="w-3.5 h-3.5 shrink-0" strokeWidth={1.6} aria-hidden="true" />
         <span>{assuranceLine(gateway)}</span>
       </p>
     );
@@ -85,22 +85,25 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
     { key: 'delivery', icon: <TruckIcon className="w-[19px] h-[19px]" mono />, text: facts.delivery, onClick: () => open('shipping-policy') },
     { key: 'help', icon: <WhatsAppIcon className="w-[18px] h-[18px]" mono />, text: facts.help, href: createSupportWhatsAppUrl(whatsappMessage) },
   ];
-  const iconColour = onDark ? 'text-highlight' : 'text-brand';
+  // The facts carry no fill of their own: text and chips follow the section they sit in (--fg / --inv), so the
+  // same piece reads on paper, on a white card and on an ink, forest or rose section. onDark = paper on dark.
+  const tone = onDark ? 'aura-dk' : '';
+  const chip = 'aura-fact-chip flex shrink-0 items-center justify-center rounded-full';
 
   if (variant === 'grid') {
-    // One white band with thin lines between its cells (two columns on phones, four in a row on desktop): in each
-    // cell a thin emerald icon and the fact as a short serif title, centred. No circles, no ticks.
-    const cell = `flex h-full w-full flex-col items-center justify-center gap-2.5 px-3 py-6 text-center lg:px-5 lg:py-9 ${onDark ? 'text-on-dark' : 'bg-surface text-ink'}`;
+    // Two columns on phones, four in a row on desktop: in each cell a big round chip with the icon, then the
+    // fact in bold. The file has no second line for a fact, so none is shown.
+    const cell = 'aura-fact group flex h-full w-full flex-col items-start gap-3.5 text-left';
     const body = (row: (typeof rows)[number]) => (
       <>
-        <span className={`flex shrink-0 [&>svg]:h-[26px] [&>svg]:w-[26px] ${iconColour}`}>{row.icon}</span>
-        <span className="min-w-0 font-display text-[18px] leading-[1.15] lg:text-[21px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
+        <span className={`${chip} h-[54px] w-[54px] [&>svg]:h-[24px] [&>svg]:w-[24px]`}>{row.icon}</span>
+        <span className="min-w-0 text-[19px] font-extrabold leading-[1.15] tracking-[-0.02em] lg:text-[21px]">{row.key === 'help' ? 'Chat with us on WhatsApp' : row.text}</span>
       </>
     );
     return (
-      <ul className={`grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-line lg:grid-cols-4 ${onDark ? '' : 'bg-line'} ${className}`}>
-        {rows.map((row) => (
-          <li key={row.key} className="flex min-w-0">
+      <ul className={`grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-8 ${tone} ${className}`}>
+        {rows.map((row, index) => (
+          <li key={row.key} data-rv data-rv-delay={index * 80} className="flex min-w-0">
             {row.href ? (
               <a href={row.href} target="_blank" rel="noopener noreferrer" className={cell}>{body(row)}</a>
             ) : row.onClick ? (
@@ -114,20 +117,20 @@ export const Assurance: React.FC<AssuranceProps> = ({ variant = 'full', gateway,
     );
   }
 
-  // full: plain rows between thin lines, each a thin emerald icon and the fact (the caller's panel is the white box)
-  const rowLine = `sag-row min-h-[52px]! gap-3! font-medium! ${onDark ? 'border-line text-on-dark' : ''}`;
+  // full: rows, each a round chip with the icon, the fact in bold and an arrow where the row leads somewhere
+  const rowLine = 'aura-fact group flex min-h-[64px] w-full items-center gap-3.5 py-2.5 text-left';
   return (
-    <div className={`border-y border-line ${className}`}>
+    <div className={`${tone} ${className}`}>
       {rows.map((row) => {
         const inner = (
           <>
-            <span className={`shrink-0 flex w-7 [&>svg]:h-[22px] [&>svg]:w-[22px] ${iconColour}`}>{row.icon}</span>
-            <span className="flex-1 min-w-0 text-[14px] leading-[1.35]">{row.text}</span>
-            {(row.onClick || row.href) && <ChevronRight className={`w-4 h-4 shrink-0 ${onDark ? 'text-on-dark-muted' : 'text-ink-muted'}`} strokeWidth={1.5} aria-hidden="true" />}
+            <span className={`${chip} h-11 w-11 [&>svg]:h-[20px] [&>svg]:w-[20px]`}>{row.icon}</span>
+            <span className="min-w-0 flex-1 text-[15.5px] font-bold leading-[1.3]">{row.text}</span>
+            {(row.onClick || row.href) && <ChevronRight className="aura-mu h-[18px] w-[18px] shrink-0 transition-transform duration-300 group-hover:translate-x-1 motion-reduce:transition-none" strokeWidth={1.6} aria-hidden="true" />}
           </>
         );
         if (row.href) return <a key={row.key} href={row.href} target="_blank" rel="noopener noreferrer" className={rowLine}>{inner}</a>;
-        if (row.onClick) return <button key={row.key} type="button" onClick={row.onClick} className={`${rowLine} w-full text-left cursor-pointer`}>{inner}</button>;
+        if (row.onClick) return <button key={row.key} type="button" onClick={row.onClick} className={`${rowLine} cursor-pointer`}>{inner}</button>;
         return <div key={row.key} className={rowLine}>{inner}</div>;
       })}
     </div>

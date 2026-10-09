@@ -1,13 +1,13 @@
 import React from 'react';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 
-/** Shared pieces of the admin dashboard and reports in the "Emerald Heritage" look. */
+/** Shared pieces of the admin dashboard and reports in the "Aura" look: white cards on the paper page, ink for the main action and the main series. */
 
 export const adminText = {
-  eyebrow: 'text-[11px] leading-4 font-medium uppercase tracking-[0.12em] text-ink-muted',
-  title: 'text-[17px] leading-6 font-semibold text-ink',
+  eyebrow: 'text-[11px] leading-4 font-bold uppercase tracking-[0.12em] text-ink-muted',
+  title: 'text-[18px] leading-6 font-extrabold tracking-[-0.015em] text-ink',
   note: 'text-[13px] leading-[18px] text-ink-muted',
-  link: 'inline-flex items-center gap-0.5 min-h-9 text-[13px] leading-[18px] font-medium text-brand underline underline-offset-[3px] hover:text-brand-dark cursor-pointer shrink-0',
+  link: 'inline-flex items-center gap-0.5 min-h-9 text-[13px] leading-[18px] font-bold text-brand underline underline-offset-[3px] hover:text-brand-dark cursor-pointer shrink-0',
   row: 'w-full min-h-[52px] px-4 sm:px-5 py-2.5 flex items-center gap-3 text-left hover:bg-sunken transition-colors cursor-pointer',
 };
 
@@ -24,7 +24,7 @@ interface PanelProps {
   children: React.ReactNode;
 }
 
-/** One glass panel with a plain title. */
+/** One white card with a plain title. */
 export const Panel: React.FC<PanelProps> = ({ id, title, note, action, strong, flush, className = '', children }) => (
   <section aria-labelledby={id ? `${id}-title` : undefined} id={id} className={`sag-glass ${strong ? 'sag-glass-strong' : ''} min-w-0 overflow-hidden ${className}`}>
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 sm:px-5 pt-4 pb-3">
@@ -45,7 +45,7 @@ interface SegmentedProps<T extends string> {
   onChange: (id: NoInfer<T>) => void;
 }
 
-/** A row of chips where one is chosen (gold with dark text). */
+/** A row of chips where one is chosen (an ink pill with paper text). */
 export function Segmented<T extends string>({ label, value, options, onChange }: SegmentedProps<T>): React.ReactElement {
   return (
     <div role="group" aria-label={label} className="flex flex-wrap gap-1.5">
@@ -64,10 +64,10 @@ export const EmptyNote: React.FC<{ children: React.ReactNode }> = ({ children })
 
 /** A small product photo (4:5), or a quiet placeholder when the product has none. */
 export const Thumb: React.FC<{ url?: string }> = ({ url }) => (url && url.trim()
-  ? <img src={getCleanImageUrl(url, 160)} alt="" loading="lazy" className="w-10 aspect-[4/5] shrink-0 object-cover object-top bg-sunken" />
-  : <span className="w-10 aspect-[4/5] shrink-0 rounded-[10px] bg-sunken" aria-hidden="true" />);
+  ? <img src={getCleanImageUrl(url, 160)} alt="" loading="lazy" className="w-10 aspect-[4/5] shrink-0 rounded-[12px] object-cover object-top bg-sunken" />
+  : <span className="w-10 aspect-[4/5] shrink-0 rounded-[12px] bg-sunken" aria-hidden="true" />);
 
-/** A share of a whole as a thin gold bar with its label and number. */
+/** A share of a whole as a thin ink bar on a hairline track, with its label and number. */
 export const ShareRow: React.FC<{ label: string; count: number; total: number }> = ({ label, count, total }) => {
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
@@ -76,7 +76,7 @@ export const ShareRow: React.FC<{ label: string; count: number; total: number }>
         <span className="min-w-0 truncate text-ink">{label}</span>
         <span className="shrink-0 sag-num text-ink">{count.toLocaleString('en-IN')} <span className="text-ink-muted">· {Math.round(pct)}%</span></span>
       </div>
-      <div className="mt-1.5 h-1.5 rounded-full bg-sunken-deep overflow-hidden" aria-hidden="true">
+      <div className="mt-1.5 h-1.5 rounded-full bg-line overflow-hidden" aria-hidden="true">
         <div className="h-full rounded-full bg-brand" style={{ width: `${Math.max(pct, count > 0 ? 2 : 0)}%` }} />
       </div>
     </li>

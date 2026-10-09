@@ -59,7 +59,7 @@ const when = (iso?: string) => {
 };
 export const digits = (phone: string) => String(phone || '').replace(/\D/g, '').slice(-10);
 
-// Gold while the request waits or is moving, red (with the word) when it was denied, muted once finished
+// Forest while the request waits or is moving, red (with the word) when it was denied, muted once finished
 const statusTone = (state: ReturnRequestStatus): PillTone =>
   state === 'requested' || state === 'approved' || state === 'received' ? 'good'
     : state === 'rejected' ? 'danger'
@@ -69,13 +69,13 @@ const stateRank = (state: ReturnRequestStatus) => (state === 'requested' ? 0 : s
 
 // Shared pieces of the request cards (returns here, cancellations in AdminCancellations.tsx)
 export const cardShell = adminUi.card;
-/** "New" mark: a gold fill, so it carries dark text. */
-export const newBadge = 'inline-flex items-center min-h-6 px-2.5 py-0.5 rounded-lg bg-brand text-[color:var(--sag-on-gold)] text-xs leading-4 font-semibold whitespace-nowrap';
+/** "New" mark: an ink fill, so it carries paper text. */
+export const newBadge = 'inline-flex items-center min-h-6 px-2.5 py-0.5 rounded-full bg-brand text-[color:var(--sag-on-gold)] text-xs leading-4 font-semibold whitespace-nowrap';
 export const contactBtn = `${adminUi.outline} px-4`;
 export const orderLink = `${adminUi.link} mt-2.5 min-h-11 max-w-full text-[15px] font-semibold sag-num inline-flex items-center gap-1.5 break-all text-left`;
 export const actionRow = 'flex flex-wrap gap-2 [&>*]:flex-1 sm:[&>*]:flex-none';
 /** Small muted capitals above a value inside a request card. */
-export const cardEyebrow = 'text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted';
+export const cardEyebrow = 'text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted';
 
 /**
  * Admin → Returns & exchanges. Customer requests arrive here live (the orders list is a live listener);
@@ -224,7 +224,7 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
           <ul className="space-y-2.5">
             {items.map((item, i) => (
               <li key={`${item.line}-${i}`} className="flex gap-3">
-                <div className="w-14 aspect-[4/5] shrink-0 rounded-lg overflow-hidden bg-sunken">
+                <div className="w-14 aspect-[4/5] shrink-0 rounded-[12px] overflow-hidden bg-sunken">
                   {(item.image || order.items?.[item.line]?.product?.images?.[0]) && <img src={getCleanImageUrl(item.image || order.items?.[item.line]?.product?.images?.[0] || '', 160)} alt="" className="w-full h-full object-cover object-top" />}
                 </div>
                 <div className="min-w-0 text-sm">
@@ -247,7 +247,7 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
           {(request.photos || []).length > 0 && (
             <div className="flex flex-wrap gap-2 pt-1">
               {(request.photos || []).map((url, i) => (
-                <a key={url} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Customer photo ${i + 1}`} className="w-14 aspect-[4/5] rounded-lg overflow-hidden bg-sunken">
+                <a key={url} href={url} target="_blank" rel="noopener noreferrer" aria-label={`Customer photo ${i + 1}`} className="w-14 aspect-[4/5] rounded-[12px] overflow-hidden bg-sunken">
                   <img src={getCleanImageUrl(url, 160)} alt="" loading="lazy" className="w-full h-full object-cover" />
                 </a>
               ))}
@@ -273,7 +273,7 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
               <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} className={adminUi.check} /> Email the customer
             </label>
             <div className={actionRow}>
-              {/* "Deny" sits first, apart from the gold main action at the end */}
+              {/* "Deny" sits first, apart from the ink main action at the end */}
               {[...actions].sort((a, b) => Number(b === 'reject') - Number(a === 'reject')).map((action) => {
                 const primary = action === 'approve' || action === 'refund' || action === 'exchange';
                 return (

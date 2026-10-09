@@ -47,7 +47,7 @@ const decimals = (value: number) => value.toLocaleString('en-IN', { maximumFract
 const size = (bytes: number) => (bytes >= 1e9 ? `${decimals(bytes / 1e9)} GB` : `${decimals(bytes / 1e6)} MB`);
 const ms = (value: number | null) => (value === null ? 'not available' : `${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })} ms`);
 
-// Calm status: gold normally, a gold word from 70%, red from 90% (always with words, never colour alone)
+// Calm status: ink normally, a dark rose word from 70%, red from 90% (always with words, never colour alone)
 const NEAR = 90;
 const CLOSE = 70;
 const tone = (percent: number) => (percent >= NEAR
@@ -490,7 +490,7 @@ export const AdminUsage: React.FC = () => {
         >
           {planError && <p role="alert" className="mb-3 text-sm leading-5 font-semibold text-danger">{planError}</p>}
           {confirmPaid ? (
-            <div className="rounded-[10px] border border-brand-line bg-brand-wash px-4 py-3">
+            <div className="rounded-[16px] border border-brand-line bg-brand-wash px-4 py-3">
               <p className="text-sm leading-5 font-semibold text-ink">Have you already bought Workers Paid in Cloudflare?</p>
               <p className="mt-1 text-sm leading-5 text-ink">
                 Switch only after buying it. On a free account this would let visitor counting use up the day's free writes, and orders would stop until 5:30 am.

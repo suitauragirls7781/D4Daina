@@ -258,11 +258,11 @@ export const UpdatedAgo: React.FC<{ at: number; stale?: boolean }> = ({ at, stal
   return <span className="sag-num">{words}{stale ? ' · trying again' : ''}</span>;
 };
 
-/** The small gold dot that pulses beside a live number (still with reduced motion). */
+/** The small rose dot that pulses beside a live number (still with reduced motion). */
 export const LiveDot: React.FC<{ on?: boolean }> = ({ on = true }) => (
   <span className="relative inline-flex w-2.5 h-2.5 shrink-0" aria-hidden="true">
-    {on && <span className="absolute inset-0 rounded-full bg-brand opacity-60 motion-safe:animate-ping" />}
-    <span className={`relative w-2.5 h-2.5 rounded-full ${on ? 'bg-brand' : 'bg-control'}`} />
+    {on && <span className="absolute inset-0 rounded-full bg-accent opacity-60 motion-safe:animate-ping" />}
+    <span className={`relative w-2.5 h-2.5 rounded-full ${on ? 'bg-accent' : 'bg-control'}`} />
   </span>
 );
 
@@ -303,8 +303,8 @@ export const LiveVisitorsPanel: React.FC<{ live: LiveState }> = ({ live }) => {
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span className="text-sm leading-5 font-medium text-ink">{placeLabel(v)}</span>
-                      {stage === 'checkout' && <span className="inline-flex items-center h-5 px-2 rounded-lg bg-brand text-[11px] leading-4 font-semibold text-[color:var(--sag-on-gold)]">At checkout</span>}
-                      {stage === 'bag' && <span className="inline-flex items-center h-5 px-2 rounded-lg border border-brand-line text-[11px] leading-4 font-medium text-sale">In the bag</span>}
+                      {stage === 'checkout' && <span className="inline-flex items-center h-5 px-2 rounded-full bg-brand text-[11px] leading-4 font-bold text-[color:var(--sag-on-gold)]">At checkout</span>}
+                      {stage === 'bag' && <span className="inline-flex items-center h-5 px-2 rounded-full border border-brand-line text-[11px] leading-4 font-medium text-sale">In the bag</span>}
                     </span>
                     <span className={`mt-0.5 block text-sm leading-5 break-words ${stage === 'checkout' || stage === 'bag' ? 'text-sale' : 'text-ink'}`}>Now on: {v.label}</span>
                     <span className="mt-1 block text-xs leading-4 text-ink-muted">
@@ -318,7 +318,7 @@ export const LiveVisitorsPanel: React.FC<{ live: LiveState }> = ({ live }) => {
                 </button>
                 {isOpen && (
                   <div className="px-4 sm:px-5 pb-4 pl-11 sm:pl-12">
-                    <p className="text-[11px] leading-4 font-medium uppercase tracking-[0.12em] text-ink-muted">Their path, newest first</p>
+                    <p className="text-[11px] leading-4 font-bold uppercase tracking-[0.12em] text-ink-muted">Their path, newest first</p>
                     {v.trail.length === 0 ? (
                       <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">No pages recorded yet.</p>
                     ) : (
@@ -352,7 +352,7 @@ export interface FeedEvent {
   who: string;
   what: string;
   kind: 'product' | 'buying' | 'order' | 'other';
-  /** Good news is written in gold. */
+  /** Good news is written in dark rose (the field's name is from an earlier look). */
   gold?: boolean;
   onOpen?: () => void;
 }
@@ -455,14 +455,14 @@ export const VisitorsByHourPanel: React.FC<{ live: LiveState }> = ({ live }) => 
 
   return (
     <Panel id="admin-by-hour" title="Visitors by hour today" note="One bar for each hour of today, India time.">
-      <p className={`text-sm leading-5 ${busiest >= 0 ? 'text-sale' : 'text-ink-muted'}`}>{sentence}</p>
+      <p className={`text-sm leading-5 ${busiest >= 0 ? 'text-star' : 'text-ink-muted'}`}>{sentence}</p>
       <div className="mt-3 h-28 flex items-end gap-[3px] border-b border-line rounded-none" role="img" aria-label={`Visitors for each hour of today. ${sentence}`}>
         {hours.map((count, hour) => {
           const height = hour <= nowHour && peak > 0 ? Math.max((count / peak) * 100, count > 0 ? 4 : 0) : 0;
           const words = hour > nowHour ? `${hourWord(hour)} to ${hourWord(hour + 1)}: not yet` : `${hourWord(hour)} to ${hourWord(hour + 1)}: ${visitorWord(count)}${hour === nowHour ? ' so far' : ''}`;
           return (
             <span key={hour} title={words} className="flex-1 min-w-0 h-full flex items-end">
-              <span className={`block w-full rounded-t-[4px] ${hour === busiest ? 'bg-brand' : hour === nowHour ? 'bg-star' : 'bg-control'}`} style={{ height: `${height}%` }} />
+              <span className={`block w-full rounded-t-[4px] ${hour === busiest ? 'bg-star' : hour === nowHour ? 'bg-accent' : 'bg-brand'}`} style={{ height: `${height}%` }} />
             </span>
           );
         })}
@@ -471,7 +471,7 @@ export const VisitorsByHourPanel: React.FC<{ live: LiveState }> = ({ live }) => 
         <span>12 am</span><span>6 am</span><span>12 pm</span><span>6 pm</span>
       </div>
       <p className="mt-3 text-xs leading-4 text-ink-muted">
-        The green bar is the busiest hour, the bronze bar is this hour ({hourWord(nowHour)} to {hourWord(nowHour + 1)}: <span className="sag-num">{visitorWord(hours[nowHour])}</span> so far).
+        The brown bar is the busiest hour, the pink bar is this hour ({hourWord(nowHour)} to {hourWord(nowHour + 1)}: <span className="sag-num">{visitorWord(hours[nowHour])}</span> so far).
       </p>
     </Panel>
   );

@@ -136,7 +136,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
   ].filter(([, value]) => Boolean(value)) as Array<[string, string]>;
 
   const cell = 'py-2.5 align-top border-b border-line';
-  const boxTitle = 'mb-1.5 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-sale';
+  const boxTitle = 'aura-lbl mb-1.5 text-[12px]';
 
   // "Download invoice": a real PDF file (the same document the store sends from the admin panel)
   const [downloading, setDownloading] = React.useState(false);
@@ -163,34 +163,34 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
         aria-labelledby="sag-invoice-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="sag-invoice-panel bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto border border-line rounded-t-xl sm:rounded-xl focus:outline-none animate-in fade-in slide-in-from-bottom-5"
+        className="sag-invoice-panel bg-surface text-ink w-full sm:max-w-2xl max-h-[92dvh] overflow-y-auto rounded-t-[28px] sm:rounded-[28px] focus:outline-none animate-in fade-in slide-in-from-bottom-5"
       >
-        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-2 sm:pl-6 sm:pr-4 py-2.5 bg-surface border-b border-line">
+        <div className="sag-no-print sticky top-0 z-10 flex items-center gap-2 pl-4 pr-3 sm:pl-6 sm:pr-5 py-3 bg-surface border-b border-line rounded-t-[28px]">
           <button
             type="button"
             onClick={() => window.print()}
-            className="sag-btn-primary h-11 px-4 gap-2"
+            className="aura-btn aura-btn-sm px-5"
           >
-            <Printer className="w-4 h-4" aria-hidden="true" /> Print<span className="hidden sm:inline"> / Save as PDF</span>
+            <Printer aria-hidden="true" /> Print<span className="hidden sm:inline"> / Save as PDF</span>
           </button>
           <button
             type="button"
             onClick={downloadPdf}
             aria-label={`Download ${invoiceNumber ? 'invoice' : 'receipt'} as PDF`}
-            className="sag-btn-outline h-11 px-4 gap-2"
+            className="aura-btn aura-btn-line aura-btn-sm px-5"
           >
-            <Download className="w-4 h-4" aria-hidden="true" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
+            <Download aria-hidden="true" /> Download<span className="hidden sm:inline"> {invoiceNumber ? 'invoice' : 'receipt'}</span>
           </button>
           <span className="flex-1" aria-hidden="true" />
-          <button type="button" onClick={onClose} aria-label="Close receipt" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-            <X className="w-5 h-5" strokeWidth={1.5} />
+          <button type="button" onClick={onClose} aria-label="Close receipt" className="aa-ic">
+            <X className="w-5 h-5" strokeWidth={1.6} />
           </button>
         </div>
 
-        <article className="sag-invoice-body sag-num p-4 sm:p-8 text-ink space-y-6">
+        <article className="sag-invoice-body aura-num p-5 sm:p-8 text-ink space-y-6">
           <header className="flex flex-col-reverse sm:flex-row sm:items-start sm:justify-between gap-4 pb-5 border-b border-line">
             <div className="min-w-0 text-sm leading-5 text-ink-muted">
-              <p className="font-display text-[22px] leading-7 text-ink">{storeName}</p>
+              <p className="text-[22px] leading-7 font-extrabold tracking-[-0.025em] text-ink">{storeName}</p>
               <p className="mt-1">{storeAddress}</p>
               <p>Phone: {storePhone}</p>
               {storeEmail && <p className="break-all">Email: {storeEmail}</p>}
@@ -199,12 +199,12 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
               {gstin && <p>GSTIN: {gstin}</p>}
             </div>
             <div className="shrink-0 flex sm:flex-col items-center sm:items-end justify-between gap-2">
-              <h2 id="sag-invoice-title" className="font-display text-[30px] leading-9 text-ink">{title}</h2>
-              <span className={`sag-badge border bg-surface font-semibold ${paid ? 'border-brand-line text-sale' : refunded ? 'border-line text-ink-muted' : 'border-sale-line text-sale'}`}>{paymentStatus}</span>
+              <h2 id="sag-invoice-title" className="text-[34px] leading-9 font-extrabold tracking-[-0.035em] text-ink">{title}</h2>
+              <span className={`aa-pill ${paid ? 'is-ok' : refunded ? 'is-mu' : 'is-wait'}`}>{paymentStatus}</span>
             </div>
           </header>
 
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 rounded-[10px] bg-sunken p-4 print:bg-transparent print:p-0">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm leading-5 rounded-[18px] bg-sunken p-4 print:bg-transparent print:p-0">
             {meta.map(([label, value]) => (
               <div key={label} className="flex justify-between sm:block gap-3">
                 <dt className="text-ink-muted shrink-0">{label}</dt>
@@ -214,14 +214,14 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
           </dl>
 
           <div className="grid sm:grid-cols-2 gap-3 text-sm leading-5">
-            <section className="rounded-[10px] border border-line p-4">
+            <section className="rounded-[18px] border border-line p-4">
               <p className={boxTitle}>Billed to</p>
               <p className="font-medium">{order.customerName || address.fullName}</p>
               {order.customerEmail && <p className="text-ink-muted break-all">{order.customerEmail}</p>}
               {phone && <p className="text-ink-muted">{phone}</p>}
               {shipLines.map((line) => <p key={`bill-${line}`} className="text-ink-muted">{line}</p>)}
             </section>
-            <section className="rounded-[10px] border border-line p-4">
+            <section className="rounded-[18px] border border-line p-4">
               <p className={boxTitle}>Shipped to</p>
               <p className="font-medium">{address.fullName || order.customerName}</p>
               {shipLines.map((line) => <p key={line} className="text-ink-muted">{line}</p>)}
@@ -264,7 +264,7 @@ export const OrderInvoice: React.FC<{ order: Order; onClose: () => void }> = ({ 
             </tbody>
           </table>
 
-          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 rounded-[10px] border border-line p-4 print:border-0 print:p-0">
+          <div className="sm:ml-auto sm:max-w-xs space-y-1.5 text-sm leading-5 rounded-[18px] border border-line p-4 print:border-0 print:p-0">
             {totals.map(([label, value, kind]) => (
               <div key={label} className={`flex justify-between gap-4 ${kind === 'discount' ? 'text-sale' : 'text-ink-muted'}`}>
                 <span>{label}</span>

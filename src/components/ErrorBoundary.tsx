@@ -2,7 +2,6 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { HelpIcon } from './StoreIcons';
 import { WhatsAppIcon } from './BrandIcons';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { SectionTitle } from './SectionTitle';
 
 interface Props {
   children: ReactNode;
@@ -42,16 +41,19 @@ export class ErrorBoundary extends Component<Props, State> {
   public override render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4 sm:px-6 py-10 lg:py-16" role="alert">
-        <div className="max-w-md w-full sag-glass rounded-xl! px-5 py-9 sm:px-8 text-center">
-          <span className="flex justify-center text-sale"><HelpIcon mono className="w-7 h-7" /></span>
-          <SectionTitle as="h1" className="mt-3" title="Something went wrong" sub="This page could not be shown. Your bag and account are safe." />
-          <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-6">
-            <button type="button" onClick={this.retry} className="sag-btn-primary min-[420px]:flex-1">Try again</button>
-            <a href="/" className="sag-btn-outline min-[420px]:flex-1">Homepage</a>
+      // Plain markup on purpose (no hooks, no shared motion pieces): this page must show even when those fail
+      <div data-aura className="min-h-[60vh] px-3 sm:px-6 pt-3 pb-14 lg:pt-6" role="alert">
+        <div className="aa-band aa-band-blush mx-auto max-w-[1120px]">
+          <span className="aa-ic mb-5 h-14 w-14"><HelpIcon mono className="w-7 h-7" /></span>
+          <p className="aura-lbl mb-3">Page error</p>
+          <h1 className="aura-h1">Something went <em>wrong</em></h1>
+          <p className="aura-sub mt-4 max-w-[42ch]">This page could not be shown. Your bag and account are safe.</p>
+          <div className="flex flex-col min-[420px]:flex-row gap-2.5 mt-7 max-w-md">
+            <button type="button" onClick={this.retry} className="aura-btn min-[420px]:flex-1">Try again</button>
+            <a href="/" className="aura-btn aura-btn-line min-[420px]:flex-1">Homepage</a>
           </div>
           <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls! A page on your website is not opening for me.')} target="_blank" rel="noopener noreferrer"
-            className="sag-link mt-4 justify-center gap-2">
+            className="sag-link mt-4 gap-2">
             <WhatsAppIcon className="w-[18px] h-[18px]" /> Tell us on WhatsApp
           </a>
         </div>

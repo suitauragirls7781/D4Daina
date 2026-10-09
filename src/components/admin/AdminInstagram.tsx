@@ -151,7 +151,7 @@ export const AdminInstagram: React.FC = () => {
                   className="sag-input h-12"
                 />
                 <div className="flex items-center justify-between gap-2 mt-auto">
-                  <span className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">Reel {index + 1}</span>
+                  <span className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-brand sag-num">Reel {index + 1}</span>
                   <div className="flex items-center gap-0.5">
                     <a href={reel.url} target="_blank" rel="noopener noreferrer" className={kit.iconBtn} title="Open on Instagram" aria-label="Open on Instagram">
                       <ExternalLink className="w-4 h-4 text-current" />

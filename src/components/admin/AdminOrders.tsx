@@ -107,10 +107,10 @@ const nextStepOf = (order: Order, bucket: Bucket): NextStep | null => {
 };
 
 // The status is a pill you can change: 44px tall on a phone so it is easy to tap, compact in the desktop table
-const STATUS_SELECT = 'h-11 md:h-9 max-w-full pl-3 pr-7 rounded-lg border text-[13px] leading-5 font-medium cursor-pointer transition-colors';
+const STATUS_SELECT = 'h-11 md:h-9 max-w-full pl-3 pr-7 rounded-full border text-[13px] leading-5 font-medium cursor-pointer transition-colors';
 const STATUS_SELECT_TONE = {
-  good: 'border-brand-line bg-brand-wash text-brand',
-  plain: 'border-line bg-sunken text-ink',
+  good: 'border-ok-line bg-ok-tint text-ok',
+  plain: 'border-control bg-sunken text-ink',
   muted: 'border-line bg-sunken text-ink-muted',
   danger: 'border-danger-line bg-danger-tint text-danger',
 };
@@ -134,7 +134,7 @@ export const AdminOrders: React.FC = () => {
     }
   };
 
-  // The gold button in each row. A one-tap status change asks first, so a slip of the thumb changes nothing.
+  // The ink button in each row. A one-tap status change asks first, so a slip of the thumb changes nothing.
   const runNextStep = (order: Order, step: NextStep) => {
     if (step.go === 'returns') { openAdminTab('returns'); return; }
     if (step.go === 'cancellations') { openAdminTab('cancellations'); return; }
@@ -269,7 +269,7 @@ export const AdminOrders: React.FC = () => {
 
       <PageTitle
         title={<>Orders <span className="font-sans text-ink-muted font-normal text-lg sag-num">({counts.all})</span></>}
-        line="Every order sits in one tab, from “To pack” to “Delivered”. Tap the green button to move an order one step on, or open it to add tracking and message the customer."
+        line="Every order sits in one tab, from “To pack” to “Delivered”. Tap the black button to move an order one step on, or open it to add tracking and message the customer."
       />
 
       <KeyNumbers
@@ -306,8 +306,8 @@ export const AdminOrders: React.FC = () => {
       )}
 
       {/* Tabs, date range and search in one panel */}
-      <div className="sag-glass px-3 sm:px-4 pt-1 pb-3.5 space-y-3">
-        <div role="tablist" aria-label="Order groups" className="flex overflow-x-auto sag-scroll-x border-b border-line">
+      <div className="sag-glass px-3 sm:px-4 pt-3 pb-3.5 space-y-3">
+        <div role="tablist" aria-label="Order groups" className="flex gap-1 overflow-x-auto sag-scroll-x pb-3 border-b border-line">
           {TABS.map((t) => {
             const on = t.key === tab;
             return (
@@ -319,10 +319,10 @@ export const AdminOrders: React.FC = () => {
                 aria-selected={on}
                 aria-controls="orders-list"
                 onClick={() => setTab(t.key)}
-                className={`shrink-0 h-12 px-3 -mb-px border-b-2 text-sm whitespace-nowrap inline-flex items-center gap-2 cursor-pointer transition-colors ${on ? 'border-brand text-ink font-semibold' : 'border-transparent text-ink-muted hover:text-ink'}`}
+                className={`shrink-0 h-11 pl-4 pr-2.5 rounded-full text-sm whitespace-nowrap inline-flex items-center gap-2 cursor-pointer transition-colors ${on ? 'bg-brand font-bold' : 'text-ink-muted font-medium hover:bg-sunken hover:text-ink'}`}
               >
                 {t.label}
-                <span className={`sag-num min-w-6 h-6 px-1.5 rounded-full inline-flex items-center justify-center text-xs font-medium ${on ? 'bg-brand-wash text-brand' : 'bg-sunken text-ink-muted'}`}>{counts[t.key]}</span>
+                <span className={`sag-num min-w-6 h-6 px-1.5 rounded-full inline-flex items-center justify-center text-xs font-semibold ${on ? 'bg-page text-[color:var(--aura-ink)]' : 'bg-sunken text-ink-muted'}`}>{counts[t.key]}</span>
               </button>
             );
           })}

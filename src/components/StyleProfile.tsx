@@ -161,20 +161,20 @@ export const saveStylePrefs = async (email: string, prefs: StylePrefs) => {
   primeStylePrefs(key, value);
 };
 
-// Outline chips with 8px corners; the selected one is filled emerald with a small tick
-const chipClass = 'sag-chip h-11 min-w-[44px] gap-1.5 px-3.5 text-[13px] font-normal aria-pressed:font-semibold';
-const legendClass = 'text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-ink-muted';
+// Pill chips; the selected one is ink with a small tick
+const chipClass = 'sag-chip h-11 min-w-[44px] gap-1.5 px-4 text-[14px] font-semibold';
+const legendClass = 'aura-lbl';
 
 const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ value: string; label: string }>; selected: string[]; onToggle: (value: string) => void }> = ({ legend, hint, options, selected, onToggle }) => (
-  <fieldset className="space-y-2">
+  <fieldset className="space-y-2.5">
     <legend className={legendClass}>{legend}</legend>
-    {hint && <p className="text-[13px] leading-[18px] text-ink-muted">{hint}</p>}
+    {hint && <p className="text-[14px] leading-[1.45] text-ink-muted">{hint}</p>}
     <div className="flex flex-wrap gap-2">
       {options.map(({ value, label }) => {
         const on = selected.includes(value);
         return (
           <button key={value} type="button" aria-pressed={on} onClick={() => onToggle(value)} className={chipClass}>
-            {on && <Check className="w-3.5 h-3.5 text-current" strokeWidth={1.5} aria-hidden="true" />}
+            {on && <Check className="w-4 h-4 text-current" strokeWidth={2} aria-hidden="true" />}
             {label}
           </button>
         );
@@ -183,7 +183,7 @@ const ChipGroup: React.FC<{ legend: string; hint?: string; options: Array<{ valu
   </fieldset>
 );
 
-const inputClass = 'sag-input sag-num h-12';
+const inputClass = 'sag-input sag-num h-[52px]';
 
 /** Account tab where a signed-in customer can optionally save colours, sizes, budget, occasions and categories. */
 export const StyleProfile: React.FC = () => {
@@ -275,9 +275,9 @@ export const StyleProfile: React.FC = () => {
 
   if (failed) {
     return (
-      <div className="sag-glass px-4 py-8 text-center space-y-3" role="alert">
-        <p className="text-sm leading-5 text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
-        <button type="button" onClick={retry} className="sag-btn-outline h-11 px-5">Try again</button>
+      <div className="aura-card aura-blk aura-lt px-5 py-9 text-center space-y-4" role="alert">
+        <p className="text-[15px] leading-[1.45] text-ink-muted">We could not load your style profile. Check your connection and try again.</p>
+        <button type="button" onClick={retry} className="aura-btn aura-btn-line aura-btn-sm">Try again</button>
       </div>
     );
   }
@@ -293,13 +293,13 @@ export const StyleProfile: React.FC = () => {
   const anySelected = hasStylePrefs(preview);
 
   return (
-    <section className="space-y-6" aria-labelledby="style-profile-title">
-      <form onSubmit={handleSave} className="space-y-6">
-        <div className="flex gap-3 border-b border-line pb-5">
-          <span className="mt-1 shrink-0 text-brand" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
+    <section className="space-y-7" aria-labelledby="style-profile-title">
+      <form onSubmit={handleSave} className="space-y-7">
+        <div className="flex gap-3.5">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-on-dark" aria-hidden="true"><StyleIcon className="w-[22px] h-[22px]" /></span>
           <div className="min-w-0">
-            <h2 id="style-profile-title" className="font-display text-[26px] leading-8 lg:text-[32px] lg:leading-9 text-ink">Your style profile</h2>
-            <p className="mt-1 text-[13px] leading-[19px] text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
+            <h2 id="style-profile-title" className="aura-h2 aura-h-md text-ink">Your style <em>profile</em></h2>
+            <p className="mt-2 text-[15px] leading-[1.45] text-ink-muted">Optional. Choose what you like and we will show matching in-stock styles on the home page. Saved to your account only.</p>
           </div>
         </div>
 
@@ -316,20 +316,20 @@ export const StyleProfile: React.FC = () => {
           selected={draft.sizes}
           onToggle={toggle('sizes')}
         />
-        <fieldset className="space-y-2">
+        <fieldset className="space-y-2.5">
           <legend className={legendClass}>Budget per outfit</legend>
           {priceRange && (
-            <p className="sag-num text-[13px] leading-[18px] text-ink-muted">
+            <p className="sag-num text-[14px] leading-[1.45] text-ink-muted">
               In-stock styles right now range from ₹{priceRange.min.toLocaleString('en-IN')} to ₹{priceRange.max.toLocaleString('en-IN')}.
             </p>
           )}
           <div className="grid grid-cols-2 gap-3 max-w-md">
             <label className="block">
-              <span className="block mb-1.5 text-[12.5px] leading-[18px] text-ink-muted">Minimum (₹)</span>
+              <span className="block mb-1.5 text-[13px] font-semibold leading-[18px] text-ink-muted">Minimum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={minText} onChange={(e) => { setError(''); setMinText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
             <label className="block">
-              <span className="block mb-1.5 text-[12.5px] leading-[18px] text-ink-muted">Maximum (₹)</span>
+              <span className="block mb-1.5 text-[13px] font-semibold leading-[18px] text-ink-muted">Maximum (₹)</span>
               <input className={inputClass} inputMode="numeric" placeholder="Any" value={maxText} onChange={(e) => { setError(''); setMaxText(e.target.value.replace(/\D/g, '').slice(0, 6)); }} />
             </label>
           </div>
@@ -350,12 +350,12 @@ export const StyleProfile: React.FC = () => {
         )}
 
         {error && (
-          <p role="alert" className="flex items-start gap-2 rounded-lg border border-danger px-3.5 py-3 text-[13px] leading-5 text-danger">
-            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />{error}
+          <p role="alert" className="flex items-start gap-2 rounded-[16px] border border-danger bg-surface px-4 py-3 text-[14px] font-semibold leading-5 text-danger">
+            <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.6} aria-hidden="true" />{error}
           </p>
         )}
 
-        <p className="sag-num border-y border-line py-3 text-[13px] leading-5 text-ink-muted" aria-live="polite">
+        <p className="sag-num rounded-[18px] bg-sunken px-4 py-3.5 text-[14.5px] font-semibold leading-[1.45] text-ink" aria-live="polite">
           {!anySelected
             ? 'Nothing selected yet. Saving with nothing selected removes your style profile.'
             : matches.length === 0
@@ -364,20 +364,20 @@ export const StyleProfile: React.FC = () => {
         </p>
 
         <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3">
-          <button type="submit" disabled={saving} className="sag-btn-primary h-12 px-6 gap-2">
+          <button type="submit" disabled={saving} className="aura-btn">
             {saving && <Loader2 className="w-[18px] h-[18px] animate-spin text-current" aria-hidden="true" />}
             {saving ? 'Saving…' : 'Save style profile'}
           </button>
-          <button type="button" onClick={reset} disabled={saving} className="sag-btn-outline h-12 px-6">
+          <button type="button" onClick={reset} disabled={saving} className="aura-btn aura-btn-line">
             Clear selections
           </button>
         </div>
       </form>
 
       {anySelected && matches.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-display text-[24px] leading-7 text-ink">Matching styles</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-4 lg:gap-x-5">
+        <div className="space-y-4">
+          <h3 className="aura-h2 aura-h-sm text-ink">Matching <em>styles</em></h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5">
             {matches.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} compact />)}
           </div>
         </div>

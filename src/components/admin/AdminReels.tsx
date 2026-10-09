@@ -101,7 +101,7 @@ const warmUp = (reel: AuraReel) => {
 };
 
 const input = kit.field;
-const fileInput = 'block w-full text-sm text-ink-muted file:mr-3 file:h-11 file:px-4 file:rounded-lg file:border file:border-solid file:border-line file:bg-sunken-deep file:text-ink file:text-sm file:font-medium file:cursor-pointer';
+const fileInput = 'block w-full text-sm text-ink-muted file:mr-3 file:h-11 file:px-4 file:rounded-full file:border file:border-solid file:border-line file:bg-sunken-deep file:text-ink file:text-sm file:font-medium file:cursor-pointer';
 const iconBtn = kit.iconBtn;
 const fieldLabel = 'block text-[13px] leading-[18px] font-semibold text-ink-muted';
 const textArea = 'sag-input h-auto py-3 resize-none';
@@ -132,7 +132,7 @@ const ProductPicker: React.FC<{ products: Product[]; byId: Map<string, Product>;
   return (
     <div className="space-y-2">
       {selected ? (
-        <div className="flex items-center gap-2 rounded-[10px] border border-brand-line bg-brand-wash p-2">
+        <div className="flex items-center gap-2 rounded-[16px] border border-brand-line bg-brand-wash p-2">
           <img src={getCleanImageUrl(selected.images?.[0] || selected.image, 120)} alt="" className="w-9 h-11 rounded-md object-cover object-top bg-sunken" />
           <span className="flex-1 min-w-0 text-sm">
             <span className="block font-medium text-ink line-clamp-1">{selected.name}</span>
@@ -151,7 +151,7 @@ const ProductPicker: React.FC<{ products: Product[]; byId: Map<string, Product>;
           return (
             <li key={p.id}>
               <button type="button" onClick={() => onChange(on ? '' : String(p.id))} aria-pressed={on}
-                className={`w-full flex items-center gap-2 text-left text-sm text-ink p-1.5 rounded-lg cursor-pointer ${on ? 'bg-brand-wash' : 'hover:bg-sunken-deep'}`}>
+                className={`w-full flex items-center gap-2 text-left text-sm text-ink p-1.5 rounded-full cursor-pointer ${on ? 'bg-brand-wash' : 'hover:bg-sunken-deep'}`}>
                 <img src={getCleanImageUrl(p.images?.[0] || p.image, 80)} alt="" loading="lazy" className="w-7 h-9 rounded object-cover object-top bg-sunken" />
                 <span className="flex-1 min-w-0 line-clamp-1">{p.name}</span>
                 {!isAvailable(p) && <span className="text-[13px] text-danger">Sold out</span>}
@@ -460,7 +460,7 @@ export const AdminReels: React.FC = () => {
             </label>
             {videoFile && (
               <div className="flex gap-3 items-start">
-                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-[10px] bg-dark object-contain" />}
+                {videoPreview && <video src={videoPreview} muted playsInline controls preload="metadata" className="w-28 aspect-[9/16] rounded-[16px] bg-dark object-contain" />}
                 <p className={`text-[13px] leading-[18px] sag-num ${videoProblem(videoFile) ? 'text-danger' : 'text-ink-muted'}`}>{videoFile.name} · {mb(videoFile.size)}{videoProblem(videoFile) ? ` — ${videoProblem(videoFile)}` : ''}</p>
               </div>
             )}
@@ -524,14 +524,14 @@ export const AdminReels: React.FC = () => {
             {list.map((reel, i) => {
               const open = editingId === reel.id;
               return (
-                <li key={`${reel.id}-${i}`} className="rounded-[10px] border border-line bg-sunken">
+                <li key={`${reel.id}-${i}`} className="rounded-[16px] bg-page">
                   <div className="flex gap-3 p-3">
                     <img src={reelPosterSrc(reel, 160)} alt="" loading="lazy"
                       onError={(e) => { if (!e.currentTarget.src.startsWith('data:')) e.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }}
-                      className="w-16 aspect-[9/16] shrink-0 rounded-lg object-cover object-top bg-sunken" />
+                      className="w-16 aspect-[9/16] shrink-0 rounded-[12px] object-cover object-top bg-sunken" />
                     <div className="flex-1 min-w-0 space-y-1">
                       <p className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs leading-4 font-semibold uppercase tracking-[0.08em] text-brand sag-num">Reel {i + 1}</span>
+                        <span className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-brand sag-num">Reel {i + 1}</span>
                         <Pill tone={reel.enabled ? 'live' : 'off'}>{reel.enabled ? 'Live on the site' : 'Off'}</Pill>
                       </p>
                       <p className="text-sm leading-5 text-ink line-clamp-2">{reel.caption || <span className="text-ink-faint">No caption</span>}</p>
@@ -554,7 +554,7 @@ export const AdminReels: React.FC = () => {
                       <div className="space-y-2">
                         <video src={reelVideoSrc(reel.videoUrl)} poster={reelPosterSrc({ videoUrl: reel.videoUrl, posterUrl: draft.posterUrl }, 480)} controls playsInline preload="metadata"
                           onError={(e) => { if (e.currentTarget.src !== reel.videoUrl) e.currentTarget.src = reel.videoUrl; }}
-                          className="w-40 aspect-[9/16] rounded-[10px] bg-dark object-contain" />
+                          className="w-40 aspect-[9/16] rounded-[16px] bg-dark object-contain" />
                         <p className={`${kit.hint} w-40`}>Poster shown before the video plays.</p>
                       </div>
                       <div className="space-y-4">

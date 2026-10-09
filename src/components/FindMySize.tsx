@@ -43,15 +43,15 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
 
   const labelText = 'sag-label';
   return (
-    <div className="sag-glass mt-4 p-4 sag-drop" role="region" aria-label="Find my size">
+    <div className="aura-card aura-blk aura-lt mt-4 p-5 sag-drop" role="region" aria-label="Find my size">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-display text-[21px] leading-6 text-ink">Find my size</p>
-          <p className="text-[12.5px] leading-[18px] text-ink-muted mt-1.5">Only sizes this style is made in: {offered.join(', ') || sizes.join(', ')}</p>
+          <p className="aura-h2 aura-h-sm text-ink">Find my <em>size</em></p>
+          <p className="text-[14px] leading-[1.45] text-ink-muted mt-2">Only sizes this style is made in: {offered.join(', ') || sizes.join(', ')}</p>
         </div>
-        <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 -mt-3 -mr-3 shrink-0 rounded-full text-ink hover:text-ink-muted flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
+        <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 -mt-2 -mr-2 shrink-0 rounded-full bg-sunken text-ink flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.6} /></button>
       </div>
-      <form onSubmit={calculate} className="mt-3 grid grid-cols-2 gap-3">
+      <form onSubmit={calculate} className="mt-4 grid grid-cols-2 gap-3">
         <label className="min-w-0">
           <span className={labelText}>Your usual size</span>
           <select value={usual} onChange={(e) => setUsual(e.target.value)} className="sag-input aria-invalid:border-danger!">
@@ -68,21 +68,21 @@ export const FindMySize: React.FC<{ sizes: string[]; onPick: (size: string) => v
           <div className="grid grid-cols-3 gap-2">
             {(['fitted', 'regular', 'relaxed'] as const).map((f) => (
               <button key={f} type="button" onClick={() => setFit(f)} aria-pressed={fit === f}
-                className="sag-chip h-11 min-w-0 px-2 text-[13px] leading-5 capitalize">{f}</button>
+                className="sag-chip h-12 min-w-0 px-2 text-[14px] font-semibold leading-5 capitalize">{f}</button>
             ))}
           </div>
         </fieldset>
-        <button type="submit" className="col-span-2 sag-btn-outline h-12">Get my size</button>
+        <button type="submit" className="col-span-2 aura-btn aura-btn-line aura-btn-w">Get my size</button>
       </form>
       {result && (
-        <div className="mt-4 border-t border-line pt-4 sag-fade" aria-live="polite">
+        <div className="mt-4 rounded-[18px] bg-sunken p-4 sag-fade" aria-live="polite">
           {result.size && (
             <div className="flex items-center justify-between gap-3">
-              <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-brand">Recommended size <strong className="block font-display text-[32px] leading-9 font-semibold normal-case tracking-normal text-ink mt-1">{result.size}</strong></p>
-              <button type="button" onClick={() => onPick(result.size!)} className="sag-btn-primary h-12 px-6 shrink-0">Select {result.size}</button>
+              <p className="aura-lbl">Recommended size <strong className="mt-1 block text-[44px] font-extrabold leading-[1] normal-case tracking-[-0.03em] text-ink">{result.size}</strong></p>
+              <button type="button" onClick={() => onPick(result.size!)} className="aura-btn aura-btn-sm shrink-0">Select {result.size}</button>
             </div>
           )}
-          <p className={`${result.size ? 'mt-3' : ''} text-[12.5px] leading-[18px] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-semibold text-brand underline underline-offset-4 decoration-1 cursor-pointer inline-block py-[13px] -my-[13px]">size chart</button>.</p>
+          <p className={`${result.size ? 'mt-3' : ''} text-[13.5px] leading-[1.45] text-ink-muted`}>{result.note} This is an estimate — please confirm with the <button type="button" onClick={onOpenChart} className="font-bold text-ink underline underline-offset-4 decoration-[1.5px] cursor-pointer inline-block py-[13px] -my-[13px]">size chart</button>.</p>
         </div>
       )}
     </div>

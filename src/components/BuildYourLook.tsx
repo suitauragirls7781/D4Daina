@@ -5,6 +5,7 @@ import { Product, ProductColor, ProductSize } from '../types';
 import { useDiscovery } from '../utils/discovery';
 import { fuzzyMatchProduct } from '../utils/fuzzySearch';
 import { getCleanImageUrl } from '../utils/imageHelper';
+import { Odometer } from '../aura';
 import { isAvailable } from '../utils/smartQuery';
 import { trackItem } from '../utils/visitorTracker';
 import {
@@ -53,8 +54,8 @@ export const BuildYourLookButton: React.FC<{ className?: string }> = ({ classNam
   return (
     <>
       <button ref={triggerRef} type="button" onClick={() => setOpen(true)} aria-haspopup="dialog"
-        className={className || 'h-11 px-4 rounded-lg border border-control bg-surface text-ink hover:border-brand text-[13px] font-medium inline-flex items-center gap-2 cursor-pointer'}>
-        <Layers className="w-4 h-4" strokeWidth={1.5} /> Build your look
+        className={className || 'aura-btn aura-btn-line aura-btn-sm gap-2'}>
+        <Layers className="w-4 h-4" strokeWidth={1.6} /> Build your look
       </button>
       {open && <BuildYourLook onClose={close} />}
     </>
@@ -161,60 +162,60 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
     onClose();
   };
 
-  // White boxes with 8px corners; the chosen one sits on an emerald fill
-  const chip = (active: boolean) => `shrink-0 h-11 px-4 rounded-lg border text-[13px] transition-colors duration-300 cursor-pointer ${active ? 'bg-brand border-brand text-[color:var(--sag-on-gold)] font-semibold' : 'bg-surface border-control text-ink hover:bg-sunken'}`;
-  const control = 'h-11 max-w-full pl-3 pr-8 rounded-lg border bg-surface text-[16px] text-ink focus:outline-none focus:border-brand cursor-pointer';
-  const caps = 'text-[11px] font-semibold uppercase tracking-[0.14em]';
+  // Pills: white with a thin line; the chosen one is ink with paper text
+  const chip = (active: boolean) => `sag-chip shrink-0 cursor-pointer ${active ? 'is-selected' : ''}`;
+  const control = 'h-[46px] max-w-full pl-4 pr-8 rounded-full border bg-surface text-[16px] font-medium text-ink focus:outline-none focus:border-brand cursor-pointer';
 
   return (
-    <div className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={onClose}>
+    <div data-aura className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={onClose}>
       <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="byl-title" onClick={(e) => e.stopPropagation()}
-        className="bg-surface text-ink border-t md:border border-line rounded-t-[10px] md:rounded-[10px] w-full md:max-w-5xl h-[94dvh] md:h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-line">
+        className="bg-surface text-ink rounded-t-[28px] md:rounded-[28px] w-full md:max-w-5xl h-[94dvh] md:h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-5 fade-in">
+        <span aria-hidden="true" className="md:hidden mx-auto mt-2.5 block h-1 w-10 shrink-0 rounded-full bg-sunken-deep" />
+        <div className="flex items-start justify-between gap-3 px-5 sm:px-6 pt-3 md:pt-5 pb-3.5 border-b border-line">
           <div className="min-w-0">
-            <p id="byl-title" className="font-display text-[26px] leading-8 text-ink flex items-center gap-2.5"><Layers className="w-5 h-5 shrink-0 text-brand" strokeWidth={1.5} /> Build your look</p>
-            <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted">Combine in-stock styles and see the real total as you go.</p>
+            <p id="byl-title" className="aura-h2 aura-h-sm">Build your <em>look</em></p>
+            <p className="mt-1.5 text-[13.5px] leading-[19px] text-ink-muted">Combine in-stock styles and see the real total as you go.</p>
           </div>
-          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full text-ink hover:text-brand flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.5} /></button>
+          <button ref={closeRef} type="button" onClick={onClose} aria-label="Close" className="w-[44px] h-[44px] shrink-0 rounded-full bg-sunken text-ink hover:bg-sunken-deep flex items-center justify-center cursor-pointer transition-colors"><X className="w-5 h-5" strokeWidth={1.6} /></button>
         </div>
 
-        <div className="md:hidden grid grid-cols-2 gap-2 px-4 pt-3" role="group" aria-label="Builder view">
+        <div className="md:hidden grid grid-cols-2 gap-2 px-5 pt-3" role="group" aria-label="Builder view">
           <button type="button" onClick={() => setView('browse')} aria-pressed={view === 'browse'} className={chip(view === 'browse')}>Browse styles</button>
           <button type="button" onClick={() => setView('look')} aria-pressed={view === 'look'} className={chip(view === 'look')}>Your look ({lines.length})</button>
         </div>
 
         <div className="flex-1 min-h-0 flex">
           {/* Browse real, in-stock products */}
-          <div className={`${view === 'browse' ? 'block' : 'hidden'} md:block flex-1 min-w-0 overflow-y-auto p-4 sm:p-5`}>
+          <div className={`${view === 'browse' ? 'block' : 'hidden'} md:block flex-1 min-w-0 overflow-y-auto p-5 sm:p-6`}>
             <div className="relative">
-              <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
+              <Search className="w-[18px] h-[18px] text-ink-muted absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={1.6} aria-hidden="true" />
               <label htmlFor="byl-search" className="sr-only">Search styles</label>
               <input id="byl-search" type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, colour, fabric"
-                className="sag-input h-12 pl-10 pr-4" />
+                className="sag-input pl-11 pr-4" />
             </div>
             {categories.length > 2 && (
-              <div className="sag-scroll-x mt-3 -mx-4 sm:-mx-5 px-4 sm:px-5 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Categories">
+              <div className="sag-scroll-x mt-3 -mx-5 sm:-mx-6 px-5 sm:px-6 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Categories">
                 {categories.map((c) => <button key={c} type="button" onClick={() => setCategory(c)} aria-pressed={category === c} className={chip(category === c)}>{c}</button>)}
               </div>
             )}
-            <p className="sag-num mt-3 text-[13px] text-ink-muted" aria-live="polite">
+            <p className="aura-num mt-3 text-[13.5px] text-ink-muted" aria-live="polite">
               {results.length === 0 ? 'No in-stock styles match. Try another word or category.' : `${results.length} ${results.length === 1 ? 'style' : 'styles'} in stock`}
             </p>
-            <ul className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-6">
+            <ul className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-7">
               {results.slice(0, visible).map((p) => {
                 const added = inLook(p);
                 return (
                   <li key={p.id} className="flex flex-col min-w-0">
-                    <img src={getCleanImageUrl(firstImage(p), 360)} alt={p.name} loading="lazy" className="w-full aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
-                    <div className="pt-2.5 flex flex-col flex-1">
-                      <p className="text-[13.5px] text-ink line-clamp-2 leading-snug">{p.name}</p>
-                      <p className="sag-num mt-1 mb-2.5 text-sm">
-                        <span className="font-semibold text-ink">{inr(p.price)}</span>
-                        {mrpOf(p) > p.price && <span className="ml-1.5 text-[12.5px] text-ink-muted line-through">{inr(mrpOf(p))}</span>}
+                    <img src={getCleanImageUrl(firstImage(p), 360)} alt={p.name} loading="lazy" className="w-full aspect-[4/5] rounded-[20px] object-cover object-top bg-sunken" />
+                    <div className="pt-3 flex flex-col flex-1">
+                      <p className="text-[14px] font-medium text-ink line-clamp-2 leading-snug">{p.name}</p>
+                      <p className="aura-num mt-1 mb-3 text-[15px]">
+                        <span className="font-bold text-ink">{inr(p.price)}</span>
+                        {mrpOf(p) > p.price && <span className="ml-1.5 text-[13px] text-ink-muted line-through">{inr(mrpOf(p))}</span>}
                       </p>
                       <button type="button" onClick={() => toggle(p)} aria-pressed={added} aria-label={added ? `Remove ${p.name} from your look` : `Add ${p.name} to your look`}
-                        className={`mt-auto h-11 w-full px-2 gap-1.5 ${added ? 'sag-btn-outline' : 'sag-btn-primary'}`}>
-                        {added ? <><Check className="w-4 h-4" strokeWidth={1.5} /> Added</> : <><Plus className="w-4 h-4" strokeWidth={1.5} /> Add</>}
+                        className={`aura-btn aura-btn-sm mt-auto w-full px-2 gap-1.5 ${added ? 'aura-btn-line' : ''}`}>
+                        {added ? <><Check className="w-4 h-4" strokeWidth={1.8} /> Added</> : <><Plus className="w-4 h-4" strokeWidth={1.8} /> Add</>}
                       </button>
                     </div>
                   </li>
@@ -223,31 +224,31 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
             </ul>
             {results.length > visible && (
               <div className="mt-6 flex justify-center">
-                <button type="button" onClick={() => setVisible((v) => v + PAGE)} className="sag-btn-outline h-11 px-8 cursor-pointer">Show more</button>
+                <button type="button" onClick={() => setVisible((v) => v + PAGE)} className="aura-btn aura-btn-line aura-btn-sm">Show more</button>
               </div>
             )}
           </div>
 
           {/* The look being built */}
-          <div className={`${view === 'look' ? 'block' : 'hidden'} md:block w-full md:w-[380px] shrink-0 overflow-y-auto rounded-none p-4 sm:p-5 bg-sunken md:border-l border-line`}>
-            <p className="font-display text-[24px] leading-7 text-ink">Your look</p>
+          <div className={`${view === 'look' ? 'block' : 'hidden'} md:block w-full md:w-[390px] shrink-0 overflow-y-auto rounded-none p-5 sm:p-6 bg-sunken`}>
+            <p className="aura-h2 aura-h-sm">Your <em>look</em></p>
             {lines.length === 0 ? (
               <div className="mt-6 text-center px-2">
-                <span className="mx-auto w-14 h-14 rounded-full border border-line bg-surface flex items-center justify-center"><Layers className="w-6 h-6 text-brand" strokeWidth={1.25} /></span>
-                <p className="mt-3 text-sm font-medium text-ink">Nothing added yet</p>
+                <span className="mx-auto w-16 h-16 rounded-full bg-surface flex items-center justify-center"><Layers className="w-6 h-6 text-ink" strokeWidth={1.6} /></span>
+                <p className="mt-4 text-[16px] font-bold text-ink">Nothing added yet</p>
                 <p className="mt-1 text-sm text-ink-muted">Add styles from the list to build your outfit. The total updates as you go.</p>
-                <button type="button" onClick={() => setView('browse')} className="md:hidden mt-4 sag-btn-outline h-11 px-6 cursor-pointer">Browse styles</button>
+                <button type="button" onClick={() => setView('browse')} className="md:hidden mt-5 aura-btn aura-btn-line aura-btn-sm">Browse styles</button>
               </div>
             ) : (
               <>
-                <ul className="mt-2 divide-y divide-line">
+                <ul className="mt-4 grid gap-2.5">
                   {rows.map((row) => {
                     const { line, product: p } = row;
                     if (row.gone || !p) {
                       return (
-                        <li key={line.productId} className="flex items-center gap-3 py-3">
+                        <li key={line.productId} className="aura-card flex items-center gap-3 p-3.5">
                           <p className="flex-1 text-sm text-ink-muted">A style in your look is no longer available.</p>
-                          <button type="button" onClick={() => remove(line.productId)} className={`h-11 px-4 rounded-lg border border-control bg-surface text-ink hover:border-brand cursor-pointer ${caps}`}>Remove</button>
+                          <button type="button" onClick={() => remove(line.productId)} className="aura-btn aura-btn-line aura-btn-sm shrink-0 px-5">Remove</button>
                         </li>
                       );
                     }
@@ -257,21 +258,21 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                     const inBag = bagQtyFor(cart, String(p.id));
                     const sizeMissing = showMissing && !row.size;
                     return (
-                      <li key={line.productId} className="flex gap-3 py-3">
-                        <img src={getCleanImageUrl(firstImage(p), 160)} alt="" className="shrink-0 w-16 aspect-[4/5] rounded-lg object-cover object-top bg-surface" />
+                      <li key={line.productId} className="aura-card flex gap-3 p-3.5">
+                        <img src={getCleanImageUrl(firstImage(p), 160)} alt="" className="shrink-0 self-start w-16 aspect-[4/5] rounded-[17px] object-cover object-top bg-sunken" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-1">
-                            <p className="flex-1 min-w-0 text-sm text-ink line-clamp-2 leading-snug">{p.name}</p>
-                            <button type="button" onClick={() => remove(line.productId)} aria-label={`Remove ${p.name}`} className="w-11 h-11 -mt-2.5 -mr-2.5 shrink-0 rounded-full text-ink-muted hover:text-ink flex items-center justify-center cursor-pointer">
-                              <Trash2 className="w-4 h-4" strokeWidth={1.5} />
+                            <p className="flex-1 min-w-0 text-[14px] font-medium text-ink line-clamp-2 leading-snug">{p.name}</p>
+                            <button type="button" onClick={() => remove(line.productId)} aria-label={`Remove ${p.name}`} className="w-[44px] h-[44px] -mt-2.5 -mr-2.5 shrink-0 rounded-full text-ink-muted hover:text-ink flex items-center justify-center cursor-pointer">
+                              <Trash2 className="w-[18px] h-[18px]" strokeWidth={1.6} />
                             </button>
                           </div>
                           {row.cap <= 0 ? (
-                            <p className="text-xs text-ink-muted">Your bag already has the most we can add of this style — not included.</p>
+                            <p className="text-[13px] text-ink-muted">Your bag already has the most we can add of this style — not included.</p>
                           ) : (
-                            <p className="sag-num text-sm text-ink-muted">{inr(p.price)} × {row.qty} = <span className="font-semibold text-ink">{inr(p.price * row.qty)}</span></p>
+                            <p className="aura-num text-sm text-ink-muted">{inr(p.price)} × {row.qty} = <span className="font-bold text-ink">{inr(p.price * row.qty)}</span></p>
                           )}
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-2.5 flex flex-wrap items-center gap-2">
                             {needsSizeChoice(p) ? (
                               <select value={row.size} onChange={(e) => setSize(row, e.target.value)} aria-label={`Size for ${p.name}`} aria-invalid={sizeMissing}
                                 className={`${control} ${sizeMissing ? 'border-danger' : 'border-control'}`}>
@@ -279,7 +280,7 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                                 {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
                               </select>
                             ) : (
-                              <span className="text-xs text-ink-muted">{sizes.length ? `Size ${sizes[0]}` : 'Free size'}</span>
+                              <span className="text-[13px] text-ink-muted">{sizes.length ? `Size ${sizes[0]}` : 'Free size'}</span>
                             )}
                             {colours.length > 1 && (
                               <select value={row.colour?.name || ''} onChange={(e) => update(line.productId, { colour: e.target.value })} aria-label={`Colour for ${p.name}`}
@@ -288,18 +289,18 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                               </select>
                             )}
                             {row.cap > 0 && (
-                              <div className="inline-flex h-11 items-center rounded-lg border border-control bg-surface text-ink">
+                              <div className="inline-flex h-[46px] items-center rounded-full border border-control bg-surface text-ink">
                                 <button type="button" onClick={() => update(line.productId, { qty: Math.max(1, row.qty - 1) })} disabled={row.qty <= 1} aria-label={`Decrease quantity of ${p.name}`}
-                                  className="w-10 h-[42px] flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Minus className="w-4 h-4" /></button>
-                                <span className="sag-num w-7 text-center text-sm font-semibold" aria-live="polite">{row.qty}</span>
+                                  className="w-[44px] h-[44px] rounded-full flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Minus className="w-4 h-4" /></button>
+                                <span className="aura-num w-6 text-center text-[15px] font-bold" aria-live="polite">{row.qty}</span>
                                 <button type="button" onClick={() => update(line.productId, { qty: Math.min(row.cap, row.qty + 1) })} disabled={row.qty >= row.cap} aria-label={`Increase quantity of ${p.name}`}
-                                  className="w-10 h-[42px] flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Plus className="w-4 h-4" /></button>
+                                  className="w-[44px] h-[44px] rounded-full flex items-center justify-center disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"><Plus className="w-4 h-4" /></button>
                               </div>
                             )}
                           </div>
-                          {sizeMissing && <p className="mt-1 text-xs text-danger">Please choose a size.</p>}
+                          {sizeMissing && <p className="mt-1.5 text-[13px] text-danger">Please choose a size.</p>}
                           {row.cap > 0 && (stock <= 5 || inBag > 0) && (
-                            <p className="mt-1 text-xs text-ink-muted">
+                            <p className="mt-1.5 text-[13px] text-ink-muted">
                               {stock <= 5 ? `Only ${stock} left` : ''}{stock <= 5 && inBag > 0 ? ' · ' : ''}{inBag > 0 ? `${inBag} already in your bag` : ''}
                             </p>
                           )}
@@ -309,42 +310,43 @@ export const BuildYourLook: React.FC<{ onClose: () => void }> = ({ onClose }) =>
                   })}
                 </ul>
 
-                <div className="sag-glass sag-num mt-3 p-4 text-sm text-ink" aria-live="polite">
-                  <p className="flex justify-between gap-3"><span>Subtotal ({pieces} {pieces === 1 ? 'piece' : 'pieces'})</span><span className="font-semibold">{inr(subtotal)}</span></p>
+                <div className="aura-card aura-num mt-2.5 p-5 text-sm text-ink" aria-live="polite">
+                  <p className="flex justify-between gap-3"><span>Subtotal ({pieces} {pieces === 1 ? 'piece' : 'pieces'})</span><span className="font-bold">{inr(subtotal)}</span></p>
                   {comboOffer && (
                     <p className="mt-2 text-ink-muted">Combo offer: {comboOffer.percent}% off when you buy {comboOffer.minItems} or more outfits — applied at checkout.</p>
                   )}
                   {saving > 0 && (
                     <>
-                      <p className="mt-1 flex justify-between gap-3 font-medium text-brand"><span>Combo saving (estimate)</span><span className="shrink-0">−{inr(saving)}</span></p>
-                      {viaBag && <p className="text-xs text-ink-muted">Counted with the {comboPieces} {comboPieces === 1 ? 'outfit' : 'outfits'} already in your bag.</p>}
+                      <p className="mt-1.5 flex justify-between gap-3 font-bold text-sale"><span>Combo saving (estimate)</span><span className="shrink-0">−{inr(saving)}</span></p>
+                      {viaBag && <p className="text-[13px] text-ink-muted">Counted with the {comboPieces} {comboPieces === 1 ? 'outfit' : 'outfits'} already in your bag.</p>}
                     </>
                   )}
-                  {shortBy > 0 && <p className="mt-1 text-xs text-ink-muted">Add {shortBy} more {shortBy === 1 ? 'outfit' : 'outfits'} to reach the combo offer.</p>}
-                  <p className="mt-2 pt-2 border-t border-line flex justify-between gap-3 font-semibold"><span>Estimated total</span><span className="text-ink">{inr(subtotal - saving)}</span></p>
-                  <p className="mt-2 text-xs text-ink-muted">Final price is confirmed at checkout.</p>
+                  {shortBy > 0 && <p className="mt-1.5 text-[13px] text-ink-muted">Add {shortBy} more {shortBy === 1 ? 'outfit' : 'outfits'} to reach the combo offer.</p>}
+                  <p className="mt-3 pt-3 border-t border-line flex items-baseline justify-between gap-3 font-bold"><span>Estimated total</span><Odometer value={inr(subtotal - saving)} roll={false} className="text-[22px] font-extrabold tracking-[-0.02em] text-ink" /></p>
+                  <p className="mt-2 text-[13px] text-ink-muted">Final price is confirmed at checkout.</p>
                 </div>
               </>
             )}
           </div>
         </div>
 
-        <div className="border-t border-line bg-surface px-4 sm:px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3">
+        <div className="border-t border-line bg-surface px-5 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-3">
           <div className="min-w-0 flex-1">
-            <p className="sag-num text-sm text-ink truncate">
-              {pieces > 0 ? <>{pieces} {pieces === 1 ? 'piece' : 'pieces'} · <span className="font-semibold text-ink">Est. {inr(subtotal - saving)}</span></> : 'Your look is empty'}
+            <p className="aura-num text-[14.5px] text-ink truncate">
+              {pieces > 0 ? <>{pieces} {pieces === 1 ? 'piece' : 'pieces'} · <span className="font-bold text-ink">Est. {inr(subtotal - saving)}</span></> : 'Your look is empty'}
             </p>
             {missingSizes > 0 ? (
-              <button type="button" onClick={() => { setShowMissing(true); setView('look'); }} className="block py-3 -my-3 text-xs text-danger underline underline-offset-2 cursor-pointer text-left">
+              <button type="button" onClick={() => { setShowMissing(true); setView('look'); }} className="block py-3 -my-3 text-[13px] font-medium text-danger underline underline-offset-2 cursor-pointer text-left">
                 Choose a size for {missingSizes} {missingSizes === 1 ? 'style' : 'styles'}
               </button>
             ) : (
-              <p className="text-xs text-ink-muted">Final price is confirmed at checkout.</p>
+              <p className="text-[13px] text-ink-muted">Final price is confirmed at checkout.</p>
             )}
           </div>
           <button type="button" onClick={addBundle} disabled={!canAdd}
-            className="sag-btn-primary shrink-0 h-12 px-4 sm:px-5 gap-2 cursor-pointer disabled:cursor-not-allowed">
-            <ShoppingBag className="w-4 h-4 hidden sm:block" strokeWidth={1.5} /> Add bundle to bag
+            className="aura-btn shrink-0 px-5 sm:px-7 gap-2">
+            <ShoppingBag className="w-4 h-4 hidden sm:block" strokeWidth={1.6} /> Add bundle to bag
+
           </button>
         </div>
       </div>

@@ -64,7 +64,7 @@ const ORDER_STATUSES: AdminOrderStatus[] = [
 ];
 
 const inr = (value: unknown) => `₹${(Number(value) || 0).toLocaleString('en-IN')}`;
-const eyebrow = 'text-[11px] leading-4 font-medium uppercase tracking-[0.08em] text-ink-muted';
+const eyebrow = 'text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted';
 const small = 'text-[13px] leading-[18px] text-ink-muted';
 
 interface AdminOrderDetailsProps {
@@ -190,7 +190,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
     return d && !Number.isNaN(d.getTime()) ? d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
   };
 
-  /** Saves the whole form with the given status: the "Save order" button and the gold next-step button both end here. */
+  /** Saves the whole form with the given status: the "Save order" button and the ink next-step button both end here. */
   const saveWith = async (nextStatus: AdminOrderStatus) => {
     if (trackingUrl.trim() && !/^https:\/\/[^\s/]+\.[^\s]+$/i.test(trackingUrl.trim())) {
       showToast('The tracking link must be a full https:// web address.', 'error');
@@ -485,11 +485,11 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
         <div className="space-y-2">
           <p className={eyebrow}>Items</p>
           {returnItems.map((item) => (
-            <div key={item.line} className="flex items-center gap-3 p-2 rounded-[10px] border border-line bg-sunken">
+            <div key={item.line} className="flex items-center gap-3 p-2 rounded-[16px] bg-page">
               {item.image ? (
-                <img src={getCleanImageUrl(item.image, 120)} alt="" className="w-10 aspect-[4/5] shrink-0 object-cover object-top rounded-lg bg-sunken" />
+                <img src={getCleanImageUrl(item.image, 120)} alt="" className="w-10 aspect-[4/5] shrink-0 object-cover object-top rounded-[12px] bg-sunken" />
               ) : (
-                <span className="w-10 aspect-[4/5] shrink-0 rounded-lg bg-sunken-deep" />
+                <span className="w-10 aspect-[4/5] shrink-0 rounded-[12px] bg-sunken-deep" />
               )}
               <div className="min-w-0 text-[13px] leading-[18px]">
                 <p className="font-semibold text-ink truncate">{item.name}</p>
@@ -515,7 +515,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               <p className={`${eyebrow} mb-1.5`}>Customer photos (tap to enlarge)</p>
               <div className="flex flex-wrap gap-2">
                 {(returnRequest.photos || []).map((url, index) => (
-                  <button key={url} type="button" onClick={() => setPhotoOpen(url)} className="w-16 aspect-[4/5] rounded-lg overflow-hidden bg-sunken cursor-pointer" aria-label={`Open photo ${index + 1}`}>
+                  <button key={url} type="button" onClick={() => setPhotoOpen(url)} className="w-16 aspect-[4/5] rounded-[12px] overflow-hidden bg-sunken cursor-pointer" aria-label={`Open photo ${index + 1}`}>
                     <img src={getCleanImageUrl(url, 200)} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -688,7 +688,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
       {photoOpen && (
         <div className="fixed inset-0 z-[90] bg-dark/95 flex items-center justify-center p-4" onClick={() => setPhotoOpen('')} role="dialog" aria-modal="true" aria-label="Customer photo">
           <div className="relative max-w-3xl w-full" onClick={(e) => e.stopPropagation()}>
-            <img src={getCleanImageUrl(photoOpen, 1600)} alt="Customer photo" className="max-h-[78dvh] w-auto mx-auto rounded-lg" />
+            <img src={getCleanImageUrl(photoOpen, 1600)} alt="Customer photo" className="max-h-[78dvh] w-auto mx-auto rounded-[16px]" />
             <div className="mt-3 flex justify-center gap-2">
               <a href={photoOpen} target="_blank" rel="noopener noreferrer" className={adminUi.outline}>
                 <ExternalLink className="w-3.5 h-3.5" /> Open original
@@ -772,7 +772,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                       src={itemImg}
                       alt={item.product?.name || 'Item'}
                       loading="lazy"
-                      className="w-14 sm:w-16 aspect-[4/5] shrink-0 object-cover object-top rounded-lg bg-sunken"
+                      className="w-14 sm:w-16 aspect-[4/5] shrink-0 object-cover object-top rounded-[12px] bg-sunken"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm leading-5 font-semibold text-ink line-clamp-2">
@@ -851,7 +851,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
                     <p className="mt-0.5 text-xl leading-7 font-semibold text-ink sag-num">₹{(order.codAdvance || 0).toLocaleString('en-IN')}</p>
                     <p className="text-xs leading-4 text-ink-muted">Cash on delivery advance</p>
                   </div>
-                  <div className="rounded-[10px] border border-brand-line bg-brand-wash p-3.5">
+                  <div className="rounded-[16px] border border-brand-line bg-brand-wash p-3.5">
                     <p className={eyebrow}>Collect in cash at delivery</p>
                     <p className="mt-0.5 text-xl leading-7 font-semibold text-sale sag-num">₹{(order.codDue || 0).toLocaleString('en-IN')}</p>
                     <p className="text-xs leading-4 text-ink-muted">Cash on delivery</p>

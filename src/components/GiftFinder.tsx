@@ -29,26 +29,26 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     return smartSearch(products, q, 12);
   }, [products, occasion, budget, colour, size]);
 
-  const select = 'sag-input h-12 pr-9 appearance-none truncate cursor-pointer';
+  const select = 'sag-input h-[52px] pr-9 appearance-none truncate cursor-pointer';
   const field = (id: string, label: string, control: React.ReactNode, wide = false) => (
     <div className={wide ? 'col-span-2 md:col-span-1' : ''}>
-      <label htmlFor={id} className="block mb-1.5 text-[10.5px] leading-[14px] font-semibold uppercase tracking-[0.2em] text-ink-muted">{label}</label>
+      <label htmlFor={id} className="aura-lbl mb-2 block">{label}</label>
       <div className="relative">
         {control}
-        <ChevronDown strokeWidth={1.5} className="w-4 h-4 text-ink-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+        <ChevronDown strokeWidth={1.5} className="w-4 h-4 text-ink-muted absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
       </div>
     </div>
   );
   return (
     <div className="fixed inset-0 z-[70] bg-[color:var(--sag-scrim)] flex items-end md:items-center justify-center sag-fade" onClick={onClose}>
       <div role="dialog" aria-modal="true" aria-label="Shop as a gift" onClick={(e) => e.stopPropagation()}
-        className="bg-surface text-ink border-t border-x md:border-b border-line rounded-t-[10px] rounded-b-none md:rounded-[10px] w-full md:max-w-4xl max-h-[85dvh] flex flex-col animate-in slide-in-from-bottom-5 fade-in">
-        <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-control" /></div>
-        <div className="flex items-center justify-between pl-4 pr-2 min-h-[60px] border-b border-line shrink-0">
-          <p className="font-display text-[24px] leading-7 text-ink flex items-center gap-2.5"><Gift className="w-[19px] h-[19px] text-brand" strokeWidth={1.25} /> Shop as a gift</p>
-          <button onClick={onClose} aria-label="Close" className="w-11 h-11 rounded-full text-ink hover:text-ink-muted flex items-center justify-center cursor-pointer"><X className="w-[22px] h-[22px]" strokeWidth={1.5} /></button>
+        className="bg-page text-ink rounded-t-[28px] rounded-b-none md:rounded-[28px] w-full md:max-w-4xl max-h-[88dvh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-5 fade-in">
+        <div className="md:hidden shrink-0 pt-2 flex justify-center" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-sunken-deep" /></div>
+        <div className="flex items-center justify-between gap-3 pl-5 pr-3 pt-4 pb-3 shrink-0">
+          <p className="aura-h2 aura-h-sm text-ink flex min-w-0 items-center gap-2.5"><Gift className="w-[22px] h-[22px] shrink-0 text-accent" strokeWidth={1.6} /> <span>Shop as a <em>gift</em></span></p>
+          <button onClick={onClose} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full bg-surface text-ink flex items-center justify-center cursor-pointer"><X className="w-5 h-5" strokeWidth={1.6} /></button>
         </div>
-        <div className="overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
+        <div className="overflow-y-auto overscroll-contain px-4 pt-2 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             {field('gift-for', 'For', <select id="gift-for" value={relation} onChange={(e) => setRelation(e.target.value)} className={select}>{RELATIONS.map((r) => <option key={r}>{r}</option>)}</select>)}
             {field('gift-occasion', 'Occasion', <select id="gift-occasion" value={occasion} onChange={(e) => setOccasion(e.target.value)} className={select}><option value="">Any</option>{Object.keys(OCCASIONS).map((o) => <option key={o}>{o}</option>)}</select>)}
@@ -56,15 +56,15 @@ export const GiftFinder: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             {field('gift-colour', 'Colour', <select id="gift-colour" value={colour} onChange={(e) => setColour(e.target.value)} className={select}><option value="">Any</option>{Object.keys(COLOUR_FAMILIES).map((c) => <option key={c}>{c}</option>)}</select>)}
             {field('gift-size', 'Size (if known)', <select id="gift-size" value={size} onChange={(e) => setSize(e.target.value)} className={select}><option value="">Not sure</option>{SIZES.map((s) => <option key={s}>{s}</option>)}</select>, true)}
           </div>
-          <p className="mt-5 border-t border-line pt-4 text-[14px] leading-[21px] text-ink" aria-live="polite">
+          <p className="mt-6 text-[16px] font-bold leading-[1.4] text-ink" aria-live="polite">
             {result.products.length === 0
               ? 'No styles in stock match all of these. Try a higher budget or “Any” colour.'
               : result.exact
                 ? `${result.products.length} ${result.products.length === 1 ? 'gift idea' : 'gift ideas'} for your ${relation.toLowerCase()} — all in stock.`
                 : `No exact match — closest in-stock styles within your budget and size:`}
           </p>
-          {size === '' && result.products.length > 0 && <p className="text-[13px] leading-[18px] text-ink-muted mt-1">Not sure of the size? Every product page has a size chart and “Find my size”.</p>}
-          <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-6 sm:gap-x-5 sm:gap-y-8">
+          {size === '' && result.products.length > 0 && <p className="text-[14px] leading-[1.45] text-ink-muted mt-1">Not sure of the size? Every product page has a size chart and “Find my size”.</p>}
+          <div className="mt-5 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
             {result.products.map((p) => <div key={p.id} className="min-w-0" onClickCapture={onClose}><ProductCard product={p} compact /></div>)}
           </div>
         </div>

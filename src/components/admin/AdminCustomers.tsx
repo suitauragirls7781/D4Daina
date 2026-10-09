@@ -151,7 +151,7 @@ export const AdminCustomers: React.FC = () => {
           <button
             type="button"
             onClick={() => openAdminOrderDetails(o.orderNumber)}
-            className="w-full min-h-12 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-left text-[13px] leading-[18px] cursor-pointer transition-colors hover:bg-sunken rounded-lg px-2 -mx-2"
+            className="w-full min-h-12 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-left text-[13px] leading-[18px] cursor-pointer transition-colors hover:bg-sunken rounded-[16px] px-2 -mx-2"
           >
             <span className={`${adminUi.link} text-sm font-semibold sag-num`}>{o.orderNumber}</span>
             <span className="text-ink-muted">{formatOrderDate(o.date)}</span>
@@ -241,7 +241,7 @@ export const AdminCustomers: React.FC = () => {
                     <p className="text-xs leading-4 text-ink-muted">Joined {formatDate(row.createdAt)}</p>
                   </div>
                 </div>
-                <dl className="mt-3 grid grid-cols-3 gap-2 rounded-[10px] border border-line bg-sunken p-3">
+                <dl className="mt-3 grid grid-cols-3 gap-2 rounded-[16px] bg-page p-3">
                   <div><dt className="text-xs leading-4 text-ink-muted">Paid orders</dt><dd className="mt-0.5 text-lg leading-6 font-semibold text-ink sag-num">{row.orders}</dd></div>
                   <div><dt className="text-xs leading-4 text-ink-muted">Spent</dt><dd className="mt-0.5 text-lg leading-6 font-semibold text-ink sag-num">{inr(row.spent)}</dd></div>
                   <div className="min-w-0">

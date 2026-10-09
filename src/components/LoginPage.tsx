@@ -3,8 +3,8 @@ import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { apiPost } from '../lib/api';
 import { GOOGLE_LOGIN_ENABLED, exchangeGoogleCredential, getGoogleId } from '../utils/googleSignIn';
-import { AlertCircle, ArrowLeft, Check, Loader2, Lock, RefreshCw } from 'lucide-react';
-import { Ornament } from './SectionTitle';
+import { AlertCircle, ArrowLeft, ArrowRight, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { AuraTitle, Icon } from '../aura';
 
 type AuthMode = 'login' | 'signup';
 
@@ -155,7 +155,7 @@ export const LoginPage: React.FC = () => {
         if (cancelled || !el) return;
         el.innerHTML = '';
         g.renderButton(el, {
-          type: 'standard', theme: 'outline', size: 'large', shape: 'rectangular', text: 'continue_with', logo_alignment: 'center',
+          type: 'standard', theme: 'outline', size: 'large', shape: 'pill', text: 'continue_with', logo_alignment: 'center',
           width: Math.min(400, Math.max(220, el.clientWidth || 320)),
         });
       })
@@ -186,125 +186,118 @@ export const LoginPage: React.FC = () => {
     setOtpCode(['', '', '', '', '', '']);
   };
 
+  const card = 'aura-card aura-blk mt-6 px-4 pt-5 pb-[22px] sm:px-7 sm:pt-7 sm:pb-8 min-[900px]:mt-0';
+
   if (user) {
     return (
-      <div className="min-h-[70vh] px-4 py-10 flex items-start sm:items-center justify-center">
-        <div className="w-full max-w-[440px] text-center sag-glass rounded-xl! px-5 pt-8 pb-6">
-          <span className="mx-auto flex h-[54px] w-[54px] items-center justify-center rounded-full border border-brand text-sale">
-            <Check className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
-          </span>
-          <h1 className="mt-4 font-display text-[32px] leading-[1.05] text-ink">You are signed in</h1>
-          <Ornament className="mt-3.5" />
-          <p className="mt-3.5 text-[13px] leading-[18px] text-ink-muted break-all">{user.email}</p>
-          <button type="button" onClick={() => setActivePage('account')} className="sag-btn-primary w-full mt-6">Go to my account</button>
+      <section data-th="blush" className="aa-cen">
+        <div className="aa-cen-in">
+          <AuraTitle as="h1" label="My account" title="You are signed" accent="in" sub={<span className="break-all">{user.email}</span>} />
+          <div className={card}>
+            <span className="aa-ic aa-ic-ink"><Icon name="check" draw className="in" /></span>
+            <p className="mt-4 text-[15px] leading-[22px] text-ink-muted">Your orders, returns and saved addresses are in My account.</p>
+            <button type="button" onClick={() => setActivePage('account')} className="aura-btn aura-btn-w mt-5">Go to my account <ArrowRight aria-hidden="true" /></button>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 
-  const title = otpStep ? 'Check your email' : mode === 'login' ? 'Welcome' : 'Create your account';
+  const title: [string, string] = otpStep ? ['Check your', 'email'] : mode === 'login' ? ['Sign', 'in'] : ['Create your', 'account'];
   const changeEmail = () => { setOtpStep(false); setError(null); };
-  const label = 'sag-label mb-1.5 block text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted';
-  const note = 'text-[12.5px] leading-[18px] text-ink-muted';
-  const smallLink = 'inline-flex min-h-11 items-center gap-1.5 text-[10.5px] leading-none font-semibold uppercase tracking-[0.16em] text-brand underline underline-offset-4 cursor-pointer disabled:opacity-60';
+  const note = 'text-[13.5px] leading-5 text-ink-muted';
 
   return (
-    <div className="min-h-[80vh] px-4 pt-2 pb-16 sm:py-12 flex items-start justify-center">
-      <div className="w-full max-w-[440px]">
-        <button type="button" onClick={() => setActivePage('home')} className={smallLink}>
-          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
-          <span>Back to shop</span>
-        </button>
+    <section data-th="blush" className="aa-cen">
+      <div className="aa-cen-in">
+        <div className="min-w-0">
+          <button type="button" onClick={() => setActivePage('home')} className="aura-lk -mt-2 mb-3 text-[14px]">
+            <ArrowLeft strokeWidth={1.6} aria-hidden="true" />
+            <span>Back to shop</span>
+          </button>
+          <AuraTitle
+            as="h1"
+            label="My account"
+            title={title[0]}
+            accent={title[1]}
+            sub={otpStep ? 'Enter the 6-digit code we emailed you.' : mode === 'login' ? 'Sign in to track orders and keep your wishlist.' : 'Track orders, request returns and save addresses.'}
+          />
+        </div>
 
-        <div className="mt-3 sag-glass rounded-xl! px-5 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8">
-          <div className="text-center">
-            <Ornament />
-            <h1 className="mt-3.5 font-display text-[36px] leading-[1.05] text-ink lg:text-[40px]">{title}</h1>
-            <p className="mx-auto mt-2.5 max-w-[30ch] text-[13.5px] leading-5 text-ink-muted">
-              {otpStep ? 'Enter the 6-digit code we emailed you.' : mode === 'login' ? 'Sign in to track orders and keep your wishlist.' : 'Track orders, request returns and save addresses.'}
-            </p>
-          </div>
+        <div className={card}>
+          {!otpStep && (
+            <div className="aa-tabs mb-4" data-on={mode === 'login' ? '0' : '1'} role="tablist" aria-label="Sign in or create an account">
+              {(['login', 'signup'] as AuthMode[]).map((tab) => (
+                <button key={tab} type="button" role="tab" aria-selected={mode === tab} onClick={() => switchMode(tab)}>
+                  {tab === 'login' ? 'Sign in' : 'New account'}
+                </button>
+              ))}
+            </div>
+          )}
 
-          <div key={otpStep ? 'code' : mode} className="sag-step-in mt-6 space-y-3.5">
-            {!otpStep && (
-              <div className="grid grid-cols-2 border-b border-line" role="tablist" aria-label="Sign in or create an account">
-                {(['login', 'signup'] as AuthMode[]).map((tab) => (
-                  <button
-                    key={tab}
-                    type="button"
-                    role="tab"
-                    aria-selected={mode === tab}
-                    onClick={() => switchMode(tab)}
-                    className={`-mb-px h-11 rounded-none border-b-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-colors cursor-pointer ${
-                      mode === tab ? 'border-brand text-brand' : 'border-transparent text-ink-muted hover:text-ink'
-                    }`}
-                  >
-                    {tab === 'login' ? 'Sign in' : 'New account'}
-                  </button>
-                ))}
-              </div>
-            )}
-
+          <div key={otpStep ? 'code' : mode} className="sag-step-in space-y-3.5">
             {error && (
-              <div role="alert" className="flex items-start gap-2 rounded-lg border border-danger-line bg-surface px-3.5 py-3 text-left text-sm leading-5 text-danger">
-                <AlertCircle className="w-[18px] h-[18px] mt-px shrink-0" strokeWidth={1.5} aria-hidden="true" />
+              <div role="alert" className="aa-alert">
+                <AlertCircle strokeWidth={1.6} aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
 
             {!otpStep && GOOGLE_LOGIN_ENABLED && !googleUnavailable && (
               <>
-                <div className="relative flex justify-center min-h-[44px] pt-1">
-                  <div id="auth-google" ref={googleButtonRef} className={`w-full flex justify-center ${googleLoading ? 'opacity-40 pointer-events-none' : ''}`} />
-                  {googleLoading && <Loader2 className="absolute top-3 w-5 h-5 animate-spin text-ink" aria-label="Signing in with Google" />}
+                <div className="relative flex min-h-[44px] justify-center">
+                  <div id="auth-google" ref={googleButtonRef} className={`flex w-full justify-center ${googleLoading ? 'pointer-events-none opacity-40' : ''}`} />
+                  {googleLoading && <Loader2 className="absolute top-3 h-5 w-5 animate-spin text-ink" aria-label="Signing in with Google" />}
                 </div>
-                <div className="flex items-center gap-3 text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-ink-muted">
+                <div className="aura-lbl flex items-center gap-3 text-[12px]">
                   <span className="h-px flex-1 bg-line" />or<span className="h-px flex-1 bg-line" />
                 </div>
               </>
             )}
 
             {!otpStep ? (
-              <form onSubmit={handleRequestCode} className="space-y-3.5" noValidate>
+              <form onSubmit={handleRequestCode} className="space-y-3" noValidate>
                 {mode === 'signup' && (
                   <>
-                    <div>
-                      <label htmlFor="signup-name" className={label}>Full name</label>
-                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" className="sag-input" />
-                    </div>
-                    <div>
-                      <label htmlFor="signup-phone" className={label}>Mobile number</label>
-                      <div className="flex h-[52px] max-sm:h-[46px] rounded-lg! border border-control bg-surface overflow-hidden has-[:focus]:border-brand has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
-                        <span className="flex items-center px-3.5 border-r border-line text-base text-ink-muted" aria-hidden="true">+91</span>
-                        <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" className="flex-1 min-w-0 h-full px-3.5 bg-transparent text-base text-ink placeholder:text-ink-faint focus:outline-none" />
-                      </div>
-                    </div>
+                    <label className="aura-field" htmlFor="signup-name">
+                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" />
+                      <span>Full name</span>
+                      <i />
+                    </label>
+                    <label className="aura-field aa-tel" htmlFor="signup-phone">
+                      <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" />
+                      <span>Mobile number</span>
+                      <b aria-hidden="true">+91</b>
+                      <i />
+                    </label>
                   </>
                 )}
-                <div>
-                  <label htmlFor="auth-email" className={label}>Email</label>
-                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" className="sag-input" />
-                </div>
-                <button id="auth-send-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
-                  {loading && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
+                <label className="aura-field" htmlFor="auth-email">
+                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" />
+                  <span>Email</span>
+                  <i />
+                </label>
+                <button id="auth-send-code" type="submit" disabled={loading} className="aura-btn aura-btn-w">
+                  {loading && <Loader2 className="animate-spin" aria-hidden="true" />}
                   <span>{loading ? 'Sending code…' : 'Send code'}</span>
+                  {!loading && <ArrowRight aria-hidden="true" />}
                 </button>
-                <p className={`${note} pt-0.5 text-center`}>
+                <p className={`${note} pt-1 text-center`}>
                   {mode === 'login' ? 'No password needed. New here? The code also creates your account.' : 'Already have an account? Use the Sign in tab.'}
                 </p>
               </form>
             ) : (
-              <form onSubmit={handleVerify} className="space-y-5">
-                <div className="flex items-center justify-between gap-3 border-b border-line pb-2 rounded-none!">
+              <form onSubmit={handleVerify} className="space-y-4">
+                <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <p className={note}>Code sent to</p>
-                    <p className="text-sm leading-5 font-semibold text-ink break-all">{email}</p>
+                    <p className="text-[15px] leading-5 font-bold text-ink break-all">{email}</p>
                   </div>
-                  <button type="button" onClick={changeEmail} aria-label="Change email" className={`${smallLink} shrink-0`}>Change</button>
+                  <button type="button" onClick={changeEmail} aria-label="Change email" className="aura-btn aura-btn-line aura-btn-sm shrink-0">Change</button>
                 </div>
                 <fieldset>
-                  <legend className={label}>6-digit code</legend>
-                  <div className="grid grid-cols-6 gap-2">
+                  <legend className="aa-flbl">6-digit code</legend>
+                  <div className="aa-otp pt-1">
                     {otpCode.map((digit, idx) => (
                       <input
                         key={idx}
@@ -320,24 +313,22 @@ export const LoginPage: React.FC = () => {
                         onKeyDown={(e) => {
                           if (e.key === 'Backspace' && !digit && idx > 0) document.getElementById(`otp-input-${idx - 1}`)?.focus();
                         }}
-                        className={`w-full min-w-0 h-[58px] px-0 text-center font-display text-[26px] leading-none font-semibold text-ink bg-surface border rounded-lg transition-[border-color,box-shadow,transform] duration-300 focus:border-brand focus:-translate-y-0.5 focus:shadow-[inset_0_-2px_0_var(--sag-brand)] motion-reduce:transition-none motion-reduce:focus:translate-y-0 ${
-                          digit ? 'border-brand' : 'border-control'
-                        }`}
+                        className={digit ? 'f' : undefined}
                       />
                     ))}
                   </div>
                 </fieldset>
                 <p className={note}>The code expires in 10 minutes. Check spam if it has not arrived.</p>
-                <button id="auth-verify-code" type="submit" disabled={loading} className="sag-btn-primary w-full gap-2">
-                  {loading ? <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" /> : <Lock className="w-[18px] h-[18px]" strokeWidth={1.5} aria-hidden="true" />}
+                <button id="auth-verify-code" type="submit" disabled={loading} className="aura-btn aura-btn-w">
+                  {loading ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Lock strokeWidth={1.6} aria-hidden="true" />}
                   <span>{loading ? 'Verifying…' : mode === 'signup' ? 'Verify & create account' : 'Verify & sign in'}</span>
                 </button>
                 <div className="flex justify-center">
                   {resendCooldown > 0 ? (
-                    <span className="sag-num inline-flex items-center min-h-11 text-[12.5px] text-ink-muted">Resend in {resendCooldown}s</span>
+                    <span className="aura-num inline-flex min-h-11 items-center text-[13.5px] text-ink-muted">Resend in {resendCooldown}s</span>
                   ) : (
-                    <button type="button" disabled={loading} onClick={handleResend} className={smallLink}>
-                      <RefreshCw className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+                    <button type="button" disabled={loading} onClick={handleResend} className="aura-lk text-[14px] disabled:opacity-60">
+                      <RefreshCw strokeWidth={1.6} aria-hidden="true" />
                       Resend code
                     </button>
                   )}
@@ -345,9 +336,8 @@ export const LoginPage: React.FC = () => {
               </form>
             )}
           </div>
-
         </div>
       </div>
-    </div>
+    </section>
   );
 };

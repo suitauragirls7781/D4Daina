@@ -224,7 +224,7 @@ export const AdminToys: React.FC = () => {
         {countsLoading ? (
           <p className="mt-4 text-sm text-ink-muted flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin text-current" /> Loading products…</p>
         ) : toys.length === 0 ? (
-          <div className="mt-4 rounded-[10px] bg-sunken border border-line p-5 text-sm text-ink-muted text-center">
+          <div className="mt-4 rounded-[16px] bg-page p-5 text-sm text-ink-muted text-center">
             No toys yet. Use the buttons above to add a car, bike, doll, soft toy, puzzle or any other toy.
           </div>
         ) : results.length === 0 ? (

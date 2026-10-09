@@ -12,7 +12,7 @@ import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
 import { OrderInvoice, useDialogA11y } from './OrderInvoice';
 import { StyleProfile, primeStylePrefs } from './StyleProfile';
 import { LoginPage } from './LoginPage';
-import { ArrowLeft, CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, X } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { useAdmin } from '../context/AdminContext';
@@ -25,7 +25,7 @@ import { ProductCard } from './ProductCard';
 import { BagIcon } from './BrandIcons';
 import { HeartIcon, HelpIcon, OrdersIcon, PinIcon, ReturnIcon, SupportIcon, TagIcon, UserIcon } from './StoreIcons';
 import { ReceiptIcon, StyleIcon } from './AccountIcons';
-import { SectionTitle } from './SectionTitle';
+import { AuraTitle } from '../aura';
 
 type Tab = 'orders' | 'wishlist' | 'addresses' | 'coupons' | 'profile' | 'style' | 'returns' | 'help';
 
@@ -49,14 +49,20 @@ const CANCEL_REASONS = [
   'Other reason',
 ];
 
-/** Small buttons inside cards (the 52px height is for the one main action on a screen). */
-const smallBtn = 'h-11 px-4 gap-2 whitespace-nowrap';
-const sectionTitle = 'font-display text-[28px] leading-[1.1] text-ink lg:text-[34px]';
-const noteClass = 'text-[12px] leading-[17px] text-ink-muted';
-/** A small-capitals underlined link ("Sign out", "My account"). */
-const capsLink = 'inline-flex min-h-11 items-center gap-1.5 text-[10.5px] leading-none font-semibold uppercase tracking-[0.16em] text-brand underline underline-offset-4 cursor-pointer';
-/** A serif heading inside a white panel. */
-const panelTitle = 'font-display text-[22px] leading-7 font-semibold text-ink';
+/** Small pill buttons inside cards (the 54px pill is for the one main action on a screen). */
+const smallBtn = 'aura-btn-sm';
+const sectionTitle = 'aura-h2 aura-h-md';
+const noteClass = 'text-[13px] leading-[18px] text-ink-muted';
+/** A bold link whose underline draws in ("My account" on a phone). */
+const capsLink = 'aura-lk text-[14px]';
+/** A heading inside a white card. */
+const panelTitle = 'text-[22px] leading-7 font-extrabold tracking-[-0.025em] text-ink';
+/** A plain label over a white field. */
+const fieldLbl = 'aa-flbl';
+/** A link inside running text. */
+const textLink = 'font-bold text-ink underline decoration-[1.5px] underline-offset-4 cursor-pointer';
+/** A white sheet over the page: from the bottom on a phone, centred from tablet width up. */
+const sheet = 'bg-surface text-ink w-full max-h-[85dvh] flex flex-col rounded-t-[28px] sm:rounded-[28px] animate-in fade-in slide-in-from-bottom-5';
 
 /** Phones open on the account menu; a link that names a tab (or /my-profile) opens that tab straight away. */
 const initialMobileView = (): 'menu' | 'panel' => {
@@ -67,20 +73,20 @@ const initialMobileView = (): 'menu' | 'panel' => {
 
 /** Empty / "nothing here" card used across the tabs, so every one looks the same. */
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, text, children }) => (
-  <div className="sag-glass px-4 py-11 text-center">
-    <span className="mx-auto flex justify-center text-sale">{icon}</span>
-    <p className="mt-4 font-display text-[26px] leading-8 text-ink">{title}</p>
-    <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted max-w-sm mx-auto">{text}</p>
+  <div className="aura-card aura-blk px-5 py-10 text-center">
+    <span className="aa-ic aa-ic-blush mx-auto h-14 w-14">{icon}</span>
+    <p className="mt-4 text-[26px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">{title}</p>
+    <p className="mt-2 text-[14.5px] leading-[21px] text-ink-muted max-w-sm mx-auto">{text}</p>
     {children && <div className="mt-5 flex flex-col sm:flex-row sm:justify-center gap-2">{children}</div>}
   </div>
 );
 
 /** Heading + one-line explanation at the top of a tab. */
 const SectionIntro: React.FC<{ title: string; text?: React.ReactNode; action?: React.ReactNode }> = ({ title, text, action }) => (
-  <div className="flex flex-wrap items-end justify-between gap-3">
+  <div className="flex flex-wrap items-end justify-between gap-3 px-1">
     <div className="min-w-0">
       <h2 className={sectionTitle}>{title}</h2>
-      {text && <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">{text}</p>}
+      {text && <p className="aura-sub mt-2">{text}</p>}
     </div>
     {action}
   </div>
@@ -153,27 +159,27 @@ const CancelOrderDialog: React.FC<{
         aria-describedby="cancel-order-desc"
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="bg-surface text-ink w-full sm:max-w-lg max-h-[85dvh] flex flex-col border border-line rounded-t-xl! rounded-b-none! sm:rounded-xl! animate-in fade-in slide-in-from-bottom-5"
+        className={`${sheet} sm:max-w-lg`}
       >
-        <span className="sm:hidden mx-auto mt-2 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-3 pl-4 pr-2 sm:pl-6 sm:pr-4 pt-2 sm:pt-4 pb-3 border-b border-line rounded-none!">
-          <div className="min-w-0 pt-2">
-            <h2 id="cancel-order-title" className="font-display text-[26px] leading-8 text-ink">Cancel this order?</h2>
-            <p className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted break-words">#{order.orderNumber} · {order.payMode === 'cod' ? `${inr(order.codAdvance || 0)} paid, ${inr(order.codDue || 0)} cash on delivery` : `${inr(order.finalTotal)} paid`}</p>
+        <span className="sm:hidden mx-auto mt-2.5 h-1 w-9 rounded-full bg-control" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-3 pl-5 pr-3 sm:pl-7 sm:pr-5 pt-3 sm:pt-5 pb-3">
+          <div className="min-w-0 pt-1">
+            <h2 id="cancel-order-title" className="aura-h2 aura-h-sm">Cancel this order?</h2>
+            <p className="aura-num mt-1.5 text-[13.5px] leading-[18px] text-ink-muted break-words">#{order.orderNumber} · {order.payMode === 'cod' ? `${inr(order.codAdvance || 0)} paid, ${inr(order.codDue || 0)} cash on delivery` : `${inr(order.finalTotal)} paid`}</p>
           </div>
-          <button type="button" onClick={close} aria-label="Close" className="w-11 h-11 shrink-0 rounded-full hover:bg-sunken flex items-center justify-center text-ink cursor-pointer">
-            <X className="w-5 h-5" strokeWidth={1.5} />
+          <button type="button" onClick={close} aria-label="Close" className="aa-ic">
+            <X className="w-5 h-5" strokeWidth={1.6} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4 space-y-5">
-          <p id="cancel-order-desc" className="text-[13px] leading-[18px] text-ink-muted">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 sm:px-7 pt-1 pb-4 space-y-5">
+          <p id="cancel-order-desc" className="text-[14px] leading-[21px] text-ink-muted">
             You can ask to cancel until your order is handed to the courier. Our team reviews every request and emails you. Orders cancelled before dispatch are refunded in full to your original payment method.{' '}
-            <button type="button" onClick={onPolicy} className="text-brand underline decoration-1 underline-offset-4 cursor-pointer">Cancellation policy</button>
+            <button type="button" onClick={onPolicy} className={textLink}>Cancellation policy</button>
           </p>
           <fieldset className="space-y-2">
-            <legend className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted mb-2">Why do you want to cancel?</legend>
+            <legend className={`${fieldLbl} mb-2`}>Why do you want to cancel?</legend>
             {CANCEL_REASONS.map((reason, index) => (
-              <label key={reason} data-selected={choice === reason} className="sag-card flex items-center gap-3 min-h-12 px-3.5 py-2.5 text-sm leading-5 text-ink cursor-pointer has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-brand">
+              <label key={reason} data-selected={choice === reason} className="flex items-center gap-3 min-h-[52px] rounded-[16px] bg-page px-4 py-2.5 text-[15px] leading-5 text-ink cursor-pointer transition-shadow data-[selected=true]:shadow-[inset_0_0_0_2px_var(--aura-ink)] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent">
                 <input
                   type="radio"
                   name="cancel-reason"
@@ -183,12 +189,12 @@ const CancelOrderDialog: React.FC<{
                   data-autofocus={index === 0 || undefined}
                   className="w-5 h-5 shrink-0 accent-brand focus:outline-none"
                 />
-                <span className={choice === reason ? 'font-medium' : ''}>{reason}</span>
+                <span className={choice === reason ? 'font-bold' : ''}>{reason}</span>
               </label>
             ))}
           </fieldset>
           <div>
-            <label htmlFor="cancel-details" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">{choice === 'Other reason' ? 'Tell us why' : 'More details (optional)'}</label>
+            <label htmlFor="cancel-details" className={fieldLbl}>{choice === 'Other reason' ? 'Tell us why' : 'More details (optional)'}</label>
             <textarea
               id="cancel-details"
               rows={3}
@@ -198,18 +204,18 @@ const CancelOrderDialog: React.FC<{
               placeholder={choice === 'Other reason' ? 'A line or two is enough' : 'Anything our team should know'}
               className="sag-input resize-none"
             />
-            <span className={`sag-num block mt-1 text-right ${noteClass}`}>{details.length}/250</span>
+            <span className={`aura-num block mt-1 text-right ${noteClass}`}>{details.length}/250</span>
           </div>
           {error && (
-            <p role="alert" className="rounded-lg border border-danger-line bg-surface px-3.5 py-3 text-sm leading-5 text-danger">{error}</p>
+            <p role="alert" className="aa-alert"><AlertCircle strokeWidth={1.6} aria-hidden="true" /><span>{error}</span></p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-2 px-4 sm:px-6 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-line rounded-none!">
-          <button type="button" onClick={close} disabled={sending} className="sag-btn-outline h-12 px-3">
+        <div className="grid grid-cols-2 gap-2 px-5 sm:px-7 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-line">
+          <button type="button" onClick={close} disabled={sending} className="aura-btn aura-btn-line px-3">
             Keep order
           </button>
-          <button type="submit" disabled={sending} className="sag-btn-primary h-12 px-3 gap-2">
-            {sending && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
+          <button type="submit" disabled={sending} className="aura-btn px-3">
+            {sending && <Loader2 className="animate-spin" aria-hidden="true" />}
             {sending ? 'Sending…' : 'Send request'}
           </button>
         </div>
@@ -240,7 +246,7 @@ const CouponsPanel: React.FC<{ coupons: Coupon[]; onShop: () => void }> = ({ cou
   if (coupons.length === 0) {
     return (
       <EmptyState icon={<TagIcon className="w-7 h-7" mono />} title="No coupons running right now" text="When the store runs an offer, its code appears here.">
-        <button type="button" onClick={onShop} className={`sag-btn-outline ${smallBtn}`}>Continue shopping</button>
+        <button type="button" onClick={onShop} className={`aura-btn aura-btn-line ${smallBtn}`}>Continue shopping</button>
       </EmptyState>
     );
   }
@@ -249,26 +255,26 @@ const CouponsPanel: React.FC<{ coupons: Coupon[]; onShop: () => void }> = ({ cou
       <SectionIntro title="Your coupons" text="Copy a code and apply it in your bag. The final discount is confirmed at checkout." />
       <ul className="grid gap-3 sm:grid-cols-2">
         {coupons.map((c) => (
-          <li key={c.id} className="rounded-[10px] border border-dashed border-brand-line bg-surface p-4 flex flex-col gap-3">
+          <li key={c.id} className="aura-card p-4 sm:p-5 flex flex-col gap-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="sag-caps text-[15px] leading-5 font-semibold tracking-[0.16em] text-ink break-all">{c.code}</p>
-                <p className="sag-num mt-1 font-display text-[20px] leading-6 font-semibold text-sale">{couponDiscountLabel(c)}</p>
+                <p className="sag-caps text-[13px] leading-5 font-bold uppercase tracking-[0.16em] text-ink-muted break-all">{c.code}</p>
+                <p className="aura-num mt-1 text-[26px] leading-[1.05] font-extrabold tracking-[-0.03em] text-sale">{couponDiscountLabel(c)}</p>
               </div>
               <button
                 type="button"
                 onClick={() => copy(c.code)}
                 aria-label={`Copy coupon code ${c.code}`}
-                className={`sag-btn-outline shrink-0 ${smallBtn}`}
+                className={`aura-btn shrink-0 px-4 ${smallBtn}`}
               >
-                {copied === c.code ? <CheckCircle2 className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" /> : <Copy className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />}
+                {copied === c.code ? <CheckCircle2 strokeWidth={1.6} aria-hidden="true" /> : <Copy strokeWidth={1.6} aria-hidden="true" />}
                 {copied === c.code ? 'Copied' : 'Copy'}
               </button>
             </div>
-            {c.description && <p className="text-[13px] leading-[18px] text-ink">{c.description}</p>}
-            <dl className="sag-num mt-auto grid grid-cols-2 gap-3 pt-3 border-t border-line text-[13px] leading-[18px]">
-              <div><dt className={noteClass}>Min. order</dt><dd className="text-ink">{c.minOrderValue > 0 ? inr(c.minOrderValue) : 'No minimum'}</dd></div>
-              <div><dt className={noteClass}>Valid until</dt><dd className="text-ink">{formatDate(c.expiryDate) || 'Until withdrawn'}</dd></div>
+            {c.description && <p className="text-[14px] leading-5 text-ink">{c.description}</p>}
+            <dl className="aura-num mt-auto grid grid-cols-2 gap-3 pt-3 border-t border-line text-[14px] leading-5">
+              <div><dt className={noteClass}>Min. order</dt><dd className="font-semibold text-ink">{c.minOrderValue > 0 ? inr(c.minOrderValue) : 'No minimum'}</dd></div>
+              <div><dt className={noteClass}>Valid until</dt><dd className="font-semibold text-ink">{formatDate(c.expiryDate) || 'Until withdrawn'}</dd></div>
             </dl>
           </li>
         ))}
@@ -291,38 +297,38 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
     { label: 'Terms & conditions', hint: 'Terms of using this store', action: () => onGo('terms-conditions') },
   ];
   const rowText = (title: string, sub: string, breakAll = false) => (
-    <span className="min-w-0 flex-1">
-      <span className="block">{title}</span>
-      <span className={`block font-normal ${noteClass} ${breakAll ? 'break-all' : ''}`}>{sub}</span>
+    <span className="aa-row-t">
+      <b>{title}</b>
+      <small className={breakAll ? 'break-all' : ''}>{sub}</small>
     </span>
   );
-  const chevron = <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />;
+  const chevron = <ChevronRight strokeWidth={1.6} aria-hidden="true" />;
   return (
     <section className="space-y-4" aria-label="Help Center">
       <SectionIntro title="How can we help?" text="Reach our team directly, or find answers in our store policies." />
-      <div className="sag-glass px-4">
-        <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need some help.')} target="_blank" rel="noopener noreferrer" className="sag-row font-normal min-h-14">
-          <WhatsAppIcon mono className="w-5 h-5 shrink-0 text-sale" aria-hidden="true" />
+      <div className="space-y-2">
+        <a href={createSupportWhatsAppUrl('Hi Suit Aura Girls, I need some help.')} target="_blank" rel="noopener noreferrer" className="aa-row">
+          <span className="aa-ic"><WhatsAppIcon mono className="w-5 h-5" aria-hidden="true" /></span>
           {rowText('Chat on WhatsApp', 'Chat with our team')}
           {chevron}
         </a>
-        <a href={`tel:+91${SUPPORT_PHONE}`} className="sag-row font-normal min-h-14">
-          <SupportIcon className="w-5 h-5 shrink-0 text-sale" mono />
+        <a href={`tel:+91${SUPPORT_PHONE}`} className="aa-row">
+          <span className="aa-ic"><SupportIcon className="w-5 h-5" mono /></span>
           {rowText('Call us', SUPPORT_PHONE_DISPLAY)}
           {chevron}
         </a>
-        <a href={`mailto:${email}`} className="sag-row font-normal min-h-14">
-          <Mail className="w-5 h-5 shrink-0 text-sale" strokeWidth={1.5} aria-hidden="true" />
+        <a href={`mailto:${email}`} className="aa-row">
+          <span className="aa-ic"><Mail className="w-5 h-5" strokeWidth={1.6} aria-hidden="true" /></span>
           {rowText('Email', email, true)}
           {chevron}
         </a>
       </div>
-      <div className="sag-glass px-4">
-        <p className="text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale pt-4 pb-1">Common questions</p>
+      <div className="aura-card aura-blk px-4 pt-5 pb-2 sm:px-6">
+        <p className="aura-lbl pb-1">Common questions</p>
         <ul>
           {links.map((link) => (
             <li key={link.label} className="border-t border-line first:border-t-0">
-              <button type="button" onClick={link.action} className="sag-row font-normal border-t-0 min-h-14 w-full text-left cursor-pointer">
+              <button type="button" onClick={link.action} className="aa-row rounded-none px-0">
                 {rowText(link.label, link.hint)}
                 {chevron}
               </button>
@@ -330,7 +336,7 @@ const HelpCenter: React.FC<{ onGo: (page: ActivePage) => void; onTab: (tab: Tab)
           ))}
         </ul>
       </div>
-      <button type="button" onClick={() => onGo('contact')} className={`sag-btn-outline w-full sm:w-auto ${smallBtn}`}>
+      <button type="button" onClick={() => onGo('contact')} className={`aura-btn aura-btn-line w-full sm:w-auto ${smallBtn}`}>
         Contact us page
       </button>
     </section>
@@ -362,38 +368,38 @@ const OrderCard: React.FC<{
   const awaitingPay = order.paymentStatus === 'Unpaid' && order.status === 'Pending';
   const latest = latestUpdate(order);
   const failed = paymentFailed(order);
-  const paymentTone = paid ? 'border-brand-line text-sale' : order.paymentStatus === 'Refunded' ? 'border-line text-ink-muted' : 'border-sale-line text-sale';
+  const paymentTone = paid ? '' : order.paymentStatus === 'Refunded' ? 'is-mu' : 'is-wait';
   // Two per row on a phone; a button left alone on its row stretches to fill it.
-  const action = `sag-btn-outline ${smallBtn} px-3 flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto sm:px-4`;
+  const action = `aura-btn aura-btn-line ${smallBtn} px-3 flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto sm:px-5`;
 
   return (
-    <article className="sag-glass overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
-      <header className="px-4 sm:px-6 pt-4 pb-3.5 border-b border-line space-y-2 rounded-none!">
+    <article className="aura-card aura-blk overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
+      <header className="px-4 sm:px-6 pt-5 pb-4 border-b border-line space-y-2.5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 id={`order-${order.orderNumber}`} className="sag-num font-sans text-[15px] leading-[22px] font-semibold text-ink break-all">
+            <h2 id={`order-${order.orderNumber}`} className="aura-num text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink break-all">
               <span className="sr-only">Order </span>#{order.orderNumber}
             </h2>
-            <p className={noteClass}>
+            <p className={`${noteClass} mt-0.5`}>
               Placed {formatDate(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
             </p>
           </div>
-          <p className="sag-num shrink-0 text-right text-[15px] leading-[22px] font-semibold text-ink">
+          <p className="aura-num shrink-0 text-right text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink">
             <span className="sr-only">Total </span>{inr(order.finalTotal)}
-            {order.payMode === 'cod' && <span className="block text-[12px] leading-[17px] font-normal text-sale">{inr(order.codDue || 0)} cash on delivery</span>}
+            {order.payMode === 'cod' && <span className="block text-[13px] leading-[18px] font-semibold tracking-normal text-sale">{inr(order.codDue || 0)} cash on delivery</span>}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusPill order={order} />
           {!awaitingPay && (
-            <span className={`sag-badge border bg-surface font-semibold ${paymentTone}`}>
+            <span className={`aa-pill ${paymentTone}`}>
               <span className="sr-only">Payment: </span>{paid ? 'Paid online' : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
             </span>
           )}
         </div>
         {latest && (
           <p className={noteClass}>
-            <span className="text-ink">Latest:</span> {latest.label} · {formatDateTime(latest.at)}
+            <span className="font-semibold text-ink">Latest:</span> {latest.label} · {formatDateTime(latest.at)}
           </p>
         )}
       </header>
@@ -404,17 +410,19 @@ const OrderCard: React.FC<{
         {/* An order still waiting for payment shows only the pay box (no delivery steps yet) */}
         {!awaitingPay && <OrderProgress order={order} compact />}
 
-        <CourierCard order={order} />
+        <div className="space-y-3 empty:hidden [&>section]:bg-page">
+          <CourierCard order={order} />
 
-        <DeliveryAgentCard order={order} />
+          <DeliveryAgentCard order={order} />
+        </div>
 
         {order.customerNote && (
-          <p className="rounded-lg bg-sunken px-3.5 py-3 text-[13px] leading-[18px] text-ink">
-            <span className="font-medium">Note from our team:</span> {order.customerNote}
+          <p className="aa-note">
+            <span className="font-bold">Note from our team:</span> {order.customerNote}
           </p>
         )}
 
-        <ul className="divide-y divide-line border-y border-line rounded-none!" aria-label="Items in this order">
+        <ul className="divide-y divide-line border-y border-line" aria-label="Items in this order">
           {order.items.map((item) => {
             const colour = item.selectedColor?.name && !['Default', 'Standard'].includes(item.selectedColor.name) ? ` · ${item.selectedColor.name}` : '';
             const unit = Number(item.product?.price) || 0;
@@ -423,7 +431,7 @@ const OrderCard: React.FC<{
                 <button
                   type="button"
                   onClick={() => item.product?.id && onOpenProduct(String(item.product.id))}
-                  className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-sunken cursor-pointer"
+                  className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[14px] bg-sunken cursor-pointer"
                   aria-label={`View ${item.product?.name || 'product'}`}
                 >
                   {item.product?.images?.[0] && (
@@ -432,14 +440,14 @@ const OrderCard: React.FC<{
                 </button>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{item.product?.name}</p>
-                    <p className="sag-num text-sm leading-5 font-medium text-ink shrink-0">{inr(unit * item.quantity)}</p>
+                    <p className="text-[14.5px] leading-5 font-semibold text-ink line-clamp-2">{item.product?.name}</p>
+                    <p className="aura-num text-[15px] leading-5 font-bold text-ink shrink-0">{inr(unit * item.quantity)}</p>
                   </div>
-                  <p className={`sag-num ${noteClass}`}>
+                  <p className={`aura-num ${noteClass}`}>
                     {item.selectedSize ? `Size ${item.selectedSize}` : 'One size'}{colour} · {item.quantity} × {inr(unit)}
                   </p>
                   {canRate && item.product?.id && !item.lookParentId && (
-                    <button type="button" onClick={() => onRate(String(item.product.id))} className="sag-link -mb-2 text-[12.5px]">
+                    <button type="button" onClick={() => onRate(String(item.product.id))} className="sag-link -mb-2 text-[13.5px]">
                       Rate this product
                     </button>
                   )}
@@ -450,10 +458,10 @@ const OrderCard: React.FC<{
         </ul>
 
         {address && (address.fullName || placeLine) && (
-          <div className="flex gap-3 text-[13px] leading-[18px]">
-            <span className="shrink-0 flex mt-0.5 text-sale"><PinIcon className="w-5 h-5" mono /></span>
+          <div className="flex gap-3 text-[14px] leading-5">
+            <span className="aa-ic"><PinIcon className="w-5 h-5" mono /></span>
             <div className="min-w-0 text-ink-muted">
-              <p className="font-medium text-ink">Delivering to {address.fullName}</p>
+              <p className="font-bold text-ink">Delivering to {address.fullName}</p>
               {streetLine && <p className="break-words">{streetLine}</p>}
               {placeLine && <p>{placeLine}</p>}
               {address.mobile && <p>Phone: {address.mobile}</p>}
@@ -462,7 +470,7 @@ const OrderCard: React.FC<{
         )}
 
         <div className="space-y-2">
-          <button type="button" onClick={onTrack} className={`${awaitingPay ? 'sag-btn-outline' : 'sag-btn-primary'} w-full h-12 gap-2`}>
+          <button type="button" onClick={onTrack} className={`aura-btn aura-btn-w ${awaitingPay ? 'aura-btn-line' : ''}`}>
             Track order
           </button>
           <div className="flex flex-wrap gap-2">
@@ -730,57 +738,57 @@ export const AccountPage: React.FC = () => {
   const tabLabel = tabs.find((t) => t.key === tab)?.label || 'My account';
 
   return (
-    <div className="min-h-[70vh] px-4 pt-6 pb-14 sm:px-6 lg:px-8 lg:py-10">
-      <div className="max-w-6xl mx-auto lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-10 lg:items-start">
-        <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-5 lg:sticky lg:top-20`}>
-          <div className="min-w-0">
-            <SectionTitle as="h1" title="My account" className="lg:[&>h1]:text-[38px]" />
-            <p className="mt-2.5 text-center text-[13px] leading-[18px] text-ink-muted truncate">Hello, {firstName} · {user.email}</p>
+    <div data-aura className="min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8 lg:pb-16">
+      <div className="max-w-[1120px] mx-auto lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10 lg:items-start">
+        <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-3 lg:sticky lg:top-24`}>
+          <div className="aa-band aa-band-blush min-w-0">
+            <AuraTitle as="h1" label={`Hello, ${firstName}`} title="My" accent="account" size="lg" titleClassName="lg:text-[46px]" />
+            <p className="mt-3 text-[14px] leading-5 aura-mu truncate">{user.email}</p>
           </div>
 
           {newestOrder && (() => {
-            // How far the order has come, as seven short bars (none for a cancelled, returned or refunded order)
+            // How far the order has come, as seven dots (none for a cancelled, returned or refunded order)
             const stage = ['Pending', 'Processing', 'Packed', 'Shipped', 'In Transit', 'Out for Delivery', 'Delivered'].indexOf(String(newestOrder.status));
             const first = newestOrder.items?.[0];
             const photo = first?.product?.images?.[0] || first?.product?.image || '';
             const more = (newestOrder.items?.length || 0) - 1;
             return (
-              <section aria-labelledby="account-latest-order" className="sag-glass p-4">
+              <section aria-labelledby="account-latest-order" className="aa-tlc aura-dk">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 id="account-latest-order" className="font-sans text-[10.5px] leading-4 font-semibold uppercase tracking-[0.2em] text-sale" style={{ fontSizeAdjust: 'none' }}>Latest order</h2>
+                  <h2 id="account-latest-order" className="aura-lbl" style={{ fontSizeAdjust: 'none' }}>Latest order</h2>
                   <StatusPill order={newestOrder} />
                 </div>
-                <button type="button" onClick={() => openTab('orders')} className="mt-3 grid w-full grid-cols-[62px_minmax(0,1fr)] items-start gap-3 text-left cursor-pointer">
+                <button type="button" onClick={() => openTab('orders')} className="mt-4 grid w-full grid-cols-[62px_minmax(0,1fr)] items-start gap-3.5 text-left cursor-pointer">
                   {photo
-                    ? <img src={getCleanImageUrl(photo, 160)} alt="" loading="lazy" className="w-[62px] aspect-[4/5] rounded-lg object-cover object-top bg-sunken" />
-                    : <span className="w-[62px] aspect-[4/5] rounded-lg bg-sunken" />}
+                    ? <img src={getCleanImageUrl(photo, 160)} alt="" loading="lazy" className="w-[62px] aspect-[4/5] rounded-[14px] object-cover object-top bg-sunken" />
+                    : <span className="w-[62px] aspect-[4/5] rounded-[14px] bg-sunken" />}
                   <span className="min-w-0">
-                    <span className="sag-num block truncate text-[12px] leading-[17px] text-ink-muted">#{newestOrder.orderNumber}</span>
-                    {newestUpdate && <span className="mt-0.5 block font-display text-[21px] leading-6 font-semibold text-ink">{newestUpdate.label}</span>}
-                    {newestUpdate && <span className="sag-num block text-[12px] leading-[17px] text-ink-muted">{formatDateTime(newestUpdate.at)}</span>}
-                    {first?.product?.name && <span className="mt-1.5 block text-[13px] leading-[18px] text-ink line-clamp-2">{first.product.name}{more > 0 ? ` + ${more} more` : ''}</span>}
-                    {stage >= 0 && (
-                      <span className="mt-3 flex items-center" aria-hidden="true">
-                        {[0, 1, 2, 3, 4, 5, 6].map((index) => (
-                          <React.Fragment key={index}>
-                            {index > 0 && <span className={`h-px flex-1 ${index <= stage ? 'bg-brand' : 'bg-control'}`} />}
-                            <span className={`h-2 w-2 shrink-0 rounded-full border ${index < stage || stage === 6 ? 'border-brand bg-brand' : index === stage ? 'border-brand bg-surface ring-2 ring-brand-wash' : 'border-control bg-surface'}`} />
-                          </React.Fragment>
-                        ))}
-                      </span>
-                    )}
+                    <span className="aura-num block truncate text-[13px] leading-[18px] text-on-dark-muted">#{newestOrder.orderNumber}</span>
+                    {newestUpdate && <span className="mt-1 block text-[26px] leading-[1.02] font-extrabold tracking-[-0.03em]">{newestUpdate.label}</span>}
+                    {newestUpdate && <span className="aura-num mt-1 block text-[13px] leading-[18px] text-on-dark-muted">{formatDateTime(newestUpdate.at)}</span>}
+                    {first?.product?.name && <span className="mt-1.5 block text-[14px] leading-5 line-clamp-2">{first.product.name}{more > 0 ? ` + ${more} more` : ''}</span>}
                   </span>
                 </button>
-                <div className="mt-4 flex gap-2">
-                  <button type="button" onClick={() => openTab('orders')} className="sag-btn-primary h-11 flex-1 min-w-0 px-3">Track order</button>
-                  <button type="button" onClick={() => openTab('help')} className="sag-btn-outline h-11 flex-1 min-w-0 px-3">Need help?</button>
+                {stage >= 0 && (
+                  <span className="aa-dots mt-5" aria-hidden="true">
+                    {[0, 1, 2, 3, 4, 5, 6].map((index) => (
+                      <React.Fragment key={index}>
+                        {index > 0 && <s className={index <= stage ? 'on' : ''} />}
+                        <i className={`${index <= stage ? 'on' : ''}${index === stage && stage < 6 ? ' cur' : ''}`} />
+                      </React.Fragment>
+                    ))}
+                  </span>
+                )}
+                <div className="mt-5 flex gap-2">
+                  <button type="button" onClick={() => openTab('orders')} className="aura-btn aura-btn-sm flex-1 min-w-0 px-3">Track order</button>
+                  <button type="button" onClick={() => openTab('help')} className="aura-btn aura-btn-line aura-btn-sm flex-1 min-w-0 px-3">Need help?</button>
                 </div>
               </section>
             );
           })()}
 
-          <div className="border-y border-line" role="tablist" aria-label="My account" aria-orientation="vertical">
-            {tabs.map(({ key, label, icon: Icon }) => (
+          <div className="space-y-2" role="tablist" aria-label="My account" aria-orientation="vertical">
+            {tabs.map(({ key, label, icon: TabIcon }) => (
               <button
                 key={key}
                 id={`account-tab-${key}`}
@@ -789,16 +797,16 @@ export const AccountPage: React.FC = () => {
                 aria-selected={tab === key}
                 aria-controls="account-panel"
                 onClick={() => openTab(key)}
-                className={`flex w-full min-h-[60px] items-center gap-3.5 rounded-none border-b border-line last:border-b-0 px-1 py-3 text-left text-[14.5px] leading-5 text-ink cursor-pointer transition-colors hover:text-brand lg:px-3 ${tab === key ? 'lg:bg-sunken lg:font-semibold lg:text-sale' : ''}`}
+                className="aa-row"
               >
-                <span className="flex shrink-0 text-sale">
-                  <Icon className="w-5 h-5" mono live={false} />
+                <span className="aa-ic">
+                  <TabIcon className="w-5 h-5" mono live={false} />
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block">{label}</span>
-                  {tabNote[key] && <span className="sag-num mt-px block text-[12px] leading-[17px] font-normal text-ink-muted">{tabNote[key]}</span>}
+                <span className="aa-row-t">
+                  <b>{label}</b>
+                  {tabNote[key] && <small className="aura-num">{tabNote[key]}</small>}
                 </span>
-                <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" strokeWidth={1.5} aria-hidden="true" />
+                <ChevronRight strokeWidth={1.6} aria-hidden="true" />
               </button>
             ))}
           </div>
@@ -810,27 +818,27 @@ export const AccountPage: React.FC = () => {
               showToast('You have been signed out.', 'info');
               setActivePage('home');
             }}
-            className={capsLink}
+            className="aura-btn aura-btn-line aura-btn-sm mt-2"
           >
-            <LogOut className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+            <LogOut strokeWidth={1.6} aria-hidden="true" />
             <span>Sign out</span>
           </button>
         </aside>
 
-        <div className={`${mobileView === 'menu' ? 'hidden lg:block' : ''} min-w-0`}>
-          <button type="button" onClick={backToMenu} className={`lg:hidden ${capsLink} mb-2`} aria-label={`Back to My account from ${tabLabel}`}>
-            <ArrowLeft className="w-4 h-4" strokeWidth={1.5} aria-hidden="true" />
+        <div className={`${mobileView === 'menu' ? 'hidden lg:block' : ''} min-w-0 px-1 lg:px-0`}>
+          <button type="button" onClick={backToMenu} className={`lg:hidden ${capsLink} mb-3`} aria-label={`Back to My account from ${tabLabel}`}>
+            <ArrowLeft strokeWidth={1.6} aria-hidden="true" />
             <span>My account</span>
           </button>
 
-          <div id="account-panel" role="tabpanel" aria-labelledby={`account-tab-${tab}`}>
+          <div id="account-panel" role="tabpanel" aria-labelledby={`account-tab-${tab}`} key={tab} className="sag-step-in">
             {tab === 'orders' && (
               <section className="space-y-4">
                 {ordersLoading && recentOrders.length === 0 ? (
                   <div className="py-16 flex justify-center" role="status" aria-label="Loading your orders"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
                 ) : recentOrders.length === 0 ? (
                   <EmptyState icon={<BagIcon className="w-7 h-7" mono />} title="No orders yet" text={<>Orders placed with <span className="break-all">{user.email}</span> appear here on every device.</>}>
-                    <button type="button" onClick={() => setActivePage('shop')} className="sag-btn-primary h-12 px-6">
+                    <button type="button" onClick={() => setActivePage('shop')} className="aura-btn">
                       Start shopping
                     </button>
                   </EmptyState>
@@ -840,7 +848,7 @@ export const AccountPage: React.FC = () => {
                     <div className="space-y-3">
                       <div className="relative">
                         <label htmlFor="order-search" className="sr-only">Search your orders</label>
-                        <Search className="w-[18px] h-[18px] text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+                        <Search className="w-[18px] h-[18px] text-ink-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
                         <input
                           id="order-search"
                           type="search"
@@ -848,7 +856,7 @@ export const AccountPage: React.FC = () => {
                           value={orderSearch}
                           onChange={(e) => setOrderSearch(e.target.value)}
                           placeholder="Search by order number or product"
-                          className="sag-input h-12 pl-11"
+                          className="sag-input pl-12"
                         />
                       </div>
                       <div className="flex gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap py-0.5" role="group" aria-label="Filter orders by status">
@@ -860,7 +868,7 @@ export const AccountPage: React.FC = () => {
                               type="button"
                               aria-pressed={orderFilter === key}
                               onClick={() => setOrderFilter(key)}
-                              className="sag-chip sag-num shrink-0 h-11 min-w-0 gap-1.5 text-[13px] whitespace-nowrap"
+                              className="sag-chip aura-num shrink-0 h-11 min-w-0 gap-1.5 text-[14px] font-semibold whitespace-nowrap"
                             >
                               {label}
                               <span className="font-normal opacity-80">{count}</span>
@@ -875,10 +883,10 @@ export const AccountPage: React.FC = () => {
                         title="No orders match"
                         text={<>{searchText ? `Nothing found for “${orderSearch.trim()}”` : 'No orders with this status'}{orderFilter !== 'all' ? ` under ${ORDER_FILTERS.find((f) => f.key === orderFilter)?.label}` : ''}.</>}
                       >
-                        <button type="button" onClick={() => { setOrderSearch(''); setOrderFilter('all'); }} className={`sag-btn-primary ${smallBtn}`}>
+                        <button type="button" onClick={() => { setOrderSearch(''); setOrderFilter('all'); }} className={`aura-btn ${smallBtn}`}>
                           Show all orders
                         </button>
-                        <button type="button" onClick={() => goPage('shop')} className={`sag-btn-outline ${smallBtn}`}>
+                        <button type="button" onClick={() => goPage('shop')} className={`aura-btn aura-btn-line ${smallBtn}`}>
                           Continue shopping
                         </button>
                       </EmptyState>
@@ -921,21 +929,21 @@ export const AccountPage: React.FC = () => {
               <section className="space-y-4">
                 {wishlist.length === 0 ? (
                   <EmptyState icon={<HeartIcon className="w-7 h-7" mono />} title="Your wishlist is empty" text="Tap the heart on any product to save it here.">
-                    <button type="button" onClick={() => goPage('shop')} className="sag-btn-primary h-12 px-6">Explore styles</button>
+                    <button type="button" onClick={() => goPage('shop')} className="aura-btn">Explore styles</button>
                   </EmptyState>
                 ) : (
                   <>
                     <SectionIntro title="Wishlist" text={`${wishlist.length} ${wishlist.length === 1 ? 'style' : 'styles'} saved to your account.`} />
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-3 gap-y-7 sm:gap-x-5 sm:gap-y-9">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-2.5 gap-y-4 sm:gap-x-4 sm:gap-y-6">
                       {wishlist.map((saved) => {
                         const live = allProducts.find((p) => String(p.id) === String(saved.id));
                         return live ? <ProductCard key={saved.id} product={live} /> : (
-                          <div key={saved.id} className="flex flex-col gap-2">
-                            <div className="aspect-[4/5] rounded-lg bg-sunken flex items-center justify-center px-3 text-center">
+                          <div key={saved.id} className="aura-card flex flex-col gap-2 p-1.5 pb-3">
+                            <div className="aspect-[3/4] rounded-[17px] bg-sunken flex items-center justify-center px-3 text-center">
                               <span className="text-sm leading-5 text-ink-muted">No longer available</span>
                             </div>
-                            <p className="text-[13px] leading-[18px] text-ink line-clamp-2">{saved.name}</p>
-                            <button type="button" onClick={() => toggleWishlist(saved)} className={`sag-btn-outline mt-auto w-full ${smallBtn}`}>Remove</button>
+                            <p className="px-1.5 text-[14px] leading-5 font-semibold text-ink line-clamp-2">{saved.name}</p>
+                            <button type="button" onClick={() => toggleWishlist(saved)} className={`aura-btn aura-btn-line mx-1.5 mt-auto ${smallBtn}`}>Remove</button>
                           </div>
                         );
                       })}
@@ -948,56 +956,56 @@ export const AccountPage: React.FC = () => {
             {tab === 'profile' && (
               <section className="space-y-4">
                 <SectionIntro title="Profile" text="Your contact details, used to fill in checkout faster." />
-                <form onSubmit={handleSaveProfile} className="space-y-4">
-                  <div className="sag-glass p-4 sm:p-6 space-y-4">
+                <form onSubmit={handleSaveProfile} className="space-y-3">
+                  <div className="aura-card aura-blk p-4 sm:p-6 space-y-4">
                     <h3 className={panelTitle}>Contact</h3>
-                    <p className="rounded-lg bg-sunken px-3.5 py-2.5 text-[13px] leading-[18px] text-ink-muted">
-                      Signed in with <span className="font-medium text-ink break-all">{user.email}</span>
+                    <p className="aa-note text-ink-muted">
+                      Signed in with <span className="font-bold text-ink break-all">{user.email}</span>
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label htmlFor="profile-name" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">Full name</label>
+                        <label htmlFor="profile-name" className={fieldLbl}>Full name</label>
                         <input id="profile-name" name="name" className="sag-input" disabled={!profileLoaded} autoComplete="name" autoCapitalize="words" value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} />
                       </div>
                       <div>
-                        <label htmlFor="profile-mobile" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">Mobile number</label>
+                        <label htmlFor="profile-mobile" className={fieldLbl}>Mobile number</label>
                         <input id="profile-mobile" name="mobile" type="tel" className="sag-input" disabled={!profileLoaded} inputMode="numeric" autoComplete="tel-national" maxLength={10} placeholder="10-digit mobile" value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} />
                       </div>
                     </div>
                   </div>
 
-                  <fieldset className="sag-glass p-4 sm:p-6 min-w-0">
+                  <fieldset className="aura-card aura-blk p-4 sm:p-6 min-w-0">
                     <legend className="sr-only">Address</legend>
                     <div className="flex flex-wrap items-center justify-between gap-x-3">
                       <h3 className={panelTitle}>Address</h3>
-                      <button type="button" onClick={() => openTab('addresses')} className="sag-link text-[12.5px]">Saving more than one? Use Addresses</button>
+                      <button type="button" onClick={() => openTab('addresses')} className="sag-link text-[13.5px]">Saving more than one? Use Addresses</button>
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-4">
                       <div className="col-span-2">
-                        <label htmlFor="profile-house" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">House / flat, building</label>
+                        <label htmlFor="profile-house" className={fieldLbl}>House / flat, building</label>
                         <input id="profile-house" className="sag-input" disabled={!profileLoaded} autoComplete="address-line1" value={profile.houseFlat} onChange={(e) => setProfile({ ...profile, houseFlat: e.target.value })} />
                       </div>
                       <div className="col-span-2">
-                        <label htmlFor="profile-street" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">Street / area</label>
+                        <label htmlFor="profile-street" className={fieldLbl}>Street / area</label>
                         <input id="profile-street" className="sag-input" disabled={!profileLoaded} autoComplete="address-line2" value={profile.street} onChange={(e) => setProfile({ ...profile, street: e.target.value })} />
                       </div>
                       <div>
-                        <label htmlFor="profile-pin" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">PIN code</label>
+                        <label htmlFor="profile-pin" className={fieldLbl}>PIN code</label>
                         <input id="profile-pin" className="sag-input" disabled={!profileLoaded} inputMode="numeric" autoComplete="postal-code" maxLength={6} placeholder="6-digit PIN" value={profile.pincode} onChange={(e) => handlePincode(e.target.value)} />
                       </div>
                       <div>
-                        <label htmlFor="profile-city" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">City</label>
+                        <label htmlFor="profile-city" className={fieldLbl}>City</label>
                         <input id="profile-city" className="sag-input" disabled={!profileLoaded} autoComplete="address-level2" value={profile.city} onChange={(e) => setProfile({ ...profile, city: e.target.value })} />
                       </div>
                       <div className="col-span-2">
-                        <label htmlFor="profile-state" className="sag-label text-[10.5px] leading-4 font-semibold uppercase tracking-[0.16em] text-ink-muted">State</label>
+                        <label htmlFor="profile-state" className={fieldLbl}>State</label>
                         <input id="profile-state" className="sag-input" disabled={!profileLoaded} autoComplete="address-level1" value={profile.state} onChange={(e) => setProfile({ ...profile, state: e.target.value })} />
                       </div>
                     </div>
                   </fieldset>
 
-                  <button type="submit" disabled={savingProfile || !profileLoaded} className="sag-btn-primary w-full sm:w-auto sm:px-8 gap-2">
-                    {savingProfile && <Loader2 className="w-[18px] h-[18px] animate-spin" aria-hidden="true" />}
+                  <button type="submit" disabled={savingProfile || !profileLoaded} className="aura-btn aura-btn-w sm:inline-flex sm:w-auto sm:px-10">
+                    {savingProfile && <Loader2 className="animate-spin" aria-hidden="true" />}
                     {savingProfile ? 'Saving…' : 'Save profile'}
                   </button>
                 </form>
@@ -1009,35 +1017,35 @@ export const AccountPage: React.FC = () => {
             {tab === 'returns' && (
               <section className="space-y-4">
                 <SectionIntro title="Returns & exchanges" />
-                <div className="sag-glass sag-glass-strong p-4 flex gap-3">
-                  <span className="shrink-0 flex mt-0.5 text-sale"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
-                  <p className="min-w-0 text-[13px] leading-[18px] text-ink">
+                <div className="rounded-[26px] bg-blush p-4 sm:p-5 flex gap-3">
+                  <span className="aa-ic"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
+                  <p className="min-w-0 text-[14px] leading-[21px] text-ink">
                     You can ask for a return or a size exchange within 7 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
-                    <button type="button" onClick={() => setActivePage('return-policy')} className="text-brand underline decoration-1 underline-offset-4 cursor-pointer">Return policy</button>
+                    <button type="button" onClick={() => setActivePage('return-policy')} className={textLink}>Return policy</button>
                   </p>
                 </div>
 
                 {returnable.length > 0 && (
-                  <div className="sag-glass px-4 sm:px-6">
-                    <p className={`${panelTitle} pt-4`}>Ready to return or exchange</p>
+                  <div className="aura-card aura-blk px-4 sm:px-6">
+                    <p className={`${panelTitle} pt-5`}>Ready to return or exchange</p>
                     <ul className="divide-y divide-line">
                       {returnable.map((order) => (
-                        <li key={order.orderNumber} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <li key={order.orderNumber} className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <div className="min-w-0 flex items-center gap-3">
-                            <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-lg bg-sunken">
+                            <span className="w-14 aspect-[4/5] shrink-0 overflow-hidden rounded-[14px] bg-sunken">
                               {order.items[0]?.product?.images?.[0] && <img src={getCleanImageUrl(order.items[0].product.images[0], 140)} alt="" className="w-full h-full object-cover object-top" loading="lazy" />}
                             </span>
                             <div className="min-w-0">
-                              <p className="text-sm leading-5 font-semibold text-ink break-all">#{order.orderNumber}</p>
-                              <p className={`sag-num ${noteClass}`}>
+                              <p className="aura-num text-[15px] leading-5 font-bold text-ink break-all">#{order.orderNumber}</p>
+                              <p className={`aura-num ${noteClass}`}>
                                 {order.items.length} {order.items.length === 1 ? 'item' : 'items'} · {inr(order.finalTotal)}
                               </p>
                               {formatWindowEnd(order.returnEligibility?.windowEndsAt) && (
-                                <p className="sag-badge mt-1 border bg-surface font-semibold border-sale-line text-sale">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
+                                <p className="aa-pill mt-1.5">Request by {formatWindowEnd(order.returnEligibility?.windowEndsAt)}</p>
                               )}
                             </div>
                           </div>
-                          <button type="button" onClick={() => setReturnFor(order)} className={`sag-btn-outline ${smallBtn} w-full sm:w-auto`}>
+                          <button type="button" onClick={() => setReturnFor(order)} className={`aura-btn ${smallBtn} w-full sm:w-auto`}>
                             <ReturnIcon className="w-[18px] h-[18px]" mono live={false} /> Start return / exchange
                           </button>
                         </li>
@@ -1047,11 +1055,11 @@ export const AccountPage: React.FC = () => {
                 )}
 
                 {withRequests.map((order) => (
-                  <div key={order.orderNumber} className="sag-glass p-4 sm:p-6 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="min-w-0 text-sm leading-5 font-semibold text-ink break-all"><span className="sr-only">Order </span>#{order.orderNumber}</p>
-                      <button type="button" onClick={() => openTrack(order)} className="sag-link shrink-0 gap-1 text-[12.5px]">
-                        View order <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.5} aria-hidden="true" />
+                  <div key={order.orderNumber} className="aura-card aura-blk pt-2">
+                    <div className="flex items-center justify-between gap-2 px-4">
+                      <p className="aura-num min-w-0 text-[15px] leading-5 font-bold text-ink break-all"><span className="sr-only">Order </span>#{order.orderNumber}</p>
+                      <button type="button" onClick={() => openTrack(order)} className="sag-link shrink-0 gap-1 text-[13.5px]">
+                        View order <ChevronRight className="w-3.5 h-3.5" strokeWidth={1.6} aria-hidden="true" />
                       </button>
                     </div>
                     <ReturnProgress order={order} />
