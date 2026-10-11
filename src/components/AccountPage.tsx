@@ -596,6 +596,13 @@ export const AccountPage: React.FC = () => {
   // Profile document from the read below, handed to the address book so it does not read it again
   const [profileDoc, setProfileDoc] = useState<Record<string, any> | null | undefined>(undefined);
   const [ordersLoading, setOrdersLoading] = useState(true);
+  // True when the last read of the orders failed (a dropped connection, an expired sign-in)
+  const [ordersFailed, setOrdersFailed] = useState(false);
+  const loadOrders = () => {
+    if (!user?.email) return;
+    setOrdersLoading(true);
+    syncCustomerOrders(user.email).then((ok) => setOrdersFailed(ok === false)).finally(() => setOrdersLoading(false));
+  };
   const [profile, setProfile] = useState({ fullName: '', phone: '', houseFlat: '', street: '', city: '', state: '', pincode: '' });
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -608,8 +615,7 @@ export const AccountPage: React.FC = () => {
 
   useEffect(() => {
     if (!user?.email) return;
-    setOrdersLoading(true);
-    syncCustomerOrders(user.email).finally(() => setOrdersLoading(false));
+    loadOrders();
     getDocById(COLLECTIONS.profiles, emailKey(user.email))
       .then((data) => {
         // The same read also gives the style profile (no second read for the Style tab or home rail)
@@ -691,6 +697,45 @@ export const AccountPage: React.FC = () => {
     setTrackOrderNumber(order.orderNumber);
     setActivePage('track-order');
   };
+  // Orders placed on this phone BEFORE signing in (as a guest, perhaps with another email than the account's).
+  // The account's own list comes from the server by the sign-in email, so these would otherwise be missing and
+  // the page would say "No orders yet" to someone who has just paid. They are read from this browser (it kept
+  // them when the order was placed) and each opens the Track order page with its number and the contact used
+  // at checkout already filled in, where the server shows the real, current state.
+  const deviceOrders: OrderWithRequests[] = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('sag_guest_orders') || '[]');
+      const listed = new Set(shownOrders.map((order) => order.orderNumber));
+      return (Array.isArray(saved) ? saved : []).filter((order: OrderWithRequests) => order?.orderNumber && !listed.has(order.orderNumber)).slice(0, 10);
+    } catch {
+      return [];
+    }
+  })();
+  const openDeviceOrder = (order: OrderWithRequests) => {
+    try { sessionStorage.setItem('sag_last_order', JSON.stringify({ orderNumber: order.orderNumber, contact: order.customerEmail || order.customerMobile || '' })); } catch {}
+    setTrackOrderNumber(order.orderNumber);
+    setActivePage('track-order');
+    window.scrollTo(0, 0);
+  };
+  const deviceOrdersBlock = deviceOrders.length > 0 && (
+    <div id="account-device-orders" className="aura-card aura-blk p-4 sm:p-5">
+      <p className="text-[17px] leading-6 font-extrabold tracking-[-0.02em] text-ink">Ordered on this phone before you signed in</p>
+      <p className="mt-1 text-[13.5px] leading-5 text-ink-muted">These were placed without signing in, so they are tracked with the order number.</p>
+      <ul className="mt-3 divide-y divide-line">
+        {deviceOrders.map((order) => (
+          <li key={order.orderNumber} className="flex items-center gap-3 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="sag-num text-[14.5px] leading-5 font-semibold text-ink">{order.orderNumber}</p>
+              <p className="sag-num mt-0.5 text-[13px] leading-[18px] text-ink-muted">
+                {[order.items?.length ? `${order.items.length} ${order.items.length === 1 ? 'item' : 'items'}` : '', Number(order.finalTotal) > 0 ? `₹${Number(order.finalTotal).toLocaleString('en-IN')}` : ''].filter(Boolean).join(' · ')}
+              </p>
+            </div>
+            <button type="button" onClick={() => openDeviceOrder(order)} className="aura-btn aura-btn-sm shrink-0">Track order</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 
   const searchText = orderSearch.trim().toLowerCase();
   const filteredOrders = shownOrders.filter((order) =>
@@ -836,14 +881,37 @@ export const AccountPage: React.FC = () => {
               <section className="space-y-4">
                 {ordersLoading && recentOrders.length === 0 ? (
                   <div className="py-16 flex justify-center" role="status" aria-label="Loading your orders"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
+                ) : ordersFailed && recentOrders.length === 0 ? (
+                  // The list could not be read: say so, never "No orders yet" to someone who may have paid
+                  <>
+                    <EmptyState icon={<BagIcon className="w-7 h-7" mono />} title="We could not load your orders" text="Your orders are safe. Check your connection and try again, or track an order with its number.">
+                      <button type="button" onClick={loadOrders} className="aura-btn">Try again</button>
+                      <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="aura-btn aura-btn-line">Track with order number</button>
+                    </EmptyState>
+                    {deviceOrdersBlock}
+                  </>
                 ) : recentOrders.length === 0 ? (
-                  <EmptyState icon={<BagIcon className="w-7 h-7" mono />} title="No orders yet" text={<>Orders placed with <span className="break-all">{user.email}</span> appear here on every device.</>}>
-                    <button type="button" onClick={() => setActivePage('shop')} className="aura-btn">
-                      Start shopping
-                    </button>
-                  </EmptyState>
+                  <>
+                    {deviceOrdersBlock}
+                    <EmptyState
+                      icon={<BagIcon className="w-7 h-7" mono />}
+                      title={deviceOrders.length ? 'No orders under this email' : 'No orders under this email yet'}
+                      text={<>Orders placed while signed in as <span className="break-all">{user.email}</span> appear here. Ordered without signing in, or with another email? Track it with your order number and the mobile number or email you gave at checkout.</>}
+                    >
+                      <button type="button" id="account-track-guest-order" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="aura-btn">
+                        Track with order number
+                      </button>
+                      <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, I placed an order but I cannot see it in my account (${user.email}). Please help me find it.`)} target="_blank" rel="noopener noreferrer" className="aura-btn aura-btn-line">
+                        Ask us on WhatsApp
+                      </a>
+                      <button type="button" onClick={() => setActivePage('shop')} className="aura-btn aura-btn-line">
+                        Start shopping
+                      </button>
+                    </EmptyState>
+                  </>
                 ) : (
                   <>
+                    {deviceOrdersBlock}
                     <SectionIntro title="My orders" text="Track deliveries, download receipts and manage returns." />
                     <div className="space-y-3">
                       <div className="relative">

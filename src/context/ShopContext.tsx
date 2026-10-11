@@ -74,7 +74,8 @@ interface ShopContextType {
   setConfirmedOrder: (order: Order | null) => void;
   recentOrders: Order[];
   addRecentOrder: (order: Order) => void;
-  syncCustomerOrders: (identifier?: string | { email?: string; phone?: string }) => Promise<void>;
+  /** Resolves false when the signed-in shopper's orders could not be read from the server (the list is then unchanged) */
+  syncCustomerOrders: (identifier?: string | { email?: string; phone?: string }) => Promise<boolean>;
   appliedCoupon: Coupon | null;
   /** onRefused: the caller shows the refusal reason next to its coupon field instead of an error toast. */
   applyCoupon: (code: string, onRefused?: (reason: string) => void) => Promise<boolean>;
@@ -673,15 +674,16 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
 
-  const syncCustomerOrders = async (_identifier?: string | { email?: string; phone?: string }) => {
+  const syncCustomerOrders = async (_identifier?: string | { email?: string; phone?: string }): Promise<boolean> => {
     if (getSessionEmail()) {
       try {
         const result = await ordersApi<{ orders: Order[] }>('my-orders');
         setRecentOrders(result.orders || []);
+        return true;
       } catch (e) {
         console.warn('Could not load your orders:', e);
+        return false;
       }
-      return;
     }
     try {
       const guest = JSON.parse(localStorage.getItem('sag_guest_orders') || '[]');
@@ -689,6 +691,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       setRecentOrders([]);
     }
+    return true;
   };
 
   useEffect(() => {
