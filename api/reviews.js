@@ -3,6 +3,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, getIdentity, isSameOrigin, parseBody, reply } from './_lib/http.js';
 import { createMediaGrant, deleteMedia, mediaImage } from './_lib/media.js';
+import { emailVariants } from './_lib/emailFix.js';
 
 // Product reviews from the storefront. Every review waits for the admin's approval (status 'pending').
 // "Verified purchase" is decided here, never by the browser: only a signed-in customer whose paid order
@@ -115,7 +116,7 @@ const reviewPhotosEnabled = async (db) => {
 
 /** The line of a paid order from this customer that contains the product, or null. */
 const paidOrderLine = async (db, email, productId) => {
-  const snapshot = await db.collection('orders').where('customerEmail', '==', email).limit(300).get();
+  const snapshot = await db.collection('orders').where('customerEmail', 'in', emailVariants(email)).limit(300).get();
   for (const doc of snapshot.docs) {
     const order = doc.data();
     if (order.paymentStatus !== 'Paid') continue;

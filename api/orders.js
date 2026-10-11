@@ -2,6 +2,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { firestore } from './_lib/firebaseAdmin.js';
 import { cleanText, clientIp, getIdentity, isSameOrigin, isValidEmail, parseBody, reply } from './_lib/http.js';
 import { createMediaGrant } from './_lib/media.js';
+import { emailVariants, fixEmailTypo, sameEmail } from './_lib/emailFix.js';
 import {
   ORDER_STATUSES,
   RETURN_PHOTO_FOLDER,
@@ -139,7 +140,9 @@ const validateAddress = (raw) => {
   const address = {
     fullName: cleanText(raw?.fullName, 100),
     mobile: String(raw?.mobile || '').replace(/\D/g, '').slice(-10),
-    email: cleanText(raw?.email, 160).toLowerCase(),
+    // A well-known mistyped domain (gamil.com for gmail.com) is corrected, so the receipt reaches the shopper
+    // and the order belongs to the account she signs in with
+    email: fixEmailTypo(cleanText(raw?.email, 160)),
     houseFlat: cleanText(raw?.houseFlat, 200),
     street: cleanText(raw?.street, 200),
     area: cleanText(raw?.area, 120),
@@ -280,7 +283,7 @@ const returnPhotoSignature = (key) => createMediaGrant('returns', 'image', { id:
 const ownOrder = async (db, orderNumber, email) => {
   const snap = await db.collection('orders').doc(orderNumber).get();
   const order = snap.exists ? snap.data() : null;
-  if (!order || String(order.customerEmail || '').trim().toLowerCase() !== String(email || '').trim().toLowerCase()) throw new UserError('Order not found.', 404);
+  if (!order || !sameEmail(order.customerEmail, email)) throw new UserError('Order not found.', 404);
   return order;
 };
 
@@ -537,13 +540,13 @@ const actions = {
     const digits = contact.replace(/\D/g, '').slice(-10);
     const owns = order && (
       identity.admin
-      || (identity.email && identity.email === order.customerEmail)
-      || (contact && contact === String(order.customerEmail || '').toLowerCase())
+      || (identity.email && sameEmail(identity.email, order.customerEmail))
+      || (contact && sameEmail(contact, order.customerEmail))
       || (digits.length === 10 && digits === String(order.customerMobile || '').slice(-10))
     );
     if (!owns) throw new UserError('No order matches that order number and email / phone.', 404);
     // Only the signed-in owner (or the admin) sees the full address; a guest lookup gets the short view.
-    if (identity.email && identity.email === order.customerEmail) return { status: 200, body: { order: ownerOrderView(order) } };
+    if (identity.email && sameEmail(identity.email, order.customerEmail)) return { status: 200, body: { order: ownerOrderView(order) } };
     if (identity.admin) {
       // The admin looking from the storefront: no customer actions (returns need the customer's own sign-in).
       const { returnEligibility, ...view } = ownerOrderView(order);
@@ -554,7 +557,8 @@ const actions = {
 
   async 'my-orders'(db, body, req, identity) {
     if (!identity.email) throw new UserError('Please sign in to see your orders.', 401);
-    const snapshot = await db.collection('orders').where('customerEmail', '==', identity.email).get();
+    // Orders saved with a mistyped form of this address (gamil.com for gmail.com) are this shopper's too
+    const snapshot = await db.collection('orders').where('customerEmail', 'in', emailVariants(identity.email)).get();
     const orders = snapshot.docs
       .map((docSnap) => docSnap.data())
       // Unpaid orders from the last 3 days stay listed with a "Pay" button; older abandoned ones are hidden
@@ -620,7 +624,7 @@ const actions = {
       const photoRefs = photoKeys.map((key) => db.collection('return_photos').doc(key));
       const [snap, ...photoSnaps] = await tx.getAll(ref, ...photoRefs);
       const data = snap.exists ? snap.data() : null;
-      if (!data || String(data.customerEmail || '').trim().toLowerCase() !== identity.email.trim().toLowerCase()) throw new UserError('Order not found.', 404);
+      if (!data || !sameEmail(data.customerEmail, identity.email)) throw new UserError('Order not found.', 404);
       const blocked = returnBlockReason(data);
       if (blocked) throw new UserError(blocked, 409);
       const request = validateReturnInput(data, input, { products, isPhotoUrl });

@@ -15,6 +15,7 @@ import { listAddresses, SavedAddress } from '../lib/addressBook';
 import { Gateway, UPI_APPS, UpiAppId, loadRazorpaySDK, razorpayDisplayConfig, submitToPayu } from '../lib/payments';
 import { useFestiveRound, useTimeLeft } from './FestiveBanner';
 import { couponEligibleSubtotal } from '../utils/coupons';
+import { correctedEmail } from '../utils/emailFix';
 
 type PaymentReturn = { state: 'checking' | 'failed' | 'pending'; orderNumber: string; token: string; message: string };
 
@@ -1408,7 +1409,12 @@ export const CheckoutPage: React.FC = () => {
                       enterKeyHint="next"
                       value={address.email}
                       onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
-                      onBlur={() => { handleFieldBlur(); touch('email'); }}
+                      onBlur={() => {
+                        // A well-known mistyped domain (gamil.com) is corrected in the field, and the shopper is told
+                        const fixed = correctedEmail(address.email);
+                        if (fixed) { handleFieldChangeDebounced('email', fixed); showToast(`Email corrected to ${fixed}`, 'info'); }
+                        handleFieldBlur(); touch('email');
+                      }}
                       placeholder="you@example.com"
                       aria-invalid={emailError ? true : undefined}
                       aria-describedby={emailError ? 'co-email-error' : 'co-email-help'}
