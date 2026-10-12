@@ -1,5 +1,6 @@
 import { Product } from '../types';
 import { fuzzyMatchProduct } from './fuzzySearch';
+import { WOMEN_CATEGORY_INFO, WOMEN_CATEGORY_NAMES } from '../data/womenCategories';
 
 /**
  * Understands shopping requests like "pink suit under ₹999", "wedding ke liye heavy suit",
@@ -32,17 +33,17 @@ export const OCCASIONS: Record<string, string[]> = {
   Daily: ['daily', 'casual', 'everyday', 'regular', 'roz', 'comfortable'],
 };
 
-const CATEGORY_WORDS: Array<[RegExp, string[]]> = [
-  [/\b(suit|suits|salwar|soot)\b/, ['suit']],
-  [/\b(kurti|kurtis|kurta|kurtas)\b/, ['kurti', 'kurta']],
-  [/\b(anarkali|anarkalis|gown|gowns)\b/, ['anarkali', 'gown']],
-  [/\b(lehenga|lehengas|lehnga|lahanga|choli)\b/, ['lehenga']],
-  [/\b(co-?ords?|co ord|coord)\b/, ['co-ord', 'coord', 'co ord']],
-  [/\b(sharara|gharara)\b/, ['sharara', 'gharara']],
-  [/\b(dress|dresses|frock)\b/, ['dress']],
-  [/\b(palazzo|plazo)\b/, ['palazzo']],
-  [/\b(dupatta|chunni)\b/, ['dupatta']],
-];
+// What a shopper types for each category, and the words then looked for in a style: from the one list of
+// categories (src/data/womenCategories.ts). Phrases ("kurta set", "night suit", "dress material") are read
+// before single words, and before colours and occasions, so "night suit" is nightwear and not a party suit.
+const escapeRe = (word: string) => word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const wordRule = (asks: string[], find: string[]): [RegExp, string[]] | null =>
+  (asks.length ? [new RegExp(`\\b(${[...asks].sort((a, b) => b.length - a.length).map(escapeRe).join('|')})\\b`), find] : null);
+const rulesFor = (phrases: boolean) => WOMEN_CATEGORY_NAMES
+  .map((name) => wordRule(WOMEN_CATEGORY_INFO[name].ask.filter((ask) => /[ -]/.test(ask) === phrases), WOMEN_CATEGORY_INFO[name].find))
+  .filter((rule): rule is [RegExp, string[]] => Boolean(rule));
+const CATEGORY_PHRASES = rulesFor(true);
+const CATEGORY_WORDS = rulesFor(false);
 
 const SIZE_ALIASES: Record<string, string> = { '2xl': 'XXL', xxl: 'XXL', '3xl': '3XL', xxxl: '3XL', '4xl': '4XL', '5xl': '5XL', xl: 'XL', xs: 'XS' };
 const NUMBER_WORDS: Record<string, number> = { 'one thousand': 1000, thousand: 1000, 'ek hazar': 1000, hazar: 1000, hazaar: 1000, 'two thousand': 2000, 'do hazar': 2000, 'five hundred': 500, 'paanch sau': 500 };
@@ -86,6 +87,14 @@ export const parseSmartQuery = (raw: string): SmartQuery => {
   if (out.maxPrice !== null) out.understood.push(out.minPrice ? `₹${out.minPrice}–₹${out.maxPrice}` : `Under ₹${out.maxPrice}`);
   else if (out.minPrice !== null) out.understood.push(`Above ₹${out.minPrice}`);
 
+  const readCategories = (rules: Array<[RegExp, string[]]>, labels: string[]) => rules.forEach(([re, words]) => {
+    const g = new RegExp(re.source, 'g');
+    const m = q.match(g);
+    if (m) { out.categoryWords.push(words); labels.push(m[0].replace(/s$/, '').replace(/^\w/, (c) => c.toUpperCase())); consume(g); }
+  });
+  // Product type, the phrases (their labels are shown with the single words, further down)
+  const phraseLabels: string[] = [];
+  readCategories(CATEGORY_PHRASES, phraseLabels);
 
   // Sizes (only unambiguous tokens, plus "size m"/"m size")
   q = q.replace(/\b(xxxl|xxl|xl|xs|[2-5]xl)\b/g, (m) => { const s = SIZE_ALIASES[m]; if (s && !out.sizes.includes(s)) out.sizes.push(s); return ' '; });
@@ -112,11 +121,8 @@ export const parseSmartQuery = (raw: string): SmartQuery => {
   out.occasions.forEach((o) => out.understood.push(o === 'Daily' ? 'Daily wear' : o === 'Office' ? 'Office wear' : o));
 
   // Product type
-  CATEGORY_WORDS.forEach(([re, words]) => {
-    const g = new RegExp(re.source, 'g');
-    const m = q.match(g);
-    if (m) { out.categoryWords.push(words); out.understood.push(m[0].replace(/s$/, '').replace(/^\w/, (c) => c.toUpperCase())); consume(g); }
-  });
+  out.understood.push(...phraseLabels);
+  readCategories(CATEGORY_WORDS, out.understood);
 
   if (/\b(in stock|available|ready)\b/.test(q)) { out.inStockOnly = true; out.understood.push('In stock'); consume(/\b(in stock|available|ready)\b/g); }
 

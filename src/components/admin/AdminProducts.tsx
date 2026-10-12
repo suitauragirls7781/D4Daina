@@ -24,6 +24,7 @@ import { getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminStockHistory } from './AdminStockHistory';
 import { PackageIcon } from '../StoreIcons';
 import { AdminPageHeader, EmptyState, SCRIM, StatRow, StatTile, tone, ui } from './adminShared';
+import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 
 type StatusTab = 'all' | 'published' | 'draft' | 'archived';
 // 'hidden' = drafts and archived together (the "Drafts / hidden" tile); it has no tab of its own
@@ -35,17 +36,7 @@ const statusOf = (product: Product): Exclude<StatusTab, 'all'> =>
 import { isAccessory, setTypeOf } from '../../utils/looks';
 
 // Outfit categories only: accessories live in Complete the Look, never in this list.
-const ALL_CATEGORIES: string[] = [
-  'All',
-  'Suits',
-  'Kurtis',
-  'Dresses',
-  'Anarkali',
-  'Dupatta Sets',
-  'Co-ord Sets',
-  'Festive Wear',
-  'Party Wear'
-];
+const ALL_CATEGORIES: string[] = ['All', ...WOMEN_CATEGORY_NAMES];
 
 const STATUS_LABEL: Record<StatusTab, string> = { all: 'All', published: 'Published', draft: 'Draft', archived: 'Archived' };
 // Sold out the same way the stock filter reads it

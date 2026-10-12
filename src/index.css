@@ -1934,6 +1934,20 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .pdp-buy > p > span:last-child { display: flex; font-size: 17px; font-weight: 800; color: var(--aura-paper); }
 .pdp-buy .aura-btn { flex: none; min-height: 48px; padding: 0 16px; font-size: 14.5px; }
 @media (max-width: 379px) { .pdp-buy > img { display: none; } .pdp-buy .aura-btn { padding: 0 13px; } }
+/* The whole range of categories, above the footer (CategoryDirectory): sand, white pills with the real count,
+   quieter outline pills for the categories still to come */
+.cdir { position: relative; flex: none; background: var(--aura-sand); color: var(--aura-ink); }
+.cdir-in { width: 100%; max-width: 1120px; margin: 0 auto; padding: 56px 18px 60px; }
+.cdir-l { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cdir-h { margin: 26px 0 12px; }
+.cdir-p { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: var(--aura-ink); font-family: var(--font-sans); font-size: 15px; line-height: 1.1; font-weight: 700; cursor: pointer; transition: transform 300ms var(--aura-sp); }
+.cdir-p:active { transform: scale(0.96); }
+.cdir-p > span { font-size: 13px; font-weight: 600; color: #6A645E; }
+.cdir-p.soon { background: transparent; box-shadow: inset 0 0 0 1px rgba(17, 16, 19, 0.28); font-weight: 600; }
+.cdir-p[aria-current="page"] { background: var(--aura-ink); color: var(--aura-paper); box-shadow: none; }
+.cdir-p[aria-current="page"] > span { color: #BDB6AD; }
+@media (min-width: 900px) { .cdir-in { padding: 80px 20px 88px; } }
+@media (prefers-reduced-motion: reduce) { .cdir-p { transition: none; } }
 /* Phones: the label, the name and the price above the photo, so the first screen says what it is and what it costs */
 .pdp-top { padding: 4px 16px 12px; }
 .pdp-top .pdp-n { font-size: 21px; line-height: 1.16; letter-spacing: -0.02em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }

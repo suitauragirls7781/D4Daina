@@ -17,6 +17,7 @@ import {
 import { Product, ProductCategory, ProductSize, ProductColor } from '../../types';
 import { ACCESSORY_CATEGORY, FOOTWEAR_SIZES, SET_TYPES, isAccessory, setTypeHint } from '../../utils/looks';
 import { AiProductFill, type AiDraft } from './AiProductFill';
+import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 import { ON_GOLD, SWITCH_TRACK, SectionTitle, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 
@@ -49,16 +50,8 @@ const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; isName?: boo
 );
 
 
-const ALL_CATEGORIES: ProductCategory[] = [
-  'Suits',
-  'Kurtis',
-  'Dresses',
-  'Anarkali',
-  'Dupatta Sets',
-  'Co-ord Sets',
-  'Festive Wear',
-  'Party Wear'
-];
+// Every women's category the store sells under (one list: src/data/womenCategories.ts)
+const ALL_CATEGORIES: ProductCategory[] = [...WOMEN_CATEGORY_NAMES];
 
 // S to 5XL, plus Free Size. XS is only offered on older products that already use it.
 const ALL_SIZES: ProductSize[] = ['S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'Free Size'];

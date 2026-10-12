@@ -10,6 +10,7 @@ import { ShieldCheck } from 'lucide-react';
 import { Header } from './components/Header';
 import { HomePage } from './components/HomePage';
 import { Footer } from './components/Footer';
+import { CategoryDirectory } from './components/CategoryDirectory';
 
 // Pages & Views
 
@@ -248,6 +249,8 @@ const MainContent: React.FC = () => {
         </ErrorBoundary>
       </main>
 
+      {/* The whole range of categories, above the footer on the pages where people shop */}
+      {['home', 'shop', 'product-detail', 'wishlist', 'about', 'not-found'].includes(currentPage as string) && <CategoryDirectory />}
       {/* Footer on every page except checkout (checkout stays focused on paying) */}
       {currentPage !== 'checkout' && <Footer />}
       {/* Phones: room for the fixed bottom tab bar (the product page leaves room for its own buy bar) */}

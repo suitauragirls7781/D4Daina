@@ -1,12 +1,8 @@
+import type { WomenCategoryName } from './data/womenCategories';
+
+/** Every women's category is listed once, in src/data/womenCategories.ts. */
 export type ProductCategory =
-  | 'Suits'
-  | 'Kurtis'
-  | 'Dresses'
-  | 'Dupatta Sets'
-  | 'Co-ord Sets'
-  | 'Anarkali'
-  | 'Festive Wear'
-  | 'Party Wear'
+  | WomenCategoryName
   /** Accessories (bags, heels, jewellery...) sold only inside "Complete the look". */
   | 'Accessories';
 

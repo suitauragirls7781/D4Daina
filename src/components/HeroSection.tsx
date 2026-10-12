@@ -4,6 +4,7 @@ import { useAdmin, generateHeroSlidesFromProducts } from '../context/AdminContex
 import { HeroBannerConfig, Product } from '../types';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { slugToCategory } from '../utils/slugHelper';
+import { WOMEN_CATEGORY_NAMES } from '../data/womenCategories';
 import { prepaidPercentApplies } from '../utils/prepaid';
 import { assuranceFacts } from './Assurance';
 import { frameInsets } from './HomeSections';
@@ -25,7 +26,7 @@ const ownerBadge = (badge?: string) => {
   const text = (badge || '').trim();
   return text && !AUTO_BADGES.has(text) ? text : '';
 };
-const HERO_CATEGORY_LINKS =['All', 'Suits', 'Kurtis', 'Dresses', 'Dupatta Sets', 'Co-ord Sets', 'Anarkali', 'Festive Wear', 'Party Wear', 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'] as const;
+const HERO_CATEGORY_LINKS: readonly string[] = ['All', ...WOMEN_CATEGORY_NAMES, 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'];
 
 /** The badge as plain words: emoji and the joiners that belong to them are removed. */
 const plainWords = (text: string) => text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim();
@@ -199,7 +200,7 @@ export const HeroSection: React.FC = () => {
       navigateToProduct(matchedProduct.id);
     } else {
       const category = HERO_CATEGORY_LINKS.find((candidate) => candidate === slugToCategory(targetLink));
-      navigateToCategory(category || 'All');
+      navigateToCategory((category || 'All') as any);
     }
   };
 

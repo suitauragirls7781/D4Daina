@@ -89,6 +89,8 @@ Default order (admin can reorder/toggle in Admin → Homepage; stored in `storef
 
 (The "On Instagram" section was removed from the homepage at the owner's request on 2026-10-09; do not bring it back.)
 
+(Women's categories, owner 2026-10-13: the store's whole range is ONE list, `src/data/womenCategories.ts` (29 categories: name, one plain line, other addresses, search words). The `ProductCategory` type, the admin's product form, product filter, hero links and Categories page, the category addresses (`slugHelper.ts`) and the search words (`smartQuery.ts`) are all built from it: to add a category, add it there and nowhere else. A category with styles shows its real count. One without styles is shown as "Soon" (never with a count, a photo or a product) in the directory above the footer on the shopping pages (`CategoryDirectory.tsx`), in the phone menu's folded "Coming soon" group and in the search panel, and opens an honest "coming soon" listing that search engines are told not to index; it is not in the sitemap. The stacking cards of "Shop by category" stay for categories that have styles. Admin → Categories lists every category without a saved card; a card is only needed for the owner's own photo or to switch a category off (an empty category that is switched off is hidden from shoppers).)
+
 (Kids wear and toys were removed from the whole store and the admin panel at the owner's request on 2026-10-12: no menu entry, home section, category, shop listing, admin page or AI mode for them; do not bring them back. Styles and categories saved for them earlier are still in the database and are left out wherever the catalogue is read or an order is priced: `src/utils/removedSections.ts` and `api/_lib/removedSections.js`.)
 
 ---

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { categoryDirectory } from '../data/womenCategories';
+import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../context/AuthContext';
-import { ChevronDown, Heart, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Clock, Heart, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { ActivePage } from '../types';
 import { useBackToClose } from '../utils/backClose';
@@ -20,6 +22,7 @@ type Group = { key: string; title: string; items: Item[] };
 export const MobileMenuDrawer: React.FC = () => {
   const { isMobileMenuOpen, setIsMobileMenuOpen, products = [], navigateToCategory, setActivePage, setIsSearchOpen, wishlist, activePage, selectedCategory } = useShop();
   const { user } = useAuth();
+  const { categories: categoryDocs = [] } = useAdmin();
   const close = () => setIsMobileMenuOpen(false);
   useBackToClose(isMobileMenuOpen, close);
 
@@ -36,6 +39,8 @@ export const MobileMenuDrawer: React.FC = () => {
     women.forEach((p) => counts.set(p.category, (counts.get(p.category) || 0) + 1));
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [women]);
+  // The rest of the range (src/data/womenCategories.ts): categories that have no styles yet
+  const coming = useMemo(() => categoryDirectory(women, categoryDocs).filter((entry) => entry.count === 0), [women, categoryDocs]);
   const newCount = women.filter((p) => p.isNewArrival).length;
   const offerCount = women.filter((p) => Number(p.originalPrice) > Number(p.price)).length;
 
@@ -56,6 +61,9 @@ export const MobileMenuDrawer: React.FC = () => {
     ...(collections.length > 0 ? [{ key: 'collections', title: 'Collections', items: collections.map(([name, count]): Item => ({
       key: `collection-${name}`, label: name, icon: Shirt, count, current: activePage === 'shop' && selectedCategory === name, onClick: () => goCategory(name),
     })) }] : []),
+    ...(coming.length > 0 ? [{ key: 'coming', title: 'Coming soon', items: coming.map((entry): Item => ({
+      key: `coming-${entry.name}`, label: entry.name, icon: Clock, current: activePage === 'shop' && selectedCategory === entry.name, onClick: () => goCategory(entry.name),
+    })) }] : []),
     { key: 'account', title: 'Your account', items: [
       { key: 'wishlist', id: 'header-wishlist-btn-mobile', ariaLabel: `Wishlist, ${wishlist.length} items`, label: 'Wishlist', icon: Heart, count: wishlist.length, current: activePage === 'wishlist', onClick: () => goPage('wishlist') },
       { key: 'track-order', label: 'Track order', icon: Truck, current: activePage === 'track-order', onClick: () => goPage('track-order') },
@@ -73,7 +81,7 @@ export const MobileMenuDrawer: React.FC = () => {
 
 
   // A group folds when its title is tapped; the group that holds the current page never starts folded
-  const [folded, setFolded] = useState<Record<string, boolean>>({});
+  const [folded, setFolded] = useState<Record<string, boolean>>({ coming: true });
   const toggle = (key: string) => setFolded((state) => ({ ...state, [key]: !state[key] }));
 
   // The very large lines rise in one after another each time the menu opens (--i is the line's place)

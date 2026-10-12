@@ -1,3 +1,4 @@
+import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -124,7 +125,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     // Products = outfits only (accessories have their own section)
     { id: 'products', label: 'Products', route: '/admin/products', icon: Package, group: 'Catalogue', badge: products.filter((p) => p.productType !== 'accessory').length },
     { id: 'add-product', label: 'Add product', route: '/admin/products/new', icon: PlusCircle, group: 'Catalogue' },
-    { id: 'categories', label: 'Categories', route: '/admin/categories', icon: Layers, group: 'Catalogue', badge: categories.length },
+    { id: 'categories', label: 'Categories', route: '/admin/categories', icon: Layers, group: 'Catalogue', badge: new Set([...WOMEN_CATEGORY_NAMES, ...categories.map((c) => String(c.name))]).size },
 
     { id: 'coupons', label: 'Coupons', route: '/admin/coupons', icon: Tag, group: 'Offers', badge: coupons.length },
     { id: 'dealOfTheDay', label: 'Deal of the day', route: '/admin/deal-of-the-day', icon: Flame, group: 'Offers' },

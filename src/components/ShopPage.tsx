@@ -17,6 +17,7 @@ const FindThisLookButton = React.lazy(() => import('./FindThisLook').then((m) =>
 import { BuildYourLookButton } from './BuildYourLook';
 import { useDiscovery, occasionProducts } from '../utils/discovery';
 import { categoryToSlug } from '../utils/slugHelper';
+import { WOMEN_CATEGORY_INFO, isWomenCategory } from '../data/womenCategories';
 import { ChevronDown, ChevronRight, Shuffle, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { AuraTitle, Icon, clamp, prefersReducedMotion, setVar, useScrollFx } from '../aura';
 
@@ -864,10 +865,10 @@ export const ShopPage: React.FC = () => {
                 <Icon name="search" size={24} />
               </span>
               <p className="aura-h2 aura-h-sm mt-5 [overflow-wrap:anywhere]">
-                {query.trim() ? `No styles match “${query.trim()}”` : narrowed ? 'No styles match these filters' : 'No styles here yet'}
+                {query.trim() ? `No styles match “${query.trim()}”` : narrowed ? 'No styles match these filters' : isWomenCategory(category) ? `${category}: coming soon` : 'No styles here yet'}
               </p>
               <p className="mt-3 text-[15px] leading-[1.5] text-ink-muted max-w-md mx-auto">
-                {query.trim() ? 'Check the spelling, try a simpler word like “suit” or “kurti”, or browse a collection below.' : narrowed ? 'Try another colour, size or price range, or remove a filter.' : 'New styles are added often. Browse another collection meanwhile.'}
+                {query.trim() ? 'Check the spelling, try a simpler word like “suit” or “kurti”, or browse a collection below.' : narrowed ? 'Try another colour, size or price range, or remove a filter.' : isWomenCategory(category) ? `${WOMEN_CATEGORY_INFO[category].line}. This collection is being added to the store. Browse one that has styles meanwhile.` : 'New styles are added often. Browse another collection meanwhile.'}
               </p>
               {emptyActions.length > 0 && (
                 <div className="mt-6 flex flex-col sm:flex-row sm:flex-wrap sm:justify-center gap-2.5">

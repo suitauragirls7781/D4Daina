@@ -22,20 +22,10 @@ import {
 import { HeroBannerConfig } from '../../types';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminPageHeader } from './adminShared';
+import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 import { Empty, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
-const AVAILABLE_CATEGORIES = [
-  'All',
-  'Suits',
-  'Kurtis',
-  'Dresses',
-  'Dupatta Sets',
-  'Co-ord Sets',
-  'Anarkali',
-  'Festive Wear',
-  'Party Wear',
-  'New Arrivals'
-];
+const AVAILABLE_CATEGORIES = ['All', ...WOMEN_CATEGORY_NAMES, 'New Arrivals'];
 
 export const AdminHero: React.FC = () => {
   const {

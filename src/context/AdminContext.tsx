@@ -39,7 +39,6 @@ import {
 } from '../types';
 import { useProducts } from './ProductContext';
 import { ordersApi } from '../lib/api';
-import { CATEGORIES_DATA } from '../data/categories';
 
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../utils/imageHelper';
 

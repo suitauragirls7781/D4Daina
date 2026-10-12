@@ -18,6 +18,7 @@ import { CategoryItem, ProductCategory } from '../../types';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { AdminPageHeader, EmptyState, SCRIM, SWITCH_TRACK, StatRow, StatTile, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
+import { WOMEN_CATEGORY_INFO, WOMEN_CATEGORY_NAMES, isWomenCategory } from '../../data/womenCategories';
 
 const MAX_UPLOAD_MB = 10;
 
@@ -49,6 +50,13 @@ export const AdminCategories: React.FC = () => {
       tagline: '',
       isActive: true,
     });
+    setIsModalOpen(true);
+  };
+
+  // A built-in category that has no saved card yet: the form opens with its name and line filled in
+  const handleOpenReady = (name: ProductCategory) => {
+    setEditingCatId(null);
+    setFormData({ name, title: name, image: '', itemCount: '', tagline: isWomenCategory(name) ? WOMEN_CATEGORY_INFO[name].line : '', isActive: true });
     setIsModalOpen(true);
   };
 
@@ -151,8 +159,13 @@ export const AdminCategories: React.FC = () => {
     return products.filter((p) => p.category === catName).length;
   };
 
-  const activeCount = categories.filter((c) => c.isActive).length;
-  const noPhotoCount = categories.filter((c) => !c.image).length;
+  // Every category the store can sell under (src/data/womenCategories.ts) that has no saved card yet. They work
+  // without one: a card is only needed for the owner's own photo, or to switch a category off.
+  const ready = WOMEN_CATEGORY_NAMES.filter((name) => !categories.some((c) => c.name === name));
+  const withProducts = WOMEN_CATEGORY_NAMES.filter((name) => products.some((p) => p.category === name)).length;
+  const total = categories.length + ready.length;
+  const activeCount = categories.filter((c) => c.isActive).length + ready.length;
+  const noPhotoCount = categories.filter((c) => !c.image).length + ready.length;
 
   return (
     <div id="admin-categories-page" className="space-y-6">
@@ -162,7 +175,7 @@ export const AdminCategories: React.FC = () => {
         eyebrow="Catalogue"
         title="Categories"
         icon={<Layers className="text-current" />}
-        description="The groups shoppers browse by (Suits, Kurtis, Anarkali…). Give each one a photo. The store shows a category only when it has products."
+        description="Every women's category the store can sell under is already here. Add products to a category and it shows on the store with its real count; a category without products shows as “Coming soon”. Add a photo to give a category its own picture."
         actions={
           <button
             onClick={handleOpenAdd}
@@ -174,17 +187,12 @@ export const AdminCategories: React.FC = () => {
         }
       />
       <StatRow label="Categories in numbers">
-        <StatTile label="Categories" value={categories.length} note="in total" />
-        <StatTile label="Shown on the store" value={activeCount} note="switched on" tone="gold" />
-        <StatTile label="Switched off" value={categories.length - activeCount} note="hidden from shoppers" />
+        <StatTile label="Categories" value={total} note="in total" />
+        <StatTile label="With products" value={withProducts} note="shown with their count" tone="gold" />
+        <StatTile label="Switched off" value={total - activeCount} note="hidden from shoppers" />
         <StatTile label="No photo yet" value={noPhotoCount} note={noPhotoCount ? 'the store uses a product photo' : 'every category has a photo'} />
       </StatRow>
 
-      {categories.length === 0 && (
-        <div className="sag-glass">
-          <EmptyState icon={<Layers />} title="No categories yet">Use Add category to create the first one.</EmptyState>
-        </div>
-      )}
 
       {/* Categories Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
@@ -265,6 +273,28 @@ export const AdminCategories: React.FC = () => {
         })}
       </div>
 
+      {/* The built-in categories that have no card of their own yet */}
+      {ready.length > 0 && (
+        <section id="admin-categories-ready" className="sag-glass p-4 sm:p-5">
+          <h3 className={ui.h2}>All women's categories</h3>
+          <p className="mt-1 text-sm leading-5 text-ink-muted">Ready to use in Add Product. A category with products is on the store with a product's photo; one without products shows as “Coming soon”. “Add photo” gives it your own picture, and lets you switch it off.</p>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {ready.map((name) => {
+              const count = getActualProductCount(name);
+              return (
+                <li key={name} className="flex items-center gap-3 rounded-[16px] bg-sunken px-3.5 py-2.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold leading-5 text-ink">{name}</span>
+                    <span className="block truncate text-[13px] leading-[18px] text-ink-muted">{count > 0 ? `${count} ${count === 1 ? 'product' : 'products'} · on the store` : 'No products yet · coming soon'}</span>
+                  </span>
+                  <button type="button" onClick={() => handleOpenReady(name)} className={ui.small} aria-label={`Add a photo for ${name}`}>Add photo</button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {/* Add / Edit Category Modal */}
       {isModalOpen && (
         <div className={`fixed inset-0 z-50 ${SCRIM} flex items-end sm:items-center justify-center sm:p-4`}>
@@ -301,14 +331,7 @@ export const AdminCategories: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value as ProductCategory })}
                   className="sag-input"
                 >
-                  <option value="Suits">Suits</option>
-                  <option value="Kurtis">Kurtis</option>
-                  <option value="Dresses">Dresses</option>
-                  <option value="Anarkali">Anarkali</option>
-                  <option value="Dupatta Sets">Dupatta Sets</option>
-                  <option value="Co-ord Sets">Co-ord Sets</option>
-                  <option value="Festive Wear">Festive Wear</option>
-                  <option value="Party Wear">Party Wear</option>
+                  {Array.from(new Set<string>([...WOMEN_CATEGORY_NAMES, formData.name])).map((name) => <option key={name} value={name}>{name}</option>)}
                 </select>
                 <p className="mt-1.5 text-[13px] text-ink-muted">Products saved with this category appear under it.</p>
               </div>

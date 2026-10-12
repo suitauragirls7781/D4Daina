@@ -137,7 +137,7 @@ const hint = (name) => (name ? `The owner has typed this working name, use it on
 const SPECS = {
   women: ({ categories, setTypes, name }) => ({
     prompt: [
-      'You write product listings for "Suit Aura Girls", an Indian online boutique of women\'s ethnic wear (suits, kurtis, anarkalis, co-ord sets, dupatta sets, festive wear).',
+      'You write product listings for "Suit Aura Girls", an Indian online boutique of women\'s wear (suits, kurtis and kurta sets, anarkalis, sarees, lehengas, gowns, dresses, co-ord sets, tops, bottoms, nightwear and more).',
       'Look carefully at every photo of ONE product (front, back, close-ups) and fill the JSON fields. Write in simple, elegant Indian English.',
       'Rules:',
       HONEST_RULE,

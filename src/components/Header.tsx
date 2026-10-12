@@ -5,6 +5,7 @@ import { useDiscovery } from '../utils/discovery';
 const FindThisLookButton = lazy(() => import('./FindThisLook').then((m) => ({ default: m.FindThisLookButton })));
 import { withPageTransition } from '../utils/pageTransition';
 import { useShop } from '../context/ShopContext';
+import { categoryDirectory } from '../data/womenCategories';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from '../context/RouterContext';
 import { isAvailable, searchQueryMatcher } from '../utils/smartQuery';
@@ -170,6 +171,8 @@ export const Header: React.FC = () => {
     products.forEach((p) => { counts.set(p.category, (counts.get(p.category) || 0) + 1); });
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [products]);
+  // The rest of the range (src/data/womenCategories.ts): categories that have no styles yet
+  const comingCategories = useMemo(() => categoryDirectory(products).filter((entry) => entry.count === 0), [products]);
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -571,6 +574,13 @@ export const Header: React.FC = () => {
                         <button key={name} type="button" onClick={() => { navigateToCategory(name as any); setIsSearchOpen(false); }} className={listRow}>
                           <span className="min-w-0 flex-1 break-words">{name}</span>
                           <span className="sag-num shrink-0 text-[11.5px] text-ink-muted">{count}</span>
+                          <ChevronRight className="w-[15px] h-[15px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                        </button>
+                      ))}
+                      {comingCategories.map((entry) => (
+                        <button key={entry.name} type="button" onClick={() => { navigateToCategory(entry.name as any); setIsSearchOpen(false); }} className={listRow}>
+                          <span className="min-w-0 flex-1 break-words">{entry.name}</span>
+                          <span className="shrink-0 text-[11.5px] text-ink-muted">Soon</span>
                           <ChevronRight className="w-[15px] h-[15px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
                         </button>
                       ))}
