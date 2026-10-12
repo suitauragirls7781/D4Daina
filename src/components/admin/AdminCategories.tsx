@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { CategoryItem, ProductCategory } from '../../types';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
-import { AdminPageHeader, EmptyState, SCRIM, SWITCH_TRACK, StatRow, StatTile, tone, ui } from './kidsToysShared';
+import { AdminPageHeader, EmptyState, SCRIM, SWITCH_TRACK, StatRow, StatTile, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 
 const MAX_UPLOAD_MB = 10;
@@ -162,7 +162,7 @@ export const AdminCategories: React.FC = () => {
         eyebrow="Catalogue"
         title="Categories"
         icon={<Layers className="text-current" />}
-        description="The groups shoppers browse by (Suits, Kurtis, Kids…). Give each one a photo. The store shows a category only when it has products."
+        description="The groups shoppers browse by (Suits, Kurtis, Anarkali…). Give each one a photo. The store shows a category only when it has products."
         actions={
           <button
             onClick={handleOpenAdd}
@@ -309,9 +309,6 @@ export const AdminCategories: React.FC = () => {
                   <option value="Co-ord Sets">Co-ord Sets</option>
                   <option value="Festive Wear">Festive Wear</option>
                   <option value="Party Wear">Party Wear</option>
-                  <option value="Baby Girls">Baby Girls (Kids)</option>
-                  <option value="Baby Boys">Baby Boys (Kids)</option>
-                  <option value="Toys">Toys</option>
                 </select>
                 <p className="mt-1.5 text-[13px] text-ink-muted">Products saved with this category appear under it.</p>
               </div>

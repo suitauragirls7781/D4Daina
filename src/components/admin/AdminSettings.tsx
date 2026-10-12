@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { StoreSettings, PaymentGatewaySettings } from '../../types';
 import { AdminPaymentGateways, CheckRow, Panel, Pill, SaveBar, SwitchRow, Tile, Tiles, kit } from './AdminPaymentGateways';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { deliveryEstimateText } from '../../utils/delivery';
 
 /** Loose GSTIN shape (same as api/admin-config.js): state code, PAN, entity digit, Z, check character. */

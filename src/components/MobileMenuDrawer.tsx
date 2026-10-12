@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
-import { Baby, ChevronDown, Heart, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Heart, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { ActivePage } from '../types';
 import { useBackToClose } from '../utils/backClose';
-import { KIDS_TOYS, departmentOf, isKidsToysListing } from '../utils/kids';
 import { assuranceFacts } from './Assurance';
 
 type Item = { key: string; id?: string; ariaLabel?: string; label: string; icon: LucideIcon; count?: number; current?: boolean; note?: string; onClick?: () => void; href?: string };
@@ -31,19 +30,18 @@ export const MobileMenuDrawer: React.FC = () => {
     return () => document.removeEventListener('keydown', onKey);
   }, [isMobileMenuOpen]);
 
-  const women = useMemo(() => products.filter((p) => departmentOf(p) === 'women'), [products]);
+  const women = products;
   const collections = useMemo(() => {
     const counts = new Map<string, number>();
     women.forEach((p) => counts.set(p.category, (counts.get(p.category) || 0) + 1));
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [women]);
-  const kidsCount = products.length - women.length;
   const newCount = women.filter((p) => p.isNewArrival).length;
   const offerCount = women.filter((p) => Number(p.originalPrice) > Number(p.price)).length;
 
   const goPage = (page: ActivePage) => { close(); setActivePage(page); };
   const goCategory = (category: string) => { close(); navigateToCategory(category as any); };
-  const isCurrent = (key: string) => activePage === 'shop' && (selectedCategory === key || (key === KIDS_TOYS && isKidsToysListing(selectedCategory)));
+  const isCurrent = (key: string) => activePage === 'shop' && selectedCategory === key;
 
   const facts = assuranceFacts();
   const firstName = (user?.displayName || user?.name || '').trim().split(/\s+/)[0];
@@ -54,7 +52,6 @@ export const MobileMenuDrawer: React.FC = () => {
       { key: 'shop-all', label: 'Shop all', icon: LayoutGrid, count: women.length, current: isCurrent('All'), onClick: () => goCategory('All') },
       { key: 'new-arrivals', label: 'New arrivals', icon: Sparkles, count: newCount, current: isCurrent('New Arrivals'), onClick: () => goCategory('New Arrivals') },
       { key: 'offers', label: 'Offers', icon: Tag, count: offerCount, current: isCurrent('Sale'), onClick: () => goCategory('Sale') },
-      ...(kidsCount > 0 ? [{ key: 'kids', label: 'Kids & Toys', icon: Baby, count: kidsCount, current: isCurrent(KIDS_TOYS), onClick: () => goCategory(KIDS_TOYS) }] : []),
     ] },
     ...(collections.length > 0 ? [{ key: 'collections', title: 'Collections', items: collections.map(([name, count]): Item => ({
       key: `collection-${name}`, label: name, icon: Shirt, count, current: activePage === 'shop' && selectedCategory === name, onClick: () => goCategory(name),

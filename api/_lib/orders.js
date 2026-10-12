@@ -1,4 +1,5 @@
 import { FieldValue } from 'firebase-admin/firestore';
+import { isRemovedSection } from './removedSections.js';
 import { randomInt } from 'node:crypto';
 import { cleanText, isValidEmail } from './http.js';
 import { mediaImage } from './media.js';
@@ -317,7 +318,8 @@ export const priceCart = async (db, rawItems, couponCode, customer = null, { pay
   const products = new Map(snapshots.filter((snap) => snap.exists).map((snap) => [snap.id, { id: snap.id, ...snap.data() }]));
   for (const request of requests) {
     const product = products.get(request.productId);
-    if (!product || product.hidden) throw new UserError('An item in your bag is no longer available. Please remove it and try again.', 409);
+    // Kids wear and toys are no longer sold (removedSections.js): a bag that still holds one is told so
+    if (!product || product.hidden || isRemovedSection(product)) throw new UserError('An item in your bag is no longer available. Please remove it and try again.', 409);
   }
   await checkLookAccessories(db, requests, products);
 

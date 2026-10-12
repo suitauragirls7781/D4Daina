@@ -5,7 +5,7 @@ import { Plus, Edit3, Trash2, X, Save, CheckCircle2 } from 'lucide-react';
 import { Coupon } from '../../types';
 import { couponRestrictionNotes } from '../../utils/coupons';
 import { TagIcon } from '../StoreIcons';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Empty, Meter, Pill, Switch, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const rupees = (value: unknown) => `₹${(Number(value) || 0).toLocaleString('en-IN')}`;

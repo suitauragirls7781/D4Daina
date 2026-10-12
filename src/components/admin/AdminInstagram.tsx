@@ -4,7 +4,7 @@ import { useShop } from '../../context/ShopContext';
 import { ArrowDown, ArrowUp, ExternalLink, Instagram, Loader2, Plus, Save, Trash2 } from 'lucide-react';
 import type { InstagramReel } from '../../types';
 import { instagramEmbedUrl, instagramProfile, normalizeInstagramUrl } from '../../utils/instagram';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { Empty, Panel, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const MAX_REELS = 24;

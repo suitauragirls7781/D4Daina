@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { HeroBannerConfig } from '../../types';
 import { getCleanImageUrl } from '../../utils/imageHelper';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { Empty, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const AVAILABLE_CATEGORIES = [

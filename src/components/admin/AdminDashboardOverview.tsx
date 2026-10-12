@@ -9,7 +9,7 @@ import { AdminInsights } from './AdminInsights';
 import { OrderStatusBadge } from './PaymentBadge';
 import { returnRows } from './AdminReturns';
 import { waitingCancelRows } from './AdminCancellations';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { AnalyticsDay, OrderDay, dayLabel, dayRange, istDay, istToday, num, ordersByDay, rupees, shiftDay, totalsFor, useDailyAnalytics } from './adminStats';
 import { ActivityFeedPanel, FeedEvent, LiveDot, LiveVisitorsPanel, SourcesAndDevices, UpdatedAgo, VisitorsByHourPanel, useLiveVisitors } from './AdminLive';
 import { EmptyNote, Panel, Segmented, adminText } from './adminUi';

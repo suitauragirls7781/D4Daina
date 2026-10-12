@@ -12,7 +12,7 @@ const checkAlerts = (productId: string) => {
 };
 import { Product, ProductSize } from '../types';
 import { ACCESSORY_SIZE, FOOTWEAR_SIZES } from '../utils/looks';
-import { KIDS_SIZES } from '../utils/kids';
+import { isRemovedSection } from '../utils/removedSections';
 import { fromCatalogOrLive } from '../lib/catalog';
 
 const LOCAL_STORAGE_KEY = 'sag_custom_products_v1';
@@ -39,15 +39,14 @@ const ProductContext = createContext<ProductContextType | undefined>(undefined);
 // Every size a product can be saved with (Admin → Add product offers S–5XL and Free Size; XS is
 // kept for older products; heels and other footwear accessories use UK shoe sizes). Sizes outside
 // this list are dropped as invalid data.
-const ALL_STANDARD_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'Free Size', ...FOOTWEAR_SIZES, ...KIDS_SIZES];
+const ALL_STANDARD_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'Free Size', ...FOOTWEAR_SIZES];
 // Shown when a product has no valid sizes saved (unchanged long-standing default for outfits).
 const FALLBACK_SIZES: ProductSize[] = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'];
 // Accessories without valid sizes are sold as one size (never offered in clothing sizes).
 const ACCESSORY_FALLBACK_SIZES: ProductSize[] = [ACCESSORY_SIZE];
-// Kids wear and toys without valid sizes are sold as one size too (sizes are never invented for them).
-const fallbackSizesFor = (p: any): ProductSize[] => (['accessory', 'kids', 'toy'].includes(p?.productType) ? ACCESSORY_FALLBACK_SIZES : FALLBACK_SIZES);
-// outfit (women's wear), accessory ("Complete the look"), kids (Admin → Kids Wear) or toy (Admin → Toys)
-const PRODUCT_TYPES = ['outfit', 'accessory', 'kids', 'toy'] as const;
+const fallbackSizesFor = (p: any): ProductSize[] => (p?.productType === 'accessory' ? ACCESSORY_FALLBACK_SIZES : FALLBACK_SIZES);
+// outfit (women's wear) or accessory ("Complete the look")
+const PRODUCT_TYPES = ['outfit', 'accessory'] as const;
 const productTypeOf = (p: any): (typeof PRODUCT_TYPES)[number] => (PRODUCT_TYPES.includes(p?.productType) ? p.productType : 'outfit');
 
 // Helper to retrieve any products saved in local storage across version keys
@@ -60,7 +59,7 @@ const getLocalStorageProducts = (): Product[] => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const cleaned = parsed
-            .filter((p) => p && p.id != null)
+            .filter((p) => p && p.id != null && !isRemovedSection(p))
             .map((p) => {
               let imgs = p.images ?? p.image_urls ?? p.imageUrls ?? p.product_images ?? p.photos;
               if (typeof imgs === 'string') {
@@ -194,9 +193,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Accessories are sold only in "Complete the look"; a set type marks combo / set outfits.
       productType: productTypeOf(p),
       accessoryType: productTypeOf(p) === 'accessory' ? shortLabel(p.accessoryType) : '',
-      // Only women's outfits can be combos; kids wear, toys and accessories never are
+      // Only women's outfits can be combos; accessories never are
       setType: productTypeOf(p) === 'outfit' ? shortLabel(p.setType) : '',
-      ageRange: productTypeOf(p) === 'toy' ? shortLabel(p.ageRange) : '',
     };
   };
 
@@ -284,9 +282,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
       lowStockThreshold: lowStockOverride(p.lowStockThreshold) || undefined,
       productType: productTypeOf(p),
       accessoryType: productTypeOf(p) === 'accessory' ? shortLabel(p.accessoryType) : '',
-      // Only women's outfits can be combos; kids wear, toys and accessories never are
+      // Only women's outfits can be combos; accessories never are
       setType: productTypeOf(p) === 'outfit' ? shortLabel(p.setType) : '',
-      ageRange: productTypeOf(p) === 'toy' ? shortLabel(p.ageRange) : '',
     };
   };
 
@@ -295,7 +292,8 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // deleted by the admin must disappear even if an older copy is cached in the browser.
   const applyProductRows = (rows: any[]) => {
     // Newest first by createdAt
-    const sortedRows = [...(rows || [])].sort((a, b) =>
+    // Kids wear and toys are no longer part of the store (utils/removedSections): their saved rows are left out
+    const sortedRows = (rows || []).filter((row) => !isRemovedSection(row)).sort((a, b) =>
       String(b.createdAt || '').localeCompare(String(a.createdAt || ''))
     );
     const productsWithImages = sortedRows.map(mapProductFromDb).filter(hasRealProductImage);

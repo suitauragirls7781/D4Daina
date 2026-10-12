@@ -13,7 +13,7 @@ import {
 import { useDiscovery } from '../../utils/discovery';
 import { isAvailable } from '../../utils/smartQuery';
 import { ELEGANT_PLACEHOLDER_SVG, getCleanImageUrl } from '../../utils/imageHelper';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { makeVideoPoster, putMediaFile, uploadImageWithGrant } from '../../lib/media';
 import { CheckRow, Empty, Meter, Panel, Pill, Switch, Tile, Tiles, kit } from './AdminPaymentGateways';
 

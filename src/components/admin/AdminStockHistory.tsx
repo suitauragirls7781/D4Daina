@@ -115,7 +115,7 @@ export const AdminStockHistory: React.FC = () => {
         <div className="px-6 py-12 text-center">
           <span className="mx-auto w-12 h-12 rounded-full bg-sunken text-ink-muted flex items-center justify-center mb-3"><History className="w-6 h-6" /></span>
           <p className="text-base font-semibold text-ink">{productId ? 'No stock changes for this product' : 'No stock changes yet'}</p>
-          <p className="mt-1 text-sm text-ink-muted max-w-md mx-auto">No stock changes recorded yet. Changes made from now on in Products, Kids Wear, Toys and Complete the Look appear here.</p>
+          <p className="mt-1 text-sm text-ink-muted max-w-md mx-auto">No stock changes recorded yet. Changes made from now on in Products and Complete the Look appear here.</p>
         </div>
       ) : (
         <>

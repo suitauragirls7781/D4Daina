@@ -3,7 +3,7 @@ import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { CreditCard, ShieldCheck, Save, Loader2, Copy, Check, RefreshCw, KeyRound } from 'lucide-react';
 import { PaymentGatewaySettings } from '../../types';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 
 // ---------------------------------------------------------------- shared pieces of the admin's "storefront & settings" pages
 // (Coupons, Deal, Combo, Homepage, Hero, Banners, Reels, Instagram, Discovery, Payments, Usage, Settings.)

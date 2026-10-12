@@ -1,6 +1,5 @@
 import { Product } from '../types';
 import { isAvailable, productColourFamilies, productOccasions } from './smartQuery';
-import { departmentOf } from './kids';
 
 /** How alike two real products are (category, colour, occasion, fabric, price band). */
 export const similarity = (a: Product, b: Product) => {
@@ -20,7 +19,7 @@ export const similarity = (a: Product, b: Product) => {
 /** Similar available styles for a product page. */
 export const similarProducts = (product: Product, all: Product[], limit = 8) =>
   all
-    .filter((p) => p.id !== product.id && !p.hidden && isAvailable(p) && departmentOf(p) === departmentOf(product))
+    .filter((p) => p.id !== product.id && !p.hidden && isAvailable(p))
     .map((p) => ({ p, s: similarity(product, p) }))
     .sort((x, y) => y.s - x.s)
     .slice(0, limit)

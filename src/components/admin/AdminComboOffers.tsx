@@ -4,7 +4,7 @@ import { adminDb as db } from '../../lib/firebase';
 import { useShop } from '../../context/ShopContext';
 import { Gift, Loader2, Save } from 'lucide-react';
 import { ComboOfferConfig } from '../../types';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Panel, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const DEFAULTS: ComboOfferConfig = { enabled: false, percent: 15, minItems: 2, title: 'Festive combo', subtitle: '' };

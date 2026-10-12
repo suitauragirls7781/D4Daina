@@ -8,8 +8,8 @@ import { inr } from '../../utils/looks';
 import { isAvailable } from '../../utils/smartQuery';
 
 /**
- * Building blocks shared by Admin → Kids Wear and Admin → Toys: photo uploads, colours, the add / edit
- * sheet, list rows and the store category check. Same look and rules as Complete the Look (AdminLooks).
+ * Building blocks shared by the admin pages: the look ("ui"), page headers, tiles, photo uploads, colours,
+ * the add / edit sheet and list rows. Same look and rules as Complete the Look (AdminLooks).
  */
 
 export type ShowToast = (message: string, type?: 'success' | 'info' | 'error') => void;
@@ -582,92 +582,3 @@ export const PublishButton: React.FC<{ p: Product; busy: boolean; onToggle: () =
     {p.hidden ? 'Hidden' : 'Published'}
   </button>
 );
-
-// ---------------------------------------------------------------- store categories
-
-export type CategoryResult = 'created' | 'exists' | 'skipped' | 'failed';
-const categoryKey = (name: string) => String(name || '').trim().toLowerCase();
-
-/**
- * "Baby Girls", "Baby Boys" and "Toys" entries in Admin → Categories (where the owner adds the category photo).
- * A missing one is created (name only, like Admin → Categories creates it); existing categories are never
- * changed or deleted here.
- */
-export const useStoreCategories = () => {
-  const { categories = [], addCategory, isLoading } = useAdmin();
-  const latest = useRef(categories);
-  latest.current = categories;
-  const created = useRef(new Set<string>());
-  const inFlight = useRef(new Map<string, Promise<CategoryResult>>());
-
-  const find = (name: string) => categories.find((c) => categoryKey(c.name) === categoryKey(name));
-  const has = (name: string) => created.current.has(categoryKey(name)) || latest.current.some((c) => categoryKey(c.name) === categoryKey(name));
-  /** Still waiting for the category list (an empty list is not trusted while it may be loading). */
-  const loading = isLoading && categories.length === 0;
-
-  const ensure = (name: string, force = false): Promise<CategoryResult> => {
-    const key = categoryKey(name);
-    if (has(name)) return Promise.resolve('exists');
-    const pending = inFlight.current.get(key);
-    if (pending) return pending;
-    // An empty list may simply not have loaded yet: never risk a duplicate (the admin can use "Add now")
-    if (!force && latest.current.length === 0) return Promise.resolve('skipped');
-    const job = addCategory({ name: name as ProductCategory, title: name, image: '', itemCount: '', tagline: '', isActive: true })
-      .then((): CategoryResult => { created.current.add(key); return 'created'; }, (): CategoryResult => 'failed')
-      .finally(() => { inFlight.current.delete(key); });
-    inFlight.current.set(key, job);
-    return job;
-  };
-
-  return { find, has, ensure, loading };
-};
-export type StoreCategories = ReturnType<typeof useStoreCategories>;
-
-/** Short note for the save message when a category was added along the way. */
-export const categoryNote = (result: CategoryResult, name: string) =>
-  result === 'created' ? ` "${name}" was also added to Categories — you can give it a photo there.` : '';
-
-export const CategoryStatus: React.FC<{ names: string[]; cats: StoreCategories; showToast: ShowToast; onOpenCategories: () => void }> = ({ names, cats, showToast, onOpenCategories }) => {
-  const [adding, setAdding] = useState<string | null>(null);
-  const add = async (name: string) => {
-    setAdding(name);
-    const result = await cats.ensure(name, true);
-    setAdding(null);
-    if (result === 'created') showToast(`"${name}" added to Categories. You can give it a photo there.`, 'success');
-    else if (result === 'exists') showToast(`"${name}" is already in Categories.`, 'info');
-    else showToast(`Could not add "${name}" to Categories. Please try again.`, 'error');
-  };
-  return (
-    <div className="sag-glass px-4 py-3.5 flex flex-wrap items-center gap-x-4 gap-y-2.5">
-      <div className="min-w-0 flex-1 basis-60">
-        <p className={ui.eyebrow}>Store categories</p>
-        <ul className="mt-1.5 flex flex-wrap gap-2">
-          {names.map((name) => {
-            const cat = cats.find(name);
-            return (
-              <li key={name} className={`min-h-9 pl-3 pr-1 py-1 rounded-[18px] text-[13px] leading-[18px] inline-flex flex-wrap items-center gap-1.5 ${cat ? 'bg-ok-tint text-ok' : 'bg-sunken text-ink'}`}>
-                {cats.loading ? (
-                  <><Loader2 className="w-3.5 h-3.5 animate-spin text-current" aria-hidden="true" /> {name}: checking…</>
-                ) : cat ? (
-                  <span className="pr-1.5 inline-flex items-center gap-1"><Check className="w-3.5 h-3.5 text-current" aria-hidden="true" /> <span className="font-semibold">{name}</span>{!cat.isActive ? ' · switched off' : !cat.image ? ' · no photo yet' : ' · has a photo'}</span>
-                ) : (
-                  <>
-                    <span><span className="font-semibold">{name}</span> · not in Categories yet</span>
-                    <button type="button" onClick={() => add(name)} disabled={adding !== null}
-                      className="h-9 px-3 rounded-full bg-surface border border-control text-xs font-semibold text-ink hover:bg-sunken inline-flex items-center gap-1 cursor-pointer disabled:opacity-60">
-                      {adding === name ? <Loader2 className="w-3 h-3 animate-spin text-current" /> : <FolderPlus className="w-3 h-3 text-current" />} Add now
-                    </button>
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        <p className="mt-1.5 text-xs leading-4 text-ink-muted">Added automatically when you save an item. Without a category photo, the store uses the first product photo.</p>
-      </div>
-      <button type="button" onClick={onOpenCategories} className={ui.small}>
-        Open Categories
-      </button>
-    </div>
-  );
-};

@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { startHarness } from '../harness/harness.mjs';
+import { isRemovedCategory, isRemovedSection } from '../../../api/_lib/removedSections.js';
 
 const h = await startHarness();
 
@@ -10,7 +11,8 @@ const PUBLIC_SETTINGS = ['homepageSections', 'heroConfig', 'storeSettings', 'ban
 const REVIEW_FIELDS = ['id', 'productId', 'productName', 'userName', 'rating', 'comment', 'adminReply', 'date', 'verifiedPurchase', 'sizePurchased', 'location', 'imageUrl', 'helpfulCount', 'createdAt', 'status'];
 const COUPON_FIELDS = ['id', 'code', 'discountType', 'discountValue', 'minOrderValue', 'maxDiscount', 'startDate', 'expiryDate', 'usageLimit', 'usageCount', 'isActive', 'perUserLimit', 'allowedCategories', 'allowedProductIds'];
 
-const products = h.exported('products');
+// Kids wear and toys are no longer part of the store: their saved rows are never handed out (removed-sections.test.mjs)
+const products = h.exported('products').filter((row) => !isRemovedSection(row.data));
 const hiddenProduct = products[0];
 const byId = (rows) => Object.fromEntries(rows.map((row) => [row.id, row]));
 
@@ -38,7 +40,7 @@ test('catalogue: every visible product, the categories, approved reviews, active
   assert.equal(served[hiddenProduct.id], undefined);
 
   // Categories: as stored
-  const categories = h.exported('categories');
+  const categories = h.exported('categories').filter((row) => !isRemovedCategory(row.data.name));
   assert.equal(catalogue.categories.length, categories.length);
   for (const row of categories) assert.deepEqual(byId(catalogue.categories)[row.id], { id: row.id, ...row.data });
 

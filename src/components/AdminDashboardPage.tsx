@@ -27,8 +27,6 @@ import { AdminSpecialDod } from './admin/AdminSpecialDod';
 import { AdminDiscovery } from './admin/AdminDiscovery';
 import { AdminReels } from './admin/AdminReels';
 import { AdminLooks } from './admin/AdminLooks';
-import { AdminKids } from './admin/AdminKids';
-import { AdminToys } from './admin/AdminToys';
 import { AdminDealOfTheDay } from './admin/AdminDealOfTheDay';
 import { AdminPaymentGateways } from './admin/AdminPaymentGateways';
 import { AdminUsage } from './admin/AdminUsage';
@@ -139,10 +137,6 @@ export const AdminDashboardPage: React.FC = () => {
         return <AdminReels />;
       case 'looks':
         return <AdminLooks />;
-      case 'kids':
-        return <AdminKids />;
-      case 'toys':
-        return <AdminToys />;
       case 'payments':
         return <AdminPaymentGateways asPage />;
       case 'usage':

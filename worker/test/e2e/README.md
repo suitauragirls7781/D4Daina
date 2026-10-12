@@ -7,7 +7,7 @@ site fails the run.
 
 | Script | What it proves |
 |---|---|
-| `storefront.mjs` | Home, shop, category, Kids & Toys, product page and search show the products of local D1; add to bag and the checkout's payment options (never pays); an abandoned checkout, a contact message and a newsletter sign-up land in D1; an anonymous visitor cannot change products or read orders; customer sign-in screen; `/sitemap.xml`, cache and security headers, unknown paths. |
+| `storefront.mjs` | Home, shop, category, product page and search show the products of local D1; add to bag and the checkout's payment options (never pays); an abandoned checkout, a contact message and a newsletter sign-up land in D1; an anonymous visitor cannot change products or read orders; customer sign-in screen; `/sitemap.xml`, cache and security headers, unknown paths. |
 | `admin.mjs` | `/admin` is the store's 404 page, `/drdaina` the sign-in form; sign-in; order count against D1; one order's details; every sidebar page opens without errors; a product flag and a stock change made in the admin UI are saved in D1 and reach shoppers; an order inserted straight into D1 appears on the open dashboard; reload stays signed in; sign-out. |
 | `customer.mjs` | A signed-in customer (session token minted locally with `AUTH_TOKEN_SECRET` from `.dev.vars`, because the one-time code arrives by email): the profile is read, the bag is saved to the profile in D1, the account page loads its orders from `/api/orders`, and another customer's profile, orders and products are out of reach. |
 | `requests.mjs` | Counts the requests that reach the Worker for a home page view, a product page view and an idle admin dashboard, against the free plan's 100,000 a day. |

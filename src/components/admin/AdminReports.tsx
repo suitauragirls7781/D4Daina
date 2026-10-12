@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { dayLabel, dayRange, firstOrderDay, istToday, monthLabel, monthStart, num, ordersByDay, rupees, shiftDay, totalsFor, useDailyAnalytics, weekStart } from './adminStats';
 import { Panel, Segmented } from './adminUi';
 

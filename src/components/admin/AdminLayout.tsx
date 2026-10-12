@@ -27,8 +27,6 @@ import {
   ExternalLink,
   PanelLeftClose,
   PanelLeft,
-  Baby,
-  ToyBrick,
   Star,
   Film,
   Compass,
@@ -44,7 +42,6 @@ import { useNewOrderAlerts } from './adminAlerts';
 import { AdminTab } from '../../types';
 import { returnRows } from './AdminReturns';
 import { waitingCancelRows } from './AdminCancellations';
-import { departmentOf } from '../../utils/kids';
 import { isLowStock } from '../../utils/inventory';
 import { useLiveCount } from './AdminLive';
 
@@ -124,11 +121,9 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     { id: 'leads', label: 'Captured leads', route: '/admin/leads', icon: MessageSquare, group: 'Customers' },
     { id: 'reviews', label: 'Reviews', route: '/admin/reviews', icon: Star, group: 'Customers', badge: reviews.length },
 
-    // Products = women's outfits only (accessories, kids wear and toys have their own sections)
-    { id: 'products', label: 'Products', route: '/admin/products', icon: Package, group: 'Catalogue', badge: products.filter((p) => p.productType !== 'accessory' && departmentOf(p) === 'women').length },
+    // Products = outfits only (accessories have their own section)
+    { id: 'products', label: 'Products', route: '/admin/products', icon: Package, group: 'Catalogue', badge: products.filter((p) => p.productType !== 'accessory').length },
     { id: 'add-product', label: 'Add product', route: '/admin/products/new', icon: PlusCircle, group: 'Catalogue' },
-    { id: 'kids', label: 'Kids wear', route: '/admin/kids', icon: Baby, group: 'Catalogue', badge: products.filter((p) => departmentOf(p) === 'kids').length },
-    { id: 'toys', label: 'Toys', route: '/admin/toys', icon: ToyBrick, group: 'Catalogue', badge: products.filter((p) => departmentOf(p) === 'toys').length },
     { id: 'categories', label: 'Categories', route: '/admin/categories', icon: Layers, group: 'Catalogue', badge: categories.length },
 
     { id: 'coupons', label: 'Coupons', route: '/admin/coupons', icon: Tag, group: 'Offers', badge: coupons.length },

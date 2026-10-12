@@ -1,4 +1,5 @@
 import { createAdminFirebaseToken, firestore, revokeAdminFirebaseSessions } from './_lib/firebaseAdmin.js';
+import { isRemovedCategory, isRemovedSection } from './_lib/removedSections.js';
 import { createMediaGrant, deleteMedia, mediaImage, mediaVideo, parseMediaUrl } from './_lib/media.js';
 import { createHmac, pbkdf2Sync, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { clearGatewayCache, gatewaysDoc, normalizeGateways, razorpayCreds } from './_lib/payu.js';
@@ -546,8 +547,8 @@ export default async function handler(req, res) {
           const pick = (data, keys) => Object.fromEntries(keys.filter((key) => data[key] !== undefined).map((key) => [key, data[key]]));
           const body = {
             settings: publicSettingsFrom(settingsSnap),
-            products: productsSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.hidden),
-            categories: categoriesSnap.docs.map((d) => ({ id: d.id, ...d.data() })),
+            products: productsSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.hidden && !isRemovedSection(p)),
+            categories: categoriesSnap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((c) => !isRemovedCategory(c.name)),
             // Public review fields only (never the reviewer's email)
             reviews: reviewsSnap.docs.map((d) => ({
               id: d.id,
@@ -664,11 +665,8 @@ export default async function handler(req, res) {
           key: geminiKey,
           model,
           images: body.images,
-          department: ['women', 'kids', 'toys'].includes(body.department) ? body.department : 'women',
           categories: body.categories,
           setTypes: body.setTypes,
-          kinds: body.kinds,
-          ages: body.ages,
           name: typeof body.name === 'string' ? body.name : '',
         });
         if (result.saveModel) await aiDoc(client).set({ model: result.saveModel }, { merge: true }).catch(() => undefined);

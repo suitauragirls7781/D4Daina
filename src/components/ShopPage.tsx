@@ -16,7 +16,6 @@ import { VoiceSearchButton } from './VoiceSearchButton';
 const FindThisLookButton = React.lazy(() => import('./FindThisLook').then((m) => ({ default: m.FindThisLookButton })));
 import { BuildYourLookButton } from './BuildYourLook';
 import { useDiscovery, occasionProducts } from '../utils/discovery';
-import { KIDS_ALL, KIDS_CATEGORIES, KIDS_SIZES, KIDS_TOYS, TOYS, departmentOf, isKids, isKidsToysListing, kindOf } from '../utils/kids';
 import { categoryToSlug } from '../utils/slugHelper';
 import { ChevronDown, ChevronRight, Shuffle, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { AuraTitle, Icon, clamp, prefersReducedMotion, setVar, useScrollFx } from '../aura';
@@ -30,7 +29,7 @@ const SORTS: Array<{ key: SortKey; label: string }> = [
   { key: 'discount', label: 'Biggest discount' },
   { key: 'top-rated', label: 'Top rated' },
 ];
-const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', ...KIDS_SIZES, 'UK 3', 'UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'Free Size'];
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL', 'UK 3', 'UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'Free Size'];
 const FABRIC_WORDS = ['cotton', 'silk', 'georgette', 'chiffon', 'rayon', 'velvet', 'organza', 'linen', 'crepe', 'net', 'chanderi', 'muslin', 'satin', 'khadi', 'modal', 'viscose', 'tissue', 'banarasi'];
 const SPECIAL = ['All', 'New Arrivals', 'Sale', 'Best Sellers', 'Trending'] as const;
 const PAGE = 24;
@@ -175,8 +174,6 @@ export const ShopPage: React.FC = () => {
   const [query, setQuery] = useState(() => readParams().q);
   const [sort, setSort] = useState<SortKey>(() => readParams().sort);
   const [sizes, setSizes] = useState<string[]>([]);
-  // Kids wear / toys: one kind at a time (Frocks & Dresses, Cars...); '' = every kind
-  const [kind, setKind] = useState('');
   const [colors, setColors] = useState<string[]>([]);
   const [fabrics, setFabrics] = useState<string[]>([]);
   const [fits, setFits] = useState<string[]>([]);
@@ -248,8 +245,7 @@ export const ShopPage: React.FC = () => {
     setVisible(PAGE);
   }, [routeState]);
 
-  useEffect(() => { setVisible(PAGE); }, [category, query, sizes, colors, fabrics, fits, occasions, minPrice, maxPrice, minDiscount, minRating, inStockOnly, sort, kind]);
-  useEffect(() => { setKind(''); }, [category]);
+  useEffect(() => { setVisible(PAGE); }, [category, query, sizes, colors, fabrics, fits, occasions, minPrice, maxPrice, minDiscount, minRating, inStockOnly, sort]);
 
   // Ratings come only from approved customer reviews.
   const ratings = useMemo(() => {
@@ -272,21 +268,14 @@ export const ShopPage: React.FC = () => {
   const hasRatings = useMemo(() => products.some((p) => ratings.has(String(p.id))), [products, ratings]);
   const activeSort: SortKey = sort === 'top-rated' && !hasRatings ? 'featured' : sort;
 
-  const kidsPage = isKidsToysListing(category);
-  const searchingAll = category === 'All' && query.trim().length > 0;
-  const pool = useMemo(
-    () => (searchingAll ? products : products.filter((p) => (departmentOf(p) === 'women') !== kidsPage)),
-    [products, kidsPage, searchingAll],
-  );
+  const pool = products;
   const inCategory = useMemo(() => pool.filter((p) => {
     switch (category) {
       case 'All': return true;
-      case KIDS_TOYS: return true; // the whole Kids & Toys page
       case 'New Arrivals': return Boolean(p.isNewArrival);
       case 'Best Sellers': return Boolean(p.isBestSeller);
       case 'Trending': return Boolean(p.isTrending);
       case 'Sale': return Boolean(p.isSale) || discountOf(p) > 0;
-      case KIDS_ALL: return isKids(p); // Baby Girls and Baby Boys together
       default: return categoryToSlug(p.category) === categoryToSlug(category);
     }
   }), [pool, category]);
@@ -343,7 +332,6 @@ export const ShopPage: React.FC = () => {
       if (inStockOnly && soldOut) return false;
       if (occasionIds && !occasionIds.has(String(p.id))) return false;
       if (query.trim() && (smartOn ? !matchesSmartQuery(p, smart) : !fuzzyMatchProduct(p, query))) return false;
-      if (kind && kindOf(p) !== kind) return false;
       if (sizes.length && !sizes.some((s) => (p.sizes || []).includes(s as ProductSize))) return false;
       if (colors.length && !(p.colors || []).some((c) => colors.includes(c.name.trim()))) return false;
       if (fabrics.length && !fabrics.some((f) => (p.fabric || '').toLowerCase().includes(f))) return false;
@@ -374,15 +362,7 @@ export const ShopPage: React.FC = () => {
     });
     // Sold-out styles are shown last.
     return [...sorted.filter((p) => p.inStock && Number(p.stockQuantity ?? 0) > 0), ...sorted.filter((p) => !p.inStock || Number(p.stockQuantity ?? 0) <= 0)];
-  }, [inCategory, occasionIds, query, smart, smartOn, sizes, colors, fabrics, fits, occasions, minPrice, maxPrice, minDiscount, minRating, ratings, inStockOnly, activeSort, products, kind]);
-
-  // Kinds on offer in a kids or toys listing (with counts), shown as a second row of chips
-  const kinds = useMemo(() => {
-    if (!inCategory.length || inCategory.some((p) => departmentOf(p) === 'women')) return [] as Array<[string, number]>;
-    const counts = new Map<string, number>();
-    inCategory.forEach((p) => { const k = kindOf(p); if (k) counts.set(k, (counts.get(k) || 0) + 1); });
-    return counts.size > 1 ? [...counts.entries()].sort((a, b) => b[1] - a[1]) : [];
-  }, [inCategory]);
+  }, [inCategory, occasionIds, query, smart, smartOn, sizes, colors, fabrics, fits, occasions, minPrice, maxPrice, minDiscount, minRating, ratings, inStockOnly, activeSort, products]);
 
   // Surprise me: a random available style from what the shopper is looking at now
   const surprise = () => {
@@ -423,15 +403,8 @@ export const ShopPage: React.FC = () => {
 
   const categoryPills = useMemo(() => {
     const all = [...new Set(products.map((p) => p.category))];
-    // Women's categories first, then Kids (girls + boys together), Baby Girls, Baby Boys, then Toys
-    const kidsCats = (KIDS_CATEGORIES as readonly string[]).filter((c) => all.includes(c as any));
-    if (kidsPage) {
-      const list: string[] = [KIDS_TOYS, ...(kidsCats.length ? [KIDS_ALL, ...kidsCats] : []), ...all.filter((c) => c === TOYS)];
-      if (!list.some((c) => categoryToSlug(c) === categoryToSlug(category))) list.push(category);
-      return list;
-    }
-    const women = products.filter((p) => departmentOf(p) === 'women');
-    const own: string[] = all.filter((c) => departmentOf({ category: c } as Product) === 'women');
+    const women = products;
+    const own: string[] = all;
     const special = SPECIAL.filter((c) => c === 'All'
       || (c === 'New Arrivals' && women.some((p) => p.isNewArrival))
       || (c === 'Sale' && women.some((p) => p.isSale || discountOf(p) > 0))
@@ -440,7 +413,7 @@ export const ShopPage: React.FC = () => {
     const list: string[] = [...special, ...own];
     if (!list.some((c) => categoryToSlug(c) === categoryToSlug(category))) list.push(category);
     return list;
-  }, [products, category, kidsPage]);
+  }, [products, category]);
 
   // Filter and sort sheets: focus moves in and stays inside, Escape closes, focus returns to the button that opened it.
   useEffect(() => {
@@ -480,7 +453,7 @@ export const ShopPage: React.FC = () => {
     const q = query.trim();
     const path = category === 'All' ? '/shop' : `/category/${categoryToSlug(category)}`;
     const isSpecial = (SPECIAL as readonly string[]).includes(category);
-    const label = category === 'All' ? 'All styles' : category === 'Sale' ? 'Offers' : category === KIDS_TOYS ? 'Kids wear & toys' : category;
+    const label = category === 'All' ? 'All styles' : category === 'Sale' ? 'Offers' : category;
     const count = isLoading ? 0 : listing.length;
     const styles = count ? `${count} ${count === 1 ? 'style' : 'styles'}` : '';
     const prices = listing.map((p) => p.price).filter((n) => n > 0);
@@ -504,7 +477,7 @@ export const ShopPage: React.FC = () => {
       description = `Shop ${styles ? `all ${styles}` : 'all styles'}${cats.length ? ` of ${listOf(cats)}` : ''} at Suit Aura Girls${from}. ${trail}`;
       canonical = `${SITE}/shop`;
     } else {
-      title = isSpecial || kidsPage ? `${label} | Suit Aura Girls` : `${label} for women | Suit Aura Girls`;
+      title = isSpecial ? `${label} | Suit Aura Girls` : `${label} for women | Suit Aura Girls`;
       description = category === 'Sale'
         ? `Styles on offer at Suit Aura Girls${styles ? `: ${styles}${from}` : ''}. ${trail}`
         : `Shop ${label} at Suit Aura Girls${styles ? `: ${styles}${from}` : ''}. ${trail}`;
@@ -513,7 +486,7 @@ export const ShopPage: React.FC = () => {
     // Search results and empty listings are kept out of search engines; their links are still followed.
     const robots = q || (!isLoading && listing.length === 0) ? 'noindex, follow' : 'index, follow';
     return { title, description: clip(description, 160), canonical, robots };
-  }, [query, category, activeOccasion, listing, isLoading, kidsPage]);
+  }, [query, category, activeOccasion, listing, isLoading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -691,8 +664,8 @@ export const ShopPage: React.FC = () => {
     const last = text.slice(cut + 1);
     return /^[\p{L}][\p{L}'’-]{2,}$/u.test(last) ? [text.slice(0, cut), last] : [text, ''];
   })();
-  const headLabel = activeOccasion ? 'Occasion' : query.trim() ? 'Search' : category === 'All' || category === KIDS_TOYS ? 'Suit Aura Girls' : 'Collection';
-  const homeListing = kidsPage ? KIDS_TOYS : 'All';
+  const headLabel = activeOccasion ? 'Occasion' : query.trim() ? 'Search' : category === 'All' ? 'Suit Aura Girls' : 'Collection';
+  const homeListing = 'All';
   const narrowed = activeCount > 0 || Boolean(query.trim()) || Boolean(activeOccasion);
   const countLabel = isLoading ? 'Loading styles…' : `${results.length} ${results.length === 1 ? 'style' : 'styles'}`;
   const sortLabel = SORTS.find((s) => s.key === activeSort)?.label || 'Featured';
@@ -702,16 +675,16 @@ export const ShopPage: React.FC = () => {
   // Collections that really have products, offered when a listing comes up empty
   const suggestions = useMemo(() => {
     const counts = new Map<string, number>();
-    products.forEach((p) => { if (p.category && (departmentOf(p) === 'women') !== kidsPage) counts.set(p.category, (counts.get(p.category) || 0) + 1); });
+    products.forEach((p) => { if (p.category) counts.set(p.category, (counts.get(p.category) || 0) + 1); });
     return [...counts.entries()].filter(([c]) => categoryToSlug(c) !== categoryToSlug(category)).sort((a, b) => b[1] - a[1]).slice(0, 8);
-  }, [products, category, kidsPage]);
+  }, [products, category]);
   const openCollection = (c: string) => { clearFilters(); setQuery(''); setOccasionId(''); navigateToCategory(c as any); };
 
   // Empty listing: the first way out is the primary button, the rest are secondary
   const emptyActions: Array<{ label: string; run: () => void }> = [
     ...(activeCount > 0 ? [{ label: 'Clear filters', run: clearFilters }] : []),
     ...(query.trim() ? [{ label: 'Clear search', run: () => setQuery('') }] : []),
-    ...(category !== 'All' || activeOccasion ? [{ label: kidsPage ? 'See all kids & toys' : 'Shop all styles', run: () => openCollection(homeListing) }] : []),
+    ...(category !== 'All' || activeOccasion ? [{ label: 'Shop all styles', run: () => openCollection(homeListing) }] : []),
   ];
 
   const tabs = categoryPills.map((c) => ({
@@ -735,7 +708,7 @@ export const ShopPage: React.FC = () => {
           <ChevronRight className="w-3.5 h-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
           {category !== homeListing && (
             <>
-              <button onClick={() => openCollection(homeListing)} className="shrink-0 min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">{kidsPage ? KIDS_TOYS : 'Shop'}</button>
+              <button onClick={() => openCollection(homeListing)} className="shrink-0 min-h-11 hover:text-ink hover:underline underline-offset-2 cursor-pointer">Shop</button>
               <ChevronRight className="w-3.5 h-3.5 shrink-0 text-ink-faint" aria-hidden="true" />
             </>
           )}
@@ -774,7 +747,7 @@ export const ShopPage: React.FC = () => {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder={kidsPage ? 'Try “frock” or “car”' : 'Try “pink suit under 999”'}
+            placeholder="Try “pink suit under 999”"
             aria-label="Search products"
             enterKeyHint="search"
           />
@@ -794,14 +767,13 @@ export const ShopPage: React.FC = () => {
               <Shuffle className="w-[18px] h-[18px]" strokeWidth={1.6} /> Surprise me
             </button>
           )}
-          {/* Outfit builder is for women's styles only */}
-          {!kidsPage && <BuildYourLookButton className="shop-tool" />}
+          <BuildYourLookButton className="shop-tool" />
           {discovery.features.visualSearch && <React.Suspense fallback={null}><FindThisLookButton variant="link" className="shop-tool" /></React.Suspense>}
         </div>
       </div>
 
       {/* The filter bar stays under the site header while the grid scrolls: Filter, then the collections as pills with
-          the sliding ink indicator (and the kinds of a kids / toys listing). Solid paper, so the grid never shows
+          the sliding ink indicator. Solid paper, so the grid never shows
           through. When the header slides away the bar moves up into its place. */}
       <div ref={barMark} aria-hidden="true" />
       <div className={`shop-fbar ${barStuck && header.gone ? 'up' : ''}`}>
@@ -822,16 +794,6 @@ export const ShopPage: React.FC = () => {
             <CategoryTabs scroller={pillsRef} items={tabs} />
           </div>
 
-          {kinds.length > 0 && (
-            <div className="shop-kinds" role="group" aria-label="Type">
-              <button onClick={() => setKind('')} aria-pressed={kind === ''} className={`shrink-0 ${chip(kind === '', true)}`}>All types</button>
-              {kinds.map(([k, n]) => (
-                <button key={k} onClick={() => setKind(kind === k ? '' : k)} aria-pressed={kind === k} className={`shrink-0 ${chip(kind === k, true)}`}>
-                  {k} <span className="aura-num font-medium opacity-70">({n})</span>
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 

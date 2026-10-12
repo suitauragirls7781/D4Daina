@@ -3,6 +3,7 @@ import { adminAuth as auth, adminDb as db } from '../lib/firebase';
 import { doc, updateDoc, collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { isAdminAreaPath, isAdminEntryPath } from '../utils/adminEntry';
+import { isRemovedCategory } from '../utils/removedSections';
 import { fromCatalogOrLive, loadCatalog, readsLive, setAdminLive } from '../lib/catalog';
 import { DEFAULT_LOW_STOCK_THRESHOLD, cleanLowStockThreshold } from '../utils/inventory';
 import {
@@ -231,7 +232,6 @@ export const INITIAL_SECTIONS: HomepageSectionConfig[] = [
   { id: 'sec-best-sellers', title: 'Featured Collection', key: 'bestSellers', enabled: true, order: 4 },
   { id: 'sec-new-arrivals', title: 'New Arrivals', key: 'newArrivals', enabled: true, order: 5 },
   { id: 'sec-aura-reels', title: 'Aura Reels', key: 'auraReels', enabled: true, order: 6 },
-  { id: 'sec-kids', title: 'Kids & Toys', key: 'kidsCorner', enabled: true, order: 7 },
   { id: 'sec-special-offer', title: 'Offer Banner', key: 'specialOffer', enabled: true, order: 8 },
   { id: 'sec-combo', title: 'Combo Offer Builder', key: 'comboOffers', enabled: false, order: 9 },
   { id: 'sec-why-shop', title: 'Why Shop With Us', key: 'whyShop', enabled: true, order: 10 },
@@ -249,7 +249,8 @@ export const mergeHomepageSections = (parsed: any[]): HomepageSectionConfig[] =>
     return INITIAL_SECTIONS;
   }
 
-  const sanitized = parsed;
+  // The Kids & Toys section was taken out of the store: a saved row for it is dropped
+  const sanitized = parsed.filter((s) => s && s.key !== 'kidsCorner');
   const existingKeys = new Set(sanitized.map(p => p.key));
   const merged = [...sanitized];
 
@@ -923,12 +924,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const stopCategories = fromCatalogOrLive(
       (catalog) => {
-        setCategoryDocs(catalog.categories.map(mapCategoryFromDb));
+        setCategoryDocs(catalog.categories.map(mapCategoryFromDb).filter((c: CategoryItem) => !isRemovedCategory(c.name)));
         categoriesLoaded = true;
         markLoaded();
       },
       () => watchCollection('categories', (rows) => {
-        setCategoryDocs(rows.map(mapCategoryFromDb));
+        setCategoryDocs(rows.map(mapCategoryFromDb).filter((c: CategoryItem) => !isRemovedCategory(c.name)));
         categoriesLoaded = true;
         markLoaded();
       }),

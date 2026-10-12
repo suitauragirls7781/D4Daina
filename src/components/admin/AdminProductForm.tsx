@@ -16,9 +16,8 @@ import {
 } from 'lucide-react';
 import { Product, ProductCategory, ProductSize, ProductColor } from '../../types';
 import { ACCESSORY_CATEGORY, FOOTWEAR_SIZES, SET_TYPES, isAccessory, setTypeHint } from '../../utils/looks';
-import { KIDS_CATEGORIES, TOYS, departmentOf } from '../../utils/kids';
 import { AiProductFill, type AiDraft } from './AiProductFill';
-import { ON_GOLD, SWITCH_TRACK, SectionTitle, tone, ui } from './kidsToysShared';
+import { ON_GOLD, SWITCH_TRACK, SectionTitle, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 
 /** Page header with a back button, in the same layout as the order details page. */
@@ -49,8 +48,6 @@ const FormHeader: React.FC<{ crumb: string; title: React.ReactNode; isName?: boo
   </div>
 );
 
-// Kids wear and toys are added only in Admin → Kids Wear / Toys, never from this women's product form.
-const KIDS_AND_TOY_CATEGORIES: readonly string[] = [...KIDS_CATEGORIES, TOYS];
 
 const ALL_CATEGORIES: ProductCategory[] = [
   'Suits',
@@ -101,17 +98,13 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   // Complete the Look accessories (bags, heels, jewellery...) are a separate section: this form only
   // edits outfits and never creates an accessory.
   const editingAccessory = isAccessory(existingProduct);
-  // Kids wear and toys have their own sections too: this form never edits them or turns them into outfits.
-  const otherSection = existingProduct && !editingAccessory ? departmentOf(existingProduct) : 'women';
-  const editingKidsOrToy = otherSection !== 'women';
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ProductCategory>('Suits');
   // Admin-managed categories first, then the built-in list, without duplicates. "Accessories" belongs to
-  // Complete the Look and "Baby Girls" / "Baby Boys" / "Toys" to Kids Wear / Toys, so they are not offered
-  // here; the product's own saved category is always kept.
+  // Complete the Look, so it is not offered here; the product's own saved category is always kept.
   const categoryOptions = Array.from(new Set([
-    ...[...categories.map((c) => c.name), ...ALL_CATEGORIES].filter((c) => c && c !== ACCESSORY_CATEGORY && !KIDS_AND_TOY_CATEGORIES.includes(c)),
+    ...[...categories.map((c) => c.name), ...ALL_CATEGORIES].filter((c) => c && c !== ACCESSORY_CATEGORY),
     category,
   ].filter(Boolean))) as ProductCategory[];
   // Set / combo type ('' = not a set). "Complete the look" shows only on products that have one.
@@ -392,14 +385,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
       showToast('This is a Complete the Look accessory — edit it in Complete the Look.', 'error');
       return;
     }
-    if (editingKidsOrToy) {
-      showToast(otherSection === 'toys' ? 'This is a toy — edit it in Toys.' : 'This is kids wear — edit it in Kids Wear.', 'error');
-      return;
-    }
-    if (KIDS_AND_TOY_CATEGORIES.includes(category)) {
-      showToast('Kids wear and toys are added in Kids Wear and Toys. Choose a women\'s category here.', 'error');
-      return;
-    }
     if (!name.trim()) {
       showToast('Product name is required.', 'error');
       return;
@@ -533,36 +518,6 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     );
   }
 
-  // Opened on kids wear or a toy (e.g. /admin/products/<id>/edit): they are edited only in Kids Wear / Toys.
-  if (editingKidsOrToy && existingProduct) {
-    const isToyItem = otherSection === 'toys';
-    const sectionName = isToyItem ? 'Toys' : 'Kids Wear';
-    return (
-      <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
-        <FormHeader crumb={isToyItem ? 'Toy' : 'Kids wear'} title={existingProduct.name} isName onBack={() => navigate('/admin/products')} />
-
-        <div id="admin-kids-toys-notice" role="status" className={`${ui.card} space-y-3`}>
-          <p className={ui.h2}>
-            {isToyItem ? 'This is a toy — edit it in Toys' : 'This is kids wear — edit it in Kids Wear'}
-          </p>
-          <p className="text-sm leading-5 text-ink-muted">
-            {isToyItem
-              ? 'Toys have their own section, with the kind of toy and a suitable age, and are sold as one piece. This women\'s product form is not used for them.'
-              : 'Kids wear has its own section for Baby Girls and Baby Boys, with sizes by age (1-2 Y to 14-15 Y). This women\'s product form is not used for it.'}
-          </p>
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button type="button" onClick={() => openAdminTab(isToyItem ? 'toys' : 'kids')} className={ui.primary}>
-              Open {sectionName}
-            </button>
-            <button type="button" onClick={() => navigate('/admin/products')} className={ui.outline}>
-              Back to Products
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // The labels shoppers see on the store (the "published" switch has its own panel: Visibility)
   const labelToggles: Array<{ id: string; label: string; hint: string; checked: boolean; onChange: (next: boolean) => void }> = [
     { id: 'apf-flag-new', label: 'New Arrival', hint: 'Shows a "New" label on the product', checked: isNewArrival, onChange: setIsNewArrival },
@@ -613,7 +568,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         crumb={isEditMode ? 'Edit product' : 'New product'}
         title={isEditMode ? (existingProduct?.name || 'Edit product') : 'Add a new product'}
         isName={isEditMode && Boolean(existingProduct?.name)}
-        description={isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Kids wear, toys and accessories have their own sections."}
+        description={isEditMode ? 'Changes go live on the store as soon as you save.' : "A women's outfit for the store. Accessories have their own section."}
         onBack={handleCancel}
       />
 

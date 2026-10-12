@@ -14,7 +14,7 @@ import { BagReminder } from './BagReminder';
 import { FestiveBanner } from './FestiveBanner';
 import { OccasionSection } from './OccasionSection';
 import { AuraReelsSection } from './AuraReels';
-import { AskAssistantRow, FeaturedCollection, HomeAssuranceBand, KidsCorner, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
+import { AskAssistantRow, FeaturedCollection, HomeAssuranceBand, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
 import { Thread, requestMeasure } from '../aura';
 
 /**
@@ -47,8 +47,6 @@ export const HomePage: React.FC = () => {
         return <NewArrivalsRail />;
       case 'auraReels':
         return <AuraReelsSection />;
-      case 'kidsCorner':
-        return <KidsCorner />;
       case 'bestSellers':
         return <FeaturedCollection />;
       case 'trending':

@@ -7,7 +7,7 @@ import { ArrowDown, ArrowUp, CalendarHeart, Loader2, Plus, Save, Trash2 } from '
 import { DEFAULT_DISCOVERY, DiscoveryFeatures, DiscoverySettings, OccasionConfig, normaliseDiscovery, occasionProducts } from '../../utils/discovery';
 import { OCCASIONS } from '../../utils/smartQuery';
 import { SearchIcon } from '../StoreIcons';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Empty, Panel, Pill, SaveBar, Switch, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const FEATURE_LABELS: Array<[keyof DiscoveryFeatures, string, string]> = [

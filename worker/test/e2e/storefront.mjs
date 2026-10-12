@@ -45,14 +45,6 @@ try {
   check('category Suits: count matches D1', suits && Number(suits[2]) === byCategory.Suits, `${suits?.[0]} / D1 ${byCategory.Suits}`);
   clean('category', watch);
 
-  await page.locator('button:visible', { hasText: /^kids & toys$/i }).first().click();
-  await page.waitForSelector('article[id^="product-card-"]');
-  const kidsText = await bodyText();
-  const kids = kidsText.match(/Showing (\d+) of (\d+) styles/);
-  const kidsInD1 = products.filter(({ data }) => ['Toys', 'Baby Girls', 'Baby Boys'].includes(data.category)).length;
-  check('Kids & Toys: count matches D1', kids && Number(kids[2]) === kidsInD1, `${kids?.[0]} / D1 ${kidsInD1} @ ${new URL(page.url()).pathname}`);
-  clean('kids & toys', watch);
-
   const product = products.find(({ data }) => data.category === 'Suits' && data.inStock !== false && (data.sizes || []).length > 0);
   await page.goto(`/product/${product.id}`, { waitUntil: 'load' });
   await page.waitForSelector('h1');

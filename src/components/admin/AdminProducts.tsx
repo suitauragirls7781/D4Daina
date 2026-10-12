@@ -14,7 +14,6 @@ import {
   Layers,
   Eye,
   Star,
-  Baby,
   Archive,
   ArchiveRestore,
   History
@@ -24,7 +23,7 @@ import { isLowStock, lowStockLevelFor } from '../../utils/inventory';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminStockHistory } from './AdminStockHistory';
 import { PackageIcon } from '../StoreIcons';
-import { AdminPageHeader, EmptyState, SCRIM, StatRow, StatTile, tone, ui } from './kidsToysShared';
+import { AdminPageHeader, EmptyState, SCRIM, StatRow, StatTile, tone, ui } from './adminShared';
 
 type StatusTab = 'all' | 'published' | 'draft' | 'archived';
 // 'hidden' = drafts and archived together (the "Drafts / hidden" tile); it has no tab of its own
@@ -34,7 +33,6 @@ type StockFilter = 'all' | 'inStock' | 'outOfStock' | 'low';
 const statusOf = (product: Product): Exclude<StatusTab, 'all'> =>
   !product.hidden ? 'published' : product.status === 'archived' ? 'archived' : 'draft';
 import { isAccessory, setTypeOf } from '../../utils/looks';
-import { departmentOf } from '../../utils/kids';
 
 // Outfit categories only: accessories live in Complete the Look, never in this list.
 const ALL_CATEGORIES: string[] = [
@@ -107,9 +105,9 @@ export const AdminProducts: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [filterStock, setFilterStock] = useState<StockFilter>('all');
-  // Accessories (bags, heels, jewellery...) are a separate section, managed only in Complete the Look, and
-  // kids wear and toys are managed in Kids Wear and Toys: none of them is listed, counted or filtered here.
-  const outfits = products.filter((product) => !isAccessory(product) && departmentOf(product) === 'women');
+  // Accessories (bags, heels, jewellery...) are a separate section, managed only in Complete the Look:
+  // none of them is listed, counted or filtered here.
+  const outfits = products.filter((product) => !isAccessory(product));
   const [filterType, setFilterType] = useState<'all' | 'combos' | 'singles'>('all');
   const comboCount = outfits.filter((product) => setTypeOf(product)).length;
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -614,10 +612,6 @@ export const AdminProducts: React.FC = () => {
             <Layers className="w-4 h-4 mt-0.5 shrink-0 text-brand" aria-hidden="true" />
             <span>Bags, heels, jewellery and other accessories are managed in Complete the Look</span>
           </p>
-          <p className="mt-1 flex items-start gap-2 text-sm leading-5 text-ink">
-            <Baby className="w-4 h-4 mt-0.5 shrink-0 text-brand" aria-hidden="true" />
-            <span>Kids wear and toys are managed in Kids Wear and Toys</span>
-          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -626,20 +620,6 @@ export const AdminProducts: React.FC = () => {
             className={ui.small}
           >
             Open Complete the Look
-          </button>
-          <button
-            type="button"
-            onClick={() => openAdminTab('kids')}
-            className={ui.small}
-          >
-            Open Kids Wear
-          </button>
-          <button
-            type="button"
-            onClick={() => openAdminTab('toys')}
-            className={ui.small}
-          >
-            Open Toys
           </button>
         </div>
       </div>

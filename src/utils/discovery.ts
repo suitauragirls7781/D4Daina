@@ -3,7 +3,6 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { Product } from '../types';
 import { isAvailable, productOccasions } from './smartQuery';
-import { departmentOf } from './kids';
 import { fromCatalogOrLive } from '../lib/catalog';
 
 /** Admin-managed settings for the discovery features (storefront_settings/discovery). */
@@ -110,7 +109,7 @@ export const occasionProducts = (occasion: OccasionConfig, products: Product[]) 
   const picked = occasion.productIds.map((id) => byId.get(id)).filter((p): p is Product => Boolean(p && !p.hidden));
   const hasRule = Boolean(occasion.match || occasion.maxPrice || occasion.sizes?.length);
   const ruled = hasRule ? products.filter((p) => {
-    if (p.hidden || picked.includes(p) || departmentOf(p) !== 'women') return false;
+    if (p.hidden || picked.includes(p)) return false;
     if (occasion.match && !productOccasions(p).includes(occasion.match)) return false;
     if (occasion.maxPrice && p.price > occasion.maxPrice) return false;
     if (occasion.sizes?.length && !occasion.sizes.some((s) => (p.sizes || []).map(String).includes(s))) return false;

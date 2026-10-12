@@ -5,7 +5,7 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableHomepageSection } from './SortableHomepageSection';
 import { HomeIcon } from '../StoreIcons';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { Empty, Panel, Tile, Tiles, kit } from './AdminPaymentGateways';
 import {
   ExternalLink,
@@ -19,8 +19,7 @@ import {
   ShieldCheck,
   Star,
   RotateCcw,
-  Clapperboard,
-  Baby
+  Clapperboard
 } from 'lucide-react';
 import { AdminTab } from '../../types';
 
@@ -57,8 +56,6 @@ export const AdminHomepage: React.FC = () => {
         return <Flame className={ICON} />;
       case 'auraReels':
         return <Clapperboard className={ICON} />;
-      case 'kidsCorner':
-        return <Baby className={ICON} />;
       case 'instagram':
       case 'newsletter':
       case 'reviews':
@@ -91,8 +88,6 @@ export const AdminHomepage: React.FC = () => {
         return 'The wide offer banner. Change it in Banners.';
       case 'auraReels':
         return 'Your product videos. Upload and arrange them in Aura Reels.';
-      case 'kidsCorner':
-        return 'Baby Girls, Baby Boys and Toys added in Admin → Kids Wear and Toys (shows only when they have styles in stock).';
       case 'instagram':
         return 'Your Instagram reels and posts. Add them in Instagram reels.';
       case 'newsletter':

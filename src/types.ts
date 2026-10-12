@@ -8,18 +8,11 @@ export type ProductCategory =
   | 'Festive Wear'
   | 'Party Wear'
   /** Accessories (bags, heels, jewellery...) sold only inside "Complete the look". */
-  | 'Accessories'
-  /** Kids wear (Admin → Kids Wear) and toys (Admin → Toys): their own sections of the store. */
-  | 'Baby Girls'
-  | 'Baby Boys'
-  | 'Toys';
+  | 'Accessories';
 
 export type ProductSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL' | '3XL' | '4XL' | '5XL' | 'Free Size'
   /** UK shoe sizes, for heels and other footwear accessories. */
-  | 'UK 3' | 'UK 4' | 'UK 5' | 'UK 6' | 'UK 7' | 'UK 8'
-  /** Kids wear sizes by age (see KIDS_SIZES in src/utils/kids.ts). */
-  | '1-2 Y' | '2-3 Y' | '3-4 Y' | '4-5 Y' | '5-6 Y' | '6-7 Y' | '7-8 Y'
-  | '8-9 Y' | '9-10 Y' | '10-11 Y' | '11-12 Y' | '12-13 Y' | '13-14 Y' | '14-15 Y';
+  | 'UK 3' | 'UK 4' | 'UK 5' | 'UK 6' | 'UK 7' | 'UK 8';
 
 export interface ProductColor {
   name: string;
@@ -81,9 +74,7 @@ export interface Product {
    * 'accessory': a bag, heels, jewellery... sold only inside "Complete the look" on combo / set
    * products; never listed in the shop, search, home rails or recommendations. Anything else is an outfit.
    */
-  productType?: 'outfit' | 'accessory' | 'kids' | 'toy';
-  /** Toys only: the suitable age, e.g. "3+ years". */
-  ageRange?: string;
+  productType?: 'outfit' | 'accessory';
   /** Accessories only: Bag, Heels, Jewellery, Earrings, Watch or the admin's own word. */
   accessoryType?: string;
   /** Outfits only: 'Full combo', '3 piece'... "Complete the look" shows only on products with a set type. */
@@ -489,8 +480,6 @@ export type AdminTab =
   | 'discovery'
   | 'reels'
   | 'looks'
-  | 'kids'
-  | 'toys'
   | 'dealOfTheDay'
   | 'categories'
   | 'orders'

@@ -294,7 +294,9 @@ test('sitemap: one URL per visible product, none for hidden products or accessor
 
   const locs = [...response.text.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
   const hasPhoto = (row) => (row.data.images || []).some((url) => typeof url === 'string' && url.trim() && !url.startsWith('data:image/svg+xml') && !url.includes('placeholder.com'));
-  const visible = products.filter((row) => row.id !== hidden.id && row.data.productType !== 'accessory' && hasPhoto(row));
+  // Kids wear and toys are no longer part of the store (removed-sections.test.mjs)
+  const removed = (row) => ['kids', 'toy'].includes(row.data.productType) || ['Baby Girls', 'Baby Boys', 'Toys'].includes(row.data.category);
+  const visible = products.filter((row) => row.id !== hidden.id && row.data.productType !== 'accessory' && !removed(row) && hasPhoto(row));
   assert.ok(visible.length > 10);
   assert.deepEqual(locs.filter((loc) => loc.startsWith(`${SITE}/product/`)).sort(), visible.map((row) => `${SITE}/product/${encodeURIComponent(row.id)}`).sort());
   for (const accessory of products.filter((row) => row.data.productType === 'accessory')) assert.ok(!response.text.includes(`/product/${accessory.id}<`));

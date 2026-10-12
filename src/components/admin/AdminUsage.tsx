@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Gauge, Loader2, RefreshCw } from 'lucide-react';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { Meter, Panel, Pill, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 /** What /api/admin-config?action=usage answers (api/_lib/usage.js). */

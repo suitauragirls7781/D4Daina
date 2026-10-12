@@ -6,7 +6,6 @@ import { ProductCard } from './ProductCard';
 import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
 import { CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, X } from 'lucide-react';
 import { useDiscovery } from '../utils/discovery';
-import { BABY_BOYS, BABY_GIRLS, KIDS_ALL, KIDS_TOYS, TOYS, departmentOf, isToy } from '../utils/kids';
 import { isAccessory } from '../utils/looks';
 import { assuranceFacts, HowOrderWorks } from './Assurance';
 import { WhatsAppIcon } from './BrandIcons';
@@ -205,7 +204,7 @@ export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assura
   const rows = useMemo(() => {
     const facts = assuranceFacts();
     const count = new Map<string, number>();
-    products.forEach((p) => { if (p.inStock && departmentOf(p) === 'women' && p.category) count.set(p.category, (count.get(p.category) || 0) + 1); });
+    products.forEach((p) => { if (p.inStock && p.category) count.set(p.category, (count.get(p.category) || 0) + 1); });
     const names = [...count.entries()].sort((a, b) => b[1] - a[1]).map(([name]) => name).slice(0, 8);
     return [[facts.payment, facts.returns, facts.delivery, 'Chat with us on WhatsApp'], offers.length > 0 ? offers : names];
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -220,7 +219,7 @@ export const HomeAssuranceBand: React.FC<{ id?: string }> = ({ id = 'home-assura
 export const FeaturedCollection: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
   const { items, liveCount } = useMemo(() => {
-    const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
+    const live = products.filter((p) => p.inStock);
     const picked = live.filter((p) => p.isFeatured || p.isBestSeller);
     return { items: (picked.length >= 2 ? picked : live).slice(0, 8), liveCount: live.length };
   }, [products]);
@@ -383,7 +382,7 @@ const pad2 = (n: number) => String(n).padStart(2, '0');
 export const NewArrivalsRail: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
   const items = useMemo(() => {
-    const live = products.filter((p) => p.inStock && departmentOf(p) === 'women');
+    const live = products.filter((p) => p.inStock);
     const fresh = live.filter((p) => p.isNewArrival);
     return (fresh.length > 0 ? fresh : live).slice(0, 10);
   }, [products]);
@@ -501,60 +500,6 @@ export const NewArrivalsRail: React.FC = () => {
           <div ref={track} className="hm-hg-tr">{cards}</div>
         </div>
         <div className="hm-hg-bar" aria-hidden="true"><i ref={bar} /></div>
-      </div>
-    </section>
-  );
-};
-
-/** Kids & Toys: Baby Girls, Baby Boys and Toys in one home section; each tab appears only when it has styles in stock. */
-export const KidsCorner: React.FC = () => {
-  const { products = [], navigateToCategory } = useShop();
-  const groups = useMemo(() => [
-    { key: BABY_GIRLS, label: 'Baby Girls', items: products.filter((p) => p.category === BABY_GIRLS && p.inStock) },
-    { key: BABY_BOYS, label: 'Baby Boys', items: products.filter((p) => p.category === BABY_BOYS && p.inStock) },
-    { key: TOYS, label: 'Toys', items: products.filter((p) => isToy(p) && p.inStock) },
-  ].filter((g) => g.items.length > 0), [products]);
-  const [tab, setTab] = useState(0);
-  if (groups.length === 0) return null;
-  const current = groups[Math.min(tab, groups.length - 1)];
-  const hasKids = groups.some((g) => g.key !== TOYS);
-  const both = hasKids && groups.some((g) => g.key === TOYS);
-  return (
-    <section id="kids-corner" aria-labelledby="kids-corner-title" data-th="sand" className={HOME_SECTION}>
-      <div className="max-w-7xl mx-auto">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <AuraTitle
-            id="kids-corner-title"
-            label="For little ones"
-            title={both ? 'Kids &' : hasKids ? 'Kids' : 'Toys'}
-            accent={both ? 'toys' : hasKids ? 'wear' : undefined}
-            sub={hasKids ? 'Outfits for baby girls and boys, sized by age from 1 to 15 years.' : 'Toys for every age.'}
-            className={groups.length > 1 ? 'mb-5' : HOME_TITLE_GAP}
-          />
-          {groups.length > 1 && (
-            <div className="sag-scroll-x flex gap-2 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 pb-1 mb-6" role="tablist" aria-label="Kids and toys">
-              {groups.map((g, i) => {
-                const active = g.key === current.key;
-                return (
-                  <button key={g.key} type="button" role="tab" aria-selected={active} data-selected={active} onClick={() => setTab(i)}
-                    className="sag-chip shrink-0 h-11 px-4 text-[14px] font-semibold">
-                    {g.label}&nbsp;<span className="aura-num font-normal">({g.items.length})</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        <div key={current.key} className={`${HOME_RAIL} sag-fade`} role="tabpanel" aria-label={current.label}>
-          {current.items.slice(0, 12).map((product) => (
-            <div key={product.id} className={HOME_RAIL_ITEM}>
-              <ProductCard product={product} compact />
-            </div>
-          ))}
-        </div>
-        <HomeMore onClick={() => navigateToCategory((groups.length > 1 ? KIDS_TOYS : current.key === TOYS ? TOYS : KIDS_ALL) as any)}>
-          View all <Icon name="arrow" size={18} />
-        </HomeMore>
       </div>
     </section>
   );

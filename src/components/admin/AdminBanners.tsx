@@ -13,7 +13,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { Banner } from '../../types';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Empty, Pill, Switch, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 export const AdminBanners: React.FC = () => {

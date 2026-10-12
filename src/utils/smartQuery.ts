@@ -1,6 +1,5 @@
 import { Product } from '../types';
 import { fuzzyMatchProduct } from './fuzzySearch';
-import { kidsSizesForAge } from './kids';
 
 /**
  * Understands shopping requests like "pink suit under ₹999", "wedding ke liye heavy suit",
@@ -43,14 +42,6 @@ const CATEGORY_WORDS: Array<[RegExp, string[]]> = [
   [/\b(dress|dresses|frock)\b/, ['dress']],
   [/\b(palazzo|plazo)\b/, ['palazzo']],
   [/\b(dupatta|chunni)\b/, ['dupatta']],
-  // Kids & toys (a bare "girls" is left out: it is part of the store's own name)
-  [/\b(baby girls?|girl child|beti|ladki)\b/, ['baby girls']],
-  [/\b(baby boys?|boys?|beta|ladka)\b/, ['baby boys']],
-  [/\b(kids?|child|children|bab(?:y|ies)|bachcha|bachche|bachon|bacchon)\b/, ['baby girls', 'baby boys']],
-  [/\b(toys?|khilon[ae])\b/, ['toys', 'toy']],
-  [/\b(cars?|gaadi|gadi)\b/, ['car']],
-  [/\b(bikes?|cycles?|scooters?)\b/, ['bike', 'cycle', 'scooter']],
-  [/\b(dolls?|gudiya)\b/, ['doll']],
 ];
 
 const SIZE_ALIASES: Record<string, string> = { '2xl': 'XXL', xxl: 'XXL', '3xl': '3XL', xxxl: '3XL', '4xl': '4XL', '5xl': '5XL', xl: 'XL', xs: 'XS' };
@@ -95,13 +86,6 @@ export const parseSmartQuery = (raw: string): SmartQuery => {
   if (out.maxPrice !== null) out.understood.push(out.minPrice ? `₹${out.minPrice}–₹${out.maxPrice}` : `Under ₹${out.maxPrice}`);
   else if (out.minPrice !== null) out.understood.push(`Above ₹${out.minPrice}`);
 
-  // A child's age ("5 year", "5 saal") → the kids sizes that fit it
-  const age = q.match(/\b(\d{1,2})\s*(?:y|yr|yrs|year|years|sal|saal)\b/);
-  if (age && +age[1] >= 1 && +age[1] <= 15) {
-    kidsSizesForAge(+age[1]).forEach((size) => { if (!out.sizes.includes(size)) out.sizes.push(size); });
-    out.understood.push(`Age ${age[1]}`);
-    consume(/\b\d{1,2}\s*(?:y|yr|yrs|year|years|sal|saal)\b/);
-  }
 
   // Sizes (only unambiguous tokens, plus "size m"/"m size")
   q = q.replace(/\b(xxxl|xxl|xl|xs|[2-5]xl)\b/g, (m) => { const s = SIZE_ALIASES[m]; if (s && !out.sizes.includes(s)) out.sizes.push(s); return ' '; });

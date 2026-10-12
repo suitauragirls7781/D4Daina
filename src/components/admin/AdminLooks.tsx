@@ -15,8 +15,7 @@ import {
   SET_TYPES, SIZED_ACCESSORY_TYPES, accessoriesFor, accessoryTypeOf, byAccessoryType, inr, isAccessory, isLookId, normaliseLookRelations,
   setTypeHint, setTypeOf, sizesOf,
 } from '../../utils/looks';
-import { departmentOf } from '../../utils/kids';
-import { AdminPageHeader, SCRIM, ui } from './kidsToysShared';
+import { AdminPageHeader, SCRIM, ui } from './adminShared';
 
 const LIST_LIMIT = 60;
 // Search results shown at once in "Make a product a combo"
@@ -42,8 +41,8 @@ const matchesOutfit = (p: Product, query: string) => {
   return Boolean(needle) && [p.name, p.sku, p.category, p.id].some((v) => String(v || '').toLowerCase().includes(needle));
 };
 const mrpOf = (p: Product) => Math.max(p.price, Number(p.originalPrice) || p.price);
-/** Only women's outfits can be combos: never an accessory, kids wear or a toy. */
-const isWomenOutfit = (p?: Product | null) => Boolean(p) && !isAccessory(p) && departmentOf(p) === 'women';
+/** Only outfits can be combos: never an accessory. */
+const isWomenOutfit = (p?: Product | null) => Boolean(p) && !isAccessory(p);
 // "Standard" / "Default" are stand-ins for products saved without a colour.
 const isRealColour = (c?: ProductColor) => Boolean(c && c.name && !['standard', 'default'].includes(c.name.trim().toLowerCase()));
 /** Sizes an accessory is sold in, apart from Free Size (empty = one size). */
@@ -186,7 +185,7 @@ export const AdminLooks: React.FC = () => {
   const byId = useMemo(() => new Map(allProducts.map((p) => [String(p.id), p])), [allProducts]);
   const accessories = useMemo(() => byAccessoryType(allProducts.filter(isAccessory)), [allProducts]);
   const combos = useMemo(() => allProducts.filter((p) => isWomenOutfit(p) && setTypeOf(p) && isLookId(String(p.id))), [allProducts]);
-  // Women's outfits that can be made a combo (never an accessory, kids wear or a toy; the id must be one a look can be saved under)
+  // Women's outfits that can be made a combo (never an accessory; the id must be one a look can be saved under)
   const outfits = useMemo(() => allProducts.filter((p) => isWomenOutfit(p) && !setTypeOf(p) && isLookId(String(p.id))), [allProducts]);
   const setLike = useMemo(() => outfits.filter((p) => setTypeHint(p.name).looksLikeSet).slice(0, 5), [outfits]);
   const outfitResults = useMemo(() => outfits.filter((p) => matchesOutfit(p, comboQuery)), [outfits, comboQuery]);
@@ -490,7 +489,7 @@ export const AdminLooks: React.FC = () => {
                 </div>
                 {comboQuery.trim() && (outfitResults.length === 0 ? (
                   <p className="mt-2 text-sm text-ink-muted">
-                    No product matches{outfits.length === 0 && !countsLoading ? ' (every product is already a combo)' : ''}. Accessories, kids wear, toys and products that are already combos are not listed.
+                    No product matches{outfits.length === 0 && !countsLoading ? ' (every product is already a combo)' : ''}. Accessories and products that are already combos are not listed.
                   </p>
                 ) : (
                   <ul className="mt-2 max-h-72 overflow-y-auto grid gap-1" aria-label="Matching products">

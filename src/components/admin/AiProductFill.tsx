@@ -18,16 +18,9 @@ export interface AiDraft {
   seoDescription: string;
   searchKeywords: string;
   checkNotes: string;
-  /** Kids wear / toys: a listed kind ('' if none fits), or the kind Gemini wrote itself. */
-  kind: string;
-  customKind: string;
-  /** Toys: only when an age is printed on the toy or its box. */
-  ageRange: string;
 }
 
 interface Props {
-  /** Which store section the form is for; decides what Gemini fills in. */
-  department?: 'women' | 'kids' | 'toys';
   images: string[];
   uploading: boolean;
   onUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -46,7 +39,7 @@ type AiStatus = { configured: boolean; keyHint: string; model: string; fromServe
  * Admin → Add product: "Fill with Gemini". The owner uploads the photos, Gemini (with the store's own free
  * API key, kept on the server) drafts the listing text, and the owner adds price, MRP, sizes and stock.
  */
-export const AiProductFill: React.FC<Props> = ({ department = 'women', images, uploading, onUpload, categories = [], setTypes = [], kinds = [], ages = [], currentName, hasDetails, onApply }) => {
+export const AiProductFill: React.FC<Props> = ({ images, uploading, onUpload, categories = [], setTypes = [], currentName, hasDetails, onApply }) => {
   const [status, setStatus] = useState<AiStatus | null>(null);
   const [keyInput, setKeyInput] = useState('');
   const [editingKey, setEditingKey] = useState(false);
@@ -97,7 +90,7 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ department, images, categories, setTypes, kinds, ages, name: currentName }),
+        body: JSON.stringify({ images, categories, setTypes, name: currentName }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.draft) {
@@ -113,13 +106,9 @@ export const AiProductFill: React.FC<Props> = ({ department = 'women', images, u
     }
   };
 
-  const writes = department === 'kids'
-    ? 'the name, type, description, colours, fabric and wash care'
-    : department === 'toys'
-      ? 'the name, kind of toy, description, colours and material (and the age, if it is printed on the box)'
-      : 'the name, description, category, colours, fabric, occasion, care and SEO';
-  const ownFields = department === 'kids' ? 'Price, MRP, stock and age sizes' : department === 'toys' ? 'Price, MRP and stock' : 'Price, MRP, sizes and stock';
-  const checkHint = department === 'toys' ? ' Please check the suitable age and batteries on the box.' : ' Please check the fabric once.';
+  const writes = 'the name, description, category, colours, fabric, occasion, care and SEO';
+  const ownFields = 'Price, MRP, sizes and stock';
+  const checkHint = ' Please check the fabric once.';
   const input = 'sag-input';
   const showKeyForm = status && (!status.configured || editingKey);
 

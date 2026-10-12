@@ -1825,8 +1825,6 @@ html.aura-nopin .aura-ftw { --fp: 1 !important; --fy: 0px !important; }
 .shop-seg-sc::-webkit-scrollbar { display: none; }
 .shop-seg { width: max-content; }
 .shop-seg > button[aria-selected="true"] { color: var(--inv); }
-.shop-kinds { display: flex; gap: 8px; padding: 0 12px 8px; overflow-x: auto; scrollbar-width: none; }
-.shop-kinds::-webkit-scrollbar { display: none; }
 /* The count and Sort as a white pill */
 .shop-sortw { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 0 6px 14px; font-size: 14px; color: var(--sag-ink-muted); }
 .shop-sort { flex: none; display: inline-flex; align-items: center; gap: 8px; max-width: 62%; height: 44px; padding: 0 16px 0 18px; border: 1px solid var(--sag-line); border-radius: 999px; background: #FFFFFF; color: var(--sag-ink); font-family: var(--font-sans); font-size: 14px; line-height: 1; font-weight: 600; cursor: pointer; }
@@ -1845,7 +1843,6 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
   .shop-tools { margin: 12px 0 0; padding: 0; }
   .shop-fbar-r { justify-content: center; padding-right: 12px; }
   .shop-seg-sc { flex: 0 1 auto; padding-right: 0; }
-  .shop-kinds { justify-content: center; flex-wrap: wrap; }
   .shop-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
   button.shop-sort { display: none; }
   /* The large card: its photo takes all the height the two rows give, the text keeps its own */

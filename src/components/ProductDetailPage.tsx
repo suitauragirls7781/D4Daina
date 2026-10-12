@@ -4,7 +4,6 @@ import { useShop } from '../context/ShopContext';
 import { FindMySize } from './FindMySize';
 import { CompleteTheLook } from './CompleteTheLook';
 import { isAccessory } from '../utils/looks';
-import { KIDS_ALL, isKids, isToy, kindOf, sortKidsSizes } from '../utils/kids';
 import { DeliveryCheck } from './DeliveryCheck';
 import { categoryToSlug } from '../utils/slugHelper';
 import { prepaidPercentApplies } from '../utils/prepaid';
@@ -24,7 +23,7 @@ import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { useBackToClose } from '../utils/backClose';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { Baby, Bell, ChevronLeft, ChevronRight, Eye, GitCompare, Share2, Star, Tag } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, Eye, GitCompare, Share2, Star, Tag } from 'lucide-react';
 import { AuraTitle, Icon, Odometer, Seg, clamp, flyToBag, prefersReducedMotion, setVar, useScrollFx } from '../aura';
 import { WhatsAppIcon } from './BrandIcons';
 import { Assurance, assuranceFacts } from './Assurance';
@@ -373,15 +372,12 @@ export const ProductDetailPage: React.FC = () => {
   const colors = (product.colors || []).filter((c) => c && c.name);
   // Accessories are sold only through "Complete the look": no size finder, size chart, compare or similar outfits
   const accessoryPage = isAccessory(product);
-  // Kids wear is sized by age and toys are one size: the women's size finder and size chart don't apply
-  const kidsPage = isKids(product);
-  const toyPage = isToy(product);
-  const womenSizing = !accessoryPage && !kidsPage && !toyPage;
-  const sizes = (kidsPage ? sortKidsSizes((product.sizes || []).map(String)) : (product.sizes || [])) as ProductSize[];
-  // A single "Free Size" (toys, one-size pieces) needs no choosing
+  const womenSizing = !accessoryPage;
+  const sizes = (product.sizes || []) as ProductSize[];
+  // A single "Free Size" (one-size pieces) needs no choosing
   const oneSize = sizes.length === 1 && sizes[0] === 'Free Size';
-  const sizeWord = kidsPage ? 'Age' : 'Size';
-  const chooseSizeText = kidsPage ? 'Please choose an age' : 'Please choose a size';
+  const sizeWord = 'Size';
+  const chooseSizeText = 'Please choose a size';
   const price = Number(product.price) || 0;
   // The online payment percent is mentioned only when this product's price qualifies for it
   const prepaidPercentHere = prepaidPercentApplies(storeOffers, price);
@@ -397,17 +393,13 @@ export const ProductDetailPage: React.FC = () => {
   const related = similarProducts(product, products, 4);
   const inCompare = compareIds.includes(String(product.id));
   // Product facts: only what was entered for this product
-  const kind = (kidsPage || toyPage) ? String(kindOf(product) || '') : '';
   const occasionText = product.occasion || productOccasions(product).join(', ');
   const facts = ([
-    product.fabric && [toyPage ? 'Material' : 'Fabric', product.fabric],
-    !toyPage && product.fit && ['Fit', product.fit],
-    !toyPage && occasionText && ['Occasion', occasionText],
+    product.fabric && ['Fabric', product.fabric],
+    product.fit && ['Fit', product.fit],
+    occasionText && ['Occasion', occasionText],
     colors.length > 0 && colors[0].name !== 'Default' && [colors.length > 1 ? 'Colours' : 'Colour', colors.map((c) => c.name).join(', ')],
-    kind && ['Type', kind],
-    kidsPage && product.category && ['For', product.category],
-    toyPage && product.ageRange && ['Suitable for', product.ageRange],
-    sizes.length > 0 && !oneSize && [kidsPage ? 'Ages' : 'Sizes', sizes.join(', ')],
+    sizes.length > 0 && !oneSize && ['Sizes', sizes.join(', ')],
     product.washCare && ['Care', product.washCare],
   ].filter(Boolean) as Array<[string, string]>);
   const description = String(product.description || '').trim();
@@ -504,7 +496,7 @@ export const ProductDetailPage: React.FC = () => {
     if (sizeMissing(chosen)) {
       setNeedSize(true);
       document.getElementById('pdp-size-selector')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      showToast(kidsPage ? "Please choose your child's age size." : 'Please choose a size.', 'info');
+      showToast('Please choose a size.', 'info');
       return false;
     }
     return true;
@@ -591,7 +583,7 @@ export const ProductDetailPage: React.FC = () => {
   const detailRows: Array<{ key: InfoRow; title: string; body: React.ReactNode }> = [
     {
       key: 'details',
-      title: toyPage ? 'About this toy' : 'Product details',
+      title: 'Product details',
       body: (
         <>
           {facts.length > 0 && (
@@ -715,12 +707,6 @@ export const ProductDetailPage: React.FC = () => {
         <nav aria-label="Breadcrumb" className="pdp-crumb">
           <button onClick={() => setActivePage('home')} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">Home</button>
           <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
-          {kidsPage && (
-            <>
-              <button onClick={() => navigateToCategory(KIDS_ALL as any)} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">Kids</button>
-              <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
-            </>
-          )}
           <button onClick={() => navigateToCategory((product.productType === 'accessory' ? 'All' : product.category) as any)} className="min-h-11 min-w-11 -mx-1.5 px-1.5 inline-flex items-center justify-center hover:text-ink cursor-pointer shrink-0">{product.productType === 'accessory' ? 'Shop' : product.category}</button>
           <ChevronRight className="w-3 h-3 shrink-0" aria-hidden="true" />
           <span className="text-ink truncate">{product.name}</span>
@@ -806,9 +792,6 @@ export const ProductDetailPage: React.FC = () => {
               )}
               <span>Inclusive of all taxes</span>
             </p>
-            {toyPage && product.ageRange && (
-              <p className="mt-3 flex items-center gap-2 text-[14px] leading-5 text-ink"><Baby className="w-[18px] h-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" /> Suitable for {product.ageRange}</p>
-            )}
 
             {/* Offers: only the ones that are live, as plain lines on a blush card */}
             {hasOffers && (
@@ -870,12 +853,6 @@ export const ProductDetailPage: React.FC = () => {
                   {sizeLinks}
                 </div>
                 {sizeChips(needSize)}
-                {kidsPage && (
-                  <p className="mt-3 flex items-start gap-2 text-[14px] leading-[1.4] text-ink-muted">
-                    <Baby className="w-[18px] h-[18px] shrink-0 text-ink" strokeWidth={1.6} aria-hidden="true" />
-                    <span><span className="font-bold text-ink">Sized by age · {sizes[0]} to {sizes[sizes.length - 1]}.</span> If your child is between two sizes, pick the bigger one.</span>
-                  </p>
-                )}
                 {findSizeOpen && womenSizing && (
                   <FindMySize sizes={sizes} onPick={(sz) => { pickSize(sz as ProductSize); setFindSizeOpen(false); }} onClose={() => setFindSizeOpen(false)} onOpenChart={() => setIsSizeGuideOpen(true)} />
                 )}
@@ -991,7 +968,7 @@ export const ProductDetailPage: React.FC = () => {
           <CompleteTheLook product={product} selectedSize={size} selectedColor={color} quantity={qty} onNeedSize={() => { requireSize(); }} />
         </div>
 
-        {related.length > 0 && !accessoryPage && rail(kidsPage ? `More ${product.category}` : toyPage ? 'More toys' : 'Similar styles', related)}
+        {related.length > 0 && !accessoryPage && rail('Similar styles', related)}
         {recentlyViewed.length > 0 && rail('Recently viewed', recentlyViewed)}
 
         <div className="mt-10 px-4 min-[900px]:px-0 flex flex-wrap items-center justify-center gap-2.5">
@@ -1029,7 +1006,7 @@ export const ProductDetailPage: React.FC = () => {
       </div>
       {/* Size sheet: opened by a bar button when no size is chosen yet. The shopper picks, then confirms. */}
       {sheetAction && (
-        <BottomSheet title={kidsPage ? "Choose your child's age" : 'Choose your size'} onClose={() => setSheetAction(null)}>
+        <BottomSheet title="Choose your size" onClose={() => setSheetAction(null)}>
           <div className="flex items-center gap-3 rounded-[22px] bg-sunken p-2.5">
             <img src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" className="w-14 aspect-[4/5] shrink-0 rounded-[14px] object-cover object-top" />
             <div className="min-w-0">
@@ -1048,7 +1025,6 @@ export const ProductDetailPage: React.FC = () => {
             {womenSizing && <button type="button" onClick={() => setIsSizeGuideOpen(true)} className={`${quietLink} shrink-0`}>Size guide</button>}
           </div>
           <div className="rounded-full bg-sunken p-1 has-[.wrap]:rounded-[22px] has-[.wrap]:bg-transparent has-[.wrap]:p-0">{sizeChips(sheetError)}</div>
-          {kidsPage && <p className="mt-3 text-[14px] leading-[1.4] text-ink-muted">If your child is between two sizes, pick the bigger one.</p>}
           <button type="button" onClick={confirmSheet} className="aura-btn aura-btn-w mt-5">{sheetAction === 'add' ? 'Add to bag' : 'Buy now'}</button>
           <Assurance variant="line" className="mt-3" />
         </BottomSheet>

@@ -1,7 +1,6 @@
 import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { VoiceSearchButton } from './VoiceSearchButton';
 import { useDiscovery } from '../utils/discovery';
-import { KIDS_TOYS, departmentOf, isKidsToysListing } from '../utils/kids';
 // Photo search is off by default; its code loads only when the owner switches it on
 const FindThisLookButton = lazy(() => import('./FindThisLook').then((m) => ({ default: m.FindThisLookButton })));
 import { withPageTransition } from '../utils/pageTransition';
@@ -165,13 +164,12 @@ export const Header: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const collectionsRef = useRef<HTMLDivElement>(null);
 
-  // Collections = women's categories that actually have products (kids wear and toys have their own page).
+  // Collections = the categories that actually have products.
   const collections = useMemo(() => {
     const counts = new Map<string, number>();
-    products.forEach((p) => { if (departmentOf(p) === 'women') counts.set(p.category, (counts.get(p.category) || 0) + 1); });
+    products.forEach((p) => { counts.set(p.category, (counts.get(p.category) || 0) + 1); });
     return [...counts.entries()].sort((a, b) => b[1] - a[1]);
   }, [products]);
-  const hasKidsToys = useMemo(() => products.some((p) => departmentOf(p) !== 'women'), [products]);
 
   useEffect(() => {
     if (!isSearchOpen) return;
@@ -225,7 +223,7 @@ export const Header: React.FC = () => {
   // The empty search panel leads with photos: the styles the owner marked trending or best seller. When none
   // is marked, the newest arrivals are shown under their own name, so the title is always true.
   const suggested = useMemo(() => {
-    const live = products.filter((p) => departmentOf(p) === 'women' && isAvailable(p));
+    const live = products.filter((p) => isAvailable(p));
     const marked = live.filter((p) => p.isTrending || p.isBestSeller);
     if (marked.length > 0) return { title: 'Trending now', items: marked.slice(0, 8) };
     return { title: 'New arrivals', items: live.filter((p) => p.isNewArrival).slice(0, 8) };
@@ -235,7 +233,6 @@ export const Header: React.FC = () => {
     { label: 'Home', action: () => setActivePage('home'), active: activePage === 'home' },
     { label: 'Shop', action: () => navigateToCategory('All'), active: activePage === 'shop' && selectedCategory === 'All' },
     { label: 'New Arrivals', action: () => navigateToCategory('New Arrivals'), active: activePage === 'shop' && selectedCategory === 'New Arrivals' },
-    ...(hasKidsToys ? [{ label: KIDS_TOYS, action: () => navigateToCategory(KIDS_TOYS as any), active: activePage === 'shop' && isKidsToysListing(selectedCategory) }] : []),
   ];
 
   // Header controls: round 46px icon buttons in the bar's own text colour
@@ -566,7 +563,7 @@ export const Header: React.FC = () => {
                   </div>
                 )}
                 {/* Quick ways in: only collections that have products, each with its real count */}
-                {(collections.length > 0 || hasKidsToys) && (
+                {collections.length > 0 && (
                   <div id="trending-searches-container">
                     <p className={EYEBROW}>Collections</p>
                     <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 sm:gap-x-8">
@@ -577,12 +574,6 @@ export const Header: React.FC = () => {
                           <ChevronRight className="w-[15px] h-[15px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
                         </button>
                       ))}
-                      {hasKidsToys && (
-                        <button type="button" onClick={() => { navigateToCategory(KIDS_TOYS as any); setIsSearchOpen(false); }} className={listRow}>
-                          <span className="min-w-0 flex-1 break-words">{KIDS_TOYS}</span>
-                          <ChevronRight className="w-[15px] h-[15px] shrink-0" strokeWidth={1.5} aria-hidden="true" />
-                        </button>
-                      )}
                       <button type="button" onClick={() => { navigateToCategory('New Arrivals'); setIsSearchOpen(false); }} className={listRow}>
                         <span className="min-w-0 flex-1 break-words">New arrivals</span>
                         <ChevronRight className="w-[15px] h-[15px] shrink-0" strokeWidth={1.5} aria-hidden="true" />

@@ -23,7 +23,7 @@ export const AboutUsPage: React.FC = () => {
 
   // A real photo from the store's own catalogue (no stock imagery)
   const storyImage = useMemo(() => {
-    const withPhoto = products.find((p) => p.inStock && p.productType !== 'toy' && (p.images?.[0] || p.image));
+    const withPhoto = products.find((p) => p.inStock && (p.images?.[0] || p.image));
     return withPhoto ? { src: getCleanImageUrl(withPhoto.images?.[0] || withPhoto.image, 900), alt: withPhoto.name } : null;
   }, [products]);
 

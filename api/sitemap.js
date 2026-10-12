@@ -1,4 +1,5 @@
 import { firestore } from './_lib/firebaseAdmin.js';
+import { isRemovedSection } from './_lib/removedSections.js';
 
 const SITE = 'https://www.suitauragirls.in';
 const STATIC_PATHS = ['/about', '/contact', '/size-guide', '/shipping-policy', '/return-policy', '/privacy-policy', '/terms-policy', '/cancellation-policy'];
@@ -24,7 +25,7 @@ const productImages = (p) => {
   if (images.length === 0 && typeof p.image === 'string' && p.image.trim()) images = [p.image.trim()];
   return images;
 };
-const isVisible = (p) => !p.hidden && p.productType !== 'accessory' && productImages(p).some(isRealImage);
+const isVisible = (p) => !p.hidden && p.productType !== 'accessory' && !isRemovedSection(p) && productImages(p).some(isRealImage);
 
 /** YYYY-MM-DD from an ISO string, epoch millis or Firestore timestamp; '' when unknown. Never in the future. */
 const toDay = (value) => {
@@ -61,10 +62,6 @@ export default async function handler(req, res) {
       const slug = categoryToSlug(p.category || 'Suits');
       if (!slug || slug === 'all') continue;
       categories.set(slug, newest([categories.get(slug) || '', lastChanged(p)]));
-    }
-    // /category/kids lists Baby Girls and Baby Boys together
-    if (categories.has('baby-girls') || categories.has('baby-boys')) {
-      categories.set('kids', newest([categories.get('baby-girls') || '', categories.get('baby-boys') || '']));
     }
     const catalogueDay = newest(products.map(lastChanged));
 

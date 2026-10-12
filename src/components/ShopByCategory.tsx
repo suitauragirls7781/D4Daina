@@ -2,7 +2,6 @@ import React, { useMemo, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
-import { KIDS_TOYS, departmentOf } from '../utils/kids';
 import { KineticBand, frameInsets } from './HomeSections';
 import { AuraTitle, Icon, clamp, setVar, useNoPin, useScrollFx } from '../aura';
 
@@ -20,23 +19,16 @@ const PHOTO_SHAPE = ['hm-m0', 'hm-m1', 'hm-m2', 'hm-m3', 'hm-m4'];
  * scrolls, and the covered ones scale down slightly and dim (a transform and an opacity, from the shared
  * scroll engine). Each card has its own colour, its place and the real count of designs, the name in very
  * large type, a round arrow and the category's real photo in its own shape. Every category stays reachable:
- * past the first six they follow as pills. Kids wear and toys are one card that opens their own page.
+ * past the first six they follow as pills.
  * Without pinning (reduced motion, no sticky) the cards are a plain list.
  */
 export const ShopByCategory: React.FC = () => {
   const { products = [], navigateToCategory } = useShop();
   const { categories = [] } = useAdmin();
 
-  // Women's categories here; kids wear and toys show as one tile that opens their own page
-  const women = useMemo(() => products.filter((p) => departmentOf(p) === 'women'), [products]);
-  const kidsToys = useMemo(() => {
-    const items = products.filter((p) => departmentOf(p) !== 'women');
-    const images = [...new Set(items.map((p) => p.images?.find(Boolean) || p.image || '').filter(Boolean))].slice(0, 1);
-    return { count: items.length, images };
-  }, [products]);
   const cards = useMemo(() => {
     const byCategory = new Map<string, { count: number; images: string[] }>();
-    women.forEach((p) => {
+    products.forEach((p) => {
       const entry = byCategory.get(p.category) || { count: 0, images: [] };
       entry.count += 1;
       const photo = p.images?.find(Boolean) || p.image || '';
@@ -51,12 +43,9 @@ export const ShopByCategory: React.FC = () => {
         return { name: name as string, count: info.count, image: adminImage || info.images[0] || '' };
       })
       .sort((a, b) => b.count - a.count);
-  }, [women, categories]);
+  }, [products, categories]);
 
-  const tiles = useMemo(() => [
-    ...cards.map((card) => ({ key: card.name, name: card.name, count: card.count, image: card.image, open: card.name })),
-    ...(kidsToys.count > 0 ? [{ key: KIDS_TOYS as string, name: KIDS_TOYS as string, count: kidsToys.count, image: kidsToys.images[0] || '', open: KIDS_TOYS as string }] : []),
-  ], [cards, kidsToys]);
+  const tiles = useMemo(() => cards.map((card) => ({ key: card.name, name: card.name, count: card.count, image: card.image, open: card.name })), [cards]);
 
   const still = useNoPin();
   const section = useRef<HTMLElement>(null);

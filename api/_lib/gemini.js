@@ -172,63 +172,6 @@ const SPECS = {
     },
     required: ['name', 'category', 'setType', 'description', 'fabric', 'fit', 'occasion', 'washCare', 'colors', 'seoTitle', 'seoDescription', 'searchKeywords'],
   }),
-  kids: ({ categories, kinds, name }) => ({
-    prompt: [
-      'You write product listings for the Kids Wear section of "Suit Aura Girls", an Indian online boutique. This item is clothing for a baby girl or baby boy (ages 1 to 15).',
-      'Look carefully at every photo of ONE product and fill the JSON fields. Write in simple, warm Indian English for parents.',
-      'Rules:',
-      HONEST_RULE,
-      '- name: 4 to 9 words, e.g. "Floral Net Party Frock with Bow Belt". No emojis, no ALL CAPS, no age, no size, no price.',
-      `- category: exactly one of: ${categories.join(', ')} (who the outfit is for).`,
-      `- kind: exactly one of: ${kinds.join(', ')}. Use "${NOT_LISTED}" only if none fits, and then write the kind in customKind (e.g. "Lehenga choli").`,
-      '- description: 35 to 70 words, 2 or 3 sentences: the design, what is in the set, comfort, and where to wear it.',
-      '- fabric: the most likely fabric (e.g. "Soft cotton", "Net with satin lining"). If unsure, still guess and mention it in checkNotes.',
-      '- washCare: gentle, sensible care for that fabric (e.g. "Gentle hand wash, dry in shade").',
-      COLOURS_RULE,
-      NOTES_RULE + ' (fabric, colour shade, pieces in the set)',
-      hint(name),
-    ],
-    schema: {
-      name: { type: 'STRING' },
-      category: { type: 'STRING', enum: categories },
-      kind: { type: 'STRING', enum: [...kinds, NOT_LISTED] },
-      customKind: { type: 'STRING' },
-      description: { type: 'STRING' },
-      fabric: { type: 'STRING' },
-      washCare: { type: 'STRING' },
-      colors: colourSchema,
-      checkNotes: { type: 'STRING' },
-    },
-    required: ['name', 'category', 'kind', 'description', 'fabric', 'washCare', 'colors'],
-  }),
-  toys: ({ kinds, ages, name }) => ({
-    prompt: [
-      'You write product listings for the Toys section of "Suit Aura Girls", an Indian online store. This item is a toy for children.',
-      'Look carefully at every photo of ONE toy (and its box if shown) and fill the JSON fields. Write in simple, cheerful Indian English for parents.',
-      'Rules:',
-      HONEST_RULE,
-      '- Never claim a battery type, a safety standard, a size in cm, a remote range, a speed or a weight limit unless it is printed clearly in a photo.',
-      '- name: 4 to 10 words, e.g. "Kids Electric Ride-On Jeep with LED Lights". No emojis, no ALL CAPS, no price.',
-      `- kind: exactly one of: ${kinds.join(', ')}. Use "${NOT_LISTED}" only if none fits, and then write the kind in customKind (e.g. "Kitchen set").`,
-      `- ageRange: exactly one of: ${ages.join(', ')} ONLY if an age is printed on the toy or its box in the photos; otherwise "${NOT_SURE}".`,
-      '- description: 35 to 70 words, 2 or 3 sentences: what it is, what it does (only what is visible or printed), and what is in the box if shown.',
-      '- fabric: the main material as a shopper would say it (e.g. "Plastic", "Soft plush", "Wood").',
-      COLOURS_RULE,
-      NOTES_RULE + ' (age on the box, batteries, what is in the box)',
-      hint(name),
-    ],
-    schema: {
-      name: { type: 'STRING' },
-      kind: { type: 'STRING', enum: [...kinds, NOT_LISTED] },
-      customKind: { type: 'STRING' },
-      ageRange: { type: 'STRING', enum: [...ages, NOT_SURE] },
-      description: { type: 'STRING' },
-      fabric: { type: 'STRING' },
-      colors: colourSchema,
-      checkNotes: { type: 'STRING' },
-    },
-    required: ['name', 'kind', 'ageRange', 'description', 'fabric', 'colors'],
-  }),
 };
 
 const callModel = async (key, model, parts, responseSchema) => {
@@ -260,23 +203,18 @@ const callModel = async (key, model, parts, responseSchema) => {
 const list = (values, max = 40) => [...new Set((Array.isArray(values) ? values : []).map((c) => clean(c, 40)).filter(Boolean))].slice(0, max);
 
 /**
- * Drafts the listing from the product photos for one store section (women / kids / toys).
+ * Drafts the listing from the product photos.
  * Returns only text fields; never price, MRP, sizes or stock.
  */
-export const describeProduct = async ({ key, model, images, department = 'women', categories, setTypes, kinds, ages, name }) => {
-  const dept = SPECS[department] ? department : 'women';
+export const describeProduct = async ({ key, model, images, categories, setTypes, name }) => {
   const urls = [...new Set((Array.isArray(images) ? images : []).map(photoUrl).filter(Boolean))].slice(0, MAX_IMAGES);
   if (!urls.length) throw new Error('GEMINI_NO_PHOTOS');
   const photos = (await Promise.all(urls.map(loadPhoto))).filter(Boolean);
   if (!photos.length) throw new Error('GEMINI_NO_PHOTOS');
   const cats = list(categories);
   const sets = list(setTypes, 12);
-  const kindList = list(kinds).filter((k) => k !== NOT_LISTED);
-  const ageList = list(ages, 20);
-  if (dept === 'women' && !cats.length) throw new Error('GEMINI_NO_CATEGORIES');
-  if (dept === 'kids' && (!cats.length || !kindList.length)) throw new Error('GEMINI_NO_CATEGORIES');
-  if (dept === 'toys' && (!kindList.length || !ageList.length)) throw new Error('GEMINI_NO_CATEGORIES');
-  const spec = SPECS[dept]({ categories: cats, setTypes: sets, kinds: kindList, ages: ageList, name });
+  if (!cats.length) throw new Error('GEMINI_NO_CATEGORIES');
+  const spec = SPECS.women({ categories: cats, setTypes: sets, name });
   const responseSchema = { type: 'OBJECT', properties: spec.schema, required: spec.required };
   const parts = [{ text: spec.prompt.filter(Boolean).join('\n') }, ...photos];
 
@@ -319,7 +257,6 @@ export const describeProduct = async ({ key, model, images, department = 'women'
     .filter((c) => c.name && c.hex)
     .slice(0, 4);
   const pick = (value, options, max = 40) => (options.includes(clean(value, max)) ? clean(value, max) : '');
-  const kind = pick(raw.kind, kindList);
   return {
     model: used,
     // save a new model only when the old one no longer exists
@@ -330,10 +267,6 @@ export const describeProduct = async ({ key, model, images, department = 'women'
       category: pick(raw.category, cats),
       setType: pick(raw.setType, sets),
       subcategory: clean(raw.subcategory, 80),
-      // kids wear / toys: a listed kind, or the kind Gemini wrote itself
-      kind,
-      customKind: kind ? '' : clean(raw.customKind, 40),
-      ageRange: pick(raw.ageRange, ageList),
       description: clean(raw.description, 900),
       fabric: clean(raw.fabric, 80),
       fit: clean(raw.fit, 80),

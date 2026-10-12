@@ -8,7 +8,7 @@ import { Coupon, SpecialDodConfig, SpecialDodOffer } from '../../types';
 import { uploadImage } from '../../lib/dataStore';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { DEFAULT_EYEBROW, DEFAULT_ROUNDS } from '../FestiveBanner';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Panel, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 // Special DOD: the festive offer panel on the homepage (and its slim row on the shop page, the line under the

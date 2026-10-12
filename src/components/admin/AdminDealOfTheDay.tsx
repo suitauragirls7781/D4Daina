@@ -4,7 +4,7 @@ import { useShop } from '../../context/ShopContext';
 import { Flame, Save, RefreshCw, Search, Eye, Upload, Loader2, Image as ImageIcon, TimerOff, CalendarClock } from 'lucide-react';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
-import { AdminPageHeader } from './kidsToysShared';
+import { AdminPageHeader } from './adminShared';
 import { CheckRow, Empty, Panel, Pill, SaveBar, SwitchRow, Tile, Tiles, kit } from './AdminPaymentGateways';
 
 const DURATION_PRESETS = [1, 2, 3, 6, 12, 24, 48, 72];
