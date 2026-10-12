@@ -132,8 +132,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://media.suitauragirls.in">
     <link rel="preconnect" href="https://checkout.razorpay.com" crossorigin>
-    <!-- The catalogue is asked for before the app's code arrives (src/lib/catalog.ts picks this answer up), and on
-         a product page its first photo starts loading as soon as the catalogue names it. Shop pages only. -->
+    <!-- The catalogue is asked for before the app's code arrives (src/lib/catalog.ts picks this answer up). Shop pages
+         only. The product photo is NOT preloaded here: measured on a phone connection it took bandwidth from the
+         app's code and the name and price came half a second later. -->
     <script>
       (function () {
         try {
@@ -144,26 +145,6 @@
             .then(function (r) { return r.ok ? r.json() : null; })
             .catch(function () { return null; });
           window.__sagCatalog = asked;
-          var match = path.match(/^\/product\/([^/?#]+)/);
-          if (!match) return;
-          var id = decodeURIComponent(match[1]);
-          asked.then(function (catalog) {
-            var list = (catalog && catalog.products) || [];
-            for (var i = 0; i < list.length; i++) {
-              if (String(list[i].id) !== id) continue;
-              var photo = String((list[i].images && list[i].images[0]) || list[i].image || '');
-              if (!/^https:\/\/media\.suitauragirls\.in\/.+\/w1100\.webp$/.test(photo)) return;
-              var at = function (w) { return photo.replace(/\/w1100\.webp$/, '/w' + w + '.webp'); };
-              var link = document.createElement('link');
-              link.rel = 'preload';
-              link.as = 'image';
-              link.setAttribute('imagesrcset', at(480) + ' 480w, ' + at(828) + ' 828w, ' + at(1100) + ' 1100w');
-              link.setAttribute('imagesizes', '(min-width: 900px) 560px, 100vw');
-              link.setAttribute('fetchpriority', 'high');
-              document.head.appendChild(link);
-              return;
-            }
-          });
         } catch (e) {}
       })();
     </script>
