@@ -509,6 +509,34 @@ const actions = {
     return { status: 200, body: await paymentSessionBody(gateways, { ...order, ...update }, gateway, extra) };
   },
 
+  // What happened in the payment window of an order that is still unpaid (it failed, or the shopper closed it), so
+  // the store can see why orders stay unpaid. Only the browser that made the order knows its attempt key.
+  async 'pay-note'(db, body, req) {
+    const orderNumber = cleanText(body.orderNumber, 40).toUpperCase();
+    const attemptKey = /^[A-Za-z0-9_-]{16,64}$/.test(String(body.attemptKey || '')) ? String(body.attemptKey) : '';
+    if (!orderNumber || !attemptKey) return { status: 200, body: { ok: false } };
+    if (!(await rateLimit(db, `paynote:${clientIp(req)}`, 40, 60 * 60 * 1000))) return { status: 200, body: { ok: false } };
+    const entry = {
+      at: new Date().toISOString(),
+      kind: body.kind === 'closed' ? 'closed' : 'failed',
+      code: cleanText(body.code, 60),
+      reason: cleanText(body.reason, 200),
+      step: cleanText(body.step, 60),
+      source: cleanText(body.source, 60),
+      method: cleanText(body.method, 40),
+      browser: cleanText(body.browser, 40),
+    };
+    const ref = db.collection('orders').doc(orderNumber);
+    const ok = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      const order = snap.exists ? snap.data() : null;
+      if (!order || order.attemptKey !== attemptKey || order.paymentStatus !== 'Unpaid') return false;
+      tx.update(ref, { payTries: [...(Array.isArray(order.payTries) ? order.payTries : []), entry].slice(-10) });
+      return true;
+    });
+    return { status: 200, body: { ok } };
+  },
+
   async verify(db, body) {
     const orderNumber = cleanText(body.orderNumber, 40);
     const razorpayOrderId = cleanText(body.razorpay_order_id, 60);

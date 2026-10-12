@@ -1937,6 +1937,13 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .pdp-buy > p > span:last-child { display: flex; font-size: 17px; font-weight: 800; color: var(--aura-paper); }
 .pdp-buy .aura-btn { flex: none; min-height: 48px; padding: 0 16px; font-size: 14.5px; }
 @media (max-width: 379px) { .pdp-buy > img { display: none; } .pdp-buy .aura-btn { padding: 0 13px; } }
+/* Phones: the label, the name and the price above the photo, so the first screen says what it is and what it costs */
+.pdp-top { padding: 4px 16px 12px; }
+.pdp-top .pdp-n { font-size: 21px; line-height: 1.16; letter-spacing: -0.02em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.pdp-top .pdp-ic { width: 40px; height: 40px; }
+.pdp-top .pdp-pr { margin-top: 8px; }
+.pdp-top .pdp-big { font-size: 26px; }
+.pdp-top + .pdp-g + .pdp-d { padding-top: 10px; }
 .pdp-page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 @media (min-width: 900px) {
   .pdp-page { padding-bottom: 96px; }

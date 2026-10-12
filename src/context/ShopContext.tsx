@@ -27,6 +27,7 @@ import { categoryToSlug, slugToCategory } from '../utils/slugHelper';
 import { MAX_BAG_LINES, comboPiecesIn, enforceLooks, isAccessory, lookLineId, outfitQtyIn } from '../utils/looks';
 import { fromCatalogOrLive, loadCatalog, readsLive } from '../lib/catalog';
 import { prepaidDiscountFor, prepaidRulesFrom } from '../utils/prepaid';
+import { clearBagLink, readBagLink } from '../utils/bagLink';
 
 export // Must match MAX_QTY_PER_LINE in api/_lib/orders.js.
 const MAX_QTY_PER_ITEM = 10;
@@ -177,6 +178,31 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     cartTouchedRef.current = true;
     setCart(value);
   };
+
+  // A checkout link opened from an in-app browser carries the bag (utils/bagLink): this browser's empty bag is
+  // filled from it once the catalogue is here. A bag that already holds something is left as it is.
+  const bagLinkRef = React.useRef(typeof window === 'undefined' ? null : readBagLink());
+  useEffect(() => {
+    const lines = bagLinkRef.current;
+    if (!lines || isLoading || published.length === 0) return;
+    bagLinkRef.current = null;
+    clearBagLink();
+    if (cartRef.current.length > 0) return;
+    const items: CartItem[] = [];
+    for (const line of lines) {
+      const product = published.find((p) => String(p.id) === line.productId);
+      if (!product) continue;
+      const selectedSize = ((product.sizes || []).find((s) => String(s) === line.size) || (product.sizes || [])[0] || 'M') as ProductSize;
+      const selectedColor = (product.colors || []).find((c) => c.name === line.color) || (product.colors || [])[0] || { name: 'Standard', hex: '#241D1B' };
+      const accessory = isAccessory(product);
+      if (accessory && !line.parentId) continue;
+      const id = accessory ? lookLineId(product, selectedSize, selectedColor, line.parentId) : `${product.id}-${selectedSize}-${selectedColor.name.replace(/\s+/g, '-').toLowerCase()}`;
+      if (items.some((item) => item.id === id)) continue;
+      items.push({ id, product, selectedSize, selectedColor, quantity: Math.min(qtyCapFor(product), line.quantity), ...(accessory ? { lookParentId: line.parentId } : {}) });
+    }
+    const kept = enforceLooks(items).cart;
+    if (kept.length > 0) setCartByShopper(kept);
+  }, [isLoading, published]);
 
   // Load Wishlist from localStorage
   const [wishlist, setWishlist] = useState<Product[]>(() => {

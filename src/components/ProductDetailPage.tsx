@@ -108,6 +108,16 @@ export const ProductDetailPage: React.FC = () => {
   }, [products, selectedProductId, selectedProduct]);
 
   const [imageIdx, setImageIdx] = useState(0);
+  // Phones: the name and the price sit above the photo, so they are on the first screen
+  const [phone, setPhone] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia) && window.matchMedia('(max-width: 899px)').matches);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const query = window.matchMedia('(max-width: 899px)');
+    const onChange = () => setPhone(query.matches);
+    onChange();
+    query.addEventListener?.('change', onChange);
+    return () => query.removeEventListener?.('change', onChange);
+  }, []);
   const [size, setSize] = useState<ProductSize | null>(null);
   const [color, setColor] = useState<ProductColor | null>(null);
   const [qty, setQty] = useState(1);
@@ -674,6 +684,30 @@ export const ProductDetailPage: React.FC = () => {
   ];
   const addLabel = justAdded ? <><Icon name="check" size={18} /> Added to bag</> : inBagNow ? 'View bag' : <><Icon name="bag" size={19} /> Add to bag</>;
 
+  // The style's label, name and price: above the photo on phones, at the top of the buy box on wider screens
+  const head = (
+    <>
+      <p className="aura-lbl">{badgeText ? <>{badgeText} · {product.category}</> : product.category}</p>
+      <div className="mt-2.5 flex items-start gap-2">
+        <h1 className="pdp-n">{product.name}</h1>
+        <div className="flex shrink-0 gap-1.5">
+          <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className="pdp-ic">
+            <Icon name="heart" size={21} filled={fav} className={fav ? 'sag-beat text-accent' : ''} />
+          </button>
+          <button type="button" onClick={share} aria-label="Share this style" className="pdp-ic">
+            <Share2 className="w-5 h-5" strokeWidth={1.6} />
+          </button>
+        </div>
+      </div>
+
+      <p className="pdp-pr aura-num">
+        <Odometer value={inr(price)} className="pdp-big" />
+        {mrp > price && <span className="text-[16px] text-ink-muted"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
+        {discount > 0 && <span className="aura-tag">{discount}% off</span>}
+      </p>
+    </>
+  );
+
   return (
     <div ref={pageRef} id="product-detail-page" data-aura="" className="pdp-page" style={{ '--pdp-top': `${stickyTop}px` } as React.CSSProperties}>
       <div className="pdp-w">
@@ -695,6 +729,7 @@ export const ProductDetailPage: React.FC = () => {
         {/* Phones: the gallery, the buy box, the details, the reviews in one column.
             Desktop: the gallery left (it stays in view), the buy box and the details right; the reviews across. */}
         <div className="pdp">
+          {phone && <div className="pdp-top">{head}</div>}
           {/* Gallery: a strip to swipe inside a 26px frame; under it "1 / N" and the small photos */}
           <div className="pdp-g">
             <div className="pdp-gi">
@@ -751,24 +786,7 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Buy box: the same at every width */}
           <div className="pdp-d">
-            <p className="aura-lbl">{badgeText ? <>{badgeText} · {product.category}</> : product.category}</p>
-            <div className="mt-2.5 flex items-start gap-2">
-              <h1 className="pdp-n">{product.name}</h1>
-              <div className="flex shrink-0 gap-1.5">
-                <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className="pdp-ic">
-                  <Icon name="heart" size={21} filled={fav} className={fav ? 'sag-beat text-accent' : ''} />
-                </button>
-                <button type="button" onClick={share} aria-label="Share this style" className="pdp-ic">
-                  <Share2 className="w-5 h-5" strokeWidth={1.6} />
-                </button>
-              </div>
-            </div>
-
-            <p className="pdp-pr aura-num">
-              <Odometer value={inr(price)} className="pdp-big" />
-              {mrp > price && <span className="text-[16px] text-ink-muted"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
-              {discount > 0 && <span className="aura-tag">{discount}% off</span>}
-            </p>
+            {!phone && head}
             {/* Rating: only with real approved reviews */}
             <p className="pdp-tax aura-num">
               {reviews.length > 0 && (

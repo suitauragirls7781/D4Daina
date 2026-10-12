@@ -36,6 +36,7 @@ import { AlertCircle, Check, ChevronDown, Clock, Gift, Info, Loader2, Lock, Shie
 import { Icon } from '../aura';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
+import { bagLinkUrl, outOfAppUrl } from '../utils/bagLink';
 import { assuranceFacts, assuranceLine } from './Assurance';
 import { CouponError, PriceDetails, useBagSavings, useCouponApply } from './CartContents';
 
@@ -791,6 +792,16 @@ export const CheckoutPage: React.FC = () => {
   const inAppBrowser = typeof navigator !== 'undefined'
     ? (/Instagram/i.test(navigator.userAgent) ? 'Instagram' : /FBAN|FBAV|FB_IAB/i.test(navigator.userAgent) ? 'Facebook' : '')
     : '';
+  // The phone's own browser, where the bag link (utils/bagLink) takes a shopper who cannot pay inside the app
+  const outBrowser = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'Safari' : 'Chrome';
+  const copyBagLink = async () => {
+    try {
+      await navigator.clipboard.writeText(bagLinkUrl(cart));
+      showToast(`Link copied. Paste it in ${outBrowser}.`, 'success');
+    } catch {
+      showToast(`Could not copy. Tap ⋮ at the top right, then "Open in ${outBrowser}".`, 'info');
+    }
+  };
 
   const handlePlacePrepaidOrder = async (e: React.FormEvent, appOverride?: UpiAppId | '') => {
     e.preventDefault();
@@ -831,11 +842,21 @@ export const CheckoutPage: React.FC = () => {
       razorpayOrderId: string; amount: number; currency: string; keyId: string;
       payuAction?: string; payuFields?: Record<string, string>;
     };
+    const attemptKey = checkoutAttemptKey(signature);
+    // Why a payment did not finish is noted on the order for the store (never shown to the shopper, never blocks paying)
+    const notePayTry = (orderNumber: string, kind: 'failed' | 'closed', error?: any) => {
+      ordersApi('pay-note', {
+        orderNumber, attemptKey, kind,
+        code: String(error?.code || ''), reason: String(error?.description || error?.reason || ''), step: String(error?.step || ''), source: String(error?.source || ''),
+        method: `${cod ? 'cod advance' : 'prepaid'}${payApp ? ` · ${payApp}` : ''}`,
+        browser: inAppBrowser ? `${inAppBrowser} app` : (onPhone ? 'phone browser' : 'computer'),
+      }).catch(() => {});
+    };
     try {
       created = await ordersApi('create', {
         gateway: payGateway,
         payMode: cod ? 'cod' : 'prepaid',
-        attemptKey: checkoutAttemptKey(signature),
+        attemptKey,
         items: cart.map((item) => ({
           productId: item.product.id,
           size: item.selectedSize,
@@ -909,6 +930,7 @@ export const CheckoutPage: React.FC = () => {
           confirm_close: true,
           ondismiss: () => {
             setIsProcessing(false);
+            notePayTry(created.orderNumber, 'closed');
             showToast('Payment cancelled. No money was taken.', 'info');
           },
         },
@@ -917,6 +939,7 @@ export const CheckoutPage: React.FC = () => {
         setIsProcessing(false);
         // The same order stays open: the panel on the payment step offers to pay it again (never a second order)
         setPayFail({ orderNumber: created.orderNumber, reason: String(response?.error?.description || '').trim() });
+        notePayTry(created.orderNumber, 'failed', response?.error);
         setErrorMessage('');
       });
       rzp.open();
@@ -1059,7 +1082,7 @@ export const CheckoutPage: React.FC = () => {
   const prepaidSaving = Math.max(0, codTotal - finalCartTotal);
   // One-tap UPI apps: on a phone, when the payment goes through Razorpay with UPI on (the cash-on-delivery advance always does)
   const upiOn = noMethodSwitch || Boolean(paymentSettings?.enableUpi);
-  const showUpiApps = onPhone && !inAppBrowser && upiOn && Boolean(gateways?.razorpay) && (codChosen || gateway === 'razorpay');
+  const showUpiApps = onPhone && upiOn && Boolean(gateways?.razorpay) && (codChosen || gateway === 'razorpay');
   const pickedApp = showUpiApps ? UPI_APPS.find((app) => app.id === upiApp) : undefined;
   // A cash-on-delivery order does not get the online payment discount, so it is not counted as saved
   const summarySavings = codChosen ? Math.max(0, totalSavings - prepaidDiscount) : totalSavings;
@@ -1505,6 +1528,9 @@ export const CheckoutPage: React.FC = () => {
                         {upiApp && <button type="button" onClick={(e) => handlePlacePrepaidOrder(e, '')} disabled={payDisabled} className={`${appTile(false)} justify-center px-2!`}>{upiOnly ? 'Any UPI app' : 'Other ways'}</button>}
                       </div>
                     )}
+                    {inAppBrowser && (
+                      <a id="co-fail-open-browser" href={outOfAppUrl(bagLinkUrl(cart))} className="aura-btn aura-btn-line aura-btn-w mt-2.5">Pay in {outBrowser} instead (your bag comes with you)</a>
+                    )}
                     <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, my payment for order ${payFail.orderNumber} did not go through. Please help.`)} target="_blank" rel="noopener noreferrer"
                       className="mt-3 block rounded-none! border-t border-line pt-3 text-[13.5px] leading-5 text-ink-muted">
                       Money was taken but this still shows? <span className="font-bold text-ink underline decoration-[1.5px] underline-offset-4">Message us on WhatsApp with this order number</span>
@@ -1629,13 +1655,14 @@ export const CheckoutPage: React.FC = () => {
                   )}
 
                   {inAppBrowser && (
-                    <p className="aco-note">
+                    <div id="co-inapp" className="aco-note">
                       <Info className="h-5 w-5" strokeWidth={1.6} aria-hidden="true" />
-                      <span>
-                        You are inside the {inAppBrowser} app. UPI apps (Google Pay, PhonePe, Paytm) open best in your phone's browser:
-                        tap <span className="font-semibold">⋮</span> (top right) → <span className="font-semibold">Open in browser / Chrome</span>, then pay.
-                      </span>
-                    </p>
+                      <div className="min-w-0">
+                        <p>You are inside the {inAppBrowser} app. If your UPI app does not open from here, continue in {outBrowser}: your bag comes with you.</p>
+                        <a id="co-open-browser" href={outOfAppUrl(bagLinkUrl(cart))} className="aura-btn aura-btn-sm mt-3">Open in {outBrowser} with my bag</a>
+                        <button type="button" id="co-copy-bag-link" onClick={copyBagLink} className="mt-3 block text-[13.5px] leading-5 font-bold underline decoration-[1.5px] underline-offset-4 cursor-pointer">Or copy the link and paste it in {outBrowser}</button>
+                      </div>
+                    </div>
                   )}
                 </div>
 

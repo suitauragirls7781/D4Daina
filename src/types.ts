@@ -202,6 +202,8 @@ export interface Order {
   paidAt?: string;
   stockShortfall?: Array<{ productId: string; name?: string; requested: number; available: number }>;
   emailLog?: Array<{ kind: string; at: string; ok: boolean }>;
+  /** Unpaid orders: what happened in the payment window (failed or closed), newest last. */
+  payTries?: Array<{ at: string; kind: 'failed' | 'closed'; code?: string; reason?: string; step?: string; source?: string; method?: string; browser?: string }>;
   /** Return / exchange request (api/orders.js 'return-request'); older orders may hold only { reason, at }. */
   returnRequest?: ReturnRequest | null;
   /** Earlier requests on the order (rejected, refunded or exchanged), kept when the customer asks again. */

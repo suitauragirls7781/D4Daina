@@ -1047,6 +1047,19 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
             ) : (
               <p className={small}>No steps are recorded for this order yet. It was placed {formatOrderDate(order.date)}.</p>
             )}
+            {(order.payTries || []).length > 0 && (
+              <div id="admin-order-pay-tries" className="mt-4 pt-3 border-t border-line">
+                <p className="text-sm leading-5 font-medium text-ink">Payment tries that did not finish</p>
+                <ul className="mt-1.5 space-y-1.5">
+                  {(order.payTries || []).slice().reverse().map((t, index) => (
+                    <li key={index} className={`${small} break-words`}>
+                      <span className="sag-num">{new Date(t.at).toLocaleString('en-IN')}</span> · {t.kind === 'closed' ? 'Customer closed the payment window' : `Failed: ${t.reason || t.code || 'no reason given'}`}
+                      {[t.method, t.browser].filter(Boolean).length > 0 && <> · {[t.method, t.browser].filter(Boolean).join(' · ')}</>}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             {lastEmail && (
               <p className={`mt-4 pt-3 border-t border-line ${small} flex items-start gap-2`}>
                 <Mail className="w-4 h-4 shrink-0 mt-px" aria-hidden="true" />

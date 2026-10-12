@@ -69,8 +69,12 @@ export const loadCatalog = (): Promise<PublicCatalog | null> => {
     // A saved copy is used if the server takes longer than 4 seconds; otherwise wait up to 10 seconds
     const saved = readSaved();
     const timer = window.setTimeout(() => controller.abort(), saved ? 4000 : 10000);
-    pending = fetch(`/api/admin-config?action=catalog&v=${bucket}`, { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
+    // index.html asks for the catalogue before this code has arrived: that answer is used when it is there
+    const early: Promise<unknown> | undefined = (window as any).__sagCatalog;
+    const asked: Promise<unknown> = early
+      ? Promise.race([early, new Promise((resolve) => window.setTimeout(() => resolve(null), saved ? 4000 : 10000))])
+      : fetch(`/api/admin-config?action=catalog&v=${bucket}`, { signal: controller.signal }).then((response) => (response.ok ? response.json() : null));
+    pending = asked
       .then((catalog) => {
         if (!valid(catalog)) return saved;
         save(catalog);
