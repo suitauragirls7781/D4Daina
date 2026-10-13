@@ -53,40 +53,56 @@ const watch = (el: Element, info: Pending) => {
   io?.observe(el);
 };
 
-const adoptAura = (el: Element) => {
-  if (seen.has(el)) return;
-  seen.add(el);
-  // Already on screen when it appears (the top of a page): never hidden
-  if (onScreen(el)) { el.classList.add('in'); return; }
-  const raw = (el as HTMLElement).dataset.rvDelay;
-  el.classList.add('aura-w');
-  watch(el, { kind: 'aura', delay: raw != null && raw !== '' ? Number(raw) || 0 : null });
-};
-
-const adoptLegacy = (el: Element) => {
-  if (seen.has(el)) return;
-  seen.add(el);
-  if (el.closest(LEGACY_SKIP)) return;
-  // A themed or pinned section, or one built from Aura pieces, is not moved as a whole
-  if (el.matches('[data-th], [data-rv], .aura-pin-wrap') || el.querySelector(AURA_INSIDE)) return;
-  // A section inside a section: only the outer one moves, so nothing slides twice
-  if (el.parentElement?.closest('.sag-reveal, .aura-w')) return;
-  if (onScreen(el)) return;
-  const group = el.parentElement?.hasAttribute('data-reveal-group') ? el.parentElement : null;
-  let delay: number | null = null;
-  if (group) {
-    delay = Math.min(Array.prototype.indexOf.call(group.children, el), 7) * 70;
-    (el as HTMLElement).style.setProperty('--sag-reveal-delay', `${delay}ms`);
-  }
-  el.classList.add('sag-reveal');
-  watch(el, { kind: 'legacy', delay: delay ?? 0 });
-};
-
 const markLoaded = (img: HTMLImageElement) => { img.closest('.aura-sk')?.classList.add('ok'); };
 
+// One pass over what is new on the page. Everything is MEASURED first and only then changed: a class written
+// between two measurements makes the browser lay the whole page out again for each element (on a product page
+// that was more than a second of a mid-range phone's time).
 const scan = () => {
-  document.querySelectorAll(AURA).forEach(adoptAura);
-  document.querySelectorAll(LEGACY).forEach(adoptLegacy);
+  const aura: Array<{ el: Element; on: boolean }> = [];
+  const legacy: Element[] = [];
+  // What this pass is about to hide (the classes are not on the elements yet)
+  const hiding = new Set<Element>();
+  const insideHidden = (el: Element) => {
+    for (let p = el.parentElement; p; p = p.parentElement) if (hiding.has(p)) return true;
+    return false;
+  };
+  document.querySelectorAll(AURA).forEach((el) => {
+    if (seen.has(el)) return;
+    seen.add(el);
+    // Already on screen when it appears (the top of a page): never hidden
+    const on = onScreen(el);
+    aura.push({ el, on });
+    if (!on) hiding.add(el);
+  });
+  document.querySelectorAll(LEGACY).forEach((el) => {
+    if (seen.has(el)) return;
+    seen.add(el);
+    if (el.closest(LEGACY_SKIP)) return;
+    // A themed or pinned section, or one built from Aura pieces, is not moved as a whole
+    if (el.matches('[data-th], [data-rv], .aura-pin-wrap') || el.querySelector(AURA_INSIDE)) return;
+    // A section inside a section: only the outer one moves, so nothing slides twice
+    if (el.parentElement?.closest('.sag-reveal, .aura-w') || insideHidden(el)) return;
+    if (onScreen(el)) return;
+    legacy.push(el);
+    hiding.add(el);
+  });
+  for (const { el, on } of aura) {
+    if (on) { el.classList.add('in'); continue; }
+    const raw = (el as HTMLElement).dataset.rvDelay;
+    el.classList.add('aura-w');
+    watch(el, { kind: 'aura', delay: raw != null && raw !== '' ? Number(raw) || 0 : null });
+  }
+  for (const el of legacy) {
+    const group = el.parentElement?.hasAttribute('data-reveal-group') ? el.parentElement : null;
+    let delay: number | null = null;
+    if (group) {
+      delay = Math.min(Array.prototype.indexOf.call(group.children, el), 7) * 70;
+      (el as HTMLElement).style.setProperty('--sag-reveal-delay', `${delay}ms`);
+    }
+    el.classList.add('sag-reveal');
+    watch(el, { kind: 'legacy', delay: delay ?? 0 });
+  }
   document.querySelectorAll<HTMLImageElement>('.aura-sk:not(.ok) img').forEach((img) => { if (img.complete) markLoaded(img); });
 };
 
@@ -119,11 +135,14 @@ export const startReveal = () => {
   // Safety net: anything still waiting although it is on screen (a missed observer callback) is shown
   window.setInterval(() => {
     if (!pending.size) return;
+    // Measure all of them, then show (never a class change between two measurements)
+    const late: Element[] = [];
     for (const el of [...pending.keys()]) {
       if (!el.isConnected) { pending.delete(el); continue; }
       const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight && rect.bottom > 0) show(el);
+      if (rect.top < window.innerHeight && rect.bottom > 0) late.push(el);
     }
+    late.forEach((el) => show(el));
   }, 1500);
 };
 

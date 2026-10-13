@@ -64,6 +64,13 @@ if (typeof window !== 'undefined') {
   }
 }
 
+// The two font files are asked for now, while the app's code is still being run, so the first screen is laid
+// out once with its real letters instead of once with stand-ins and again when the fonts arrive.
+try {
+  (document as any).fonts?.load?.('700 16px Figtree');
+  (document as any).fonts?.load?.('italic 400 16px "Instrument Serif"');
+} catch { /* an old browser: the fonts arrive when the page first needs them */ }
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>

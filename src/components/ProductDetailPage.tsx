@@ -171,6 +171,15 @@ export const ProductDetailPage: React.FC = () => {
   // The strip's width, read on resize only (the sideways parallax needs it on every scroll frame)
   const stripWidth = useRef(0);
   const barPhoto = useRef<HTMLImageElement>(null);
+  // The reviews, "Complete the look" and the rails of other styles are put on the page right after the first
+  // screen has been painted (they are all far below it), so the name, price and photo never wait for them
+  const [belowShown, setBelowShown] = useState(false);
+  useEffect(() => {
+    let timer = 0;
+    const frame = window.requestAnimationFrame(() => { timer = window.setTimeout(() => setBelowShown(true), 0); });
+    const late = window.setTimeout(() => setBelowShown(true), 1500);
+    return () => { window.cancelAnimationFrame(frame); window.clearTimeout(timer); window.clearTimeout(late); };
+  }, []);
 
   useEffect(() => {
     setImageIdx(0);
@@ -963,17 +972,17 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Reviews: after the details on phones, full width under both columns on desktop */}
           <div className="pdp-wide min-w-0 mt-12 px-4 min-[900px]:px-0 min-[900px]:mt-16">
-            <ProductReviews key={product.id} product={product} />
+            {belowShown && <ProductReviews key={product.id} product={product} />}
           </div>
         </div>
 
         {/* Complete the look: its own section, only on combo / set products */}
         <div className="mt-12 px-4 min-[900px]:px-0 empty:hidden">
-          <CompleteTheLook product={product} selectedSize={size} selectedColor={color} quantity={qty} onNeedSize={() => { requireSize(); }} />
+          {belowShown && <CompleteTheLook product={product} selectedSize={size} selectedColor={color} quantity={qty} onNeedSize={() => { requireSize(); }} />}
         </div>
 
-        {related.length > 0 && !accessoryPage && rail('Similar styles', related)}
-        {recentlyViewed.length > 0 && rail('Recently viewed', recentlyViewed)}
+        {belowShown && related.length > 0 && !accessoryPage && rail('Similar styles', related)}
+        {belowShown && recentlyViewed.length > 0 && rail('Recently viewed', recentlyViewed)}
 
         <div className="mt-10 px-4 min-[900px]:px-0 flex flex-wrap items-center justify-center gap-2.5">
           {features.compare && !accessoryPage && (
