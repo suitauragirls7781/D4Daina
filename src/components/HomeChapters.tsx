@@ -24,7 +24,8 @@ export const HomeChapters: React.FC<{ hostRef: React.RefObject<HTMLElement | nul
       host.querySelectorAll<HTMLElement>('section[id][data-th]').forEach((section) => {
         if (section.offsetHeight < 80) return;
         const titled = section.getAttribute('aria-labelledby');
-        const raw = (titled && document.getElementById(titled)?.textContent) || section.getAttribute('aria-label') || '';
+        // innerText keeps the space between a title's separate lines
+        const raw = (titled && document.getElementById(titled)?.innerText) || section.getAttribute('aria-label') || '';
         const label = raw.replace(/\s+/g, ' ').trim();
         if (!label || label.length > 40) return;
         next.push({ id: section.id, label, dark: ['ink', 'forest'].includes(section.dataset.th || '') });

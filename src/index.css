@@ -2412,3 +2412,48 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   @keyframes kx-drop { from { opacity: 0; transform: translate3d(0, -70px, 0) rotate(-9deg); } }
   @media (hover: hover) { .kx-404 > b { transition: transform 600ms var(--kx-spring); } .kx-404:hover > b:nth-child(odd) { transform: rotate(-5deg) translate3d(0, -6px, 0); } .kx-404:hover > b:nth-child(2) { transform: rotate(8deg) scale(1.06); } }
 }
+
+/* ---- Aura Kinetic, the frame, checkout and order pages (presentation only) ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Search panel and the desktop collections menu drop on a spring; the rows of the panel follow one after another */
+  #search-drawer-overlay.sag-drop, #header-pin-panel.sag-drop { animation: sag-enter 560ms var(--kx-spring) both; --sag-enter-opacity: 0; --sag-enter-y: -22px; }
+  #collections-menu.sag-pop { animation: sag-enter 480ms var(--kx-spring) both; --sag-enter-opacity: 0; --sag-enter-y: -12px; --sag-enter-scale: 0.96; transform-origin: 50% 0; }
+  #trending-searches-container :is(button, a) { animation: kx-line-in 520ms var(--kx-out) backwards; }
+  #trending-searches-container :is(button, a):nth-child(1) { animation-delay: 90ms; }
+  #trending-searches-container :is(button, a):nth-child(2) { animation-delay: 125ms; }
+  #trending-searches-container :is(button, a):nth-child(3) { animation-delay: 160ms; }
+  #trending-searches-container :is(button, a):nth-child(4) { animation-delay: 195ms; }
+  #trending-searches-container :is(button, a):nth-child(5) { animation-delay: 230ms; }
+  #trending-searches-container :is(button, a):nth-child(n + 6) { animation-delay: 265ms; }
+  /* The rose menu: a pressed line leans forward; a small row slides under a mouse */
+  .aura-menu-big, .aura-menu-row { transition: translate 380ms var(--kx-spring); }
+  .aura-menu-big:active { translate: 10px 0; }
+  .aura-menu-row:active { translate: 6px 0; }
+  @media (hover: hover) { .aura-menu-row:hover { translate: 6px 0; } }
+  /* Header: the wordmark's accent word leans under a mouse; icon buttons answer on a spring */
+  .aura-wm em { display: inline-block; transition: color 300ms, transform 520ms var(--kx-spring); }
+  @media (hover: hover) { .aura-wm:hover em { transform: rotate(-7deg) scale(1.1); } .aura-hb:hover > svg { transform: scale(1.12); } }
+  .aura-hb > svg { transition: transform 420ms var(--kx-spring); }
+  /* Tab bar: the pressed icon dips */
+  .aura-tb-ic { transition: transform 300ms var(--kx-spring); }
+  .aura-tb > button:active .aura-tb-ic { transform: scale(0.84); }
+  /* Footer: link pills and social circles grow a touch under a mouse */
+  .aura-ft-ln > button, .aura-ft-so { transition: background-color 300ms, color 300ms, scale 420ms var(--kx-spring); }
+  @media (hover: hover) { .aura-ft-ln > button:hover, .aura-ft-so:hover { scale: 1.06; } }
+  :is(.aura-ft-ln > button, .aura-ft-so):active { scale: 0.95; }
+
+  /* Checkout: a way to pay answers the press and settles when chosen (looks only; what is chosen is the page's own state) */
+  .aco-pay, .aco-opt, .aco-upi { transition: background-color 350ms, color 350ms, box-shadow 300ms, scale 420ms var(--kx-spring); }
+  :is(.aco-pay, .aco-opt, .aco-upi):active { scale: 0.975; }
+  :is(.aco-pay, .aco-opt, .aco-upi).on { animation: kx-chosen 480ms var(--kx-spring); }
+  @keyframes kx-chosen { from { scale: 0.965; } }
+  .aco-pay-tag { animation: kx-pop 520ms var(--kx-spring) 360ms backwards; }
+  /* Order tracking: the dot of the stage reached now breathes once */
+  .sag-tl > li.is-current > .sag-tl-dot::after { animation: kx-pop 700ms var(--kx-spring) 900ms backwards; }
+  /* Sign in: the two-way switch slides on a spring; code boxes pop as they fill */
+  .aa-tabs::before { transition: transform 560ms var(--kx-spring); }
+  .aa-otp input.f { animation: kx-pop 360ms var(--kx-spring); }
+  /* Segmented controls everywhere: the ink indicator lands on a spring */
+  .aura-seg-ind.mv { transition: transform 560ms var(--kx-spring), width 460ms var(--aura-e); }
+  .aura-tb > i { transition: transform 560ms var(--kx-spring), opacity 300ms; }
+}

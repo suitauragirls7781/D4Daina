@@ -309,3 +309,15 @@ well, so always write it.
 `scroll.ts` engine · `revealEngine.ts` reveal + photo placeholders · `Reveal.tsx` · `MaskLines.tsx` ·
 `AuraTitle.tsx` · `Odometer.tsx` · `Seg.tsx` · `Thread.tsx` · `Backdrop.tsx` · `fly.ts` · `ripple.ts` ·
 `icons.tsx` · `index.ts`.
+
+## 8. Aura Kinetic (preview A, motion-first)
+
+`kinetic.ts`, `KineticParts.tsx`, the flight in `utils/pageTransition.ts`, and the block "Aura Kinetic" at the end of `index.css` (classes `kx-*`).
+
+- `startKinetic()` (started with this folder): magnets (pill and round buttons lean towards a MOUSE and spring back) and the pointer label (a rose disc saying "View" / "Open" / "Play" / "Zoom" over photos; `data-cur="Word"` on anything else). Never on a touch screen, never with reduced motion. They write the `translate` property, so a button's own `transform` (press) is untouched.
+- `enterPage()` (called by `App.tsx` in a layout effect on every page change): the blocks of the new page that are on screen rise in one after another. The hidden start is the first frame of a Web Animation, never a class. Anything that is or holds a fixed layer is skipped (see `HOLDS_FIXED` / `NEVER`): add a new fixed class there.
+- The photo flight: a product photo marked `data-vt-source` at the moment of the tap (ProductCard and the home gallery do it) travels to the product page's `img[data-vt-hero]` over a paper veil, instead of the curtain. No marked photo, reduced motion or a product page that is late: the curtain or a quiet fade.
+- `useFlip(ref, dep, { selector })`: items (each with an `id` or `data-flip`) glide to their new place when `dep` changes (shop sort / filter, wishlist).
+- `useColumnDrift(ref, amount)`: the columns of a SMALL grid travel a few pixels against each other while it crosses the screen (home featured grid). Each card becomes a layer: a dozen cards at most.
+- `<Drift amount={5}>` a photo that moves slower than the page inside its frame. `<ScrollWords text="... *accent.*" />` a sentence lit word by word (class changes only when the count changes).
+- CSS only: springy `.animate-in` sheets and dialogs on the storefront (`--kx-spring`), the curved curtain, `kx-pop`, `kx-drawn` (an icon draws itself), `kx-shake` on a refused field, the page placeholder `kx-skel`.

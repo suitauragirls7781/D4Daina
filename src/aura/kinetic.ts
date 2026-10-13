@@ -144,8 +144,8 @@ export const startKinetic = () => {
 
 // ---- The first screen of a new page arrives piece by piece -----------------------------------------------------
 // Something that is (or holds) a fixed layer is never moved: a moved ancestor would carry the fixed bar with it.
-const HOLDS_FIXED = '.fixed, .pdp-buy, .shop-orb, [role="dialog"], .aura-pin, .hm-hero-pin';
-const NEVER = '.fixed, .sticky, .aura-pin-wrap, .aura-pin, .hm-hero, .shop-fbar, .pdp-buy, .pdp-gi, .shop-orb, [role="dialog"], [role="status"], .aura-mq, .hm-cc, script, style';
+const HOLDS_FIXED = '.fixed, [class*=":fixed"], .pdp-buy, .shop-orb, .kx-ch, [role="dialog"], .aura-pin, .hm-hero-pin';
+const NEVER = '.fixed, [class*=":fixed"], .sticky, .aura-pin-wrap, .aura-pin, .hm-hero, .shop-fbar, .pdp-buy, .pdp-gi, .shop-orb, .kx-ch, .aura-thr, [role="dialog"], [role="status"], .aura-mq, .hm-cc, svg, script, style';
 let enterToken = 0;
 
 const pickBlocks = (root: Element) => {
