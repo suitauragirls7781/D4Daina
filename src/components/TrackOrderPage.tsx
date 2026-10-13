@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { useAdmin } from '../context/AdminContext';
 import { useRouter } from '../context/RouterContext';
 import { ordersApi } from '../lib/api';
-import { AlertCircle, ArrowRight, ChevronRight, ExternalLink, Loader2, Phone, Share2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, ChevronRight, ExternalLink, Loader2, Phone, Share2 } from 'lucide-react';
 import { trackingLinkFor } from '../utils/courier';
 import { PinIcon, ReturnIcon } from './StoreIcons';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { CourierCard, DeliveryAgentCard, OrderProgress, OrderWithRequests, StatusHistory, StatusPill, canRequestCancel, formatDateTime, formatWindowEnd, latestUpdate } from './OrderProgress';
 import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
-import { AuraTitle, Icon } from '../aura';
+import { AuraTitle, Icon, useArrive } from '../aura';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
@@ -47,6 +47,12 @@ export const TrackOrderPage: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState('');
   const [returnOpen, setReturnOpen] = useState(false);
+  // Presentation only: once an order is on the page the lookup form steps aside (one tap brings it back), so the
+  // answer, not the form, is what a phone's first screen shows. `tries` replays the refusal on a repeated miss.
+  const [editing, setEditing] = useState(false);
+  const [tries, setTries] = useState(0);
+  const resultRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
   const search = async (orderNumber: string, contact: string) => {
     const cleanOrder = orderNumber.trim().toUpperCase();
@@ -63,8 +69,10 @@ export const TrackOrderPage: React.FC = () => {
     try {
       const result = await ordersApi<{ order: OrderWithRequests }>('track', { orderNumber: cleanOrder, contact: contact.trim() });
       setOrder(result.order);
+      setEditing(false);
     } catch (err: any) {
       setOrder(null);
+      setTries((count) => count + 1);
       setError(err?.message || 'Could not look up that order. Please try again.');
     } finally {
       setIsSearching(false);
@@ -81,6 +89,17 @@ export const TrackOrderPage: React.FC = () => {
     if (initialContact) setContactQuery((current) => current || initialContact);
     if (initialOrder && (user || initialContact)) search(initialOrder, initialContact);
   }, [user?.email]);
+
+  // A found order is shown from the top of the page, its parts arriving one after another; its number takes the
+  // keyboard and screen-reader focus so the answer is read out
+  const foundKey = order ? `${order.orderNumber}|${order.status}` : '';
+  useEffect(() => {
+    if (!foundKey) return;
+    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    titleRef.current?.focus({ preventScroll: true });
+  }, [foundKey]);
+  useArrive(resultRef, foundKey);
+  const compact = Boolean(order) && !editing;
 
   // Only the signed-in owner gets the full view (address, return eligibility) from the server; the return
   // card also needs the customer's own sign-in (not an admin session), since the request is sent as them.
@@ -130,12 +149,19 @@ export const TrackOrderPage: React.FC = () => {
   return (
     <section data-th="sand" className="aa-cen">
       <div className="aa-cen-in">
-        <AuraTitle as="h1" label="Orders" title="Track your" accent="order" sub="Enter the order number from your confirmation email." />
+        <AuraTitle as="h1" label="Orders" title="Track your" accent="order" sub="Enter the order number from your confirmation email." className={compact ? 'sr-only' : ''} />
 
-        <div className="mt-6 min-w-0 space-y-3 min-[900px]:mt-0">
+        <div className={`min-w-0 space-y-3 min-[900px]:mt-0 ${compact ? 'min-[900px]:col-span-2' : 'mt-6'}`}>
+          {compact && (
+            <button type="button" onClick={() => { setEditing(true); window.setTimeout(() => document.getElementById('track-order-number')?.focus(), 60); }} className="aura-lk -mt-3 text-[14px]">
+              <ArrowLeft strokeWidth={1.6} aria-hidden="true" />
+              <span>Track another order</span>
+            </button>
+          )}
           <form
+            hidden={compact}
             onSubmit={(e) => { e.preventDefault(); search(orderQuery, contactQuery); }}
-            className="aura-card aura-blk space-y-3 px-4 pt-5 pb-[22px] sm:px-7 sm:pt-7 sm:pb-8"
+            className={`aura-card aura-blk space-y-3 px-4 pt-5 pb-[22px] sm:px-7 sm:pt-7 sm:pb-8${editing ? ' aco-open' : ''}`}
           >
             <label className="aura-field" htmlFor="track-order-number">
               <input
@@ -181,9 +207,16 @@ export const TrackOrderPage: React.FC = () => {
           </form>
 
           {error && (
-            <div role="alert" className="aa-alert">
+            <div key={tries} role="alert" className="aa-alert aa-refused">
               <AlertCircle strokeWidth={1.6} aria-hidden="true" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {/* While the order is looked up: the shape of the answer (the ink card and the items card) */}
+          {!order && isSearching && (
+            <div className="aa-tsk" aria-hidden="true">
+              <div><i className="w-24" /><i className="mt-4 h-8 w-4/5" /><i className="mt-6 w-3/5" /><i className="mt-5 w-2/5" /><i className="mt-5 w-1/2" /></div>
             </div>
           )}
 
@@ -210,14 +243,14 @@ export const TrackOrderPage: React.FC = () => {
       </div>
 
       {order && (
-        <div className="mx-auto mt-8 flex max-w-[1120px] flex-col gap-4 min-[900px]:mt-12 min-[900px]:grid min-[900px]:grid-cols-2 min-[900px]:items-start min-[900px]:gap-x-[50px]">
+        <div ref={resultRef} className={`mx-auto flex max-w-[1120px] flex-col gap-4 min-[900px]:grid min-[900px]:grid-cols-2 min-[900px]:items-start min-[900px]:gap-x-[50px] ${compact ? 'mt-2 min-[900px]:mt-4' : 'mt-8 min-[900px]:mt-12'}`}>
           <div className={column}>
             {/* The order, its state in words and the timeline */}
-            <section className="order-1 space-y-3 sag-fade" aria-labelledby="tracked-order-title">
-              <div className="flex items-start justify-between gap-3 px-1">
+            <section className="order-1 space-y-3" aria-labelledby="tracked-order-title">
+              <div className="flex items-start justify-between gap-3 px-1" data-arr>
                 <div className="min-w-0">
                   <p className="aura-lbl">Order</p>
-                  <h2 id="tracked-order-title" className="aura-h2 aura-h-sm aura-num mt-1.5 break-all">#{order.orderNumber}</h2>
+                  <h2 id="tracked-order-title" ref={titleRef} tabIndex={-1} className="aura-h2 aura-h-sm aura-num mt-1.5 break-all focus:outline-none">#{order.orderNumber}</h2>
                   <p className="aura-num mt-1.5 text-[13.5px] leading-[18px] aura-mu">
                     Placed {formatDateTime(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
                   </p>
@@ -228,10 +261,10 @@ export const TrackOrderPage: React.FC = () => {
                 </button>
               </div>
 
-              <OrderProgress order={order} />
+              <div data-arr><OrderProgress order={order} /></div>
             </section>
 
-            <div className="order-3 flex gap-2.5">
+            <div className="order-3 flex gap-2.5" data-arr>
               {courierLink && (
                 <a
                   href={courierLink.url}
@@ -255,7 +288,7 @@ export const TrackOrderPage: React.FC = () => {
               </a>
             </div>
 
-            <section className="order-4 space-y-3 empty:hidden" aria-label="Order updates">
+            <section className="order-4 space-y-3 empty:hidden" aria-label="Order updates" data-arr>
               {latest && (
                 <div className="aura-card px-4 py-4 text-[14px] leading-5">
                   <p className="aura-lbl">Latest update</p>
@@ -276,7 +309,7 @@ export const TrackOrderPage: React.FC = () => {
           </div>
 
           <div className={column}>
-            <section className="order-2 aura-card aura-blk space-y-4 p-4 sm:p-6" aria-labelledby="tracked-items-title">
+            <section className="order-2 aura-card aura-blk space-y-4 p-4 sm:p-6" aria-labelledby="tracked-items-title" data-arr>
               <h3 id="tracked-items-title" className={cardTitle}>Items in this order</h3>
               <ul className="divide-y divide-line">
                 {order.items.map((item, index) => {

@@ -202,6 +202,41 @@ export const enterPage = (delay = 0) => {
   window.setTimeout(() => mo.disconnect(), 3000);
 };
 
+// ---- Arrive: the parts of something that has just been put on the page come in one after another ----------------
+/**
+ * When `dep` changes to something truthy (an order was found, a list has loaded, a step was opened), the
+ * container's parts marked `data-arr` that are on screen rise in one after another. Like `enterPage`, the hidden
+ * start is only the first frame of a Web Animation, so nothing can be left hidden; it does nothing with reduced
+ * motion. Pass `first: false` to skip the very first time (a page that is itself arriving already moves).
+ */
+export function useArrive(ref: RefObject<HTMLElement | null>, dep: unknown, options: { selector?: string; first?: boolean; step?: number } = {}) {
+  const ran = useRef(false);
+  const selector = options.selector || '[data-arr]';
+  const step = options.step ?? 70;
+  const first = options.first !== false;
+  useLayoutEffect(() => {
+    const host = ref.current;
+    const isFirst = !ran.current;
+    ran.current = true;
+    if (!host || !dep || (isFirst && !first) || prefersReducedMotion() || typeof host.animate !== 'function') return;
+    const vh = window.innerHeight;
+    let n = 0;
+    host.querySelectorAll<HTMLElement>(selector).forEach((el) => {
+      if (n >= 12) return;
+      const rect = el.getBoundingClientRect();
+      if (!rect.height || rect.bottom <= 0 || rect.top >= vh) return;
+      try {
+        el.animate(
+          [{ opacity: 0, translate: '0 22px' }, { opacity: 1, offset: 0.55 }, { opacity: 1, translate: '0 0' }],
+          { duration: 680, delay: n * step, easing: 'cubic-bezier(0.16, 0.84, 0.24, 1)', fill: 'backwards' },
+        );
+      } catch { /* no translate keyframes: the part is simply there */ }
+      n += 1;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dep]);
+}
+
 // ---- FLIP: list items glide to their new place -------------------------------------------------------------------
 interface FlipOptions {
   /** The items inside the container (default: its direct children). Each needs an id or a data-flip key. */
