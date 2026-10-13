@@ -7,7 +7,8 @@
 //   stays the same): no curtain.
 // - A change is never lost: it runs when the curtain has covered the page, and a safety timer runs it and
 //   takes the curtain away even if a timer was dropped.
-// (The curtain replaced the View Transitions animation, the growing product photo included.)
+// (The curtain replaced the View Transitions animation. Preview "Aura Kinetic": a tapped product photo flies
+//  to its place on the product page instead, see flight() below.)
 
 const COVER_MS = 290;   // rose 230ms, ink 60ms later: the page is covered
 const HOLD_MS = 60;     // the new page is put in place under the curtain
@@ -75,9 +76,94 @@ const finish = () => {
   runQueue();
   phase = 'idle';
   if (curtain) curtain.className = 'aura-cur';
+  document.querySelectorAll('.kx-fly').forEach((el) => el.remove());
 };
 
 const later = (fn: () => void, ms: number) => { timers.push(window.setTimeout(fn, ms)); };
+
+// ---- The photo flight (preview "Aura Kinetic") ----------------------------------------------------------------
+// A tap on a product card marks its photo (data-vt-source, see ProductCard). Instead of the curtain, a paper
+// veil comes over the page, the page changes underneath, and a copy of the tapped photo travels to the place of
+// the product page's large photo (data-vt-hero) and hands over to it. Transforms and opacity only, on two
+// elements; if the product page is not there in time the copy simply fades. Returns false when there is nothing
+// to fly (then the curtain is used).
+const VEIL_MS = 190;
+const FLY_MS = 560;
+const flight = (update: () => void) => {
+  const source = document.querySelector<HTMLImageElement>('img[data-vt-source]');
+  if (!source || typeof source.animate !== 'function') return false;
+  // The photo's frame is what the eye sees (a gallery photo is wider than its frame)
+  const from = (source.closest('.aura-sk') || source).getBoundingClientRect();
+  if (from.width < 40 || from.height < 40 || from.bottom < 20 || from.top > window.innerHeight - 20) return false;
+  let box: HTMLElement;
+  let copy: HTMLImageElement;
+  try {
+    box = document.createElement('div');
+    box.className = 'kx-fly';
+    box.setAttribute('aria-hidden', 'true');
+    const veil = document.createElement('i');
+    copy = new Image();
+    copy.alt = '';
+    copy.decoding = 'sync';
+    copy.src = source.currentSrc || source.src;
+    copy.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px`;
+    box.append(veil, copy);
+    document.body.append(box);
+    veil.animate([{ opacity: 0 }, { opacity: 1 }], { duration: VEIL_MS, easing: 'ease-out', fill: 'forwards' });
+    copy.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.035)' }], { duration: VEIL_MS, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)', fill: 'forwards' });
+  } catch { return false; }
+  phase = 'cover';
+  queue.push(update);
+  const leave = (ms: number) => {
+    phase = 'leave';
+    try { box.animate([{ opacity: 1 }, { opacity: 0 }], { duration: ms, easing: 'ease-out', fill: 'forwards' }); } catch { /* removed below */ }
+    later(finish, ms + 20);
+  };
+  later(() => {
+    runQueue();
+    let tries = 0;
+    const land = () => {
+      if (phase !== 'cover' || !box.isConnected) return;
+      const hero = document.querySelector<HTMLImageElement>('#main-content img[data-vt-hero]');
+      const frame = hero?.closest<HTMLElement>('.pdp-fr') || hero;
+      const to = frame?.getBoundingClientRect();
+      if (!hero || !to || to.width < 40) {
+        // The product page is still arriving: wait a little (about half a second), then give up quietly
+        if (++tries < 34) { window.requestAnimationFrame(land); return; }
+        leave(220);
+        return;
+      }
+      phase = 'leave';
+      const k = to.width / from.width;
+      const veil = box.firstElementChild as HTMLElement;
+      // The copy keeps its proportions and is cut to the frame's shape on the way
+      const cut = Math.max(0, 1 - to.height / (from.height * k)) * 100;
+      const radius = (px: number) => `${(px / k).toFixed(1)}px`;
+      try {
+        copy.animate(
+          [
+            { transform: 'scale(1.035)', clipPath: 'inset(0 0 0 0 round 17px)' },
+            { transform: `translate3d(${(to.left - from.left).toFixed(1)}px, ${(to.top - from.top).toFixed(1)}px, 0) scale(${k.toFixed(4)})`, clipPath: `inset(0 0 ${cut.toFixed(2)}% 0 round ${radius(26)})` },
+          ],
+          { duration: FLY_MS, easing: 'cubic-bezier(0.3, 0.75, 0.12, 1)', fill: 'forwards' },
+        );
+        veil.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, delay: 90, easing: 'ease-out', fill: 'forwards' });
+      } catch { leave(200); return; }
+      // Hand over once the copy has landed and the page's own photo is there (it was preloaded by the card)
+      later(() => {
+        let waits = 0;
+        const hand = () => {
+          if (!hero.isConnected || hero.complete || ++waits > 12) { leave(200); return; }
+          later(hand, 50);
+        };
+        hand();
+      }, FLY_MS + 10);
+    };
+    window.requestAnimationFrame(() => window.requestAnimationFrame(land));
+  }, VEIL_MS);
+  later(finish, SAFETY_MS + 900);
+  return true;
+};
 
 export const withPageTransition = (update: () => void) => {
   if (!hasDom) { update(); return; }
@@ -104,6 +190,8 @@ export const withPageTransition = (update: () => void) => {
     lastPath = here();
     return;
   }
+  // A tapped product photo travels to the product page instead of the curtain
+  if (flight(update)) return;
   let el: HTMLElement;
   try { el = getCurtain(); } catch { update(); return; }
   phase = 'cover';

@@ -59,6 +59,7 @@ export const Icon = ({ name, size = 22, draw = false, filled = false, title, cla
     aria-label={title}
     aria-hidden={title ? undefined : true}
     focusable="false"
+    data-ic={name}
     className={`${draw ? 'aura-draw ' : ''}shrink-0 ${className}`}
     {...rest}
   >

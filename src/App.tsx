@@ -29,7 +29,7 @@ import { ActivePage } from './types';
 
 import { slugToCategory } from './utils/slugHelper';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { Backdrop } from './aura';
+import { Backdrop, enterPage } from './aura';
 
 // Pages other than home load on demand so shoppers never download the admin panel.
 const AccountPage = lazy(() => import('./components/AccountPage').then((m) => ({ default: m.AccountPage })));
@@ -69,8 +69,15 @@ if (typeof window !== 'undefined') {
 const NotFoundPage = lazy(() => import('./components/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 const PageFallback: React.FC = () => (
-  <div className="min-h-[60vh] flex items-center justify-center" role="status" aria-label="Loading">
-    <span className="w-8 h-8 rounded-full border-2 border-line border-t-ink animate-spin" />
+  // The shape of a page (label, title, sub line, pills, cards) instead of a spinning ring
+  <div className="min-h-[70vh]" role="status" aria-label="Loading">
+    <div className="kx-skel" aria-hidden="true">
+      <i className="h-3.5 w-28" />
+      <i className="mt-5 h-12 w-3/4" />
+      <i className="mt-4 h-4 w-2/5" />
+      <i className="mt-7 h-[54px] w-full max-w-[480px]" />
+      <div><i /><i /><i className="max-[899px]:hidden" /><i className="max-[899px]:hidden" /></div>
+    </div>
   </div>
 );
 
@@ -195,6 +202,13 @@ const MainContent: React.FC = () => {
     const timer = window.setTimeout(() => setLoaderLeaving(false), 650);
     return () => window.clearTimeout(timer);
   }, [isLoading]);
+
+  // Aura Kinetic: the first screen of every new page arrives piece by piece (storefront only)
+  const pageKey = currentPage === 'product-detail' ? 'pdp-' + selectedProductId : currentPage;
+  useLayoutEffect(() => {
+    if (isLoading || isAdminRoute || activePage === 'admin') return;
+    enterPage(40);
+  }, [pageKey, isLoading, isAdminRoute]);
 
   if (isLoading) {
     return <LoadingScreen />;

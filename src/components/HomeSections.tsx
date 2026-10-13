@@ -287,6 +287,8 @@ const GalleryCard: React.FC<{ product: Product; eager: boolean }> = ({ product, 
   const openProduct = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
+    // The photo travels to the product page (utils/pageTransition, flight)
+    frame.current?.querySelector('img')?.setAttribute('data-vt-source', '');
     const hero = productPhoto(primary);
     preloadImage(hero.src, 280, hero).then(() => navigateToProduct(product.id));
   };

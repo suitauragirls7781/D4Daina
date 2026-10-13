@@ -2220,3 +2220,90 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   .hm-tk::before, .hm-tk::after { transition: none; }
   .hm-gc .aura-rnd:not(.ok) > svg.aura-draw, .hm-gc .aura-rnd.ok > svg:not(.aura-draw) { display: none; }
 }
+
+/* ------------------------------------------------------------------
+   Aura Kinetic (preview A, motion-first). The same Aura look; this block
+   only adds motion and touch feedback on top of it:
+   the pointer label and magnets (src/aura/kinetic.ts), the photo flight
+   from a product card to the product page (utils/pageTransition.ts), the
+   curved page-change curtain, springy sheets and dialogs, the page
+   placeholder, drift and lit words (src/aura/KineticParts.tsx), and the
+   per-page touches (kx-*). Only transform, translate, scale, opacity and
+   clip-path move; prefers-reduced-motion switches all of it off at the end.
+------------------------------------------------------------------- */
+:root { --kx-spring: cubic-bezier(0.3, 1.3, 0.5, 1); --kx-out: cubic-bezier(0.16, 0.84, 0.24, 1); }
+@supports (animation-timing-function: linear(0, 1)) {
+  :root { --kx-spring: linear(0, 0.007, 0.029 2.2%, 0.118 4.7%, 0.625 14.4%, 0.826 18.8%, 0.94, 1.011, 1.046 28.5%, 1.056 30.6%, 1.059 32.8%, 1.053 36.1%, 1.012 47.5%, 0.999 53.6%, 0.995 60.7%, 1); }
+}
+
+/* The pointer label: a rose disc with one word that follows a mouse over photos (never on a touch screen) */
+.kx-cur { position: fixed; left: 0; top: 0; z-index: 60; width: 0; height: 0; pointer-events: none; }
+.kx-cur > span { position: absolute; left: 14px; top: 14px; display: grid; place-items: center; min-width: 62px; height: 62px; padding: 0 12px; border-radius: 999px; background: var(--aura-rose); color: var(--aura-ink); font-family: var(--font-sans); font-size: 13px; line-height: 1; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; transform: scale(0); transform-origin: 0 0; transition: transform 380ms var(--kx-spring); }
+.kx-cur.on > span { transform: scale(1); }
+
+/* The photo flight: a paper veil over the old page and the copy of the tapped photo on top of it */
+.kx-fly { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 88; pointer-events: none; contain: strict; }
+.kx-fly > i { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: var(--aura-paper); opacity: 0; }
+.kx-fly > img { position: absolute; max-width: none; object-fit: cover; object-position: 50% 0; transform-origin: 0 0; clip-path: inset(0 0 0 0 round 17px); will-change: transform; }
+
+/* The curtain: both layers are taller than the screen and round at both ends, so the edge that sweeps over the
+   page is a soft curve; the wordmark rises out of a mask instead of fading */
+.aura-cur > i { top: -11vh; bottom: -11vh; border-radius: 50% 50% 50% 50% / 9vh 9vh 9vh 9vh; }
+.aura-cur > span { opacity: 1; clip-path: inset(-20% 0 120% 0); transform: translate3d(0, 105%, 0); transition: none; }
+.aura-cur.a > span { opacity: 1; clip-path: inset(-20% 0 -20% 0); transform: none; transition: transform 320ms var(--aura-eo) 130ms, clip-path 320ms var(--aura-eo) 130ms; }
+.aura-cur.b > span { opacity: 0; clip-path: inset(-20% 0 -20% 0); transform: translate3d(0, -60%, 0); transition: transform 300ms var(--aura-io), opacity 200ms; }
+
+/* The page placeholder while a page's code arrives: the shape of a page (label, title, sub line, a row of pills, two cards) */
+.kx-skel { width: 100%; max-width: 1160px; margin: 0 auto; padding: 26px 16px 60px; }
+.kx-skel > i { display: block; border-radius: 999px; background: #E6DFD3; animation: aura-sk 1200ms ease-in-out infinite alternate; }
+.kx-skel > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 30px; }
+.kx-skel > div > i { display: block; aspect-ratio: 3 / 4.6; border-radius: 22px; background: #FFFFFF; }
+@media (min-width: 900px) { .kx-skel > div { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+
+/* Drift (parallax inside a frame) and lit words */
+.kx-drift { position: relative; overflow: hidden; }
+.kx-drift > :is(img, picture, .kx-drift-in) { transform: translate3d(0, calc(var(--dy, 0) * var(--da, 6) * -1%), 0) scale(calc(1 + var(--da, 6) * 0.024)); will-change: transform; }
+.kx-words > span { opacity: 0.24; transition: opacity 380ms; }
+.kx-words > span.lit, .kx-words.all > span { opacity: 1; }
+.kx-words > span.k { font-family: var(--font-display); font-style: italic; font-weight: 400; font-size: 1.1em; line-height: 1; letter-spacing: -0.01em; }
+.kx-words > span.k.lit, .kx-words.all > span.k { color: var(--ac); }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Sheets, drawers and dialogs of the storefront arrive on a spring (the admin keeps its own plain entrance) */
+  body:not(:has(#admin-root-container)) .animate-in { animation-duration: 560ms; animation-timing-function: var(--kx-spring); }
+  body:not(:has(#admin-root-container)) .animate-in.slide-in-from-bottom-5 { --sag-enter-y: 4.25rem; --sag-enter-opacity: 0.4; }
+  body:not(:has(#admin-root-container)) .animate-in:is(.slide-in-from-bottom, .slide-in-from-right, .slide-in-from-left) { animation-duration: 520ms; animation-timing-function: var(--aura-eo); }
+  body:not(:has(#admin-root-container)) .animate-in.fade-in:not([class*="slide-in"], [class*="zoom-in"]) { animation-duration: 320ms; animation-timing-function: ease-out; }
+  body:not(:has(#admin-root-container)) .aco-sheet { animation-duration: 600ms; }
+
+  /* A button's arrow shoots out at the right and comes back in from the left under a mouse */
+  @media (hover: hover) {
+    :is(.aura-btn, .aura-rnd, .aura-lk, .sag-lnk, .hm-cc-in, .aa-row):hover svg[data-ic="arrow"] { animation: kx-arrow 620ms var(--aura-e); }
+    .aura-rnd:hover > svg[data-ic="plus"] { transform: rotate(90deg); }
+    .cdir-p:hover, .hm-cs-pill:hover { scale: 1.04; }
+    .cdir-p, .hm-cs-pill { transition: transform 300ms var(--aura-sp), scale 380ms var(--kx-spring), background-color 300ms, color 300ms; }
+  }
+  @keyframes kx-arrow { 0% { transform: none; opacity: 1; } 44% { transform: translate3d(130%, 0, 0); opacity: 0; } 45% { transform: translate3d(-130%, 0, 0); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+  /* The phone tab bar: the icon of the page that was just opened hops once */
+  .aura-tb > button[aria-current="page"] .aura-tb-ic { animation: kx-hop 560ms var(--kx-spring); }
+  @keyframes kx-hop { 0% { transform: translate3d(0, 5px, 0) scale(0.8); } }
+
+  /* A field that was refused shakes once (the message and the red line say why) */
+  :is(.aura-field > :is(input, select), .sag-input)[aria-invalid="true"] { animation: kx-shake 420ms var(--aura-e); }
+  @keyframes kx-shake { 20% { transform: translate3d(-6px, 0, 0); } 45% { transform: translate3d(5px, 0, 0); } 70% { transform: translate3d(-3px, 0, 0); } 90% { transform: translate3d(1px, 0, 0); } }
+
+  /* The toast leaves a thin rose line that runs out while it is shown */
+  .aura-toast { overflow: hidden; animation: aura-toast-in 640ms var(--kx-spring) both; }
+  .aura-toast::after { content: ""; position: absolute; left: 22px; right: 22px; bottom: 0; height: 2px; border-radius: 2px; background: var(--aura-rose); transform-origin: 0 50%; animation: kx-toast-life 3500ms linear forwards; }
+  .aura-toast.is-error::after { background: #FF9C94; }
+  @keyframes kx-toast-life { to { transform: scaleX(0); } }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kx-cur, .kx-fly { display: none !important; }
+  .kx-skel > i { animation: none; }
+  .kx-drift > :is(img, picture, .kx-drift-in) { transform: none !important; }
+  .kx-words > span { opacity: 1 !important; transition: none; }
+  .kx-words > span.k { color: var(--ac); }
+}
