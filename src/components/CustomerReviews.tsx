@@ -83,7 +83,19 @@ export const CustomerReviews: React.FC = () => {
   return (
     <section id="customer-reviews-section" aria-labelledby="customer-reviews-title" data-th="blush" className="w-full py-20 lg:py-28">
       <div className="mx-auto max-w-[1120px] px-5 sm:px-6 lg:px-8">
-        <AuraTitle id="customer-reviews-title" label="Real customers" title="Customer" accent="reviews" size="lg" />
+        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-5">
+          <AuraTitle id="customer-reviews-title" label="Real customers" title="Customer" accent="reviews" size="lg" />
+          {/* The real average of every approved review and how many there are, said before the first quote */}
+          {approved.length > 0 && (
+            <p className="aura-rvs aura-num" data-rv>
+              <b className="aura-fg">{allAverage.toFixed(1)}</b>
+              <span className="aura-mu">
+                <Stars value={allAverage} />
+                <span className="mt-1 block">out of 5 from {approved.length} {approved.length === 1 ? 'review' : 'reviews'}</span>
+              </span>
+            </p>
+          )}
+        </div>
 
         {/* Every review is in the page; one is shown at a time, in the same place, so nothing jumps when it changes */}
         <div
@@ -125,7 +137,10 @@ export const CustomerReviews: React.FC = () => {
           })}
         </div>
 
-        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4 lg:mt-12">
+        {/* Which review is shown: a hairline with one segment that slides to its place */}
+        {quotes.length > 1 && <div className="kx-gp aura-rvp mt-8 max-w-[220px] lg:mt-10" aria-hidden="true" style={{ '--gn': quotes.length, '--gp': at } as React.CSSProperties}><i /></div>}
+
+        <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-4 lg:mt-8">
           {quotes.length > 1 && (
             <div className="flex items-center gap-2.5">
               <button type="button" onClick={() => step(at - 1)} disabled={at === 0} aria-label="Previous review" className="aura-rnd disabled:cursor-not-allowed disabled:opacity-30">
@@ -138,12 +153,7 @@ export const CustomerReviews: React.FC = () => {
             </div>
           )}
 
-          <div className="min-w-0 sm:ml-auto sm:text-right">
-            {approved.length > 0 && (
-              <p className="aura-num aura-mu text-[15px] leading-[1.4]">
-                <b className="aura-fg text-[26px] font-extrabold leading-none tracking-[-0.03em]">{allAverage.toFixed(1)}</b> out of 5 from {approved.length} {approved.length === 1 ? 'review' : 'reviews'}
-              </p>
-            )}
+          <div className="min-w-0 ml-auto text-right">
             {linked && (
               <button type="button" onClick={() => navigateToProduct(linked.id)} className="aura-lk">
                 Read all reviews

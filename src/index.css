@@ -2611,5 +2611,32 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   .aa-keeps > li + li + li { animation-delay: 580ms; }
 }
 @media (prefers-reduced-motion: reduce) { .aa-osk i { animation: none; } }
+/* ---- The finishing pass: policy pages, size guide, contact ---- */
+/* Phones and tablets: the contents row of a policy stays under the header while the text is read */
+@media (max-width: 1023px) {
+  .pol-nav { position: sticky; top: var(--aura-hh, 56px); z-index: 20; margin: 0 -16px 6px; padding: 8px 0; background: var(--aura-paper); }
+  .pol-nav nav { padding: 0 16px; scroll-padding-inline: 16px; }
+  .aa-sec { scroll-margin-top: 132px; }
+}
+@media (min-width: 640px) and (max-width: 1023px) { .pol-nav { margin-inline: -28px; } .pol-nav nav { padding-inline: 28px; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* "In short": the ticks land one after another; a size chart figure settles when the unit changes */
+  .aa-short li > span:first-child { animation: kx-pop 460ms var(--kx-spring) backwards; animation-delay: calc(var(--i, 0) * 110ms + 320ms); }
+  .aa-short li > span + span { animation: kx-line-in 600ms var(--kx-out) backwards; animation-delay: calc(var(--i, 0) * 110ms + 260ms); }
+  .pol-cell { animation: pol-cell 360ms var(--aura-eo) backwards; }
+  @keyframes pol-cell { from { opacity: 0; transform: translate3d(0, 6px, 0); } }
+  .pol-nav button { transition: background-color 300ms, color 300ms, border-color 300ms, scale 420ms var(--kx-spring); }
+  .pol-nav button:active { scale: 0.95; }
+}
+/* ---- The finishing pass: home, customer reviews and the newsletter ---- */
+/* The real average, big, with its stars and the count */
+.aura-rvs { display: flex; align-items: center; gap: 14px; font-size: 14px; line-height: 1.35; }
+.aura-rvs > b { font-size: clamp(52px, 15vw, 76px); line-height: 0.86; font-weight: 800; letter-spacing: -0.045em; }
+.aura-rvp { background: var(--hl, var(--sag-line)); }
+.aura-rvp > i { background: var(--fg, var(--aura-ink)); }
+@media (prefers-reduced-motion: no-preference) {
+  .aura-rvp > i { transition: transform 620ms var(--kx-spring); }
+  .nl-done { animation: kx-pop 520ms var(--kx-spring) backwards; }
+}
 /* end of the finishing pass */
 }
