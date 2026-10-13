@@ -192,7 +192,7 @@ export const LoginPage: React.FC = () => {
     return (
       <section data-th="blush" className="aa-cen">
         <div className="aa-cen-in">
-          <AuraTitle as="h1" label="My account" title="You are signed" accent="in" sub={<span className="break-all">{user.email}</span>} />
+          <AuraTitle as="h1" label="My account" title="You are signed" accent="in" sub={<span className="ocf-em">{user.email}</span>} />
           <div className={card}>
             <span className="aa-ic aa-ic-ink"><Icon name="check" draw className="in" /></span>
             <p className="mt-4 text-[15px] leading-[22px] text-ink-muted">Your orders, returns and saved addresses are in My account.</p>
@@ -206,6 +206,9 @@ export const LoginPage: React.FC = () => {
   const title: [string, string] = otpStep ? ['Check your', 'email'] : mode === 'login' ? ['Sign', 'in'] : ['Create your', 'account'];
   const changeEmail = () => { setOtpStep(false); setError(null); };
   const note = 'text-[13.5px] leading-5 text-ink-muted';
+  // Which field the message is about, read from the message itself (looks only: the field is marked and shakes once)
+  const about = !error ? '' : otpStep ? 'code' : /name/i.test(error) ? 'name' : /mobile/i.test(error) ? 'phone' : /email/i.test(error) ? 'email' : '';
+  const bad = (field: string) => (about === field ? { 'aria-invalid': true as const, 'aria-describedby': 'auth-error' } : {});
 
   return (
     <section data-th="blush" className="aa-cen">
@@ -221,7 +224,14 @@ export const LoginPage: React.FC = () => {
             title={title[0]}
             accent={title[1]}
             sub={otpStep ? 'Enter the 6-digit code we emailed you.' : mode === 'login' ? 'Sign in to track orders and keep your wishlist.' : 'Track orders, request returns and save addresses.'}
+            size={otpStep ? 'lg' : 'xl'}
           />
+          {/* What an account keeps, in the store's own words (desktop: under the heading) */}
+          <ul className="aa-keeps max-[899px]:hidden" aria-label="What your account keeps">
+            {['Your orders and their tracking', 'Returns and size exchanges', 'Saved addresses for a faster checkout'].map((line) => (
+              <li key={line}><Icon name="check" size={16} /> {line}</li>
+            ))}
+          </ul>
         </div>
 
         <div className={card}>
@@ -237,7 +247,7 @@ export const LoginPage: React.FC = () => {
 
           <div key={otpStep ? 'code' : mode} className="sag-step-in space-y-3.5">
             {error && (
-              <div role="alert" className="aa-alert">
+              <div id="auth-error" role="alert" className="aa-alert aco-open">
                 <AlertCircle strokeWidth={1.6} aria-hidden="true" />
                 <span>{error}</span>
               </div>
@@ -260,12 +270,12 @@ export const LoginPage: React.FC = () => {
                 {mode === 'signup' && (
                   <>
                     <label className="aura-field" htmlFor="signup-name">
-                      <input id="signup-name" name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" />
+                      <input id="signup-name" {...bad('name')} name="name" type="text" autoComplete="name" autoCapitalize="words" enterKeyHint="next" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Ananya Sharma" />
                       <span>Full name</span>
                       <i />
                     </label>
                     <label className="aura-field aa-tel" htmlFor="signup-phone">
-                      <input id="signup-phone" name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" />
+                      <input id="signup-phone" {...bad('phone')} name="mobile" type="tel" inputMode="numeric" autoComplete="tel-national" enterKeyHint="next" maxLength={10} value={mobileNumber} onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="10-digit mobile number" />
                       <span>Mobile number</span>
                       <b aria-hidden="true">+91</b>
                       <i />
@@ -273,7 +283,7 @@ export const LoginPage: React.FC = () => {
                   </>
                 )}
                 <label className="aura-field" htmlFor="auth-email">
-                  <input id="auth-email" name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" />
+                  <input id="auth-email" {...bad('email')} name="email" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} enterKeyHint="done" value={emailAddress} onChange={(e) => setEmailAddress(e.target.value)} placeholder="name@example.com" />
                   <span>Email</span>
                   <i />
                 </label>
@@ -288,16 +298,16 @@ export const LoginPage: React.FC = () => {
               </form>
             ) : (
               <form onSubmit={handleVerify} className="space-y-4">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className={note}>Code sent to</p>
-                    <p className="text-[15px] leading-5 font-bold text-ink break-all">{email}</p>
-                  </div>
-                  <button type="button" onClick={changeEmail} aria-label="Change email" className="aura-btn aura-btn-line aura-btn-sm shrink-0">Change</button>
+                <div className="min-w-0">
+                  <p className={note}>Code sent to</p>
+                  <p className="flex flex-wrap items-center gap-x-3">
+                    <span className="min-w-0 text-[15px] leading-5 font-bold text-ink [overflow-wrap:anywhere]">{email}</span>
+                    <button type="button" onClick={changeEmail} aria-label="Change email" className="aura-lk text-[14px]">Change</button>
+                  </p>
                 </div>
                 <fieldset>
                   <legend className="aa-flbl">6-digit code</legend>
-                  <div className="aa-otp pt-1">
+                  <div className={`aa-otp pt-1${about === 'code' ? ' err' : ''}`}>
                     {otpCode.map((digit, idx) => (
                       <input
                         key={idx}
@@ -307,6 +317,7 @@ export const LoginPage: React.FC = () => {
                         inputMode="numeric"
                         autoComplete={idx === 0 ? 'one-time-code' : 'off'}
                         aria-label={`Digit ${idx + 1}`}
+                        aria-invalid={about === 'code' ? true : undefined}
                         maxLength={idx === 0 ? 6 : 1}
                         value={digit}
                         onChange={(e) => handleOtpDigitChange(idx, e.target.value)}

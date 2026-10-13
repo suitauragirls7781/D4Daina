@@ -12,7 +12,7 @@ import { ReturnRequestForm, canStartReturn } from './ReturnRequestForm';
 import { OrderInvoice, useDialogA11y } from './OrderInvoice';
 import { StyleProfile, primeStylePrefs } from './StyleProfile';
 import { LoginPage } from './LoginPage';
-import { AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, ChevronRight, Copy, Loader2, LogOut, Mail, Search, WifiOff, X } from 'lucide-react';
 import { getCleanImageUrl } from '../utils/imageHelper';
 import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { useAdmin } from '../context/AdminContext';
@@ -25,7 +25,7 @@ import { ProductCard } from './ProductCard';
 import { BagIcon } from './BrandIcons';
 import { HeartIcon, HelpIcon, OrdersIcon, PinIcon, ReturnIcon, SupportIcon, TagIcon, UserIcon } from './StoreIcons';
 import { ReceiptIcon, StyleIcon } from './AccountIcons';
-import { AuraTitle } from '../aura';
+import { AuraTitle, useFlip } from '../aura';
 
 type Tab = 'orders' | 'wishlist' | 'addresses' | 'coupons' | 'profile' | 'style' | 'returns' | 'help';
 
@@ -74,7 +74,7 @@ const initialMobileView = (): 'menu' | 'panel' => {
 /** Empty / "nothing here" card used across the tabs, so every one looks the same. */
 const EmptyState: React.FC<{ icon: React.ReactNode; title: string; text: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, text, children }) => (
   <div className="aura-card aura-blk px-5 py-10 text-center">
-    <span className="aa-ic aa-ic-blush mx-auto h-14 w-14">{icon}</span>
+    <span className="aa-ic aa-ic-blush kx-pop mx-auto h-14 w-14">{icon}</span>
     <p className="mt-4 text-[26px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">{title}</p>
     <p className="mt-2 text-[14.5px] leading-[21px] text-ink-muted max-w-sm mx-auto">{text}</p>
     {children && <div className="mt-5 flex flex-col sm:flex-row sm:justify-center gap-2">{children}</div>}
@@ -375,26 +375,28 @@ const OrderCard: React.FC<{
   return (
     <article className="aura-card aura-blk overflow-hidden" aria-labelledby={`order-${order.orderNumber}`}>
       <header className="px-4 sm:px-6 pt-5 pb-4 border-b border-line space-y-2.5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 id={`order-${order.orderNumber}`} className="aura-num text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink break-all">
+        <div>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id={`order-${order.orderNumber}`} className="aura-num min-w-0 text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink [overflow-wrap:anywhere]">
               <span className="sr-only">Order </span>#{order.orderNumber}
             </h2>
-            <p className={`${noteClass} mt-0.5`}>
-              Placed {formatDate(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
+            <p className="aura-num shrink-0 text-right text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink">
+              <span className="sr-only">Total </span>{inr(order.finalTotal)}
             </p>
           </div>
-          <p className="aura-num shrink-0 text-right text-[19px] leading-6 font-extrabold tracking-[-0.02em] text-ink">
-            <span className="sr-only">Total </span>{inr(order.finalTotal)}
-            {order.payMode === 'cod' && <span className="block text-[13px] leading-[18px] font-semibold tracking-normal text-sale">{inr(order.codDue || 0)} cash on delivery</span>}
+          <p className={`${noteClass} mt-0.5`}>
+            Placed {formatDate(order.date)} · {pieces} {pieces === 1 ? 'item' : 'items'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-1.5">
           <StatusPill order={order} />
           {!awaitingPay && (
             <span className={`aa-pill ${paymentTone}`}>
-              <span className="sr-only">Payment: </span>{paid ? 'Paid online' : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
+              <span className="sr-only">Payment: </span>{paid ? (order.payMode === 'cod' ? 'Advance paid' : 'Paid online') : order.paymentStatus === 'Refunded' ? 'Refunded' : failed ? 'Payment failed' : 'Payment pending'}
             </span>
+          )}
+          {order.payMode === 'cod' && Number(order.codDue) > 0 && !['Cancelled', 'Refunded', 'Returned'].includes(order.status) && (
+            <span className="aa-pill is-line aura-num">{inr(order.codDue || 0)} cash on delivery</span>
           )}
         </div>
         {latest && (
@@ -612,6 +614,9 @@ export const AccountPage: React.FC = () => {
   // Orders just updated by the server (e.g. after a cancel request), shown until the next order sync
   const [updatedOrders, setUpdatedOrders] = useState<Record<string, OrderWithRequests>>({});
   useEffect(() => setUpdatedOrders({}), [recentOrders]);
+  // Aura Kinetic: after a filter or a search the order cards glide to their new places (looks only)
+  const ordersListRef = useRef<HTMLDivElement>(null);
+  useFlip(ordersListRef, `${orderFilter}|${orderSearch.trim().toLowerCase()}|${recentOrders.length}`, { selector: ':scope > [data-flip]' });
 
   useEffect(() => {
     if (!user?.email) return;
@@ -640,9 +645,10 @@ export const AccountPage: React.FC = () => {
   }, [user?.email]);
 
   if (authLoading) {
+    // The shape of the account while the sign-in is read: the greeting band and the rows
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-ink-muted" />
+      <div data-aura className="min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8" role="status" aria-label="Loading your account">
+        <div className="aa-ask mx-auto max-w-[1120px]" aria-hidden="true"><b /><i /><i /><i /><i /></div>
       </div>
     );
   }
@@ -819,7 +825,7 @@ export const AccountPage: React.FC = () => {
                     {[0, 1, 2, 3, 4, 5, 6].map((index) => (
                       <React.Fragment key={index}>
                         {index > 0 && <s className={index <= stage ? 'on' : ''} />}
-                        <i className={`${index <= stage ? 'on' : ''}${index === stage && stage < 6 ? ' cur' : ''}`} />
+                        <i className={`${index <= stage ? 'on' : ''}${index === stage && stage < 6 ? ' cur' : ''}`} style={{ '--i': index } as React.CSSProperties} />
                       </React.Fragment>
                     ))}
                   </span>
@@ -880,11 +886,14 @@ export const AccountPage: React.FC = () => {
             {tab === 'orders' && (
               <section className="space-y-4">
                 {ordersLoading && recentOrders.length === 0 ? (
-                  <div className="py-16 flex justify-center" role="status" aria-label="Loading your orders"><Loader2 className="w-6 h-6 animate-spin text-ink-muted" /></div>
+                  // The shape of two order cards while the list is read
+                  <div className="aa-osk" role="status" aria-label="Loading your orders">
+                    {[0, 1].map((n) => <div key={n} aria-hidden="true"><i className="w-2/5" /><i className="mt-3 w-3/5" /><i className="mt-6 h-1! w-full" /><b /><i className="mt-5 h-[54px]! w-full" /></div>)}
+                  </div>
                 ) : ordersFailed && recentOrders.length === 0 ? (
                   // The list could not be read: say so, never "No orders yet" to someone who may have paid
                   <>
-                    <EmptyState icon={<BagIcon className="w-7 h-7" mono />} title="We could not load your orders" text="Your orders are safe. Check your connection and try again, or track an order with its number.">
+                    <EmptyState icon={<WifiOff className="w-6 h-6" strokeWidth={1.6} aria-hidden="true" />} title="We could not load your orders" text="Your orders are safe. Check your connection and try again, or track an order with its number.">
                       <button type="button" onClick={loadOrders} className="aura-btn">Try again</button>
                       <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="aura-btn aura-btn-line">Track with order number</button>
                     </EmptyState>
@@ -896,7 +905,7 @@ export const AccountPage: React.FC = () => {
                     <EmptyState
                       icon={<BagIcon className="w-7 h-7" mono />}
                       title={deviceOrders.length ? 'No orders under this email' : 'No orders under this email yet'}
-                      text={<>Orders placed while signed in as <span className="break-all">{user.email}</span> appear here. Ordered without signing in, or with another email? Track it with your order number and the mobile number or email you gave at checkout.</>}
+                      text={<>Orders placed while signed in as <span className="ocf-em">{user.email}</span> appear here. Ordered without signing in, or with another email? Track it with your order number and the mobile number or email you gave at checkout.</>}
                     >
                       <button type="button" id="account-track-guest-order" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="aura-btn">
                         Track with order number
@@ -959,20 +968,23 @@ export const AccountPage: React.FC = () => {
                         </button>
                       </EmptyState>
                     ) : (
-                      filteredOrders.map((order) => (
-                        <OrderCard
-                          key={order.orderNumber}
-                          order={order}
-                          onTrack={() => openTrack(order)}
-                          onInvoice={() => setInvoiceOrder(order)}
-                          onCancel={() => setCancelOrder(order)}
-                          onReturn={() => setReturnFor(order)}
-                          onOpenProduct={navigateToProduct}
-                          onRate={rateProduct}
-                          onBuyAgain={() => buyAgain(order)}
-                          cancelWindowHours={cancelWindowHours}
-                        />
-                      ))
+                      <div ref={ordersListRef} className="space-y-4">
+                        {filteredOrders.map((order) => (
+                          <div key={order.orderNumber} data-flip={order.orderNumber}>
+                            <OrderCard
+                              order={order}
+                              onTrack={() => openTrack(order)}
+                              onInvoice={() => setInvoiceOrder(order)}
+                              onCancel={() => setCancelOrder(order)}
+                              onReturn={() => setReturnFor(order)}
+                              onOpenProduct={navigateToProduct}
+                              onRate={rateProduct}
+                              onBuyAgain={() => buyAgain(order)}
+                              cancelWindowHours={cancelWindowHours}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </>
                 )}
@@ -1028,7 +1040,7 @@ export const AccountPage: React.FC = () => {
                   <div className="aura-card aura-blk p-4 sm:p-6 space-y-4">
                     <h3 className={panelTitle}>Contact</h3>
                     <p className="aa-note text-ink-muted">
-                      Signed in with <span className="font-bold text-ink break-all">{user.email}</span>
+                      Signed in with <span className="ocf-em font-bold! text-ink">{user.email}</span>
                     </p>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
