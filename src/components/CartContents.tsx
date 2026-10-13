@@ -337,6 +337,8 @@ export const EmptyBag: React.FC<{ onDone?: () => void; heading?: 'h1' | 'h2' }> 
   const Heading = heading;
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center px-6 text-center">
+      {/* Aura Kinetic: the bag draws itself and settles */}
+      <span className="kx-drawn kx-emptybag" aria-hidden="true"><Icon name="bag" size={40} strokeWidth={1.4} /></span>
       <Heading className="abag-empty-h">Your bag is empty</Heading>
       <p className="mt-3 text-[15px] leading-[1.5] text-ink-muted">Add a style you like and it will wait here until you are ready to check out.</p>
       <button onClick={() => { onDone?.(); navigateToCategory('All'); }} className="aura-btn aura-btn-w mt-6">

@@ -6,7 +6,7 @@ import { SharedWishlistView, ShareWishlistButton, sharedWishlistId } from './Sha
 import { defaultSizeFor, sizesOf } from '../utils/looks';
 import { Product, ProductSize } from '../types';
 import { PackageIcon } from './StoreIcons';
-import { AuraTitle, Icon } from '../aura';
+import { AuraTitle, Icon, useFlip } from '../aura';
 
 const inr = (value: number) => `₹${Math.round(Number(value) || 0).toLocaleString('en-IN')}`;
 
@@ -66,7 +66,7 @@ const WishlistCard: React.FC<{ product: Product }> = ({ product }) => {
   const off = mrp > product.price ? Math.round((1 - product.price / mrp) * 100) : 0;
   return (
     // The pieces of the shop's product card: a white card, the photo, the heart, the name, the price and the pill
-    <article className="aura-pc aura-card" data-rv="card">
+    <article className="aura-pc aura-card" data-rv="card" data-flip={String(product.id)}>
       <div className="aura-pc-m">
         <button
           type="button"
@@ -151,6 +151,10 @@ export const WishlistPage: React.FC = () => {
     return [...counts.entries()].sort((x, y) => y[1] - x[1]).slice(0, 6);
   }, [products]);
 
+  // Aura Kinetic: when a style leaves the list the others glide into its place
+  const gridRef = React.useRef<HTMLDivElement>(null);
+  useFlip(gridRef, wishlist.map((saved) => saved.id).join(','), { selector: ':scope > article' });
+
   const sharedId = sharedWishlistId();
   if (sharedId) return <SharedWishlistView id={sharedId} />;
 
@@ -159,7 +163,7 @@ export const WishlistPage: React.FC = () => {
       <div id="wishlist-empty-state" data-aura className="px-3 pt-4 pb-16 sm:px-6 lg:pt-8">
         <div className="mx-auto max-w-[1120px] lg:grid lg:grid-cols-2 lg:items-start lg:gap-[50px]">
           <div className="aa-band aa-band-blush">
-            <span className="aa-ic mb-5 h-14 w-14" aria-hidden="true">
+            <span className="aa-ic kx-drawn kx-beat mb-5 h-14 w-14" aria-hidden="true">
               <Icon name="heart" size={24} />
             </span>
             <AuraTitle
@@ -242,12 +246,12 @@ export const WishlistPage: React.FC = () => {
         </div>
 
         {/* Wishlist items always show the live product (current price and stock) */}
-        <div className="aura-pc-grid">
+        <div ref={gridRef} className="aura-pc-grid">
           {wishlist.map((saved) => {
             const live = allProducts.find((p) => String(p.id) === String(saved.id));
             if (live) return <WishlistCard key={saved.id} product={live} />;
             return (
-              <article key={saved.id} className="aura-pc aura-card">
+              <article key={saved.id} data-flip={String(saved.id)} className="aura-pc aura-card">
                 <div className="aura-pc-ph flex flex-col items-center justify-center gap-2 bg-sunken px-3 text-center text-ink-muted">
                   <PackageIcon className="w-6 h-6" mono live={false} />
                   <p className="text-[13px] leading-4 font-semibold">No longer available</p>

@@ -16,6 +16,7 @@ import { OccasionSection } from './OccasionSection';
 import { AuraReelsSection } from './AuraReels';
 import { AskAssistantRow, FeaturedCollection, HomeAssuranceBand, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
 import { Thread, requestMeasure } from '../aura';
+import { HomeChapters } from './HomeChapters';
 
 /**
  * The homepage as one scroll story. Every section sets the colour of the page while it is under the reader's
@@ -130,6 +131,7 @@ export const HomePage: React.FC = () => {
   return (
     <div id="dynamic-storefront-homepage" ref={host} data-aura="" className="relative flex w-full min-w-0 flex-col gap-0">
       <Thread containerRef={host} />
+      <HomeChapters hostRef={host} />
       {!heroOn && notices}
       {visibleSections.map((section, index) => (
         <React.Fragment key={section.id}>

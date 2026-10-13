@@ -2307,3 +2307,108 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   .kx-words > span { opacity: 1 !important; transition: none; }
   .kx-words > span.k { color: var(--ac); }
 }
+
+/* ---- Aura Kinetic, homepage ---- */
+/* The chapter rail (tablets and desktop): dots at the right edge, the current one a short line with its name */
+.kx-ch { display: none; }
+@media (min-width: 768px) {
+  .kx-ch { position: fixed; right: 10px; top: 50%; z-index: 20; display: flex; flex-direction: column; align-items: flex-end; transform: translate3d(0, -50%, 0); color: var(--aura-ink); opacity: 0; pointer-events: none; transition: opacity 400ms, color 350ms; }
+  .kx-ch.on { opacity: 1; pointer-events: auto; }
+  .kx-ch.dk { color: var(--aura-paper); }
+  .kx-ch > button { display: flex; align-items: center; justify-content: flex-end; gap: 10px; height: 28px; padding: 0 4px; color: inherit; cursor: pointer; }
+  .kx-ch > button > i { display: block; width: 18px; height: 2px; border-radius: 2px; background: currentColor; opacity: 0.32; transform-origin: 100% 50%; transform: scaleX(0.34); transition: transform 450ms var(--kx-spring), opacity 300ms; }
+  .kx-ch > button > span { font-family: var(--font-sans); font-size: 13px; line-height: 1; font-weight: 700; white-space: nowrap; opacity: 0; transform: translate3d(8px, 0, 0); transition: opacity 250ms, transform 400ms var(--aura-eo); }
+  .kx-ch > button[aria-current="true"] > i { opacity: 1; transform: scaleX(1); }
+  .kx-ch > button[aria-current="true"] > span, .kx-ch > button:focus-visible > span { opacity: 1; transform: none; }
+  @media (hover: hover) {
+    .kx-ch:hover > button > span { opacity: 0.62; transform: none; }
+    .kx-ch:hover > button:hover > span, .kx-ch:hover > button[aria-current="true"] > span { opacity: 1; }
+    .kx-ch > button:hover > i { opacity: 1; transform: scaleX(0.7); }
+  }
+}
+.kx-col { will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .kx-ch, .kx-ch > button > i, .kx-ch > button > span { transition: none; } .kx-col { translate: none !important; will-change: auto; } }
+
+/* ---- Aura Kinetic, shop ---- */
+@media (prefers-reduced-motion: no-preference) {
+  /* A chosen filter pops in; the empty state's lens looks around once */
+  .kx-pop { animation: kx-pop 460ms var(--kx-spring) backwards; }
+  @keyframes kx-pop { from { opacity: 0; transform: scale(0.7); } }
+  .kx-seek > svg { animation: kx-seek 2200ms var(--aura-e) 300ms backwards; }
+  @keyframes kx-seek { 0% { transform: translate3d(-14px, 6px, 0) rotate(-18deg); opacity: 0; } 22% { opacity: 1; } 34% { transform: translate3d(9px, -5px, 0) rotate(10deg); } 62% { transform: translate3d(-5px, -3px, 0) rotate(-6deg); } 100% { transform: none; } }
+  /* The filter button's count and the sort pill answer a tap */
+  .shop-sort { transition: transform 350ms var(--aura-sp), border-color 300ms; }
+  button.shop-sort:active { transform: scale(0.95); }
+  .shop-sort[aria-expanded="true"] > svg { transform: rotate(180deg); }
+  .shop-sort > svg { transition: transform 400ms var(--kx-spring); }
+  .shop-fbtn-n { animation: kx-pop 460ms var(--kx-spring) backwards; }
+  /* Category pills of the directory arrive one after another when the block comes into view */
+  .cdir-l > li { transition: opacity 500ms var(--aura-e), translate 650ms var(--kx-out); transition-delay: calc(var(--i, 0) * 22ms); }
+  .cdir.kx-wait .cdir-l > li { opacity: 0; translate: 0 18px; }
+}
+
+/* ---- Aura Kinetic, product page ---- */
+/* Under the photo: a hairline with one ink segment that travels with the swipe (--gp, written by the strip's own scroll) */
+.kx-gp { position: relative; height: 3px; margin: 12px 6px 0; border-radius: 3px; background: var(--sag-line); overflow: hidden; }
+.kx-gp > i { display: block; width: calc(100% / var(--gn, 1)); height: 100%; border-radius: 3px; background: var(--aura-ink); transform: translate3d(calc(var(--gp, 0) * 100%), 0, 0); }
+.kx-gp + .pdp-m { padding-top: 8px; }
+@media (prefers-reduced-motion: no-preference) {
+  .kx-gp > i { transition: transform 120ms linear; }
+  /* The "% off" tag pops in after the price has rolled; a chosen colour's dot pops; a refused size pill shakes */
+  .pdp-pr .aura-tag { animation: kx-pop 520ms var(--kx-spring) 620ms backwards; }
+  .pdp-sw > button[aria-pressed="true"] > i { animation: kx-pop 460ms var(--kx-spring); }
+  .pdp-size.err { animation: kx-shake 420ms var(--aura-e); }
+  /* An opened detail: its text rises in; the tick of "Added to bag" lands with a spring */
+  .pdp-acc-p.on > div > div { animation: kx-acc 620ms var(--kx-out) 80ms backwards; }
+  @keyframes kx-acc { from { opacity: 0; transform: translate3d(0, 14px, 0); } }
+  :is(#pdp-add-to-bag, .pdp-buy .aura-btn) > svg[data-ic="check"] { animation: kx-pop 520ms var(--kx-spring) backwards; }
+  /* Phones: the ink buy bar comes up from under the screen once the page is there; its small photo follows the gallery */
+  @media (max-width: 899px) {
+    .pdp-buy { animation: kx-bar-in 720ms var(--kx-spring) 420ms backwards; }
+    @keyframes kx-bar-in { from { transform: translate3d(0, 110%, 0); } }
+  }
+  .pdp-th > button { transition: box-shadow 300ms, transform 450ms var(--kx-spring); }
+  .pdp-th > button:active { transform: scale(0.92); }
+  .pdp-conf-r > span:first-child { transition: transform 450ms var(--kx-spring); }
+  @media (hover: hover) { :is(a, button).pdp-conf-r:hover > span:first-child { transform: scale(1.1) rotate(-6deg); } }
+}
+
+/* ---- Aura Kinetic, bag, wishlist and the quiet pages ---- */
+.kx-emptybag { display: grid; place-items: center; width: 84px; height: 84px; margin-bottom: 22px; border-radius: 50%; background: var(--aura-blush); color: var(--aura-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  /* An icon that draws itself once when it appears (the empty bag, the empty wishlist, a page's round mark) */
+  .kx-drawn > svg path { stroke-dasharray: 1; animation: kx-draw 1100ms var(--aura-e) 350ms backwards; }
+  @keyframes kx-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+  .kx-emptybag { animation: kx-pop 620ms var(--kx-spring) 120ms backwards; }
+  .kx-emptybag > svg { animation: kx-sway 2600ms var(--aura-e) 1500ms; transform-origin: 50% 12%; }
+  @keyframes kx-sway { 20% { transform: rotate(-9deg); } 45% { transform: rotate(7deg); } 70% { transform: rotate(-4deg); } 100% { transform: none; } }
+  .kx-beat > svg { animation: sag-beat 700ms var(--aura-e) 1500ms; }
+  /* Bag lines arrive one after another; the phone's checkout pill comes up from under the screen */
+  .abag-l { animation: kx-line-in 700ms var(--kx-out) backwards; }
+  .abag-l:nth-child(2) { animation-delay: 70ms; }
+  .abag-l:nth-child(3) { animation-delay: 140ms; }
+  .abag-l:nth-child(n + 4) { animation-delay: 210ms; }
+  @keyframes kx-line-in { from { opacity: 0; transform: translate3d(0, 26px, 0); } }
+  .abag-bar { animation: kx-bar-in 720ms var(--kx-spring) 380ms backwards; }
+  @keyframes kx-bar-in { from { transform: translate3d(0, 130%, 0); } }
+  /* Rows of the account, help and contact pages: the arrow leans out under a mouse, the row answers a press */
+  .aa-row > svg:last-child { transition: transform 420ms var(--kx-spring); }
+  @media (hover: hover) { .aa-row:hover > svg:last-child { transform: translate3d(5px, 0, 0); } .aa-row:hover .aa-ic { transform: scale(1.08) rotate(-6deg); } }
+  .aa-ic { transition: transform 450ms var(--kx-spring); }
+  /* Numbered policy sections: the number counts in with a rose rule that draws under it */
+  .aa-sec { position: relative; }
+  .aa-sec::before { content: ""; position: absolute; left: 0; top: -1px; width: 100%; height: 1px; background: var(--aura-rose); transform-origin: 0 50%; transform: scaleX(0); transition: transform 1100ms var(--kx-out) 120ms; }
+  .aa-sec.in::before, .aa-sec.is-in::before { transform: scaleX(0.22); }
+}
+
+/* The 404 page's number: three very large figures, the middle one outlined */
+.kx-404 { display: flex; gap: 0.02em; margin: -6px 0 18px -4px; font-family: var(--font-sans); font-size: clamp(104px, 36vw, 200px); line-height: 0.82; font-weight: 900; letter-spacing: -0.06em; font-variant-numeric: lining-nums; color: var(--aura-ink); -webkit-user-select: none; user-select: none; }
+.kx-404 > b { display: block; font-weight: 900; }
+.kx-404 > b:nth-child(2) { color: transparent; -webkit-text-stroke: 2px var(--aura-ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .kx-404 > b { animation: kx-drop 900ms var(--kx-spring) backwards; transform-origin: 50% 100%; }
+  .kx-404 > b:nth-child(2) { animation-delay: 110ms; }
+  .kx-404 > b:nth-child(3) { animation-delay: 220ms; }
+  @keyframes kx-drop { from { opacity: 0; transform: translate3d(0, -70px, 0) rotate(-9deg); } }
+  @media (hover: hover) { .kx-404 > b { transition: transform 600ms var(--kx-spring); } .kx-404:hover > b:nth-child(odd) { transform: rotate(-5deg) translate3d(0, -6px, 0); } .kx-404:hover > b:nth-child(2) { transform: rotate(8deg) scale(1.06); } }
+}

@@ -6,7 +6,8 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { STORE_ADDRESS_LINES, STORE_MAPS_URL } from '../utils/storeContact';
 import { LockIcon, PinIcon, ReturnIcon, StoreIconProps, SupportIcon, TruckIcon } from './StoreIcons';
 import { HelpCard, InfoPageHeader } from './PolicyPages';
-import { AuraTitle } from '../aura';
+import { AuraTitle, Drift, ScrollWords } from '../aura';
+import { HomeAssuranceBand } from './HomeSections';
 
 type PromiseItem = { icon: React.FC<StoreIconProps>; title: string; text: string; page: ActivePage; link: string };
 
@@ -44,7 +45,10 @@ export const AboutUsPage: React.FC = () => {
           <div className="w-full max-w-[340px] md:max-w-none mx-auto">
             {storyImage ? (
               <div data-rv="photo" style={{ '--rv-r': '24px' } as React.CSSProperties} className="aura-sk aspect-[4/5] rounded-[24px]">
-                <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
+                {/* Aura Kinetic: the photo travels a little slower than the page inside its frame */}
+                <Drift amount={5} className="h-full w-full">
+                  <img src={storyImage.src} alt={storyImage.alt} loading="lazy" className="w-full h-full object-cover object-top" />
+                </Drift>
               </div>
             ) : (
               <div className="aspect-[4/5] rounded-[24px] bg-surface flex items-center justify-center p-8">
@@ -65,7 +69,7 @@ export const AboutUsPage: React.FC = () => {
               We bring together suits, kurtis, anarkalis and co-ord sets chosen for how they look, feel and move, from easy everyday pieces to festive favourites.
             </p>
             <p data-rv className={`mt-3 ${body}`}>
-              We believe dressing well should never be uncomfortable. Our silhouettes are designed to flatter all Indian body shapes in sizes from S to 5XL, with graceful drapes that move easily with you.
+              Our silhouettes are designed to flatter all Indian body shapes in sizes from S to 5XL, with graceful drapes that move easily with you.
             </p>
             <div data-rv className="mt-6 flex flex-col min-[420px]:flex-row gap-2.5">
               <button type="button" onClick={() => navigateToCategory('All')} className="aura-btn">
@@ -78,6 +82,15 @@ export const AboutUsPage: React.FC = () => {
           </div>
         </section>
 
+      </div>
+
+      {/* Aura Kinetic: the store's own sentence, lit word by word as it is read, then its real facts as the moving band */}
+      <div className="mx-auto max-w-[1120px] px-4 pb-4 pt-16 sm:px-7 lg:pt-28">
+        <ScrollWords text="We believe dressing well should never be *uncomfortable.*" className="aura-h2 aura-h-lg max-w-[13em]" />
+      </div>
+      <div className="mt-10 lg:mt-16"><HomeAssuranceBand id="about-facts" /></div>
+
+      <div className="max-w-[1120px] mx-auto px-3 sm:px-6 pt-12 lg:pt-20 space-y-12 lg:space-y-20">
         {/* Promises (all backed by the store's policies) */}
         <section aria-labelledby="about-promises-title">
           <AuraTitle label="Shopping with us" title="What you can count" accent="on" id="about-promises-title" size="lg" className="px-1" />

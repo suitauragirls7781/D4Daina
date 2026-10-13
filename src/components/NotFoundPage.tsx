@@ -24,6 +24,8 @@ export const NotFoundPage: React.FC = () => {
     <div id="not-found-page" data-aura className="px-3 sm:px-6 pt-3 pb-14 lg:pt-6 lg:pb-20">
       <div className="max-w-[1120px] mx-auto lg:grid lg:grid-cols-2 lg:items-start lg:gap-[50px]">
         <div className="aa-band">
+          {/* Aura Kinetic: the number itself, dropped in figure by figure (decoration; the label below says it in words) */}
+          <p className="kx-404" aria-hidden="true"><b>4</b><b>0</b><b>4</b></p>
           <AuraTitle as="h1" label="Error 404" title="This page does not" accent="exist" sub="The link may be old or mistyped. Try the shop or go back to the homepage." />
           <div className="mt-7 flex flex-col min-[420px]:flex-row gap-2.5">
             <button type="button" onClick={() => navigateToCategory('All')} className="aura-btn min-[420px]:flex-1">Shop all styles <Icon name="arrow" /></button>

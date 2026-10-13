@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
-import { prefersReducedMotion } from './scroll';
+import { prefersReducedMotion, useScrollFx } from './scroll';
 
 // Aura Kinetic: the site-wide interaction layer of the motion-first preview.
 //   startKinetic()  one pointer listener and one animation-frame loop (asleep unless something is moving) for
@@ -188,8 +188,8 @@ export const enterPage = (delay = 0) => {
     blocks.forEach((el, i) => {
       try {
         el.animate(
-          [{ opacity: 0, translate: '0 30px' }, { opacity: 1, translate: '0 0' }],
-          { duration: 820, delay: delay + i * 65, easing: 'cubic-bezier(0.16, 0.84, 0.24, 1)', fill: 'backwards' },
+          [{ opacity: 0, translate: '0 34px' }, { opacity: 1, offset: 0.5 }, { opacity: 1, translate: '0 0' }],
+          { duration: 780, delay: delay + i * 60, easing: 'cubic-bezier(0.16, 0.84, 0.24, 1)', fill: 'backwards' },
         );
       } catch { /* an old browser without the translate property in keyframes: the page is simply there */ }
     });
@@ -274,4 +274,31 @@ export function useFlip(ref: RefObject<HTMLElement | null>, dep: unknown, option
     return () => ro.disconnect();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dep]);
+}
+
+// ---- Column drift: the columns of a small grid travel at slightly different speeds -----------------------------
+/**
+ * The cards of a grid move a few pixels against each other while the grid crosses the screen (odd columns up,
+ * even columns down); a card that spans columns stays put. For SMALL grids only (a dozen cards at most): every
+ * card becomes its own layer. Columns are read in the engine's measure pass, never on a scroll frame.
+ */
+export function useColumnDrift(ref: RefObject<HTMLElement | null>, amount = 14, selector = ':scope > *') {
+  const cards = useRef<Array<{ el: HTMLElement; dir: number }>>([]);
+  useScrollFx(ref, ({ enter }) => {
+    if (prefersReducedMotion()) return;
+    const v = (enter - 0.5) * 2 * amount;
+    for (const card of cards.current) card.el.style.translate = `0 ${(v * card.dir).toFixed(1)}px`;
+  }, [amount, selector], {
+    measure: (host) => {
+      const width = host.offsetWidth || 1;
+      const next: Array<{ el: HTMLElement; dir: number }> = [];
+      host.querySelectorAll<HTMLElement>(selector).forEach((el) => {
+        const w = el.offsetWidth;
+        if (!w || w > width * 0.6 || prefersReducedMotion()) { el.style.removeProperty('translate'); el.classList.remove('kx-col'); return; }
+        el.classList.add('kx-col');
+        next.push({ el, dir: Math.round(el.offsetLeft / w) % 2 ? -1 : 1 });
+      });
+      cards.current = next.slice(0, 12);
+    },
+  });
 }

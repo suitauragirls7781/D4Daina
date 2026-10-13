@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
-import { AuraTitle } from '../aura';
+import { AuraTitle, prefersReducedMotion, revealOnce } from '../aura';
 import { categoryDirectory } from '../data/womenCategories';
 
 /**
@@ -15,11 +15,24 @@ export const CategoryDirectory: React.FC = () => {
   const entries = useMemo(() => categoryDirectory(products, categories), [products, categories]);
   const filled = entries.filter((entry) => entry.count > 0);
   const coming = entries.filter((entry) => entry.count === 0);
+  // Aura Kinetic: the pills arrive one after another the first time the block comes into view. The waiting state
+  // is only set while the block is still below the screen, so without the script everything is simply there.
+  const host = useRef<HTMLElement>(null);
+  const [wait, setWait] = useState(false);
+  const has = filled.length > 0;
+  useEffect(() => {
+    const el = host.current;
+    if (!el || prefersReducedMotion() || el.getBoundingClientRect().top < window.innerHeight * 0.9) return undefined;
+    setWait(true);
+    const stop = revealOnce(el, () => setWait(false));
+    const safety = window.setTimeout(() => setWait(false), 20000);
+    return () => { stop(); window.clearTimeout(safety); setWait(false); };
+  }, [has]);
   if (filled.length === 0) return null;
 
   const open = (name: string) => { navigateToCategory(name as any); window.scrollTo(0, 0); };
-  const pill = (entry: { name: string; count: number }) => (
-    <li key={entry.name}>
+  const pill = (entry: { name: string; count: number }, index: number) => (
+    <li key={entry.name} style={{ '--i': index } as React.CSSProperties}>
       <button type="button" onClick={() => open(entry.name)} aria-current={activePage === 'shop' && selectedCategory === entry.name ? 'page' : undefined}
         className={`cdir-p ${entry.count > 0 ? '' : 'soon'}`}>
         {entry.name}<span className="aura-num">{entry.count > 0 ? entry.count : 'Soon'}</span>
@@ -28,7 +41,7 @@ export const CategoryDirectory: React.FC = () => {
   );
 
   return (
-    <section id="category-directory" aria-labelledby="category-directory-title" className="cdir">
+    <section ref={host} id="category-directory" aria-labelledby="category-directory-title" className={`cdir${wait ? ' kx-wait' : ''}`}>
       <div className="cdir-in">
         <AuraTitle
           id="category-directory-title"
@@ -44,7 +57,7 @@ export const CategoryDirectory: React.FC = () => {
         {coming.length > 0 && (
           <>
             <p className="aura-lbl cdir-h">Coming soon</p>
-            <ul className="cdir-l" aria-label="Categories coming soon">{coming.map(pill)}</ul>
+            <ul className="cdir-l" aria-label="Categories coming soon">{coming.map((entry, i) => pill(entry, i + filled.length))}</ul>
           </>
         )}
       </div>

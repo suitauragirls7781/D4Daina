@@ -442,6 +442,7 @@ export const ProductDetailPage: React.FC = () => {
     scrollLock.current = Date.now() + 600;
     el.scrollTo({ left: slide.offsetLeft - first.offsetLeft, behavior: smooth ? 'smooth' : 'auto' });
   };
+  const gpRef = useRef<HTMLDivElement>(null);
   const onStripScroll = () => {
     if (scrollFrame.current) return;
     scrollFrame.current = requestAnimationFrame(() => {
@@ -454,6 +455,8 @@ export const ProductDetailPage: React.FC = () => {
       const w = stripWidth.current;
       if (w > 0 && !prefersReducedMotion()) {
         const x = el.scrollLeft;
+        // Aura Kinetic: the small segment under the photo travels with the finger
+        setVar(gpRef.current, '--gp', clamp(x / w, 0, slides.length - 1));
         slides.forEach((slide, i) => {
           const layer = slide.firstElementChild as HTMLElement | null;
           const d = x - i * w;
@@ -754,6 +757,7 @@ export const ProductDetailPage: React.FC = () => {
               </div>
               {images.length > 1 && (
                 <>
+                  <div ref={gpRef} className="kx-gp" aria-hidden="true" style={{ '--gn': images.length } as React.CSSProperties}><i /></div>
                   <div className="pdp-m">
                     <span><Icon name="pinch" size={18} className="shrink-0 text-ink" /> Swipe for more photos</span>
                     <span className="pdp-ix" aria-label={`Photo ${imageIdx + 1} of ${images.length}`}><Odometer value={imageIdx + 1} roll={false} /> / {images.length}</span>

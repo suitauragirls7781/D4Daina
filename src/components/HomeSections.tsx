@@ -14,7 +14,7 @@ import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../util
 import { preloadImage } from '../utils/pageTransition';
 import { SectionTitle } from './SectionTitle';
 import { Product, ProductSize } from '../types';
-import { AuraTitle, Icon, Odometer, clamp, flyToBag, revealOnce, setVar, useNoPin, useReducedMotion, useScrollFx } from '../aura';
+import { AuraTitle, Icon, Odometer, clamp, flyToBag, revealOnce, setVar, useColumnDrift, useNoPin, useReducedMotion, useScrollFx } from '../aura';
 import type { IconName } from '../aura';
 
 /** Shared widths so every home section lines up on the same gutters. */
@@ -223,6 +223,9 @@ export const FeaturedCollection: React.FC = () => {
     const picked = live.filter((p) => p.isFeatured || p.isBestSeller);
     return { items: (picked.length >= 2 ? picked : live).slice(0, 8), liveCount: live.length };
   }, [products]);
+  // Aura Kinetic: the two columns travel a few pixels against each other while the grid crosses the screen
+  const grid = useRef<HTMLDivElement>(null);
+  useColumnDrift(grid, 14);
   if (items.length === 0) return null;
   // A lone card would look lost as a wide one: the wide card needs a row of its own to end the grid well
   const wideAt = items.length >= 8 ? 5 : -1;
@@ -239,7 +242,7 @@ export const FeaturedCollection: React.FC = () => {
           sub={<span className="aura-num">{liveCount} women's {liveCount === 1 ? 'style' : 'styles'} in stock right now.</span>}
           className="px-2 pb-6"
         />
-        <div data-thread="right" className="hm-ed-grid">
+        <div ref={grid} data-thread="right" className="hm-ed-grid">
           {items.map((product, index) => (
             <ProductCard key={product.id} product={product} layout={index === 0 && items.length >= 3 ? 'big' : index === wideAt ? 'wide' : undefined} />
           ))}

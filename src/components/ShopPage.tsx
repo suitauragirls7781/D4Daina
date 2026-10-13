@@ -19,7 +19,8 @@ import { useDiscovery, occasionProducts } from '../utils/discovery';
 import { categoryToSlug } from '../utils/slugHelper';
 import { WOMEN_CATEGORY_INFO, isWomenCategory } from '../data/womenCategories';
 import { ChevronDown, ChevronRight, Shuffle, SlidersHorizontal, Sparkles, X } from 'lucide-react';
-import { AuraTitle, Icon, clamp, prefersReducedMotion, setVar, useScrollFx } from '../aura';
+import { AuraTitle, Icon, Odometer, clamp, prefersReducedMotion, setVar, useFlip, useScrollFx } from '../aura';
+import { KineticBand } from './HomeSections';
 
 type SortKey = 'featured' | 'newest' | 'price-low' | 'price-high' | 'discount' | 'top-rated';
 const SORTS: Array<{ key: SortKey; label: string }> = [
@@ -696,6 +697,10 @@ export const ShopPage: React.FC = () => {
   }));
   // The bento: in every run of eight the first card is large and the sixth is wide (ProductCard lays itself out)
   const layoutOf = (i: number): 'big' | 'wide' | undefined => (i % 8 === 0 ? 'big' : i % 8 === 5 ? 'wide' : undefined);
+  // Aura Kinetic: after a new sort or filter the cards glide from where they were to where they belong
+  const gridRef = useRef<HTMLDivElement>(null);
+  const shownIds = results.slice(0, visible).map((p) => p.id).join(',');
+  useFlip(gridRef, shownIds, { selector: ':scope > article' });
   const sheet = 'absolute inset-x-0 bottom-0 max-h-[88dvh] bg-surface text-ink rounded-t-[28px] flex flex-col animate-in slide-in-from-bottom-5 fade-in';
   const sheetClose = 'w-11 h-11 shrink-0 rounded-full flex items-center justify-center bg-sunken text-ink cursor-pointer';
 
@@ -802,7 +807,7 @@ export const ShopPage: React.FC = () => {
         {/* The count at the left, Sort as a white pill at the right (a sheet on phones, a select on desktop) */}
         <div className="shop-sortw">
           <p className="aura-num min-w-0 truncate">
-            {isLoading ? '' : results.length > 0 ? <>Showing <span className="font-bold text-ink">{Math.min(visible, results.length)}</span> of {results.length} {results.length === 1 ? 'style' : 'styles'}</> : ''}
+            {isLoading ? '' : results.length > 0 ? <>Showing <span className="font-bold text-ink"><Odometer value={Math.min(visible, results.length)} roll={false} /></span> of <Odometer value={results.length} roll={false} /> {results.length === 1 ? 'style' : 'styles'}</> : ''}
           </p>
           <button
             ref={sortButtonRef}
@@ -835,7 +840,7 @@ export const ShopPage: React.FC = () => {
                 type="button"
                 onClick={() => removeChip(i)}
                 aria-label={`Remove filter: ${c.label}`}
-                className="h-11 max-w-full pl-4 pr-3 inline-flex items-center gap-1.5 rounded-full bg-blush text-[14px] font-semibold text-ink cursor-pointer"
+                className="kx-pop h-11 max-w-full pl-4 pr-3 inline-flex items-center gap-1.5 rounded-full bg-blush text-[14px] font-semibold text-ink cursor-pointer"
               >
                 <span className="truncate">{c.label}</span>
                 <X className="w-4 h-4 shrink-0" strokeWidth={1.8} aria-hidden="true" />
@@ -861,7 +866,7 @@ export const ShopPage: React.FC = () => {
         ) : results.length === 0 ? (
           <>
             <div className="aura-card aura-blk px-5 py-10 sm:p-12 text-center">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blush text-ink" aria-hidden="true">
+              <span className="kx-seek mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blush text-ink" aria-hidden="true">
                 <Icon name="search" size={24} />
               </span>
               <p className="aura-h2 aura-h-sm mt-5 [overflow-wrap:anywhere]">
@@ -890,6 +895,10 @@ export const ShopPage: React.FC = () => {
                 </div>
               )}
             </div>
+            {/* A collection still to come: its name and the plain fact, as the moving band (nothing invented) */}
+            {!query.trim() && !narrowed && isWomenCategory(category) && (
+              <KineticBand bare label={`${category}: coming soon`} rows={[[category, 'Coming soon', 'Suit Aura Girls']]} className="-mx-2.5 mt-8 sm:-mx-5" />
+            )}
             {products.some(isAvailable) && (
               <div className="mt-14">
                 <AuraTitle title="More styles in" accent="stock" size="lg" className="mb-6 px-1.5" />
@@ -901,7 +910,7 @@ export const ShopPage: React.FC = () => {
           </>
         ) : (
           <>
-            <div className="shop-grid">
+            <div ref={gridRef} className="shop-grid">
               {results.slice(0, visible).map((p, i) => <ProductCard key={p.id} product={p} layout={layoutOf(i)} />)}
             </div>
             {results.length > visible ? (
