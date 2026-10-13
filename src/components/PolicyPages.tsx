@@ -136,10 +136,15 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
     const els = sections.map((s) => document.getElementById(s.id)).filter(Boolean) as HTMLElement[];
+    // The reading line sits just under where a jump puts a section's title (scroll-margin-top of .aa-sec: 132px),
+    // so the section jumped to is the marked one and the one before it is already out. The sections on the line
+    // are remembered across calls (an observer only reports the ones that changed); the first in the text wins.
+    const onLine = new Set<string>();
     const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      if (visible[0]) setActiveId(visible[0].target.id);
-    }, { rootMargin: '-120px 0px -55% 0px' });
+      entries.forEach((e) => { if (e.isIntersecting) onLine.add(e.target.id); else onLine.delete(e.target.id); });
+      const first = sections.find((s) => onLine.has(s.id));
+      if (first) setActiveId(first.id);
+    }, { rootMargin: '-138px 0px -55% 0px' });
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [sections]);

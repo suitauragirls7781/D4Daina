@@ -56,7 +56,8 @@ export const HomePage: React.FC = () => {
       window.clearTimeout(late);
       if (idle) (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(idle);
     };
-  }, [shown]);
+    // (the owner's list can arrive or change after the page is up: the count is read again then)
+  }, [shown, homepageSections]);
   // The backdrop and the scroll engine read the sections again once the last one is in place
   useEffect(() => {
     if (shown > 1 && shown >= total.current) { refreshBackdrop(); requestMeasure(); }
