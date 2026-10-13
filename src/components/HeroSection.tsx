@@ -138,13 +138,15 @@ export const HeroSection: React.FC = () => {
   // Nothing animates in before the shopper (or the clock) has changed the look once
   const [moved, setMoved] = useState(false);
   const [paused, setPaused] = useState(false);
-  // Photos of the cards deeper in the pile are asked for only after the first screen is up
-  const [warm, setWarm] = useState(false);
+  // The photos are asked for in steps, so the first one has the line to itself: 0 = only the top card's,
+  // 1 = the two that peek out as well (once the first has arrived, or after 3.5 s), 2 = the one under them
+  // and the one "previous" brings back (a little later, or as soon as the shopper changes the look)
+  const [ask, setAsk] = useState(0);
   const asked = useRef(new Set<string>());
   const insets = useRef({ hs: 0 });
   const cur = count > 0 ? index % count : 0;
 
-  const onChange = (next: number, dir: 1 | -1) => { setIndex(next); setStepDir(dir); setMoved(true); setWarm(true); };
+  const onChange = (next: number, dir: 1 | -1) => { setIndex(next); setStepDir(dir); setMoved(true); setAsk(2); };
   // Why the deck is waiting (pointer over it, focus inside, a finger down, off screen, the pause button), kept
   // as `data-hold` on the section: it only stops the line that fills, and the line's end deals the next card
   const holds = useRef(new Set<string>());
@@ -178,15 +180,19 @@ export const HeroSection: React.FC = () => {
   useEffect(() => {
     const el = wrap.current;
     if (!el || count < 2) return undefined;
-    const timer = window.setTimeout(() => setWarm(true), 2600);
     let watch: IntersectionObserver | null = null;
     if ('IntersectionObserver' in window) {
       watch = new IntersectionObserver((entries) => hold('off', !entries[entries.length - 1].isIntersecting), { threshold: 0.4 });
       watch.observe(el);
     }
-    return () => { window.clearTimeout(timer); watch?.disconnect(); };
+    return () => watch?.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count]);
+  useEffect(() => {
+    if (count < 2 || ask >= 2) return undefined;
+    const timer = window.setTimeout(() => setAsk((step) => step + 1), ask === 0 ? 3500 : 2400);
+    return () => window.clearTimeout(timer);
+  }, [count, ask]);
 
   // The keyboard focus follows the look: when the focused card leaves the top of the pile, the new top card
   // takes the focus (a card under the pile is hidden, and a hidden element drops the focus without a word)
@@ -263,7 +269,7 @@ export const HeroSection: React.FC = () => {
     const slot = slotOf(i);
     const key = slide.id || String(i);
     // The top three are on the first screen; the one under them and the one that "previous" brings back follow
-    if (slot <= 2 || (warm && (slot === 3 || slot === count - 1))) asked.current.add(key);
+    if (slot === 0 || (ask >= 1 && slot <= 2) || (ask >= 2 && (slot === 3 || slot === count - 1))) asked.current.add(key);
     if (!asked.current.has(key)) return null;
     const first = i === 0;
     const small = getCleanImageUrl(slide.image, 640);
@@ -273,13 +279,16 @@ export const HeroSection: React.FC = () => {
       <img
         src={small || ELEGANT_PLACEHOLDER_SVG}
         srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
-        sizes="(min-width: 900px) 500px, (min-width: 640px) 440px, 76vw"
+        sizes="(min-width: 900px) 40vw, (min-width: 640px) 460px, 76vw"
         alt={slot === 0 ? (slide.title || 'Featured Suit Aura Girls design') : ''}
         loading={first ? 'eager' : 'lazy'}
         fetchPriority={first ? 'high' : 'low'}
         decoding="async"
         draggable={false}
+        ref={first ? (img) => { if (img?.complete) setAsk((step) => Math.max(step, 1)); } : undefined}
+        onLoad={first ? () => setAsk((step) => Math.max(step, 1)) : undefined}
         onError={(event) => {
+          if (first) setAsk((step) => Math.max(step, 1));
           if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
         }}
       />

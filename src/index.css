@@ -2065,7 +2065,8 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .h3v-in { display: flex; flex-direction: column; width: 100%; min-height: calc(100vh - var(--hs, var(--aura-hh)) - var(--hx, 0px) - var(--tb)); min-height: calc(100svh - var(--hs, var(--aura-hh)) - var(--hx, 0px) - var(--tb)); padding: 4px 16px 12px; }
 .h3v-stage { position: relative; z-index: 1; flex: 1 1 0; min-height: 280px; display: grid; place-items: center; container-type: size; }
 .h3v-deck { position: relative; width: min(66vw, 42vh); aspect-ratio: 4 / 5; touch-action: pan-y; -webkit-user-select: none; user-select: none; --f: calc(1 - var(--k, 0)); transform: translate3d(0, calc(var(--k, 0) * 34px), 0) scale(calc(1 - var(--k, 0) * 0.1)); }
-@supports (width: 1cqw) { .h3v-deck { width: min(80cqw, calc((100cqh - 22px) * 0.8), 460px); } }
+/* The photos are 2:3. The card is as wide as the stage allows and as tall as it can be, between 4:5 (a short phone) and nearly the whole photo */
+@supports (width: 1cqw) { .h3v-deck { --w: min(82cqw, calc((100cqh - 22px) * 0.8), 460px); width: var(--w); height: min(calc(100cqh - 22px), calc(var(--w) * 1.42)); aspect-ratio: auto; } }
 .h3v-c { position: absolute; left: 0; top: 0; display: block; width: 100%; height: 100%; padding: 5px; border-radius: 27px; background: var(--color-surface, #FFFFFF); transform-origin: 50% 50%; outline-offset: 4px; -webkit-user-drag: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .h3v-many .h3v-c { cursor: grab; will-change: transform; }
 .h3v-deck.dg .h3v-c { cursor: grabbing; }
@@ -2129,7 +2130,7 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
   .h3v-in { flex-direction: row; align-items: stretch; gap: clamp(28px, 5vw, 88px); max-width: 1560px; min-height: clamp(540px, calc(100vh - var(--hs, var(--aura-hh)) - var(--hx, 0px)), 900px); min-height: clamp(540px, calc(100svh - var(--hs, var(--aura-hh)) - var(--hx, 0px)), 900px); margin: 0 auto; padding: 30px clamp(32px, 6vw, 104px) 44px; }
   .h3v-stage { flex: 0 0 44%; min-height: 0; }
   .h3v-deck { width: min(56vh, 480px); }
-  @supports (width: 1cqw) { .h3v-deck { width: min(84cqw, calc((100cqh - 40px) * 0.8), 600px); } }
+  @supports (width: 1cqw) { .h3v-deck { --w: min(84cqw, calc((100cqh - 40px) * 0.8), 600px); height: min(calc(100cqh - 40px), calc(var(--w) * 1.42)); } }
   .h3v-txt { flex: 1 1 0; align-self: center; max-width: none; margin: 0; padding: 0 clamp(0px, 3vw, 48px) 0 0; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "lbl lbl" "words words" "cta cta" "bar segs"; }
   .h3v-lbl { margin-bottom: 16px; }
   .h3v-hl { -webkit-line-clamp: 4; }
@@ -2192,8 +2193,8 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .d3v-b::before { content: ""; position: absolute; left: 22px; right: 22px; top: 0; border-top: 2px dashed var(--aura-paper); opacity: 0.38; }
 .d3v-sh { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; pointer-events: none; }
 .d3v-sh::before, .d3v-sh::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: 0; background: var(--aura-paper); transform: translate3d(-400%, 0, 0) skewX(-20deg); }
-.d3v-sh::before { width: 24%; opacity: 0.08; }
-.d3v-sh::after { width: 5%; opacity: 0.12; }
+.d3v-sh::before { width: 26%; opacity: 0.1; }
+.d3v-sh::after { width: 5%; opacity: 0.16; }
 .d3v-top { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 12px; }
 .d3v-pc { display: flex; align-items: baseline; font-size: clamp(80px, 24.5vw, 124px); line-height: 0.78; font-weight: 900; letter-spacing: -0.06em; color: var(--aura-paper); transform-origin: 0 100%; }
 .d3v-pc small { margin-left: 0.03em; font-size: 0.44em; font-weight: 800; letter-spacing: -0.02em; }
@@ -2246,8 +2247,8 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 }
 @media (prefers-reduced-motion: no-preference) {
   /* Seen for the first time: a flat band of light crosses the stub once and the percent lands */
-  .d3v.in .d3v-sh::before { animation: d3v-sw1 1300ms var(--aura-io) 300ms both; }
-  .d3v.in .d3v-sh::after { animation: d3v-sw2 1300ms var(--aura-io) 420ms both; }
+  .d3v.in .d3v-sh::before { animation: d3v-sw1 1500ms cubic-bezier(0.45, 0, 0.25, 1) 350ms both; }
+  .d3v.in .d3v-sh::after { animation: d3v-sw2 1500ms cubic-bezier(0.45, 0, 0.25, 1) 470ms both; }
   .d3v.in .d3v-pc { animation: d3v-pop 900ms var(--kx-spring) both; }
   @keyframes d3v-sw1 { from { transform: translate3d(-200%, 0, 0) skewX(-20deg); } to { transform: translate3d(560%, 0, 0) skewX(-20deg); } }
   @keyframes d3v-sw2 { from { transform: translate3d(-1200%, 0, 0) skewX(-20deg); } to { transform: translate3d(2600%, 0, 0) skewX(-20deg); } }

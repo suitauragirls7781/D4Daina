@@ -75,6 +75,8 @@ export function useCardDeck(
     let raf = 0, last = 0, opened = false;
     let ptr: Pointer | null = null;
     let dragEnd = 0;
+    let used = false;
+    let hint = 0;
     const fan = spring(1);
     const pose = (slot: number, out: [number, number, number, number]) => {
       const s = Math.max(0, Math.min(POSES.length - 1, slot));
@@ -156,6 +158,7 @@ export function useCardDeck(
 
     const deal = (stepDir: 1 | -1, dir: number, speed = 0) => {
       if (W <= 0) return;
+      used = true;
       const now = performance.now();
       if (stepDir === 1) {
         const top = cards[index];
@@ -184,7 +187,19 @@ export function useCardDeck(
       if (!w || !h) return;
       const first = W <= 0;
       W = w; H = h;
-      if (first && !opened) { opened = true; place(); cards.forEach(restZ); }
+      if (first && !opened) {
+        opened = true;
+        place();
+        cards.forEach(restZ);
+        // Once, a moment after the fan has opened: the top card gives a small push to one side and comes
+        // back, to show that it can be moved (not if the shopper already did, or has scrolled on)
+        hint = window.setTimeout(() => {
+          const top = cards[index];
+          if (used || ptr || document.hidden || window.scrollY > 80 || top.phase !== 0) return;
+          top.dx.s = -620; top.dr.s = -16;
+          wake();
+        }, 1700);
+      }
       wake();
     };
 
@@ -202,6 +217,7 @@ export function useCardDeck(
         // An up / down move belongs to the page
         if (Math.abs(dx) <= Math.abs(dy) * 1.15) { ptr = null; return; }
         ptr.drag = true;
+        used = true;
         ptr.card = cards[index];
         // start from where the card is now (it may still be settling), without a jump
         ptr.x0 = event.clientX - ptr.card.dx.v; ptr.y0 = event.clientY;
@@ -269,6 +285,7 @@ export function useCardDeck(
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(hint);
       deck.removeEventListener('pointerdown', onDown);
       deck.removeEventListener('pointermove', onMove);
       deck.removeEventListener('pointerup', onUp);
