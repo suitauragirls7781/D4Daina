@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useAdmin } from '../context/AdminContext';
 import { BrandMarqueeHeader } from './BrandMarqueeHeader';
 import { HeroSection } from './HeroSection';
@@ -15,7 +15,7 @@ import { FestiveBanner } from './FestiveBanner';
 import { OccasionSection } from './OccasionSection';
 import { AuraReelsSection } from './AuraReels';
 import { AskAssistantRow, FeaturedCollection, HomeAssuranceBand, NewArrivalsRail, NewsletterSignup, OfferBanner, WhyShop } from './HomeSections';
-import { Thread, requestMeasure } from '../aura';
+import { Thread, refreshBackdrop, requestMeasure } from '../aura';
 import { HomeChapters } from './HomeChapters';
 
 /**
@@ -28,6 +28,39 @@ import { HomeChapters } from './HomeChapters';
 export const HomePage: React.FC = () => {
   const { homepageSections = [] } = useAdmin();
   const host = useRef<HTMLDivElement>(null);
+
+  // The first frame draws only the first screen: the hero (with the notices and the facts band under it). The
+  // sections below are put on the page right after that frame has been painted, one per idle moment, so a phone
+  // shows the headline and the photo without first laying out the whole story, and stays free to answer a touch
+  // while the rest arrives. Nothing is hidden: a section is simply added, in the owner's order.
+  const [shown, setShown] = useState(1);
+  const total = useRef(1);
+  useEffect(() => {
+    if (shown >= total.current) return undefined;
+    let idle = 0;
+    let timer = 0;
+    let frame = 0;
+    const next = () => setShown((count) => count + 1);
+    const later = () => {
+      const w = window as unknown as { requestIdleCallback?: (run: () => void, options: { timeout: number }) => number };
+      if (w.requestIdleCallback) idle = w.requestIdleCallback(next, { timeout: 250 });
+      else timer = window.setTimeout(next, 30);
+    };
+    // The first step waits for the first paint; a tab in the background gets no animation frame
+    if (shown === 1) frame = window.requestAnimationFrame(() => { timer = window.setTimeout(later, 0); });
+    else later();
+    const late = window.setTimeout(next, 1500);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.clearTimeout(late);
+      if (idle) (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback?.(idle);
+    };
+  }, [shown]);
+  // The backdrop and the scroll engine read the sections again once the last one is in place
+  useEffect(() => {
+    if (shown > 1 && shown >= total.current) { refreshBackdrop(); requestMeasure(); }
+  }, [shown]);
 
   const renderSectionComponent = (key: string) => {
     switch (key) {
@@ -79,6 +112,7 @@ export const HomePage: React.FC = () => {
     .sort((first, second) => first.order - second.order)
     // The story opens with the hero (its arch opens as the page starts to scroll); everything else keeps the owner's order
     .sort((first, second) => Number(second.key === 'hero') - Number(first.key === 'hero'));
+  total.current = visibleSections.length + 1;
 
   // The festive panel and the "your bag is waiting" row: straight after the hero (at the very top when the
   // hero is switched off). Their wrappers add no space when they draw nothing.
@@ -133,7 +167,7 @@ export const HomePage: React.FC = () => {
       <Thread containerRef={host} />
       <HomeChapters hostRef={host} />
       {!heroOn && notices}
-      {visibleSections.map((section, index) => (
+      {visibleSections.slice(0, shown).map((section, index) => (
         <React.Fragment key={section.id}>
           {/* The hero draws its own thread around the arch; the page's thread starts under it */}
           <div className="hm-part" data-nothread={section.key === 'hero' ? '' : undefined}>{renderSectionComponent(section.key)}</div>
@@ -150,7 +184,7 @@ export const HomePage: React.FC = () => {
         </React.Fragment>
       ))}
       {/* The assistant sits in the page here; its floating button is kept off product cards and photos */}
-      <div className="hm-part"><AskAssistantRow /></div>
+      {shown > visibleSections.length && <div className="hm-part"><AskAssistantRow /></div>}
     </div>
   );
 };

@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-// The code of the page a visit starts on (a product page, the checkout) is asked for from the HTML itself, side by
+// The code of the page a visit starts on (a product page, the checkout, the home page, the shop) is asked for from the HTML itself, side by
 // side with the app's main file, instead of only after the app has started: one round trip less before the first
 // screen. The file names are known only after the build, so the list is written into index.html here.
 const startPagePreload = () => ({
@@ -20,8 +20,8 @@ const startPagePreload = () => ({
         if (!chunk) return [];
         return [chunk.fileName, ...chunk.imports].filter((file: string) => !always.has(file)).map((file: string) => `/${file}`);
       };
-      const map = { product: filesOf('ProductDetailPage'), checkout: filesOf('CheckoutPage') };
-      const script = `<script>(function(){try{var m=${JSON.stringify(map)},p=location.pathname,k=p.indexOf('/product/')===0?'product':p.indexOf('/checkout')===0?'checkout':'';(m[k]||[]).forEach(function(h){var l=document.createElement('link');l.rel='modulepreload';l.href=h;document.head.appendChild(l)})}catch(e){}})();</script>`;
+      const map = { product: filesOf('ProductDetailPage'), checkout: filesOf('CheckoutPage'), home: filesOf('HomePage'), shop: filesOf('ShopPage') };
+      const script = `<script>(function(){try{var m=${JSON.stringify(map)},p=location.pathname,k=p==='/'?'home':p.indexOf('/product/')===0?'product':p.indexOf('/checkout')===0?'checkout':/^\\/(shop|category\\/)/.test(p)?'shop':'';(m[k]||[]).forEach(function(h){var l=document.createElement('link');l.rel='modulepreload';l.href=h;document.head.appendChild(l)})}catch(e){}})();</script>`;
       return html.replace('</head>', `  ${script}\n  </head>`);
     },
   },

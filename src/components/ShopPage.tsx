@@ -190,6 +190,17 @@ export const ShopPage: React.FC = () => {
   useBackToClose(filtersOpen, () => setFiltersOpen(false));
   useBackToClose(sortOpen, () => setSortOpen(false));
   const [visible, setVisible] = useState(PAGE);
+  // The first frame draws only the cards of the first screen; the rest of the page of results is added right
+  // after that frame has been painted (once per visit of the page), so the title and the first photos are on a
+  // phone's screen without first laying out two dozen cards.
+  const [firstFrame, setFirstFrame] = useState(true);
+  useEffect(() => {
+    let timer = 0;
+    const frame = window.requestAnimationFrame(() => { timer = window.setTimeout(() => setFirstFrame(false), 0); });
+    // A tab in the background gets no animation frame
+    const late = window.setTimeout(() => setFirstFrame(false), 1500);
+    return () => { window.cancelAnimationFrame(frame); window.clearTimeout(timer); window.clearTimeout(late); };
+  }, []);
   // Typed min/max prices apply on blur or Enter, so a half-typed number never empties the list.
   const [minDraft, setMinDraft] = useState('');
   const [maxDraft, setMaxDraft] = useState('');
@@ -911,7 +922,7 @@ export const ShopPage: React.FC = () => {
         ) : (
           <>
             <div ref={gridRef} className="shop-grid">
-              {results.slice(0, visible).map((p, i) => <ProductCard key={p.id} product={p} layout={layoutOf(i)} />)}
+              {results.slice(0, firstFrame ? Math.min(visible, typeof window !== 'undefined' && window.innerWidth >= 900 ? 8 : 4) : visible).map((p, i) => <ProductCard key={p.id} product={p} layout={layoutOf(i)} />)}
             </div>
             {results.length > visible ? (
               <div className="mt-12 flex flex-col items-center gap-3">
