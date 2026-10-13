@@ -19,7 +19,9 @@ export const Toast: React.FC = () => {
   const [offset, setOffset] = useState(12);
   useLayoutEffect(() => {
     if (!toast) return;
-    const header = Array.from(document.querySelectorAll('header.fixed, header.sticky')).find((el) => el.getBoundingClientRect().height > 0);
+    // A page with its own top bar (checkout) marks it: the notice drops under it, never over its back button or "Help"
+    const own = document.querySelector('[data-toast-under]');
+    const header = own || Array.from(document.querySelectorAll('header.fixed, header.sticky')).find((el) => el.getBoundingClientRect().height > 0);
     // The bar inside the site header is what is seen (the header's own box keeps its full height)
     const bar = header?.querySelector('.aura-hd-bar') || header;
     setOffset(bar ? Math.max(12, Math.round(bar.getBoundingClientRect().bottom) + 10) : 12);

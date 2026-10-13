@@ -16,6 +16,7 @@ import { Gateway, UPI_APPS, UpiAppId, loadRazorpaySDK, razorpayDisplayConfig, su
 import { useFestiveRound, useTimeLeft } from './FestiveBanner';
 import { couponEligibleSubtotal } from '../utils/coupons';
 import { correctedEmail } from '../utils/emailFix';
+import { useBackToClose } from '../utils/backClose';
 
 type PaymentReturn = { state: 'checking' | 'failed' | 'pending'; orderNumber: string; token: string; message: string };
 
@@ -210,6 +211,8 @@ export const CheckoutPage: React.FC = () => {
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [showCouponsModal]);
+  // Display only: the phone's Back button closes the coupon list instead of leaving the checkout
+  useBackToClose(showCouponsModal, () => setShowCouponsModal(false));
 
   // Processing state & error
   const [isProcessing, setIsProcessing] = useState(false);
@@ -271,6 +274,14 @@ export const CheckoutPage: React.FC = () => {
   // Shown once per visit when cash on delivery is picked: what paying online would save
   const [codAsk, setCodAsk] = useState(false);
   const codAsked = useRef(false);
+  // Display only: Escape and the phone's Back button close the question (the way to pay stays as it was)
+  useEffect(() => {
+    if (!codAsk) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCodAsk(false); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [codAsk]);
+  useBackToClose(codAsk, () => setCodAsk(false));
   // A payment that failed in the payment window: the same order stays open to be paid again
   const [payFail, setPayFail] = useState<{ orderNumber: string; reason: string } | null>(null);
   // One-tap UPI app choices are for phones, where the app can be opened straight from the payment window
@@ -955,11 +966,11 @@ export const CheckoutPage: React.FC = () => {
   if (paymentReturn) {
     return (
       <div data-aura className="min-h-[80vh] flex items-center justify-center p-4">
-        <div className="aura-card aura-blk w-full max-w-md px-6 py-8 text-center">
+        <div className="aura-card aura-blk aco-ret w-full max-w-md px-6 py-8 text-center">
           {paymentReturn.state === 'checking' ? (
             <>
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-ink" strokeWidth={1.6} />
-              <h2 className="aco-sheet-h mt-5">Confirming your payment…</h2>
+              <span className="aco-wait mx-auto" aria-hidden="true"><Lock className="h-6 w-6" strokeWidth={1.6} /></span>
+              <h2 className="aco-sheet-h mt-6">Confirming your payment…</h2>
               <p className="mt-3 text-[15px] leading-[1.5] text-ink-muted">Please keep this page open. This takes a few seconds.</p>
             </>
           ) : (
@@ -1030,6 +1041,10 @@ export const CheckoutPage: React.FC = () => {
   const helpUrl = createSupportWhatsAppUrl('Hi Suit Aura Girls, I need help with my order checkout.');
 
   const fieldErrors = getCheckoutFieldErrors({ firstName, lastName, address, pincodeError });
+  // Display only: the rail between the two steps fills as the address form does (each of the eight fields that
+  // has nothing left to fix is one eighth), and is full on the payment step
+  const fieldsLeft = new Set(fieldErrors.map((entry) => entry.field)).size;
+  const railFill = checkoutStep === 'payment' ? 1 : Math.max(0, 1 - fieldsLeft / FIELD_SCREEN_ORDER.length);
   // The banner for an address-form problem follows the form: one field = its own message, several = a plain count
   const formProblems = formErrorShown ? inScreenOrder(fieldErrors) : [];
   const bannerTitle = formProblems.length > 1 ? `Please check ${formProblems.length} fields` : 'Please check';
@@ -1050,6 +1065,11 @@ export const CheckoutPage: React.FC = () => {
   const houseError = errFor('houseFlat');
   const streetError = errFor('street');
   const mobileValid = Boolean(touched.mobile) && /^[6-9]\d{9}$/.test(address.mobile);
+  // Display only: a small tick inside a field the shopper has left with nothing to fix in it
+  const okFor = (field: CheckoutField) => Boolean(touched[field]) && !fieldErrors.some((entry) => entry.field === field);
+  const fieldTick = (field: CheckoutField) => okFor(field) && (
+    <Check className="sag-tick-draw pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-ok" strokeWidth={2} aria-hidden="true" />
+  );
   const pinFound = !pincodeLoading && !pincodeError && address.pincode.length === 6 && availablePostOffices.length > 0;
   // Display only: the line under the PIN code box (what the lookup is doing, then what it found)
   const pinPlace = pinFound ? [availablePostOffices[0]?.District || availablePostOffices[0]?.Taluk, availablePostOffices[0]?.State].filter(Boolean).join(', ') : '';
@@ -1166,54 +1186,50 @@ export const CheckoutPage: React.FC = () => {
   return (
     <div data-aura className={`sag-checkout min-h-screen text-ink font-sans text-left pb-12`}>
 
-      {/* The top: one forest block. A row with the round back button and WhatsApp help, the shield that assembles
-          itself beside "Secure checkout" as the big heading, then the two steps, always visible.
+      {/* The top: one slim forest block, so the first field is on a phone's first screen. A row with the round back
+          button, the lock that assembles itself beside "Secure checkout", and WhatsApp help; under it the two steps
+          on one line, joined by a rail that fills as the shopper moves on. A notice (toast) drops under this
+          block, never over the back button or "Help" (data-toast-under, read by Toast.tsx).
           The site header is hidden while this page is open (".sag-checkout" rule in index.css). */}
-      <div className="mx-auto max-w-[1088px] px-3 pt-3 sm:px-6 sm:pt-5">
-      <div className="aco-top">
-        <div className="flex h-[58px] items-center justify-between gap-2 pl-2 pr-5">
-          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className="grid h-11 w-11 shrink-0 place-items-center rounded-full cursor-pointer transition-transform duration-300 active:scale-90 motion-reduce:transition-none">
+      <div className="mx-auto max-w-[1088px] px-3 pt-2.5 sm:px-6 sm:pt-5">
+      <div className="aco-top" data-toast-under="">
+        <div className="aco-hd">
+          <button type="button" onClick={goBack} aria-label={checkoutStep === 'details' ? 'Back to bag' : 'Back to the previous step'} className="aco-hd-b">
             <Icon name="arrow" className="rotate-180" />
           </button>
-          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className="aura-lk">
+          <p className="aco-hd-t">
+            <svg className="aco-shd" viewBox="0 0 96 96" aria-hidden="true">
+              <path className="s-l" d="M48 8 18 20v26c0 20 13 34 30 42" /><path className="s-r" d="M48 8l30 12v26c0 20-13 34-30 42" />
+              <rect className="s-b" x="34" y="44" width="28" height="22" rx="5" /><path className="s-k" pathLength={1} d="M39 44v-7a9 9 0 0 1 18 0v7" /><circle className="s-d" cx="48" cy="55" r="3" />
+            </svg>
+            <span>Secure <em className="aura-serif">checkout</em></span>
+            <span className="sr-only"> · {itemsText} · step {stepIndex + 1} of 2</span>
+          </p>
+          <a href={helpUrl} target="_blank" rel="noopener noreferrer" aria-label="Help on WhatsApp" className="aco-hd-h">
             Help
           </a>
         </div>
-        <div className="aco-band">
-          <svg className="aco-shd" viewBox="0 0 96 96" aria-hidden="true">
-            <path className="s-l" d="M48 8 18 20v26c0 20 13 34 30 42" /><path className="s-r" d="M48 8l30 12v26c0 20-13 34-30 42" />
-            <rect className="s-b" x="34" y="44" width="28" height="22" rx="5" /><path className="s-k" pathLength={1} d="M39 44v-7a9 9 0 0 1 18 0v7" /><circle className="s-d" cx="48" cy="55" r="3" />
-          </svg>
-          <div className="min-w-0">
-            <p className="aura-lbl">{itemsText} · step {stepIndex + 1} of 2</p>
-            <p className="aura-h2 mt-2 text-[clamp(30px,8.6vw,48px)]! leading-none!">Secure <em>checkout</em></p>
-          </div>
-          <p className="aura-sub col-span-2 mt-2">{assuranceLine()}</p>
-        </div>
 
-      {/* The two steps as round nodes joined by a line that draws to the current step; the current node pulses
-          once, a done step shows a tick. A step that is not open is a button (back to the address, or on to
-          payment once the address is complete). */}
-      <nav aria-label="Checkout steps" className="aco-stp aura-num" style={{ '--f': stepIndex } as React.CSSProperties}>
-          <svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 10C50 2 100 18 150 10s100-8 150 0" vectorEffect="non-scaling-stroke" />
-            <path pathLength={1} d="M0 10C50 2 100 18 150 10s100-8 150 0" vectorEffect="non-scaling-stroke" />
-          </svg>
+      {/* The two steps: a numbered dot and its name each, joined by a rail that fills up to the current step; the
+          current dot pulses once, a done step shows a tick that draws itself. A step that is not open is a button
+          (back to the address, or on to payment once the address is complete). */}
+      <nav aria-label="Checkout steps" className="aco-stp aura-num" style={{ '--f': railFill } as React.CSSProperties}>
           {stepBlocks.map((block, index) => {
             const on = index === stepIndex;
             const dn = index < stepIndex;
             const dot = (
               <b>
-                {dn ? <><Check className="sag-tick-draw h-4 w-4" strokeWidth={2.4} aria-hidden="true" /><span className="sr-only">{index + 1}</span></> : index + 1}
+                {dn ? <><Check className="sag-tick-draw h-3.5 w-3.5" strokeWidth={2.6} aria-hidden="true" /><span className="sr-only">{index + 1}</span></> : index + 1}
               </b>
             );
             const label = <span>{block.label}</span>;
             return (
               <React.Fragment key={block.step}>
+                {index > 0 && <i className="aco-rail" aria-hidden="true"><i /></i>}
                 {on ? (
                   <span aria-current="step" className="aco-stp-b on pl">{dot}{' '}{label}</span>
                 ) : (
-                  <button type="button" onClick={() => goToStep(block.step)} className={`aco-stp-b${dn ? ' on' : ''}`}>
+                  <button type="button" onClick={() => goToStep(block.step)} className={`aco-stp-b${dn ? ' on dn' : ''}`}>
                     {dot}{' '}{label}{dn && <span className="sr-only"> (done)</span>}
                   </button>
                 )}
@@ -1224,7 +1240,7 @@ export const CheckoutPage: React.FC = () => {
       </div>
       </div>
 
-      <div className="max-w-[1040px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-12 items-start">
+      <div className="max-w-[1040px] mx-auto px-4 sm:px-6 pt-3 sm:pt-8 grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-12 items-start">
 
         {/* Left column: the current step */}
         <div className="lg:col-span-7 min-w-0">
@@ -1245,9 +1261,9 @@ export const CheckoutPage: React.FC = () => {
             <div className="sag-co-step-in">
               <h1 className="aco-h">Where should we deliver?</h1>
 
-              <section className="mt-6" aria-labelledby="co-contact-title">
-                <h2 id="co-contact-title" className={`font-sans ${EYEBROW}`}>Contact</h2>
-                <div className="mt-3 space-y-3.5">
+              <section className="mt-4 sm:mt-6" aria-labelledby="co-contact-title">
+                <h2 id="co-contact-title" className="sr-only">Contact</h2>
+                <div className="space-y-3.5">
                   <Field id="co-mobile" label="Mobile number" error={mobileError}>
                     <div className={`aco-tel${mobileError ? ' bad' : ''}`}>
                       <span className="flex items-center rounded-none! pl-4 pr-3 border-r border-line text-base font-medium text-ink-muted shrink-0" aria-hidden="true">+91</span>
@@ -1275,19 +1291,21 @@ export const CheckoutPage: React.FC = () => {
               </section>
 
               {hasSavedAddresses && (
-                <section className="mt-8 space-y-3" aria-labelledby="co-saved-title">
+                <section className="mt-6 space-y-3" aria-labelledby="co-saved-title">
                   <h2 id="co-saved-title" className={`font-sans ${EYEBROW}`}>Deliver to a saved address</h2>
                   <AddressBook onSelect={applySavedAddress} selectedId={selectedAddressId} />
                 </section>
               )}
 
-              <section className="mt-8" aria-labelledby="co-address-title">
-                <h2 id="co-address-title" className={`font-sans ${EYEBROW}`}>Delivery address</h2>
-                {/* "Use my location": a dashed pill above the fields */}
-                <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="aco-loc mt-3">
-                  {isDetectingLocation ? <Loader2 className="w-[18px] h-[18px] animate-spin" strokeWidth={1.6} /> : <Icon name="pin" size={18} />}
-                  Use my location
-                </button>
+              <section className="mt-6" aria-labelledby="co-address-title">
+                {/* The section's name and, beside it, "Use my location" as a small line pill */}
+                <div className="flex items-center justify-between gap-3">
+                  <h2 id="co-address-title" className={`font-sans ${EYEBROW}`}>Delivery address</h2>
+                  <button type="button" onClick={handleAutoDetectLocation} disabled={isDetectingLocation} className="aco-loc">
+                    {isDetectingLocation ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={1.6} /> : <Icon name="pin" size={16} />}
+                    Use my location
+                  </button>
+                </div>
 
                 <div className="mt-3 space-y-3.5">
                   {/* PIN code and city side by side; the state follows on its own line */}
@@ -1305,7 +1323,7 @@ export const CheckoutPage: React.FC = () => {
                           value={address.pincode}
                           onChange={(e) => setAddress(prev => ({ ...prev, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
                           onBlur={() => touch('pincode')}
-                          placeholder="6-digit PIN code (e.g. 110001)"
+                          placeholder="6-digit PIN"
                           aria-invalid={pinError ? true : undefined}
                           aria-describedby={pinError ? 'co-pincode-error' : 'co-pincode-help'}
                           className={`${INPUT} pr-10`}
@@ -1316,21 +1334,24 @@ export const CheckoutPage: React.FC = () => {
                     </Field>
 
                     <Field id="co-city" label="City / town" error={cityError}>
-                      <input
-                        id="co-city"
-                        name="city"
-                        type="text"
-                        autoComplete="address-level2"
-                        autoCapitalize="words"
-                        enterKeyHint="next"
-                        value={address.city}
-                        onChange={(e) => setAddress(prev => ({ ...prev, city: e.target.value }))}
-                        onBlur={() => touch('city')}
-                        placeholder="New Delhi"
-                        aria-invalid={cityError ? true : undefined}
-                        aria-describedby={cityError ? 'co-city-error' : undefined}
-                        className={INPUT}
-                      />
+                      <div className="relative">
+                        <input
+                          id="co-city"
+                          name="city"
+                          type="text"
+                          autoComplete="address-level2"
+                          autoCapitalize="words"
+                          enterKeyHint="next"
+                          value={address.city}
+                          onChange={(e) => setAddress(prev => ({ ...prev, city: e.target.value }))}
+                          onBlur={() => touch('city')}
+                          placeholder="New Delhi"
+                          aria-invalid={cityError ? true : undefined}
+                          aria-describedby={cityError ? 'co-city-error' : undefined}
+                          className={`${INPUT} pr-10`}
+                        />
+                        {fieldTick('city')}
+                      </div>
                     </Field>
                   </div>
 
@@ -1363,21 +1384,24 @@ export const CheckoutPage: React.FC = () => {
 
                   <div>
                     <label htmlFor="co-first-name" className={LABEL}>Full name</label>
-                    <input
-                      id="co-first-name"
-                      name="name"
-                      type="text"
-                      autoComplete="name"
-                      autoCapitalize="words"
-                      enterKeyHint="next"
-                      value={nameInput}
-                      onChange={(e) => handleFieldChangeDebounced('fullName', e.target.value)}
-                      onBlur={() => { handleFieldBlur(); touch('firstName'); }}
-                      placeholder="Your full name"
-                      aria-invalid={nameError ? true : undefined}
-                      aria-describedby={nameError ? 'co-name-error' : undefined}
-                      className={INPUT}
-                    />
+                    <div className="relative">
+                      <input
+                        id="co-first-name"
+                        name="name"
+                        type="text"
+                        autoComplete="name"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        value={nameInput}
+                        onChange={(e) => handleFieldChangeDebounced('fullName', e.target.value)}
+                        onBlur={() => { handleFieldBlur(); touch('firstName'); }}
+                        placeholder="Your full name"
+                        aria-invalid={nameError ? true : undefined}
+                        aria-describedby={nameError ? 'co-name-error' : undefined}
+                        className={`${INPUT} pr-10`}
+                      />
+                      {fieldTick('firstName')}
+                    </div>
                     {nameError && (
                       <p id="co-name-error" role="alert" className={FIELD_ERROR}>
                         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" strokeWidth={1.6} aria-hidden="true" /><span>{nameError}</span>
@@ -1386,63 +1410,72 @@ export const CheckoutPage: React.FC = () => {
                   </div>
 
                   <Field id="co-house" label="Flat, house no., building" error={houseError}>
-                    <input
-                      id="co-house"
-                      name="address-line1"
-                      type="text"
-                      autoComplete="address-line1"
-                      enterKeyHint="next"
-                      value={address.houseFlat}
-                      onChange={(e) => setAddress(prev => ({ ...prev, houseFlat: e.target.value }))}
-                      onBlur={() => touch('houseFlat')}
-                      placeholder="Flat 302, Palm Heights"
-                      aria-invalid={houseError ? true : undefined}
-                      aria-describedby={houseError ? 'co-house-error' : undefined}
-                      className={INPUT}
-                    />
+                    <div className="relative">
+                      <input
+                        id="co-house"
+                        name="address-line1"
+                        type="text"
+                        autoComplete="address-line1"
+                        enterKeyHint="next"
+                        value={address.houseFlat}
+                        onChange={(e) => setAddress(prev => ({ ...prev, houseFlat: e.target.value }))}
+                        onBlur={() => touch('houseFlat')}
+                        placeholder="Flat 302, Palm Heights"
+                        aria-invalid={houseError ? true : undefined}
+                        aria-describedby={houseError ? 'co-house-error' : undefined}
+                        className={`${INPUT} pr-10`}
+                      />
+                      {fieldTick('houseFlat')}
+                    </div>
                   </Field>
 
                   <Field id="co-street" label="Street, area, landmark" error={streetError}>
-                    <input
-                      id="co-street"
-                      name="address-line2"
-                      type="text"
-                      autoComplete="address-line2"
-                      enterKeyHint="done"
-                      value={address.street}
-                      onChange={(e) => setAddress(prev => ({ ...prev, street: e.target.value, area: e.target.value }))}
-                      onBlur={() => touch('street')}
-                      placeholder="MG Road, Near Central Mall"
-                      aria-invalid={streetError ? true : undefined}
-                      aria-describedby={streetError ? 'co-street-error' : undefined}
-                      className={INPUT}
-                    />
+                    <div className="relative">
+                      <input
+                        id="co-street"
+                        name="address-line2"
+                        type="text"
+                        autoComplete="address-line2"
+                        enterKeyHint="done"
+                        value={address.street}
+                        onChange={(e) => setAddress(prev => ({ ...prev, street: e.target.value, area: e.target.value }))}
+                        onBlur={() => touch('street')}
+                        placeholder="MG Road, Near Central Mall"
+                        aria-invalid={streetError ? true : undefined}
+                        aria-describedby={streetError ? 'co-street-error' : undefined}
+                        className={`${INPUT} pr-10`}
+                      />
+                      {fieldTick('street')}
+                    </div>
                   </Field>
 
                   <Field id="co-email" label="Email" error={emailError} helper="Your receipt and order updates are sent to this email.">
-                    <input
-                      id="co-email"
-                      name="email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="email"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      enterKeyHint="next"
-                      value={address.email}
-                      onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
-                      onBlur={() => {
-                        // A well-known mistyped domain (gamil.com) is corrected in the field, and the shopper is told
-                        const fixed = correctedEmail(address.email);
-                        if (fixed) { handleFieldChangeDebounced('email', fixed); showToast(`Email corrected to ${fixed}`, 'info'); }
-                        handleFieldBlur(); touch('email');
-                      }}
-                      placeholder="you@example.com"
-                      aria-invalid={emailError ? true : undefined}
-                      aria-describedby={emailError ? 'co-email-error' : 'co-email-help'}
-                      className={INPUT}
-                    />
+                    <div className="relative">
+                      <input
+                        id="co-email"
+                        name="email"
+                        type="email"
+                        inputMode="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        enterKeyHint="next"
+                        value={address.email}
+                        onChange={(e) => handleFieldChangeDebounced('email', e.target.value)}
+                        onBlur={() => {
+                          // A well-known mistyped domain (gamil.com) is corrected in the field, and the shopper is told
+                          const fixed = correctedEmail(address.email);
+                          if (fixed) { handleFieldChangeDebounced('email', fixed); showToast(`Email corrected to ${fixed}`, 'info'); }
+                          handleFieldBlur(); touch('email');
+                        }}
+                        placeholder="you@example.com"
+                        aria-invalid={emailError ? true : undefined}
+                        aria-describedby={emailError ? 'co-email-error' : 'co-email-help'}
+                        className={`${INPUT} pr-10`}
+                      />
+                      {fieldTick('email')}
+                    </div>
                   </Field>
 
                   <label htmlFor="saveAddr" className="flex items-center gap-3 min-h-12 text-[15px] leading-5 text-ink cursor-pointer">
@@ -1461,11 +1494,11 @@ export const CheckoutPage: React.FC = () => {
                     Its accessible name keeps "Deliver here" (the e2e test in worker/test/e2e finds the button by it). */}
                 {/* The coupon on this order, in sight before paying (the best one is applied by itself) */}
                 {appliedCoupon && discountAmount > 0 && (
-                  <div id="co-coupon-strip" className="mt-3 flex items-center gap-3 rounded-[20px] border-[1.5px] border-dashed border-ink px-4 py-1.5">
-                    <Tag className="h-[18px] w-[18px] shrink-0 text-ink" strokeWidth={1.6} aria-hidden="true" />
-                    <p className="min-w-0 flex-1 text-[13.5px] leading-[18px] text-ink-muted">
-                      <span className="block font-bold text-ink">{couponIsAuto ? 'Best coupon applied' : 'Coupon applied'}: {appliedCoupon.code}</span>
-                      <span className="aura-num font-semibold text-sale">You save {rupees(discountAmount)}</span>
+<div id="co-coupon-strip" className="aco-tkt mt-4">
+                    <span className="aco-tkt-ic" aria-hidden="true"><Tag className="h-[18px] w-[18px]" strokeWidth={1.6} /></span>
+                    <p className="min-w-0 flex-1 text-[13.5px] leading-[18px] text-ink">
+                      <span className="block truncate">{couponIsAuto ? 'Best coupon applied' : 'Coupon applied'}: <b className="font-extrabold tracking-[0.04em]">{appliedCoupon.code}</b></span>
+                      <span className="aura-num font-bold text-sale">You save {rupees(discountAmount)}</span>
                     </p>
                     <button type="button" onClick={removeCouponHere} aria-label={`Remove coupon ${appliedCoupon.code}`} className={`${CAPS_LINK} shrink-0`}>Remove</button>
                   </div>
@@ -1499,7 +1532,7 @@ export const CheckoutPage: React.FC = () => {
                 {deliveryEstimateText && <p className="mt-1.5 text-[13.5px] leading-[18px] text-ink-muted">Estimated delivery by <span className="text-ink">{deliveryEstimateText}</span></p>}
               </div>
 
-              <section className="mt-7" aria-labelledby="co-pay-title">
+              <section className="mt-5 sm:mt-7" aria-labelledby="co-pay-title">
                 <h2 id="co-pay-title" className="aco-h">How would you like to pay?</h2>
 
                 {/* A payment that failed in the payment window: the same order, ready to be paid again */}
@@ -1529,7 +1562,7 @@ export const CheckoutPage: React.FC = () => {
                       </div>
                     )}
                     {inAppBrowser && (
-                      <a id="co-fail-open-browser" href={outOfAppUrl(bagLinkUrl(cart))} className="aura-btn aura-btn-line aura-btn-w mt-2.5">Pay in {outBrowser} instead (your bag comes with you)</a>
+                      <a id="co-fail-open-browser" href={outOfAppUrl(bagLinkUrl(cart))} className="aura-btn aura-btn-line aura-btn-w mt-2.5">Pay in {outBrowser} with my bag</a>
                     )}
                     <a href={createSupportWhatsAppUrl(`Hi Suit Aura Girls, my payment for order ${payFail.orderNumber} did not go through. Please help.`)} target="_blank" rel="noopener noreferrer"
                       className="mt-3 block rounded-none! border-t border-line pt-3 text-[13.5px] leading-5 text-ink-muted">
@@ -1540,7 +1573,7 @@ export const CheckoutPage: React.FC = () => {
 
                 {/* The two ways to pay. Online payment is the large ink card with paper text and blush accents, chosen
                     from the start; cash on delivery (when the owner has it on) is the white card under it with its full cost. */}
-                <div id="co-pay-mode" className="mt-4 grid gap-2.5" role={codOn ? 'radiogroup' : undefined} aria-label={codOn ? 'How would you like to pay?' : undefined}>
+                <div id="co-pay-mode" className="mt-3.5 grid gap-2.5" role={codOn ? 'radiogroup' : undefined} aria-label={codOn ? 'How would you like to pay?' : undefined}>
                   <label className={`aco-pay ${codOn ? 'cursor-pointer' : ''} ${codChosen ? '' : 'on'}`}>
                     {(codOn || prepaidDiscount > 0) && (
                       <span className="mb-2.5 flex items-center justify-between gap-3">
@@ -1560,9 +1593,9 @@ export const CheckoutPage: React.FC = () => {
                         {codOn && prepaidSaving > 0 && <span className="mt-1 block text-[14px] leading-[18px] line-through aura-mu">{rupees(codTotal)}</span>}
                       </span>
                     </span>
-                    <span className="mt-4 grid grid-cols-2 gap-x-3 gap-y-2 rounded-none! border-t aura-hl pt-3.5 text-[14px] leading-[18px] font-medium aura-num">
+                    <span className="aco-perks aura-hl aura-num">
                       {prepaidPerks.map((perk) => (
-                        <span key={perk} className="flex items-center gap-2"><Check className="h-[18px] w-[18px] shrink-0 aura-ac" strokeWidth={2} aria-hidden="true" />{perk}</span>
+                        <span key={perk}><Check className="h-4 w-4 shrink-0 aura-ac" strokeWidth={2.2} aria-hidden="true" />{perk}</span>
                       ))}
                     </span>
                   </label>
@@ -1706,7 +1739,7 @@ export const CheckoutPage: React.FC = () => {
                   )}
 
                   {/* The one pay button at every width (this step has no fixed bar): the big ink pill, with a thin lock */}
-                  <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} className="aura-btn aura-btn-w aco-paybtn mt-4 px-4!">
+                  <button type="button" onClick={handlePlacePrepaidOrder} disabled={payDisabled} aria-busy={isProcessing || undefined} className={`aura-btn aura-btn-w aco-paybtn mt-4 px-4!${isProcessing ? ' busy' : ''}`}>
                     {payButtonContent}
                   </button>
                   <p className="aco-fine mt-3 flex items-start justify-center gap-2">
@@ -1739,7 +1772,7 @@ export const CheckoutPage: React.FC = () => {
         <aside className="lg:col-span-5 lg:sticky lg:top-6 lg:order-none min-w-0 order-first" aria-label="Order summary">
           <div className="aura-card overflow-hidden rounded-[24px]!">
               <button type="button" onClick={() => setSummaryOpen((open) => !open)} aria-expanded={summaryOpen} aria-controls="co-order-summary"
-                className="lg:hidden w-full flex items-center gap-3 p-3 pr-[18px] text-left cursor-pointer">
+                className="aco-strip lg:hidden w-full flex items-center gap-3 p-2.5 pr-4 text-left cursor-pointer">
                 {/* The first photos, the count and total, the real saving */}
                 <span className="flex shrink-0 items-center gap-1" aria-hidden="true">
                   {cart.slice(0, 3).map((item) => (
@@ -1749,17 +1782,17 @@ export const CheckoutPage: React.FC = () => {
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-[15.5px] leading-5 font-extrabold text-ink aura-num">{itemsText} · {rupees(codChosen ? codTotal : finalCartTotal)}</span>
-                  <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted">
+                  <span className="mt-0.5 block truncate text-[13px] leading-[18px] text-ink-muted">
                     {summarySavings > 0 && <span className="aura-num font-bold text-sale">You save {rupees(Math.round(summarySavings))}</span>}
-                    {summarySavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code} applied` : 'Have a coupon?'}
+                    {summarySavings > 0 ? ' · ' : ''}{appliedCoupon ? `Coupon ${appliedCoupon.code}` : 'Have a coupon?'}
                   </span>
                 </span>
-                <span className="shrink-0 text-[14px] leading-none font-semibold text-ink underline decoration-[1.5px] underline-offset-4">
-                  {summaryOpen ? 'Hide' : 'View'}
+                <span className="aco-strip-v">
+                  {summaryOpen ? 'Hide' : 'View'} <ChevronDown className={`h-4 w-4 ${summaryOpen ? 'rotate-180' : ''}`} strokeWidth={2} aria-hidden="true" />
                 </span>
               </button>
 
-            <div id="co-order-summary" className={`${summaryOpen ? 'block' : 'hidden'} lg:block rounded-none! border-t border-line lg:border-t-0 px-4 pb-[18px] pt-2 sm:px-5 sm:pb-5 space-y-4`}>
+            <div id="co-order-summary" className={`${summaryOpen ? 'block aco-open' : 'hidden'} lg:block rounded-none! border-t border-line lg:border-t-0 px-4 pb-[18px] pt-2 sm:px-5 sm:pb-5 space-y-4`}>
                 <div>
                   <div className="mb-1.5 flex items-center justify-between gap-3">
                     <h2 className="aco-sum-h font-sans">Order summary <span className="text-[14px] font-normal tracking-normal text-ink-muted aura-num">· {itemsText}</span></h2>
