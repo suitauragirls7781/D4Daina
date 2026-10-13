@@ -125,12 +125,12 @@ export const abandonedEmail = (checkout, rules) => {
   const shown = checkout.items.slice(0, 6);
   const more = checkout.items.length - shown.length;
   const photo = /^https:\/\//.test(shown[0]?.image || '') ? mediaVariant(shown[0].image, 'j480.jpg') : '';
-  const rows = shown.map((item) => `<tr><td style="padding:8px 0;border-bottom:1px solid rgba(75,29,63,0.12);font-size:14px">${escapeHtml(item.name)}${item.quantity > 1 ? ` <span style="font-size:12px;color:#55635D">× ${item.quantity}</span>` : ''}</td></tr>`).join('');
+  const rows = shown.map((item) => `<tr><td style="padding:8px 0;border-bottom:1px solid #DDD6CC;font-size:14px">${escapeHtml(item.name)}${item.quantity > 1 ? ` <span style="font-size:12px;color:#55635D">× ${item.quantity}</span>` : ''}</td></tr>`).join('');
   const offer = paymentOfferLine(rules);
   const html = layout('Your bag is waiting', [
     greeting(checkout.name),
     p('You left these in your bag at Suit Aura Girls. They are saved, and you can finish your order whenever you like.'),
-    photo ? `<p style="margin:0 0 12px"><img src="${escapeHtml(photo)}" alt="${escapeHtml(shown[0].name)}" width="160" style="border-radius:12px;border:1px solid rgba(75,29,63,0.15)"></p>` : '',
+    photo ? `<p style="margin:0 0 12px"><img src="${escapeHtml(photo)}" alt="${escapeHtml(shown[0].name)}" width="160" style="border-radius:12px;border:1px solid #DDD6CC"></p>` : '',
     `<table style="width:100%;border-collapse:collapse;margin:4px 0 16px">${rows}</table>`,
     more > 0 ? p(`and ${more} more.`) : '',
     offer ? p(escapeHtml(offer)) : '',
