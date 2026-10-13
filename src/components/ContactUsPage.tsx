@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin } from '../context/AdminContext';
 import { instagramProfile } from '../utils/instagram';
-import { ChevronRight, Clock, Phone } from 'lucide-react';
+import { AlertCircle, ChevronRight, Clock, Loader2, Phone } from 'lucide-react';
 import { GmailIcon, InstagramIcon, WhatsAppIcon } from './BrandIcons';
 import { PinIcon, TruckIcon } from './StoreIcons';
 import { InfoPageHeader } from './PolicyPages';
@@ -24,6 +24,9 @@ export const ContactUsPage: React.FC = () => {
   const [orderNumber, setOrderNumber] = useState('');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  // While the message is on its way, and when it could not be stored (the page then says so and offers WhatsApp)
+  const [sending, setSending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,29 +35,35 @@ export const ContactUsPage: React.FC = () => {
       return;
     }
 
+    if (sending) return;
+    setSending(true);
+    setFailed(false);
     try {
-      if (!isQuotaExhausted()) {
-        await addDoc(collection(db, 'leads'), {
-          name,
-          email,
-          phone: phone || null,
-          source: 'contact',
-          message,
-          orderNumber: orderNumber || null,
-          createdAt: new Date().toISOString(),
-          offerSent: false
-        });
-      }
+      // "Received" is only said when the message really was stored
+      if (isQuotaExhausted()) throw new Error('The message could not be stored.');
+      await addDoc(collection(db, 'leads'), {
+        name,
+        email,
+        phone: phone || null,
+        source: 'contact',
+        message,
+        orderNumber: orderNumber || null,
+        createdAt: new Date().toISOString(),
+        offerSent: false
+      });
       setSubmitted(true);
       showToast('Your message has been received. Our team will reply during support hours.', 'success');
     } catch (error: any) {
       if (error?.code === 'resource-exhausted' || error?.message?.includes('Quota')) {
         markFirestoreQuotaExhausted();
       }
-      setSubmitted(true);
-      showToast('Your message has been received. Our team will reply during support hours.', 'success');
+      setFailed(true);
+    } finally {
+      setSending(false);
     }
   };
+  // The same message, ready to send on WhatsApp when the form could not deliver it
+  const whatsappInstead = createSupportWhatsAppUrl(`Hi Suit Aura Girls, this is ${name.trim()}. ${message.trim()}${orderNumber.trim() ? ` (Order ${orderNumber.trim()})` : ''}`);
 
   const telHref = `tel:+91${SUPPORT_PHONE_DISPLAY.replace(/\D/g, '').replace(/^91/, '')}`;
   const optional = <span className="font-normal">(optional)</span>;
@@ -69,7 +78,8 @@ export const ContactUsPage: React.FC = () => {
         title="We are here to help"
         subtitle="Questions about sizing, styling or an order? Message us and our team will get back to you during support hours."
       >
-        <p className="aa-pill mt-4 bg-surface whitespace-normal">
+        {/* Phones: the hours are in the WhatsApp card right under this band */}
+        <p className="aa-pill mt-4 bg-surface whitespace-normal max-sm:hidden">
           <Clock className="w-4 h-4 shrink-0" strokeWidth={1.6} aria-hidden="true" /> Monday to Saturday · 10:00 AM – 7:00 PM IST
         </p>
       </InfoPageHeader>
@@ -103,12 +113,12 @@ export const ContactUsPage: React.FC = () => {
           </section>
 
           {/* Email */}
-          <section aria-label="Email us">
+          <section aria-label="Email us" data-rv>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="aa-row items-start">
               <span className="aa-ic"><GmailIcon mono className="w-5 h-5" /></span>
               <span className="aa-row-t">
                 <b>Email</b>
-                <span className="block text-[14px] leading-5 text-ink underline decoration-[1.5px] underline-offset-4 break-all">{SUPPORT_EMAIL}</span>
+                <span className="block text-[14px] leading-5 text-ink underline decoration-[1.5px] underline-offset-4 [overflow-wrap:anywhere]">{SUPPORT_EMAIL}</span>
                 <small>Customer Support: Monday to Saturday, 10:00 AM - 7:00 PM IST</small>
               </span>
               {chevron}
@@ -116,7 +126,7 @@ export const ContactUsPage: React.FC = () => {
           </section>
 
           {/* Track order */}
-          <section aria-label="Track your order">
+          <section aria-label="Track your order" data-rv>
             <button type="button" onClick={() => { setActivePage('track-order'); window.scrollTo(0, 0); }} className="aa-row">
               <span className="aa-ic"><TruckIcon mono live={false} className="w-5 h-5" /></span>
               <span className="aa-row-t">
@@ -128,7 +138,7 @@ export const ContactUsPage: React.FC = () => {
           </section>
 
           {/* Store, Instagram */}
-          <section aria-label="Other ways to reach us" className="space-y-2">
+          <section aria-label="Other ways to reach us" className="space-y-2" data-rv>
             <div className="aa-row cursor-default items-start">
               <span className="aa-ic"><PinIcon mono className="w-5 h-5" /></span>
               <div className="aa-row-t">
@@ -157,7 +167,7 @@ export const ContactUsPage: React.FC = () => {
         <div className="lg:col-span-7 aura-card aura-blk px-4 pt-6 pb-5 sm:p-8 min-w-0">
           {submitted ? (
             <div className="py-8 sm:py-12 text-center" role="status">
-              <div className="aa-ic aa-ic-ink mx-auto h-14 w-14">
+              <div className="aa-ic aa-ic-ink kx-pop mx-auto h-14 w-14">
                 <Icon name="check" draw className="in" />
               </div>
               <h2 className="aura-h2 aura-h-md mt-5">Thank <em>you!</em></h2>
@@ -168,6 +178,7 @@ export const ContactUsPage: React.FC = () => {
                 type="button"
                 onClick={() => {
                   setSubmitted(false);
+                  setFailed(false);
                   setName('');
                   setEmail('');
                   setMessage('');
@@ -264,13 +275,26 @@ export const ContactUsPage: React.FC = () => {
                 />
               </div>
 
+              {failed && (
+                <div role="alert" className="aa-alert aa-refused flex-wrap">
+                  <AlertCircle strokeWidth={1.6} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">We could not send your message just now. Your text is still here: send it on WhatsApp, or try again.</span>
+                  <a href={whatsappInstead} target="_blank" rel="noopener noreferrer" className="aura-btn aura-btn-sm w-full">
+                    <WhatsAppIcon mono className="h-[18px] w-[18px]" /> Send on WhatsApp instead
+                  </a>
+                </div>
+              )}
+
               <button
                 id="contact-submit-btn"
                 type="submit"
+                disabled={sending}
+                aria-busy={sending || undefined}
                 className="aura-btn aura-btn-w"
               >
-                <span>Send message</span>
-                <Icon name="arrow" />
+                {sending && <Loader2 className="animate-spin" aria-hidden="true" />}
+                <span>{sending ? 'Sending…' : failed ? 'Try again' : 'Send message'}</span>
+                {!sending && <Icon name="arrow" />}
               </button>
             </form>
           )}

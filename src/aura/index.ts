@@ -19,7 +19,7 @@ export type { ThreadPoint } from './Thread';
 export { Backdrop, refreshBackdrop } from './Backdrop';
 export type { AuraTheme } from './Backdrop';
 export { Icon, ICON_NAMES } from './icons';
-export { startKinetic, enterPage, useFlip, useColumnDrift } from './kinetic';
+export { startKinetic, enterPage, useFlip, useColumnDrift, useArrive } from './kinetic';
 export { Drift, ScrollWords } from './KineticParts';
 export type { IconName } from './icons';
 

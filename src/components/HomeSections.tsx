@@ -4,7 +4,7 @@ import { db } from '../lib/firebase';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './ProductCard';
 import { prepaidPercentText, prepaidRulesFrom } from '../utils/prepaid';
-import { CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, X } from 'lucide-react';
+import { AlertCircle, CheckCircle2, ChevronRight, Loader2, MessageCircleQuestion, X } from 'lucide-react';
 import { useDiscovery } from '../utils/discovery';
 import { isAccessory } from '../utils/looks';
 import { assuranceFacts, HowOrderWorks } from './Assurance';
@@ -711,13 +711,17 @@ export const NewsletterSignup: React.FC = () => {
   const { showToast } = useShop();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'saving' | 'done'>('idle');
+  // Looks only: the field is marked, with words and an icon under it, when the address cannot be right
+  const [bad, setBad] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setBad(true);
       showToast('Please enter a valid email address.', 'error');
       return;
     }
+    setBad(false);
     setStatus('saving');
     try {
       await addDoc(collection(db, 'leads'), { email: email.trim().toLowerCase(), phone: null, source: 'newsletter', createdAt: new Date().toISOString(), offerSent: false });
@@ -752,11 +756,13 @@ export const NewsletterSignup: React.FC = () => {
           <WhatsAppIcon className="h-[18px] w-[18px]" mono /> Chat on WhatsApp
         </a>
         {status === 'done' ? (
-          <p role="status" className="mt-6 flex items-center gap-2.5 rounded-2xl bg-sunken px-4 py-3.5 text-left text-[14px] font-semibold leading-5 text-ink">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-ok" strokeWidth={1.6} aria-hidden="true" /> You are subscribed. Thank you!
+          <p role="status" className="nl-done mt-6 flex w-full max-w-lg items-center gap-3 rounded-[20px] bg-blush px-4 py-3.5 text-left text-[15px] font-bold leading-5 text-ink">
+            <span className="aa-ic aa-ic-ink h-9 w-9"><Icon name="check" draw className="in" size={18} /></span> You are subscribed. Thank you!
           </p>
         ) : (
-          <form onSubmit={submit} className="mt-4 flex w-full max-w-lg gap-2 lg:mt-7">
+          <form onSubmit={submit} noValidate className="nl-form mt-5 flex w-full max-w-lg flex-wrap gap-2 lg:mt-7">
+            {/* Phones: what the email is for, in the store's own line (desktop says it under the title) */}
+            <p className="w-full text-[13.5px] leading-[19px] text-ink-muted lg:hidden">Or hear about new styles first: new collections, restocks and offers by email. A few emails, never spam.</p>
             <label htmlFor="newsletter-email" className="sr-only">Email address</label>
             <input
               id="newsletter-email"
@@ -765,7 +771,9 @@ export const NewsletterSignup: React.FC = () => {
               autoComplete="email"
               autoCapitalize="none"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); if (bad) setBad(false); }}
+              aria-invalid={bad || undefined}
+              aria-describedby={bad ? 'newsletter-email-error' : undefined}
               placeholder="Your email address"
               className="sag-input h-[54px] min-w-0 flex-1 w-auto px-4 text-[16px]"
             />
@@ -778,6 +786,11 @@ export const NewsletterSignup: React.FC = () => {
               <span className="lg:hidden">Get offers</span>
               <span className="hidden lg:inline">Subscribe</span>
             </button>
+            {bad && (
+              <p id="newsletter-email-error" role="alert" className="pdp-need w-full">
+                <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden="true" /> Please enter a valid email address.
+              </p>
+            )}
           </form>
         )}
       </div>

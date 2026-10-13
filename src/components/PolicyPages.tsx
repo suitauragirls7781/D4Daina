@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Check, ChevronRight } from 'lucide-react';
-import { SIZE_CHART } from '../utils/sizeChart';
+import { SIZE_CHART, inchesToCm } from '../utils/sizeChart';
 import { DEFAULT_SUPPORT_EMAIL, SUPPORT_PHONE_DISPLAY, createSupportWhatsAppUrl } from '../utils/storeContact';
 import { useAdmin } from '../context/AdminContext';
 import { ActivePage } from '../types';
@@ -9,7 +9,7 @@ import { GmailIcon, WhatsAppIcon } from './BrandIcons';
 import {
   HelpIcon, LockIcon, OrdersIcon, PackageIcon, PinIcon, QualityIcon, ReturnIcon, StoreIconProps, SupportIcon, TagIcon, TruckIcon, UserIcon,
 } from './StoreIcons';
-import { AuraTitle } from '../aura';
+import { AuraTitle, Seg, prefersReducedMotion } from '../aura';
 
 type IconType = React.FC<StoreIconProps>;
 
@@ -87,7 +87,7 @@ export const InfoPageHeader: React.FC<{ crumb: string; eyebrow?: string; title: 
   return (
     <div className="px-3 pt-3 sm:px-6 lg:pt-6">
       <div className="aa-band mx-auto max-w-[1120px]">
-        <nav aria-label="Breadcrumb" className="-ml-2 mb-4 flex items-center gap-1 text-[13.5px] leading-[18px] aura-mu">
+        <nav aria-label="Breadcrumb" className="-ml-2 mb-1.5 sm:mb-4 flex items-center gap-1 text-[13.5px] leading-[18px] aura-mu">
           <button type="button" onClick={() => setActivePage('home')} className="inline-flex items-center min-h-11 px-2 hover:text-ink cursor-pointer">Home</button>
           <ChevronRight className="w-3.5 h-3.5 shrink-0" strokeWidth={1.6} aria-hidden="true" />
           <span aria-current="page" className="font-semibold text-ink truncate px-2">{crumb}</span>
@@ -136,30 +136,81 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
   useEffect(() => {
     if (typeof IntersectionObserver === 'undefined') return;
     const els = sections.map((s) => document.getElementById(s.id)).filter(Boolean) as HTMLElement[];
+    // The reading line sits just under where a jump puts a section's title (scroll-margin-top of .aa-sec: 132px),
+    // so the section jumped to is the marked one and the one before it is already out. The sections on the line
+    // are remembered across calls (an observer only reports the ones that changed); the first in the text wins.
+    const onLine = new Set<string>();
     const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      if (visible[0]) setActiveId(visible[0].target.id);
-    }, { rootMargin: '-120px 0px -55% 0px' });
+      entries.forEach((e) => { if (e.isIntersecting) onLine.add(e.target.id); else onLine.delete(e.target.id); });
+      const first = sections.find((s) => onLine.has(s.id));
+      if (first) setActiveId(first.id);
+    }, { rootMargin: '-138px 0px -55% 0px' });
     els.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, [sections]);
 
   const jump = (id: string) => {
     setActiveId(id);
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById(id)?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
   };
+
+  // Phones: the contents row stays under the header while the policy is read, and the pill of the section being
+  // read is brought into view (only that row moves, never the page)
+  const navRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav || nav.scrollWidth <= nav.clientWidth + 2) return;
+    const on = nav.querySelector<HTMLElement>('[aria-current="true"]');
+    if (on) nav.scrollTo({ left: Math.max(0, on.offsetLeft - 16), behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+  }, [activeId]);
+  const many = sections.length > 1;
+  const column = many ? 'lg:col-span-8 lg:col-start-5' : 'lg:col-span-12';
 
   return (
     <div id={`${page}-page`} data-aura className="pb-14 lg:pb-20">
       <InfoPageHeader crumb={title} eyebrow={eyebrow} title={title} subtitle={subtitle} />
 
-      <div className="max-w-[1120px] mx-auto px-4 sm:px-7 pt-5 lg:pt-10 lg:grid lg:grid-cols-12 lg:gap-12">
-        {/* Contents: a swipe row of pills on phones, a sticky list of pills on desktop */}
-        {sections.length > 1 && (
-          <aside className="lg:col-span-4 mb-5 lg:mb-0 min-w-0">
+      <div className="max-w-[1120px] mx-auto px-4 sm:px-7 pt-4 lg:pt-10 lg:grid lg:grid-cols-12 lg:gap-x-12">
+        {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
+        {(short.length > 0 || facts.length > 0) && (
+          <div className={`${column} lg:row-start-1 min-w-0 pb-3 lg:pb-6`}>
+            {short.length > 0 && (
+              <section aria-labelledby={`${page}-short-title`} className={`aa-short rounded-[26px] bg-blush p-5 sm:p-7 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
+                <h2 id={`${page}-short-title`} className="text-[28px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">In short</h2>
+                <ul className="mt-4 space-y-3">
+                  {short.map((point, i) => (
+                    <li key={point} className="flex items-start gap-3 text-[15px] leading-[22px] text-ink" style={{ '--i': i } as React.CSSProperties}>
+                      <span aria-hidden="true" className="mt-px flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-ink text-on-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
+                      <span className="min-w-0">{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {facts.length > 0 && (
+              <section aria-label="Key facts" className={`rounded-[26px] bg-blush px-4 py-2 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
+                <dl>
+                  {facts.map(({ icon: FactIcon, label, value }) => (
+                    <div key={label} className="flex items-center gap-3.5 border-t border-[color:var(--hl)] py-3 first:border-t-0">
+                      <span className="aa-ic"><FactIcon mono className="w-5 h-5" /></span>
+                      <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
+                        <dt className="text-[14px] leading-5 text-ink-muted">{label}</dt>
+                        <dd className="text-[15.5px] leading-[22px] font-bold text-ink sm:text-right">{value}</dd>
+                      </div>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
+          </div>
+        )}
+
+        {/* Contents: a swipe row of pills that stays under the header on phones, a sticky list of pills on desktop */}
+        {many && (
+          <aside className="pol-nav lg:col-span-4 lg:col-start-1 lg:row-start-1 lg:row-span-2 min-w-0">
             <div className="lg:sticky lg:top-24">
               <p className="hidden lg:block aura-lbl mb-3">On this page</p>
-              <nav aria-label="On this page" className="flex lg:flex-col gap-2 overflow-x-auto sag-scroll-x -mx-4 px-4 sm:-mx-7 sm:px-7 lg:mx-0 lg:px-0 lg:overflow-visible">
+              <nav ref={navRef} aria-label="On this page" className="relative flex lg:flex-col gap-2 overflow-x-auto sag-scroll-x lg:overflow-visible">
                 {sections.map((s, i) => {
                   const active = activeId === s.id;
                   return (
@@ -180,37 +231,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
           </aside>
         )}
 
-        <div className={`${sections.length > 1 ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-6 min-w-0`}>
-          {/* The short answers first: "In short" on phones and tablets, the facts table on desktop */}
-          {short.length > 0 && (
-            <section aria-labelledby={`${page}-short-title`} className={`rounded-[26px] bg-blush p-5 sm:p-7 ${facts.length > 0 ? 'lg:hidden' : ''}`}>
-              <h2 id={`${page}-short-title`} className="text-[28px] leading-[1.05] font-extrabold tracking-[-0.03em] text-ink">In short</h2>
-              <ul className="sag-stagger mt-4 space-y-3">
-                {short.map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-[15px] leading-[22px] text-ink">
-                    <span aria-hidden="true" className="mt-px flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-ink text-on-dark"><Check className="h-3 w-3" strokeWidth={3} /></span>
-                    <span className="min-w-0">{point}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {facts.length > 0 && (
-            <section aria-label="Key facts" className={`rounded-[26px] bg-blush px-4 py-2 sm:px-6 ${short.length > 0 ? 'hidden lg:block' : ''}`}>
-              <dl>
-                {facts.map(({ icon: FactIcon, label, value }) => (
-                  <div key={label} className="flex items-center gap-3.5 border-t border-[color:var(--hl)] py-3 first:border-t-0">
-                    <span className="aa-ic"><FactIcon mono className="w-5 h-5" /></span>
-                    <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:justify-between sm:gap-6">
-                      <dt className="text-[14px] leading-5 text-ink-muted">{label}</dt>
-                      <dd className="text-[15.5px] leading-[22px] font-bold text-ink sm:text-right">{value}</dd>
-                    </div>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          )}
-
+        <div className={`${column} space-y-6 min-w-0`}>
           {intro && <div className="aura-card aura-blk p-4 sm:p-6">{intro}</div>}
 
           <div>
@@ -497,28 +518,34 @@ export const CancellationPolicyPage: React.FC = () => {
   );
 };
 
-// Built from the one store chart (src/utils/sizeChart.ts), the same numbers as the size popup and "Find my size"
-const SIZE_ROWS: Array<[string, string, string, string, string, string]> = SIZE_CHART.map((row) => [
-  `${row.size} (${row.bust})`, `${row.bust}"`, `${row.waist}"`, `${row.hips}"`, `${row.kurtaLength}"`, `${row.bottomLength}"`,
-]);
+type SizeUnit = 'Inches' | 'Centimetres';
+// Built from the one store chart (src/utils/sizeChart.ts), the same numbers as the size popup and "Find my size".
+// The chart is kept in inches; centimetres are the same numbers converted (1 inch = 2.54 cm, to the nearest cm).
+const sizeRows = (unit: SizeUnit): Array<[string, string, string, string, string, string]> => {
+  const show = (inches: number) => (unit === 'Inches' ? `${inches}"` : `${inchesToCm(inches)} cm`);
+  return SIZE_CHART.map((row) => [`${row.size} (${row.bust})`, show(row.bust), show(row.waist), show(row.hips), show(row.kurtaLength), show(row.bottomLength)]);
+};
 
-export const SizeGuidePage: React.FC = () => (
+export const SizeGuidePage: React.FC = () => {
+  const [unit, setUnit] = useState<SizeUnit>('Inches');
+  const SIZE_ROWS = sizeRows(unit);
+  return (
   <PolicyWrapper
     page="size-guide"
     title="Size guide"
     subtitle="Garment measurements in inches for every size we make"
     eyebrow="Guide"
-    facts={[
-      { icon: TagIcon, label: 'Units', value: 'All measurements in inches' },
-      { icon: HelpIcon, label: 'Between two sizes?', value: 'Choose the larger size' },
-    ]}
     sections={[
       {
         id: 'chart',
         title: 'Size chart',
         body: (
           <>
-            <p className={P}>To find your size, measure yourself with a flexible tape over your undergarments. If your measurements fall between two sizes, we recommend choosing the larger size for a relaxed, comfortable fit.</p>
+            {/* The chart comes first (it is what the page is opened for); the store's own guidance follows it */}
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <Seg ariaLabel="Units" variant="box" options={['Inches', 'Centimetres']} value={unit} onChange={(next) => setUnit(next as SizeUnit)} className="w-full max-w-[300px]" />
+              <p className="text-[13.5px] leading-[19px] text-ink-muted">{unit === 'Inches' ? 'Garment measurements, in inches' : 'The same chart, converted to the nearest centimetre'}</p>
+            </div>
             <div className="overflow-x-auto rounded-[22px] bg-surface">
               <table className="w-full min-w-[540px] text-left text-[14.5px] border-collapse">
                 <caption className="sr-only">Garment measurements in inches by size</caption>
@@ -533,13 +560,15 @@ export const SizeGuidePage: React.FC = () => (
                   {SIZE_ROWS.map(([size, ...cells]) => (
                     <tr key={size} className="bg-surface">
                       <th scope="row" className="px-4 py-3.5 font-bold text-ink whitespace-nowrap sticky left-0 bg-surface border-r border-line">{size}</th>
-                      {cells.map((c, i) => <td key={i} className="px-4 py-3.5 text-ink aura-num">{c}</td>)}
+                      {cells.map((c, i) => <td key={`${unit}-${i}`} className="pol-cell px-4 py-3.5 text-ink aura-num whitespace-nowrap">{c}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <p className="text-[13.5px] leading-[19px] text-ink-muted sm:hidden">Swipe the table sideways to see every measurement.</p>
+            <p className="aa-note"><span className="font-bold">Between two sizes?</span> Choose the larger size.</p>
+            <p className={P}>To find your size, measure yourself with a flexible tape over your undergarments. If your measurements fall between two sizes, we recommend choosing the larger size for a relaxed, comfortable fit.</p>
           </>
         ),
       },
@@ -563,4 +592,5 @@ export const SizeGuidePage: React.FC = () => (
       },
     ]}
   />
-);
+  );
+};

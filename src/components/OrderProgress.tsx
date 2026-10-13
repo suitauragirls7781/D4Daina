@@ -304,9 +304,10 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
     const next = !waiting && current < DELIVERED_STEP ? STEPS[current + 1] : null;
     return (
       <div>
-        <div className="flex gap-1" aria-hidden="true">
+        {/* Seven short bars: the reached ones fill one after another, once */}
+        <div className="aa-pg" aria-hidden="true">
           {STEPS.map((item, index) => (
-            <span key={item.label} className={`h-1 flex-1 rounded-full ${index <= current ? 'bg-accent' : 'bg-line'}`} />
+            <span key={item.label} className={index <= current ? 'on' : undefined} style={{ '--i': index } as React.CSSProperties} />
           ))}
         </div>
         <p className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-[15px] leading-5" aria-hidden="true">
@@ -335,6 +336,10 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
   const rows = STEPS.map((step, index) => ({ label: step.label, index, when: index <= current ? formatDateTime(times[index]) : '' }));
   const reachedTo = Math.max(0, current);
   const path = timelinePath(rows.length);
+  // What a shopper looks for first, right under the state: the delivery date (the store's own, or the labelled
+  // estimate) and, on a cash-on-delivery order that is still on its way, the cash to keep ready. Real figures only.
+  const delivery = deliveryDateOf(order);
+  const cashDue = order.payMode === 'cod' && current < DELIVERED_STEP && !waiting ? Number(order.codDue) || 0 : 0;
 
   return (
     <div className="aa-tlc aura-dk">
@@ -343,6 +348,12 @@ const Stepper: React.FC<{ order: Order; compact?: boolean }> = ({ order, compact
         <span className="aura-num min-w-0 text-[13px] leading-4 text-on-dark-muted break-all">#{order.orderNumber}</span>
       </div>
       <p className="aa-tlc-h">{heading}</p>
+      {(delivery || cashDue > 0) && (
+        <ul className="aa-tlc-f aura-num">
+          {delivery && <li><TruckIcon className="w-[18px] h-[18px]" mono live={false} /><span>{delivery.estimated ? 'Estimated delivery by ' : 'Expected by '}<b>{delivery.text}</b></span></li>}
+          {cashDue > 0 && <li><PackageIcon className="w-[18px] h-[18px]" mono live={false} /><span><b>₹{Math.round(cashDue).toLocaleString('en-IN')}</b> in cash on delivery</span></li>}
+        </ul>
+      )}
       <div
         ref={lineRef}
         className={`aa-tl${seen ? ' in' : ''}`}

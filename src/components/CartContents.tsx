@@ -295,7 +295,7 @@ export const CartLines: React.FC<{ onNavigate?: () => void }> = ({ onNavigate })
                       {mrp > item.product.price && (
                         <span className="mt-0.5 block text-[13px] leading-[18px] text-ink-muted">
                           <span className="line-through">{inr(mrp * item.quantity)}</span>
-                          {off > 0 && <span className="ml-1.5 font-bold text-sale">{off}% off</span>}
+                          {off > 0 && <span className="ml-1.5 inline-block whitespace-nowrap font-bold text-sale">{off}% off</span>}
                         </span>
                       )}
                     </p>

@@ -2533,3 +2533,112 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   .aura-seg-ind.mv { transition: transform 560ms var(--kx-spring), width 460ms var(--aura-e); }
   .aura-tb > i { transition: transform 560ms var(--kx-spring), opacity 300ms; }
 }
+
+/* ==== Aura Kinetic, the finishing pass (order confirmed, tracking, account, sign in, contact, size guide, policies,
+   home reviews and newsletter). In the components layer, so a utility on the same element wins. ==== */
+@layer components {
+/* ---- Aura Kinetic, the finishing pass: order confirmed and order tracking ---- */
+/* Order confirmed: the moment on forest (tick, heading), the order as a white ticket, then the receipt on paper */
+.ocf-top { padding: 26px 16px 32px; }
+.ocf-body { padding: 26px 16px 56px; }
+.ocf-in { display: grid; gap: 22px; max-width: 1120px; margin: 0 auto; }
+.ocf-body > .ocf-in { gap: 30px; }
+@media (min-width: 900px) {
+  .ocf-top { padding: 60px 32px 68px; }
+  .ocf-body { padding: 52px 32px 96px; }
+  .ocf-in, .ocf-body > .ocf-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 50px; align-items: start; }
+}
+.ocf-mark { position: relative; display: inline-grid; place-items: center; width: 72px; height: 72px; }
+.ocf-mark > i { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(245, 242, 236, 0.5); opacity: 0; pointer-events: none; }
+.ocf-wait { border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--fg); color: var(--fg); }
+/* An email address moves to the next line whole; it is cut only when it is longer than the line */
+.ocf-em { display: inline-block; max-width: 100%; overflow-wrap: anywhere; font-weight: 600; vertical-align: bottom; }
+.ocf-tkt { border-radius: 24px; padding: 18px 18px 20px; background: #FFFFFF; color: var(--aura-ink); }
+.ocf-facts { display: flex; flex-wrap: wrap; gap: 12px 30px; margin: 16px 0; padding: 14px 0; border-top: 1.5px dashed var(--sag-line); border-bottom: 1.5px dashed var(--sag-line); }
+.ocf-facts dt { font-size: 13px; line-height: 18px; color: var(--sag-ink-muted); }
+.ocf-facts dd { margin-top: 1px; font-size: 16px; line-height: 26px; font-weight: 700; color: var(--aura-ink); }
+.ocf-facts dd.big { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.ocf-sk > i, .aa-tsk i { display: block; height: 14px; border-radius: 999px; background: #E6DFD3; animation: aura-sk 1200ms ease-in-out infinite alternate; }
+/* The slim progress of an order in a list: seven short bars */
+.aa-pg { display: flex; gap: 4px; }
+.aa-pg > span { position: relative; flex: 1; height: 4px; border-radius: 99px; background: var(--sag-line); overflow: hidden; }
+.aa-pg > span.on::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--aura-rose); transform-origin: 0 50%; }
+/* Order tracking: the facts under the state (delivery date, cash to keep ready), and the answer's placeholder */
+.aa-tlc-f { display: grid; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(245, 242, 236, 0.16); font-size: 14.5px; line-height: 20px; color: #D9D2C8; }
+.aa-tlc-f > li { display: flex; align-items: center; gap: 10px; }
+.aa-tlc-f svg { flex: none; color: var(--aura-blush); }
+.aa-tlc-f b { font-weight: 700; color: var(--aura-paper); }
+.aa-tsk > div { border-radius: 28px; padding: 22px 18px 26px; background: var(--aura-ink); }
+.aa-tsk i { background: rgba(245, 242, 236, 0.2); animation: aa-tsk 1200ms ease-in-out infinite alternate; }
+@keyframes aa-tsk { to { opacity: 0.45; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* A ring opens out from the tick; the ticket is printed from its top edge; its facts follow */
+  .ocf-mark > i { animation: aco-ring 1300ms var(--aura-eo) 620ms both; }
+  .ocf-tkt { animation: ocf-print 820ms var(--kx-out) 120ms backwards; }
+  @keyframes ocf-print { from { clip-path: inset(0 0 100% 0 round 24px); transform: translate3d(0, -10px, 0); } to { clip-path: inset(0 0 0 0 round 24px); } }
+  .ocf-facts > div { animation: kx-line-in 600ms var(--kx-out) 520ms backwards; }
+  .ocf-facts > div + div { animation-delay: 600ms; }
+  .ocf-facts > div + div + div { animation-delay: 680ms; }
+  .aa-pg > span.on::after { animation: aa-pg-fill 420ms var(--aura-eo) backwards; animation-delay: calc(var(--i, 0) * 110ms + 380ms); }
+  @keyframes aa-pg-fill { from { transform: scaleX(0); } }
+  /* A lookup that found nothing: the message shakes once (and again on the next miss) */
+  .aa-refused { animation: kx-shake 420ms var(--aura-e); }
+  .aa-tlc-f > li { animation: kx-line-in 600ms var(--kx-out) 260ms backwards; }
+  .aa-tlc-f > li + li { animation-delay: 340ms; }
+}
+@media (prefers-reduced-motion: reduce) { .ocf-sk > i, .aa-tsk i { animation: none; } }
+
+/* ---- Aura Kinetic, the finishing pass: my account and sign in ---- */
+/* Placeholders in the shape of what is on its way: the account (band and rows) and two order cards */
+.aa-ask { display: grid; gap: 10px; max-width: 520px; }
+.aa-ask > b { display: block; height: 132px; border-radius: 28px; background: var(--aura-blush); opacity: 0.7; }
+.aa-ask > i { display: block; height: 68px; border-radius: 22px; background: #FFFFFF; }
+.aa-osk { display: grid; gap: 16px; }
+.aa-osk > div { border-radius: 28px; padding: 22px 18px; background: #FFFFFF; }
+.aa-osk i { display: block; height: 14px; border-radius: 999px; background: #E6DFD3; animation: aura-sk 1200ms ease-in-out infinite alternate; }
+.aa-osk b { display: block; width: 56px; aspect-ratio: 4 / 5; margin-top: 18px; border-radius: 14px; background: #EFE9DF; }
+.aa-pill.is-line { background: transparent; box-shadow: inset 0 0 0 1.5px var(--aura-ink); }
+/* What an account keeps: three ticked lines under the sign-in heading (desktop) */
+.aa-keeps { display: grid; gap: 10px; margin-top: 28px; font-size: 15px; line-height: 22px; font-weight: 600; color: var(--fg, var(--aura-ink)); }
+.aa-keeps > li { display: flex; align-items: center; gap: 10px; }
+.aa-keeps svg { flex: none; width: 26px; height: 26px; padding: 5px; border-radius: 50%; background: var(--aura-ink); color: var(--aura-paper); }
+.aa-otp.err input { border-color: var(--sag-danger); }
+@media (prefers-reduced-motion: no-preference) {
+  .aa-otp.err { animation: kx-shake 420ms var(--aura-e); }
+  /* The latest order's seven dots light up one after another */
+  .aa-dots > i.on { animation: kx-pop 420ms var(--kx-spring) backwards; animation-delay: calc(var(--i, 0) * 80ms + 350ms); }
+  .aa-keeps > li { animation: kx-line-in 600ms var(--kx-out) 420ms backwards; }
+  .aa-keeps > li + li { animation-delay: 500ms; }
+  .aa-keeps > li + li + li { animation-delay: 580ms; }
+}
+@media (prefers-reduced-motion: reduce) { .aa-osk i { animation: none; } }
+/* ---- The finishing pass: policy pages, size guide, contact ---- */
+/* Phones and tablets: the contents row of a policy stays under the header while the text is read */
+@media (max-width: 1023px) {
+  .pol-nav { position: sticky; top: var(--aura-hh, 56px); z-index: 20; margin: 0 -16px 6px; padding: 8px 0; background: var(--aura-paper); }
+  .pol-nav nav { padding: 0 16px; scroll-padding-inline: 16px; }
+}
+/* A jump puts a section's title clear of the header (108px on desktop) and of the contents row (phones) */
+.aa-sec { scroll-margin-top: 132px; }
+@media (min-width: 640px) and (max-width: 1023px) { .pol-nav { margin-inline: -28px; } .pol-nav nav { padding-inline: 28px; } }
+@media (prefers-reduced-motion: no-preference) {
+  /* "In short": the ticks land one after another; a size chart figure settles when the unit changes */
+  .aa-short li > span:first-child { animation: kx-pop 460ms var(--kx-spring) backwards; animation-delay: calc(var(--i, 0) * 110ms + 320ms); }
+  .aa-short li > span + span { animation: kx-line-in 600ms var(--kx-out) backwards; animation-delay: calc(var(--i, 0) * 110ms + 260ms); }
+  .pol-cell { animation: pol-cell 360ms var(--aura-eo) backwards; }
+  @keyframes pol-cell { from { opacity: 0; transform: translate3d(0, 6px, 0); } }
+  .pol-nav button { transition: background-color 300ms, color 300ms, border-color 300ms, scale 420ms var(--kx-spring); }
+  .pol-nav button:active { scale: 0.95; }
+}
+/* ---- The finishing pass: home, customer reviews and the newsletter ---- */
+/* The real average, big, with its stars and the count */
+.aura-rvs { display: flex; align-items: center; gap: 14px; font-size: 14px; line-height: 1.35; }
+.aura-rvs > b { font-size: clamp(52px, 15vw, 76px); line-height: 0.86; font-weight: 800; letter-spacing: -0.045em; }
+.aura-rvp { background: var(--hl, var(--sag-line)); }
+.aura-rvp > i { background: var(--fg, var(--aura-ink)); }
+@media (prefers-reduced-motion: no-preference) {
+  .aura-rvp > i { transition: transform 620ms var(--kx-spring); }
+  .nl-done { animation: kx-pop 520ms var(--kx-spring) backwards; }
+}
+/* end of the finishing pass */
+}
