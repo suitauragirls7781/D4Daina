@@ -23,7 +23,7 @@ import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { useBackToClose } from '../utils/backClose';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
-import { Bell, ChevronLeft, ChevronRight, Eye, GitCompare, Share2, Star, Tag } from 'lucide-react';
+import { AlertCircle, Bell, ChevronLeft, ChevronRight, Eye, GitCompare, Share2, Star, Tag } from 'lucide-react';
 import { AuraTitle, Icon, Odometer, Seg, clamp, flyToBag, prefersReducedMotion, setVar, useScrollFx } from '../aura';
 import { WhatsAppIcon } from './BrandIcons';
 import { Assurance, assuranceFacts } from './Assurance';
@@ -171,6 +171,11 @@ export const ProductDetailPage: React.FC = () => {
   // The strip's width, read on resize only (the sideways parallax needs it on every scroll frame)
   const stripWidth = useRef(0);
   const barPhoto = useRef<HTMLImageElement>(null);
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
+  // A swipe is not a tap on the backdrop: the viewer stays open
+  const swipedAt = useRef(0);
+  // Left and right arrow keys change the photo in the full-size viewer (the count is read when the key is pressed)
+  const photoCount = useRef(1);
   // The reviews, "Complete the look" and the rails of other styles are put on the page right after the first
   // screen has been painted (they are all far below it), so the name, price and photo never wait for them
   const [belowShown, setBelowShown] = useState(false);
@@ -297,7 +302,11 @@ export const ProductDetailPage: React.FC = () => {
   // Image viewer: Escape closes it, the page behind does not scroll
   useEffect(() => {
     if (!lightbox) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightbox(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setLightbox(false);
+      const step = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (step && photoCount.current > 1) setImageIdx((idx) => (idx + step + photoCount.current) % photoCount.current);
+    };
     window.addEventListener('keydown', onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -378,6 +387,7 @@ export const ProductDetailPage: React.FC = () => {
   const images = (Array.isArray(product.images) ? product.images.filter(Boolean) : []).length
     ? product.images.filter(Boolean)
     : [product.image || ELEGANT_PLACEHOLDER_SVG];
+  photoCount.current = images.length;
   const colors = (product.colors || []).filter((c) => c && c.name);
   // Accessories are sold only through "Complete the look": no size finder, size chart, compare or similar outfits
   const accessoryPage = isAccessory(product);
@@ -490,6 +500,18 @@ export const ProductDetailPage: React.FC = () => {
   };
   const go = (delta: number) => showImage((imageIdx + delta + images.length) % images.length, false);
   const openViewer = (idx: number) => { setImageIdx(idx); setLightbox(true); };
+  // Full-size viewer: a sideways swipe (or the arrow keys) shows the next or the previous photo
+  const viewerSwipe = {
+    onPointerDown: (e: React.PointerEvent) => { swipeFrom.current = { x: e.clientX, y: e.clientY }; },
+    onPointerUp: (e: React.PointerEvent) => {
+      const from = swipeFrom.current;
+      swipeFrom.current = null;
+      if (!from || images.length < 2) return;
+      const dx = e.clientX - from.x;
+      if (Math.abs(dx) > 44 && Math.abs(dx) > Math.abs(e.clientY - from.y) * 1.4) { swipedAt.current = Date.now(); go(dx < 0 ? 1 : -1); }
+    },
+    onPointerCancel: () => { swipeFrom.current = null; },
+  };
 
   const swatches = colors.filter((c) => c.name !== 'Default');
   const pickColour = (c: ProductColor) => {
@@ -692,9 +714,9 @@ export const ProductDetailPage: React.FC = () => {
   const head = (
     <>
       <p className="aura-lbl">{badgeText ? <>{badgeText} · {product.category}</> : product.category}</p>
-      <div className="mt-2.5 flex items-start gap-2">
+      <div className="pdp-hrow mt-2.5 flex items-start gap-2">
         <h1 className="pdp-n">{product.name}</h1>
-        <div className="flex shrink-0 gap-1.5">
+        <div className="pdp-acts flex shrink-0 gap-1.5">
           <button type="button" onClick={() => toggleWishlist(product)} aria-label={fav ? 'Remove from wishlist' : 'Add to wishlist'} aria-pressed={fav} className="pdp-ic">
             <Icon name="heart" size={21} filled={fav} className={fav ? 'sag-beat text-accent' : ''} />
           </button>
@@ -705,7 +727,8 @@ export const ProductDetailPage: React.FC = () => {
       </div>
 
       <p className="pdp-pr aura-num">
-        <Odometer value={inr(price)} className="pdp-big" />
+        {/* No roll on arrival: the price is readable in the first frame */}
+        <Odometer value={inr(price)} className="pdp-big" roll={false} />
         {mrp > price && <span className="text-[16px] text-ink-muted"><span className="sr-only">MRP </span><span className="line-through">₹{mrp.toLocaleString('en-IN')}</span></span>}
         {discount > 0 && <span className="aura-tag">{discount}% off</span>}
       </p>
@@ -808,7 +831,8 @@ export const ProductDetailPage: React.FC = () => {
 
             {/* Offers: only the ones that are live, as plain lines on a blush card */}
             {hasOffers && (
-              <ul data-rv="" className="aura-num mt-5 grid gap-2.5 rounded-[22px] bg-blush px-4 py-4 text-[14px] leading-[1.45] text-ink">
+              <ul data-rv="" aria-label="Offers" className="pdp-off aura-num">
+                <li className="aura-lbl text-ink!" aria-hidden="true">Offers</li>
                 {prepaidLines.map((line) => (
                   <li key={line} className="flex items-start gap-2.5"><Tag className="mt-0.5 w-[18px] h-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" /><span className="min-w-0">{line}</span></li>
                 ))}
@@ -818,16 +842,19 @@ export const ProductDetailPage: React.FC = () => {
                 {bestCoupon && (
                   <li className="flex items-start gap-2.5">
                     <Tag className="mt-0.5 w-[18px] h-[18px] shrink-0" strokeWidth={1.6} aria-hidden="true" />
-                    <span className="min-w-0 flex flex-wrap items-baseline gap-x-2.5">
-                      <span className="min-w-0">
-                        {bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off with code <span className="font-extrabold tracking-[0.04em] break-all">{bestCoupon.code}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block">
+                        {bestCoupon.discountType === 'fixed' ? `₹${bestCoupon.discountValue}` : `${bestCoupon.discountValue}%`} off with a coupon
                         {bestCoupon.minOrderValue ? ` on orders above ₹${bestCoupon.minOrderValue.toLocaleString('en-IN')}` : ''}
                       </span>
-                      <button type="button" onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
-                        aria-label={`Copy code ${bestCoupon.code}`}
-                        className="-my-3 py-3 shrink-0 font-bold underline underline-offset-4 decoration-[1.5px] cursor-pointer">
-                        Copy
-                      </button>
+                      <span className="mt-2 flex items-center gap-2">
+                        <span className="pdp-code">{bestCoupon.code}</span>
+                        <button type="button" onClick={() => navigator.clipboard?.writeText(bestCoupon.code).then(() => showToast(`Code ${bestCoupon.code} copied.`, 'success')).catch(() => {})}
+                          aria-label={`Copy code ${bestCoupon.code}`}
+                          className="pdp-copy">
+                          <Icon name="copy" size={15} /> Copy
+                        </button>
+                      </span>
                     </span>
                   </li>
                 )}
@@ -860,8 +887,8 @@ export const ProductDetailPage: React.FC = () => {
             {sizes.length > 0 && !oneSize && (
               <div id="pdp-size-selector" className="pdp-fld scroll-mt-28">
                 <div className="pdp-fld-h">
-                  <p className={needSize && !size ? 'text-[14px] leading-5 text-danger font-bold' : 'aura-lbl'} aria-live="polite">
-                    {needSize && !size ? chooseSizeText : <>{sizeWord}{size && <b> · {size}</b>}</>}
+                  <p className={needSize && !size ? 'pdp-need' : 'aura-lbl'} aria-live="polite">
+                    {needSize && !size ? <><AlertCircle className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} aria-hidden="true" />{chooseSizeText}</> : <>{sizeWord}{size && <b key={size} className="pdp-picked"> · {size}</b>}</>}
                   </p>
                   {sizeLinks}
                 </div>
@@ -1007,7 +1034,7 @@ export const ProductDetailPage: React.FC = () => {
           <>
             <img ref={barPhoto} src={getCleanImageUrl(images[imageIdx] || images[0], 160)} alt="" />
             <p className="aura-num">
-              <span>{product.name}</span>
+              <span>{size && !oneSize ? <>{sizeWord} {size}{qty > 1 ? ` · Qty ${qty}` : ''} · </> : qty > 1 ? <>Qty {qty} · </> : null}{product.name}</span>
               <span><span className="sr-only">Total </span><Odometer value={total} roll={false} /></span>
             </p>
             <button type="button" onClick={() => (inBagNow ? openBag() : fromBar('add'))} className="aura-btn aura-btn-line">
@@ -1032,8 +1059,8 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           </div>
           <div className="pdp-fld-h mt-3">
-            <p className={sheetError && !size ? 'text-[14px] leading-5 text-danger font-bold' : 'aura-lbl'} role={sheetError && !size ? 'alert' : undefined}>
-              {sheetError && !size ? chooseSizeText : <>{sizeWord}{size && <b className="normal-case tracking-normal text-ink"> · {size}</b>}</>}
+            <p className={sheetError && !size ? 'pdp-need' : 'aura-lbl'} role={sheetError && !size ? 'alert' : undefined}>
+              {sheetError && !size ? <><AlertCircle className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} aria-hidden="true" />{chooseSizeText}</> : <>{sizeWord}{size && <b key={size} className="pdp-picked normal-case tracking-normal text-ink"> · {size}</b>}</>}
             </p>
             {womenSizing && <button type="button" onClick={() => setIsSizeGuideOpen(true)} className={`${quietLink} shrink-0`}>Size guide</button>}
           </div>
@@ -1045,19 +1072,20 @@ export const ProductDetailPage: React.FC = () => {
 
       {/* Photo viewer: the photo on a white sheet, round sand controls */}
       {lightbox && (
-        <div className="fixed inset-0 z-[80] bg-surface flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => setLightbox(false)}>
+<div className="pdp-vw fixed inset-0 z-[80] bg-surface flex items-center justify-center sag-fade" role="dialog" aria-modal="true" aria-label="Image viewer" onClick={() => { if (Date.now() - swipedAt.current > 400) setLightbox(false); }} {...viewerSwipe}>
           <button type="button" onClick={() => setLightbox(false)} aria-label="Close" autoFocus className={`absolute top-3 right-3 z-10 w-12 h-12 ${iconBtn}`}>
             <Icon name="close" />
           </button>
           {images.length > 1 && (
             <>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className={`absolute left-2 z-10 w-12 h-12 ${iconBtn}`}><ChevronLeft className="w-[22px] h-[22px]" strokeWidth={1.6} /></button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className={`absolute right-2 z-10 w-12 h-12 ${iconBtn}`}><ChevronRight className="w-[22px] h-[22px]" strokeWidth={1.6} /></button>
-              <span className="aura-num aura-tag absolute bottom-4 left-1/2 -translate-x-1/2 z-10" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous image" className={`absolute left-2 z-10 w-12 h-12 max-[639px]:top-auto max-[639px]:bottom-3 ${iconBtn}`}><ChevronLeft className="w-[22px] h-[22px]" strokeWidth={1.6} /></button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next image" className={`absolute right-2 z-10 w-12 h-12 max-[639px]:top-auto max-[639px]:bottom-3 ${iconBtn}`}><ChevronRight className="w-[22px] h-[22px]" strokeWidth={1.6} /></button>
+              <span className="aura-num aura-tag absolute bottom-6 left-1/2 -translate-x-1/2 z-10" aria-hidden="true">{imageIdx + 1} / {images.length}</span>
             </>
           )}
-          <img src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} className="max-h-[92vh] max-w-[94vw] rounded-[22px] object-contain" onClick={(e) => e.stopPropagation()} />
+          <img key={imageIdx} src={getCleanImageUrl(images[imageIdx], 1800)} alt={product.name} draggable={false} className="pdp-vw-ph max-h-[92vh] max-w-[94vw] rounded-[22px] object-contain max-[639px]:max-h-[calc(100dvh-150px)]" onClick={(e) => e.stopPropagation()} />
         </div>
+
       )}
     </div>
   );

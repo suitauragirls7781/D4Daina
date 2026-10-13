@@ -7,6 +7,12 @@ export const ShimmerPDP: React.FC = () => {
     <div role="status" aria-label="Loading" data-aura="" className="pdp-page">
       <div className="pdp-w">
         <div className="pdp">
+          {/* Phones: the label, the name and the price sit above the photo, as on the real page */}
+          <div className="pdp-top min-[900px]:hidden">
+            <div className={`h-3.5 w-24 ${bar}`} />
+            <div className={`col-span-2 mt-3 h-6 w-11/12 ${bar}`} />
+            <div className={`col-span-2 mt-3 h-7 w-2/5 ${bar}`} />
+          </div>
           <div className="pdp-g">
             <div className="pdp-gi">
               <div className="aura-sk aspect-[4/5] rounded-[26px]" />
@@ -16,10 +22,10 @@ export const ShimmerPDP: React.FC = () => {
             </div>
           </div>
           <div className="pdp-d">
-            <div className={`h-3.5 w-24 ${bar}`} />
-            <div className={`mt-4 h-9 w-11/12 ${bar}`} />
-            <div className={`mt-2.5 h-9 w-2/3 ${bar}`} />
-            <div className={`mt-5 h-9 w-2/5 ${bar}`} />
+            <div className={`max-[899px]:hidden h-3.5 w-24 ${bar}`} />
+            <div className={`max-[899px]:hidden mt-4 h-9 w-11/12 ${bar}`} />
+            <div className={`max-[899px]:hidden mt-2.5 h-9 w-2/3 ${bar}`} />
+            <div className={`max-[899px]:hidden mt-5 h-9 w-2/5 ${bar}`} />
             <div className={`mt-3 h-3.5 w-1/2 ${bar}`} />
             <div className={`mt-8 h-3.5 w-16 ${bar}`} />
             <div className="mt-3 h-[54px] w-full rounded-full bg-surface" />

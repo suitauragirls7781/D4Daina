@@ -1320,28 +1320,80 @@ html.aura-nopin .aura-pin { position: static; height: auto; }
 /* Checkout: the forest band with the shield that assembles itself, and the two steps */
 .aco-top { border-radius: 28px; background: var(--aura-forest); color: var(--aura-paper); --fg: #F5F2EC; --inv: #111013; --mu: #BDB6AD; --hl: rgba(245, 242, 236, 0.22); --ac: #EAD7D1; --th: #F5F2EC; }
 .aco-top :focus-visible { outline-color: #EAD7D1; }
-.aco-band { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 16px; align-items: center; padding: 10px 20px 28px; }
-.aco-shd { display: block; width: 64px; height: 64px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+/* The slim top (a phone's first screen must show the first field): back, the lock and the title, help */
+.aco-top { border-radius: 24px; }
+.aco-hd { display: flex; align-items: center; gap: 2px; height: 54px; padding: 0 16px 0 6px; }
+.aco-hd-b { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; transition: transform 300ms var(--aura-sp); }
+.aco-hd-b:active { transform: scale(0.86); }
+.aco-hd-t { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; font-size: 19px; line-height: 1; font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.aco-hd-t em { font-size: 1.16em; letter-spacing: -0.01em; }
+.aco-hd-h { flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px; font-size: 14.5px; line-height: 1; font-weight: 700; text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 5px; }
+.aco-shd { flex: none; display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+/* The two steps on one line, joined by a rail that fills (--f: how far, 0 to 1) */
+.aco-stp { display: flex; align-items: center; gap: 10px; padding: 0 18px 10px; }
+.aco-stp-b { flex: none; display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 13.5px; line-height: 1; font-weight: 700; color: var(--mu); transition: color 400ms; }
+button.aco-stp-b { cursor: pointer; }
+.aco-stp-b > b { flex: none; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--hl); font-size: 12.5px; line-height: 1; font-weight: 800; transition: background-color 400ms 250ms, color 400ms 250ms, box-shadow 400ms 250ms; }
+.aco-stp-b.on { color: var(--aura-paper); }
+.aco-stp-b.on > b { background: var(--aura-paper); color: var(--aura-forest); box-shadow: none; }
+.aco-rail { flex: 1; min-width: 24px; height: 2px; overflow: hidden; border-radius: 2px; background: var(--hl); }
+.aco-rail > i { display: block; height: 100%; border-radius: 2px; background: var(--aura-blush); transform: scaleX(var(--f, 0)); transform-origin: 0 50%; transition: transform 700ms var(--aura-e); }
+@media (min-width: 640px) { .aco-hd { height: 62px; padding: 0 22px 0 10px; } .aco-hd-t { font-size: 22px; } .aco-stp { max-width: 520px; padding: 0 24px 14px; } .aco-stp-b { min-height: 44px; } }
+/* Step titles, the small "Use my location" pill, the order strip, the coupon ticket */
+.aco-h { font-size: clamp(21px, 6.4vw, 30px); line-height: 1.08; font-weight: 800; letter-spacing: -0.03em; color: var(--aura-ink); text-wrap: balance; }
+@media (min-width: 900px) { .aco-h { font-size: 38px; } }
+.aco-loc { flex: none; display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 13px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--aura-ink); font-size: 13.5px; line-height: 1; font-weight: 700; color: var(--aura-ink); cursor: pointer; transition: background-color 300ms, transform 350ms var(--aura-e), opacity 300ms; }
+.aco-loc:not(:disabled):active { transform: scale(0.95); }
+.aco-loc:disabled { opacity: 0.6; cursor: wait; }
+@media (hover: hover) { .aco-loc:not(:disabled):hover { background: #FFFFFF; } }
+@media (min-width: 640px) { .aco-loc { min-height: 44px; padding: 0 16px; } }
+.aco-strip-v { flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: 14px; line-height: 1; font-weight: 700; color: var(--aura-ink); }
+.aco-strip-v > svg { transition: transform 420ms var(--aura-sp); }
+.aco-tkt { position: relative; display: flex; align-items: center; gap: 12px; padding: 9px 14px 9px 12px; border-radius: 18px; background: var(--aura-blush); color: var(--aura-ink); }
+.aco-tkt::before, .aco-tkt::after { content: ""; position: absolute; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--aura-paper); }
+.aco-tkt::before { left: -6px; }
+.aco-tkt::after { right: -6px; }
+.aco-tkt-ic { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #FFFFFF; }
+/* What paying online gives: small ticks in a row that wraps */
+.aco-perks { display: flex; flex-wrap: wrap; gap: 7px 16px; margin-top: 14px; padding-top: 12px; border-top-width: 1px; border-top-style: solid; border-radius: 0; font-size: 13.5px; line-height: 18px; font-weight: 600; }
+.aco-perks > span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+/* A label follows its field: ink while the field is being filled in */
+.sag-checkout .aco-lbl { transition: color 300ms; }
+.sag-checkout div:focus-within > .aco-lbl { color: var(--aura-ink); }
+/* The pay button while the order is created and the payment window opens: full strength, a rose line runs along its foot */
+.aco-paybtn.busy:disabled { opacity: 1; cursor: progress; }
+.aco-paybtn.busy::after { content: ""; position: absolute; left: 0; bottom: 0; width: 38%; height: 3px; border-radius: 3px; background: var(--aura-rose); animation: aco-run 1150ms var(--aura-io, ease-in-out) infinite; }
+@keyframes aco-run { from { transform: translate3d(-110%, 0, 0); } to { transform: translate3d(290%, 0, 0); } }
+/* Waiting for the bank's answer: a lock in a paper circle with a ring that breathes out */
+.aco-wait { position: relative; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--aura-paper); color: var(--aura-ink); }
+.aco-wait::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--aura-ink); animation: aco-breathe 1500ms var(--aura-eo) infinite; }
+@keyframes aco-breathe { from { transform: scale(1); opacity: 0.7; } to { transform: scale(1.5); opacity: 0; } }
+/* Order placed: two rings open out from the tick */
+.aco-done { position: absolute; top: 0; left: 50%; width: 112px; height: 112px; margin-left: -56px; pointer-events: none; }
+.aco-done > i { position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(245, 242, 236, 0.55); opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .aco-done > i { animation: aco-ring 1300ms var(--aura-eo) 520ms both; }
+  .aco-done > i + i { animation-delay: 760ms; }
+  .aco-ret > * { animation: aco-rise 600ms var(--aura-eo) both; }
+  .aco-ret > :nth-child(2) { animation-delay: 70ms; }
+  .aco-ret > :nth-child(3) { animation-delay: 140ms; }
+  .aco-ret > :nth-child(n + 4) { animation-delay: 210ms; }
+  .aco-tkt { animation: kx-pop 520ms var(--kx-spring) backwards; }
+  .aco-open { animation: aco-open 420ms var(--aura-eo) both; }
+  .sag-checkout p[role="alert"][id$="-error"] { animation: aco-open 320ms var(--aura-eo) both; }
+}
+@keyframes aco-ring { from { transform: scale(0.7); opacity: 0.9; } to { transform: scale(2.7); opacity: 0; } }
+@keyframes aco-open { from { opacity: 0; transform: translate3d(0, -8px, 0); } }
+@media (prefers-reduced-motion: reduce) {
+  .aco-paybtn.busy::after { animation: none; width: 100%; }
+  .aco-wait::after { animation: none; opacity: 0; }
+  .aco-rail > i, .aco-hd-b, .aco-strip-v > svg { transition: none; }
+}
 .aco-shd * { transform-box: fill-box; transform-origin: 50% 50%; }
 .aco-shd .s-b { fill: currentColor; stroke: none; }
 .aco-shd .s-d { fill: var(--aura-forest); stroke: none; }
-.aco-stp { position: relative; display: flex; justify-content: space-between; max-width: 420px; margin: 0 auto; padding: 0 40px 26px; }
-.aco-stp > svg { position: absolute; left: 60px; right: 60px; top: 9px; width: calc(100% - 120px); height: 20px; overflow: visible; }
-.aco-stp > svg path { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke: var(--hl); }
-.aco-stp > svg path + path { stroke: var(--th); stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--f, 0)); transition: stroke-dashoffset 900ms var(--aura-e); }
-.aco-stp-b { position: relative; z-index: 1; display: grid; justify-items: center; gap: 8px; min-width: 44px; min-height: 56px; font-size: 13px; line-height: 1; font-weight: 700; color: var(--mu); transition: color 400ms; }
-button.aco-stp-b { cursor: pointer; }
-.aco-stp-b > b { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: var(--aura-forest); box-shadow: inset 0 0 0 1.5px var(--hl); font-size: 14px; line-height: 1; font-weight: 800; transition: background-color 400ms 350ms, color 400ms 350ms, box-shadow 400ms 350ms; }
-.aco-stp-b.on { color: var(--aura-paper); }
-.aco-stp-b.on > b { background: var(--aura-paper); color: var(--aura-forest); box-shadow: none; }
 /* Step titles, labels above the fields, cards */
-.aco-h { font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; color: var(--aura-ink); text-wrap: balance; }
-@media (min-width: 900px) { .aco-h { font-size: 38px; } }
 .aco-lbl { display: block; margin-bottom: 6px; font-size: 12px; line-height: 1.3; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #6A645E; }
-.aco-loc { display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; min-height: 52px; border-radius: 999px; border: 1.5px dashed var(--aura-ink); font-size: 15px; line-height: 1; font-weight: 700; color: var(--aura-ink); cursor: pointer; transition: background-color 300ms, transform 350ms var(--aura-e), opacity 300ms; }
-.aco-loc:not(:disabled):active { transform: scale(0.97); }
-.aco-loc:disabled { opacity: 0.6; cursor: wait; }
-@media (hover: hover) { .aco-loc:not(:disabled):hover { background: #FFFFFF; } }
 .aco-sum { padding: 18px 16px; border-radius: 24px; background: #FFFFFF; color: var(--aura-ink); }
 .aco-sum-h { font-size: 18px; line-height: 1.1; font-weight: 800; letter-spacing: -0.02em; color: var(--aura-ink); }
 .aco-edit { flex: none; display: inline-flex; align-items: center; justify-content: flex-end; min-height: 44px; min-width: 44px; font-size: 14px; line-height: 1; font-weight: 600; color: var(--aura-ink); text-decoration: underline; text-decoration-thickness: 1.5px; text-underline-offset: 4px; cursor: pointer; }
@@ -1949,11 +2001,15 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 @media (min-width: 900px) { .cdir-in { padding: 80px 20px 88px; } }
 @media (prefers-reduced-motion: reduce) { .cdir-p { transition: none; } }
 /* Phones: the label, the name and the price above the photo, so the first screen says what it is and what it costs */
-.pdp-top { padding: 4px 16px 12px; }
-.pdp-top .pdp-n { font-size: 21px; line-height: 1.16; letter-spacing: -0.02em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
-.pdp-top .pdp-ic { width: 40px; height: 40px; }
-.pdp-top .pdp-pr { margin-top: 8px; }
-.pdp-top .pdp-big { font-size: 26px; }
+/* Phones, the first screen: the label and the two round buttons share the first line, so the name has the whole
+   width (two lines for most names instead of three), then the price. Nothing here waits for an animation. */
+.pdp-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; padding: 8px 16px 12px; }
+.pdp-top > .pdp-hrow { display: contents; }
+.pdp-top .pdp-acts { grid-column: 2; grid-row: 1; }
+.pdp-top .pdp-n { grid-column: 1 / -1; grid-row: 2; margin-top: 6px; font-size: 20.5px; line-height: 1.16; letter-spacing: -0.025em; text-wrap: balance; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+.pdp-top .pdp-ic { width: 38px; height: 38px; }
+.pdp-top .pdp-pr { grid-column: 1 / -1; grid-row: 3; margin-top: 8px; }
+.pdp-top .pdp-big { font-size: 27px; }
 .pdp-top + .pdp-g + .pdp-d { padding-top: 10px; }
 .pdp-page { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 @media (min-width: 900px) {
@@ -2355,7 +2411,8 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
 @media (prefers-reduced-motion: no-preference) {
   .kx-gp > i { transition: transform 120ms linear; }
   /* The "% off" tag pops in after the price has rolled; a chosen colour's dot pops; a refused size pill shakes */
-  .pdp-pr .aura-tag { animation: kx-pop 520ms var(--kx-spring) 620ms backwards; }
+  .pdp-pr .aura-tag { animation: pdp-tag 460ms var(--kx-spring) backwards; }
+  @keyframes pdp-tag { from { transform: scale(0.82); } }
   .pdp-sw > button[aria-pressed="true"] > i { animation: kx-pop 460ms var(--kx-spring); }
   .pdp-size.err { animation: kx-shake 420ms var(--aura-e); }
   /* An opened detail: its text rises in; the tick of "Added to bag" lands with a spring */
@@ -2364,13 +2421,32 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   :is(#pdp-add-to-bag, .pdp-buy .aura-btn) > svg[data-ic="check"] { animation: kx-pop 520ms var(--kx-spring) backwards; }
   /* Phones: the ink buy bar comes up from under the screen once the page is there; its small photo follows the gallery */
   @media (max-width: 899px) {
-    .pdp-buy { animation: kx-bar-in 720ms var(--kx-spring) 420ms backwards; }
+    .pdp-buy { animation: kx-bar-in 560ms var(--kx-spring) backwards; }
     @keyframes kx-bar-in { from { transform: translate3d(0, 110%, 0); } }
   }
   .pdp-th > button { transition: box-shadow 300ms, transform 450ms var(--kx-spring); }
   .pdp-th > button:active { transform: scale(0.92); }
   .pdp-conf-r > span:first-child { transition: transform 450ms var(--kx-spring); }
   @media (hover: hover) { :is(a, button).pdp-conf-r:hover > span:first-child { transform: scale(1.1) rotate(-6deg); } }
+}
+
+/* Product page, finished: the offers card and its coupon chip, the "choose a size" words, the chosen size, the viewer */
+.pdp-off { display: grid; gap: 10px; margin-top: 20px; padding: 16px; border-radius: 22px; background: var(--aura-blush); color: var(--aura-ink); font-size: 14px; line-height: 1.45; }
+.pdp-code { display: inline-flex; align-items: center; min-height: 34px; padding: 0 12px; border-radius: 10px; box-shadow: inset 0 0 0 1.5px var(--aura-ink); background-image: none; font-size: 14px; line-height: 1; font-weight: 800; letter-spacing: 0.06em; word-break: break-all; }
+.pdp-copy { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border-radius: 999px; background: var(--aura-ink); color: var(--aura-paper); font-size: 13.5px; line-height: 1; font-weight: 700; cursor: pointer; transition: transform 300ms var(--aura-sp); }
+.pdp-copy:active { transform: scale(0.92); }
+@media (min-width: 640px) { .pdp-code, .pdp-copy { min-height: 44px; } }
+.pdp-need { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; line-height: 20px; font-weight: 700; color: var(--sag-danger); }
+.pdp-vw { touch-action: pan-y; user-select: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .pdp-need { animation: aco-open 320ms var(--aura-eo) both; }
+  .pdp-picked { display: inline-block; animation: kx-pop 420ms var(--kx-spring) backwards; }
+  .pdp-vw-ph { animation: pdp-vw-in 420ms var(--aura-eo) both; }
+  @keyframes pdp-vw-in { from { opacity: 0; transform: scale(0.965); } }
+  /* A size that is pressed dips; the chosen one lands with a spring */
+  .pdp-size.wrap > button { transition: background-color 300ms, color 300ms, box-shadow 300ms, scale 420ms var(--kx-spring); }
+  .pdp-size.wrap > button:active { scale: 0.92; }
+  .pdp-size.wrap > button[aria-pressed="true"] { animation: kx-chosen 480ms var(--kx-spring); }
 }
 
 /* ---- Aura Kinetic, bag, wishlist and the quiet pages ---- */
