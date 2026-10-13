@@ -821,6 +821,18 @@ const actions = {
         if (nextStatus === 'Cancelled' || nextStatus === 'Refunded') {
           restore = await restoreOrderStock(tx, db, data);
         }
+        // Why the store cancelled, for the store only: never put in the timeline, which the customer sees
+        if (nextStatus === 'Cancelled') {
+          update.cancelledAt = update.updatedAt;
+          update.cancelledBy = data.cancelRequest && !data.cancelRequest.handledAt ? 'customer request' : 'store';
+          const reason = cleanText(body.cancelReason, 160);
+          if (reason) update.cancelReason = reason;
+        }
+        if (nextStatus === 'Refunded') {
+          update.refundedAt = update.updatedAt;
+          const refundRef = cleanText(body.refundRef, 80);
+          if (refundRef) update.refundRef = refundRef;
+        }
       }
       if (restore) {
         restore.apply?.();

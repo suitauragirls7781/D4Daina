@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CheckCircle2, ChevronRight, Plus } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
+import { PaymentProblemsPanel, RefundsToDoPanel, refundsToDo } from './orderMoney';
 import { useRouter } from '../../context/RouterContext';
 import { AdminTab } from '../../types';
 import { isLowStock } from '../../utils/inventory';
@@ -199,16 +200,19 @@ export const AdminDashboardOverview: React.FC = () => {
     const out = count('Out of stock');
     const low = count('Low on stock');
     const waitingReviews = reviews.filter((r) => r.status === 'pending').length;
+    // Cancelled orders whose payment is still with the store (orderMoney.tsx)
+    const refunds = refundsToDo(orders).length;
     const lines: Array<{ text: string; count: number; tab: AdminTab; problem?: boolean }> = [
       { text: `Pack ${num(toPack)} ${toPack === 1 ? 'order' : 'orders'}`, count: toPack, tab: 'orders' },
       { text: `Reply to ${num(returns)} return ${returns === 1 ? 'request' : 'requests'}`, count: returns, tab: 'returns' },
       { text: `Reply to ${num(cancels)} cancellation ${cancels === 1 ? 'request' : 'requests'}`, count: cancels, tab: 'cancellations' },
+      { text: `Refund ${num(refunds)} cancelled ${refunds === 1 ? 'order' : 'orders'} that ${refunds === 1 ? 'is' : 'are'} still paid`, count: refunds, tab: 'cancellations', problem: true },
       { text: out === 1 ? '1 product is out of stock' : `${num(out)} products are out of stock`, count: out, tab: 'products', problem: true },
       { text: low === 1 ? '1 product is low on stock' : `${num(low)} products are low on stock`, count: low, tab: 'products' },
       { text: waitingReviews === 1 ? '1 review waiting for approval' : `${num(waitingReviews)} reviews waiting for approval`, count: waitingReviews, tab: 'reviews' },
     ];
     return lines.filter((line) => line.count > 0);
-  }, [attention, reviews]);
+  }, [attention, reviews, orders]);
 
   // Cash still to be collected at the door: paid cash-on-delivery orders that are not delivered, cancelled or returned
   const cashToCollect = useMemo(() => {
@@ -352,6 +356,12 @@ export const AdminDashboardOverview: React.FC = () => {
           </p>
           <button type="button" onClick={() => openAdminTab('orders')} className={`mt-2 ${adminText.link}`}>Open orders <ChevronRight className="w-3.5 h-3.5" /></button>
         </Panel>
+      </div>
+
+      {/* Money that needs a look: refunds still to be made, and payments that did not finish */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <RefundsToDoPanel id="admin-dashboard-refunds" limit={4} />
+        <PaymentProblemsPanel />
       </div>
 
       {/* 2 and 3. Who is here and what they are doing */}

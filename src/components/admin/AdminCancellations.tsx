@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
+import { CancelReasonsPanel, RefundsToDoPanel, useCancelReason } from './orderMoney';
 import { useShop } from '../../context/ShopContext';
 import { useRouter } from '../../context/RouterContext';
 import { ordersApi } from '../../lib/api';
@@ -79,7 +80,7 @@ export const AdminCancellations: React.FC = () => {
     <div className="space-y-5 max-w-5xl mx-auto">
       <PageTitle
         title="Cancellations"
-        line={<>Customers can ask to cancel a paid order until it is shipped. Their requests appear here live. Cancel the order or keep it right here; the customer sees your decision in their account and gets an email. Refunds are made by you in your payment dashboard.</>}
+        line={<>Customers can ask to cancel a paid order until it is shipped. Their requests appear here live. Cancel the order or keep it right here; the customer sees your decision in their account and gets an email. Refunds are made by you in your payment dashboard: every cancelled order that is still paid stays in “Refunds to do” until you mark it refunded.</>}
       />
 
       <KeyNumbers
@@ -91,6 +92,11 @@ export const AdminCancellations: React.FC = () => {
         ]}
       />
 
+      {/* Money first: what still has to be sent back, and why paid orders are being cancelled */}
+      <RefundsToDoPanel />
+      <CancelReasonsPanel />
+
+      <h3 className={`${adminUi.h2} pt-2`}>Requests from customers</h3>
       <div className={adminUi.chipRow} role="tablist" aria-label="Show cancellation requests">
         {chips.map((c) => (
           <button key={c.id} type="button" role="tab" aria-selected={filter === c.id} data-selected={filter === c.id} onClick={() => setFilter(c.id)} className={adminUi.chip}>
@@ -131,6 +137,7 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
   const [customerNote, setCustomerNote] = useState(order.customerNote || '');
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState<'' | 'cancel' | 'keep'>('');
+  const cancelReason = useCancelReason();
   const phone = digits(order.customerMobile);
   const paid = order.paymentStatus === 'Paid';
   const amount = `₹${Number(order.finalTotal || 0).toLocaleString('en-IN')}`;
@@ -144,11 +151,12 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
 
   // Same cancel as the order page's "Cancel order now": stock goes back and the request is closed by the server.
   const cancelOrder = async () => {
-    if (!window.confirm(`Cancel order ${order.orderNumber}? Its stock will be returned to inventory. ${paid ? `Refund ${amount} from your ${gateway} dashboard.` : notPaidNote}`)) return;
+    const reason = await cancelReason.ask(order);
+    if (reason === null) return;
     setBusy('cancel');
     try {
       // updateOrderStatus applies the order the server returns, so the card moves to Closed at once
-      await updateOrderStatus(order.orderNumber, 'Cancelled', order.trackingNumber || '', order.notes || '', { courierPartner: order.courierPartner || '', customerNote, notify });
+      await updateOrderStatus(order.orderNumber, 'Cancelled', order.trackingNumber || '', order.notes || '', { courierPartner: order.courierPartner || '', customerNote, notify, cancelReason: request.reason ? `${reason}: ${request.reason}`.slice(0, 160) : reason });
       showToast(paid ? `Order ${order.orderNumber} cancelled. Remember to refund it in ${gateway}.` : `Order ${order.orderNumber} cancelled.`, 'success');
     } catch (err: any) {
       showToast(err?.message || 'Could not cancel the order. Please try again.', 'error');
@@ -188,6 +196,7 @@ const CancelCard: React.FC<{ row: CancelRow; now: number; isNew: boolean; onOpen
 
   return (
     <article className={cardShell}>
+      {cancelReason.dialog}
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

@@ -101,7 +101,7 @@ interface AdminContextType {
     status: AdminOrderStatus,
     trackingNumber?: string,
     notes?: string,
-    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string }
+    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string; cancelReason?: string; refundRef?: string }
   ) => Promise<void>;
   updateOrderPaymentStatus: (orderNumber: string, paymentStatus: 'Paid' | 'Pending Verification' | 'Unpaid') => void;
   deleteOrder: (orderNumber: string) => Promise<void>;
@@ -437,6 +437,13 @@ export const mapOrderFromDb = (o: any): Order => {
     emailLog: Array.isArray(o.emailLog) ? o.emailLog : [],
     returnRequest: o.returnRequest || null,
     cancelRequest: o.cancelRequest || null,
+    cancelReason: o.cancelReason || '',
+    cancelledAt: o.cancelledAt || '',
+    cancelledBy: o.cancelledBy || '',
+    refundedAt: o.refundedAt || '',
+    refundRef: o.refundRef || '',
+    // What the payment window reported for an unpaid attempt (api/orders.js "pay-note")
+    payTries: Array.isArray(o.payTries) ? o.payTries : [],
   };
 };
 
@@ -1236,7 +1243,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     status: AdminOrderStatus,
     trackingNumber?: string,
     notes?: string,
-    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string }
+    extra?: { courierPartner?: string; customerNote?: string; notify?: boolean; trackingUrl?: string; expectedDeliveryDate?: string; deliveryAgentName?: string; deliveryAgentPhone?: string; cancelReason?: string; refundRef?: string }
   ) => {
     const payload: Record<string, unknown> = { orderNumber, status };
     if (trackingNumber !== undefined) payload.trackingNumber = trackingNumber;
@@ -1248,6 +1255,8 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (extra?.deliveryAgentName !== undefined) payload.deliveryAgentName = extra.deliveryAgentName;
     if (extra?.deliveryAgentPhone !== undefined) payload.deliveryAgentPhone = extra.deliveryAgentPhone;
     if (extra?.notify === false) payload.notify = false;
+    if (extra?.cancelReason) payload.cancelReason = extra.cancelReason;
+    if (extra?.refundRef) payload.refundRef = extra.refundRef;
     const result = await ordersApi<{ order: any }>('admin-update', payload);
     applyServerOrder(result.order);
   };

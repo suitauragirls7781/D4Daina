@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
+import { useCancelReason } from './orderMoney';
 import { useShop } from '../../context/ShopContext';
 import { useRouter } from '../../context/RouterContext';
 import { AlertCircle, ChevronRight, RotateCcw, Search, ShoppingBag } from 'lucide-react';
@@ -124,10 +125,13 @@ export const AdminOrders: React.FC = () => {
   const [tab, setTab] = useState<TabKey>('topack');
   const [range, setRange] = useState<RangeKey>('all');
 
+  const cancelReason = useCancelReason();
   const changeStatus = async (order: Order, next: AdminOrderStatus) => {
-    if (next === 'Cancelled' && !window.confirm(`Cancel order ${order.orderNumber}? Its stock will be returned to inventory.`)) return;
+    // Cancelling always asks why first (orderMoney.tsx); backing out changes nothing
+    const reason = next === 'Cancelled' ? await cancelReason.ask(order) : '';
+    if (reason === null) return;
     try {
-      await updateOrderStatus(order.orderNumber, next);
+      await updateOrderStatus(order.orderNumber, next, undefined, undefined, reason ? { cancelReason: reason } : undefined);
       showToast(`Order ${order.orderNumber} updated to ${next}.`, 'success');
     } catch (err: any) {
       showToast(err?.message || 'Could not update the order.', 'error');
@@ -470,6 +474,7 @@ export const AdminOrders: React.FC = () => {
         )}
       </div>
 
+      {cancelReason.dialog}
     </div>
   );
 };

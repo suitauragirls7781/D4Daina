@@ -13,6 +13,7 @@ import { formatOrderDate } from '../../utils/orderDate';
 import { EmptyState, InfoRow, OrderStatusBadge, Panel, PaymentBadge, Pill, adminUi } from './PaymentBadge';
 import { downloadInvoicePdf, invoiceDetails, shareInvoicePdf } from '../../lib/invoicePdf';
 import { PackingSlipButton } from './AdminPackingSlip';
+import { useCancelReason } from './orderMoney';
 import { orderWhatsAppLink } from './adminAlerts';
 import { WhatsAppIcon } from '../BrandIcons';
 import {
@@ -79,6 +80,8 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
   const order = orders.find((o) => o.orderNumber === orderId || o.orderNumber.endsWith(orderId));
 
+  // Asked before any cancel (orderMoney.tsx). A hook: it stays above the early returns below.
+  const cancelReason = useCancelReason();
   const [status, setStatus] = useState<AdminOrderStatus>('Processing');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [courierPartner, setCourierPartner] = useState('');
@@ -196,7 +199,9 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
       showToast('The tracking link must be a full https:// web address.', 'error');
       return;
     }
-    if (nextStatus === 'Cancelled' && order.status !== 'Cancelled' && !window.confirm('Cancel this order? Its stock will be returned to inventory. Refund the payment from your Razorpay dashboard.')) return;
+    // Cancelling always asks why first (orderMoney.tsx); backing out changes nothing
+    const reason = nextStatus === 'Cancelled' && order.status !== 'Cancelled' ? await cancelReason.ask(order) : '';
+    if (reason === null) return;
     // Shipping the order (or any later status) closes an open cancellation request on the server.
     if (cancelRequestOpen && nextStatus !== order.status && nextStatus !== 'Cancelled' && !CANCELLABLE_STATUSES.includes(nextStatus)) {
       const kept = ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered', 'Returned'].includes(nextStatus);
@@ -216,6 +221,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
         // Sent only once the saved values were read (or typed), so a failed live read never clears them.
         trackingUrl: requests || trackingUrl.trim() ? trackingUrl.trim() : undefined,
         expectedDeliveryDate: requests || expectedDate ? expectedDate : undefined,
+        ...(reason ? { cancelReason: reason } : {}),
       });
       showToast(`Order ${order.orderNumber} saved as ${nextStatus}.`, 'success');
     } catch (err: any) {
@@ -232,10 +238,11 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
   // Same cancel as choosing "Cancelled" in the form: stock goes back and the request is closed by the server.
   const handleCancelNow = async () => {
-    if (!window.confirm(`Cancel order ${order.orderNumber}? Its stock will be returned to inventory. Refund ₹${(order.payMode === 'cod' ? order.codAdvance || 0 : order.finalTotal).toLocaleString('en-IN')} from your Razorpay dashboard.`)) return;
+    const reason = await cancelReason.ask(order);
+    if (reason === null) return;
     setIsSaving(true);
     try {
-      await updateOrderStatus(order.orderNumber, 'Cancelled', trackingNumber, notes, { courierPartner, customerNote, notify: notifyCustomer });
+      await updateOrderStatus(order.orderNumber, 'Cancelled', trackingNumber, notes, { courierPartner, customerNote, notify: notifyCustomer, cancelReason: reason });
       setStatus('Cancelled');
       showToast(`Order ${order.orderNumber} cancelled. Remember to refund it in Razorpay.`, 'success');
     } catch (err: any) {
@@ -612,6 +619,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
   return (
     <div id="admin-order-details-page" className="space-y-4 sm:space-y-5 pb-10">
+      {cancelReason.dialog}
 
       {/* Top summary: which order, where it stands, and the one next step */}
       <section className="sag-glass sag-glass-strong p-4 sm:p-6">
@@ -1046,6 +1054,12 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
               </ol>
             ) : (
               <p className={small}>No steps are recorded for this order yet. It was placed {formatOrderDate(order.date)}.</p>
+            )}
+            {(order.cancelReason || order.refundedAt) && (
+              <div id="admin-order-money-notes" className="mt-4 pt-3 border-t border-line space-y-1">
+                {order.cancelReason && <p className={`${small} break-words`}><span className="font-medium text-ink">Why it was cancelled:</span> {order.cancelReason}{order.cancelledBy === 'customer request' ? ' (the customer asked)' : ''}</p>}
+                {order.refundedAt && <p className={`${small} break-words`}><span className="font-medium text-ink">Marked refunded:</span> <span className="sag-num">{new Date(order.refundedAt).toLocaleString('en-IN')}</span>{order.refundRef ? ` · refund ${order.refundRef}` : ''}</p>}
+              </div>
             )}
             {(order.payTries || []).length > 0 && (
               <div id="admin-order-pay-tries" className="mt-4 pt-3 border-t border-line">

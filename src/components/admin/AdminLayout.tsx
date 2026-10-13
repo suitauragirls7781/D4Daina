@@ -1,4 +1,5 @@
 import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
+import { refundsToDo } from './orderMoney';
 import React, { useEffect, useRef, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -115,7 +116,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
 
     { id: 'orders', label: 'Orders', route: '/admin/orders', icon: ShoppingBag, group: 'Orders', badge: pendingOrdersCount, alert: pendingOrdersCount > 0 },
     { id: 'returns', label: 'Returns & exchanges', route: '/admin/returns', icon: RotateCcw, group: 'Orders', badge: waitingReturns.length, alert: waitingReturns.length > 0 },
-    { id: 'cancellations', label: 'Cancellations', route: '/admin/cancellations', icon: XCircle, group: 'Orders', badge: waitingCancels.length, alert: waitingCancels.length > 0 },
+    { id: 'cancellations', label: 'Cancellations', route: '/admin/cancellations', icon: XCircle, group: 'Orders', badge: waitingCancels.length + refundsToDo(orders).length, alert: waitingCancels.length + refundsToDo(orders).length > 0 },
     { id: 'abandoned', label: 'Abandoned checkouts', route: '/admin/abandoned', icon: ShoppingCart, group: 'Orders' },
 
     { id: 'customers', label: 'Customers', route: '/admin/customers', icon: Users, group: 'Customers' },

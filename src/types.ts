@@ -199,6 +199,13 @@ export interface Order {
   returnEligibility?: ReturnEligibility;
   /** Customer's cancellation request (api/orders.js 'request-cancel'); closed by the admin or by a status change. The reason is not in a guest lookup. */
   cancelRequest?: { reason?: string; at: string; handledAt?: string; outcome?: 'cancelled' | 'kept'; storeNotified?: boolean } | null;
+  /** Admin only: why and when the order was cancelled, and by whom ('store', or 'customer request'). */
+  cancelReason?: string;
+  cancelledAt?: string;
+  cancelledBy?: string;
+  /** Admin only: when the order was marked refunded, and the refund's reference in the payment dashboard. */
+  refundedAt?: string;
+  refundRef?: string;
 }
 
 export type ReturnRequestType = 'return' | 'exchange';
