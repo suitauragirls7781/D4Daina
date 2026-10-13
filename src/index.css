@@ -2100,6 +2100,8 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .h3v-words { grid-area: words; display: grid; }
 .h3v-words > * { grid-area: 1 / 1; min-width: 0; }
 .h3v-sz { visibility: hidden; pointer-events: none; }
+/* The words sit on the button; what a shorter title leaves free stays above them */
+.h3v-live { align-self: end; }
 .h3v-hl { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; padding: 0.04em 0.06em 0.09em 0; font-family: var(--font-sans); font-weight: 800; letter-spacing: -0.035em; font-synthesis: none; text-wrap: balance; overflow-wrap: break-word; color: var(--fg); }
 .h3v-hl[data-z="xl"] { font-size: clamp(38px, 12.4vw, 56px); line-height: 0.95; }
 .h3v-hl[data-z="lg"] { font-size: clamp(30px, 9.2vw, 42px); line-height: 0.98; }
@@ -2131,8 +2133,11 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
   .h3v-stage { flex: 0 0 44%; min-height: 0; }
   .h3v-deck { width: min(56vh, 480px); }
   @supports (width: 1cqw) { .h3v-deck { --w: min(84cqw, calc((100cqh - 40px) * 0.8), 600px); height: min(calc(100cqh - 40px), calc(var(--w) * 1.42)); } }
-  .h3v-txt { flex: 1 1 0; align-self: center; max-width: none; margin: 0; padding: 0 clamp(0px, 3vw, 48px) 0 0; grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "lbl lbl" "words words" "cta cta" "bar segs"; }
-  .h3v-lbl { margin-bottom: 16px; }
+  /* Beside the deck the words start at a fixed height and run down from there (no room is kept for the
+     longest title: the label, the arrows and the headline's first line never move when the look changes) */
+  .h3v-txt { flex: 1 1 0; align-self: start; max-width: none; margin: clamp(36px, 11vh, 124px) 0 0; padding: 0 clamp(24px, 9vw, 150px) 0 0; grid-template-areas: "lbl bar" "segs segs" "words words" "cta cta"; }
+  .h3v-sz { display: none; }
+  .h3v-live { align-self: start; }
   .h3v-hl { -webkit-line-clamp: 4; }
   .h3v-hl[data-z="xl"] { font-size: clamp(60px, 5.8vw, 96px); line-height: 0.92; }
   .h3v-hl[data-z="lg"] { font-size: clamp(50px, 4.8vw, 80px); line-height: 0.94; }
@@ -2144,8 +2149,7 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
   .h3v-of { margin-top: 8px; font-size: 15px; }
   .h3v-cta { margin-top: 30px; gap: 28px; }
   .h3v-cta .aura-btn { flex: none; min-width: 190px; }
-  .h3v-bar { margin-top: 48px; }
-  .h3v-segs { width: 100%; max-width: 250px; margin: 48px 0 0 22px; }
+  .h3v-segs { width: 100%; margin: 16px 0 30px; gap: 6px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   /* The words of the new look arrive one after another (opacity and transform only) */

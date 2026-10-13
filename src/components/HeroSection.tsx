@@ -306,7 +306,7 @@ export const HeroSection: React.FC = () => {
     return (
       <div key={slide.id || i} className="h3v-sz" aria-hidden="true">
         <p className="h3v-hl" data-z={sh.size}>{sh.rest} <em>{sh.accent}</em></p>
-        {sw.slidePrice > 0 && <p className="h3v-pr">{rupees(sw.slidePrice)}</p>}
+        {sw.slidePrice > 0 && <p className="h3v-pr"><b>{rupees(sw.slidePrice)}</b></p>}
         {sw.onlineOffer && <p className="h3v-of">{sw.onlineOffer}</p>}
       </div>
     );
