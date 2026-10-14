@@ -2839,6 +2839,9 @@ html { background-color: var(--clay-bg); }
   --fg: #111013; --inv: #F5F2EC; --mu: #6A645E; --hl: rgba(17,16,19,.1); --ac: #B76E79; --th: #8E4C58;
   transition: background-color 300ms; }
 .aura-hd-row { height: 48px; }
+/* The bar sits in a band of the page's own colour, so nothing scrolls by in its margins */
+.aura-hd::before { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: 0; background-color: var(--bg); transition: background-color 450ms var(--aura-e); }
+.aura-hd.sm::before { bottom: 4px; }
 .aura-hd.sm .aura-hd-row { height: 44px; }
 .aura-hd-p { left: 22px; right: 22px; bottom: 3px; height: 2.5px; border-radius: 3px; background: var(--aura-drose); }
 .aura-hd[data-menu="open"] .aura-hd-bar { background-color: var(--clay-surface); color: #111013; box-shadow: var(--clay-3t); --ac: #8E4C58; }
@@ -2913,3 +2916,94 @@ html { background-color: var(--clay-bg); }
 :is(.aura-ft-ln > button, .aura-ft-so):active { box-shadow: var(--clay-pressed); }
 footer#main-footer :focus-visible { outline-color: #8E4C58; }
 /* end of the claymorphism frame */
+
+/* ---- Claymorphism: the home page (HomePage.tsx and its sections) ---- */
+/* Hero: the still photo and the other slides are clay frames */
+.hm-hero-ph { box-shadow: var(--clay-3); }
+.hm-hs-ph { box-shadow: var(--clay-2); }
+/* A kinetic band on its own strip is pressed into the page; the big words are moulded (light from the top-left) */
+.hm-mq-clay { box-shadow: inset 0 10px 18px rgba(110,84,66,.16), inset 0 -8px 14px rgba(255,255,255,.5); }
+.aura-mq-i > span:not(.o) { text-shadow: -1px -1px 0 rgba(255,255,255,.6), 2px 3px 5px rgba(110,84,66,.24); }
+.aura-mq-i > span.o { -webkit-text-stroke-color: rgba(17,16,19,.75); }
+.aura-mq-i > i { box-shadow: 1px 1px 2px rgba(110,84,66,.3); }
+/* Deal of the day: a rose clay block; the discount is moulded; the product sits on a cream card in it */
+.hm-deal { box-shadow: var(--clay-3t); }
+.hm-deal-r.aura-card { box-shadow: var(--clay-2t); border-radius: 26px; }
+.hm-deal-ph { border-radius: 20px; }
+.hm-deal-pc { text-shadow: -2px -2px 2px rgba(255,255,255,.45), 3px 4px 8px rgba(110,84,66,.24); }
+.hm-ck { background: rgba(251,248,243,.35); box-shadow: inset 3px 3px 7px rgba(120,96,80,.18), inset -3px -3px 7px rgba(255,255,255,.55); }
+/* The festive block: deep clay, its photo in a rounded frame */
+.hm-fest { box-shadow: var(--clay-3t); }
+.hm-fest-ph { border-radius: 24px; }
+/* Shop by category: pastel clay cards that stack; the arrow is an ink pebble; the photo shape has a soft rim */
+.hm-cc-in { border-radius: var(--clay-r-card); box-shadow: var(--clay-3t); }
+.hm-cc-go { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.hm-cc-ph > span { box-shadow: 6px 8px 18px rgba(110,84,66,.22), -4px -4px 10px rgba(255,255,255,.35); }
+.hm-cs-pill { background: var(--clay-surface); box-shadow: var(--clay-2t); }
+.hm-cs-pill:active { box-shadow: var(--clay-pressed); }
+/* Featured: a little more room between the clay cards */
+.hm-ed-grid { gap: 14px; }
+/* New arrivals: each style is a cream clay card in the gallery */
+.hm-gc { background: var(--clay-surface); border-radius: 30px; padding: 8px 8px 6px; box-shadow: var(--clay-2t); --fg: #111013; --inv: #F5F2EC; --mu: #6A645E; --hl: rgba(17,16,19,.14); --sa: #8E4C58; color: #111013; }
+.hm-gc-f { border-radius: 23px; }
+.hm-gc-b { padding: 10px 4px 2px; min-height: 66px; }
+.hm-gc-s { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.hm-gc-s:active { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+@media (hover: hover) { .hm-gc-s:hover { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); } }
+.hm-gc-f + button > span, .hm-gc .rounded-full.bg-surface { background: #FFFFFF; box-shadow: 2px 3px 7px rgba(17,16,19,.18), inset 1px 1px 0 #FFFFFF, inset -1px -2px 3px rgba(120,96,80,.12); }
+.hm-gc-all { background: var(--clay-surface); border-radius: 30px; box-shadow: var(--clay-2t); color: #111013; }
+.hm-hg-bar { height: 6px; border-radius: 6px; background: rgba(251,248,243,.4); box-shadow: inset 2px 2px 4px rgba(110,84,66,.22), inset -2px -2px 4px rgba(255,255,255,.55); }
+.hm-hg-bar i { border-radius: 6px; background: var(--aura-ink); }
+/* Offers: the coupon is a cream clay ticket with punched notches; its code is moulded */
+.hm-tk { background: var(--clay-surface); color: #111013; box-shadow: var(--clay-3t); border-radius: var(--clay-r-card); }
+.hm-tk::before, .hm-tk::after { box-shadow: inset 3px 3px 5px rgba(110,84,66,.22); }
+.hm-tk::before { clip-path: inset(0 0 0 50%); }
+.hm-tk::after { clip-path: inset(0 50% 0 0); }
+.hm-tk-code { text-shadow: -2px -2px 2px rgba(255,255,255,.9), 3px 4px 7px rgba(110,84,66,.28); }
+.hm-tk-copy { background: var(--aura-ink); color: var(--aura-paper); }
+/* Why shop with us (sage clay): cream icon pebbles, the shield's keyhole is the sage of the section */
+.hm-tr-ic { background: var(--clay-surface); color: #1E3A34; box-shadow: var(--clay-2t); }
+.hm-shd .s-d { fill: var(--clay-forest); }
+/* Reels: cream clay cards around the posters */
+.aura-rc { background: var(--clay-surface); color: #111013; border-radius: 30px; padding: 8px 8px 0; box-shadow: var(--clay-2t); --fg: #111013; --mu: #6A645E; }
+.aura-rc-ph { border-radius: 23px; }
+.aura-rc-ph.aura-sk, .aura-rc-ph.aura-sk:not(.ok) { background-color: #E6DFD3; }
+.aura-rc-pl { box-shadow: 2px 3px 6px rgba(110,84,66,.3), inset 1px 1px 0 rgba(255,255,255,.4); }
+/* Trust facts: the icon sits in a cream pebble */
+.aura-fact-chip { background: var(--clay-surface); color: #111013; box-shadow: var(--clay-1); }
+/* Customer reviews: the shown review's progress segment is a raised ink pebble in a trough */
+.aura-rvp { background: var(--clay-field); box-shadow: inset 1px 1px 3px rgba(120,96,80,.2), inset -1px -1px 2px rgba(255,255,255,.7); }
+.aura-rvp > i { background: var(--aura-ink); }
+.aura-rvs > b { text-shadow: -2px -2px 2px rgba(255,255,255,.6), 3px 4px 7px rgba(110,84,66,.26); }
+
+/* ---- Claymorphism: the product card and the shop page ---- */
+/* Product card: a cream clay card (26px corners), its photo set in with 20px corners */
+.aura-pc { border-radius: 26px; }
+.aura-pc-ph { border-radius: 20px; --rv-r: 20px; }
+.aura-pc[data-layout="big"] .aura-pc-ph { border-radius: 22px; --rv-r: 22px; }
+/* "Add to bag": a cream pebble on the card; under the pointer and after adding it is the ink pebble */
+.aura-pc-add { background-color: var(--clay-surface); box-shadow: var(--clay-1); transition: background-color 350ms, color 350ms, transform 300ms var(--aura-e); }
+.aura-pc-add:active { box-shadow: var(--clay-pressed); }
+.aura-pc-add.ok { box-shadow: var(--clay-ink-btn); }
+@media (hover: hover) { .aura-pc-add:hover { box-shadow: var(--clay-ink-btn); } }
+.aura-pc-pick { border-radius: 20px; background: var(--clay-field); box-shadow: var(--clay-inset); }
+/* The heart: still a white circle, now a small raised pebble */
+.aura-hrt::before { box-shadow: 2px 3px 7px rgba(17,16,19,.18), inset 1px 1px 0 #FFFFFF, inset -1px -2px 3px rgba(120,96,80,.14); }
+.aura-hrt:active::before { box-shadow: inset 2px 2px 4px rgba(120,96,80,.25); }
+.aura-pc-grid, .shop-grid { gap: 14px; }
+@media (min-width: 900px) { .aura-pc-grid, .shop-grid { gap: 22px; } }
+
+/* Shop page: the search is a sunken trough, the tools cream pebbles, the filter bar a clay ledge */
+.shop-search > input { border-color: transparent; background: var(--clay-field); box-shadow: var(--clay-inset); }
+.shop-search > input:focus { border-color: var(--sag-ink); }
+.shop-tool { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.shop-tool:active { box-shadow: var(--clay-pressed); }
+.shop-tools { padding-top: 6px; padding-bottom: 14px; }
+.shop-fbar-in { background: var(--clay-bg); border-top: 0; border-bottom: 0; box-shadow: 0 12px 18px -12px rgba(120,96,80,.4), inset 0 -1px 0 rgba(255,255,255,.8); }
+.shop-fbar-r { padding-top: 10px; padding-bottom: 10px; }
+.shop-fbtn { box-shadow: var(--clay-ink-btn); }
+.shop-sort { border: 0; background: var(--clay-surface); box-shadow: var(--clay-1); }
+.shop-switch { background: var(--clay-field); box-shadow: var(--clay-inset); }
+.shop-switch > i { box-shadow: 2px 2px 4px rgba(120,96,80,.3), inset 1px 1px 0 #FFFFFF; }
+.shop-orb { box-shadow: var(--clay-ink-btn), 0 10px 22px rgba(17,16,19,.18); }
+/* end of the claymorphism home, product card and shop */

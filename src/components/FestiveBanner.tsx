@@ -135,7 +135,7 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
     : [];
 
   return (
-    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`hm-fest aura-blk aura-dk bg-dark ${className}`}>
+    <section id="festive-banner" aria-labelledby="festive-banner-title" className={`hm-fest aura-blk clay-t-deep ${className}`}>
       {round.imageUrl ? (
         // The owner's own photo (often a banner with words on it): shown whole at its own shape, never cut and
         // never moving. On desktop it sits at the right, centred beside the words.
@@ -179,7 +179,7 @@ export const FestiveBanner: React.FC<{ variant?: 'full' | 'strip'; className?: s
         {/* The clock is drawn only in the browser, after mounting; its space is kept so the panel does not jump */}
         <div role="timer" aria-label={spoken} className="mt-3 flex min-h-[76px] gap-2 lg:max-w-[360px]">
           {boxes.map(([label, value]) => (
-            <div key={label} aria-hidden="true" className="aura-hl flex min-w-0 flex-1 flex-col items-center rounded-[18px] border pb-2.5 pt-3">
+            <div key={label} aria-hidden="true" className="hm-ck flex min-w-0 flex-1 flex-col items-center rounded-[18px] pb-2.5 pt-3">
               <Odometer value={value} roll={false} className="text-[28px] font-extrabold" />
               <span className="aura-mu mt-0.5 text-[13px] leading-4">{label}</span>
             </div>

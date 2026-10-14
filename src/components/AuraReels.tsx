@@ -201,7 +201,7 @@ export const AuraReelsSection: React.FC = () => {
                   type="button"
                   onClick={(e) => open(i, e.currentTarget)}
                   aria-label={`Watch reel${reel.caption ? `: ${reel.caption}` : ''}${product ? ` (${product.name})` : ''}`}
-                  className="aura-rc aura-dk group"
+                  className="aura-rc group"
                 >
                   {/* Nothing sits on the poster; the play button, caption and product are below it */}
                   <span className="aura-rc-ph aura-sk">

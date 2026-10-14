@@ -144,7 +144,7 @@ export const KineticBand: React.FC<{
   if (lines.length === 0) return null;
   const Tag = (bare ? 'div' : 'section') as 'section';
   return (
-    <Tag ref={ref} id={id} role={bare ? 'group' : undefined} aria-label={label} data-th={bare || solid ? undefined : theme} className={`${still ? 'hm-mq-still' : 'aura-mq'} ${solid && !bare ? 'aura-dk bg-dark' : ''} ${className}`}>
+    <Tag ref={ref} id={id} role={bare ? 'group' : undefined} aria-label={label} data-th={bare || solid ? undefined : theme} className={`${still ? 'hm-mq-still' : 'aura-mq'} ${solid && !bare ? 'clay-t-deep hm-mq-clay' : ''} ${className}`}>
       {still ? base.map((words, r) => (
         <p key={r} className="aura-mq-i">
           {words.map((word, i) => (
@@ -546,7 +546,7 @@ export const OfferBanner: React.FC = () => {
       <div className="mx-auto w-full max-w-[640px]">
         <AuraTitle id="offer-banner-title" label="Offers live now" title={<span className="break-words">{headline}</span>} size="lg" className="mb-7" />
         {bestCoupon && (
-          <div data-rv className="hm-tk aura-dk">
+          <div data-rv className="hm-tk clay-t-surface">
             <p className="aura-lbl">Coupon code</p>
             <p ref={codeLine} className={`hm-tk-code ${written ? 'wr' : ''}`} style={{ '--n': Math.max(4, code.length) } as React.CSSProperties}>
               <span className="sr-only">{code}</span>

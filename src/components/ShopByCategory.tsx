@@ -8,7 +8,7 @@ import { AuraTitle, Icon, clamp, setVar, useNoPin, useScrollFx } from '../aura';
 // How many categories become large stacking cards; the rest follow as a row of pills
 const STACK = 6;
 // Each card's own colour, in turn: ink, rose, white, forest, sand (token classes; the text colour follows)
-const CARD_FILL = ['aura-dk bg-dark', 'aura-on-rose bg-accent', 'aura-lt bg-surface', 'aura-dk bg-ok', 'aura-lt bg-sunken-deep'];
+const CARD_FILL = ['clay-t-rose', 'clay-t-surface', 'clay-t-forest', 'clay-t-sand', 'clay-t-deep'];
 // ... and the shape of its photo: arch, circle, round-cornered, leaf, reverse arch
 const PHOTO_SHAPE = ['hm-m0', 'hm-m1', 'hm-m2', 'hm-m3', 'hm-m4'];
 

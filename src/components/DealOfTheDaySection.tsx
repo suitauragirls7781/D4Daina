@@ -110,9 +110,9 @@ export const DealOfTheDaySection: React.FC = () => {
         href={`/product/${product.id}`}
         onClick={openProduct}
         data-rv="card"
-        className="hm-deal aura-blk aura-dk bg-dark"
+        className="hm-deal aura-blk clay-t-rose"
       >
-        {/* The ink side: the label and the real discount in very large type (the price when there is no discount) */}
+        {/* The rose clay side: the label and the real discount in very large type (the price when there is no discount) */}
         <span className="hm-deal-l">
           <span className="aura-lbl">Deal of the day</span>
           {discountPercent > 0 ? (
@@ -127,7 +127,7 @@ export const DealOfTheDaySection: React.FC = () => {
               <span aria-hidden="true" className="aura-lbl block">Ends in</span>
               <span aria-hidden="true" className="mt-2 grid max-w-[300px] grid-cols-4 gap-1.5">
                 {clockParts.map(([label, value]) => (
-                  <span key={label} className="aura-hl flex min-w-0 flex-col items-center rounded-[16px] border py-2.5">
+                  <span key={label} className="hm-ck flex min-w-0 flex-col items-center rounded-[16px] py-2.5">
                     <Odometer value={two(value)} roll={false} className="text-[22px] font-extrabold" />
                     <span className="aura-mu mt-0.5 text-[13px] leading-4">{label}</span>
                   </span>
