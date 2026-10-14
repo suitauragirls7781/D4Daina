@@ -16,7 +16,9 @@ import {
   EyeOff,
   LogOut,
   Send,
-  Loader2
+  Loader2,
+  Search,
+  ChevronRight
 } from 'lucide-react';
 import { StoreSettings, PaymentGatewaySettings } from '../../types';
 import { AdminPaymentGateways, CheckRow, Panel, Pill, SaveBar, SwitchRow, Tile, Tiles, kit } from './AdminPaymentGateways';
@@ -46,6 +48,33 @@ const SECTIONS: Array<{ id: string; label: string; tab?: SettingsTab }> = [
   { id: 'settings-security', label: 'Login & security', tab: 'security' },
   { id: 'settings-data', label: 'Where data is kept', tab: 'database' },
 ];
+
+/** For "Find a setting": words people may type, and what changes on the site when the section is saved. */
+const SECTION_FIND: Record<string, { words: string; site: string }> = {
+  'settings-store': { words: 'name shop email phone whatsapp address instagram facebook contact tagline social', site: 'Your name, phone, email and links in the footer, the contact page, emails and WhatsApp buttons.' },
+  'settings-announcement': { words: 'announcement top line banner message header strip', site: 'The line under the header on every page.' },
+  'settings-delivery': { words: 'shipping delivery charge free days courier processing', site: 'The shipping charge in the bag and at checkout, the free-shipping amount and the delivery days shown on product pages.' },
+  'settings-prepaid': { words: 'prepaid online discount upi percent payment save', site: 'The "extra off with online payment" lines on product pages, the bag and checkout.' },
+  'settings-cod': { words: 'cod cash on delivery charge advance', site: 'Whether checkout offers cash on delivery, and the amount paid online to confirm it.' },
+  'settings-emails': { words: 'email brevo reminder abandoned review request test mail', site: 'Which automatic emails customers get (nothing changes on the pages).' },
+  'settings-checkout': { words: 'minimum maximum order coupons cancel cancellation window rules', site: 'The smallest and largest order allowed, whether coupon codes work and how long customers can cancel.' },
+  'settings-invoice': { words: 'invoice gst gstin legal name prefix bill tax', site: 'What is printed on the invoice customers download.' },
+  'settings-payment': { words: 'razorpay payu gateway payment keys webhook upi card', site: 'Which payment companies checkout uses.' },
+  'settings-security': { words: 'password pin login security admin address slug session sign out', site: 'Only the admin sign-in (shoppers see nothing).' },
+  'settings-data': { words: 'database data reset collections backup', site: 'Nothing on the site; this is the record of where data lives.' },
+};
+/** Which section each store setting belongs to, for the list of changes that are not saved yet. */
+const FIELD_SECTION: Record<string, string> = {
+  storeName: 'settings-store', tagline: 'settings-store', logoText: 'settings-store', storeEmail: 'settings-store', phone: 'settings-store', whatsapp: 'settings-store',
+  address: 'settings-store', instagramUrl: 'settings-store', facebookUrl: 'settings-store', twitterUrl: 'settings-store',
+  announcementText: 'settings-announcement', announcementActive: 'settings-announcement',
+  shippingCharge: 'settings-delivery', freeShippingThreshold: 'settings-delivery', processingDays: 'settings-delivery', deliveryMinDays: 'settings-delivery', deliveryMaxDays: 'settings-delivery',
+  prepaidDiscount: 'settings-prepaid', prepaidPercent: 'settings-prepaid', prepaidMinPrice: 'settings-prepaid',
+  codEnabled: 'settings-cod', codCharge: 'settings-cod',
+  abandonedReminders: 'settings-emails', reviewRequests: 'settings-emails',
+  minOrderAmount: 'settings-checkout', maxOrderAmount: 'settings-checkout', couponsEnabled: 'settings-checkout', cancellationWindowHours: 'settings-checkout',
+  legalName: 'settings-invoice', gstin: 'settings-invoice', invoicePrefix: 'settings-invoice', invoiceAddress: 'settings-invoice', invoiceNote: 'settings-invoice',
+};
 
 /** The store's collections, as listed in "Where data is kept". */
 const COLLECTIONS: Array<{ name: string; state: string; fields: string }> = [
@@ -95,6 +124,7 @@ export const AdminSettings: React.FC = () => {
   const [storeForm, setStoreForm] = useState<StoreSettings>(storeSettings);
   const [payForm, setPayForm] = useState<PaymentGatewaySettings>(paymentSettings);
   const [activeTab, setActiveTab] = useState<string>('');
+  const [find, setFind] = useState('');
 
   useEffect(() => setStoreForm(storeSettings), [storeSettings]);
   useEffect(() => setPayForm(paymentSettings), [paymentSettings]);
@@ -279,6 +309,16 @@ export const AdminSettings: React.FC = () => {
   // What the store has saved right now (the fields below may hold changes not saved yet)
   const saved = storeSettings;
   const storeUnsaved = JSON.stringify(storeForm) !== JSON.stringify(storeSettings);
+  // The sections with changes that are not saved yet, in page order
+  const changedSections = storeUnsaved
+    ? SECTIONS.filter((section) => Object.keys({ ...storeSettings, ...storeForm }).some((key) => FIELD_SECTION[key] === section.id
+      && JSON.stringify((storeForm as any)[key] ?? null) !== JSON.stringify((storeSettings as any)[key] ?? null)))
+    : [];
+  // "Find a setting": the sections whose name, words or help match what was typed
+  const findText = find.trim().toLowerCase();
+  const foundSections = findText
+    ? SECTIONS.filter((section) => `${section.label} ${SECTION_FIND[section.id]?.words || ''} ${SECTION_FIND[section.id]?.site || ''}`.toLowerCase().includes(findText))
+    : SECTIONS;
   const savedPercent = Number(saved.prepaidPercent) || 0;
   const savedFlat = Number(saved.prepaidDiscount) || 0;
   const prepaidText = savedPercent && savedFlat ? `${savedPercent}% + ${rupees(savedFlat)}` : savedPercent ? `${savedPercent}%` : savedFlat ? rupees(savedFlat) : 'Off';
@@ -304,10 +344,32 @@ export const AdminSettings: React.FC = () => {
         <Tile label="Coupons" value={saved.couponsEnabled !== false ? 'On' : 'Off'} note={saved.couponsEnabled !== false ? 'Codes work in the bag' : 'Every code is refused'} />
       </Tiles>
 
-      {/* In-page index */}
+      {/* In-page index, with "Find a setting" */}
       <nav aria-label="Settings sections" className={`${kit.panel} !py-4`}>
-        <p className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted">On this page</p>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <p className="text-xs leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted">On this page</p>
+          <div className="relative sm:w-72">
+            <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+            <input type="search" value={find} onChange={(e) => setFind(e.target.value)} placeholder="Find a setting, e.g. shipping" aria-label="Find a setting" className="sag-input h-11 pl-10" />
+          </div>
+        </div>
+        {findText && (
+          <ul className="mt-3 divide-y divide-line" aria-live="polite">
+            {foundSections.length === 0 && <li className="py-3 text-sm text-ink-muted">No setting matches "{find.trim()}". Try another word, like delivery, coupon or invoice.</li>}
+            {foundSections.map((section) => (
+              <li key={section.id}>
+                <button type="button" onClick={() => openSection(section.id)} className="w-full min-h-12 py-2.5 flex items-center justify-between gap-3 text-left cursor-pointer hover:bg-sunken rounded-[12px] px-2 -mx-2">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-ink">{section.label}</span>
+                    <span className="block text-[13px] leading-[18px] text-ink-muted">Changes on the site: {SECTION_FIND[section.id]?.site}</span>
+                  </span>
+                  <ChevronRight className="w-4 h-4 shrink-0 text-ink-muted" aria-hidden="true" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className={`mt-3 flex flex-wrap gap-2 ${findText ? 'hidden' : ''}`}>
           {SECTIONS.map((section) => (
             <button
               key={section.id}
@@ -727,7 +789,13 @@ export const AdminSettings: React.FC = () => {
 
         <SaveBar
           note={noteLine('general') || (storeUnsaved
-            ? <span className="font-medium text-brand">You have changes that are not saved yet.</span>
+            ? <span className="font-medium text-brand">
+                Not saved yet: {changedSections.length
+                  ? changedSections.map((section, i) => (
+                    <React.Fragment key={section.id}>{i > 0 && ', '}<button type="button" onClick={() => openSection(section.id)} className="underline underline-offset-2 cursor-pointer">{section.label}</button></React.Fragment>
+                  ))
+                  : 'your changes'}.
+              </span>
             : 'Saves everything from Store details to Invoice.')}
         >
           <button type="submit" disabled={busy !== ''} className={kit.primary}>
