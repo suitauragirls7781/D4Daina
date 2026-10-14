@@ -31,6 +31,35 @@ import { AdminDealOfTheDay } from './admin/AdminDealOfTheDay';
 import { AdminPaymentGateways } from './admin/AdminPaymentGateways';
 import { AdminUsage } from './admin/AdminUsage';
 import { AdminReports } from './admin/AdminReports';
+// The admin's own look (crisp, not the storefront's clay); loaded only with the admin
+import './admin/adminShell.css';
+
+/**
+ * One admin page that breaks shows a plain message with a way out, and the rest of the panel (the menu, the top
+ * bar, the other pages) keeps working. The page is tried again whenever the address changes.
+ */
+class AdminPageBoundary extends React.Component<{ resetKey: string; children: React.ReactNode }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  componentDidCatch(error: Error) { console.error('Admin page error:', error); }
+  componentDidUpdate(prev: { resetKey: string }) {
+    if (prev.resetKey !== this.props.resetKey && this.state.error) this.setState({ error: null });
+  }
+  render() {
+    if (!this.state.error) return this.props.children;
+    return (
+      <div role="alert" id="admin-page-error" className="sag-glass px-5 py-10 sm:px-8 text-center">
+        <p className="text-[11px] leading-4 font-bold uppercase tracking-[0.12em] text-danger">This page had a problem</p>
+        <h2 className="mt-1 font-display text-[24px] leading-8 text-ink">Something went wrong while showing this page</h2>
+        <p className="mt-2 text-sm leading-5 text-ink-muted max-w-md mx-auto">Nothing was changed or lost. Try again, or open another page from the menu. If it keeps happening, note what you pressed just before.</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <button type="button" onClick={() => this.setState({ error: null })} className="sag-btn-primary h-11 px-5 text-sm">Try again</button>
+          <button type="button" onClick={() => window.location.reload()} className="sag-btn-outline h-11 px-5 text-sm">Reload the admin</button>
+        </div>
+      </div>
+    );
+  }
+}
 
 export const AdminDashboardPage: React.FC = () => {
   const { isAdminLoggedIn, adminSessionChecked, adminTab, securityConfig } = useAdmin();
@@ -161,7 +190,9 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <AdminLayout>
-      {renderSubView()}
+      <AdminPageBoundary resetKey={currentPath}>
+        {renderSubView()}
+      </AdminPageBoundary>
     </AdminLayout>
   );
 };
