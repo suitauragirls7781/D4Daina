@@ -3,8 +3,8 @@ import { collection, getDocs } from 'firebase/firestore';
 import { adminDb as db } from '../../lib/firebase';
 import { useAdmin } from '../../context/AdminContext';
 import { useRouter } from '../../context/RouterContext';
-import { ChevronDown, ChevronRight, Download, Loader2, Mail, Phone, RefreshCw, Search, Users } from 'lucide-react';
-import { EmptyState, KeyNumbers, OrderStatusBadge, PageTitle, Pill, adminUi } from './PaymentBadge';
+import { ChevronDown, ChevronRight, Download, Loader2, Mail, MapPin, MessageCircle, Phone, RefreshCw, Search, Users } from 'lucide-react';
+import { EmptyState, KeyNumbers, OrderStatusBadge, PageTitle, PaymentBadge, Pill, adminUi } from './PaymentBadge';
 import { formatOrderDate } from '../../utils/orderDate';
 import type { Order } from '../../types';
 
@@ -19,8 +19,31 @@ type CustomerRow = {
   spent: number;
   lastOrder: string;
   lastOrderNumber: string;
-  /** The customer's paid (or refunded) orders, the ones counted in `orders`. */
+  /** Every order the customer placed (paid or not), newest first. */
   orderList: Order[];
+  /** Paid orders by how they were paid. */
+  cod: number;
+  prepaid: number;
+  /** Orders that were cancelled (paid or not). */
+  cancelled: number;
+  /** Orders placed but never paid. */
+  unpaid: number;
+  city: string;
+};
+
+type Segment = 'all' | 'repeat' | 'once' | 'never' | 'high';
+const SEGMENTS: Array<{ id: Segment; label: string; line: string }> = [
+  { id: 'all', label: 'Everyone', line: 'Accounts and everyone who placed an order' },
+  { id: 'repeat', label: 'Repeat buyers', line: 'Two or more paid orders' },
+  { id: 'once', label: 'Bought once', line: 'Exactly one paid order' },
+  { id: 'never', label: 'Never paid', line: 'Signed in or started an order, but no paid order yet' },
+  { id: 'high', label: 'High value', line: 'The top 10% of buyers by money spent' },
+];
+/** An Indian mobile as 10 digits ('' when it is not one). */
+const mobile10 = (value: string) => {
+  const digits = String(value || '').replace(/\D/g, '');
+  const last = digits.length > 10 && digits.startsWith('91') ? digits.slice(-10) : digits;
+  return /^[6-9]\d{9}$/.test(last) ? last : '';
 };
 
 const formatDate = (value: string) => {
@@ -40,6 +63,7 @@ export const AdminCustomers: React.FC = () => {
   const [query, setQuery] = useState('');
   // The customer whose orders are open in the list ('' = none)
   const [openEmail, setOpenEmail] = useState('');
+  const [segment, setSegment] = useState<Segment>('all');
 
   const load = async () => {
     setLoading(true);
@@ -75,46 +99,86 @@ export const AdminCustomers: React.FC = () => {
         lastOrder: '',
         lastOrderNumber: '',
         orderList: [],
+        cod: 0, prepaid: 0, cancelled: 0, unpaid: 0, city: '',
       });
     });
-    orders
-      .filter((o) => o.paymentStatus === 'Paid' || o.paymentStatus === 'Refunded')
-      .forEach((o) => {
+    orders.forEach((o) => {
         const email = String(o.customerEmail || '').toLowerCase();
         if (!email) return;
         const row = map.get(email) || {
           email, name: o.customerName || '', phone: o.customerMobile || '', createdAt: '', lastLoginAt: '',
           hasAccount: false, orders: 0, spent: 0, lastOrder: '', lastOrderNumber: '', orderList: [],
+          cod: 0, prepaid: 0, cancelled: 0, unpaid: 0, city: '',
         };
-        row.orders += 1;
         row.orderList.push(o);
-        if (o.status !== 'Cancelled' && o.status !== 'Refunded' && o.paymentStatus === 'Paid') row.spent += o.finalTotal;
+        const paid = o.paymentStatus === 'Paid' || o.paymentStatus === 'Refunded';
+        if (o.status === 'Cancelled') row.cancelled += 1;
+        if (paid) {
+          row.orders += 1;
+          if (o.payMode === 'cod') row.cod += 1; else row.prepaid += 1;
+          if (o.status !== 'Cancelled' && o.status !== 'Refunded' && o.paymentStatus === 'Paid') row.spent += o.finalTotal;
+          if (String(o.date) > row.lastOrder) {
+            row.lastOrder = String(o.date);
+            row.lastOrderNumber = o.orderNumber;
+          }
+        } else {
+          row.unpaid += 1;
+        }
         if (!row.name) row.name = o.customerName || '';
         if (!row.phone) row.phone = o.customerMobile || '';
-        if (String(o.date) > row.lastOrder) {
-          row.lastOrder = String(o.date);
-          row.lastOrderNumber = o.orderNumber;
-        }
+        const city = String(o.deliveryAddress?.city || '').trim();
+        if (city && (!row.city || paid)) row.city = city;
         map.set(email, row);
       });
     map.forEach((row) => row.orderList.sort((a, b) => String(b.date).localeCompare(String(a.date))));
     return [...map.values()].sort((a, b) => (b.lastOrder || b.createdAt).localeCompare(a.lastOrder || a.createdAt));
   }, [accounts, orders]);
 
+  // "High value": the top 10% of buyers by money spent (at least one buyer), so it follows the store's own numbers
+  const highLine = useMemo(() => {
+    const spends = rows.filter((r) => r.spent > 0).map((r) => r.spent).sort((a, b) => b - a);
+    if (!spends.length) return Infinity;
+    return spends[Math.max(0, Math.ceil(spends.length * 0.1) - 1)];
+  }, [rows]);
+  const inSegment = (row: CustomerRow, seg: Segment) => {
+    if (seg === 'repeat') return row.orders > 1;
+    if (seg === 'once') return row.orders === 1;
+    if (seg === 'never') return row.orders === 0;
+    if (seg === 'high') return row.spent > 0 && row.spent >= highLine;
+    return true;
+  };
   const filtered = rows.filter((row) => {
     const q = query.trim().toLowerCase();
-    return !q || row.email.includes(q) || row.name.toLowerCase().includes(q) || row.phone.includes(q);
+    return inSegment(row, segment) && (!q || row.email.includes(q) || row.name.toLowerCase().includes(q) || row.phone.includes(q) || row.city.toLowerCase().includes(q));
   });
+  const whatsApp = (row: CustomerRow, compact = false) => {
+    const number = mobile10(row.phone);
+    if (!number) return null;
+    const first = (row.name || '').trim().split(/\s+/)[0] || '';
+    const text = `${first ? `Namaste ${first}!` : 'Namaste!'} This is Suit Aura Girls.`;
+    return (
+      <a href={`https://wa.me/91${number}?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
+        aria-label={`Message ${row.name || row.email} on WhatsApp`} title="Message on WhatsApp" className={compact ? `${adminUi.outlineSmall} shrink-0 !w-10 !px-0` : `${adminUi.outlineSmall} shrink-0`}>
+        <MessageCircle className="w-4 h-4" aria-hidden="true" />{!compact && " WhatsApp"}
+      </a>
+    );
+  };
+  /** A short line of what the customer did, in plain words, from their real orders. */
+  const profileLine = (row: CustomerRow) => [
+    row.orders > 0 ? `${row.prepaid} paid online · ${row.cod} cash on delivery` : '',
+    row.cancelled > 0 ? `${row.cancelled} cancelled` : '',
+    row.unpaid > 0 ? `${row.unpaid} not paid` : '',
+  ].filter(Boolean).join(' · ');
 
   const exportCsv = () => {
-    const header = ['Name', 'Email', 'Phone', 'Account', 'Paid orders', 'Total spent', 'Last order', 'Joined'];
-    const lines = filtered.map((r) => [r.name, r.email, r.phone, r.hasAccount ? 'Yes' : 'Guest', r.orders, Math.round(r.spent), formatDate(r.lastOrder), formatDate(r.createdAt)]
+    const header = ['Name', 'Email', 'Phone', 'City', 'Account', 'Paid orders', 'Paid online', 'Cash on delivery', 'Cancelled', 'Not paid', 'Total spent', 'Last order', 'Joined'];
+    const lines = filtered.map((r) => [r.name, r.email, r.phone, r.city, r.hasAccount ? 'Yes' : 'Guest', r.orders, r.prepaid, r.cod, r.cancelled, r.unpaid, Math.round(r.spent), formatDate(r.lastOrder), formatDate(r.createdAt)]
       .map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','));
     const blob = new Blob([[header.join(','), ...lines].join('\n')], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `suitauragirls-customers-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `suitauragirls-customers-${segment === 'all' ? '' : `${segment}-`}${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -130,7 +194,7 @@ export const AdminCustomers: React.FC = () => {
     </Pill>
   );
   const toggleOrders = (row: CustomerRow) => setOpenEmail((current) => (current === row.email ? '' : row.email));
-  const ordersButton = (row: CustomerRow, className = '') => row.orders > 0 ? (
+  const ordersButton = (row: CustomerRow, className = '') => row.orderList.length > 0 ? (
     <button
       type="button"
       onClick={() => toggleOrders(row)}
@@ -138,10 +202,10 @@ export const AdminCustomers: React.FC = () => {
       aria-controls={`customer-orders-${row.email}`}
       className={`${adminUi.outlineSmall} ${className}`}
     >
-      {openEmail === row.email ? 'Hide orders' : `View orders (${row.orders})`}
+      {openEmail === row.email ? 'Hide orders' : `View orders (${row.orderList.length})`}
       <ChevronDown className={`w-4 h-4 transition-transform ${openEmail === row.email ? 'rotate-180' : ''}`} aria-hidden="true" />
     </button>
-  ) : <span className="text-[13px] text-ink-muted">No paid orders</span>;
+  ) : <span className="text-[13px] text-ink-muted">No orders</span>;
 
   /** The customer's paid orders, newest first; each one opens the order page. */
   const ordersList = (row: CustomerRow) => (
@@ -156,6 +220,8 @@ export const AdminCustomers: React.FC = () => {
             <span className={`${adminUi.link} text-sm font-semibold sag-num`}>{o.orderNumber}</span>
             <span className="text-ink-muted">{formatOrderDate(o.date)}</span>
             <OrderStatusBadge status={o.status} />
+            <PaymentBadge order={o} />
+            {o.payMode === 'cod' && <span className="text-ink-muted">Cash on delivery</span>}
             <span className="ml-auto text-sm font-semibold text-ink sag-num inline-flex items-center gap-1">
               {inr(Number(o.finalTotal) || 0)} <ChevronRight className="w-4 h-4 text-ink-muted" aria-hidden="true" />
             </span>
@@ -169,7 +235,7 @@ export const AdminCustomers: React.FC = () => {
     <div id="admin-customers-page" className="space-y-5">
       <PageTitle
         title={<>Customers <span className="font-sans text-ink-muted font-normal text-lg sag-num">({rows.length})</span></>}
-        line="Everyone who signed in with their email, plus guests who have paid for an order. See what each one bought and how much they spent."
+        line="Everyone who signed in or placed an order, as profiles: what they bought, how they paid, what they spent. Pick a group, then message or download it."
         actions={
           <>
             <button onClick={load} className={`${adminUi.outline} flex-1 sm:flex-none`}>
@@ -185,12 +251,26 @@ export const AdminCustomers: React.FC = () => {
       <KeyNumbers
         label="Customers at a glance"
         items={[
-          { label: 'All customers', value: rows.length, note: 'Accounts and paying guests' },
+          { label: 'All customers', value: rows.length, note: 'Accounts and everyone who ordered' },
           { label: 'With account', value: accountCount, note: 'Signed in with their email' },
           { label: 'Have paid', value: buyerCount, note: 'At least one paid order' },
           { label: 'Bought again', value: repeatCount, note: 'Two or more paid orders' },
         ]}
       />
+
+      <div role="group" aria-label="Customer groups" className="flex flex-nowrap gap-2 max-w-full overflow-x-auto sag-scroll-x">
+        {SEGMENTS.map((s) => (
+          <button key={s.id} type="button" aria-pressed={segment === s.id} onClick={() => setSegment(s.id)} title={s.line}
+            className="sag-chip h-11 px-4 shrink-0 whitespace-nowrap gap-1.5 text-sm">
+            {s.label} <span className="sag-num opacity-80">{rows.filter((r) => inSegment(r, s.id)).length}</span>
+          </button>
+        ))}
+      </div>
+      <p className="-mt-2 text-[13px] leading-[18px] text-ink-muted">
+        {SEGMENTS.find((s) => s.id === segment)?.line}
+        {segment === 'high' && Number.isFinite(highLine) ? ` (spent ${inr(highLine)} or more).` : '.'}
+        {filtered.length > 0 && ' Export CSV downloads just this group.'}
+      </p>
 
       <div className="relative">
         <Search className="w-[18px] h-[18px] text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -199,7 +279,7 @@ export const AdminCustomers: React.FC = () => {
           onChange={(e) => setQuery(e.target.value)}
           inputMode="search"
           aria-label="Search customers"
-          placeholder="Search by name, email or phone"
+          placeholder="Search by name, email, phone or city"
           className={adminUi.search}
         />
       </div>
@@ -238,9 +318,11 @@ export const AdminCustomers: React.FC = () => {
                       <p className="text-[15px] leading-5 font-semibold text-ink truncate">{row.name || '—'}</p>
                       {accountBadge(row)}
                     </div>
-                    <p className="text-xs leading-4 text-ink-muted">Joined {formatDate(row.createdAt)}</p>
+                    <p className="text-xs leading-4 text-ink-muted">{row.city ? <><MapPin className="inline w-3 h-3 -mt-0.5" aria-hidden="true" /> {row.city} · </> : ''}{row.createdAt ? `Joined ${formatDate(row.createdAt)}` : 'Guest'}</p>
                   </div>
+                  {whatsApp(row)}
                 </div>
+                {profileLine(row) && <p className="mt-2 text-[13px] leading-[18px] text-ink-muted">{profileLine(row)}</p>}
                 <dl className="mt-3 grid grid-cols-3 gap-2 rounded-[16px] bg-page p-3">
                   <div><dt className="text-xs leading-4 text-ink-muted">Paid orders</dt><dd className="mt-0.5 text-lg leading-6 font-semibold text-ink sag-num">{row.orders}</dd></div>
                   <div><dt className="text-xs leading-4 text-ink-muted">Spent</dt><dd className="mt-0.5 text-lg leading-6 font-semibold text-ink sag-num">{inr(row.spent)}</dd></div>
@@ -260,7 +342,7 @@ export const AdminCustomers: React.FC = () => {
                   <a href={`mailto:${row.email}`} className="min-h-11 flex items-center gap-2.5 text-ink break-all"><Mail className="w-4 h-4 shrink-0 text-ink-muted" />{row.email}</a>
                   {row.phone && <a href={`tel:+91${row.phone}`} className="min-h-11 flex items-center gap-2.5 text-ink border-t border-line sag-num"><Phone className="w-4 h-4 shrink-0 text-ink-muted" />+91 {row.phone}</a>}
                 </div>
-                {row.orders > 0 && (
+                {row.orderList.length > 0 && (
                   <div className="pt-2.5 border-t border-line">
                     {ordersButton(row, 'w-full')}
                     {openEmail === row.email && <div className="mt-2">{ordersList(row)}</div>}
@@ -294,7 +376,8 @@ export const AdminCustomers: React.FC = () => {
                             <span className={`w-9 h-9 ${adminUi.avatar}`} aria-hidden="true">{initial(row)}</span>
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-ink truncate">{row.name || '—'}</p>
-                              <p className="text-xs text-ink-muted">Joined {formatDate(row.createdAt)}</p>
+                              <p className="text-xs text-ink-muted">{row.city ? `${row.city} · ` : ''}{row.createdAt ? `Joined ${formatDate(row.createdAt)}` : 'Guest'}</p>
+                              {profileLine(row) && <p className="text-xs text-ink-muted">{profileLine(row)}</p>}
                             </div>
                           </div>
                         </td>
@@ -313,9 +396,9 @@ export const AdminCustomers: React.FC = () => {
                             </button>
                           ) : null}
                         </td>
-                        <td className={`${adminUi.td} pr-5 text-right whitespace-nowrap`}>{ordersButton(row)}</td>
+                        <td className={`${adminUi.td} pr-5 text-right whitespace-nowrap`}><div className="inline-flex items-center gap-2">{whatsApp(row, true)}{ordersButton(row)}</div></td>
                       </tr>
-                      {openEmail === row.email && row.orders > 0 && (
+                      {openEmail === row.email && row.orderList.length > 0 && (
                         <tr>
                           <td colSpan={7} className="px-5 py-2 bg-sunken">
                             {ordersList(row)}
