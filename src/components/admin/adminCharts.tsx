@@ -3,21 +3,20 @@ import React, { useEffect, useId, useMemo, useState } from 'react';
 /**
  * The admin's own charts, drawn with plain SVG and HTML (no chart package). Every chart takes real numbers
  * only: a value of `null` means "no data" and is drawn as a gap, never as 0. Ink is the main series, a quiet
- * dashed line the period before, rose the one highlighted mark. Motion is a single draw-in of the line, left
- * out with reduced motion. Each chart carries its numbers in words too (title, tooltip, aria-live line).
+ * dashed line the period before, rose the one highlighted mark. Motion is one fade-in of the lines and one
+ * grow of the bars (opacity and transform only), left out with reduced motion. Each chart carries its numbers
+ * in words too (title, tooltip, aria-live line).
  */
 
 // ---------------------------------------------------------------- shared bits
 
-/** The one animation the charts use (the line drawing in once), with reduced motion respected. */
+/** The charts' only animations, with reduced motion respected. */
 const ChartStyle = () => (
   <style>{`
     @media (prefers-reduced-motion: no-preference) {
-      .a2-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: a2-draw 900ms cubic-bezier(.2,.7,.2,1) forwards; }
       .a2-fade { opacity: 0; animation: a2-fade 700ms ease-out 200ms forwards; }
       .a2-grow { transform-origin: left center; transform: scaleX(0); animation: a2-grow 700ms cubic-bezier(.2,.7,.2,1) forwards; }
     }
-    @keyframes a2-draw { to { stroke-dashoffset: 0; } }
     @keyframes a2-fade { to { opacity: 1; } }
     @keyframes a2-grow { to { transform: scaleX(1); } }
   `}</style>
@@ -57,7 +56,8 @@ export const Delta: React.FC<{ now: number | null; before: number | null; than: 
   const gap = now - before;
   const flat = Math.abs(gap) < 1e-9 || (before > 0 && Math.abs(gap / before) < 0.005);
   let words: string;
-  if (flat) words = `Same as ${than}`;
+  if (flat && now === 0) words = `None ${than} either`;
+  else if (flat) words = `Same as ${than}`;
   else if (points) {
     const pts = Math.abs(gap * 100);
     words = `${gap > 0 ? '▲' : '▼'} ${pts.toFixed(pts >= 10 ? 0 : pts >= 1 ? 1 : 2)} pts vs ${than}`;
