@@ -400,13 +400,14 @@ export const HeroSection: React.FC = () => {
               )}
             </div>
           )}
+          {/* The page's one h1 stays the same for every look (search engines read it); each look's title is an h2 */}
+          <h1 className="sr-only">Suit Aura Girls: Ethnic wear across India</h1>
           <div className="h3v-words">
             {count > 1 && slides.map(sizer)}
             <div className="h3v-live">
-              <h1 key={`h${cur}`} className="h3v-hl h3v-a" data-z={head.size}>
-                <span className="sr-only">Suit Aura Girls: </span>
+              <h2 key={`h${cur}`} className="h3v-hl h3v-a" data-z={head.size}>
                 {head.rest} <em>{head.accent}</em>
-              </h1>
+              </h2>
               {w.slidePrice > 0 && (
                 <p className="h3v-pr aura-num">
                   <span className="sr-only">Price {rupees(w.slidePrice)}</span>

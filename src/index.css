@@ -3463,3 +3463,11 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 /* A policy card puffs up in place as it arrives (its top edge stays put, so a jump from the contents lands exactly) */
 .clay-pg .aa-sec.sag-reveal { transform: scale(0.965); transform-origin: 50% 0; }
 .clay-pg .aa-sec.sag-reveal.is-in { transform: none; }
+
+/* Clay: the hero deck and the deal ticket (joined 2026-10-14). The cards are raised clay; the shadow never animates:
+   a card carries it on its own layer while it is dragged, so a drag moves the layer without repainting it. */
+.h3v-c { background: var(--clay-surface); box-shadow: var(--clay-2); }
+.h3v-ph { background: var(--clay-sand); }
+.h3v-ar { background: var(--clay-surface); box-shadow: var(--clay-1); transition: transform 300ms var(--aura-sp), background-color 250ms, color 250ms; }
+.h3v-ar:active { box-shadow: var(--clay-pressed); }
+@media (prefers-reduced-motion: reduce) { .h3v-ar { transition: none; } }
