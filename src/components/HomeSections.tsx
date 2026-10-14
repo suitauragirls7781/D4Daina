@@ -24,7 +24,7 @@ export const HOME_SECTION = 'w-full py-14 lg:py-20';
 /** One card in a horizontal product rail: a little under two cards show on a phone, so the rail reads as swipeable. */
 export const HOME_RAIL_ITEM = 'shrink-0 w-[58%] sm:w-[250px]';
 /** The rail itself: a 12px gap on phones to match the two-column product grids. */
-export const HOME_RAIL = 'sag-scroll-x flex gap-3 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pb-1';
+export const HOME_RAIL = 'sag-scroll-x flex gap-3.5 sm:gap-5 overflow-x-auto px-4 sm:px-6 lg:px-8 pt-2 pb-7';
 /** Product grid: two columns on phones, four from tablet width up. */
 export const HOME_GRID = 'grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-5 md:gap-y-9';
 /** Small capitals label above a title. */

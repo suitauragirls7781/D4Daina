@@ -39,7 +39,7 @@ export const OccasionSection: React.FC = () => {
           />
         </div>
         {list.length > 0 && (
-          <ul className="sag-scroll-x flex gap-3 overflow-x-auto px-4 pb-1 sm:gap-4 sm:px-6 lg:gap-5 lg:px-8">
+          <ul className="sag-scroll-x flex gap-3.5 overflow-x-auto px-4 pt-2 pb-7 sm:gap-4 sm:px-6 lg:gap-5 lg:px-8">
             {list.map(({ occasion, items }) => {
               const cover = items.find(isAvailable) || items[0];
               const count = items.filter(isAvailable).length;

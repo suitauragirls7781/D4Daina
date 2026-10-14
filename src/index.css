@@ -2689,7 +2689,7 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
   .clay-press, .clay-press:is(.clay-1, .clay-2, .clay-3) { box-shadow: var(--clay-pressed); }
   /* Pastel blocks: a tint plus the light section variables (ink text on every one of them) */
   .clay-t-blush, .clay-t-sand, .clay-t-rose, .clay-t-forest, .clay-t-deep, .clay-t-surface {
-    --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.14); --ac: #8E4C58; --sa: #8E4C58; --th: #8E4C58;
+    --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.14); --ac: #7E404C; --sa: #7E404C; --th: #7E404C;
     color: #111013;
   }
   .clay-t-blush { background-color: var(--clay-blush); }
@@ -2710,7 +2710,7 @@ html { background-color: var(--clay-bg); }
 [data-on="forest"] { --bg: var(--clay-forest); }
 [data-on="rose"] { --bg: var(--clay-rose); }
 [data-on="blush"], [data-on="sand"], [data-on="ink"], [data-on="forest"], [data-on="rose"] {
-  --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.15); --ac: #8E4C58; --sa: #8E4C58; --th: #8E4C58;
+  --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.15); --ac: #7E404C; --sa: #7E404C; --th: #7E404C;
 }
 [data-on="forest"] { --ac: #1E3A34; --th: #1E3A34; }
 /* Focus: a dark-rose ring, visible on paper, cream, every pastel and on photos (>= 4.5:1 on the rose clay) */
@@ -2886,7 +2886,7 @@ html { background-color: var(--clay-bg); }
 
 /* Menu: a full-screen rose clay panel; the search is a sunken trough in it */
 .aura-menu { background: var(--clay-rose); --mu: #4E3A3E; --hl: rgba(17,16,19,.14); }
-.aura-menu-big[aria-current="page"], .aura-menu-row[aria-current="page"] { color: var(--aura-drose); }
+.aura-menu-big[aria-current="page"], .aura-menu-row[aria-current="page"] { color: #7E404C; }
 .aura-menu-big[aria-current="page"] > .l > span::after { content: ""; display: inline-block; width: 0.22em; height: 0.22em; margin-left: 0.18em; vertical-align: 0.12em; border-radius: 50%; background: currentColor; }
 .aura-menu-search { background: rgba(251,248,243,.55); box-shadow: inset 3px 3px 8px rgba(142,76,88,.2), inset -3px -3px 8px rgba(255,255,255,.6); }
 .aura-menu :is(.bg-ink) { box-shadow: var(--clay-ink-btn); }
@@ -3007,3 +3007,9 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 .shop-switch > i { box-shadow: 2px 2px 4px rgba(120,96,80,.3), inset 1px 1px 0 #FFFFFF; }
 .shop-orb { box-shadow: var(--clay-ink-btn), 0 10px 22px rgba(17,16,19,.18); }
 /* end of the claymorphism home, product card and shop */
+
+/* ---- Claymorphism: rows that scroll sideways keep room for the clay shadows ---- */
+#shop-by-occasion .aura-sk { box-shadow: var(--clay-2t); }
+.hm-hs { padding-top: 8px; padding-bottom: 28px; }
+#search-drawer-overlay .sag-scroll-x { padding-top: 4px; padding-bottom: 14px; }
+.hm-cs-more { padding-bottom: 14px; }
