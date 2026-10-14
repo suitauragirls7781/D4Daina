@@ -2831,3 +2831,85 @@ html { background-color: var(--clay-bg); }
   .aura-btn:active, :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):active, .sag-chip:active { transform: none !important; }
 }
 /* end of the claymorphism shared pieces */
+
+/* ---- Claymorphism: the site frame (header, phone tab bar, menu, search panel, category directory, footer) ---- */
+/* Header: a cream clay bar that floats a little below the top edge. The <header> box keeps its full height
+   (--aura-hh), so the page never moves; only the bar inside is inset. */
+.aura-hd-bar { margin: 6px 8px 0; border-radius: 24px; border-bottom: 0; background-color: var(--clay-surface); color: #111013; box-shadow: var(--clay-float);
+  --fg: #111013; --inv: #F5F2EC; --mu: #6A645E; --hl: rgba(17,16,19,.1); --ac: #B76E79; --th: #8E4C58;
+  transition: background-color 300ms; }
+.aura-hd-row { height: 48px; }
+.aura-hd.sm .aura-hd-row { height: 44px; }
+.aura-hd-p { left: 22px; right: 22px; bottom: 3px; height: 2.5px; border-radius: 3px; background: var(--aura-drose); }
+.aura-hd[data-menu="open"] .aura-hd-bar { background-color: var(--clay-surface); color: #111013; box-shadow: var(--clay-3t); --ac: #8E4C58; }
+.aura-hb:active { transform: scale(0.9); box-shadow: var(--clay-pressed); }
+.aura-cnt { background: var(--aura-rose); color: var(--aura-ink); box-shadow: 1px 2px 4px rgba(120,96,80,.3), inset 1px 1px 0 rgba(255,255,255,.35); }
+@media (min-width: 1024px) {
+  .aura-hd-bar { margin: 8px 20px 0; border-radius: 28px; }
+  .aura-hd-row { height: 56px; }
+  .aura-hd.sm .aura-hd-row { height: 48px; }
+  .aura-hd-search { background: var(--clay-field); box-shadow: var(--clay-inset); color: #6A645E; }
+  .aura-hd-search:hover { box-shadow: var(--clay-inset), inset 0 0 0 1px rgba(17,16,19,.35); }
+  .aura-hd-nav { height: 40px; border-top: 1px solid rgba(17,16,19,.08); }
+  .aura-hd-lk { height: 40px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aura-hd.sm .aura-hd-row { height: 48px; }
+}
+@media (prefers-reduced-motion: reduce) and (min-width: 1024px) { .aura-hd.sm .aura-hd-row { height: 56px; } }
+/* The desktop collections menu and the PIN panel hang from the bar as clay */
+#collections-menu { background: var(--clay-surface); border-radius: 28px; box-shadow: var(--clay-3); }
+#header-pin-panel > .relative { background: var(--clay-surface); border: 0; border-radius: 24px; box-shadow: var(--clay-3); }
+/* The announcement band on the home page: a sand clay strip, ink capitals, rose diamonds */
+.sag-marquee { background: var(--clay-sand); color: var(--aura-ink); box-shadow: inset 0 3px 6px rgba(120,96,80,.12), inset 0 -2px 4px rgba(255,255,255,.6); }
+
+/* Search panel: a cream clay sheet; the search field is a sunken trough */
+#search-drawer-overlay > .relative { background-color: var(--clay-surface); box-shadow: var(--clay-3); border-radius: 30px; }
+#search-drawer-overlay form[role="search"] { border-color: transparent; background-color: var(--clay-field); box-shadow: var(--clay-inset); }
+#search-drawer-overlay form[role="search"]:focus-within { border-color: #111013; }
+#trending-searches-container img { box-shadow: var(--clay-1); }
+
+/* Phone tab bar: a cream clay slab floating above the bottom edge; the current tab is a raised ink pebble */
+:root { --aura-tb: calc(76px + env(safe-area-inset-bottom)); }
+.aura-tb { left: 10px; right: 10px; bottom: calc(8px + env(safe-area-inset-bottom)); height: 64px; padding-bottom: 0; border-radius: 28px; background: var(--clay-surface); color: #5E5852; box-shadow: var(--clay-float); }
+.aura-tb.off { transform: translate3d(0, calc(100% + 24px), 0); }
+.aura-tb > i { top: 7px; height: 50px; }
+.aura-tb > i::before { left: 4px; right: 4px; border-radius: 20px; background: var(--aura-ink); box-shadow: var(--clay-ink-btn); }
+.aura-tb > button { height: 64px; color: #5E5852; }
+.aura-tb > button[aria-current="page"] { color: var(--aura-paper); }
+.aura-tb > button:focus-visible { outline-offset: -6px; border-radius: 20px; }
+.aura-tb .aura-cnt { box-shadow: 0 0 0 2px var(--clay-surface); }
+.aura-tb > button[aria-current="page"] .aura-cnt { box-shadow: 0 0 0 2px var(--aura-ink); }
+
+/* Menu: a full-screen rose clay panel; the search is a sunken trough in it */
+.aura-menu { background: var(--clay-rose); --mu: #4E3A3E; --hl: rgba(17,16,19,.14); }
+.aura-menu-big[aria-current="page"], .aura-menu-row[aria-current="page"] { color: var(--aura-drose); }
+.aura-menu-big[aria-current="page"] > .l > span::after { content: ""; display: inline-block; width: 0.22em; height: 0.22em; margin-left: 0.18em; vertical-align: 0.12em; border-radius: 50%; background: currentColor; }
+.aura-menu-search { background: rgba(251,248,243,.55); box-shadow: inset 3px 3px 8px rgba(142,76,88,.2), inset -3px -3px 8px rgba(255,255,255,.6); }
+.aura-menu :is(.bg-ink) { box-shadow: var(--clay-ink-btn); }
+
+/* The whole range of categories above the footer: a sand clay tray, cream pebbles with the real count,
+   the categories still to come pressed into the tray */
+.cdir { background: var(--clay-sand); box-shadow: inset 0 6px 14px rgba(120,96,80,.1); }
+.cdir-p { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.cdir-p.soon { background: rgba(251,248,243,.3); box-shadow: inset 3px 3px 7px rgba(120,96,80,.16), inset -3px -3px 7px rgba(255,255,255,.55); }
+.cdir-p > span { color: #5E5852; }
+.cdir-p[aria-current="page"] { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.cdir-p:active { box-shadow: var(--clay-pressed); }
+
+/* Footer: the deep clay slab with rounded shoulders; the giant wordmark is pressed into it like a stamp */
+.aura-ft { background: var(--clay-deep); color: var(--aura-ink); border-radius: 36px 36px 0 0; box-shadow: inset 0 4px 10px rgba(255,255,255,.55);
+  --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.14); --ac: #8E4C58; }
+.aura-ft-w { color: var(--clay-deep); text-shadow: -2px -2px 2px rgba(255,255,255,.75), 3px 3px 5px rgba(110,84,66,.42); }
+.aura-ft-w em { color: var(--clay-deep); }
+.aura-ft-ln > button { background: var(--clay-surface); box-shadow: var(--clay-2t); }
+.aura-ft-ln > button:first-child { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.aura-ft-so { background: var(--clay-surface); box-shadow: var(--clay-2t); }
+.aura-ft-b { border-top-color: rgba(17,16,19,.12); }
+@media (hover: hover) {
+  .aura-ft-ln > button:hover, .aura-ft-so:hover { background: var(--aura-ink); color: var(--aura-paper); }
+  .aura-ft-ad:hover { color: var(--aura-drose); }
+}
+:is(.aura-ft-ln > button, .aura-ft-so):active { box-shadow: var(--clay-pressed); }
+footer#main-footer :focus-visible { outline-color: #8E4C58; }
+/* end of the claymorphism frame */
