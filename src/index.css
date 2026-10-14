@@ -280,6 +280,14 @@
 #admin-root-container {
   color: var(--sag-ink);
   color-scheme: light;
+  /* The admin keeps the flat Aura look: the storefront's clay values of these shared names stop here
+     (the clay shared pieces carry a :where(:not(#admin-root-container *)) guard for the same reason) */
+  --sag-shadow-pop: 0 14px 34px rgba(17, 16, 19, 0.14);
+  --sag-shadow-bar: 0 -6px 20px rgba(17, 16, 19, 0.06);
+  --sag-glass: #FFFFFF;
+  --sag-glass-bar: #FFFFFF;
+  --sag-glass-sheet: #FFFFFF;
+  --sag-nav-fill: #FFFFFF;
 }
 
 #admin-root-container input,
@@ -2861,121 +2869,123 @@ html { background-color: var(--clay-bg); }
 }
 [data-on="forest"] { --ac: #1E3A34; --th: #1E3A34; }
 /* Focus: a dark-rose ring, visible on paper, cream, every pastel and on photos (>= 4.5:1 on the rose clay) */
-:focus-visible { outline: 2.5px solid #8E4C58; outline-offset: 3px; }
-::selection { background: var(--clay-rose); }
+:focus-visible:where(:not(#admin-root-container *)) { outline: 2.5px solid #8E4C58; outline-offset: 3px; }
+:where(:not(#admin-root-container *))::selection { background: var(--clay-rose); }
 
 /* Cream instead of white for every light surface (cards, sheets, menus, fixed bars) */
-.bg-surface { background-color: var(--clay-surface); }
-:is(.sticky, .fixed):is(.bg-surface, .bg-white), .fixed :is(.bg-surface, .bg-white), [role="dialog"] :is(.bg-surface, .bg-white), [role="menu"], [role="listbox"] { background-color: var(--clay-surface); }
+.bg-surface:where(:not(#admin-root-container *)) { background-color: var(--clay-surface); }
+:is(.sticky, .fixed):is(.bg-surface, .bg-white):where(:not(#admin-root-container *)), .fixed:where(:not(#admin-root-container *)) :is(.bg-surface, .bg-white), [role="dialog"]:where(:not(#admin-root-container *)) :is(.bg-surface, .bg-white), [role="menu"]:where(:not(#admin-root-container *)), [role="listbox"]:where(:not(#admin-root-container *)) { background-color: var(--clay-surface); }
 
 /* Buttons keep their colour and transform transitions but never animate a shadow */
 @layer base {
   #app-main-content button { transition-property: color, background-color, border-color, transform, opacity, scale, translate; }
 }
 
-/* ---- Claymorphism: shared pieces (helpers in the components layer, so a utility still wins) ---- */
+/* ---- Claymorphism: shared pieces (helpers in the components layer, so a utility still wins) ----
+   From the focus ring above to the end of this block every selector carries :where(:not(#admin-root-container *)):
+   it adds no specificity and changes nothing on the storefront; the admin panel keeps the flat Aura look. */
 @layer components {
   /* Cards: cream, 32px corners, the second level of clay */
-  .aura-card { background: var(--clay-surface); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
-  .aura-blk { border-radius: var(--clay-r-card); }
+  .aura-card:where(:not(#admin-root-container *)) { background: var(--clay-surface); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
+  .aura-blk:where(:not(#admin-root-container *)) { border-radius: var(--clay-r-card); }
 
   /* The ink pill: plump dark clay. A press sinks it: the ready-made pressed layer fades in and it moves 1px. */
-  .aura-btn { box-shadow: var(--clay-ink-btn); transition: transform 300ms var(--aura-e), background-color 300ms, color 300ms, opacity 300ms; }
-  .aura-btn::before { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--clay-ink-pressed); opacity: 0; pointer-events: none; transition: opacity 200ms; }
-  .aura-btn:active { transform: translate3d(0, 1px, 0) scale(0.97); }
-  .aura-btn:active::before { opacity: 1; transition-duration: 60ms; }
-  .aura-btn:is(:disabled, [aria-disabled="true"]) { box-shadow: none; }
+  .aura-btn:where(:not(#admin-root-container *)) { box-shadow: var(--clay-ink-btn); transition: transform 300ms var(--aura-e), background-color 300ms, color 300ms, opacity 300ms; }
+  .aura-btn:where(:not(#admin-root-container *))::before { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--clay-ink-pressed); opacity: 0; pointer-events: none; transition: opacity 200ms; }
+  .aura-btn:active:where(:not(#admin-root-container *)) { transform: translate3d(0, 1px, 0) scale(0.97); }
+  .aura-btn:active:where(:not(#admin-root-container *))::before { opacity: 1; transition-duration: 60ms; }
+  .aura-btn:is(:disabled, [aria-disabled="true"]):where(:not(#admin-root-container *)) { box-shadow: none; }
   /* Light pills (was the outline button): cream clay with ink words */
-  .aura-btn-line { background: var(--clay-surface); color: #111013; box-shadow: var(--clay-1); }
-  .aura-btn-line::before, .aura-btn-rose::before { box-shadow: var(--clay-pressed); }
-  .aura-btn-rose { background: var(--clay-rose); color: #111013; box-shadow: var(--clay-1); }
-  .aura-rnd { box-shadow: var(--clay-ink-btn); }
+  .aura-btn-line:where(:not(#admin-root-container *)) { background: var(--clay-surface); color: #111013; box-shadow: var(--clay-1); }
+  .aura-btn-line:where(:not(#admin-root-container *))::before, .aura-btn-rose:where(:not(#admin-root-container *))::before { box-shadow: var(--clay-pressed); }
+  .aura-btn-rose:where(:not(#admin-root-container *)) { background: var(--clay-rose); color: #111013; box-shadow: var(--clay-1); }
+  .aura-rnd:where(:not(#admin-root-container *)) { box-shadow: var(--clay-ink-btn); }
 
   /* Tags: a small pastel pebble */
-  .aura-tag { border-radius: 10px; background: var(--clay-blush); box-shadow: var(--clay-tag); }
-  .aura-tag-ink { background: var(--aura-ink); color: var(--aura-paper); box-shadow: 2px 3px 6px rgba(17,16,19,.22), inset 1px 1px 0 rgba(255,255,255,.16); }
-  .aura-tag-rose { background: var(--clay-rose); color: var(--aura-ink); }
+  .aura-tag:where(:not(#admin-root-container *)) { border-radius: 10px; background: var(--clay-blush); box-shadow: var(--clay-tag); }
+  .aura-tag-ink:where(:not(#admin-root-container *)) { background: var(--aura-ink); color: var(--aura-paper); box-shadow: 2px 3px 6px rgba(17,16,19,.22), inset 1px 1px 0 rgba(255,255,255,.16); }
+  .aura-tag-rose:where(:not(#admin-root-container *)) { background: var(--clay-rose); color: var(--aura-ink); }
 
   /* Segmented control: a sunken trough; the chosen part is a raised ink pebble that slides */
-  .aura-seg { padding: 5px; border-radius: 999px; background: var(--clay-field); box-shadow: var(--clay-inset); }
-  .aura-seg > button { box-shadow: none; color: #111013; }
-  .aura-seg > button[aria-pressed="true"] { color: #F5F2EC; }
-  .aura-seg > button:disabled { color: #8E877F; text-decoration: line-through; text-decoration-thickness: 1px; }
-  .aura-seg-ind { top: 5px; bottom: 5px; background: #111013; box-shadow: var(--clay-ink-btn); }
-  .aura-seg-box { padding: 5px; background: var(--clay-field); }
-  .aura-seg-box > .aura-seg-ind { top: 5px; bottom: 5px; }
+  .aura-seg:where(:not(#admin-root-container *)) { padding: 5px; border-radius: 999px; background: var(--clay-field); box-shadow: var(--clay-inset); }
+  .aura-seg:where(:not(#admin-root-container *)) > button { box-shadow: none; color: #111013; }
+  .aura-seg:where(:not(#admin-root-container *)) > button[aria-pressed="true"] { color: #F5F2EC; }
+  .aura-seg:where(:not(#admin-root-container *)) > button:disabled { color: #8E877F; text-decoration: line-through; text-decoration-thickness: 1px; }
+  .aura-seg-ind:where(:not(#admin-root-container *)) { top: 5px; bottom: 5px; background: #111013; box-shadow: var(--clay-ink-btn); }
+  .aura-seg-box:where(:not(#admin-root-container *)) { padding: 5px; background: var(--clay-field); }
+  .aura-seg-box:where(:not(#admin-root-container *)) > .aura-seg-ind { top: 5px; bottom: 5px; }
 
   /* Field with a floating label: a sunken trough; the ink line still grows on focus */
-  .aura-field > :is(input, select) { border-color: transparent; background: var(--clay-field); box-shadow: var(--clay-inset); }
-  .aura-field > :is(input, select):focus { border-color: #111013; }
-  .aura-field > [aria-invalid="true"] { border-color: var(--sag-danger); }
+  .aura-field:where(:not(#admin-root-container *)) > :is(input, select) { border-color: transparent; background: var(--clay-field); box-shadow: var(--clay-inset); }
+  .aura-field:where(:not(#admin-root-container *)) > :is(input, select):focus { border-color: #111013; }
+  .aura-field:where(:not(#admin-root-container *)) > [aria-invalid="true"] { border-color: var(--sag-danger); }
 }
 
 /* The old helper classes (unlayered, as their Aura look was) */
-.sag-glass, .sag-card { background: var(--clay-surface); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
-.sag-glass-strong { background: var(--clay-sand); box-shadow: var(--clay-2t); }
-.sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) { background: var(--clay-surface); box-shadow: var(--clay-2), inset 0 0 0 2px var(--sag-ink); }
-.sag-glass-bar { background: var(--clay-surface); border: 0; box-shadow: var(--clay-float); }
-.sag-bar { background: var(--clay-surface); border-top: 0; border-radius: 26px 26px 0 0; box-shadow: 0 -8px 24px rgba(120,96,80,.16), inset 0 2px 3px rgba(255,255,255,.85); }
-.sag-co-blocks > div > section.sag-card { border-radius: var(--clay-r-card); }
+.sag-glass:where(:not(#admin-root-container *)), .sag-card:where(:not(#admin-root-container *)) { background: var(--clay-surface); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
+.sag-glass-strong:where(:not(#admin-root-container *)) { background: var(--clay-sand); box-shadow: var(--clay-2t); }
+.sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected):where(:not(#admin-root-container *)) { background: var(--clay-surface); box-shadow: var(--clay-2), inset 0 0 0 2px var(--sag-ink); }
+.sag-glass-bar:where(:not(#admin-root-container *)) { background: var(--clay-surface); border: 0; box-shadow: var(--clay-float); }
+.sag-bar:where(:not(#admin-root-container *)) { background: var(--clay-surface); border-top: 0; border-radius: 26px 26px 0 0; box-shadow: 0 -8px 24px rgba(120,96,80,.16), inset 0 2px 3px rgba(255,255,255,.85); }
+.sag-co-blocks:where(:not(#admin-root-container *)) > div > section.sag-card { border-radius: var(--clay-r-card); }
 
-.sag-btn-primary, .sag-btn-outline, .sag-btn-light { transition: transform 300ms var(--aura-e), background-color 300ms, color 300ms; }
-.sag-btn-primary::before, .sag-btn-outline::before, .sag-btn-light::before { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; pointer-events: none; transition: opacity 200ms; }
-:is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):not(:disabled):active { transform: translate3d(0, 1px, 0) scale(0.97); }
-:is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):not(:disabled):active::before { opacity: 1; transition-duration: 60ms; }
-.sag-btn-primary, .sag-btn-primary.sag-btn-buy { box-shadow: var(--clay-ink-btn); }
-.sag-btn-primary::before { box-shadow: var(--clay-ink-pressed); }
-.sag-btn-primary:is(:disabled, [aria-disabled="true"]) { background: var(--clay-field); color: var(--sag-ink-muted); box-shadow: var(--clay-inset); }
-.sag-btn-outline { background: var(--clay-surface); color: var(--sag-ink); box-shadow: var(--clay-1); }
-.sag-btn-outline::before, .sag-btn-light::before { box-shadow: var(--clay-pressed); }
-@media (hover: hover) { .sag-btn-outline:not(:disabled):hover { background: #FFFFFF; } }
-.sag-btn-outline:is(:disabled, [aria-disabled="true"]) { background: var(--clay-field); color: var(--sag-ink-faint); box-shadow: var(--clay-inset); }
-.sag-btn-light { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-1); }
-.sag-on-emerald .sag-btn-outline { background: rgba(245,242,236,.1); color: var(--aura-paper); box-shadow: inset 0 0 0 1.5px var(--aura-paper); }
+.sag-btn-primary:where(:not(#admin-root-container *)), .sag-btn-outline:where(:not(#admin-root-container *)), .sag-btn-light:where(:not(#admin-root-container *)) { transition: transform 300ms var(--aura-e), background-color 300ms, color 300ms; }
+.sag-btn-primary:where(:not(#admin-root-container *))::before, .sag-btn-outline:where(:not(#admin-root-container *))::before, .sag-btn-light:where(:not(#admin-root-container *))::before { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; pointer-events: none; transition: opacity 200ms; }
+:is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):not(:disabled):active:where(:not(#admin-root-container *)) { transform: translate3d(0, 1px, 0) scale(0.97); }
+:is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):not(:disabled):active:where(:not(#admin-root-container *))::before { opacity: 1; transition-duration: 60ms; }
+.sag-btn-primary:where(:not(#admin-root-container *)), .sag-btn-primary.sag-btn-buy:where(:not(#admin-root-container *)) { box-shadow: var(--clay-ink-btn); }
+.sag-btn-primary:where(:not(#admin-root-container *))::before { box-shadow: var(--clay-ink-pressed); }
+.sag-btn-primary:is(:disabled, [aria-disabled="true"]):where(:not(#admin-root-container *)) { background: var(--clay-field); color: var(--sag-ink-muted); box-shadow: var(--clay-inset); }
+.sag-btn-outline:where(:not(#admin-root-container *)) { background: var(--clay-surface); color: var(--sag-ink); box-shadow: var(--clay-1); }
+.sag-btn-outline:where(:not(#admin-root-container *))::before, .sag-btn-light:where(:not(#admin-root-container *))::before { box-shadow: var(--clay-pressed); }
+@media (hover: hover) { .sag-btn-outline:not(:disabled):hover:where(:not(#admin-root-container *)) { background: #FFFFFF; } }
+.sag-btn-outline:is(:disabled, [aria-disabled="true"]):where(:not(#admin-root-container *)) { background: var(--clay-field); color: var(--sag-ink-faint); box-shadow: var(--clay-inset); }
+.sag-btn-light:where(:not(#admin-root-container *)) { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-1); }
+.sag-on-emerald:where(:not(#admin-root-container *)) .sag-btn-outline { background: rgba(245,242,236,.1); color: var(--aura-paper); box-shadow: inset 0 0 0 1.5px var(--aura-paper); }
 
 /* Fields: sunken troughs. The ink line along the bottom still grows on focus, and the edge turns ink. */
-.sag-input { border-color: transparent; background-color: var(--clay-field); box-shadow: var(--clay-inset); }
-.sag-input:focus { border-color: var(--sag-ink); box-shadow: var(--clay-inset); }
-.sag-input:is([aria-invalid="true"], .is-error) { border-color: var(--sag-danger); }
-.sag-input:disabled { background-color: #E9E3D9; }
+.sag-input:where(:not(#admin-root-container *)) { border-color: transparent; background-color: var(--clay-field); box-shadow: var(--clay-inset); }
+.sag-input:focus:where(:not(#admin-root-container *)) { border-color: var(--sag-ink); box-shadow: var(--clay-inset); }
+.sag-input:is([aria-invalid="true"], .is-error):where(:not(#admin-root-container *)) { border-color: var(--sag-danger); }
+.sag-input:disabled:where(:not(#admin-root-container *)) { background-color: #E9E3D9; }
 
 /* Chips: small cream pebbles; the chosen one is a raised ink pebble; one that cannot be chosen is sunken */
-.sag-chip { border: 0; background: var(--clay-surface); box-shadow: var(--clay-1); transition: background-color 300ms, color 300ms, transform 350ms var(--aura-sp); }
-@media (hover: hover) { .sag-chip:hover { background: #FFFFFF; } }
-.sag-chip:not(:disabled):active { transform: scale(0.95); }
-.sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: var(--sag-ink); color: var(--sag-on-gold); box-shadow: var(--clay-ink-btn); }
-.sag-chip.is-error { box-shadow: var(--clay-1), inset 0 0 0 2px var(--sag-danger); }
-.sag-chip:disabled { background: var(--clay-field); color: var(--sag-ink-faint); box-shadow: var(--clay-inset); }
-.sag-badge { border-radius: 10px; background: var(--clay-blush); box-shadow: var(--clay-tag); }
+.sag-chip:where(:not(#admin-root-container *)) { border: 0; background: var(--clay-surface); box-shadow: var(--clay-1); transition: background-color 300ms, color 300ms, transform 350ms var(--aura-sp); }
+@media (hover: hover) { .sag-chip:hover:where(:not(#admin-root-container *)) { background: #FFFFFF; } }
+.sag-chip:not(:disabled):active:where(:not(#admin-root-container *)) { transform: scale(0.95); }
+.sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected):where(:not(#admin-root-container *)) { background: var(--sag-ink); color: var(--sag-on-gold); box-shadow: var(--clay-ink-btn); }
+.sag-chip.is-error:where(:not(#admin-root-container *)) { box-shadow: var(--clay-1), inset 0 0 0 2px var(--sag-danger); }
+.sag-chip:disabled:where(:not(#admin-root-container *)) { background: var(--clay-field); color: var(--sag-ink-faint); box-shadow: var(--clay-inset); }
+.sag-badge:where(:not(#admin-root-container *)) { border-radius: 10px; background: var(--clay-blush); box-shadow: var(--clay-tag); }
 
 /* Sheets and dialogs: the third level, cream */
-.aco-sheet { background: var(--clay-surface); border-radius: 32px 32px 0 0; box-shadow: 0 -10px 30px rgba(120,96,80,.2), inset 3px 3px 6px rgba(255,255,255,.85); }
-@media (min-width: 640px) { .aco-sheet { border-radius: 32px; box-shadow: var(--clay-3); } }
-.aco-x { background: var(--clay-surface); box-shadow: var(--clay-1); }
-.aco-x:active { box-shadow: var(--clay-pressed); }
+.aco-sheet:where(:not(#admin-root-container *)) { background: var(--clay-surface); border-radius: 32px 32px 0 0; box-shadow: 0 -10px 30px rgba(120,96,80,.2), inset 3px 3px 6px rgba(255,255,255,.85); }
+@media (min-width: 640px) { .aco-sheet:where(:not(#admin-root-container *)) { border-radius: 32px; box-shadow: var(--clay-3); } }
+.aco-x:where(:not(#admin-root-container *)) { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.aco-x:active:where(:not(#admin-root-container *)) { box-shadow: var(--clay-pressed); }
 
 /* Toast: an ink pebble that drops from under the header */
-.aura-toast { box-shadow: 0 12px 28px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.16), inset -3px -3px 6px rgba(0,0,0,.4); }
-.aura-toast.is-error { box-shadow: 0 12px 28px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.16), inset 0 0 0 1.5px #FF9C94; }
+.aura-toast:where(:not(#admin-root-container *)) { box-shadow: 0 12px 28px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.16), inset -3px -3px 6px rgba(0,0,0,.4); }
+.aura-toast.is-error:where(:not(#admin-root-container *)) { box-shadow: 0 12px 28px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.16), inset 0 0 0 1.5px #FF9C94; }
 
 /* Placeholders: a sunken sand trough that breathes; the page placeholder is cream cards on clay */
-.aura-sk { background-color: #EAE3D8; box-shadow: var(--clay-inset); }
+.aura-sk:where(:not(#admin-root-container *)) { background-color: #EAE3D8; box-shadow: var(--clay-inset); }
 @keyframes aura-sk { to { background-color: #DDD4C6; } }
-.kx-skel > i { background: var(--clay-field); box-shadow: var(--clay-inset); }
-.kx-skel > div > i { background: var(--clay-surface); border-radius: 28px; box-shadow: var(--clay-2); }
+.kx-skel:where(:not(#admin-root-container *)) > i { background: var(--clay-field); box-shadow: var(--clay-inset); }
+.kx-skel:where(:not(#admin-root-container *)) > div > i { background: var(--clay-surface); border-radius: 28px; box-shadow: var(--clay-2); }
 
 /* Page change: two clay layers (rose, then sand) sweep over the page; the wordmark in ink */
-.aura-cur > i.x { background: var(--clay-rose); box-shadow: inset 0 14px 28px rgba(255,255,255,.5); }
-.aura-cur > i.y { background: var(--clay-sand); box-shadow: inset 0 14px 28px rgba(255,255,255,.55); }
-.aura-cur > span { color: var(--aura-ink); }
-.aura-cur > span em { color: var(--aura-drose); }
+.aura-cur:where(:not(#admin-root-container *)) > i.x { background: var(--clay-rose); box-shadow: inset 0 14px 28px rgba(255,255,255,.5); }
+.aura-cur:where(:not(#admin-root-container *)) > i.y { background: var(--clay-sand); box-shadow: inset 0 14px 28px rgba(255,255,255,.55); }
+.aura-cur:where(:not(#admin-root-container *)) > span { color: var(--aura-ink); }
+.aura-cur:where(:not(#admin-root-container *)) > span em { color: var(--aura-drose); }
 
 /* The photo that flies to the bag: a clay pebble */
-.aura-fly { border: 3px solid var(--clay-surface); box-shadow: 6px 8px 16px rgba(120,96,80,.3); }
+.aura-fly:where(:not(#admin-root-container *)) { border: 3px solid var(--clay-surface); box-shadow: 6px 8px 16px rgba(120,96,80,.3); }
 
 @media (prefers-reduced-motion: reduce) {
-  .aura-btn::before, .sag-btn-primary::before, .sag-btn-outline::before, .sag-btn-light::before { transition: none; }
-  .aura-btn:active, :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):active, .sag-chip:active { transform: none !important; }
+  .aura-btn:where(:not(#admin-root-container *))::before, .sag-btn-primary:where(:not(#admin-root-container *))::before, .sag-btn-outline:where(:not(#admin-root-container *))::before, .sag-btn-light:where(:not(#admin-root-container *))::before { transition: none; }
+  .aura-btn:active:where(:not(#admin-root-container *)), :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):active:where(:not(#admin-root-container *)), .sag-chip:active:where(:not(#admin-root-container *)) { transform: none !important; }
 }
 /* end of the claymorphism shared pieces */
 
