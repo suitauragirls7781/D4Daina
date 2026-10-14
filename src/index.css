@@ -3074,19 +3074,11 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 /* end of the claymorphism frame */
 
 /* ---- Claymorphism: the home page (HomePage.tsx and its sections) ---- */
-/* Hero: the still photo and the other slides are clay frames */
-.hm-hero-ph { box-shadow: var(--clay-3); }
-.hm-hs-ph { box-shadow: var(--clay-2); }
 /* A kinetic band on its own strip is pressed into the page; the big words are moulded (light from the top-left) */
 .hm-mq-clay { box-shadow: inset 0 10px 18px rgba(110,84,66,.16), inset 0 -8px 14px rgba(255,255,255,.5); }
 .aura-mq-i > span:not(.o) { text-shadow: -1px -1px 0 rgba(255,255,255,.6), 2px 3px 5px rgba(110,84,66,.24); }
 .aura-mq-i > span.o { -webkit-text-stroke-color: rgba(17,16,19,.75); }
 .aura-mq-i > i { box-shadow: 1px 1px 2px rgba(110,84,66,.3); }
-/* Deal of the day: a rose clay block; the discount is moulded; the product sits on a cream card in it */
-.hm-deal { box-shadow: var(--clay-3t); }
-.hm-deal-r.aura-card { box-shadow: var(--clay-2t); border-radius: 26px; }
-.hm-deal-ph { border-radius: 20px; }
-.hm-deal-pc { text-shadow: -2px -2px 2px rgba(255,255,255,.45), 3px 4px 8px rgba(110,84,66,.24); }
 .hm-ck { background: rgba(251,248,243,.35); box-shadow: inset 3px 3px 7px rgba(120,96,80,.18), inset -3px -3px 7px rgba(255,255,255,.55); }
 /* The festive block: deep clay, its photo in a rounded frame */
 .hm-fest { box-shadow: var(--clay-3t); }
@@ -3170,7 +3162,6 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 
 /* ---- Claymorphism: rows that scroll sideways keep room for the clay shadows ---- */
 #shop-by-occasion .aura-sk { box-shadow: var(--clay-2t); }
-.hm-hs { padding-top: 8px; padding-bottom: 28px; }
 #search-drawer-overlay .sag-scroll-x { padding-top: 4px; padding-bottom: 14px; }
 .hm-cs-more { padding-bottom: 14px; }
 

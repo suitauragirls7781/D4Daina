@@ -907,6 +907,9 @@ export const CheckoutPage: React.FC = () => {
     }
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+    // After a failed payment the window is closed too: the failure panel already says what happened, so the
+    // "cancelled" toast (which would contradict it) is only for a window closed without a failure
+    let failedHere = false;
     try {
       const rzp = new (window as any).Razorpay({
         key: created.keyId,
@@ -942,11 +945,12 @@ export const CheckoutPage: React.FC = () => {
           ondismiss: () => {
             setIsProcessing(false);
             notePayTry(created.orderNumber, 'closed');
-            showToast('Payment cancelled. No money was taken.', 'info');
+            if (!failedHere) showToast('Payment cancelled. No money was taken.', 'info');
           },
         },
       });
       rzp.on('payment.failed', (response: any) => {
+        failedHere = true;
         setIsProcessing(false);
         // The same order stays open: the panel on the payment step offers to pay it again (never a second order)
         setPayFail({ orderNumber: created.orderNumber, reason: String(response?.error?.description || '').trim() });
