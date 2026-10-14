@@ -20,6 +20,10 @@ import { AiProductFill, type AiDraft } from './AiProductFill';
 import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 import { ON_GOLD, SWITCH_TRACK, SectionTitle, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
+import { PhotoManager } from './catalogue/PhotoManager';
+import { ScoreRing } from './catalogue/ScoreRing';
+import { ProductPreviews, type PreviewData } from './catalogue/ProductPreviews';
+import { PERF_DAYS, defaultSeoTitle, seoDescriptionFrom, healthChecks, healthScore, healthWord, rupees as inrText, takePendingSection, useProductPerformance } from './catalogue/catalogueKit';
 
 /** Page header with a back button, in the same layout as the order details page. */
 // isName: the title is the product's own name, so it stays Inter (font-sans) instead of the display face
@@ -82,7 +86,9 @@ interface AdminProductFormProps {
 }
 
 export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId }) => {
-  const { products = [], addProduct, updateProduct, categories = [] } = useAdmin();
+  const { products = [], addProduct, updateProduct, categories = [], orders = [], ordersLoaded = false } = useAdmin();
+  // Views and saves (product_daily) and sales (paid orders) of the last 30 days, shown when editing
+  const performance = useProductPerformance(orders, ordersLoaded);
   const { showToast } = useShop();
   const { navigate, openAdminTab } = useRouter();
 
@@ -208,6 +214,15 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existingProduct?.id]);
+
+  // Opened from a "fix" in the Products list: go straight to the part that needs it
+  useEffect(() => {
+    const section = takePendingSection(productId);
+    if (!section) return;
+    const timer = window.setTimeout(() => document.getElementById(section)?.scrollIntoView({ block: 'start' }), 150);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, existingProduct?.id]);
 
   // Auto-calculate discount when price or originalPrice changes
   const handlePriceChange = (val: number) => {
@@ -553,6 +568,20 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
   const goTo = (target: string) => document.getElementById(target)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
   const num = (n: number) => <span className="text-sm font-semibold sag-num">{n}</span>;
 
+  // Listing quality: the same real checks as the Products list, read from what is typed now
+  const checks = healthChecks({
+    name, price: livePrice, originalPrice: liveMrp, images, description, sizes: selectedSizes, colors, fabric, category,
+    seoTitle, seoDescription, stockQuantity, hidden: !published,
+  });
+  const score = healthScore(checks);
+  const missing = checks.filter((c) => !c.ok);
+  const previewData: PreviewData = {
+    name, category: String(category), price: livePrice, mrp: liveMrp, images, sizes: selectedSizes, stock: stockValid ? stockQuantity : 0,
+    published, isNewArrival, isBestSeller, isTrending, description, seoTitle, seoDescription,
+  };
+  const numbers = isEditMode && productId ? performance.byId?.get(String(productId)) : undefined;
+  const perfNote = performance.loading ? 'Loading…' : performance.failed ? 'Could not be read right now' : '';
+
   return (
     <div id="admin-product-form-page" className="space-y-4 sm:space-y-5 pb-10">
 
@@ -565,10 +594,11 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
         onBack={handleCancel}
       />
 
-      <form id="product-edit-form" onSubmit={handleSave} className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-5 space-y-4 sm:space-y-5 lg:space-y-0">
+      <form id="product-edit-form" onSubmit={handleSave} className="lg:grid lg:grid-cols-[minmax(0,1fr)_19rem] lg:items-start lg:gap-5 space-y-4 sm:space-y-5 lg:space-y-0">
 
+        <div className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7.5rem)] lg:overflow-y-auto lg:overscroll-contain space-y-4 sag-scroll-y">
         {/* Progress: which parts are filled in. Tap one to jump to it. */}
-        <nav id="apf-progress" aria-label="What is filled in" className={`${ui.card} lg:col-start-2 lg:row-start-1 lg:sticky lg:top-24`}>
+        <nav id="apf-progress" aria-label="What is filled in" className={ui.card}>
           <div className="flex items-baseline justify-between gap-3">
             <p className={ui.eyebrow}>Checklist</p>
             <p className={`text-[13px] leading-[18px] font-semibold sag-num ${allDone ? 'text-brand' : 'text-ink'}`} aria-live="polite">
@@ -605,9 +635,66 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
               </li>
             ))}
           </ul>
+
+          {/* Listing quality: real checks, each one a tap away from its fix */}
+          <div id="apf-quality" className="mt-3 pt-3 border-t border-line">
+            <div className="flex items-center gap-3">
+              <ScoreRing score={score} />
+              <div className="min-w-0">
+                <p className={ui.eyebrow}>Listing quality</p>
+                <p className="text-[14px] leading-5 font-semibold text-ink" aria-live="polite"><span className="sr-only">{score} out of 100: </span>{healthWord(score)}{missing.length ? ` · ${missing.length} to improve` : ''}</p>
+              </div>
+            </div>
+            {missing.length > 0 && (
+              <ul className="mt-2 space-y-0.5">
+                {missing.map((c) => (
+                  <li key={c.id}>
+                    <button type="button" onClick={() => goTo(c.section)} className="w-full min-h-10 py-1.5 px-2 -mx-2 rounded-[12px] text-left text-[12.5px] leading-[17px] hover:bg-sunken cursor-pointer">
+                      <span className="font-semibold text-ink">{c.label}</span> <span className="text-ink-muted">· {c.todo}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </nav>
 
+        {/* Live previews: the shop card, the phone page and the shared link (wide screens; phones see them under the form) */}
+        <div className="hidden lg:block"><ProductPreviews data={previewData} id="apf-previews" /></div>
+        </div>
+
         <div className="min-w-0 space-y-4 sm:space-y-5 lg:col-start-1 lg:row-start-1">
+
+        {/* How this product did in the last 30 days (edit only; real counts) */}
+        {isEditMode && existingProduct && (
+          <section id="apf-performance" aria-labelledby="apf-performance-title" className={ui.card}>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h3 id="apf-performance-title" className={ui.h2}>Last {PERF_DAYS} days</h3>
+              <p className="text-[12.5px] text-ink-muted">{perfNote || 'Visitors counted once a day each; sales from paid orders'}</p>
+            </div>
+            <dl className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                ['Views', numbers ? numbers.views.toLocaleString('en-IN') : performance.byId ? '0' : '–'],
+                ['Wishlist saves', numbers ? numbers.saves.toLocaleString('en-IN') : performance.byId ? '0' : '–'],
+                ['Pieces sold', !ordersLoaded ? '–' : String(numbers?.sold || 0)],
+                ['Sales value', !ordersLoaded ? '–' : inrText(numbers?.revenue || 0)],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-[16px] bg-page px-3 py-2.5 min-w-0">
+                  <dt className={ui.eyebrow}>{label}</dt>
+                  <dd className="mt-0.5 text-[20px] leading-7 font-extrabold sag-num text-ink truncate">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            {numbers && numbers.views >= 20 && ordersLoaded && (
+              <p className="mt-2.5 text-[13px] leading-[18px] text-ink-muted sag-num">
+                {numbers.sold > 0
+                  ? `About 1 sale for every ${Math.max(1, Math.round(numbers.views / numbers.sold))} views.`
+                  : `${numbers.views} views and no sale yet: check the price, the photos and the description.`}
+              </p>
+            )}
+            {!ordersLoaded && <p className="mt-2.5 text-[12.5px] text-ink-muted">Loading the sales from your orders…</p>}
+          </section>
+        )}
 
         {/* Gemini: drafts the listing text from the product photos */}
         <AiProductFill
@@ -642,40 +729,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
               />
             </label>
 
-            {/* Gallery Grid Preview */}
+            {/* The photos in their order on the store: drag (or the arrows) to reorder, "Make cover" to put one first */}
             {images.length > 0 ? (
-              <div className="grid grid-cols-3 min-[480px]:grid-cols-4 sm:grid-cols-5 gap-2.5">
-                {images.map((imgUrl, idx) => (
-                  <div key={idx} className="min-w-0">
-                    {imgUrl && imgUrl.trim() !== "" ? (
-                      <img src={getCleanImageUrl(imgUrl, 320)} alt={`Product preview ${idx + 1}`} className="w-full aspect-[4/5] rounded-[16px] object-cover object-top bg-sunken" />
-                    ) : (
-                      <div className="w-full aspect-[4/5] rounded-[16px] bg-sunken" />
-                    )}
-                    <div className="mt-1 flex items-center justify-between gap-1">
-                      {/* Image Badge */}
-                      <span className={`${ui.badge} ${idx === 0 ? tone.brand : tone.muted}`}>
-                        {idx === 0 ? 'Cover' : `Photo ${idx + 1}`}
-                      </span>
-
-                      {/* Delete Button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleRemoveImage(idx);
-                        }}
-                        className="w-10 h-10 shrink-0 rounded-full hover:bg-danger-tint text-danger flex items-center justify-center cursor-pointer"
-                        title="Remove image"
-                        aria-label={`Remove photo ${idx + 1}`}
-                      >
-                        <X className="w-4 h-4 text-current" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <>
+                {images.length > 1 && <p className="text-[13px] leading-[18px] text-ink-muted">Drag a photo by its handle to change the order, or use the arrows. The first one is the cover in the shop.</p>}
+                <PhotoManager images={images} onChange={setImages} onRemove={handleRemoveImage} />
+              </>
             ) : (
               <p className="text-[13px] leading-[18px] text-ink-muted">No photos yet. A product cannot be saved without a photo.</p>
             )}
@@ -1225,7 +1284,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 placeholder={name ? `${name} | Suit Aura Girls` : 'Used as the browser / Google title'}
                 className={ui.field}
               />
-              <p className={`${ui.hint} sag-num`}>{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className={`${ui.hint} sag-num`}>{seoTitle.trim().length}/60 recommended characters. Empty = product name.</p>
+                {!seoTitle.trim() && name.trim() && (
+                  <button type="button" id="apf-seo-title-fill" onClick={() => setSeoTitle(defaultSeoTitle(name).slice(0, 120))} className={`${ui.small} mt-1.5`}>Use the name</button>
+                )}
+              </div>
             </div>
             <div>
               <label htmlFor="apf-seo-description" className={ui.label}>Meta description</label>
@@ -1238,7 +1302,12 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
                 placeholder="Short summary shown under the title in search results"
                 className={ui.textarea}
               />
-              <p className={`${ui.hint} sag-num`}>{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className={`${ui.hint} sag-num`}>{seoDescription.trim().length}/160 characters are shown. Empty = product description.</p>
+                {!seoDescription.trim() && description.trim() && (
+                  <button type="button" id="apf-seo-description-fill" onClick={() => setSeoDescription(seoDescriptionFrom(description))} className={`${ui.small} mt-1.5`}>Use the description</button>
+                )}
+              </div>
             </div>
             <div>
               <label htmlFor="apf-search-keywords" className={ui.label}>Search keywords</label>
@@ -1279,6 +1348,9 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             </span>
           </label>
         </section>
+
+        {/* Phones and tablets: the live previews under the form (wide screens show them beside it) */}
+        <div className="lg:hidden"><ProductPreviews data={previewData} id="apf-previews-phone" /></div>
 
         {/* The save bar stays at the bottom of the screen */}
         <div className="sticky bottom-0 sm:bottom-3 z-20 -mx-4 sm:mx-0 sag-bar sm:border sm:border-line sm:rounded-full sm:shadow-[var(--sag-shadow-bar)] flex items-center gap-3 px-4 sm:pl-6 sm:pr-2.5 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:py-2.5">
