@@ -50,6 +50,12 @@ export interface AnalyticsDay {
   /** Product pages opened (once per visitor per product per day). */
   productViews: number | null;
   searches: number | null;
+  /** Of the day's visitors, the ones who came from Instagram (the in-app browser, an Instagram link or a Meta ad) and the rest. */
+  instagramVisitors: number | null;
+  otherVisitors: number | null;
+  /** Visitors whose device had been on the store on an earlier day. */
+  returningVisitors: number | null;
+  wishlistAdds: number | null;
 }
 
 const count = (value: unknown): number | null => (value === undefined || value === null || !Number.isFinite(Number(value)) ? null : Number(value));
@@ -61,7 +67,10 @@ const toAnalyticsDay = (id: string, data: Record<string, unknown>): AnalyticsDay
   const visitors = count(data.totalUniqueVisitors);
   // Days before every visit was counted hold only one count per visitor per day; that count is the visits figure then
   const visits = sessions === null && visitors === null ? null : Math.max(sessions ?? 0, visitors ?? 0);
-  return { date, visits, visitors, cartAdds: count(data.cartAdditions), checkouts: count(data.checkoutsInitiated), productViews: count(data.productViews), searches: count(data.searches) };
+  return {
+    date, visits, visitors, cartAdds: count(data.cartAdditions), checkouts: count(data.checkoutsInitiated), productViews: count(data.productViews), searches: count(data.searches),
+    instagramVisitors: count(data.instagramVisitors), otherVisitors: count(data.otherVisitors), returningVisitors: count(data.returningVisitors), wishlistAdds: count(data.wishlistAdds),
+  };
 };
 
 /**
@@ -121,10 +130,12 @@ export interface OrderDay {
   /** Of `paid`, the ones not cancelled: these make up `sales`. */
   sold: number;
   sales: number;
+  /** Of `sales`, the part from cash-on-delivery orders. */
+  codSales: number;
   cancelled: number;
   refunded: number;
 }
-const emptyOrderDay = (): OrderDay => ({ paid: 0, cod: 0, sold: 0, sales: 0, cancelled: 0, refunded: 0 });
+const emptyOrderDay = (): OrderDay => ({ paid: 0, cod: 0, sold: 0, sales: 0, codSales: 0, cancelled: 0, refunded: 0 });
 
 /**
  * Orders grouped by India-time day: paid and refunded orders on the day they were paid (`paidAt`, else the
@@ -147,6 +158,7 @@ export const ordersByDay = (orders: Order[]) => {
       if (o.status !== 'Cancelled' && o.status !== 'Refunded') {
         row.sold += 1;
         row.sales += Number(o.finalTotal) || 0;
+        if (o.payMode === 'cod') row.codSales += Number(o.finalTotal) || 0;
       }
     }
     if (o.status === 'Cancelled') {
@@ -174,6 +186,11 @@ export interface PeriodTotals extends OrderDay {
   cartAdds: number | null;
   checkouts: number | null;
   productViews: number | null;
+  instagramVisitors: number | null;
+  otherVisitors: number | null;
+  returningVisitors: number | null;
+  /** Unique visitors (one per device per day, added up over the days). */
+  visitors: number | null;
   /** sales ÷ sold; null when nothing was sold. */
   averageOrder: number | null;
   /** Paid orders ÷ visits, over the days that have a visits figure; null when those visits are 0 or unknown. */
@@ -181,13 +198,19 @@ export interface PeriodTotals extends OrderDay {
 }
 
 export const totalsFor = (days: string[], analytics: Map<string, AnalyticsDay>, orders: Map<string, OrderDay>): PeriodTotals => {
-  const total: PeriodTotals = { ...emptyOrderDay(), days: days.length, visits: null, visitDays: 0, cartAdds: null, checkouts: null, productViews: null, averageOrder: null, conversion: null };
+  const total: PeriodTotals = {
+    ...emptyOrderDay(), days: days.length, visits: null, visitDays: 0, cartAdds: null, checkouts: null, productViews: null,
+    instagramVisitors: null, otherVisitors: null, returningVisitors: null, visitors: null, averageOrder: null, conversion: null,
+  };
+  const add = (key: 'cartAdds' | 'checkouts' | 'productViews' | 'instagramVisitors' | 'otherVisitors' | 'returningVisitors' | 'visitors', value: number | null) => {
+    if (value !== null) total[key] = (total[key] ?? 0) + value;
+  };
   let paidOnCountedDays = 0;
   days.forEach((day) => {
     const o = orders.get(day);
     if (o) {
       total.paid += o.paid; total.cod += o.cod; total.sold += o.sold; total.sales += o.sales;
-      total.cancelled += o.cancelled; total.refunded += o.refunded;
+      total.codSales += o.codSales; total.cancelled += o.cancelled; total.refunded += o.refunded;
     }
     const a = analytics.get(day);
     if (!a) return;
@@ -196,11 +219,38 @@ export const totalsFor = (days: string[], analytics: Map<string, AnalyticsDay>, 
       total.visitDays += 1;
       paidOnCountedDays += o?.paid || 0;
     }
-    if (a.cartAdds !== null) total.cartAdds = (total.cartAdds ?? 0) + a.cartAdds;
-    if (a.checkouts !== null) total.checkouts = (total.checkouts ?? 0) + a.checkouts;
-    if (a.productViews !== null) total.productViews = (total.productViews ?? 0) + a.productViews;
+    add('cartAdds', a.cartAdds);
+    add('checkouts', a.checkouts);
+    add('productViews', a.productViews);
+    add('instagramVisitors', a.instagramVisitors);
+    add('otherVisitors', a.otherVisitors);
+    add('returningVisitors', a.returningVisitors);
+    add('visitors', a.visitors);
   });
   total.averageOrder = total.sold > 0 ? total.sales / total.sold : null;
   total.conversion = total.visits !== null && total.visits > 0 ? paidOnCountedDays / total.visits : null;
   return total;
 };
+
+/** The same number of days just before `days` (for "compared with the period before"). */
+export const previousDays = (days: string[]) => (days.length ? dayRange(shiftDay(days[0], -days.length), shiftDay(days[0], -1)) : []);
+
+/** The India-time hour (0-23) and weekday (0 = Monday) of a moment; null when it is not a date. */
+export const istHourAndWeekday = (value: string | undefined | null): { hour: number; weekday: number } | null => {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return null;
+  const local = new Date(time + IST_OFFSET_MS);
+  return { hour: local.getUTCHours(), weekday: (local.getUTCDay() + 6) % 7 };
+};
+
+/** Orders with a verified payment (also the ones later cancelled or refunded) paid on one of `days`, India time. Sandbox payments are left out. */
+export const paidOrdersIn = (orders: Order[], days: string[]) => {
+  const set = new Set(days);
+  return orders.filter((o) => !o.testPayment && (o.paymentStatus === 'Paid' || o.paymentStatus === 'Refunded') && set.has(istDay(o.paidAt || o.date)));
+};
+/** A paid order that still counts as a sale (not cancelled, not refunded): the same rule as `ordersByDay`. */
+export const isSale = (o: Order) => o.paymentStatus === 'Paid' && o.status !== 'Cancelled' && o.status !== 'Refunded';
+
+/** A share as a percent: one decimal under 10%, none above. */
+export const shareText = (ratio: number) => `${(ratio * 100).toFixed(Math.abs(ratio * 100) >= 10 ? 0 : 1)}%`;

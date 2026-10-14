@@ -35,6 +35,8 @@ export interface LiveView {
   todayCount: number | null;
   /** Today's visitors per India-time hour (index 0 = the midnight hour); null when the server does not send it. */
   todayByHour: number[] | null;
+  /** The live view has used its own daily budget: the list stops moving until tomorrow (orders and visit counts are not affected). */
+  livePaused: boolean;
 }
 export interface LiveState {
   view: LiveView | null;
@@ -95,6 +97,7 @@ const toView = (raw: any): LiveView | null => {
     todayByHour: Array.isArray(raw.todayByHour) && raw.todayByHour.length === 24
       ? raw.todayByHour.map((n: unknown) => Math.max(0, Math.round(Number(n) || 0)))
       : null,
+    livePaused: raw.livePaused === true,
   };
 };
 
@@ -476,6 +479,82 @@ export const VisitorsByHourPanel: React.FC<{ live: LiveState }> = ({ live }) => 
     </Panel>
   );
 };
+
+// ---------------------------------------------------------------- the live pulse
+
+/**
+ * What the people on the site right now are doing, in one glance: how many are at checkout, in the bag, on a
+ * product or browsing, the pages most of them are on, and where they came from. Only the active visitors.
+ */
+export const LivePulse: React.FC<{ live: LiveState }> = ({ live }) => {
+  const view = live.view;
+  const pulse = useMemo(() => {
+    const active = view?.active || [];
+    const stages = { checkout: 0, bag: 0, product: 0, other: 0 };
+    const pages = new Map<string, number>();
+    const sources = new Map<string, number>();
+    let instagram = 0;
+    active.forEach((v) => {
+      stages[stageOf(v)] += 1;
+      pages.set(v.label, (pages.get(v.label) || 0) + 1);
+      const src = shortSource(v.source);
+      sources.set(src, (sources.get(src) || 0) + 1);
+      if (v.device.toLowerCase() === 'instagram_webview') instagram += 1;
+    });
+    const top = (m: Map<string, number>, n: number) => [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+    return { count: active.length, stages, pages: top(pages, 3), sources: top(sources, 3), instagram };
+  }, [view]);
+
+  if (!view || pulse.count === 0) return null;
+  const stageRows: Array<{ label: string; value: number; hot?: boolean }> = [
+    { label: 'At checkout', value: pulse.stages.checkout, hot: true },
+    { label: 'In the bag', value: pulse.stages.bag, hot: true },
+    { label: 'On a product', value: pulse.stages.product },
+    { label: 'Browsing', value: pulse.stages.other },
+  ];
+  const listed = view.active.length < view.activeCount ? ` (the ${view.active.length} listed)` : '';
+
+  return (
+    <div id="admin-live-pulse" className="mt-4 pt-4 border-t border-line rounded-none grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="min-w-0">
+        <p className="text-xs leading-4 text-ink-muted">What they are doing{listed}</p>
+        <ul className="mt-2 grid grid-cols-2 gap-2">
+          {stageRows.map((s) => (
+            <li key={s.label} className={`px-3 py-2 rounded-[14px] ${s.hot && s.value > 0 ? 'bg-brand text-on-dark' : 'bg-sunken text-ink'}`}>
+              <span className="block sag-num text-lg leading-6 font-semibold">{num(s.value)}</span>
+              <span className={`block text-xs leading-4 ${s.hot && s.value > 0 ? 'text-on-dark-muted' : 'text-ink-muted'}`}>{s.label}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs leading-4 text-ink-muted">Pages they are on</p>
+        <ol className="mt-2 space-y-1.5">
+          {pulse.pages.map(([page, n]) => (
+            <li key={page} className="flex items-baseline justify-between gap-3 text-[13px] leading-[18px]">
+              <span className="min-w-0 truncate text-ink" title={page}>{page}</span>
+              <span className="shrink-0 sag-num text-ink-muted">{num(n)}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs leading-4 text-ink-muted">Where they came from</p>
+        <ol className="mt-2 space-y-1.5">
+          {pulse.sources.map(([source, n]) => (
+            <li key={source} className="flex items-baseline justify-between gap-3 text-[13px] leading-[18px]">
+              <span className="min-w-0 truncate text-ink">{source}</span>
+              <span className="shrink-0 sag-num text-ink-muted">{num(n)}</span>
+            </li>
+          ))}
+        </ol>
+        {pulse.instagram > 0 && <p className="mt-2 text-xs leading-4 text-ink-muted sag-num">{num(pulse.instagram)} of {num(pulse.count)} inside the Instagram or Facebook app</p>}
+      </div>
+    </div>
+  );
+};
+
+const num = (n: number) => n.toLocaleString('en-IN');
 
 // ---------------------------------------------------------------- sources and devices
 
