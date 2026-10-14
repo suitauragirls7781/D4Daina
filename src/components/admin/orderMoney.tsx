@@ -300,7 +300,7 @@ export const PaymentProblemsPanel: React.FC = () => {
           </dl>
           {data.unpaid > 0 && (
             <p className="mt-3 text-sm leading-5 text-ink sag-num">
-              Of the unpaid ones, {data.cod} {data.cod === 1 ? 'was' : 'were'} the ₹ advance of a cash-on-delivery order and {data.unpaid - data.cod} {data.unpaid - data.cod === 1 ? 'was' : 'were'} full online payment.
+              Of the unpaid ones, {data.cod} {data.cod === 1 ? 'was the advance of a cash-on-delivery order' : 'were advances of cash-on-delivery orders'} and {data.unpaid - data.cod} {data.unpaid - data.cod === 1 ? 'was a full online payment' : 'were full online payments'}.
             </p>
           )}
           {data.noted === 0 ? (
