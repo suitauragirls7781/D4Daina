@@ -74,7 +74,7 @@ const BottomSheet: React.FC<{ title: string; onClose: () => void; children: Reac
         aria-label={title}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg max-h-[88dvh] overflow-y-auto rounded-t-[28px] sm:rounded-[28px] sm:mb-6 bg-surface px-5 pt-2.5 pb-[calc(18px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
+        className="pdp-sheet w-full max-w-lg max-h-[88dvh] overflow-y-auto rounded-t-[28px] sm:rounded-[28px] sm:mb-6 bg-surface px-5 pt-2.5 pb-[calc(18px+env(safe-area-inset-bottom))] animate-in slide-in-from-bottom focus:outline-none"
       >
         <div className="flex justify-center sm:hidden" aria-hidden="true"><span className="w-10 h-1 rounded-full bg-sunken-deep" /></div>
         <div className="flex items-center justify-between gap-3 pt-2 pb-3">

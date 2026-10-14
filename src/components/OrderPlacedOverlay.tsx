@@ -14,11 +14,13 @@ export const DrawnTick: React.FC<{ className?: string; tone?: 'ink' | 'paper' }>
 // Full-screen "Order placed" moment shown for ~1.7s after a verified payment, before the confirmation page.
 // Aura: a forest screen, the big tick that draws itself, the label and the huge heading rising in.
 export const OrderPlacedOverlay: React.FC = () => (
-  <div role="status" aria-live="assertive" className="aura-dk fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden bg-ok">
+  <div role="status" aria-live="assertive" className="clay-placed fixed inset-0 z-[10000] flex items-center justify-center overflow-hidden">
     <div className="relative flex flex-col items-center text-center px-6">
-      {/* Two rings open out from the tick as it draws itself */}
-      <span className="aco-done" aria-hidden="true"><i /><i /></span>
-      <DrawnTick tone="paper" className="relative h-28 w-28" />
+      {/* Clay preview: the tick draws itself on a raised clay medallion; two rings open out from it */}
+      <span className="clay-medal">
+        <span className="aco-done" aria-hidden="true"><i /><i /></span>
+        <DrawnTick className="relative h-28 w-28" />
+      </span>
       <p className="aura-lbl aco-rise mt-8" style={{ '--d': '350ms' } as React.CSSProperties}>Payment verified</p>
       <h2 className="aura-h2 aco-rise mt-3" style={{ '--d': '430ms' } as React.CSSProperties}>Order <em>placed</em></h2>
       <p className="aura-sub aco-rise mt-5" style={{ '--d': '560ms' } as React.CSSProperties}>Opening your order details…</p>
