@@ -2642,3 +2642,163 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
 }
 /* end of the finishing pass */
 }
+
+/* Claymorphism tokens */
+:root {
+  --clay-bg: #F5F2EC; --clay-surface: #FBF8F3; --clay-blush: #EFDFDA; --clay-sand: #E8DFD1; --clay-rose: #E9C9CE; --clay-forest: #D3E0DA;
+  --clay-r-card: 32px; --clay-r-sm: 22px;
+  --clay-1: 6px 6px 14px rgba(120,96,80,.14), -4px -4px 10px rgba(255,255,255,.85), inset 1px 1px 0 rgba(255,255,255,.7);
+  --clay-2: 10px 12px 24px rgba(120,96,80,.18), -6px -6px 16px rgba(255,255,255,.9), inset 2px 2px 4px rgba(255,255,255,.8), inset -3px -3px 6px rgba(120,96,80,.08);
+  --clay-3: 16px 20px 40px rgba(120,96,80,.22), -8px -8px 20px rgba(255,255,255,.9), inset 3px 3px 6px rgba(255,255,255,.85), inset -4px -4px 10px rgba(120,96,80,.1);
+  --clay-pressed: inset 4px 4px 10px rgba(120,96,80,.18), inset -4px -4px 10px rgba(255,255,255,.8);
+  --clay-inset: inset 3px 3px 8px rgba(120,96,80,.14), inset -3px -3px 8px rgba(255,255,255,.9);
+  --clay-ink-btn: 6px 8px 16px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.18), inset -3px -3px 6px rgba(0,0,0,.35);
+}
+
+/* Clay: order, account and information pages
+   (OrderConfirmationPage, TrackOrderPage, OrderProgress, AccountPage, LoginPage, WishlistPage, AboutUsPage,
+   ContactUsPage, PolicyPages + size guide, NotFoundPage). Everything is scoped to the page root .clay-pg, so the
+   shared helper classes keep their own look elsewhere. Light from the top-left; only transform and opacity move;
+   a pressed surface swaps its shadow at once (box-shadow is never transitioned). */
+.clay-pg { --clay-bounce: cubic-bezier(0.34, 1.5, 0.64, 1); --clay-ink-press: inset 3px 3px 8px rgba(0,0,0,.5), inset -2px -2px 5px rgba(255,255,255,.12); }
+
+/* Raised surfaces: cards, the ticket, the bands, the placeholders */
+.clay-pg :is(.aura-card, .ocf-tkt, .aa-osk > div, .aa-tsk > div) { background-color: var(--clay-surface); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
+.clay-pg .aura-blk { border-radius: var(--clay-r-card); }
+.clay-pg .ocf-tkt { box-shadow: var(--clay-3); padding: 22px 20px 22px; }
+.clay-pg .aa-band { border-radius: 36px; background: var(--clay-sand); box-shadow: var(--clay-2); }
+.clay-pg .aa-band-blush { background: var(--clay-blush); }
+.clay-pg .aa-short, .clay-pg section.bg-blush { background-color: var(--clay-blush); border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
+.clay-pg .aa-short li > span:first-child { background: var(--aura-ink); box-shadow: 2px 3px 6px rgba(17,16,19,.25), inset 1px 1px 1px rgba(255,255,255,.25); }
+.clay-pg .aa-ask > b { background: var(--clay-blush); opacity: 1; border-radius: 36px; box-shadow: var(--clay-2); }
+.clay-pg .aa-ask > i { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.clay-pg .aa-tsk i { background: #E6DFD3; }
+.clay-pg .ocf-sk > i { box-shadow: var(--clay-inset); }
+
+/* Rows that lead somewhere: a plump surface that sinks when pressed */
+.clay-pg .aa-row { background: var(--clay-surface); border-radius: var(--clay-r-sm); box-shadow: var(--clay-1); transition: transform 420ms var(--clay-bounce); }
+.clay-pg .aa-row:is(a, button):active { transform: scale(0.98); box-shadow: var(--clay-pressed); }
+@media (hover: hover) { .clay-pg .aa-row:is(a, button):hover { transform: translateY(-2px); } }
+@media (min-width: 1024px) {
+  .clay-pg .aa-row[aria-selected="true"] { background: var(--clay-rose); color: var(--aura-ink); box-shadow: var(--clay-pressed); transform: none; }
+  .clay-pg .aa-row[aria-selected="true"] .aa-row-t > small, .clay-pg .aa-row[aria-selected="true"] > svg:last-child { color: #4E4245; }
+  .clay-pg .aa-row[aria-selected="true"] .aa-ic { background: var(--clay-surface); }
+  .clay-pg .aa-row[aria-selected="true"]:focus-visible { outline-color: var(--aura-ink); }
+}
+
+/* Round icon chips: little clay beads */
+.clay-pg .aa-ic { background: var(--clay-surface); color: var(--aura-ink); box-shadow: 3px 4px 8px rgba(120,96,80,.18), -2px -2px 6px rgba(255,255,255,.9), inset 1px 1px 2px rgba(255,255,255,.9), inset -2px -2px 4px rgba(120,96,80,.1); }
+.clay-pg .aa-row .aa-ic, .clay-pg .aa-ic-blush { background: var(--clay-blush); }
+.clay-pg .aa-ic-ink { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.clay-pg button.aa-ic { transition: transform 360ms var(--clay-bounce); }
+.clay-pg button.aa-ic:active { box-shadow: var(--clay-pressed); }
+
+/* Buttons: plump pills. Ink ones carry the ink clay shadow, outline ones become raised surface pills */
+.clay-pg .aura-btn { box-shadow: var(--clay-ink-btn); transition: transform 380ms var(--clay-bounce), background-color 300ms, color 300ms, opacity 300ms; }
+.clay-pg .aura-btn:active { transform: translateY(2px) scale(0.97); box-shadow: var(--clay-ink-press); }
+.clay-pg .aura-btn-line { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-1); }
+.clay-pg .aura-btn-line:active { box-shadow: var(--clay-pressed); }
+.clay-pg .aura-btn:is(:disabled, [aria-disabled="true"]) { box-shadow: var(--clay-pressed); }
+@media (hover: hover) { .clay-pg .aura-btn:not(:disabled):hover { transform: translateY(-2px); } }
+
+/* Fields: pressed into the clay; the ink line still grows on focus */
+.clay-pg .aura-field > :is(input, select), .clay-pg .sag-input { border-color: transparent; border-radius: 20px; background-color: var(--clay-bg); box-shadow: var(--clay-inset); }
+.clay-pg .aura-field > :is(input, select):focus, .clay-pg .sag-input:focus { border-color: rgba(17,16,19,.45); box-shadow: var(--clay-inset); }
+.clay-pg .aura-field > [aria-invalid="true"], .clay-pg .sag-input:is([aria-invalid="true"], .is-error) { border-color: var(--sag-danger); }
+.clay-pg .aura-field > i { left: 20px; right: 20px; }
+.clay-pg .aa-otp input { border-color: transparent; border-radius: 18px; background: var(--clay-bg); box-shadow: var(--clay-inset); }
+.clay-pg .aa-otp input:focus { border-color: rgba(17,16,19,.45); }
+.clay-pg .aa-otp input.f { background: var(--aura-ink); border-color: var(--aura-ink); box-shadow: var(--clay-ink-btn); }
+.clay-pg .aa-otp.err input { border-color: var(--sag-danger); }
+
+/* Sign in or new account: a pressed track with a raised pill that slides */
+.clay-pg .aa-tabs { background: var(--clay-bg); box-shadow: var(--clay-inset); padding: 5px; }
+.clay-pg .aa-tabs::before { left: 5px; top: 5px; bottom: 5px; width: calc(50% - 5px); background: var(--aura-ink); box-shadow: var(--clay-ink-btn); }
+
+/* Chips and contents pills: raised; the chosen one is pressed in, rose */
+.clay-pg .sag-chip { border-color: transparent; background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-1); transition: transform 360ms var(--clay-bounce), background-color 300ms, color 300ms; }
+.clay-pg .sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: var(--clay-rose); border-color: transparent; color: var(--aura-ink); box-shadow: var(--clay-pressed); }
+.clay-pg .sag-chip:active { transform: scale(0.96); }
+/* A swipe row would cut the shadows: it gets room above and below */
+.clay-pg .sag-scroll-x { padding-top: 8px; padding-bottom: 14px; margin-top: -6px; margin-bottom: -10px; }
+.clay-pg .pol-nav { background: transparent; }
+@media (max-width: 1023px) { .clay-pg .pol-nav { background: var(--clay-bg); } }
+
+/* Tags, status pills, notes, errors */
+.clay-pg .aura-tag { border-radius: 999px; padding: 6px 11px; box-shadow: 2px 3px 6px rgba(120,96,80,.16), inset 1px 1px 1px rgba(255,255,255,.6); }
+.clay-pg .aura-tag-ink { box-shadow: 2px 3px 6px rgba(17,16,19,.22), inset 1px 1px 1px rgba(255,255,255,.18); }
+.clay-pg .aa-pill { box-shadow: 2px 3px 6px rgba(120,96,80,.16), inset 1px 1px 1px rgba(255,255,255,.55), inset -1px -1px 2px rgba(120,96,80,.08); }
+.clay-pg .aa-pill.is-no { box-shadow: inset 0 0 0 1.5px var(--sag-danger); }
+.clay-pg .aa-pill.is-mu { background: var(--clay-sand); color: #5C5650; }
+.clay-pg .aa-pill.is-wait { background: var(--clay-rose); }
+.clay-pg .aa-note { border-radius: var(--clay-r-sm); background: var(--clay-blush); box-shadow: var(--clay-1); }
+.clay-pg .aa-alert { border-radius: var(--clay-r-sm); background: var(--clay-surface); box-shadow: inset 0 0 0 1.5px var(--sag-danger), 6px 6px 14px rgba(120,96,80,.14), -4px -4px 10px rgba(255,255,255,.85); }
+
+/* The order's progress card: a light clay card; the stages are beads, reached ones rose and raised,
+   the others pressed in; the rose line draws down to the current stage */
+.clay-pg .aa-tlc { background: var(--clay-surface); color: var(--aura-ink); border-radius: var(--clay-r-card); box-shadow: var(--clay-2);
+  --fg: #111013; --inv: #F5F2EC; --mu: #5C5650; --hl: rgba(17,16,19,.12); --ac: #8E4C58; --sa: #8E4C58; --th: #B76E79; }
+.clay-pg .aa-tlc .aura-lbl { color: #5C5650; }
+.clay-pg .aa-tlc .text-on-dark-muted { color: #5C5650; }
+.clay-pg .aa-tlc .aa-pill { background: var(--clay-blush); color: var(--aura-ink); box-shadow: 2px 3px 6px rgba(120,96,80,.16), inset 1px 1px 1px rgba(255,255,255,.55); }
+.clay-pg .aa-tlc-f { border-top-color: rgba(17,16,19,.1); color: #4A4540; }
+.clay-pg .aa-tlc-f svg { color: #8E4C58; }
+.clay-pg .aa-tlc-f b { color: var(--aura-ink); }
+.clay-pg .aa-tl > svg path { stroke: rgba(17,16,19,.12); stroke-width: 2; }
+.clay-pg .aa-tl > svg path + path { stroke: var(--aura-rose); }
+.clay-pg .aa-tl li { color: #6A645E; }
+.clay-pg .aa-tl li.on { color: var(--aura-ink); }
+.clay-pg .aa-tl li::before { background: var(--clay-bg); box-shadow: var(--clay-inset); }
+.clay-pg .aa-tl li.on::before { background: var(--aura-rose); box-shadow: 2px 3px 6px rgba(120,96,80,.3), inset 2px 2px 3px rgba(255,255,255,.4), inset -2px -2px 4px rgba(80,30,40,.25); }
+.clay-pg .aa-tl li.cur::before { box-shadow: 0 0 0 5px rgba(183,110,121,.22), 2px 3px 6px rgba(120,96,80,.3), inset 2px 2px 3px rgba(255,255,255,.4), inset -2px -2px 4px rgba(80,30,40,.25); }
+.clay-pg .aa-tl small { color: #5C5650; }
+@media (prefers-reduced-motion: no-preference) {
+  .clay-pg .aa-tl li::before { transition: background-color 400ms calc(var(--i, 0) * 260ms + 300ms), transform 500ms var(--clay-bounce) calc(var(--i, 0) * 260ms + 300ms); }
+  .clay-pg .aa-tl:not(.in) li.on { color: #6A645E; }
+  .clay-pg .aa-tl:not(.in) li.on::before { background: var(--clay-bg); box-shadow: var(--clay-inset); transform: none; }
+}
+/* The same progress as seven dots (the latest order in My account) */
+.clay-pg .aa-dots > i { background: var(--clay-bg); box-shadow: inset 1px 1px 3px rgba(120,96,80,.3), inset -1px -1px 2px rgba(255,255,255,.9); }
+.clay-pg .aa-dots > i.on { background: var(--aura-rose); box-shadow: 1px 2px 3px rgba(120,96,80,.3), inset 1px 1px 1px rgba(255,255,255,.4); }
+.clay-pg .aa-dots > i.cur { box-shadow: 0 0 0 4px rgba(183,110,121,.22); }
+.clay-pg .aa-dots > s { background: rgba(17,16,19,.12); }
+/* The slim progress of an order in a list */
+.clay-pg .aa-pg > span { height: 6px; background: var(--clay-bg); box-shadow: inset 1px 1px 2px rgba(120,96,80,.25); }
+
+/* Order confirmed: the tick in a raised bead, the order as a puffy ticket */
+.clay-pg .ocf-mark { border-radius: 50%; background: var(--clay-surface); box-shadow: var(--clay-3); }
+.clay-pg .ocf-mark > i { box-shadow: inset 0 0 0 1.5px rgba(142,76,88,.45); }
+.clay-pg .ocf-wait { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-2); }
+.clay-pg .ocf-facts { border-top: 0; border-bottom: 0; padding: 14px 16px; border-radius: var(--clay-r-sm); background: var(--clay-bg); box-shadow: var(--clay-inset); }
+.clay-pg .aura-card li.border-dashed { border: 0; background: var(--clay-bg); box-shadow: var(--clay-inset); }
+
+/* Empty states: the round mark is a raised bead */
+.clay-pg .kx-emptybag { background: var(--clay-blush); box-shadow: var(--clay-3); }
+/* 404: the three figures look moulded */
+.clay-pg .kx-404 > b { text-shadow: 5px 6px 12px rgba(120,96,80,.28), -3px -3px 6px rgba(255,255,255,.9); }
+.clay-pg .kx-404 > b:nth-child(2) { text-shadow: none; }
+
+/* Policy text: each numbered section is a soft card */
+.clay-pg .aa-sec { margin-top: 18px; padding: 26px 20px 24px; border-top: 0; border-radius: var(--clay-r-card); background: var(--clay-surface); box-shadow: var(--clay-1); }
+.clay-pg .aa-sec:first-child { margin-top: 4px; padding-top: 26px; }
+.clay-pg .aa-sec-n { display: inline-grid; place-items: center; min-width: 38px; height: 30px; padding: 0 10px; margin-bottom: 12px; border-radius: 999px; background: var(--clay-blush); color: #8E4C58; letter-spacing: 0.08em; box-shadow: 2px 3px 6px rgba(120,96,80,.16), inset 1px 1px 1px rgba(255,255,255,.6); }
+@media (min-width: 640px) { .clay-pg .aa-sec { padding: 32px 30px 30px; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .clay-pg :is(.aura-btn, .aa-row, .sag-chip, button.aa-ic) { transition: none; }
+  .clay-pg :is(.aura-btn, .aa-row, .sag-chip, button.aa-ic):is(:hover, :active) { transform: none; }
+}
+.clay-pg .aa-sec::before { content: none; }
+.clay-pg .ocf-mark svg circle { display: none; }
+.clay-pg .aura-seg-box { background: var(--clay-bg); box-shadow: var(--clay-inset); }
+.clay-pg .aura-seg-ind { box-shadow: var(--clay-ink-btn); }
+.clay-pg .aa-tlc :focus-visible { outline-color: #8E4C58; }
+.clay-pg .aura-pc-add { background: var(--clay-surface); box-shadow: var(--clay-1); }
+.clay-pg .aura-pc-add:active { box-shadow: var(--clay-pressed); }
+/* A row inside a card is part of that card: flat, it only sinks while pressed */
+.clay-pg :is(.aura-card, .aa-tlc) .aa-row { background: transparent; box-shadow: none; }
+.clay-pg :is(.aura-card, .aa-tlc) .aa-row:is(a, button):active { box-shadow: var(--clay-pressed); }
+@media (hover: hover) { .clay-pg :is(.aura-card, .aa-tlc) .aa-row:is(a, button):hover { transform: translateX(2px); } }
+/* A policy card puffs up in place as it arrives (its top edge stays put, so a jump from the contents lands exactly) */
+.clay-pg .aa-sec.sag-reveal { transform: scale(0.965); transform-origin: 50% 0; }
+.clay-pg .aa-sec.sag-reveal.is-in { transform: none; }
