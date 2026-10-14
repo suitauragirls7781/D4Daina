@@ -2642,3 +2642,170 @@ html.aura-nopin .hm-cc { position: relative; top: 0; }
 }
 /* end of the finishing pass */
 }
+
+/* Claymorphism tokens */
+:root {
+  --clay-bg: #F5F2EC; --clay-surface: #FBF8F3; --clay-blush: #EFDFDA; --clay-sand: #E8DFD1; --clay-rose: #E9C9CE; --clay-forest: #D3E0DA;
+  --clay-r-card: 32px; --clay-r-sm: 22px;
+  --clay-1: 6px 6px 14px rgba(120,96,80,.14), -4px -4px 10px rgba(255,255,255,.85), inset 1px 1px 0 rgba(255,255,255,.7);
+  --clay-2: 10px 12px 24px rgba(120,96,80,.18), -6px -6px 16px rgba(255,255,255,.9), inset 2px 2px 4px rgba(255,255,255,.8), inset -3px -3px 6px rgba(120,96,80,.08);
+  --clay-3: 16px 20px 40px rgba(120,96,80,.22), -8px -8px 20px rgba(255,255,255,.9), inset 3px 3px 6px rgba(255,255,255,.85), inset -4px -4px 10px rgba(120,96,80,.1);
+  --clay-pressed: inset 4px 4px 10px rgba(120,96,80,.18), inset -4px -4px 10px rgba(255,255,255,.8);
+  --clay-inset: inset 3px 3px 8px rgba(120,96,80,.14), inset -3px -3px 8px rgba(255,255,255,.9);
+  --clay-ink-btn: 6px 8px 16px rgba(17,16,19,.28), inset 2px 2px 3px rgba(255,255,255,.18), inset -3px -3px 6px rgba(0,0,0,.35);
+}
+
+/* Clay: product page, bag, checkout */
+/* Page-scoped: the product page (.pdp-page, also its placeholder) and its size sheet (.pdp-sheet), the bag page
+   (#cart-page) and drawer (.abag-sheet), the checkout (.sag-checkout), its payment-return card (.aco-ret) and the
+   order-placed screen (.clay-placed). Shadows never animate: a press swaps to the pressed shadow at once and only
+   the transform eases (a small bounce). */
+:root { --clay-bounce: cubic-bezier(.34, 1.56, .64, 1); --clay-dark: 10px 14px 28px rgba(17,16,19,.30), inset 2px 2px 3px rgba(255,255,255,.14), inset -3px -3px 7px rgba(0,0,0,.42); --clay-on-dark: 4px 5px 10px rgba(0,0,0,.35), inset 2px 2px 3px rgba(255,255,255,.9), inset -2px -2px 5px rgba(120,96,80,.25); }
+
+/* Buttons on these pages: ink clay pills; the line pill becomes a raised clay pill */
+:is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) .aura-btn { box-shadow: var(--clay-ink-btn); transition: transform 380ms var(--clay-bounce), background-color 300ms, color 300ms, opacity 300ms; }
+:is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) .aura-btn.aura-btn-line { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-2); }
+:is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) .aura-btn:not(:disabled):active { box-shadow: inset 3px 3px 8px rgba(0,0,0,.45), inset -2px -2px 5px rgba(255,255,255,.12); transform: scale(.97) translate3d(0, 1px, 0); }
+:is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) .aura-btn.aura-btn-line:not(:disabled):active { box-shadow: var(--clay-pressed); }
+:is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) .aura-btn:disabled { box-shadow: none; }
+/* Fields: a soft trough pressed into the clay; the ink line still grows on focus */
+:is(.pdp-page, [id="cart-page"], .abag-sheet, .sag-checkout) .sag-input { border-color: transparent; background-color: var(--clay-bg); box-shadow: var(--clay-inset); border-radius: 18px; }
+:is(.pdp-page, [id="cart-page"], .abag-sheet, .sag-checkout) .sag-input:focus { border-color: transparent; box-shadow: var(--clay-inset), inset 0 0 0 1.5px rgba(17,16,19,.55); }
+:is(.pdp-page, [id="cart-page"], .abag-sheet, .sag-checkout) .sag-input:is([aria-invalid="true"], .is-error) { box-shadow: var(--clay-inset), inset 0 0 0 1.5px var(--sag-danger); }
+
+/* ---- Product page ---- */
+.pdp-page .pdp-fr, .pdp-page .pdp-gi > .aura-sk { border-radius: var(--clay-r-card); box-shadow: var(--clay-2); }
+.pdp-page .pdp-g { padding: 12px 14px 8px; }
+.pdp-page .pdp-th { padding: 14px 6px 12px; gap: 10px; }
+.pdp-page .pdp-th > button { border-radius: 16px; box-shadow: var(--clay-1); transition: transform 380ms var(--clay-bounce); }
+.pdp-page .pdp-th > button[aria-current="true"] { box-shadow: var(--clay-2), 0 0 0 2px var(--clay-bg), 0 0 0 3.5px var(--aura-ink); transform: translate3d(0, -3px, 0); }
+.pdp-page .pdp-ic { background: var(--clay-surface); box-shadow: var(--clay-1); transition: transform 380ms var(--clay-bounce); }
+.pdp-page .pdp-ic:active { box-shadow: var(--clay-pressed); transform: scale(.9); }
+.pdp-page .pdp-pr .aura-tag { border-radius: 999px; padding-inline: 11px; background: var(--clay-blush); box-shadow: var(--clay-1); }
+.pdp-page .pdp-off { border-radius: 28px; padding: 18px; background: var(--clay-blush); box-shadow: var(--clay-2); }
+.pdp-page .pdp-code { border-radius: 12px; background: var(--clay-surface); box-shadow: var(--clay-inset); }
+.pdp-page .pdp-copy { box-shadow: var(--clay-ink-btn); transition: transform 380ms var(--clay-bounce); }
+.pdp-page .pdp-copy:active { transform: scale(.94); }
+/* Colours: raised clay pills; the chosen one sinks in, with an ink ring */
+.pdp-page .pdp-sw > button { background: var(--clay-surface); box-shadow: var(--clay-1); transition: transform 380ms var(--clay-bounce); }
+.pdp-page .pdp-sw > button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--aura-ink), var(--clay-pressed); transform: none; }
+/* Sizes: a trough with an ink clay bead that slides to the chosen size */
+:is(.pdp-page, .pdp-sheet) .aura-seg-box { background: var(--clay-bg); box-shadow: var(--clay-inset); padding: 5px; }
+:is(.pdp-page, .pdp-sheet) .aura-seg-box > .aura-seg-ind { top: 5px; bottom: 5px; box-shadow: var(--clay-ink-btn); }
+:is(.pdp-page, .pdp-sheet) .pdp-size .sag-chip { border-color: transparent; background: var(--clay-surface); box-shadow: var(--clay-1); transition: background-color 300ms, color 300ms, transform 380ms var(--clay-bounce); }
+:is(.pdp-page, .pdp-sheet) .pdp-size .sag-chip[aria-pressed="true"] { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+:is(.pdp-page, .pdp-sheet) .pdp-size .sag-chip:active { transform: scale(.94); }
+:is(.pdp-page, .pdp-sheet) .pdp-size.err { box-shadow: 0 0 0 2px var(--sag-danger); }
+.pdp-page .pdp-size.wrap { gap: 10px; padding: 4px; margin: -4px; }
+.pdp-sheet .has-\[\.wrap\]\:rounded-\[22px\] { background: transparent; }
+/* Quantity: a raised pill whose buttons press in */
+.pdp-page .pdp-qty { background: var(--clay-surface); box-shadow: var(--clay-1); padding: 2px; }
+.pdp-page .pdp-qty > button:not(:disabled):active { box-shadow: var(--clay-pressed); transform: scale(.9); }
+.pdp-page .pdp-cta { gap: 14px; }
+/* What the store stands behind: a pastel forest clay card with ink text */
+.pdp-page .pdp-conf { border-radius: var(--clay-r-card); background: var(--clay-forest); color: var(--aura-ink); box-shadow: var(--clay-2); }
+.pdp-page .pdp-conf-h { border-bottom-color: rgba(30, 58, 52, .16); }
+.pdp-page .pdp-conf-h > span:first-child { background: var(--clay-surface); color: var(--aura-forest); box-shadow: var(--clay-1); }
+.pdp-page .pdp-conf-r { color: var(--aura-ink); }
+.pdp-page .pdp-conf-r > span:first-child { background: rgba(255, 255, 255, .6); color: var(--aura-forest); box-shadow: var(--clay-1); }
+.pdp-page .pdp-conf :focus-visible { outline-color: var(--aura-ink); }
+/* The PIN check card and the details: clay cards */
+.pdp-page .pdp-d > .aura-card { border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); margin-top: 18px; }
+.pdp-page .pdp-acc { margin-top: 22px; padding: 0 18px; border-top: 0; border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); }
+.pdp-page .pdp-acc > div:last-child { border-bottom: 0; }
+.pdp-page .pdp-off, .pdp-page .pdp-conf { margin-top: 22px; }
+/* The size sheet: a clay sheet */
+.pdp-sheet { background: var(--clay-surface) !important; box-shadow: 0 -10px 30px rgba(120,96,80,.18), inset 2px 2px 4px rgba(255,255,255,.8); }
+.pdp-sheet > div > button[aria-label="Close"] { background: var(--clay-bg); box-shadow: var(--clay-1); }
+.pdp-sheet .bg-sunken.rounded-\[22px\] { background: var(--clay-bg); box-shadow: var(--clay-inset); }
+/* The buy bar: a dark clay pill that floats a little above the edge */
+.pdp-page .pdp-buy { left: 8px; right: 8px; bottom: max(8px, env(safe-area-inset-bottom)); padding: 8px 8px 8px 10px; border-radius: 30px; box-shadow: var(--clay-dark); }
+.pdp-page .pdp-buy .aura-btn:not(.aura-btn-line) { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-on-dark); }
+.pdp-page .pdp-buy .aura-btn.aura-btn-line { background: transparent; color: var(--aura-paper); box-shadow: inset 0 0 0 1.5px rgba(245,242,236,.55); }
+.pdp-page .pdp-buy .aura-btn:not(:disabled):active { box-shadow: inset 3px 3px 7px rgba(0,0,0,.4); }
+.pdp-page .pdp-buy > img { border-radius: 16px; }
+@media (min-width: 900px) {
+  .pdp-page .pdp-g { padding: 8px 4px; }
+  .pdp-page .pdp-buy { left: auto; right: 24px; bottom: 24px; padding: 9px 10px 9px 12px; border-radius: 40px; }
+}
+
+/* ---- Bag (page and drawer) ---- */
+:is([id="cart-page"], .abag-sheet) .abag-band { border-radius: var(--clay-r-card); background: var(--clay-sand); box-shadow: var(--clay-2); }
+:is([id="cart-page"], .abag-sheet) .abag-l { margin-bottom: 16px; border-radius: 28px; box-shadow: 10px 12px 24px rgba(120,96,80,.16), -6px -6px 16px rgba(255,255,255,.9); }
+:is([id="cart-page"], .abag-sheet) .abag-l.out { margin-bottom: 0; }
+:is([id="cart-page"], .abag-sheet) .abag-in { padding: 10px; border-radius: 28px; background: var(--clay-surface); box-shadow: inset 2px 2px 4px rgba(255,255,255,.85), inset -3px -3px 6px rgba(120,96,80,.08); }
+:is([id="cart-page"], .abag-sheet) .abag-x { border-radius: 28px; background: var(--clay-rose); }
+:is([id="cart-page"], .abag-sheet) .abag-ph { border-radius: 18px; }
+:is([id="cart-page"], .abag-sheet) .abag-qty { background: var(--clay-bg); box-shadow: var(--clay-inset); }
+:is([id="cart-page"], .abag-sheet) .abag-qty > button:not(:disabled):active { box-shadow: var(--clay-pressed); }
+:is([id="cart-page"], .abag-sheet, .sag-checkout) .abag-chip { border: 1.5px dashed rgba(17,16,19,.42); background: var(--clay-surface); box-shadow: var(--clay-1); transition: transform 380ms var(--clay-bounce), opacity 300ms; }
+:is([id="cart-page"], .abag-sheet, .sag-checkout) .abag-chip:not(:disabled):active { box-shadow: var(--clay-pressed); }
+:is([id="cart-page"], .abag-sheet, .sag-checkout) .abag-pdt { border-radius: var(--clay-r-card); background: var(--clay-surface); box-shadow: var(--clay-2); }
+:is([id="cart-page"], .abag-sheet) .abag-facts { gap: 12px; }
+:is([id="cart-page"], .abag-sheet) .abag-facts > li { border-radius: var(--clay-r-sm); background: var(--clay-sand); box-shadow: var(--clay-1); }
+:is([id="cart-page"], .abag-sheet) .abag-facts > li:nth-child(2) { background: var(--clay-blush); }
+:is([id="cart-page"], .abag-sheet, .sag-checkout) .abag-note { border-radius: var(--clay-r-sm); background: var(--clay-blush); box-shadow: var(--clay-1); }
+:is([id="cart-page"], .abag-sheet) .aura-card { border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); }
+#cart-page .abag-bar { box-shadow: var(--clay-dark); }
+#cart-page .abag-bar .aura-btn { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-on-dark); }
+#cart-page .abag-bar .aura-btn:not(:disabled):active { box-shadow: inset 3px 3px 7px rgba(0,0,0,.4); }
+.abag-sheet { background: var(--clay-bg); }
+.abag-sheet :is(.abag-in, .abag-pdt, .aura-card) { background: var(--clay-surface); }
+.abag-sheet .abag-qty { background: var(--clay-bg); }
+
+/* ---- Checkout ---- */
+/* The top: a pastel forest clay block with ink text */
+.sag-checkout .aco-top { background: var(--clay-forest); color: var(--aura-ink); box-shadow: var(--clay-2); border-radius: 28px; --fg: #111013; --inv: #F5F2EC; --mu: #46524D; --hl: rgba(17, 16, 19, .18); --ac: #8E4C58; --th: #111013; }
+.sag-checkout .aco-top :focus-visible { outline-color: var(--aura-ink); }
+.sag-checkout .aco-hd-b { background: rgba(255, 255, 255, .55); box-shadow: var(--clay-1); width: 40px; height: 40px; margin: 0 6px 0 4px; transition: transform 380ms var(--clay-bounce); }
+.sag-checkout .aco-hd-b:active { box-shadow: var(--clay-pressed); transform: scale(.9); }
+.sag-checkout .aco-stp-b.on { color: var(--aura-ink); }
+.sag-checkout .aco-stp-b > b { transition: background-color 400ms 250ms, color 400ms 250ms; }
+.sag-checkout .aco-stp-b.on > b { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.sag-checkout .aco-rail { height: 4px; background: rgba(255, 255, 255, .55); box-shadow: inset 1px 1px 2px rgba(30, 58, 52, .18); }
+.sag-checkout .aco-rail > i { background: var(--aura-ink); }
+/* Cards: the summary, the gift note, the comparison bar */
+.sag-checkout .aura-card { border-radius: 28px !important; background: var(--clay-surface); box-shadow: var(--clay-2); }
+.sag-checkout .aco-sum { border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); }
+.sag-checkout .aco-strip img { box-shadow: var(--clay-1); }
+.sag-checkout .aco-strip-v { min-height: 34px; padding: 0 12px; border-radius: 999px; background: var(--clay-bg); box-shadow: var(--clay-1); }
+/* The mobile field with its +91: one trough */
+.sag-checkout .aco-tel { border-color: transparent; background: var(--clay-bg); box-shadow: var(--clay-inset); border-radius: 18px; transition: none; }
+.sag-checkout .aco-tel:focus-within { border-color: transparent; box-shadow: var(--clay-inset), inset 0 0 0 1.5px rgba(17,16,19,.55); }
+.sag-checkout .aco-tel.bad { border-color: transparent; box-shadow: var(--clay-inset), inset 0 0 0 1.5px var(--sag-danger); }
+.sag-checkout .aco-tel > span { border-right-color: rgba(120, 96, 80, .2); }
+.sag-checkout .aco-loc { background: var(--clay-surface); box-shadow: var(--clay-1); transition: transform 380ms var(--clay-bounce); }
+.sag-checkout .aco-loc:not(:disabled):active { box-shadow: var(--clay-pressed); }
+.sag-checkout .aco-tkt { border-radius: 22px; background: var(--clay-blush); box-shadow: var(--clay-1); }
+.sag-checkout .aco-tkt-ic { background: var(--clay-surface); box-shadow: var(--clay-1); }
+/* The ways to pay: the chosen card is raised blush clay with an ink ring; the other is a flatter clay card */
+.sag-checkout .aco-pay, .sag-checkout .aco-opt { background: var(--clay-surface); color: var(--aura-ink); box-shadow: var(--clay-1); border-radius: 28px; transition: background-color 350ms, transform 420ms var(--clay-bounce); --fg: #111013; --mu: #5E5852; --hl: rgba(17, 16, 19, .14); --ac: #8E4C58; }
+.sag-checkout .aco-pay.on, .sag-checkout .aco-opt.on { background: var(--clay-blush); color: var(--aura-ink); box-shadow: 0 0 0 2px var(--aura-ink), var(--clay-3); --fg: #111013; --mu: #5E5852; --hl: rgba(17, 16, 19, .14); --ac: #8E4C58; }
+.sag-checkout :is(.aco-pay, .aco-opt):active { scale: 1; transform: scale(.985); }
+.sag-checkout .aco-pay-tag { border-radius: 999px; padding: 6px 11px; background: var(--clay-surface); box-shadow: var(--clay-1); }
+.sag-checkout .aco-rd > i { background: var(--clay-bg); box-shadow: var(--clay-inset), inset 0 0 0 1.5px rgba(17,16,19,.7); transition: none; }
+.sag-checkout .aco-rd > input:checked + i { box-shadow: inset 0 0 0 6px var(--aura-ink); }
+.sag-checkout .aco-upi { background: var(--clay-surface); box-shadow: var(--clay-1); border-radius: 20px; transition: background-color 300ms, color 300ms, opacity 300ms, transform 380ms var(--clay-bounce); }
+.sag-checkout .aco-upi > i { transition: none; }
+.sag-checkout .aco-upi.on { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
+.sag-checkout .aco-upi:not(:disabled):active { scale: 1; transform: scale(.96); }
+.sag-checkout .aco-bar { height: 6px; background: var(--clay-bg); box-shadow: var(--clay-inset); }
+.sag-checkout .aco-note { border-radius: var(--clay-r-sm); background: var(--clay-blush); box-shadow: var(--clay-1); }
+.sag-checkout .aco-bad { border-radius: 26px; background: var(--clay-surface); box-shadow: var(--clay-2), inset 0 0 0 1.5px var(--sag-danger); }
+.aco-sheet { background: var(--clay-surface); box-shadow: 0 -10px 30px rgba(120,96,80,.2), inset 2px 2px 4px rgba(255,255,255,.85); }
+.aco-sheet .aco-x { background: var(--clay-bg); box-shadow: var(--clay-1); }
+@media (min-width: 640px) { .aco-sheet { box-shadow: var(--clay-3); border-radius: var(--clay-r-card); } }
+/* Payment return: one clay card; the waiting circle is a clay bead */
+.aco-ret.aura-card { border-radius: 34px; background: var(--clay-surface); box-shadow: var(--clay-3); }
+.aco-ret .aco-wait { background: var(--clay-bg); box-shadow: var(--clay-2); }
+/* Order placed: a pastel forest screen, the tick drawn on a raised clay medallion */
+.clay-placed { background: var(--clay-forest); color: var(--aura-ink); --fg: #111013; --mu: #46524D; --ac: #8E4C58; }
+.clay-medal { position: relative; display: grid; place-items: center; width: 168px; height: 168px; border-radius: 50%; background: var(--clay-surface); box-shadow: var(--clay-3); }
+.clay-medal > .aco-done { top: 28px; }
+.clay-medal > .aco-done > i { box-shadow: inset 0 0 0 1.5px rgba(17, 16, 19, .3); }
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) :is(.aura-btn, .pdp-ic, .pdp-th > button, .pdp-sw > button, .sag-chip, .pdp-copy, .pdp-qty > button, .abag-chip, .aco-hd-b, .aco-loc, .aco-pay, .aco-opt, .aco-upi) { transition: none !important; }
+  :is(.pdp-page, .pdp-sheet, [id="cart-page"], .abag-sheet, .sag-checkout, .aco-ret, .aco-sheet) :is(.aura-btn, .pdp-ic, .pdp-th > button, .pdp-sw > button, .sag-chip, .pdp-copy, .pdp-qty > button, .abag-chip, .aco-hd-b, .aco-loc, .aco-pay, .aco-opt, .aco-upi):active { transform: none !important; }
+  .pdp-page .pdp-th > button[aria-current="true"] { transform: none; }
+}
