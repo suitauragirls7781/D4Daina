@@ -235,7 +235,7 @@ export const Header: React.FC = () => {
   const navItems: Array<{ label: string; action: () => void; active: boolean }> = [
     { label: 'Home', action: () => setActivePage('home'), active: activePage === 'home' },
     { label: 'Shop', action: () => navigateToCategory('All'), active: activePage === 'shop' && selectedCategory === 'All' },
-    { label: 'New Arrivals', action: () => navigateToCategory('New Arrivals'), active: activePage === 'shop' && selectedCategory === 'New Arrivals' },
+    { label: 'New arrivals', action: () => navigateToCategory('New Arrivals'), active: activePage === 'shop' && selectedCategory === 'New Arrivals' },
   ];
 
   // Header controls: round 46px icon buttons in the bar's own text colour

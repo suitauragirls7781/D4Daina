@@ -7,14 +7,14 @@
 import type { Order, StoreSettings } from '../types';
 import { STORE_ADDRESS, SUPPORT_PHONE_DISPLAY } from '../utils/storeContact';
 
-const PLUM: [number, number, number] = [75, 29, 63];
-const INK: [number, number, number] = [42, 26, 38];
-const MUTED: [number, number, number] = [120, 104, 116];
-const GOLD: [number, number, number] = [156, 122, 69];
-const LAVENDER: [number, number, number] = [243, 238, 248];
-const IVORY: [number, number, number] = [251, 247, 243];
-const EMERALD: [number, number, number] = [4, 120, 87];
-const ROSE: [number, number, number] = [138, 46, 85];
+const PLUM: [number, number, number] = [17, 16, 19];       // ink (the name is kept from an earlier look)
+const INK: [number, number, number] = [17, 16, 19];
+const MUTED: [number, number, number] = [106, 100, 94];
+const GOLD: [number, number, number] = [106, 100, 94];      // muted ink (labels, "payment pending")
+const LAVENDER: [number, number, number] = [242, 239, 234];
+const IVORY: [number, number, number] = [248, 246, 242];
+const EMERALD: [number, number, number] = [30, 58, 52];    // forest (paid, savings)
+const ROSE: [number, number, number] = [142, 76, 88];
 
 // The standard PDF fonts only cover Western characters: common symbols are swapped for plain text and
 // anything else (e.g. emoji) is dropped, so a line never turns into scrambled, letter-spaced text.
@@ -102,7 +102,7 @@ export const buildInvoicePdf = async (order: Order, settings?: Partial<StoreSett
     text(storeName, M, 22, { size: 20, font: 'times', color: [255, 255, 255] });
   }
   text(number ? 'TAX INVOICE' : 'ORDER RECEIPT', W - M, 17, { size: 18, font: 'times', bold: true, color: [255, 255, 255], align: 'right' });
-  text(number || `Order #${order.orderNumber}`, W - M, 24, { size: 10, color: [232, 210, 164], align: 'right' });
+  text(number || `Order #${order.orderNumber}`, W - M, 24, { size: 10, color: [234, 215, 209], align: 'right' });
   const status = refunded ? 'REFUNDED' : paid ? 'PAID' : 'PAYMENT PENDING';
   doc.setFillColor(...(refunded ? ROSE : paid ? EMERALD : GOLD));
   doc.setFont('helvetica', 'bold');

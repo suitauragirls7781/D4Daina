@@ -121,8 +121,8 @@ export const Footer: React.FC = () => {
               <button key={page} type="button" onClick={() => go(page)}>{label}</button>
             ))}
             {installWay && (
-              <button type="button" id="footer-install-app" onClick={() => { void askToInstall(); }} title={installWay === 'ios' ? IOS_INSTALL_STEPS : undefined}>
-                {installWay === 'ios' ? `Install the app: ${IOS_INSTALL_STEPS.toLowerCase()}` : 'Install the app'}
+              <button type="button" id="footer-install-app" className={installWay === 'ios' ? 'aura-ft-inst' : undefined} onClick={() => { void askToInstall(); }} title={installWay === 'ios' ? IOS_INSTALL_STEPS : undefined}>
+                {installWay === 'ios' ? <>Install the app<small>{IOS_INSTALL_STEPS}</small></> : 'Install the app'}
               </button>
             )}
           </nav>

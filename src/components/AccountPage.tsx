@@ -769,7 +769,8 @@ export const AccountPage: React.FC = () => {
     window.scrollTo(0, 0);
   };
 
-  const displayName = profile.fullName || user.name || user.email.split('@')[0];
+  // A real name greets by the first name; an account that only has its email is welcomed without one (never "Hello, priya.sharma")
+  const displayName = (profile.fullName || user.name || '').trim();
   const firstName = displayName.trim().split(/\s+/)[0];
   // Real numbers only: what the account already holds
   const tabNote: Partial<Record<Tab, string>> = {
@@ -793,7 +794,7 @@ export const AccountPage: React.FC = () => {
       <div className="max-w-[1120px] mx-auto lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10 lg:items-start">
         <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-3 lg:sticky lg:top-24`}>
           <div className="aa-band aa-band-blush min-w-0">
-            <AuraTitle as="h1" label={`Hello, ${firstName}`} title="My" accent="account" size="lg" titleClassName="lg:text-[46px]" />
+            <AuraTitle as="h1" label={firstName ? `Hello, ${firstName}` : 'Welcome back'} title="My" accent="account" size="lg" titleClassName="lg:text-[46px]" />
             <p className="mt-3 text-[14px] leading-5 aura-mu truncate">{user.email}</p>
           </div>
 
