@@ -3,6 +3,7 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { adminDb as db } from '../../lib/firebase';
 import { Order, Product } from '../../types';
 import { istDay } from './adminStats';
+import { isRemovedCategory } from '../../utils/removedSections';
 
 /**
  * Per-product and per-category numbers for a set of days: product page views and wishlist saves
@@ -133,7 +134,8 @@ export const categoryRows = (products: Product[], views: Map<string, number>, so
     row.units += s.units;
     row.sales += s.sales;
   });
-  return [...rows.values()].filter((r) => r.views > 0 || r.units > 0);
+  // Kids wear and toys were removed from the store (2026-10-12): their old numbers are left out
+  return [...rows.values()].filter((r) => (r.views > 0 || r.units > 0) && !isRemovedCategory(r.category));
 };
 
 /** The category each sold product had in its order (for products no longer in the catalogue). */

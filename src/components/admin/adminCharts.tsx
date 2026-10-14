@@ -58,7 +58,10 @@ export const Delta: React.FC<{ now: number | null; before: number | null; than: 
   const flat = Math.abs(gap) < 1e-9 || (before > 0 && Math.abs(gap / before) < 0.005);
   let words: string;
   if (flat) words = `Same as ${than}`;
-  else if (points) words = `${gap > 0 ? '▲' : '▼'} ${Math.abs(gap * 100).toFixed(Math.abs(gap * 100) >= 10 ? 0 : 1)} pts vs ${than}`;
+  else if (points) {
+    const pts = Math.abs(gap * 100);
+    words = `${gap > 0 ? '▲' : '▼'} ${pts.toFixed(pts >= 10 ? 0 : pts >= 1 ? 1 : 2)} pts vs ${than}`;
+  }
   else if (before === 0) words = `▲ Up from 0 ${than}`;
   else {
     const pct = Math.abs(gap / before) * 100;
@@ -89,7 +92,7 @@ export const Sparkline: React.FC<{ values: Array<number | null>; className?: str
   return (
     <span className={`relative block h-7 ${className}`} aria-hidden="true">
       <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="absolute inset-0 w-full h-full overflow-visible">
-        {segments.map((d, i) => <path key={i} d={d} fill="none" stroke="var(--color-ink)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" pathLength={1} className="a2-draw" />)}
+        {segments.map((d, i) => <path key={i} d={d} fill="none" stroke="var(--color-ink)" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" className="a2-fade" />)}
       </svg>
       {last !== null && <span className="absolute w-1.5 h-1.5 -mr-[3px] -mt-[3px] rounded-full bg-accent" style={{ right: 0, top: `${((26 - (last / top) * 24) / 28) * 100}%` }} />}
       <ChartStyle />
@@ -239,7 +242,7 @@ export const TrendChart: React.FC<TrendChartProps> = ({ points, format, label, b
                 {areas.map((d, i) => <path key={`a${i}`} d={d} fill="var(--color-ink)" fillOpacity="0.06" className="a2-fade" />)}
                 {before.map((d, i) => <path key={`b${i}`} d={d} fill="none" stroke="var(--color-control)" strokeWidth="1.75" strokeDasharray="5 4" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />)}
                 {trend && <path d={trend.d} fill="none" stroke="var(--color-accent)" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" vectorEffect="non-scaling-stroke" />}
-                {main.map((d, i) => <path key={`m${i}`} d={d} fill="none" stroke="var(--color-ink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" pathLength={1} className="a2-draw" />)}
+                {main.map((d, i) => <path key={`m${i}`} d={d} fill="none" stroke="var(--color-ink)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" className="a2-fade" />)}
               </svg>
             )}
             {/* a lone counted point between gaps still shows as a dot */}
