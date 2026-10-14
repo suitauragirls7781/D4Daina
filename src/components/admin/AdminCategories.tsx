@@ -19,12 +19,15 @@ import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { AdminPageHeader, EmptyState, SCRIM, SWITCH_TRACK, StatRow, StatTile, tone, ui } from './adminShared';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { WOMEN_CATEGORY_INFO, WOMEN_CATEGORY_NAMES, isWomenCategory } from '../../data/womenCategories';
+import { useRouter } from '../../context/RouterContext';
+import { showCategoryInProducts } from './catalogue/catalogueKit';
 
 const MAX_UPLOAD_MB = 10;
 
 export const AdminCategories: React.FC = () => {
   const { categories = [], addCategory, updateCategory, deleteCategory, products = [], heroConfig, dealOfTheDay } = useAdmin();
   const { showToast, navigateToCategory } = useShop();
+  const { navigate } = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCatId, setEditingCatId] = useState<string | null>(null);
@@ -159,6 +162,20 @@ export const AdminCategories: React.FC = () => {
     return products.filter((p) => p.category === catName).length;
   };
 
+  // Real numbers of one category: how many styles are live, how many are sold out, and the photo the store
+  // falls back to (the first live style's cover). Accessories belong to Complete the Look and are not counted.
+  const statsOf = (catName: string) => {
+    const list = products.filter((p) => p.category === catName && p.productType !== 'accessory');
+    const live = list.filter((p) => !p.hidden);
+    const soldOut = live.filter((p) => !p.inStock || Number(p.stockQuantity ?? 0) <= 0).length;
+    const cover = (live[0] || list[0])?.images?.[0] || '';
+    return { total: list.length, live: live.length, soldOut, cover };
+  };
+  const seeProducts = (catName: string) => {
+    showCategoryInProducts(catName);
+    navigate('/admin/products');
+  };
+
   // Every category the store can sell under (src/data/womenCategories.ts) that has no saved card yet. They work
   // without one: a card is only needed for the owner's own photo, or to switch a category off.
   const ready = WOMEN_CATEGORY_NAMES.filter((name) => !categories.some((c) => c.name === name));
@@ -230,10 +247,21 @@ export const AdminCategories: React.FC = () => {
 
               {/* Body stats & controls */}
               <div className="p-3.5 sm:p-4 flex-1 flex flex-col justify-between space-y-3 text-[13px]">
-                <p className="flex items-baseline gap-1.5 text-ink-muted">
-                  <span className="text-xl leading-7 font-semibold text-ink sag-num">{liveCount}</span>
-                  <span>{liveCount === 1 ? 'product' : 'products'} in this category</span>
-                </p>
+                <div>
+                  <p className="flex items-baseline gap-1.5 text-ink-muted">
+                    <span className="text-xl leading-7 font-semibold text-ink sag-num">{liveCount}</span>
+                    <span>{liveCount === 1 ? 'product' : 'products'} in this category</span>
+                  </p>
+                  {(() => {
+                    const s = statsOf(cat.name);
+                    return s.total > 0 ? (
+                      <p className="mt-0.5 text-xs leading-4 text-ink-muted sag-num">
+                        {s.live} live{s.soldOut ? <> · <span className="text-danger font-semibold">{s.soldOut} sold out</span></> : ''}
+                        <button type="button" onClick={() => seeProducts(cat.name)} className={`ml-2 ${ui.link}`}>See products</button>
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
                 {!cat.image && <p className="text-xs leading-4 text-ink-muted">No photo yet: the store uses the first product photo.</p>}
 
                 <div className="flex flex-wrap items-center justify-between gap-1.5 pt-3 border-t border-line">
@@ -281,13 +309,22 @@ export const AdminCategories: React.FC = () => {
           <ul className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {ready.map((name) => {
               const count = getActualProductCount(name);
+              const s = statsOf(name);
               return (
-                <li key={name} className="flex items-center gap-3 rounded-[16px] bg-sunken px-3.5 py-2.5">
+                <li key={name} className="flex items-center gap-3 rounded-[16px] bg-sunken pl-2 pr-2.5 py-2">
+                  {/* The photo the store uses for it until it gets its own (the first live style's cover) */}
+                  {s.cover
+                    ? <img src={getCleanImageUrl(s.cover, 160)} alt="" loading="lazy" className="w-11 aspect-[4/5] shrink-0 rounded-[10px] object-cover object-top bg-surface" />
+                    : <span className="w-11 aspect-[4/5] shrink-0 rounded-[10px] bg-surface flex items-center justify-center text-ink-faint" aria-hidden="true"><ImageIcon className="w-4 h-4" /></span>}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold leading-5 text-ink">{name}</span>
-                    <span className="block truncate text-[13px] leading-[18px] text-ink-muted">{count > 0 ? `${count} ${count === 1 ? 'product' : 'products'} · on the store` : 'No products yet · coming soon'}</span>
+                    <span className="block text-[13px] leading-[18px] text-ink-muted">{count > 0 ? `${count} ${count === 1 ? 'product' : 'products'} · on the store` : 'No products yet · coming soon'}</span>
+                    {s.soldOut > 0 && <span className="block text-[12px] leading-4 font-semibold text-danger sag-num">{s.soldOut} sold out</span>}
                   </span>
-                  <button type="button" onClick={() => handleOpenReady(name)} className={ui.small} aria-label={`Add a photo for ${name}`}>Add photo</button>
+                  <span className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0">
+                    {count > 0 && <button type="button" onClick={() => seeProducts(name)} className={`${ui.small} !bg-surface`} aria-label={`See the products in ${name}`}>See</button>}
+                    <button type="button" onClick={() => handleOpenReady(name)} className={ui.small} aria-label={`Add a photo for ${name}`}>Add photo</button>
+                  </span>
                 </li>
               );
             })}
