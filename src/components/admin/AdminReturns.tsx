@@ -64,6 +64,13 @@ const statusTone = (state: ReturnRequestStatus): PillTone =>
   state === 'requested' || state === 'approved' || state === 'received' ? 'good'
     : state === 'rejected' ? 'danger'
       : 'muted';
+/** The pieces of a request (all of the order's lines for an older request that named none). */
+const rowItems = ({ order, request }: ReturnRow): ReturnRequestItem[] => (request.items?.length
+  ? request.items
+  : (order.items || []).map((item, line) => ({ line, name: item.product?.name || 'Item', image: item.product?.images?.[0] || '', size: item.selectedSize || '', qty: item.quantity, price: item.product?.price })));
+/** What the pieces are worth at the prices paid (before order discounts and shipping). */
+const rowValue = (row: ReturnRow) => rowItems(row).reduce((sum, item) => sum + (Number(item.price ?? row.order.items?.[item.line]?.product?.price) || 0) * (Number(item.qty) || 1), 0);
+
 /** Waiting requests first, then the ones in progress, then the closed ones. */
 const stateRank = (state: ReturnRequestStatus) => (state === 'requested' ? 0 : state === 'approved' || state === 'received' ? 1 : 2);
 
@@ -102,6 +109,9 @@ export const AdminReturns: React.FC = () => {
     all: [...rows].sort((a, b) => stateRank(a.state) - stateRank(b.state)),
   };
   const shown = groups[filter];
+  // The oldest request still waiting for a decision, and what the returns in progress are worth at the prices paid
+  const oldestDays = groups.decide.reduce((most, row) => Math.max(most, Math.floor((now - (Date.parse(row.at) || now)) / 86400000)), 0);
+  const refundValue = groups.progress.filter((row) => row.kind === 'return').reduce((sum, row) => sum + rowValue(row), 0);
   const chips: Array<{ id: Filter; label: string }> = [
     { id: 'decide', label: 'Needs your decision' },
     { id: 'progress', label: 'In progress' },
@@ -119,8 +129,9 @@ export const AdminReturns: React.FC = () => {
       <KeyNumbers
         label="Returns at a glance"
         items={[
-          { label: 'Waiting for you', value: groups.decide.length, highlight: groups.decide.length > 0, note: groups.decide.length ? 'Approve or deny each one' : 'Nothing to decide' },
+          { label: 'Waiting for you', value: groups.decide.length, highlight: groups.decide.length > 0, note: groups.decide.length ? (oldestDays >= 1 ? `Oldest waiting ${oldestDays} ${oldestDays === 1 ? 'day' : 'days'}` : 'Approve or deny each one') : 'Nothing to decide' },
           { label: 'In progress', value: groups.progress.length, note: 'Approved, not finished yet' },
+          { label: 'Returns to refund', value: `₹${refundValue.toLocaleString('en-IN')}`, note: 'Items value of returns in progress, at the prices paid' },
           { label: 'Closed', value: groups.closed.length, note: 'Refunded, exchanged or denied' },
         ]}
       />
@@ -160,10 +171,9 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
   const [notify, setNotify] = useState(true);
   const [busy, setBusy] = useState<Action | ''>('');
   const actions = (BUTTONS[state] || []).filter((a) => !(a === 'refund' && kind !== 'return') && !(a === 'exchange' && kind !== 'exchange'));
-  const items: ReturnRequestItem[] = request.items?.length
-    ? request.items
-    : (order.items || []).map((item, line) => ({ line, name: item.product?.name || 'Item', image: item.product?.images?.[0] || '', size: item.selectedSize || '', qty: item.quantity, price: item.product?.price }));
-  const value = items.reduce((sum, item) => sum + (Number(item.price ?? order.items?.[item.line]?.product?.price) || 0) * (Number(item.qty) || 1), 0);
+  const items = rowItems(row);
+  const value = rowValue(row);
+  const waitingDays = state === 'requested' ? Math.floor((now - (Date.parse(row.at) || now)) / 86400000) : 0;
   const phone = digits(order.customerMobile);
   const kindLabel = kind === 'exchange' ? 'Exchange' : 'Return';
 
@@ -203,11 +213,20 @@ const ReturnCard: React.FC<{ row: ReturnRow; now: number; isNew: boolean; onOpen
             <Pill>{kindLabel}</Pill>
             <Pill tone={statusTone(state)} dot>{RETURN_STATUS_LABEL[state] || state}</Pill>
             <span className="text-xs text-ink-muted inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {ago(row.at, now)}</span>
+            {waitingDays >= 2 && <Pill tone="danger">Waiting {waitingDays} days</Pill>}
           </div>
           <button type="button" onClick={onOpenOrder} className={orderLink}>
             {order.orderNumber} <ExternalLink className="w-3.5 h-3.5 shrink-0" />
           </button>
           <p className="text-sm leading-5 text-ink break-words"><span className="font-semibold">{order.customerName || 'Customer'}</span>{order.customerEmail ? <span className="text-ink-muted"> · {order.customerEmail}</span> : null}</p>
+          <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted sag-num break-words">
+            {order.paymentStatus !== 'Paid'
+              ? `Payment ${String(order.paymentStatus || 'not recorded').toLowerCase()}`
+              : order.payMode === 'cod'
+              ?`Cash on delivery · ₹${Number(order.codAdvance || 0).toLocaleString('en-IN')} online + ₹${Number(order.codDue || 0).toLocaleString('en-IN')} cash`
+              : `Prepaid · ₹${Number(order.finalTotal || 0).toLocaleString('en-IN')} paid online`}
+            {order.paymentRef ? ` · payment ${order.paymentRef}` : ''}
+          </p>
         </div>
         {phone.length === 10 && (
           <div className="flex gap-2 w-full sm:w-auto shrink-0 [&>*]:flex-1 sm:[&>*]:flex-none">
