@@ -94,7 +94,7 @@ export const PhotoManager: React.FC<PhotoManagerProps> = ({ images, onChange, on
             <li key={url} className="min-w-0">
               <div
                 ref={(el) => { tiles.current[i] = el; }}
-                className={`relative rounded-[16px] ${isDragged ? 'z-10 shadow-[var(--sag-shadow-pop)] opacity-95' : 'transition-transform duration-200'} ${isTarget ? 'ring-2 ring-ink ring-offset-2 ring-offset-surface' : ''}`}
+                className={`relative rounded-[16px] ${isDragged ? 'z-10 shadow-[var(--sag-shadow-pop)] opacity-95' : 'motion-safe:transition-transform motion-safe:duration-200'} ${isTarget ? 'ring-2 ring-ink ring-offset-2 ring-offset-surface' : ''}`}
               >
                 <img src={getCleanImageUrl(url, 320)} alt={`Product photo ${i + 1}${i === 0 ? ' (cover)' : ''}`} draggable={false}
                   className="w-full aspect-[4/5] rounded-[16px] object-cover object-top bg-sunken select-none" />
@@ -125,8 +125,9 @@ export const PhotoManager: React.FC<PhotoManagerProps> = ({ images, onChange, on
                   <ChevronRight className="w-4 h-4" aria-hidden="true" />
                 </button>
                 {i > 0 && (
-                  <button type="button" onClick={() => moveTo(i, 0)} className="min-w-0 h-10 px-1 text-[12px] font-semibold text-ink underline underline-offset-[3px] cursor-pointer truncate">
-                    Make cover
+                  <button type="button" onClick={() => moveTo(i, 0)} aria-label={`Make photo ${i + 1} the cover`} title="Make cover"
+                    className="w-10 h-10 shrink-0 rounded-full text-ink hover:bg-sunken flex items-center justify-center cursor-pointer">
+                    <Star className="w-4 h-4" aria-hidden="true" />
                   </button>
                 )}
                 <button type="button" onClick={() => onRemove(i)} title="Remove image" aria-label={`Remove photo ${i + 1}`}

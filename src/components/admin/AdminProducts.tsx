@@ -396,7 +396,7 @@ export const AdminProducts: React.FC = () => {
       <p className="flex md:block items-baseline gap-2 flex-wrap">
         <span className="font-semibold text-ink text-base md:text-[15px] sag-num">₹{product.price.toLocaleString('en-IN')}</span>
         {hasMrp && (
-          <span className="md:block text-[13px] text-ink-faint sag-num">
+          <span className="md:block text-[13px] text-ink-faint sag-num whitespace-nowrap">
             MRP <span className="line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>
             <span className="ml-1.5 text-sale font-semibold">{off}% off</span>
           </span>
@@ -468,7 +468,7 @@ export const AdminProducts: React.FC = () => {
         aria-label={`Listing quality of ${product.name}: ${h.score} out of 100, ${healthWord(h.score)}`}
         className="inline-flex items-center gap-2 min-h-11 md:min-h-9 pr-2 rounded-full hover:bg-sunken cursor-pointer text-left">
         <ScoreRing score={h.score} size={34} />
-        <span className="text-[12.5px] leading-4 font-semibold text-ink">{healthWord(h.score)}<ChevronDown className={`inline w-3.5 h-3.5 ml-0.5 text-ink-muted motion-safe:transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" /></span>
+        <span className={`text-[12.5px] leading-4 font-semibold text-ink whitespace-nowrap ${layout === 'list' ? 'md:hidden 2xl:inline' : ''}`}>{healthWord(h.score)}<ChevronDown className={`inline w-3.5 h-3.5 ml-0.5 text-ink-muted motion-safe:transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" /></span>
       </button>
     );
   };
@@ -516,7 +516,7 @@ export const AdminProducts: React.FC = () => {
     <form
       id={`quick-edit-${product.id}`}
       onSubmit={(e) => { e.preventDefault(); void saveQuick(product); }}
-      className="rounded-[16px] bg-page p-3 sm:p-3.5"
+      className="rounded-[16px] bg-page p-3 sm:p-3.5 md:max-w-xl"
       aria-label={`Quick edit ${product.name}`}
     >
       <div className="grid grid-cols-3 gap-2">
@@ -549,7 +549,7 @@ export const AdminProducts: React.FC = () => {
   const actions = (product: Product, compact = false) => {
     const status = statusOf(product);
     return (
-      <div className={`flex items-center gap-1 ${compact ? 'flex-wrap justify-between' : 'md:justify-end'}`}>
+      <div className={`flex items-center gap-1 ${compact ? 'flex-wrap justify-between' : 'md:flex-wrap md:justify-end md:max-w-[10.5rem] md:ml-auto'}`}>
         {/* Edit */}
         <button
           id={`edit-prod-${product.id}`}
@@ -852,7 +852,7 @@ export const AdminProducts: React.FC = () => {
                               {photo ? <img src={getCleanImageUrl(photo, 160)} alt={product.name} loading="lazy" className="w-full h-full object-cover object-top" />
                                 : <div className="w-full h-full flex items-center justify-center text-ink-faint"><Package className="w-5 h-5 text-current" aria-hidden="true" /></div>}
                             </div>
-                            <div className="min-w-0 col-start-3">
+                            <div className="min-w-0 col-start-3 md:min-w-[14rem] 2xl:min-w-[20rem]">
                               <p className="text-sm leading-5 font-semibold text-ink md:max-w-xs line-clamp-2">{product.name}</p>
                               <p className="mt-0.5 text-xs text-ink-muted break-all">
                                 <span className="text-ink">{product.category}</span> · SKU: <span className="font-mono">{product.sku || product.id}</span>
@@ -870,7 +870,7 @@ export const AdminProducts: React.FC = () => {
                           </div>
                         </td>
 
-                        <td className="col-start-3 md:table-cell md:py-3 md:px-3 align-middle md:text-right">{priceBlock(product)}</td>
+                        <td className="col-start-3 md:table-cell md:py-3 md:px-3 align-middle md:text-right md:whitespace-nowrap">{priceBlock(product)}</td>
                         <td className="col-start-3 md:table-cell md:py-3 md:px-3 align-middle">{stockStepper(product)}</td>
                         <td className="col-start-3 md:table-cell md:py-3 md:px-3 align-middle">{healthButton(product)}</td>
                         <td className="col-start-3 md:table-cell md:py-3 md:px-3 align-middle">{statusButton(product)}</td>
@@ -933,14 +933,14 @@ export const AdminProducts: React.FC = () => {
                 <button type="button" onClick={() => setSelected(new Set())} className="h-10 px-3 rounded-full text-[13px] font-semibold hover:bg-white/10 cursor-pointer inline-flex items-center gap-1">
                   <X className="w-4 h-4" aria-hidden="true" /> Clear
                 </button>
-                <button type="button" id="admin-bulk-open" onClick={() => setBulkOpen(true)} className="h-10 px-4 rounded-full bg-[color:var(--sag-on-gold)] text-ink text-[13.5px] font-semibold cursor-pointer">
+                <button type="button" id="admin-bulk-open" onClick={() => setBulkOpen(true)} className="h-10 px-4 rounded-full bg-surface !text-ink text-[13.5px] font-semibold cursor-pointer">
                   Change chosen
                 </button>
               </>
             ) : undo ? (
               <>
                 <p className="text-[13.5px] mr-auto pl-1 min-w-0 truncate"><Check className="inline w-4 h-4 mr-1 -mt-0.5" aria-hidden="true" />{undo.label}</p>
-                <button type="button" id="admin-bulk-undo" onClick={runUndo} className="h-10 px-4 rounded-full bg-[color:var(--sag-on-gold)] text-ink text-[13.5px] font-semibold cursor-pointer inline-flex items-center gap-1.5">
+                <button type="button" id="admin-bulk-undo" onClick={runUndo} className="h-10 px-4 rounded-full bg-surface !text-ink text-[13.5px] font-semibold cursor-pointer inline-flex items-center gap-1.5">
                   <Undo2 className="w-4 h-4" aria-hidden="true" /> Undo
                 </button>
                 <button type="button" onClick={() => setUndo(null)} aria-label="Close" className="w-10 h-10 rounded-full hover:bg-white/10 flex items-center justify-center cursor-pointer">

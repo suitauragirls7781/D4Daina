@@ -732,7 +732,7 @@ export const AdminProductForm: React.FC<AdminProductFormProps> = ({ productId })
             {/* The photos in their order on the store: drag (or the arrows) to reorder, "Make cover" to put one first */}
             {images.length > 0 ? (
               <>
-                {images.length > 1 && <p className="text-[13px] leading-[18px] text-ink-muted">Drag a photo by its handle to change the order, or use the arrows. The first one is the cover in the shop.</p>}
+                {images.length > 1 && <p className="text-[13px] leading-[18px] text-ink-muted">Drag a photo by its handle to change the order, or use the arrows; the star makes a photo the cover (the first photo in the shop).</p>}
                 <PhotoManager images={images} onChange={setImages} onRemove={handleRemoveImage} />
               </>
             ) : (

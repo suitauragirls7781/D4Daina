@@ -108,12 +108,12 @@ export const AdminStockHistory: React.FC = () => {
             <p className="text-[13px] text-ink-muted">Every time stock was changed by hand in the admin panel: the last {MAX_ENTRIES} changes, newest first. Stock taken by orders shows on each order.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:shrink-0">
           <select
             value={productId}
             onChange={(e) => setProductId(e.target.value)}
             aria-label="Filter stock history by product"
-            className="sag-input flex-1 sm:flex-none min-w-0 sm:max-w-[260px]"
+            className="sag-input flex-1 sm:flex-none min-w-0 sm:!w-[240px]"
           >
             <option value="">All products</option>
             {productOptions.map((p) => (

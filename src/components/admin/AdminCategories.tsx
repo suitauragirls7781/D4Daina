@@ -318,7 +318,7 @@ export const AdminCategories: React.FC = () => {
                     : <span className="w-11 aspect-[4/5] shrink-0 rounded-[10px] bg-surface flex items-center justify-center text-ink-faint" aria-hidden="true"><ImageIcon className="w-4 h-4" /></span>}
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-semibold leading-5 text-ink">{name}</span>
-                    <span className="block truncate text-[13px] leading-[18px] text-ink-muted">{count > 0 ? `${count} ${count === 1 ? 'product' : 'products'} · on the store` : 'No products yet · coming soon'}</span>
+                    <span className="block text-[13px] leading-[18px] text-ink-muted">{count > 0 ? `${count} ${count === 1 ? 'product' : 'products'} · on the store` : 'No products yet · coming soon'}</span>
                     {s.soldOut > 0 && <span className="block text-[12px] leading-4 font-semibold text-danger sag-num">{s.soldOut} sold out</span>}
                   </span>
                   <span className="flex flex-col sm:flex-row items-end sm:items-center gap-1 shrink-0">

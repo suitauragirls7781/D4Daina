@@ -116,7 +116,7 @@ export const ProductPreviews: React.FC<{ data: PreviewData; id?: string }> = ({ 
         {tab === 'page' && (
           // Product page on a phone: label · category, the name and the price ABOVE the photo (.pdp-top)
           <div className="mx-auto w-[min(100%,236px)] rounded-[30px] border-[6px] border-ink bg-page overflow-hidden">
-            <div className="h-9 bg-page flex items-center justify-center text-[11px] font-extrabold tracking-[0.04em] text-ink">SUIT <em className="mx-1 font-serif font-normal not-italic text-accent">Aura</em> GIRLS</div>
+            <div className="h-9 bg-page flex items-center justify-center text-[11px] font-extrabold tracking-[0.04em] text-ink">SUIT <em className="mx-1 font-serif font-normal italic text-accent">Aura</em> GIRLS</div>
             <div className="px-3 pt-1 pb-2">
               <p className="text-[9.5px] font-bold uppercase tracking-[0.16em] text-ink-muted">{badge ? `${badge} · ${data.category}` : data.category}</p>
               <div className="mt-1 flex items-start gap-1.5">
