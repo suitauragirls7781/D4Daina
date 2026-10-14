@@ -1,3 +1,4 @@
+import { startInstallSupport } from './utils/installApp';
 import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
@@ -70,6 +71,9 @@ try {
   (document as any).fonts?.load?.('700 16px Figtree');
   (document as any).fonts?.load?.('italic 400 16px "Instrument Serif"');
 } catch { /* an old browser: the fonts arrive when the page first needs them */ }
+
+// Installing the store as an app: keep the browser's install offer, register the worker (src/utils/installApp.ts)
+startInstallSupport();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

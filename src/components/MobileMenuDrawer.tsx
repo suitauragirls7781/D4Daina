@@ -3,10 +3,11 @@ import { useShop } from '../context/ShopContext';
 import { categoryDirectory } from '../data/womenCategories';
 import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../context/AuthContext';
-import { ChevronDown, Clock, Heart, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
+import { ChevronDown, Clock, Heart, Smartphone, Info, LayoutGrid, Mail, MessageCircle, Ruler, Search, Shirt, Sparkles, Tag, Truck, Undo2, User, type LucideIcon } from 'lucide-react';
 import { createSupportWhatsAppUrl } from '../utils/storeContact';
 import { ActivePage } from '../types';
 import { useBackToClose } from '../utils/backClose';
+import { IOS_INSTALL_STEPS, askToInstall, useInstallWay } from '../utils/installApp';
 import { assuranceFacts } from './Assurance';
 
 type Item = { key: string; id?: string; ariaLabel?: string; label: string; icon: LucideIcon; count?: number; current?: boolean; note?: string; onClick?: () => void; href?: string };
@@ -48,6 +49,9 @@ export const MobileMenuDrawer: React.FC = () => {
   const goCategory = (category: string) => { close(); navigateToCategory(category as any); };
   const isCurrent = (key: string) => activePage === 'shop' && selectedCategory === key;
 
+  // Install the store as an app: only where the browser can (src/utils/installApp.ts)
+  const installWay = useInstallWay();
+  const install = async () => { if (installWay === 'prompt') { const done = await askToInstall(); if (done) close(); } };
   const facts = assuranceFacts();
   const firstName = (user?.displayName || user?.name || '').trim().split(/\s+/)[0];
   const initials = (firstName || 'You').slice(0, 2).toUpperCase();
@@ -70,6 +74,7 @@ export const MobileMenuDrawer: React.FC = () => {
       { key: 'my-account', label: user ? 'My account' : 'Sign in', icon: User, current: activePage === 'account' || activePage === 'login', onClick: () => goPage('account') },
     ] },
     { key: 'help', title: 'Help', items: [
+      ...(installWay ? [{ key: 'install-app', id: 'menu-install-app', label: 'Install the app', icon: Smartphone, note: installWay === 'ios' ? IOS_INSTALL_STEPS : 'Opens from your home screen, like an app', onClick: install }] : []),
       { key: 'returns', label: 'Returns & exchange', icon: Undo2, current: activePage === 'return-policy', onClick: () => goPage('return-policy') },
       { key: 'whatsapp', label: 'Chat on WhatsApp', icon: MessageCircle, note: 'Mon–Sat · 10 AM – 7 PM IST', href: createSupportWhatsAppUrl('Hi Suit Aura Girls! I have a question.') },
       { key: 'contact', label: 'Contact', icon: Mail, current: activePage === 'contact', onClick: () => goPage('contact') },

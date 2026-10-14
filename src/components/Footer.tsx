@@ -6,6 +6,7 @@ import { STORE_ADDRESS, STORE_INSTAGRAM_URL, STORE_MAPS_URL, SUPPORT_PHONE_DISPL
 import { Mail } from 'lucide-react';
 import { FacebookIcon, InstagramIcon, WhatsAppIcon, XIcon } from './BrandIcons';
 import { assuranceFacts } from './Assurance';
+import { IOS_INSTALL_STEPS, askToInstall, useInstallWay } from '../utils/installApp';
 import { clamp, noPin, requestMeasure, setVar, useScrollFx } from '../aura';
 
 /**
@@ -24,6 +25,8 @@ export const Footer: React.FC = () => {
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hi Suit Aura Girls! I have a question.')}`;
   const email = storeSettings?.storeEmail || 'contact.suitauragirls@gmail.com';
   const facts = assuranceFacts();
+  // Install the store as an app, only where the browser can (src/utils/installApp.ts)
+  const installWay = useInstallWay();
 
   const go = (page: ActivePage) => {
     setActivePage(page);
@@ -117,6 +120,11 @@ export const Footer: React.FC = () => {
             {links.map(([page, label]) => (
               <button key={page} type="button" onClick={() => go(page)}>{label}</button>
             ))}
+            {installWay && (
+              <button type="button" id="footer-install-app" onClick={() => { void askToInstall(); }} title={installWay === 'ios' ? IOS_INSTALL_STEPS : undefined}>
+                {installWay === 'ios' ? `Install the app: ${IOS_INSTALL_STEPS.toLowerCase()}` : 'Install the app'}
+              </button>
+            )}
           </nav>
 
           <div className="flex flex-wrap items-center gap-2">
