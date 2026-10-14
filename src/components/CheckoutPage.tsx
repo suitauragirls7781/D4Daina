@@ -64,9 +64,9 @@ export const getCheckoutFieldErrors = (values: { firstName: string; lastName: st
   if (`${firstName} ${lastName}`.trim().length < 2) errors.push({ field: 'firstName', message: 'Please enter your full name.' });
   if (!address.mobile.trim() || !/^[6-9]\d{9}$/.test(address.mobile)) errors.push({ field: 'mobile', message: 'Please provide a valid 10-digit Indian mobile number.' });
   if (!address.email.trim() || !address.email.includes('@')) errors.push({ field: 'email', message: 'Please provide a valid email address.' });
-  if (!address.houseFlat.trim()) errors.push({ field: 'houseFlat', message: 'Please enter your House/Flat/Apartment number.' });
-  if (!address.street.trim() || !address.area.trim()) errors.push({ field: 'street', message: 'Please enter your Street and Area details.' });
-  if (!address.city.trim()) errors.push({ field: 'city', message: 'Please enter your City.' });
+  if (!address.houseFlat.trim()) errors.push({ field: 'houseFlat', message: 'Please enter your house or flat number.' });
+  if (!address.street.trim() || !address.area.trim()) errors.push({ field: 'street', message: 'Please enter your street and area.' });
+  if (!address.city.trim()) errors.push({ field: 'city', message: 'Please enter your city.' });
   if (!address.state.trim()) errors.push({ field: 'state', message: 'Please choose your state.' });
   if (!address.pincode.trim() || address.pincode.length !== 6) errors.push({ field: 'pincode', message: 'Please enter a valid 6-digit Indian PIN code.' });
   if (pincodeError) errors.push({ field: 'pincode', message: pincodeError });
@@ -648,15 +648,15 @@ export const CheckoutPage: React.FC = () => {
       return false;
     }
     if (!address.houseFlat.trim()) {
-      setErrorMessage('Please enter your House/Flat/Apartment number.');
+      setErrorMessage('Please enter your house or flat number.');
       return false;
     }
     if (!address.street.trim() || !address.area.trim()) {
-      setErrorMessage('Please enter your Street and Area details.');
+      setErrorMessage('Please enter your street and area.');
       return false;
     }
     if (!address.city.trim()) {
-      setErrorMessage('Please enter your City.');
+      setErrorMessage('Please enter your city.');
       return false;
     }
     if (!address.state.trim()) {
