@@ -1,0 +1,157 @@
+/* ==================================================================
+   Admin panel: "Command" (2026-10-14). The admin's own crisp look. Loaded only with the admin (AdminLayout
+   imports it) and scoped to #admin-root-container, so the storefront's claymorphism never reaches the admin
+   and nothing here reaches the storefront. Same palette as the store (paper, ink, rose, dark rose, blush,
+   sand, forest): white cards with a hairline ring and a faint lift, ink pills, white fields with a clear
+   edge. Motion explains state (a panel opens, a count changes, a page arrives), uses only transform and
+   opacity, and stops with prefers-reduced-motion. No scroll effects. Shadows never animate.
+------------------------------------------------------------------- */
+#admin-root-container {
+  --adm-bg: #F5F2EC;
+  --adm-card: #FFFFFF;
+  --adm-soft: #FAF8F4;
+  --adm-hover: #F3EFE8;
+  --adm-line: rgba(17, 16, 19, 0.085);
+  --adm-line-2: #D6CFC4;
+  --adm-lift: 0 0 0 1px rgba(17, 16, 19, 0.07), 0 1px 2px rgba(17, 16, 19, 0.04), 0 8px 20px -14px rgba(17, 16, 19, 0.16);
+  --adm-pop: 0 0 0 1px rgba(17, 16, 19, 0.08), 0 28px 64px -20px rgba(17, 16, 19, 0.38), 0 10px 22px -12px rgba(17, 16, 19, 0.2);
+  --adm-r: 20px;
+  /* The storefront's clay switched off inside the admin: every clay variable takes the admin's flat value */
+  --clay-surface: #FFFFFF; --clay-field: #FFFFFF; --clay-sand: #FAF8F4;
+  --clay-r-card: var(--adm-r); --clay-r-sm: 14px;
+  --clay-1: none; --clay-2: var(--adm-lift); --clay-3: var(--adm-pop); --clay-2t: var(--adm-lift); --clay-3t: var(--adm-pop);
+  --clay-pressed: none; --clay-inset: none; --clay-ink-btn: none; --clay-ink-pressed: none; --clay-tag: none; --clay-float: var(--adm-pop);
+  --sag-shadow-pop: var(--adm-pop);
+  --sag-shadow-bar: 0 0 0 1px rgba(17, 16, 19, 0.08), 0 12px 30px -16px rgba(17, 16, 19, 0.3);
+  --sag-glass: #FFFFFF; --sag-glass-bar: #FFFFFF; --sag-glass-sheet: #FFFFFF; --sag-nav-fill: #FFFFFF;
+  background-color: var(--adm-bg);
+}
+#admin-root-container ::selection { background: #EAD7D1; color: #111013; }
+#admin-root-container :focus-visible { outline: 2px solid #8E4C58; outline-offset: 2px; }
+#admin-root-container :is(.bg-dark, .bg-ink, .bg-brand, .bg-brand-dark, .adm-side, .adm-toast) :focus-visible { outline-color: #EAD7D1; }
+
+/* Surfaces */
+#admin-root-container .bg-surface { background-color: #FFFFFF; }
+#admin-root-container :is(.sag-glass, .sag-card) { background: #FFFFFF; border: 0; border-radius: var(--adm-r); box-shadow: var(--adm-lift); }
+#admin-root-container .sag-glass-strong { background: var(--adm-soft); }
+#admin-root-container .sag-card:is([data-selected="true"], [aria-checked="true"], [aria-pressed="true"], .is-selected) { box-shadow: var(--adm-lift), inset 0 0 0 2px #111013; }
+#admin-root-container .sag-glass-bar { background: #FFFFFF; border: 0; box-shadow: var(--sag-shadow-bar); }
+#admin-root-container .sag-bar { background: #FFFFFF; box-shadow: 0 -1px 0 rgba(17, 16, 19, 0.08); }
+#admin-root-container .sag-badge { background: #EAD7D1; box-shadow: none; }
+#admin-root-container .aura-sk { background-color: #ECE6DC; box-shadow: none; }
+
+/* Buttons: ink pill, white pill with a clear edge; a short press, no clay */
+#admin-root-container :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light) { box-shadow: none; transition: transform 160ms var(--aura-e), background-color 160ms, color 160ms; }
+#admin-root-container :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light)::before { content: none; }
+#admin-root-container :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light):not(:disabled):active { transform: scale(0.97); }
+#admin-root-container .sag-btn-primary { background: #111013; color: #F5F2EC; }
+@media (hover: hover) { #admin-root-container .sag-btn-primary:not(:disabled):hover { background: #2B292E; } }
+#admin-root-container .sag-btn-primary:is(:disabled, [aria-disabled="true"]) { background: #E7E1D6; color: #6A645E; box-shadow: none; }
+#admin-root-container :is(.sag-btn-outline, .sag-btn-light) { background: #FFFFFF; color: #111013; box-shadow: inset 0 0 0 1px var(--adm-line-2); }
+@media (hover: hover) { #admin-root-container :is(.sag-btn-outline, .sag-btn-light):not(:disabled):hover { background: var(--adm-hover); } }
+#admin-root-container .sag-btn-outline:is(:disabled, [aria-disabled="true"]) { background: #FFFFFF; color: #736D66; box-shadow: inset 0 0 0 1px var(--adm-line); }
+
+/* Fields: white with a clear edge; focus = an ink edge and a soft rose halo */
+#admin-root-container .sag-input { border: 1px solid var(--adm-line-2); background-color: #FFFFFF; background-image: none; box-shadow: none; transition: border-color 160ms; }
+@media (hover: hover) { #admin-root-container .sag-input:not(:disabled):not(:focus):hover { border-color: #B9B1A6; } }
+#admin-root-container .sag-input:focus { border-color: #111013; box-shadow: 0 0 0 3px rgba(183, 110, 121, 0.22); }
+#admin-root-container .sag-input:is([aria-invalid="true"], .is-error) { border-color: var(--sag-danger); box-shadow: 0 0 0 3px rgba(163, 57, 47, 0.12); }
+#admin-root-container .sag-input:disabled { background-color: var(--adm-hover); }
+
+/* Chips: white pills with an edge; the chosen one is ink */
+#admin-root-container .sag-chip { border: 1px solid var(--adm-line-2); background: #FFFFFF; color: #111013; box-shadow: none; transition: background-color 160ms, border-color 160ms, color 160ms, transform 160ms var(--aura-e); }
+@media (hover: hover) { #admin-root-container .sag-chip:not(:disabled):hover { border-color: #111013; background: #FFFFFF; } }
+#admin-root-container .sag-chip:not(:disabled):active { transform: scale(0.96); }
+#admin-root-container .sag-chip:is([aria-pressed="true"], [aria-checked="true"], [data-selected="true"], .is-selected) { background: #111013; border-color: #111013; color: #F5F2EC; box-shadow: none; }
+#admin-root-container .sag-chip:disabled { background: var(--adm-hover); border-color: var(--adm-line); color: #736D66; }
+
+/* The store's notice (Toast.tsx) inside the admin: a crisp ink pill */
+#admin-root-container .aura-toast { box-shadow: var(--adm-pop); }
+#admin-root-container .aura-toast.is-error { box-shadow: var(--adm-pop), inset 0 0 0 1.5px #FF9C94; }
+
+/* ---- The shell ---- */
+.adm-side { background: #111013; color: #F5F2EC; }
+.adm-side-scroll { scrollbar-width: thin; scrollbar-color: #3A373D transparent; }
+.adm-side-scroll::-webkit-scrollbar-track { background: transparent; }
+.adm-side-scroll::-webkit-scrollbar-thumb { background: #3A373D; }
+.adm-nav-btn { position: relative; }
+/* The page you are on: a paper pill with a small rose mark at its left edge */
+.adm-nav-btn[aria-current="page"]::before { content: ""; position: absolute; left: -8px; top: 50%; width: 3px; height: 18px; margin-top: -9px; border-radius: 3px; background: #B76E79; }
+/* A folded sidebar names each entry in a tip on hover and on keyboard focus */
+.adm-tip { position: absolute; left: calc(100% + 14px); top: 50%; z-index: 50; padding: 6px 10px; border-radius: 10px; background: #111013; color: #F5F2EC; font-size: 13px; line-height: 18px; font-weight: 600; white-space: nowrap; pointer-events: none; opacity: 0; transform: translate3d(-4px, -50%, 0); transition: opacity 140ms, transform 160ms var(--aura-e); box-shadow: 0 0 0 1px rgba(245, 242, 236, 0.14), 0 10px 24px -10px rgba(17, 16, 19, 0.5); }
+.adm-nav-btn:is(:hover, :focus-visible) > .adm-tip { opacity: 1; transform: translate3d(0, -50%, 0); }
+.adm-top { background: rgba(245, 242, 236, 0.96); box-shadow: inset 0 -1px 0 var(--adm-line); }
+.adm-kbd { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 6px; background: #FFFFFF; box-shadow: inset 0 0 0 1px var(--adm-line-2), inset 0 -1px 0 var(--adm-line-2); font-family: var(--font-sans); font-size: 11px; line-height: 1; font-weight: 700; color: #4A4540; white-space: nowrap; }
+.adm-side .adm-kbd { background: #2B292E; color: #BDB6AD; box-shadow: inset 0 0 0 1px #3A373D; }
+.adm-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; font-size: 11.5px; line-height: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.adm-dot-live { position: relative; display: inline-flex; flex-shrink: 0; width: 7px; height: 7px; }
+.adm-dot-live > i { position: absolute; inset: 0; border-radius: 50%; background: currentColor; }
+.adm-dot-live > i + i { opacity: 0.5; }
+
+/* Phone: the bottom bar (five big targets; the middle one is the round "+" for the jobs done most) */
+.adm-tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: end; height: calc(64px + env(safe-area-inset-bottom)); padding: 0 6px env(safe-area-inset-bottom); background: #FFFFFF; box-shadow: 0 -1px 0 var(--adm-line), 0 -10px 30px -18px rgba(17, 16, 19, 0.25); transition: transform 220ms var(--aura-e); }
+.adm-tabbar.is-away { transform: translate3d(0, 110%, 0); }
+/* (unlayered, so the hiding is said here too: a utility such as lg:hidden cannot win over this file) */
+@media (min-width: 1024px) { .adm-tabbar { display: none; } }
+.adm-tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; height: 64px; min-width: 0; color: #6A645E; font-size: 11.5px; line-height: 14px; font-weight: 650; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.adm-tab[aria-current="page"] { color: #111013; }
+.adm-tab-ic { position: relative; display: grid; place-items: center; width: 54px; height: 30px; border-radius: 999px; transition: background-color 180ms; }
+.adm-tab[aria-current="page"] .adm-tab-ic { background: #EAD7D1; }
+.adm-tab-n { position: absolute; top: -4px; right: 6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #B76E79; color: #111013; font-size: 11px; line-height: 18px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; box-shadow: 0 0 0 2px #FFFFFF; }
+.adm-tab-plus { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 7px; border-radius: 50%; background: #111013; color: #F5F2EC; box-shadow: 0 8px 18px -8px rgba(17, 16, 19, 0.55); transition: transform 180ms var(--aura-e); }
+.adm-tab-plus:active { transform: scale(0.94); }
+.adm-tab-plus > svg { transition: transform 220ms var(--aura-e); }
+.adm-tab-plus[aria-expanded="true"] > svg { transform: rotate(45deg); }
+
+/* Notices with an action (adminToast.tsx) */
+.adm-toasts { position: fixed; z-index: 70; left: 12px; right: 12px; bottom: calc(76px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.adm-no-tabbar .adm-toasts { bottom: calc(84px + env(safe-area-inset-bottom)); }
+@media (min-width: 1024px) { .adm-toasts, .adm-no-tabbar .adm-toasts { left: auto; right: 20px; bottom: 20px; width: 400px; } }
+.adm-toast { position: relative; overflow: hidden; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 6px 6px 14px; border-radius: 18px; background: #111013; color: #F5F2EC; box-shadow: var(--adm-pop); pointer-events: auto; }
+.adm-toast.is-error { background: #FFFFFF; color: #A3392F; box-shadow: var(--adm-pop), inset 0 0 0 1.5px rgba(163, 57, 47, 0.5); }
+.adm-toast-ic { color: #EAD7D1; }
+.adm-toast.is-error .adm-toast-ic { color: #A3392F; }
+.adm-toast-act { flex-shrink: 0; height: 40px; padding: 0 14px; border-radius: 999px; background: #F5F2EC; color: #111013; font-size: 13.5px; font-weight: 750; cursor: pointer; }
+.adm-toast.is-error .adm-toast-act { background: #A3392F; color: #FFFFFF; }
+.adm-toast-x { flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; color: inherit; opacity: 0.7; cursor: pointer; }
+.adm-toast-x:hover { opacity: 1; }
+.adm-toast-life { position: absolute; left: 14px; right: 14px; bottom: 0; height: 2px; border-radius: 2px; background: #B76E79; transform-origin: 0 50%; }
+
+/* Command palette, notification centre, shortcut sheet */
+.adm-dialog { background: #FFFFFF; box-shadow: var(--adm-pop); }
+.adm-row[aria-selected="true"] { background: var(--adm-hover); }
+.adm-row-go { opacity: 0; }
+.adm-row[aria-selected="true"] .adm-row-go, .adm-row:hover .adm-row-go { opacity: 1; }
+.adm-sk { display: block; border-radius: 10px; background: #ECE6DC; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* A page arrives: a short fade and a 6px rise */
+  .adm-enter { animation: sag-enter 260ms var(--aura-eo) both; --sag-enter-opacity: 0; --sag-enter-y: 6px; }
+  .adm-pop-in { animation: sag-enter 170ms var(--aura-eo) both; --sag-enter-opacity: 0; --sag-enter-y: -4px; --sag-enter-scale: 0.985; }
+  .adm-sheet-in { animation: sag-enter 300ms var(--aura-eo) both; --sag-enter-y: 100%; }
+  .adm-drawer-in { animation: sag-enter 280ms var(--aura-eo) both; --sag-enter-x: -100%; }
+  .adm-fade-in { animation: sag-enter 200ms ease-out both; --sag-enter-opacity: 0; }
+  @media (min-width: 640px) { .adm-sheet-in.sm-pop { --sag-enter-y: -6px; --sag-enter-opacity: 0; --sag-enter-scale: 0.985; animation-duration: 200ms; } }
+  /* A count that changes bumps once */
+  .adm-bump { animation: adm-bump 420ms var(--aura-sp); }
+  @keyframes adm-bump { 0% { transform: scale(1); } 35% { transform: scale(1.28); } 100% { transform: scale(1); } }
+  /* A number that changes settles in */
+  .adm-settle { animation: sag-enter 320ms var(--aura-eo) both; --sag-enter-opacity: 0; --sag-enter-y: 5px; }
+  .adm-toast { animation: sag-enter 260ms var(--aura-eo) both; --sag-enter-opacity: 0; --sag-enter-y: 10px; }
+  .adm-toast-life { animation: adm-life linear forwards; }
+  @keyframes adm-life { to { transform: scaleX(0); } }
+  .adm-sk { animation: adm-sk 1100ms ease-in-out infinite alternate; }
+  @keyframes adm-sk { from { opacity: 1; } to { opacity: 0.5; } }
+  .adm-dot-live > i + i { animation: adm-ping 1600ms cubic-bezier(0, 0, 0.2, 1) infinite; }
+  @keyframes adm-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
+  .adm-spark-line { stroke-dasharray: 1; animation: adm-draw 700ms var(--aura-eo) both; }
+  @keyframes adm-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .adm-tip, .adm-tabbar, .adm-tab-ic, .adm-tab-plus, .adm-tab-plus > svg { transition: none; }
+  #admin-root-container :is(.sag-btn-primary, .sag-btn-outline, .sag-btn-light, .sag-chip):active { transform: none !important; }
+}
+/* Printing a page of the admin: the shell steps aside */
+@media print {
+  .adm-side, .adm-top, .adm-tabbar, .adm-toasts { display: none !important; }
+}

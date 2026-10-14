@@ -2865,7 +2865,8 @@ html { background-color: var(--clay-bg); }
 ::selection { background: var(--clay-rose); }
 
 /* Cream instead of white for every light surface (cards, sheets, menus, fixed bars) */
-.bg-surface { background-color: var(--clay-surface); }
+/* (not inside the admin: there a white card keeps its hover colour; the admin sets its own surfaces at the end of this file) */
+.bg-surface:not(#admin-root-container *) { background-color: var(--clay-surface); }
 :is(.sticky, .fixed):is(.bg-surface, .bg-white), .fixed :is(.bg-surface, .bg-white), [role="dialog"] :is(.bg-surface, .bg-white), [role="menu"], [role="listbox"] { background-color: var(--clay-surface); }
 
 /* Buttons keep their colour and transform transitions but never animate a shadow */

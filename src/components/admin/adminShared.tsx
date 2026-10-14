@@ -6,6 +6,7 @@ import { Product, ProductCategory, ProductColor } from '../../types';
 import { getCleanImageUrl } from '../../utils/imageHelper';
 import { inr } from '../../utils/looks';
 import { isAvailable } from '../../utils/smartQuery';
+import { Sparkline } from './adminUi';
 
 /**
  * Building blocks shared by the admin pages: the look ("ui"), page headers, tiles, photo uploads, colours,
@@ -59,7 +60,7 @@ export const ui = {
   /** Small label above a value (stat tiles, detail lists): small muted capitals. */
   eyebrow: 'text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted',
   /** Page title: Figtree 800, plain (the admin never uses the serif accent word). */
-  h1: 'font-display text-[28px] leading-8 sm:text-[32px] sm:leading-9 text-ink',
+  h1: 'font-display text-[26px] leading-[32px] sm:text-[30px] sm:leading-9 tracking-[-0.03em] text-ink',
   /** Same size as h1 for a title that is really an order number or product name: those stay in the text face. */
   h1Name: 'font-sans text-[22px] leading-7 sm:text-2xl sm:leading-8 font-extrabold tracking-[-0.02em] text-ink',
   h2: 'text-[18px] leading-6 font-extrabold tracking-[-0.015em] text-ink',
@@ -107,7 +108,7 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({ eyebrow, title
     <div className="min-w-0 flex-1 flex items-start gap-3.5">
       {/* The icon is for wide screens; on a phone the title gets the full width */}
       {icon && (
-        <span className="hidden sm:flex w-12 h-12 rounded-[16px] bg-surface text-brand items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5" aria-hidden="true">
+        <span className="hidden sm:flex w-12 h-12 rounded-[16px] bg-surface shadow-[var(--adm-lift)] text-brand items-center justify-center shrink-0 [&>svg]:w-5 [&>svg]:h-5" aria-hidden="true">
           {icon}
         </span>
       )}
@@ -136,17 +137,25 @@ export const SectionTitle: React.FC<{ icon?: React.ReactNode; title: React.React
 );
 
 /** One key number of a page (real counts only). `tone` colours the number: forest for good (the value 'gold' is only a name), red for a real problem. */
-export const StatTile: React.FC<{ label: string; value: React.ReactNode; note?: React.ReactNode; tone?: 'plain' | 'gold' | 'danger'; onClick?: () => void; active?: boolean }> = ({ label, value, note, tone: colour = 'plain', onClick, active }) => {
+export const StatTile: React.FC<{ label: string; value: React.ReactNode; note?: React.ReactNode; tone?: 'plain' | 'gold' | 'danger'; onClick?: () => void; active?: boolean; icon?: React.ReactNode; trend?: number[]; trendLabel?: string }> = ({ label, value, note, tone: colour = 'plain', onClick, active, icon, trend, trendLabel }) => {
   const body = (
     <>
-      <span className={`block ${ui.eyebrow} break-words`}>{label}</span>
-      <span className={`block mt-1 ${ui.stat} ${colour === 'gold' ? '!text-ok' : colour === 'danger' ? '!text-danger' : ''}`}>{value}</span>
+      <span className={`flex items-center gap-1.5 ${ui.eyebrow} break-words`}>
+        {icon && <span className="shrink-0 text-ink-muted [&>svg]:w-3.5 [&>svg]:h-3.5" aria-hidden="true">{icon}</span>}
+        <span className="min-w-0">{label}</span>
+      </span>
+      <span className="mt-1 flex items-end justify-between gap-2">
+        <span key={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined} className={`adm-settle block min-w-0 ${ui.stat} ${colour === 'gold' ? '!text-ok' : colour === 'danger' ? '!text-danger' : ''}`}>{value}</span>
+        {trend && trend.length > 1 && (
+          <span className="hidden min-[420px]:block mb-1"><Sparkline values={trend} label={trendLabel || `${label}: trend`} width={72} height={24} tone={colour === 'danger' ? 'sale' : colour === 'gold' ? 'forest' : 'ink'} /></span>
+        )}
+      </span>
       {note && <span className="block mt-0.5 text-xs leading-4 text-ink-muted break-words">{note}</span>}
     </>
   );
   const shell = `min-w-0 text-left sag-glass px-3.5 py-3 sm:px-4 sm:py-3.5 ${active ? 'ring-2 ring-inset ring-brand' : ''}`;
   return onClick
-    ? <button type="button" onClick={onClick} aria-pressed={Boolean(active)} className={`${shell} cursor-pointer`}>{body}</button>
+    ? <button type="button" onClick={onClick} aria-pressed={Boolean(active)} className={`${shell} cursor-pointer transition-transform active:scale-[0.98]`}>{body}</button>
     : <div className={shell}>{body}</div>;
 };
 /** The row of key numbers under a page title: two across on phones, up to four on wide screens. */

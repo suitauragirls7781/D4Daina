@@ -1,6 +1,7 @@
 import React from 'react';
 import { Order } from '../../types';
 import { paymentFailed } from '../OrderProgress';
+import { Sparkline } from './adminUi';
 
 /**
  * The shared pieces of the admin sales pages (orders, order details, returns, cancellations, abandoned
@@ -52,16 +53,21 @@ export const adminUi = {
 
 // ---------------------------------------------------------------- pills
 
-/** good = fine or the current step (forest), plain = done (sand with ink text), muted = finished or nothing to do, danger = a real problem. */
-export type PillTone = 'good' | 'plain' | 'muted' | 'danger';
+/**
+ * good = fine or the current step (forest), plain = done (sand with ink text), muted = finished or nothing to do,
+ * danger = a real problem, attention = waiting for the owner (dark rose on blush), info = a neutral fact (white with an edge).
+ */
+export type PillTone = 'good' | 'plain' | 'muted' | 'danger' | 'attention' | 'info';
 
 const PILL_TONE: Record<PillTone, string> = {
   good: 'border-ok-line bg-ok-tint text-ok',
   plain: 'border-transparent bg-sunken text-ink',
   muted: 'border-transparent bg-sunken text-ink-muted',
   danger: 'border-danger-line bg-danger-tint text-danger',
+  attention: 'border-sale-line bg-highlight text-sale',
+  info: 'border-line bg-surface text-ink',
 };
-const PILL_DOT: Record<PillTone, string> = { good: 'bg-ok', plain: 'bg-ink', muted: 'bg-ink-faint', danger: 'bg-danger' };
+const PILL_DOT: Record<PillTone, string> = { good: 'bg-ok', plain: 'bg-ink', muted: 'bg-ink-faint', danger: 'bg-danger', attention: 'bg-sale', info: 'bg-ink-muted' };
 const PILL = 'inline-flex items-center gap-1.5 min-h-6 px-2.5 py-0.5 rounded-full border text-xs leading-4 font-semibold whitespace-nowrap';
 
 export const pillClass = (tone: PillTone) => `${PILL} ${PILL_TONE[tone]}`;
@@ -87,8 +93,8 @@ interface PageTitleProps {
 export const PageTitle: React.FC<PageTitleProps> = ({ title, line, actions, id }) => (
   <header id={id} className="flex flex-col lg:flex-row lg:items-end gap-3 lg:gap-6">
     <div className="min-w-0 flex-1">
-      <h2 className="font-display text-[28px] leading-8 sm:text-[32px] sm:leading-9 text-ink break-words">{title}</h2>
-      {line && <p className="mt-1.5 text-sm leading-5 text-ink-muted max-w-2xl">{line}</p>}
+      <h2 className="font-display text-[26px] leading-[32px] sm:text-[30px] sm:leading-9 tracking-[-0.03em] text-ink break-words">{title}</h2>
+      {line && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-2xl">{line}</p>}
     </div>
     {actions && <div className="flex flex-wrap items-center gap-2 lg:justify-end lg:shrink-0">{actions}</div>}
   </header>
@@ -101,19 +107,52 @@ export interface KeyNumber {
   note?: React.ReactNode;
   /** Dark rose when the number asks for attention. */
   highlight?: boolean;
+  /** Real values in order, oldest first (drawn as a small line at the right of the number). */
+  trend?: number[];
+  /** What the trend line shows, in words (for screen readers). */
+  trendLabel?: string;
+  /** Makes the tile a button (for example: show only these orders). */
+  onClick?: () => void;
+  /** With onClick: this tile's filter is the one in use. */
+  active?: boolean;
 }
+
+const KeyTile: React.FC<{ item: KeyNumber }> = ({ item }) => {
+  // Inside a button the parts are spans (a button holds only text); otherwise the list's own term and value
+  const Term = item.onClick ? 'span' : 'dt';
+  const Value = item.onClick ? 'span' : 'dd';
+  const body = (
+    <>
+      <Term className="text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted flex items-center gap-1.5">
+        {item.highlight && <span className="w-1.5 h-1.5 rounded-full bg-sale shrink-0" aria-hidden="true" />}
+        <span className="min-w-0 break-words">{item.label}</span>
+      </Term>
+      <span className="mt-1 flex items-end justify-between gap-2">
+        {/* The key makes a changed number settle in once */}
+        <Value key={typeof item.value === 'string' || typeof item.value === 'number' ? String(item.value) : undefined} className={`adm-settle block min-w-0 text-[26px] leading-8 sm:text-[28px] font-extrabold tracking-[-0.025em] sag-num break-words ${item.highlight ? 'text-sale' : 'text-ink'}`}>{item.value}</Value>
+        {item.trend && item.trend.length > 1 && (
+          <span className="hidden min-[420px]:block mb-1"><Sparkline values={item.trend} label={item.trendLabel || `${item.label}: trend`} width={72} height={24} tone={item.highlight ? 'sale' : 'ink'} /></span>
+        )}
+      </span>
+      {item.note && <Value className="block mt-0.5 text-xs leading-4 text-ink-muted">{item.note}</Value>}
+    </>
+  );
+  const shell = `sag-glass min-w-0 px-4 py-3.5 text-left ${item.active ? 'ring-2 ring-inset ring-brand' : ''}`;
+  return item.onClick
+    ? <div className="min-w-0 flex"><button type="button" onClick={item.onClick} aria-pressed={Boolean(item.active)} className={`${shell} w-full flex flex-col cursor-pointer transition-transform active:scale-[0.98]`}>{body}</button></div>
+    : <div className={shell}>{body}</div>;
+};
 
 /** The row of key numbers under the page title. Real counts only. */
 export const KeyNumbers: React.FC<{ items: KeyNumber[]; label?: string }> = ({ items, label = 'Key numbers' }) => (
   <dl aria-label={label} className={`grid grid-cols-2 gap-2.5 sm:gap-3 ${items.length >= 4 ? 'lg:grid-cols-4' : items.length === 3 ? 'sm:grid-cols-3' : ''}`}>
-    {items.map((item) => (
-      <div key={item.label} className="sag-glass min-w-0 px-4 py-3.5">
-        <dt className="text-[11px] leading-4 font-bold uppercase tracking-[0.08em] text-ink-muted">{item.label}</dt>
-        <dd className={`mt-1 text-[28px] leading-8 font-extrabold tracking-[-0.02em] sag-num break-words ${item.highlight ? 'text-sale' : 'text-ink'}`}>{item.value}</dd>
-        {item.note && <dd className="mt-0.5 text-xs leading-4 text-ink-muted">{item.note}</dd>}
-      </div>
-    ))}
+    {items.map((item) => <KeyTile key={item.label} item={item} />)}
   </dl>
+);
+
+/** One row of filters and search above a list: wraps on a phone, one line on a wide screen. */
+export const Toolbar: React.FC<{ label?: string; className?: string; children: React.ReactNode }> = ({ label = 'Filters', className = '', children }) => (
+  <div role="group" aria-label={label} className={`flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3 ${className}`}>{children}</div>
 );
 
 /** A titled white card: the building block of forms and detail pages. */
@@ -136,7 +175,7 @@ export const Panel: React.FC<{ title: React.ReactNode; icon?: React.ReactNode; h
 /** Honest empty state: says plainly that there is nothing here. */
 export const EmptyState: React.FC<{ icon?: React.ReactNode; title: React.ReactNode; line?: React.ReactNode; children?: React.ReactNode }> = ({ icon, title, line, children }) => (
   <div className="sag-glass px-5 py-12 text-center">
-    {icon && <span className="mx-auto mb-3 flex justify-center text-ink-muted [&>svg]:w-7 [&>svg]:h-7" aria-hidden="true">{icon}</span>}
+    {icon && <span className="mx-auto mb-3 w-14 h-14 rounded-full bg-[color:var(--adm-hover)] flex items-center justify-center text-ink-muted [&>svg]:w-6 [&>svg]:h-6" aria-hidden="true">{icon}</span>}
     <p className="text-base leading-6 font-bold text-ink">{title}</p>
     {line && <p className="mt-1 text-sm leading-5 text-ink-muted max-w-md mx-auto">{line}</p>}
     {children && <div className="mt-4 flex justify-center">{children}</div>}
