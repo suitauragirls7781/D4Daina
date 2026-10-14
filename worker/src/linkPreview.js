@@ -91,5 +91,9 @@ export const withProductPreview = async (request, env, shell) => {
       },
     });
   for (const rule of rules) rewriter = rewriter.on(rule.selector, rule.handler);
-  return rewriter.transform(shell);
+  // Said outright in the header too, so every link reader takes the ₹ sign and the dots as UTF-8
+  const page = rewriter.transform(shell);
+  const headers = new Headers(page.headers);
+  headers.set('content-type', 'text/html; charset=utf-8');
+  return new Response(page.body, { status: page.status, statusText: page.statusText, headers });
 };
