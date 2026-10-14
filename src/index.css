@@ -2873,6 +2873,7 @@ html { background-color: var(--clay-bg); }
 :where(:not(#admin-root-container *))::selection { background: var(--clay-rose); }
 
 /* Cream instead of white for every light surface (cards, sheets, menus, fixed bars) */
+/* (not inside the admin: the admin sets its own surfaces in src/components/admin/adminShell.css) */
 .bg-surface:where(:not(#admin-root-container *)) { background-color: var(--clay-surface); }
 :is(.sticky, .fixed):is(.bg-surface, .bg-white):where(:not(#admin-root-container *)), .fixed:where(:not(#admin-root-container *)) :is(.bg-surface, .bg-white), [role="dialog"]:where(:not(#admin-root-container *)) :is(.bg-surface, .bg-white), [role="menu"]:where(:not(#admin-root-container *)), [role="listbox"]:where(:not(#admin-root-container *)) { background-color: var(--clay-surface); }
 
