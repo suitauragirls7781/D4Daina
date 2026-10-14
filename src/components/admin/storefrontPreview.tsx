@@ -17,10 +17,10 @@ const two = (value: number) => String(value).padStart(2, '0');
 
 /** A phone outline around a preview: ink bezel, paper screen. */
 export const PhoneFrame: React.FC<{ label: string; children: React.ReactNode; className?: string; screenClassName?: string }> = ({ label, children, className = '', screenClassName = '' }) => (
-  <figure aria-label={label} className={`mx-auto w-full max-w-[320px] rounded-[42px] bg-dark p-2.5 shadow-[var(--sag-shadow-pop)] ${className}`}>
+  <figure aria-label={label} style={{ background: "var(--aura-ink)" }} className={`mx-auto w-full max-w-[320px] rounded-[42px] p-2.5 shadow-[var(--sag-shadow-pop)] ${className}`}>
     <div className={`relative overflow-hidden rounded-[34px] bg-page ${screenClassName}`}>
       <div className="flex items-center justify-center pt-2 pb-1" aria-hidden="true">
-        <span className="h-1.5 w-16 rounded-full bg-dark/80" />
+        <span className="h-1.5 w-16 rounded-full" style={{ background: "var(--aura-ink)" }} />
       </div>
       {children}
     </div>
@@ -217,7 +217,7 @@ export const DealTicketPreview: React.FC<{ product: Product; photo?: string; end
         <span className="absolute -right-2.5 -top-2.5 w-5 h-5 rounded-full bg-sunken" aria-hidden="true" />
         <span className="absolute -right-2.5 -bottom-2.5 w-5 h-5 rounded-full bg-sunken" aria-hidden="true" />
       </div>
-      <div className="flex-1 min-w-0 bg-dark text-on-dark p-3 flex flex-col justify-between gap-3 border-l-2 border-dashed border-line/40">
+      <div style={{ background: "var(--aura-ink)", color: "var(--aura-paper)" }} className="flex-1 min-w-0 p-3 flex flex-col justify-between gap-3 border-l-2 border-dashed border-line/40">
         <div>
           {off > 0 ? (
             <p className="font-display leading-none sag-num"><span className="text-[44px] tracking-[-0.04em]">{off}</span><small className="text-xl">%</small> <em className="text-2xl">off</em></p>
@@ -227,12 +227,12 @@ export const DealTicketPreview: React.FC<{ product: Product; photo?: string; end
           {off > 0 && (
             <p className="mt-2 flex flex-col gap-0.5 sag-num">
               <b className="text-lg leading-6 font-extrabold">{rupees(price)}</b>
-              <s className="text-[13px] text-on-dark-muted">{rupees(mrp)}</s>
-              <span className="text-[12px] font-semibold text-on-dark-muted">You save {rupees(mrp - price)}</span>
+              <s className="text-[13px] opacity-75">{rupees(mrp)}</s>
+              <span className="text-[12px] font-semibold opacity-75">You save {rupees(mrp - price)}</span>
             </p>
           )}
         </div>
-        <span className="inline-flex h-10 items-center justify-center rounded-full bg-page px-3 text-[13px] font-bold text-ink">{soldOut ? 'Sold out' : 'View deal →'}</span>
+        <span className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-full bg-page px-2 text-[12px] font-bold text-ink">{soldOut ? 'Sold out' : 'View deal →'}</span>
       </div>
     </div>
   );
