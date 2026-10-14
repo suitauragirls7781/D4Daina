@@ -166,9 +166,11 @@ export const AdminAbandoned: React.FC = () => {
     const today = IST_DAY.format(new Date());
     const weekStart = IST_DAY.format(new Date(Date.now() - 6 * DAY_MS));
     const open = all.filter((row) => !hasPaidOrder(row));
+    const week = open.filter((row) => { const day = istDay(row.updatedAt); return Boolean(day) && day >= weekStart; });
     return {
       today: open.filter((row) => istDay(row.updatedAt) === today).length,
-      week: open.filter((row) => { const day = istDay(row.updatedAt); return Boolean(day) && day >= weekStart; }).length,
+      week: week.length,
+      weekValue: week.reduce((sum, row) => sum + row.total, 0),
       reminded: all.filter((row) => row.reminderSentAt).length,
       recovered: all.filter(boughtAfter).length,
     };
@@ -180,12 +182,18 @@ export const AdminAbandoned: React.FC = () => {
     || row.name.toLowerCase().includes(term) || row.phone.includes(term) || row.email.includes(term)
     || row.items.some((item) => item.name.toLowerCase().includes(term)));
 
+  // The message fits how far the shopper got: a payment that did not go through gets a payment message
   const whatsappLink = (row: Checkout) => {
     const first = row.items[0];
     const link = first?.id ? `https://www.suitauragirls.in/product/${first.id}` : 'https://www.suitauragirls.in/cart';
-    const text = `Hi ${row.name.split(' ')[0] || ''}, this is Suit Aura Girls. You were looking at ${first ? `"${first.name}"` : 'a style'} on our website. Can I help you with the size, delivery or payment? ${link}`;
+    const hello = `Hi ${row.name.split(' ')[0] || ''}, this is Suit Aura Girls.`;
+    const text = reachedPayment(row)
+      ? `${hello} Your payment for ${first ? `"${first.name}"` : 'your order'} (₹${row.total.toLocaleString('en-IN')}) did not go through. Can I help you complete it? ${link}`
+      : `${hello} You were looking at ${first ? `"${first.name}"` : 'a style'} on our website. Can I help you with the size, delivery or payment? ${link}`;
     return `https://wa.me/91${row.phone}?text=${encodeURIComponent(text.replace(/\s+/g, ' ').trim())}`;
   };
+  // Opening WhatsApp from here counts as contacting the shopper (undo with "Not contacted")
+  const messaged = (row: Checkout) => { if (!row.contactedAt) void setContacted(row, true); };
 
   const setContacted = async (row: Checkout, contacted: boolean) => {
     const contactedAt = contacted ? new Date().toISOString() : '';
@@ -203,7 +211,7 @@ export const AdminAbandoned: React.FC = () => {
     <div className="space-y-5">
       <PageTitle
         title={<>Abandoned checkouts {rows && <span className="font-sans text-ink-muted font-normal text-lg sag-num">({rows.length})</span>}</>}
-        line="Shoppers who typed their details at checkout but did not pay. Message them on WhatsApp from your own number."
+        line="Shoppers who typed their details at checkout but did not pay. Message them on WhatsApp from your own number: the message fits how far they got, and the card moves to “Contacted”."
         actions={
           <button type="button" onClick={load} disabled={loading} className={adminUi.outline}>
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
@@ -216,7 +224,7 @@ export const AdminAbandoned: React.FC = () => {
           label="Abandoned checkouts at a glance"
           items={[
             { label: 'Left today', value: numbers.today, highlight: numbers.today > 0, note: 'Did not pay, no order since' },
-            { label: 'Left this week', value: numbers.week, note: 'The last 7 days' },
+            { label: 'Left this week', value: numbers.week, note: numbers.weekValue > 0 ? `₹${numbers.weekValue.toLocaleString('en-IN')} left in bags, the last 7 days` : 'The last 7 days' },
             { label: 'Reminder emails sent', value: numbers.reminded, note: 'Sent automatically to shoppers who left' },
             { label: 'Bought afterwards', value: numbers.recovered, note: 'Paid for an order after leaving' },
           ]}
@@ -316,7 +324,7 @@ export const AdminAbandoned: React.FC = () => {
 
               {row.phone.length === 10 && (
                 <div className="mt-auto pt-3.5 border-t border-line grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                  <a href={whatsappLink(row)} target="_blank" rel="noopener noreferrer" className={`${ordered || row.contactedAt ? adminUi.outline : adminUi.primary} col-span-2`}>
+                  <a href={whatsappLink(row)} target="_blank" rel="noopener noreferrer" onClick={() => messaged(row)} className={`${ordered || row.contactedAt ? adminUi.outline : adminUi.primary} col-span-2`}>
                     <MessageCircle className="w-4 h-4" /> Message on WhatsApp
                   </a>
                   <a href={`tel:+91${row.phone}`} className={`${adminUi.outline} px-4`}>

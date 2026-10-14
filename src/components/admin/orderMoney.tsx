@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState } from 'react';
-import { AlertCircle, ChevronRight, IndianRupee, Loader2, XCircle } from 'lucide-react';
+import { AlertCircle, ChevronRight, Copy, IndianRupee, Loader2, XCircle } from 'lucide-react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { useRouter } from '../../context/RouterContext';
@@ -169,7 +169,7 @@ export const RefundsToDoPanel: React.FC<{ id?: string; limit?: number }> = ({ id
                       <button type="button" onClick={() => openAdminOrderDetails(order.orderNumber)} className={`${adminUi.link} sag-num`}>{order.orderNumber}</button>
                       <span className="sag-num font-extrabold text-ink">{rupees(paidOnline(order))}</span>
                       {order.payMode === 'cod' && <Pill tone="muted">COD advance</Pill>}
-                      {days >= 3 && <Pill tone="danger">Waiting {days} days</Pill>}
+                      {cancelled && <Pill tone={days >= 3 ? 'danger' : 'muted'}>{days === 0 ? 'Cancelled today' : `Waiting ${days} ${days === 1 ? 'day' : 'days'}`}</Pill>}
                     </p>
                     <p className="mt-0.5 text-[13px] leading-[18px] text-ink-muted break-words">
                       {order.customerName || order.customerEmail}{order.customerMobile ? ` · ${order.customerMobile}` : ''}
@@ -179,6 +179,12 @@ export const RefundsToDoPanel: React.FC<{ id?: string; limit?: number }> = ({ id
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {order.paymentRef && (
+                      <button type="button" onClick={() => { navigator.clipboard?.writeText(order.paymentRef).then(() => showToast('Payment ID copied. Paste it in the payment dashboard to find the payment.', 'success'), () => showToast('Could not copy the payment ID.', 'error')); }}
+                        className={`${adminUi.outlineSmall} px-3`} title="Copy the payment ID to find it in the payment dashboard">
+                        <Copy className="w-4 h-4" aria-hidden="true" /> Payment ID
+                      </button>
+                    )}
                     <input value={refs[order.orderNumber] || ''} onChange={(e) => setRefs((state) => ({ ...state, [order.orderNumber]: e.target.value }))} maxLength={60}
                       placeholder="Refund ID (optional)" aria-label={`Refund ID for ${order.orderNumber}`} className={`${adminUi.field} w-44`} />
                     <button type="button" onClick={() => markRefunded(order)} disabled={busy === order.orderNumber} className={adminUi.primarySmall}>
