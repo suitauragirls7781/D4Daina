@@ -37,6 +37,8 @@ export const AdminHomepage: React.FC = () => {
   } = useAdmin();
   const { showToast, setActivePage } = useShop();
   const [isResetting, setIsResetting] = useState(false);
+  // The outline sits beside the list on wide screens; on a phone it is folded until asked for
+  const [outlineOpen, setOutlineOpen] = useState(() => typeof window === 'undefined' || window.matchMedia('(min-width: 1280px)').matches);
 
   const getSectionIcon = (key: string) => {
     switch (key) {
@@ -262,9 +264,14 @@ export const AdminHomepage: React.FC = () => {
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
       {/* Phone mock-up: the home page as it is drawn now, top to bottom */}
       <aside aria-label="Home page outline" className="xl:order-2 xl:sticky xl:top-24 sag-glass p-4 min-w-0">
-        <h3 className={kit.h2}>The home page, top to bottom</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className={kit.h2}>The home page, top to bottom</h3>
+          <button type="button" onClick={() => setOutlineOpen((open) => !open)} aria-expanded={outlineOpen} aria-controls="homepage-outline" className={`${kit.small} xl:hidden`}>
+            {outlineOpen ? 'Hide outline' : 'Show outline'}
+          </button>
+        </div>
         <p className={`mt-1 ${kit.hint}`}>What visitors get right now. Tap a part to find it in the list.</p>
-        <div className="mt-4">
+        {outlineOpen && <div id="homepage-outline" className="mt-4">
           <PhoneFrame label="Outline of the home page on a phone">
             <ol className="px-3 pb-4 pt-1 space-y-2 max-h-[560px] overflow-y-auto overscroll-contain">
               <li aria-hidden="true" className="h-6 rounded-full bg-surface flex items-center px-3 text-[10px] font-extrabold tracking-[0.12em] text-ink">SUIT <em className="font-display mx-1 text-[12px]">Aura</em> GIRLS</li>
@@ -282,7 +289,7 @@ export const AdminHomepage: React.FC = () => {
               <li aria-hidden="true" className="h-10 rounded-[14px] flex items-center px-3 text-[10px] font-bold tracking-[0.12em]" style={{ background: 'var(--aura-ink)', color: 'var(--aura-paper)' }}>FOOTER</li>
             </ol>
           </PhoneFrame>
-        </div>
+        </div>}
       </aside>
       <div className="space-y-5 min-w-0">
       {/* Section order */}
