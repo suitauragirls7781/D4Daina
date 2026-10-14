@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
@@ -14,9 +14,16 @@ import { EmptyState, InfoRow, OrderStatusBadge, Panel, PaymentBadge, Pill, admin
 import { downloadInvoicePdf, invoiceDetails, shareInvoicePdf } from '../../lib/invoicePdf';
 import { PackingSlipButton } from './AdminPackingSlip';
 import { useCancelReason } from './orderMoney';
-import { orderWhatsAppLink } from './adminAlerts';
+import { orderWhatsAppLink, orderMobile } from './adminAlerts';
 import { WhatsAppIcon } from '../BrandIcons';
+import { addressLines, ageOf, bucketOf, buildCustomerIndex, codConfirmMessage, codConfirmation, mapLink, needsCodCheck, notesWithCodMark, orderFacts, otherOrdersOf, paymentHelpMessage, waLink } from './orderOps';
 import {
+  Copy,
+  Navigation,
+  History,
+  PhoneCall,
+  CheckCircle2,
+  ChevronRight,
   ArrowLeft,
   ArrowRight,
   ShoppingBag,
@@ -73,12 +80,16 @@ interface AdminOrderDetailsProps {
 }
 
 export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId }) => {
-  const { orders = [], ordersLoaded, updateOrderStatus, storeSettings } = useAdmin();
+  const { orders = [], ordersLoaded, updateOrderStatus, storeSettings, applyServerOrder } = useAdmin();
   const [invoiceBusy, setInvoiceBusy] = useState<'' | 'download' | 'share'>('');
   const { showToast } = useShop();
-  const { navigate } = useRouter();
+  const { navigate, openAdminOrderDetails } = useRouter();
 
   const order = orders.find((o) => o.orderNumber === orderId || o.orderNumber.endsWith(orderId));
+  // The customer's other orders (same mobile or email). Hooks: they stay above the early returns below.
+  const customerIndex = useMemo(() => buildCustomerIndex(orders), [orders]);
+  const otherOrders = useMemo(() => (order ? otherOrdersOf(order, customerIndex) : []), [order, customerIndex]);
+  const [codBusy, setCodBusy] = useState(false);
 
   // Asked before any cancel (orderMoney.tsx). A hook: it stays above the early returns below.
   const cancelReason = useCancelReason();
@@ -344,6 +355,110 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
     return `https://wa.me/91${digits}?text=${encodeURIComponent(msg)}`;
   })();
 
+  // ---------------------------------------------------------------- the customer, the address and the cash-on-delivery check
+
+  const mobile = orderMobile(order);
+  const facts = orderFacts(order, otherOrders);
+  const realOthers = otherOrders.filter((o) => bucketOf(o) !== 'unpaid');
+  const spentBefore = realOthers
+    .filter((o) => o.paymentStatus === 'Paid' && !['Cancelled', 'Refunded', 'Returned'].includes(String(o.status)))
+    .reduce((sum, o) => sum + (Number(o.finalTotal) || 0), 0);
+  const copyText = async (text: string, what: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(`${what} copied.`, 'success');
+    } catch {
+      showToast(`Could not copy. Press and hold to select the ${what.toLowerCase()} instead.`, 'error');
+    }
+  };
+  const codCheckDue = needsCodCheck(order);
+  const codDone = order.payMode === 'cod' ? codConfirmation(order) : '';
+  // Saves only the internal notes (the same admin-update as "Save notes"), with the confirmation line on top.
+  // Built from the saved notes, so nothing typed elsewhere on the page is sent with it.
+  const confirmCod = async (how: 'call' | 'whatsapp') => {
+    if (notes.trim() !== (order.notes || '').trim() && !window.confirm('The internal notes below have changes that are not saved. They will be replaced by the saved notes plus the confirmation line. Continue?')) return;
+    setCodBusy(true);
+    try {
+      const result = await ordersApi<{ order?: any }>('admin-update', { orderNumber: order.orderNumber, notes: notesWithCodMark(order, how) });
+      if (result.order) applyServerOrder(result.order);
+      showToast('Saved: cash on delivery confirmed with the customer.', 'success');
+    } catch (err: any) {
+      showToast(err?.message || 'Could not save. Please try again.', 'error');
+    } finally {
+      setCodBusy(false);
+    }
+  };
+  const codWhatsApp = order.payMode === 'cod' ? waLink(order, codConfirmMessage(order)) : '';
+  const paymentHelpWhatsApp = order.paymentStatus === 'Unpaid' ? waLink(order, paymentHelpMessage(order)) : '';
+
+  const codCheckPanel = (codCheckDue || (codDone && ['topack', 'packed'].includes(bucketOf(order)))) && (
+    <section id="admin-order-cod-check" className={`${adminUi.panel} ${codCheckDue ? 'sag-glass-strong' : ''} space-y-3`}>
+      <div className="flex items-start gap-3">
+        {codDone ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-ok" aria-hidden="true" /> : <PhoneCall className="w-5 h-5 shrink-0 mt-0.5 text-sale" aria-hidden="true" />}
+        <div className="min-w-0 text-sm leading-5 text-ink space-y-1.5">
+          <p className={eyebrow}>Cash on delivery check</p>
+          <p className="text-[15px] font-semibold text-ink">{codDone ? 'Confirmed with the customer' : `Confirm before shipping: ${inr(order.codDue)} to collect in cash`}</p>
+          {codDone ? (
+            <p className={small}>{codDone}</p>
+          ) : (
+            <p className={small}>A short call or WhatsApp before shipping avoids parcels coming back unpaid. Facts about this order:</p>
+          )}
+          <div className="flex flex-wrap gap-1.5">{facts.map((f) => <Pill key={f.key} tone={f.tone}>{f.label}</Pill>)}</div>
+        </div>
+      </div>
+      {!codDone && (
+        <>
+          <ol className="sm:pl-8 space-y-1.5 text-sm leading-5 text-ink list-decimal list-inside marker:text-ink-muted">
+            <li>Call or WhatsApp {order.customerName?.split(' ')[0] || 'the customer'} and check the address and the amount.</li>
+            <li>Once they say yes, mark it confirmed below. It is saved in the internal notes with the time.</li>
+          </ol>
+          <div className="flex flex-wrap gap-2 sm:pl-8 [&>*]:flex-1 sm:[&>*]:flex-none">
+            {mobile && <a href={`tel:+91${mobile}`} className={adminUi.outline}><Phone className="w-4 h-4" aria-hidden="true" /> Call</a>}
+            {codWhatsApp && <a href={codWhatsApp} target="_blank" rel="noopener noreferrer" className={adminUi.outline}><WhatsAppIcon className="w-4 h-4" live={false} /> Ask on WhatsApp</a>}
+          </div>
+          <div className="flex flex-wrap gap-2 sm:pl-8 [&>*]:flex-1 sm:[&>*]:flex-none">
+            <button type="button" id="admin-order-cod-confirm-call" onClick={() => confirmCod('call')} disabled={codBusy} className={adminUi.primary}>
+              {codBusy ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="w-4 h-4" aria-hidden="true" />} Confirmed on a call
+            </button>
+            <button type="button" id="admin-order-cod-confirm-wa" onClick={() => confirmCod('whatsapp')} disabled={codBusy} className={adminUi.outline}>
+              Confirmed on WhatsApp
+            </button>
+          </div>
+        </>
+      )}
+    </section>
+  );
+
+  const customerStory = (
+    <Panel id="admin-order-customer-history" title="This customer" icon={<History />} hint="Other orders from the same mobile number or email.">
+      <div className="flex flex-wrap gap-1.5">{facts.map((f) => <Pill key={f.key} tone={f.tone}>{f.label}</Pill>)}</div>
+      {realOthers.length > 0 && (
+        <p className="mt-3 text-sm leading-5 text-ink sag-num">
+          {realOthers.length} other {realOthers.length === 1 ? 'order' : 'orders'}{spentBefore > 0 ? <>, <span className="font-semibold">{inr(spentBefore)}</span> paid and kept</> : ''}.
+        </p>
+      )}
+      {otherOrders.length === 0 ? (
+        <p className={`mt-3 ${small}`}>No other order from this customer.</p>
+      ) : (
+        <ul className="mt-2 divide-y divide-line">
+          {otherOrders.slice(0, 6).map((o) => (
+            <li key={o.orderNumber}>
+              <button type="button" onClick={() => openAdminOrderDetails(o.orderNumber)} className="w-full min-h-12 py-2 flex items-center gap-3 text-left cursor-pointer hover:bg-sunken rounded-[12px] px-2 -mx-2 transition-colors">
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm leading-5 font-semibold text-ink sag-num truncate">{o.orderNumber}</span>
+                  <span className="block text-xs leading-4 text-ink-muted">{formatOrderDate(o.date)} · {bucketOf(o) === 'unpaid' ? 'payment not completed' : o.status}{o.payMode === 'cod' ? ' · COD' : ''}</span>
+                </span>
+                <span className="text-sm font-semibold text-ink sag-num shrink-0">{inr(o.finalTotal)}</span>
+                <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {otherOrders.length > 6 && <p className={`mt-2 ${small}`}>And {otherOrders.length - 6} older.</p>}
+    </Panel>
+  );
+
   // ---------------------------------------------------------------- the one next step
 
   const isCod = order.payMode === 'cod';
@@ -363,9 +478,9 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
     switch (order.status) {
       case 'Pending':
       case 'Processing':
-        return { label: 'Mark packed', hint: 'Pack the pieces, then tap here.', run: () => stepTo('Packed') };
+        return { label: 'Mark packed', hint: codCheckDue ? 'Cash on delivery is not confirmed yet: see the check below first. Then pack the pieces and tap here.' : 'Pack the pieces, then tap here.', run: () => stepTo('Packed') };
       case 'Packed':
-        return { label: 'Mark shipped', hint: 'First type the courier and tracking number under “Shipping and tracking”; they are saved with this button.', run: () => stepTo('Shipped') };
+        return { label: 'Mark shipped', hint: `${codCheckDue ? 'Cash on delivery is not confirmed yet (see below). ' : ''}First type the courier and tracking number under “Shipping and tracking”; they are saved with this button.`, run: () => stepTo('Shipped') };
       case 'Shipped':
       case 'In Transit':
       case 'Out for Delivery':
@@ -692,6 +807,7 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
       {/* Requests that are waiting for an answer come first */}
       {cancelRequestPending && cancelPanel}
       {returnOpen && returnPanel}
+      {codCheckPanel}
 
       {photoOpen && (
         <div className="fixed inset-0 z-[90] bg-dark/95 flex items-center justify-center p-4" onClick={() => setPhotoOpen('')} role="dialog" aria-modal="true" aria-label="Customer photo">
@@ -750,7 +866,15 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
             {order.giftNote && (
               <div className={`${adminUi.inset} mt-3 text-sm leading-5 text-ink break-words`}><strong className="font-semibold">Gift note:</strong> {order.giftNote}</div>
             )}
+            <div id="admin-order-contact" className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
+              {mobile && <a href={`tel:+91${mobile}`} className={`${adminUi.outline} px-4`}><Phone className="w-4 h-4" aria-hidden="true" /> Call</a>}
+              {mobile && <a href={`https://wa.me/91${mobile}`} target="_blank" rel="noopener noreferrer" className={`${adminUi.outline} px-4`}><WhatsAppIcon className="w-4 h-4" live={false} /> WhatsApp</a>}
+              <button type="button" onClick={() => copyText(addressLines(order).join('\n'), 'Address')} className={`${adminUi.outline} px-4`}><Copy className="w-4 h-4" aria-hidden="true" /> Copy address</button>
+              {mapLink(order) && <a href={mapLink(order)} target="_blank" rel="noopener noreferrer" className={`${adminUi.outline} px-4`}><Navigation className="w-4 h-4" aria-hidden="true" /> Open in Maps</a>}
+            </div>
           </Panel>
+
+          {customerStory}
 
           <Panel title={<>Items <span className="font-normal text-ink-muted sag-num">({(order.items || []).length})</span></>} icon={<ShoppingBag />}>
             {(order.stockShortfall || []).length > 0 && (
@@ -875,7 +999,23 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
 
               <div className="space-y-2 pt-1">
                 <InfoRow label="Method" strong><span className="capitalize">{order.paymentMethod}</span></InfoRow>
-                <InfoRow label="Gateway ref"><span className="font-mono text-xs break-all">{order.paymentRef || '—'}</span></InfoRow>
+                <InfoRow label="Gateway ref">
+                  <span className="font-mono text-xs break-all">{order.paymentRef || '—'}</span>
+                  {order.paymentRef && (
+                    <button type="button" onClick={() => copyText(order.paymentRef, 'Payment ID')} className="ml-1.5 align-middle inline-flex w-8 h-8 items-center justify-center rounded-full hover:bg-sunken cursor-pointer" aria-label="Copy payment ID" title="Copy payment ID">
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </InfoRow>
+                {order.razorpayOrderId && <InfoRow label="Razorpay order"><span className="font-mono text-xs break-all">{order.razorpayOrderId}</span></InfoRow>}
+                {order.paidAt && <InfoRow label="Paid at">{new Date(order.paidAt).toLocaleString('en-IN')}</InfoRow>}
+                {order.paymentStatus === 'Unpaid' && (
+                  <InfoRow label="Payment window">
+                    {(order.payTries || []).length > 0
+                      ? <>{(order.payTries || []).length} {(order.payTries || []).length === 1 ? 'try' : 'tries'} reported, last {ageOf((order.payTries || []).slice(-1)[0]?.at)} (see Timeline)</>
+                      : 'Nothing reported'}
+                  </InfoRow>
+                )}
               </div>
             </div>
           </Panel>
@@ -1102,6 +1242,12 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
           <Panel title="Packing slip and messages" icon={<Printer />} hint="Print the slip that goes in the parcel, or send the customer a ready-made WhatsApp message.">
             <div className="grid grid-cols-1 gap-2">
               <PackingSlipButton order={order} className={`${adminUi.outline} px-3`} />
+              {codWhatsApp && !['onway', 'delivered', 'cancelled'].includes(bucketOf(order)) && (
+                <a href={codWhatsApp} target="_blank" rel="noopener noreferrer" className={`${adminUi.outline} px-3`}>WhatsApp: confirm cash on delivery</a>
+              )}
+              {paymentHelpWhatsApp && (
+                <a href={paymentHelpWhatsApp} target="_blank" rel="noopener noreferrer" className={`${adminUi.outline} px-3`}>WhatsApp: help with the payment</a>
+              )}
               {(['packed', 'shipped', 'delivered'] as const).map((kind) => {
                 const link = orderWhatsAppLink(order, kind);
                 return link ? (
