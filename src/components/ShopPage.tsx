@@ -668,7 +668,7 @@ export const ShopPage: React.FC = () => {
   );
 
   // The page title: the real name of what is listed, its last word as the serif accent
-  const heading = activeOccasion ? activeOccasion.name : query.trim() ? `Results for “${query.trim()}”` : category === 'All' ? 'Shop all' : category === 'Sale' ? 'Offers' : category;
+  const heading = activeOccasion ? activeOccasion.name : query.trim() ? `Results for “${query.trim()}”` : category === 'All' ? 'Shop all' : category === 'Sale' ? 'Offers' : category === 'New Arrivals' ? 'New arrivals' : category === 'Best Sellers' ? 'Best sellers' : category;
   const [headMain, headAccent] = ((): [string, string] => {
     if (!activeOccasion && query.trim()) return ['Results for', `“${query.trim()}”`];
     const text = heading.trim();
@@ -680,7 +680,8 @@ export const ShopPage: React.FC = () => {
   const headLabel = activeOccasion ? 'Occasion' : query.trim() ? 'Search' : category === 'All' ? 'Suit Aura Girls' : 'Collection';
   const homeListing = 'All';
   const narrowed = activeCount > 0 || Boolean(query.trim()) || Boolean(activeOccasion);
-  const countLabel = isLoading ? 'Loading styles…' : `${results.length} ${results.length === 1 ? 'style' : 'styles'}`;
+  // A category still to come is "Coming soon", never "0 styles" (AGENTS.md: no count for it)
+  const countLabel = isLoading ? 'Loading styles…' : results.length === 0 && !narrowed && isWomenCategory(category) ? 'Coming soon' : `${results.length} ${results.length === 1 ? 'style' : 'styles'}`;
   const sortLabel = SORTS.find((s) => s.key === activeSort)?.label || 'Featured';
   const sortChoices = SORTS.filter((s) => s.key !== 'top-rated' || hasRatings);
   // Quiet bold link ("Clear all")
@@ -702,7 +703,7 @@ export const ShopPage: React.FC = () => {
 
   const tabs = categoryPills.map((c) => ({
     key: c,
-    label: c === 'Sale' ? 'Offers' : c,
+    label: c === 'Sale' ? 'Offers' : c === 'New Arrivals' ? 'New arrivals' : c === 'Best Sellers' ? 'Best sellers' : c,
     active: categoryToSlug(c) === categoryToSlug(category),
     pick: () => navigateToCategory(c as any),
   }));

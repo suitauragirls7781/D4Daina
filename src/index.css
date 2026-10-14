@@ -1637,6 +1637,10 @@ button.aco-stp-b { cursor: pointer; }
   .aura-pc[data-layout="big"] .aura-pc-n { font-size: 20px; }
   .aura-pc[data-layout="big"] .aura-pc-b { flex: none; }
   .aura-pc[data-layout="wide"] { grid-column: span 2; }
+  /* The row of a wide card is as tall as the single cards beside it: its photo takes that height, so the card is
+     never a short card with an empty block under it */
+  .aura-pc[data-layout="wide"] .aura-pc-m { display: flex; flex-direction: column; width: 48%; }
+  .aura-pc[data-layout="wide"] .aura-pc-ph { flex: 1; width: 100%; min-height: 300px; aspect-ratio: auto; }
 }
 
 /* Trust facts: the round chip takes the section's text colour, its icon the section's ground */
@@ -1975,7 +1979,7 @@ select.shop-sort { -webkit-appearance: none; appearance: none; max-width: none; 
 .pdp-acc-p > div > div { padding: 0 0 18px; font-size: 15px; line-height: 1.6; color: var(--sag-ink-muted); }
 /* Rails of cards under the page */
 .pdp-sec { margin-top: 48px; padding: 0 16px; }
-.pdp-rail { display: flex; gap: 10px; margin: 16px -16px 0; padding: 4px 16px 12px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none; }
+.pdp-rail { display: flex; gap: 10px; margin: 16px -16px 0; padding: 4px 16px 12px; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: 16px; scrollbar-width: none; }
 .pdp-rail::-webkit-scrollbar { display: none; }
 .pdp-rail > div { flex: none; width: 44vw; max-width: 210px; scroll-snap-align: start; }
 /* The buy bar. Phones: a solid ink bar at the bottom. Desktop: an ink pill at the bottom right, there once the main buttons are out of sight. */
@@ -2860,8 +2864,9 @@ html { background-color: var(--clay-bg); }
   --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.15); --ac: #7E404C; --sa: #7E404C; --th: #7E404C;
 }
 [data-on="forest"] { --ac: #1E3A34; --th: #1E3A34; }
-/* Focus: a dark-rose ring, visible on paper, cream, every pastel and on photos (>= 4.5:1 on the rose clay) */
-:focus-visible { outline: 2.5px solid #8E4C58; outline-offset: 3px; }
+/* Focus: a dark-rose ring, visible on paper, cream, every pastel and on photos (>= 4.5:1 on the rose clay). In the base
+   layer like the rule it replaces, so a component that draws its own focus (outline-none on a field inside a pill) still wins */
+@layer base { :focus-visible { outline: 2.5px solid #8E4C58; outline-offset: 3px; } }
 ::selection { background: var(--clay-rose); }
 
 /* Cream instead of white for every light surface (cards, sheets, menus, fixed bars) */
@@ -3061,6 +3066,10 @@ html { background-color: var(--clay-bg); }
   .aura-ft-ad:hover { color: var(--aura-drose); }
 }
 :is(.aura-ft-ln > button, .aura-ft-so):active { box-shadow: var(--clay-pressed); }
+/* "Install the app" on an iPhone: the name, and under it the two steps (Safari has no install button), so the pill
+   never runs past a 360px screen */
+.aura-ft-ln > button.aura-ft-inst { flex-direction: column; align-items: flex-start; gap: 4px; padding: 9px 18px; border-radius: 22px; line-height: 1.2; white-space: normal; text-align: left; }
+.aura-ft-inst > small { font-size: 13px; font-weight: 500; color: var(--mu); }
 footer#main-footer :focus-visible { outline-color: #8E4C58; }
 /* end of the claymorphism frame */
 
@@ -3149,6 +3158,10 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 .shop-fbar-in { background: var(--clay-bg); border-top: 0; border-bottom: 0; box-shadow: 0 12px 18px -12px rgba(120,96,80,.4), inset 0 -1px 0 rgba(255,255,255,.8); }
 .shop-fbar-r { padding-top: 10px; padding-bottom: 10px; }
 .shop-fbtn { box-shadow: var(--clay-ink-btn); }
+/* The category row scrolls sideways: a trough would be cut square at the scroller's edge, so the row sits on the
+   ledge itself (only the chosen pebble is raised) and both edges fade */
+.shop-seg-sc { padding-block: 4px 10px; margin-block: -4px -10px; -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 16px), transparent); mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 16px), transparent); }
+.shop-seg.aura-seg { background: transparent; box-shadow: none; padding-inline: 8px; }
 .shop-sort { border: 0; background: var(--clay-surface); box-shadow: var(--clay-1); }
 .shop-switch { background: var(--clay-field); box-shadow: var(--clay-inset); }
 .shop-switch > i { box-shadow: 2px 2px 4px rgba(120,96,80,.3), inset 1px 1px 0 #FFFFFF; }
@@ -3219,6 +3232,8 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 .pdp-page .pdp-d > .aura-card { border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); margin-top: 18px; }
 .pdp-page .pdp-acc { margin-top: 22px; padding: 0 18px; border-top: 0; border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-2); }
 .pdp-page .pdp-acc > div:last-child { border-bottom: 0; }
+/* The similar styles row scrolls sideways on phones: room above and below so the clay shadows are not cut square */
+@media (max-width: 899px) { .pdp-page .pdp-rail { padding-top: 10px; padding-bottom: 32px; margin-bottom: -20px; } }
 .pdp-page .pdp-off, .pdp-page .pdp-conf { margin-top: 22px; }
 /* The size sheet: a clay sheet */
 .pdp-sheet { background: var(--clay-surface) !important; box-shadow: 0 -10px 30px rgba(120,96,80,.18), inset 2px 2px 4px rgba(255,255,255,.8); }
@@ -3444,6 +3459,10 @@ footer#main-footer :focus-visible { outline-color: #8E4C58; }
 .clay-pg .aa-sec:first-child { margin-top: 4px; padding-top: 26px; }
 .clay-pg .aa-sec-n { display: inline-grid; place-items: center; min-width: 38px; height: 30px; padding: 0 10px; margin-bottom: 12px; border-radius: 999px; background: var(--clay-blush); color: #8E4C58; letter-spacing: 0.08em; box-shadow: 2px 3px 6px rgba(120,96,80,.16), inset 1px 1px 1px rgba(255,255,255,.6); }
 @media (min-width: 640px) { .clay-pg .aa-sec { padding: 32px 30px 30px; } }
+/* The number pebble sits beside the section title, not on a line of its own (on a phone the size chart then starts
+   on the first screen, above the tab bar) */
+.clay-pg .aa-sec > h2 { display: flex; align-items: center; gap: 12px; }
+.clay-pg .aa-sec > h2 > .aa-sec-n { flex: none; margin-bottom: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .clay-pg :is(.aura-btn, .aa-row, .sag-chip, button.aa-ic) { transition: none; }
