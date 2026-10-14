@@ -1,14 +1,15 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Pause } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { useAdmin, generateHeroSlidesFromProducts } from '../context/AdminContext';
 import { HeroBannerConfig, Product } from '../types';
 import { getCleanImageUrl, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
-import { slugToCategory } from '../utils/slugHelper';
+import { categoryToSlug, slugToCategory } from '../utils/slugHelper';
 import { WOMEN_CATEGORY_NAMES } from '../data/womenCategories';
 import { prepaidPercentApplies } from '../utils/prepaid';
-import { assuranceFacts } from './Assurance';
 import { frameInsets } from './HomeSections';
-import { Icon, clamp, setVar, smooth, useNoPin, useScrollFx } from '../aura';
+import { useCardDeck } from './useCardDeck';
+import { Icon, Odometer, clamp, setVar, useNoPin, useScrollFx } from '../aura';
 
 type LiveHeroSlide = HeroBannerConfig['slides'][number] & { rawProduct?: Product };
 // Labels the code fills in by itself (auto-made slides, or linking a product in Admin). They are not the
@@ -29,35 +30,36 @@ const ownerBadge = (badge?: string) => {
 const HERO_CATEGORY_LINKS: readonly string[] = ['All', ...WOMEN_CATEGORY_NAMES, 'Sale', 'New Arrivals', 'Best Sellers', 'Trending'];
 
 /** The badge as plain words: emoji and the joiners that belong to them are removed. */
-const plainWords = (text: string) => text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s+/g, ' ').trim();
-
-// The store's own short line (the header says "Ethnic wear · Delivery across India"), as the two-line headline
-const STORE_HEADLINE = { first: 'Ethnic wear', second: 'across', accent: 'India' };
+const plainWords = (text: string) => text.replace(/[\p{Extended_Pictographic}️‍]/gu, '').replace(/\s+/g, ' ').trim();
 
 /**
- * The two lines of the big headline. A short title the owner gave the first slide is used as it is (its last
- * word becomes the accent); a long one (a product's full name) cannot be set that large, so the store's own
- * line stands there and the slide's real title is shown with its price under the photo.
+ * A slide's title as the headline: its last word is the serif accent, and the type gets one step smaller as the
+ * title gets longer (a short title the owner typed stands very large; a product's full name still fits).
+ * A slide without a title carries the store's own line.
  */
-const headlineFrom = (title: string) => {
+const headlineOf = (title: string) => {
   const words = plainWords(title || '').split(' ').filter(Boolean);
-  if (words.length < 2 || words.length > 4 || words.join(' ').length > 22) return STORE_HEADLINE;
-  const accent = words[words.length - 1];
-  const rest = words.slice(0, -1);
-  const cut = rest.length === 1 ? 1 : Math.ceil(rest.length / 2);
-  return { first: rest.slice(0, cut).join(' '), second: rest.slice(cut).join(' '), accent };
+  if (words.length === 0) return { rest: 'Ethnic wear across', accent: 'India', size: 'lg' };
+  const length = words.join(' ').length;
+  const size = length <= 18 ? 'xl' : length <= 34 ? 'lg' : length <= 54 ? 'md' : 'sm';
+  if (words.length === 1) return { rest: '', accent: words[0], size };
+  return { rest: words.slice(0, -1).join(' '), accent: words[words.length - 1], size };
 };
+const two = (value: number) => String(value).padStart(2, '0');
+/** How long a card stays on top before the deck deals the next one by itself. */
+const DEAL_EVERY_MS = 6000;
 
 /**
- * Hero, the opening of the scroll story. The first slide is pinned: a tall wrapper with a sticky stage. At
- * rest: the small label, a two-line headline in very large light type and the photo inside an arch, with a
- * thin thread drawn around it; under it the store's facts in one line and "Scroll". Scrolling opens the arch
- * into a full-width round-cornered photo (clip-path from --o), the headline becomes bold (--wt), the facts
- * leave (--c) and the slide's real title, price and buttons come up in their place (--b). Only CSS variables
- * are written, from the shared scroll engine; nothing is taken from the scroll.
- * The other slides follow right after as a swipe row of large round-cornered cards (photo, title, real
- * price, link). Nothing is drawn on a photo. Without pinning (reduced motion, no sticky, a very short
- * screen) the first slide is a plain block with everything visible.
+ * Hero, "the deck": the owner's slides are a pile of large round-cornered photo cards. The top card is the
+ * look on show; the next two peek out behind it, a little turned. The shopper drags the top card away (it
+ * follows the finger, tilts, and is dealt or springs back: src/components/useCardDeck.ts), or uses the arrows
+ * or the arrow keys; the deck also deals by itself every 6 seconds, shown by the thin line that fills (it
+ * waits while the pointer, the keyboard focus or a finger is on the hero, and while the hero is off screen).
+ * With each card the words exchange: the owner's badge text, the title as the headline, the real price and
+ * "% off"; "Shop now" opens the look on show. Nothing is drawn on a photo.
+ * Scrolling tucks the fan together and lets the deck recede (one CSS variable from the shared scroll engine).
+ * With reduced motion, without sticky support or on a very short screen the deck is still: the cards lie
+ * fanned and the previous / next buttons change the look at once.
  */
 export const HeroSection: React.FC = () => {
   const { navigateToCategory, navigateToProduct, products, storeOffers } = useShop();
@@ -124,70 +126,87 @@ export const HeroSection: React.FC = () => {
   }, [heroConfig, products]);
 
 
+
   const slides = liveProductSlides;
+  const count = slides.length;
   const still = useNoPin();
   const wrap = useRef<HTMLElement>(null);
-  const stage = useRef<HTMLDivElement>(null);
-  const photoFrame = useRef<HTMLDivElement>(null);
-  const threadPath = useRef<SVGPathElement>(null);
-  const row = useRef<HTMLUListElement>(null);
-  // Sizes cached by the measure pass (never read on a scroll frame)
-  const size = useRef({ hs: 0, pinH: 1, x: 0, y: 0, w: 0, h: 0, gutter: 10, drawn: -1, cta: false });
+  const deckEl = useRef<HTMLDivElement>(null);
+  const [index, setIndex] = useState(0);
+  // The direction of the last change (the words come up from below for the next look, down for the previous)
+  const [stepDir, setStepDir] = useState<1 | -1>(1);
+  // Nothing animates in before the shopper (or the clock) has changed the look once
+  const [moved, setMoved] = useState(false);
+  const [paused, setPaused] = useState(false);
+  // The photos are asked for in steps, so the first one has the line to itself: 0 = only the top card's,
+  // 1 = the two that peek out as well (once the first has arrived, or after 3.5 s), 2 = the one under them
+  // and the one "previous" brings back (a little later, or as soon as the shopper changes the look)
+  const [ask, setAsk] = useState(0);
+  const asked = useRef(new Set<string>());
+  const insets = useRef({ hs: 0 });
+  const cur = count > 0 ? index % count : 0;
+
+  const onChange = (next: number, dir: 1 | -1) => { setIndex(next); setStepDir(dir); setMoved(true); setAsk(2); };
+  // Why the deck is waiting (pointer over it, focus inside, a finger down, off screen, the pause button), kept
+  // as `data-hold` on the section: it only stops the line that fills, and the line's end deals the next card
+  const holds = useRef(new Set<string>());
+  const hold = (why: string, on: boolean) => {
+    if (on) holds.current.add(why); else holds.current.delete(why);
+    const el = wrap.current;
+    if (!el) return;
+    if (holds.current.size > 0) el.dataset.hold = Array.from(holds.current).join(' '); else delete el.dataset.hold;
+  };
+  const deck = useCardDeck(deckEl, slides.map((slide, i) => slide.id || i).join('|'), !still, onChange, (active) => hold('drag', active));
+  const goNext = () => { if (still) onChange((cur + 1) % count, 1); else deck.next(-1); };
+  const goPrev = () => { if (still) onChange((cur - 1 + count) % count, -1); else deck.prev(); };
 
   useScrollFx(wrap, ({ y, top, height }) => {
-    const g = size.current;
-    const pin = stage.current;
-    if (still || !pin) return;
-    const p = clamp((y - (top - g.hs)) / Math.max(1, height - g.pinH));
-    const o = smooth(clamp(p / 0.72));
-    setVar(pin, '--o', o);
-    setVar(pin, '--wt', o, 2);
-    setVar(pin, '--c', 1 - clamp(p / 0.22));
-    const b = clamp((p - 0.5) / 0.34);
-    setVar(pin, '--b', b);
-    const cta = b > 0.6;
-    if (cta !== g.cta) { g.cta = cta; pin.classList.toggle('cta', cta); }
-    // The thread follows the arch as it opens
-    const step = Math.round(o * 1000);
-    if (step !== g.drawn && threadPath.current && g.w > 0) {
-      g.drawn = step;
-      const gap = 6;
-      const inset = (1 - o) * 0.19 * g.w;
-      const xl = g.x + inset - gap;
-      const xr = g.x + g.w - inset + gap;
-      const yt = g.y - gap;
-      const yb = g.y + g.h + gap;
-      const r = Math.min(26 + gap + (1 - o) * 240, (xr - xl) / 2);
-      const rb = 30;
-      const ex = g.gutter;
-      const ey = Math.min(yb + 50, g.pinH);
-      const n = (v: number) => v.toFixed(1);
-      threadPath.current.setAttribute('d', `M${n(xl + rb)} ${n(yb)}H${n(xr - rb)}Q${n(xr)} ${n(yb)} ${n(xr)} ${n(yb - rb)}V${n(yt + r)}A${n(r)} ${n(r)} 0 0 0 ${n(xr - r)} ${n(yt)}H${n(xl + r)}A${n(r)} ${n(r)} 0 0 0 ${n(xl)} ${n(yt + r)}V${n(yb - rb)}Q${n(xl)} ${n(yb)} ${n(xl + rb)} ${n(yb)}C${n(xl - 10)} ${n(yb + 2)} ${n(ex)} ${n(yb + 6)} ${n(ex)} ${n(ey)}V${n(g.pinH)}`);
-    }
-  }, [still, slides.length > 0], {
-    measure: (el, { vh, vw, top }) => {
-      const g = size.current;
-      const insets = frameInsets();
-      // What scrolls away above the hero when the page is at its top (the announcement strip): the stage is
-      // that much shorter, so the whole hero fits the first screen
-      const above = top - insets.hs;
-      setVar(el, '--hs', `${insets.hs}px`);
+    if (still) return;
+    setVar(deckEl.current, '--k', clamp((y - (top - insets.current.hs)) / Math.max(1, height * 0.8)));
+  }, [still, count > 0], {
+    measure: (el, { vh, top }) => {
+      const frame = frameInsets();
+      insets.current.hs = frame.hs;
+      // What scrolls away above the hero when the page is at its top: the hero is that much shorter, so it
+      // fits the first screen
+      const above = top - frame.hs;
+      setVar(el, '--hs', `${frame.hs}px`);
       setVar(el, '--hx', `${above > 0 && above < vh * 0.3 ? Math.round(above) : 0}px`);
-      setVar(el, '--tb', `${insets.tb}px`);
-      const pin = stage.current;
-      const frame = photoFrame.current;
-      if (!pin || !frame) return;
-      g.hs = insets.hs;
-      g.pinH = pin.offsetHeight;
-      g.x = frame.offsetLeft;
-      g.y = frame.offsetTop;
-      g.w = frame.offsetWidth;
-      g.h = frame.offsetHeight;
-      // The same gutter the page's thread runs in (src/aura/Thread.tsx), so the two lines meet
-      g.gutter = Math.max(10, (vw - 1120) / 2 - 8);
-      g.drawn = -1;
+      setVar(el, '--tb', `${frame.tb}px`);
+      deck.measure();
     },
   });
+
+  useEffect(() => {
+    const el = wrap.current;
+    if (!el || count < 2) return undefined;
+    let watch: IntersectionObserver | null = null;
+    if ('IntersectionObserver' in window) {
+      watch = new IntersectionObserver((entries) => hold('off', !entries[entries.length - 1].isIntersecting), { threshold: 0.4 });
+      watch.observe(el);
+    }
+    return () => watch?.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [count]);
+  useEffect(() => {
+    if (count < 2 || ask >= 2) return undefined;
+    const timer = window.setTimeout(() => setAsk((step) => step + 1), ask === 0 ? 3500 : 2400);
+    return () => window.clearTimeout(timer);
+  }, [count, ask]);
+
+  // The keyboard focus follows the look: when the focused card leaves the top of the pile, the new top card
+  // takes the focus (a card under the pile is hidden, and a hidden element drops the focus without a word)
+  useLayoutEffect(() => {
+    const pile = deckEl.current;
+    const section = wrap.current;
+    if (!pile || !section) return;
+    const active = document.activeElement;
+    if (active instanceof HTMLElement && active.hasAttribute('data-card') && pile.contains(active) && active.dataset.slot !== '0') {
+      pile.querySelector<HTMLElement>('[data-card][data-slot="0"]')?.focus({ preventScroll: true });
+    }
+    if (holds.current.has('focus') && !section.contains(document.activeElement)) hold('focus', false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cur]);
 
   const handleSlideClick = (slide: LiveHeroSlide) => {
     if (slide.productId) {
@@ -203,21 +222,28 @@ export const HeroSection: React.FC = () => {
       navigateToCategory((category || 'All') as any);
     }
   };
+  // The same destination as an address, for the card's link
+  const hrefOf = (slide: LiveHeroSlide) => {
+    if (slide.productId) return `/product/${slide.productId}`;
+    const targetLink = slide.link || 'All';
+    if (products.some((p) => p.id === targetLink)) return `/product/${targetLink}`;
+    const category = HERO_CATEGORY_LINKS.find((candidate) => candidate === slugToCategory(targetLink));
+    return !category || category === 'All' ? '/shop' : `/category/${categoryToSlug(category)}`;
+  };
 
-  if (isLoading && (!slides || slides.length === 0)) {
+  if (isLoading && count === 0) {
     return (
-      <div className="w-full px-3.5 pb-10 pt-8" aria-hidden="true">
-        <div className="mx-auto flex max-w-[1120px] flex-col items-center gap-4">
+      <div className="h3v-in" aria-hidden="true">
+        <div className="h3v-stage"><div className="h3v-deck"><span className="h3v-c" data-slot="0"><span className="h3v-ph" /></span></div></div>
+        <div className="flex flex-col gap-3 pt-4">
           <div className="h-3 w-28 rounded-full bg-sunken" />
-          <div className="h-12 w-3/4 rounded-2xl bg-sunken" />
-          <div className="aspect-[4/5] w-[62%] max-w-[420px] rounded-t-full rounded-b-[26px] bg-sunken" />
+          <div className="h-9 w-3/4 rounded-2xl bg-sunken" />
+          <div className="h-12 w-40 rounded-full bg-sunken" />
         </div>
       </div>
     );
   }
-
-  const lead = slides[0];
-  if (!lead) return null;
+  if (count === 0) return null;
 
   // What one slide says under (never on) its photo: the owner's badge text, the real price and the real offer
   const wordsOf = (slide: LiveHeroSlide) => {
@@ -236,18 +262,16 @@ export const HeroSection: React.FC = () => {
       : '';
     return { slidePrice, originalPrice, discountPercent, caption, onlineOffer };
   };
-  const priceLine = (slide: LiveHeroSlide, className: string) => {
-    const w = wordsOf(slide);
-    if (w.slidePrice <= 0) return null;
-    return (
-      <span className={`aura-num flex flex-wrap items-baseline gap-x-2 gap-y-0.5 ${className}`}>
-        <b className="text-[17px] font-extrabold leading-6">₹{w.slidePrice.toLocaleString('en-IN')}</b>
-        {w.originalPrice > w.slidePrice && <s className="aura-mu text-[13px]">₹{w.originalPrice.toLocaleString('en-IN')}</s>}
-        {w.discountPercent > 0 && <span className="aura-sa text-[13px] font-bold">{w.discountPercent}% off</span>}
-      </span>
-    );
-  };
-  const photo = (slide: LiveHeroSlide, sizes: string, eager: boolean) => {
+  const rupees = (value: number) => `₹${value.toLocaleString('en-IN')}`;
+
+  const slotOf = (i: number) => (i - cur + count) % count;
+  const photo = (slide: LiveHeroSlide, i: number) => {
+    const slot = slotOf(i);
+    const key = slide.id || String(i);
+    // The top three are on the first screen; the one under them and the one that "previous" brings back follow
+    if (slot === 0 || (ask >= 1 && slot <= 2) || (ask >= 2 && (slot === 3 || slot === count - 1))) asked.current.add(key);
+    if (!asked.current.has(key)) return null;
+    const first = i === 0;
     const small = getCleanImageUrl(slide.image, 640);
     const mid = getCleanImageUrl(slide.image, 828);
     const wide = getCleanImageUrl(slide.image, 1100);
@@ -255,136 +279,155 @@ export const HeroSection: React.FC = () => {
       <img
         src={small || ELEGANT_PLACEHOLDER_SVG}
         srcSet={slide.image && small && small !== wide ? `${small} 640w, ${mid} 828w, ${wide} 1100w` : undefined}
-        sizes={sizes}
-        alt={slide.title || 'Featured Suit Aura Girls design'}
-        loading={eager ? 'eager' : 'lazy'}
-        fetchPriority={eager ? 'high' : 'auto'}
+        sizes="(min-width: 900px) 40vw, (min-width: 640px) 460px, 76vw"
+        alt={slot === 0 ? (slide.title || 'Featured Suit Aura Girls design') : ''}
+        loading={first ? 'eager' : 'lazy'}
+        fetchPriority={first ? 'high' : 'low'}
         decoding="async"
         draggable={false}
+        ref={first ? (img) => { if (img?.complete) setAsk((step) => Math.max(step, 1)); } : undefined}
+        onLoad={first ? () => setAsk((step) => Math.max(step, 1)) : undefined}
         onError={(event) => {
+          if (first) setAsk((step) => Math.max(step, 1));
           if (!event.currentTarget.src.includes('data:image/svg+xml')) { event.currentTarget.removeAttribute('srcset'); event.currentTarget.src = ELEGANT_PLACEHOLDER_SVG; }
         }}
       />
     );
   };
 
-  const lw = wordsOf(lead);
-  const head = headlineFrom(lead.title);
-  const secondLine = [head.second, head.accent].filter(Boolean).join(' ');
-  const longest = Math.max(head.first.length, secondLine.length, 6);
-  const facts = assuranceFacts();
-  const factLine = [facts.payment, facts.returns, facts.delivery];
-  const rest = slides.slice(1);
-
-  const headline = (
-    <h1 className="hm-hl" style={{ '--n': longest } as React.CSSProperties}>
-      <span className="sr-only">Suit Aura Girls: </span>
-      {head.first}<br />{head.second && `${head.second} `}<em>{head.accent}</em>
-    </h1>
-  );
-  // The first slide's own words: its real title, price, offer and the two actions
-  const leadWords = (
-    <>
-      <p className="line-clamp-1 max-w-full text-[16px] font-bold leading-[1.25] lg:line-clamp-2 lg:text-[19px]">{lead.title}</p>
-      {priceLine(lead, 'justify-center lg:justify-start')}
-      {lw.onlineOffer && <p className="aura-sa text-[13px] font-semibold leading-[18px]">{lw.onlineOffer}</p>}
-      <span className="mt-1 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 lg:justify-start">
-        <button type="button" id="hero-view-style-btn" onClick={() => handleSlideClick(lead)} className="aura-btn">
-          Shop now <Icon name="arrow" />
-        </button>
-        <button type="button" id="hero-explore-btn" onClick={() => navigateToCategory('All')} aria-label="Explore collection" className="aura-lk">
-          Explore
-        </button>
-      </span>
-    </>
-  );
-  const factsLine = (
-    <p className="hm-facts">
-      {factLine.map((fact, i) => <React.Fragment key={fact}>{i > 0 && <i aria-hidden="true" />}{fact}</React.Fragment>)}
-    </p>
-  );
-
-  const more = rest.length > 0 && (
-    <section id="hero-more-designs" aria-label="Featured designs" data-thread="left" className="w-full pb-14 pt-10 lg:pb-20 lg:pt-14">
-      <div className="mx-auto flex w-full max-w-[1120px] items-end justify-between gap-3 px-[18px] pb-4 lg:px-0">
-        <p className="aura-lbl">More to see · {String(rest.length).padStart(2, '0')}</p>
-        {rest.length > 3 && (
-          <div className="hidden items-center gap-2 lg:flex">
-            <button type="button" aria-label="Previous design" onClick={() => row.current?.scrollBy({ left: -340, behavior: 'smooth' })} className="aura-rnd aura-btn-line">
-              <Icon name="arrow" className="rotate-180" />
-            </button>
-            <button type="button" aria-label="Next design" onClick={() => row.current?.scrollBy({ left: 340, behavior: 'smooth' })} className="aura-rnd aura-btn-line">
-              <Icon name="arrow" />
-            </button>
-          </div>
-        )}
-      </div>
-      <ul ref={row} className="hm-hs sag-scroll-x">
-        {rest.map((slide, index) => {
-          const w = wordsOf(slide);
-          return (
-            <li key={slide.id || index} className="hm-hs-c" data-rv="card">
-              <button type="button" onClick={() => handleSlideClick(slide)} aria-label={`View ${slide.title}`} className="block w-full cursor-pointer text-left">
-                <span className="hm-hs-ph aura-sk">{photo(slide, '(min-width: 900px) 320px, 72vw', false)}</span>
-                <span className="aura-lbl mt-3.5 block">{w.caption}</span>
-                <span className="mt-1.5 block text-[17px] font-bold leading-[1.25] tracking-[-0.01em] line-clamp-2">{slide.title}</span>
-                {priceLine(slide, 'mt-1.5')}
-                {w.onlineOffer && <span className="aura-sa mt-0.5 block text-[13px] font-semibold leading-[18px]">{w.onlineOffer}</span>}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-
-  if (still) {
+  const shown = slides[cur];
+  const w = wordsOf(shown);
+  const head = headlineOf(shown.title);
+  // The words of one slide, laid out but not shown: the block keeps the height of the tallest slide, so the
+  // buttons under it never move when the look changes
+  const sizer = (slide: LiveHeroSlide, i: number) => {
+    const sw = wordsOf(slide);
+    const sh = headlineOf(slide.title);
     return (
-      <>
-        <section id="haute-couture-hero" aria-label="Featured collection" data-th="paper" className="w-full px-3.5 pb-8 pt-6 lg:px-8 lg:pt-10">
-          <div className="hm-hero-still mx-auto grid w-full max-w-[1120px] gap-5 lg:grid-cols-2 lg:items-center lg:gap-x-14">
-            <div className="text-center lg:text-left">
-              <p className="aura-lbl">{lw.caption}</p>
-              {headline}
-            </div>
-            <button type="button" onClick={() => handleSlideClick(lead)} aria-label={`View ${lead.title}`} className="hm-hero-ph aura-sk lg:col-start-2 lg:row-span-2 lg:row-start-1">
-              {photo(lead, '(min-width: 1024px) 540px, 94vw', true)}
-            </button>
-            <div className="flex flex-col items-center gap-2.5 text-center lg:items-start lg:text-left">
-              {leadWords}
-              <div className="mt-4">{factsLine}</div>
-            </div>
-          </div>
-        </section>
-        {more}
-      </>
+      <div key={slide.id || i} className="h3v-sz" aria-hidden="true">
+        <p className="h3v-hl" data-z={sh.size}>{sh.rest} <em>{sh.accent}</em></p>
+        {sw.slidePrice > 0 && <p className="h3v-pr"><b>{rupees(sw.slidePrice)}</b></p>}
+        {sw.onlineOffer && <p className="h3v-of">{sw.onlineOffer}</p>}
+      </div>
     );
-  }
+  };
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (count < 2 || event.altKey || event.ctrlKey || event.metaKey) return;
+    if (event.key === 'ArrowRight') { event.preventDefault(); goNext(); }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); goPrev(); }
+  };
+  const openCard = (event: React.MouseEvent<HTMLAnchorElement>, slide: LiveHeroSlide) => {
+    // A drag ends in a click: that click never opens the card
+    if (deck.dragged()) { event.preventDefault(); return; }
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    handleSlideClick(slide);
+  };
 
   return (
-    <>
-      <section ref={wrap} id="haute-couture-hero" aria-label="Featured collection" data-th="paper" className="hm-hero">
-        <div ref={stage} className="hm-hero-pin">
-          <svg className="aura-thr hm-hero-th" aria-hidden="true" focusable="false"><path ref={threadPath} pathLength={1} /></svg>
-          <div className="hm-hero-txt">
-            <p className="aura-lbl">{lw.caption}</p>
-            {headline}
-          </div>
-          <div ref={photoFrame} className="hm-hero-fr">
-            <button type="button" onClick={() => handleSlideClick(lead)} aria-label={`View ${lead.title}`} className="hm-hero-clip">
-              {photo(lead, '(min-width: 900px) 46vw, 96vw', true)}
-            </button>
-          </div>
-          <div className="hm-hero-bot">
-            <div className="hm-hero-a">
-              {factsLine}
-              <div className="hm-cue" aria-hidden="true"><span />Scroll</div>
-            </div>
-            <div className="hm-hero-b">{leadWords}</div>
+    <section
+      ref={wrap}
+      id="haute-couture-hero"
+      aria-label="Featured collection"
+      aria-roledescription={count > 1 ? 'carousel' : undefined}
+      data-th="paper"
+      data-still={still ? '' : undefined}
+      className="hm-hero h3v"
+      onKeyDown={onKeyDown}
+      onPointerEnter={(event) => { if (event.pointerType === 'mouse') hold('hover', true); }}
+      onPointerLeave={() => hold('hover', false)}
+      onPointerDown={(event) => { if (event.pointerType !== 'mouse') hold('touch', true); }}
+      onPointerUp={() => hold('touch', false)}
+      onPointerCancel={() => hold('touch', false)}
+      onFocus={() => hold('focus', true)}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) hold('focus', false); }}
+    >
+      <div className="h3v-in">
+        <div className="h3v-stage">
+          <div ref={deckEl} className={`h3v-deck${count > 1 ? ' h3v-many' : ''}`}>
+            {slides.map((slide, i) => {
+              const slot = slotOf(i);
+              return (
+                <a
+                  key={slide.id || i}
+                  href={hrefOf(slide)}
+                  data-card=""
+                  data-slot={Math.min(slot, 3)}
+                  data-cur={count > 1 && !still ? 'Drag' : 'View'}
+                  className="h3v-c"
+                  draggable={false}
+                  tabIndex={slot === 0 ? 0 : -1}
+                  aria-hidden={slot === 0 ? undefined : true}
+                  aria-label={`View ${slide.title}`}
+                  onClick={(event) => openCard(event, slide)}
+                >
+                  <span className="h3v-ph">{photo(slide, i)}</span>
+                </a>
+              );
+            })}
           </div>
         </div>
-      </section>
-      {more}
-    </>
+
+        <div className="h3v-txt" data-dir={stepDir} data-mv={moved ? '' : undefined}>
+          {count > 1 && (
+            <div className="h3v-segs" aria-hidden="true">
+              {slides.map((slide, i) => (
+                <span key={slide.id || i} className={i < cur ? 'on' : undefined}>
+                  {i === cur && <i key={cur} onAnimationEnd={() => { if (!still && !paused) deck.next(-1); }} style={{ animationDuration: `${DEAL_EVERY_MS}ms` }} />}
+                </span>
+              ))}
+            </div>
+          )}
+          <p key={`l${cur}`} className="h3v-lbl aura-lbl h3v-a">{w.caption}</p>
+          {count > 1 && (
+            <div className="h3v-bar" role="group" aria-label="Change the look">
+              <button type="button" className="h3v-ar" aria-label="Previous look" onClick={goPrev}><Icon name="arrow" size={18} className="rotate-180" /></button>
+              <span className="h3v-ct aura-num" aria-label={`Look ${cur + 1} of ${count}`}>
+                <Odometer value={two(cur + 1)} roll={false} /><small aria-hidden="true">/ {two(count)}</small>
+              </span>
+              <button type="button" className="h3v-ar" aria-label="Next look" onClick={goNext}><Icon name="arrow" size={18} /></button>
+              {!still && (
+                <button
+                  type="button"
+                  className="h3v-ar h3v-pp"
+                  aria-label={paused ? 'Play: change the look every few seconds' : 'Pause: stop changing the look'}
+                  aria-pressed={paused}
+                  onClick={() => { hold('user', !paused); setPaused(!paused); }}
+                >
+                  {paused ? <Icon name="play" size={16} /> : <Pause size={16} strokeWidth={1.6} aria-hidden="true" />}
+                </button>
+              )}
+            </div>
+          )}
+          <div className="h3v-words">
+            {count > 1 && slides.map(sizer)}
+            <div className="h3v-live">
+              <h1 key={`h${cur}`} className="h3v-hl h3v-a" data-z={head.size}>
+                <span className="sr-only">Suit Aura Girls: </span>
+                {head.rest} <em>{head.accent}</em>
+              </h1>
+              {w.slidePrice > 0 && (
+                <p className="h3v-pr aura-num">
+                  <span className="sr-only">Price {rupees(w.slidePrice)}</span>
+                  <b aria-hidden="true"><Odometer value={rupees(w.slidePrice)} roll={false} /></b>
+                  {w.originalPrice > w.slidePrice && <s key={`s${cur}`} className="h3v-a">{rupees(w.originalPrice)}</s>}
+                  {w.discountPercent > 0 && <span key={`d${cur}`} className="h3v-off h3v-a">{w.discountPercent}% off</span>}
+                </p>
+              )}
+              {w.onlineOffer && <p key={`o${cur}`} className="h3v-of aura-sa h3v-a">{w.onlineOffer}</p>}
+            </div>
+          </div>
+          <div className="h3v-cta">
+            <button type="button" id="hero-view-style-btn" onClick={() => handleSlideClick(shown)} className="aura-btn">
+              Shop now <Icon name="arrow" />
+            </button>
+            <button type="button" id="hero-explore-btn" onClick={() => navigateToCategory('All')} aria-label="Explore collection" className="aura-lk">
+              Explore
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
