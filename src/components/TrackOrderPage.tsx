@@ -147,7 +147,7 @@ export const TrackOrderPage: React.FC = () => {
   const column = 'contents min-[900px]:flex min-[900px]:min-w-0 min-[900px]:flex-col min-[900px]:gap-4';
 
   return (
-    <section data-th="sand" className="aa-cen">
+    <section data-th="sand" className="clay-pg aa-cen">
       <div className="aa-cen-in">
         <AuraTitle as="h1" label="Orders" title="Track your" accent="order" sub="Enter the order number from your confirmation email." className={compact ? 'sr-only' : ''} />
 

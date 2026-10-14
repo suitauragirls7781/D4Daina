@@ -21,7 +21,7 @@ export const NotFoundPage: React.FC = () => {
   ];
 
   return (
-    <div id="not-found-page" data-aura className="px-3 sm:px-6 pt-3 pb-14 lg:pt-6 lg:pb-20">
+    <div id="not-found-page" data-aura className="clay-pg px-3 sm:px-6 pt-3 pb-14 lg:pt-6 lg:pb-20">
       <div className="max-w-[1120px] mx-auto lg:grid lg:grid-cols-2 lg:items-start lg:gap-[50px]">
         <div className="aa-band">
           {/* Aura Kinetic: the number itself, dropped in figure by figure (decoration; the label below says it in words) */}

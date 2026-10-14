@@ -190,7 +190,7 @@ export const LoginPage: React.FC = () => {
 
   if (user) {
     return (
-      <section data-th="blush" className="aa-cen">
+      <section data-th="blush" className="clay-pg aa-cen">
         <div className="aa-cen-in">
           <AuraTitle as="h1" label="My account" title="You are signed" accent="in" sub={<span className="ocf-em">{user.email}</span>} />
           <div className={card}>
@@ -211,7 +211,7 @@ export const LoginPage: React.FC = () => {
   const bad = (field: string) => (about === field ? { 'aria-invalid': true as const, 'aria-describedby': 'auth-error' } : {});
 
   return (
-    <section data-th="blush" className="aa-cen">
+    <section data-th="blush" className="clay-pg aa-cen">
       <div className="aa-cen-in">
         <div className="min-w-0">
           <button type="button" onClick={() => setActivePage('home')} className="aura-lk -mt-2 mb-3 text-[14px]">

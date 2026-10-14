@@ -647,7 +647,7 @@ export const AccountPage: React.FC = () => {
   if (authLoading) {
     // The shape of the account while the sign-in is read: the greeting band and the rows
     return (
-      <div data-aura className="min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8" role="status" aria-label="Loading your account">
+      <div data-aura className="clay-pg min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8" role="status" aria-label="Loading your account">
         <div className="aa-ask mx-auto max-w-[1120px]" aria-hidden="true"><b /><i /><i /><i /><i /></div>
       </div>
     );
@@ -789,7 +789,7 @@ export const AccountPage: React.FC = () => {
   const tabLabel = tabs.find((t) => t.key === tab)?.label || 'My account';
 
   return (
-    <div data-aura className="min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8 lg:pb-16">
+    <div data-aura className="clay-pg min-h-[70vh] px-3 pt-4 pb-14 sm:px-6 lg:px-8 lg:pt-8 lg:pb-16">
       <div className="max-w-[1120px] mx-auto lg:grid lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-10 lg:items-start">
         <aside className={`${mobileView === 'panel' ? 'hidden lg:block' : ''} space-y-3 lg:sticky lg:top-24`}>
           <div className="aa-band aa-band-blush min-w-0">

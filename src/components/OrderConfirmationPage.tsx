@@ -82,7 +82,7 @@ export const OrderConfirmationPage: React.FC = () => {
   if (loading) {
     // The shape of the page while the order is read again after a refresh: the mark, the heading, the ticket
     return (
-      <div data-aura className="px-4 pt-10 pb-16" role="status" aria-label="Loading your order">
+      <div data-aura className="clay-pg px-4 pt-10 pb-16" role="status" aria-label="Loading your order">
         <div className="ocf-sk mx-auto max-w-xl" aria-hidden="true">
           <i className="h-[72px] w-[72px] rounded-full!" />
           <i className="mt-7 h-3.5 w-36" />
@@ -96,7 +96,7 @@ export const OrderConfirmationPage: React.FC = () => {
 
   if (!confirmedOrder) {
     return (
-      <div data-aura className="px-4 py-16">
+      <div data-aura className="clay-pg px-4 py-16">
         <div className="max-w-md mx-auto px-4 py-10 text-center">
           <span className="kx-emptybag kx-drawn mx-auto"><Icon name="box" size={34} /></span>
           <h1 className="abag-empty-h">No recent order</h1>
@@ -174,14 +174,14 @@ export const OrderConfirmationPage: React.FC = () => {
   const stepRow = 'aa-row items-start py-3.5';
 
   return (
-    <div id="order-confirmation-page" data-aura>
-      {/* The moment itself, on forest (the colour of the "order placed" screen it follows): the tick that draws
+    <div id="order-confirmation-page" data-aura className="clay-pg">
+      {/* The moment itself, on blush clay (sand while the payment is confirmed): the tick that draws
           itself, the heading, then the order as a ticket with what a shopper looks for first */}
-      <section data-th={paid ? 'forest' : 'sand'} className="ocf-top" aria-labelledby="order-confirmed-title">
+      <section data-th={paid ? 'blush' : 'sand'} className="ocf-top" aria-labelledby="order-confirmed-title">
         <div className="ocf-in">
           <div className="min-w-0">
             {paid ? (
-              <span className="ocf-mark"><i aria-hidden="true" /><DrawnTick tone="paper" className="relative h-[72px] w-[72px]" /></span>
+              <span className="ocf-mark"><i aria-hidden="true" /><DrawnTick tone="ink" className="relative h-[72px] w-[72px]" /></span>
             ) : (
               <span className="ocf-mark ocf-wait"><Clock className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" /></span>
             )}
@@ -236,11 +236,11 @@ export const OrderConfirmationPage: React.FC = () => {
       </section>
 
       {/* Its own (paper) section, so what is written outside the cards follows the colour in force while the
-          forest block above is still under the reader's eye */}
+          blush block above is still under the reader's eye */}
       <section data-th="paper" className="ocf-body" aria-label="Order details">
         <div className="ocf-in">
           {/* What was bought, what it cost and where it goes */}
-          <section className="aura-card min-w-0 overflow-hidden rounded-[24px]!" aria-label="Order receipt" data-rv="card">
+          <section className="aura-card min-w-0 overflow-hidden" aria-label="Order receipt" data-rv="card">
             <div className="px-[18px] pt-[18px] pb-4 sm:px-5 sm:pt-5">
               <p className={`${blockTitle} aura-num`}>{pieces} {pieces === 1 ? 'item' : 'items'} in this order</p>
               <ul className="mt-3">
@@ -368,7 +368,7 @@ export const OrderConfirmationPage: React.FC = () => {
             )}
 
             {paid && nextCoupons.length > 0 && (
-              <section className="aura-card rounded-[24px]! p-[18px] sm:p-5 space-y-3" aria-label="Coupons for your next order" data-rv="card">
+              <section className="aura-card p-[18px] sm:p-5 space-y-3" aria-label="Coupons for your next order" data-rv="card">
                 <h2 className="aco-sum-h font-sans">For your next order</h2>
                 <ul className="space-y-2">
                   {nextCoupons.map((coupon) => (
