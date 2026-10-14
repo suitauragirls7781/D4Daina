@@ -3,6 +3,7 @@ import { setEnv } from './env.js';
 import { handleDb } from './gateway.js';
 import { runNodeHandler } from './node-adapter.js';
 import { handleMedia } from './media.js';
+import { withProductPreview } from './linkPreview.js';
 import { setMediaBucket } from '../../api/_lib/media.js';
 import * as adminConfig from '../../api/admin-config.js';
 import * as orders from '../../api/orders.js';
@@ -185,7 +186,16 @@ export default {
     const apiModule = API_MODULES.get(path);
     // Static files, the app shell and unknown paths: Workers Static Assets answers (GET and HEAD), with the
     // single-page-app fallback from wrangler.jsonc and the headers from public/_headers.
-    if (!apiModule && path !== DB_PATH && path !== MEDIA_PATH) return env.ASSETS.fetch(request);
+    if (!apiModule && path !== DB_PATH && path !== MEDIA_PATH) {
+      const shell = await env.ASSETS.fetch(request);
+      // A product page carries that product's own link-preview tags (WhatsApp, Instagram, search engines)
+      try {
+        return (await withProductPreview(request, env, shell)) || shell;
+      } catch (error) {
+        console.error(JSON.stringify({ level: 'error', message: 'Product link preview failed', error: error?.message || String(error) }));
+        return shell;
+      }
+    }
 
     // Workers stops a request's work when the caller goes away (a closed tab, Razorpay's 5-second webhook
     // timeout) unless waitUntil holds it. The handlers were written for a runtime where a function always

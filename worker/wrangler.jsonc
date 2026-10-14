@@ -20,7 +20,8 @@
     // Any path that is not a file gets index.html, so the single-page app handles the route.
     "not_found_handling": "single-page-application",
     // Without this, PayU's return (a browser form POST to /api/payu, i.e. a navigation) would get the app shell.
-    "run_worker_first": ["/api/*", "/sitemap.xml"]
+    // /product/* reaches the Worker so the shell carries that product's link-preview tags (worker/src/linkPreview.js).
+    "run_worker_first": ["/api/*", "/sitemap.xml", "/product/*"]
   },
 
   "d1_databases": [
