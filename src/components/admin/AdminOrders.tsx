@@ -122,7 +122,15 @@ export const AdminOrders: React.FC = () => {
   const { openAdminOrderDetails, openAdminTab } = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [tab, setTab] = useState<TabKey>('topack');
+  // The dashboard's to-do can ask for a tab ("Hand 3 packed orders to the courier" opens Packed); read once
+  const [tab, setTab] = useState<TabKey>(() => {
+    try {
+      const asked = sessionStorage.getItem('sag_admin_orders_tab');
+      sessionStorage.removeItem('sag_admin_orders_tab');
+      if (asked && TABS.some((t) => t.key === asked)) return asked as TabKey;
+    } catch { /* storage blocked */ }
+    return 'topack';
+  });
   const [range, setRange] = useState<RangeKey>('all');
 
   const cancelReason = useCancelReason();

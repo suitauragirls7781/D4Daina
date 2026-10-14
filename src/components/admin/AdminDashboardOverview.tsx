@@ -194,7 +194,10 @@ export const AdminDashboardOverview: React.FC = () => {
   // Today's to-do: only the jobs that are really waiting, each one a link to its page
   const todo = useMemo(() => {
     const count = (label: string) => attention.find((row) => row.label === label)?.count || 0;
-    const toPack = count('Orders to pack');
+    // "Orders to pack" counts paid orders still to pack AND packed ones waiting for the courier: the to-do names each
+    // job as the Orders tabs do ("To pack", "Packed")
+    const packed = orders.filter((o) => o.paymentStatus === 'Paid' && o.status === 'Packed').length;
+    const toPack = Math.max(0, count('Orders to pack') - packed);
     const returns = count('Return and exchange requests');
     const cancels = count('Cancellation requests');
     const out = count('Out of stock');
@@ -202,8 +205,9 @@ export const AdminDashboardOverview: React.FC = () => {
     const waitingReviews = reviews.filter((r) => r.status === 'pending').length;
     // Cancelled orders whose payment is still with the store (orderMoney.tsx)
     const refunds = refundsToDo(orders).length;
-    const lines: Array<{ text: string; count: number; tab: AdminTab; problem?: boolean }> = [
+    const lines: Array<{ text: string; count: number; tab: AdminTab; problem?: boolean; ordersTab?: string }> = [
       { text: `Pack ${num(toPack)} ${toPack === 1 ? 'order' : 'orders'}`, count: toPack, tab: 'orders' },
+      { text: `Hand ${num(packed)} packed ${packed === 1 ? 'order' : 'orders'} to the courier`, count: packed, tab: 'orders', ordersTab: 'packed' },
       { text: `Reply to ${num(returns)} return ${returns === 1 ? 'request' : 'requests'}`, count: returns, tab: 'returns' },
       { text: `Reply to ${num(cancels)} cancellation ${cancels === 1 ? 'request' : 'requests'}`, count: cancels, tab: 'cancellations' },
       { text: `Refund ${num(refunds)} cancelled ${refunds === 1 ? 'order' : 'orders'} that ${refunds === 1 ? 'is' : 'are'} still paid`, count: refunds, tab: 'cancellations', problem: true },
@@ -336,7 +340,7 @@ export const AdminDashboardOverview: React.FC = () => {
             <ul className="divide-y divide-line">
               {todo.map((line) => (
                 <li key={line.text}>
-                  <button type="button" onClick={() => openAdminTab(line.tab)} className={adminText.row}>
+                  <button type="button" onClick={() => { if (line.ordersTab) { try { sessionStorage.setItem('sag_admin_orders_tab', line.ordersTab); } catch { /* the Orders page opens on its first tab */ } } openAdminTab(line.tab); }} className={adminText.row}>
                     <span className={`w-5 h-5 shrink-0 rounded-full border ${line.problem ? 'border-danger' : 'border-brand-line'}`} aria-hidden="true" />
                     <span className="min-w-0 flex-1 sag-num text-[15px] leading-[22px] text-ink">{line.text}</span>
                     <ChevronRight className="w-4 h-4 text-ink-muted shrink-0" aria-hidden="true" />
