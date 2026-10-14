@@ -6,6 +6,7 @@ import { getCleanImageUrl } from '../../utils/imageHelper';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
 import { AdminPageHeader } from './adminShared';
 import { CheckRow, Empty, Panel, Pill, SaveBar, SwitchRow, Tile, Tiles, kit } from './AdminPaymentGateways';
+import { DealTicketPreview, PhoneFrame, PreviewBadge } from './storefrontPreview';
 
 const DURATION_PRESETS = [1, 2, 3, 6, 12, 24, 48, 72];
 
@@ -30,7 +31,7 @@ const formatLeft = (ms: number) => {
 const label = 'sag-label';
 
 export const AdminDealOfTheDay: React.FC = () => {
-  const { products: allAdminProducts = [], dealOfTheDay, updateDealOfTheDay } = useAdmin();
+  const { products: allAdminProducts = [], dealOfTheDay, updateDealOfTheDay, homepageSections = [] } = useAdmin();
   const products = allAdminProducts.filter((p) => p.productType !== 'accessory');
   const { showToast } = useShop();
 
@@ -166,6 +167,29 @@ export const AdminDealOfTheDay: React.FC = () => {
   const liveProduct = products.find((p) => p.id === dealOfTheDay?.productId);
   const endsAtText = liveTimerOn ? new Date(liveEndMs).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '';
 
+  // The preview: the ticket the home page would draw with the choices in the form. The clock is the running
+  // timer's real end; a timer that has not started yet is shown as it would run if saved now.
+  const draftEndMs = (() => {
+    if (!showTimer) return 0;
+    if (timerRunning) return liveEndMs;
+    if (timerMode === 'exact') { const ms = new Date(exactEnd).getTime(); return Number.isFinite(ms) ? ms : 0; }
+    return now + durationHours * 3600000;
+  })();
+  const sectionOn = homepageSections.length === 0 || homepageSections.some((s) => s.key === 'dealOfTheDay' && s.enabled !== false);
+  const draftUnsaved = Boolean(dealOfTheDay) && (
+    enabled !== Boolean(dealOfTheDay?.enabled) || productId !== (dealOfTheDay?.productId || '') || (bannerImage || '') !== (dealOfTheDay?.bannerImage || '')
+    || showTimer !== (dealOfTheDay?.showTimer !== false) || (showTimer && !timerRunning)
+  );
+  const previewNote = !enabled
+    ? 'The deal is switched off: the home page leaves it out.'
+    : !sectionOn
+    ? 'The Deal of the day section is switched off in Homepage sections, so the home page leaves it out.'
+    : showTimer && !timerRunning
+    ? 'The clock shows how the timer would run if you save now.'
+    : showTimer
+    ? 'The clock is the real timer on the site; it never restarts by itself.'
+    : 'No timer: the ticket is shown without a clock.';
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -202,6 +226,22 @@ export const AdminDealOfTheDay: React.FC = () => {
         </div>
       </Tiles>
 
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
+      <aside id="deal-preview" aria-label="Deal preview" className="xl:order-2 xl:sticky xl:top-24 sag-glass p-4 min-w-0">
+        <h3 className={kit.h2}>How the home page shows it</h3>
+        <div className="mt-2"><PreviewBadge unsaved={draftUnsaved} /></div>
+        <div className="mt-4">
+          <PhoneFrame label="Phone preview of the deal of the day" screenClassName="!bg-sunken">
+            <div className={`px-3 pt-2 pb-6 ${!enabled || !sectionOn ? 'opacity-40 grayscale' : ''}`}>
+              {activeProduct
+                ? <DealTicketPreview product={activeProduct} photo={bannerImage} endMs={draftEndMs} timerOn={showTimer} />
+                : <p className="px-3 py-12 text-center text-sm text-ink-muted">Choose a product to see the ticket.</p>}
+            </div>
+          </PhoneFrame>
+          <p role="status" className={`mt-3 ${kit.hint}`}>{previewNote}</p>
+        </div>
+      </aside>
+      <div className="space-y-5 min-w-0">
       {/* Show / hide */}
       <Panel title="On the homepage" hint="The switch saves by itself, straight away.">
         <SwitchRow
@@ -402,6 +442,7 @@ export const AdminDealOfTheDay: React.FC = () => {
                   )}
                 </div>
               </div>
+              <p className={kit.note}>The ticket on the home page always says "Deal of the day" and shows the product's name. The two lines below are saved for later and are not shown on the site now.</p>
               <div>
                 <label className={label} htmlFor="deal-label">Small label above the name</label>
                 <input id="deal-label" type="text" value={badgeText} onChange={(e) => setBadgeText(e.target.value)} placeholder="Deal of the day"
@@ -436,6 +477,8 @@ export const AdminDealOfTheDay: React.FC = () => {
           </button>
         </SaveBar>
       </form>
+      </div>
+      </div>
     </div>
   );
 };

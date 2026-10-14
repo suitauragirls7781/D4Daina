@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
@@ -24,6 +24,7 @@ import { getCleanImageUrl } from '../../utils/imageHelper';
 import { AdminPageHeader } from './adminShared';
 import { WOMEN_CATEGORY_NAMES } from '../../data/womenCategories';
 import { Empty, Pill, SaveBar, Tile, Tiles, kit } from './AdminPaymentGateways';
+import { HeroDeckPreview, PhoneFrame, PreviewBadge, heroSlideStatus, resolveDeck } from './storefrontPreview';
 
 const AVAILABLE_CATEGORIES = ['All', ...WOMEN_CATEGORY_NAMES, 'New Arrivals'];
 
@@ -35,7 +36,7 @@ export const AdminHero: React.FC = () => {
     syncHeroWithLiveProducts,
     dealOfTheDay
   } = useAdmin();
-  const { showToast, setActivePage } = useShop();
+  const { showToast, setActivePage, storeOffers } = useShop();
 
   const [heroForm, setHeroForm] = useState<HeroBannerConfig>(heroConfig || { slides: [] });
   const [uploadingSlideId, setUploadingSlideId] = useState<string | null>(null);
@@ -43,6 +44,10 @@ export const AdminHero: React.FC = () => {
   const [productSearch, setProductSearch] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  // The card on top of the preview deck
+  const [previewIndex, setPreviewIndex] = useState(0);
+  // The preview is open beside the slides on wide screens; on a phone it folds above them
+  const [previewOpen, setPreviewOpen] = useState(() => typeof window === 'undefined' || window.matchMedia('(min-width: 1280px)').matches);
 
   useEffect(() => {
     if (heroConfig?.slides) {
@@ -193,6 +198,17 @@ export const AdminHero: React.FC = () => {
   const linkedCount = slides.filter((slide) => slide.productId).length;
   const ownPhotoCount = slides.filter((slide) => slide.bannerImage).length;
   const unsaved = JSON.stringify(slides) !== JSON.stringify(heroConfig?.slides || []);
+  // The cards the home page would deal from the slides in the form (the storefront's own rules)
+  const deck = useMemo(() => resolveDeck(slides, products || []), [slides, products]);
+  const shownSlideCount = slides.filter((s) => heroSlideStatus(s, products || []).shown).length;
+  const showOnPreview = (slideId: string) => {
+    const at = deck.cards.findIndex((card) => card.id === slideId);
+    if (at < 0) return;
+    setPreviewIndex(at);
+    setPreviewOpen(true);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => document.getElementById('hero-preview')?.scrollIntoView({ block: 'nearest', behavior: reduce ? 'auto' : 'smooth' }));
+  };
 
   return (
     <div id="admin-hero-page" className="space-y-5 pb-12">
@@ -248,7 +264,31 @@ export const AdminHero: React.FC = () => {
         </button>
       </div>
 
-      <form onSubmit={handleHeroSubmit} className="space-y-5">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
+      {/* Live preview: what the home page's deck would show with the slides in the form */}
+      <aside id="hero-preview" aria-label="Home page preview" className="xl:order-2 xl:sticky xl:top-24 sag-glass p-4 scroll-mt-24 min-w-0">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className={kit.h2}>How the home page shows it</h3>
+          <button type="button" onClick={() => setPreviewOpen((open) => !open)} aria-expanded={previewOpen} aria-controls="hero-preview-body" className={`${kit.small} xl:hidden`}>
+            {previewOpen ? 'Hide preview' : 'Show preview'}
+          </button>
+        </div>
+        <div className="mt-2"><PreviewBadge unsaved={unsaved} /></div>
+        {previewOpen && (
+          <div id="hero-preview-body" className="mt-4">
+            <PhoneFrame label="Phone preview of the home page hero">
+              <HeroDeckPreview cards={deck.cards} index={previewIndex} onIndex={setPreviewIndex} offers={storeOffers} />
+            </PhoneFrame>
+            <p className={`mt-3 ${kit.hint}`}>
+              {deck.automatic
+                ? 'None of these slides can be shown yet (each needs a banner photo or a live product), so the home page makes the cards from your products by itself.'
+                : `${deck.cards.length} card${deck.cards.length === 1 ? '' : 's'} on the home page, in this order. Linked products always show their live photo and price.${shownSlideCount > 6 ? ' Only the first 6 are shown.' : ''}`}
+            </p>
+          </div>
+        )}
+      </aside>
+
+      <form onSubmit={handleHeroSubmit} className="space-y-5 min-w-0">
 
         {/* Slides List */}
         <div className="space-y-5">
@@ -296,6 +336,18 @@ export const AdminHero: React.FC = () => {
                       </h3>
                       {slide.productId && <Pill tone="soon">Linked Product</Pill>}
                     </div>
+                    {(() => {
+                      const status = heroSlideStatus(slide, products || []);
+                      return (
+                        <p className="basis-full order-last flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-[18px] text-ink-muted">
+                          <Pill tone={status.shown ? 'live' : 'problem'}>{status.shown ? 'On the home page' : 'Not on the home page'}</Pill>
+                          <span>{status.why}</span>
+                          {status.shown && (
+                            <button type="button" onClick={() => showOnPreview(slide.id)} className="sag-link min-h-9 cursor-pointer">See it in the preview</button>
+                          )}
+                        </p>
+                      );
+                    })()}
 
                     <div className="flex flex-wrap items-center gap-1">
                       {/* Move Up/Down */}
@@ -564,6 +616,7 @@ export const AdminHero: React.FC = () => {
         </SaveBar>
 
       </form>
+      </div>
 
       {/* Product Picker Modal */}
       {productPickerSlideId && (

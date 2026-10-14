@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { BadgeCheck, Check, Edit2, EyeOff, Loader2, MessageSquare, Plus, Reply, Save, Star, ThumbsUp, Trash2, Upload, X } from 'lucide-react';
+import { BadgeCheck, Check, Edit2, EyeOff, Loader2, MessageSquare, Plus, Reply, Save, Search, Star, ThumbsUp, Trash2, Upload, X } from 'lucide-react';
 import { adminDb } from '../../lib/firebase';
 import { apiPost } from '../../lib/api';
 import { deleteImages, uploadImage } from '../../lib/dataStore';
@@ -86,6 +86,10 @@ export const AdminReviews: React.FC = () => {
   }, () => setExtras(null)), []);
 
   const [filter, setFilter] = useState<Filter>('all');
+  const [query, setQuery] = useState('');
+  // Reviews ticked for a bulk approve / hide
+  const [picked, setPicked] = useState<Set<string>>(() => new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [replyingId, setReplyingId] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -137,7 +141,31 @@ export const AdminReviews: React.FC = () => {
 
   const shown = useMemo(() => reviewsList
     .filter((r) => filter === 'all' || statusOf(r) === filter)
-    .sort((a, b) => (STATUS_RANK[statusOf(a)] - STATUS_RANK[statusOf(b)]) || (sortTime(b, extras?.[b.id]) - sortTime(a, extras?.[a.id]))), [reviewsList, filter, extras]);
+    .filter((r) => {
+      const q = query.trim().toLowerCase();
+      return !q || [r.userName, r.comment, r.productName, r.location].some((v) => String(v || '').toLowerCase().includes(q));
+    })
+    .sort((a, b) => (STATUS_RANK[statusOf(a)] - STATUS_RANK[statusOf(b)]) || (sortTime(b, extras?.[b.id]) - sortTime(a, extras?.[a.id]))), [reviewsList, filter, extras, query]);
+  // Only reviews that are still in the list and shown can stay ticked
+  const pickedShown = shown.filter((r) => picked.has(r.id));
+  const togglePick = (id: string) => setPicked((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const allShownPicked = shown.length > 0 && pickedShown.length === shown.length;
+  const bulkSet = async (status: Status) => {
+    const targets = pickedShown.filter((r) => statusOf(r) !== status);
+    if (targets.length === 0) { showToast(status === 'approved' ? 'Those reviews are already on the store.' : 'Those reviews are already hidden.', 'info'); return; }
+    setBulkBusy(true);
+    let done = 0;
+    for (const review of targets) {
+      try { await updateReviewStatus(review.id, status); done += 1; } catch { /* counted below */ }
+    }
+    setBulkBusy(false);
+    setPicked(new Set());
+    const failed = targets.length - done;
+    showToast(
+      `${done} review${done === 1 ? '' : 's'} ${status === 'approved' ? 'approved and shown on the store' : 'hidden from the store'}.${failed ? ` ${failed} could not be saved; try again.` : ''}`,
+      failed ? 'error' : 'success',
+    );
+  };
 
   // Average of the reviews shoppers can see (approved ones); null when there are none
   const average = useMemo(() => {
@@ -332,6 +360,18 @@ export const AdminReviews: React.FC = () => {
         ))}
       </div>
 
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="relative flex-1 min-w-0">
+          <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by name, product or words in the review" aria-label="Search reviews" className="sag-input h-11 pl-10" />
+        </div>
+        {shown.length > 0 && (
+          <button type="button" onClick={() => setPicked(allShownPicked ? new Set() : new Set(shown.map((r) => r.id)))} className={`${pill} shrink-0`}>
+            {allShownPicked ? 'Untick all' : `Tick all ${shown.length} shown`}
+          </button>
+        )}
+      </div>
+
       {editor && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-dark/70 p-0 sm:p-4 sag-fade" onClick={() => closeEditor()}>
           <form role="dialog" aria-modal="true" aria-labelledby="review-editor-title" onSubmit={saveForm} onClick={(e) => e.stopPropagation()}
@@ -450,8 +490,11 @@ export const AdminReviews: React.FC = () => {
           const busy = busyId === review.id;
           const location = review.location && review.location !== PLACEHOLDER_LOCATION ? review.location : '';
           return (
-            <article key={review.id} className={`${card} space-y-3`}>
+            <article key={review.id} className={`${card} space-y-3 ${picked.has(review.id) ? 'ring-2 ring-ink' : ''}`}>
               <div className="flex items-start justify-between gap-3">
+                <label className="shrink-0 -m-2 p-2 cursor-pointer" title="Tick for approve or hide in one go">
+                  <input type="checkbox" checked={picked.has(review.id)} onChange={() => togglePick(review.id)} aria-label={`Tick the review by ${review.userName}`} className="w-5 h-5 accent-brand cursor-pointer" />
+                </label>
                 <span className={`hidden sm:flex w-10 h-10 text-base ${adminUi.avatar}`} aria-hidden="true">{(review.userName || '?').trim().charAt(0).toUpperCase()}</span>
                 <div className="min-w-0 flex-1 space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
@@ -538,6 +581,19 @@ export const AdminReviews: React.FC = () => {
           );
         })}
       </div>
+
+      {pickedShown.length > 0 && (
+        <div role="region" aria-label="Ticked reviews" className="sticky bottom-3 z-20 sag-glass-bar shadow-[var(--sag-shadow-bar)] flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-5 pr-2 py-2">
+          <p className="text-sm font-semibold text-ink" aria-live="polite"><span className="sag-num">{pickedShown.length}</span> ticked</p>
+          <div className="flex flex-wrap items-center gap-2 max-sm:w-full max-sm:[&>*]:flex-1">
+            <button type="button" onClick={() => setPicked(new Set())} disabled={bulkBusy} className={pill}>Clear</button>
+            <button type="button" onClick={() => bulkSet('hidden')} disabled={bulkBusy} className={pill}><EyeOff className="w-3.5 h-3.5" /> Hide</button>
+            <button type="button" onClick={() => bulkSet('approved')} disabled={bulkBusy} className={`${adminUi.primary} px-4`}>
+              {bulkBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Approve
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -25,6 +25,9 @@ export const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  // Caps Lock is a common reason a right password is refused: said in words while the password field is used
+  const [capsOn, setCapsOn] = useState(false);
+  const readCaps = (e: React.KeyboardEvent<HTMLInputElement>) => setCapsOn(Boolean(e.getModifierState?.('CapsLock')));
   // "Save login on this phone": on by default, remembered for the next time the form is shown
   const [remember, setRemember] = useState(() => { try { return localStorage.getItem('sag_admin_remember') !== '0'; } catch { return true; } });
   const toggleRemember = () => setRemember((on) => { try { localStorage.setItem('sag_admin_remember', on ? '0' : '1'); } catch {} return !on; });
@@ -65,8 +68,8 @@ export const AdminLogin: React.FC = () => {
       <div className="bg-surface border-b border-line">
         <div className="max-w-5xl mx-auto h-14 pl-4 pr-2 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 shrink-0 rounded-full bg-brand text-[color:var(--sag-on-gold)] flex items-center justify-center text-[13px] font-extrabold tracking-[0.02em]" aria-hidden="true">SA</div>
-            <span className="font-display text-[19px] leading-6 text-ink truncate">Suit Aura Girls</span>
+            <img src="/suit-aura-mark-132.webp" alt="" width={36} height={36} className="w-9 h-9 shrink-0 rounded-full object-cover" />
+            <span className="text-[15px] leading-6 font-extrabold tracking-[0.06em] text-ink truncate">SUIT <em className="font-display text-[19px] tracking-normal">Aura</em> GIRLS</span>
           </div>
           <button
             id="admin-login-back-to-store-btn"
@@ -80,7 +83,21 @@ export const AdminLogin: React.FC = () => {
       </div>
 
       <div className="flex-1 flex flex-col sm:justify-center px-4 py-6 sm:py-10">
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md lg:max-w-4xl mx-auto lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-6 lg:items-stretch">
+          {/* Wide screens: the store's own words beside the form (nothing here is a claim or a number) */}
+          <div className="hidden lg:flex flex-col justify-between rounded-[28px] p-8 motion-safe:animate-in motion-safe:fade-in" style={{ background: 'var(--aura-ink)', color: 'var(--aura-paper)' }}>
+            <img src="/suit-aura-mark-132.webp" alt="" width={56} height={56} className="w-14 h-14 rounded-full object-cover" />
+            <div>
+              <p className="text-[13px] font-bold uppercase tracking-[0.16em] opacity-70">Store admin</p>
+              <p className="mt-3 text-[44px] leading-[0.96] font-extrabold tracking-[-0.035em]">Run the shop<br />from <em className="font-display font-normal">one</em> place.</p>
+              <ul className="mt-6 space-y-2 text-[15px] leading-6 opacity-85">
+                <li>Orders, payments and deliveries</li>
+                <li>Products, offers and the home page</li>
+                <li>Customers, reviews and settings</li>
+              </ul>
+            </div>
+            <p className="text-[13px] opacity-60">www.suitauragirls.in</p>
+          </div>
           <div className="sag-glass !rounded-[28px] p-5 sm:p-8">
             <div className="pb-5 border-b border-line">
               <p className="flex items-center gap-1.5 text-xs leading-4 font-bold uppercase tracking-[0.16em] text-ink-muted">
@@ -142,6 +159,10 @@ export const AdminLogin: React.FC = () => {
                     placeholder="••••••••••••"
                     autoComplete="current-password"
                     enterKeyHint="next"
+                    onKeyDown={readCaps}
+                    onKeyUp={readCaps}
+                    onBlur={() => setCapsOn(false)}
+                    aria-describedby={capsOn ? 'admin-caps-note' : undefined}
                     className={`${inputClass} pr-12`}
                   />
                   <button
@@ -154,6 +175,10 @@ export const AdminLogin: React.FC = () => {
                   </button>
                 </div>
               </div>
+
+              {capsOn && (
+                <p id="admin-caps-note" role="status" className="-mt-2 text-[13px] leading-[18px] font-medium text-danger">Caps Lock is on. Passwords care about capital letters.</p>
+              )}
 
               {/* 6-digit security PIN */}
               <div>
@@ -178,8 +203,11 @@ export const AdminLogin: React.FC = () => {
                     className={`${inputClass} pr-3.5 tracking-[0.4em] font-mono`}
                   />
                 </div>
-                <p id="admin-pin-help" className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">
-                  Needed along with the password. You can change it in Admin Settings.
+                <p id="admin-pin-help" className="mt-1.5 flex items-center justify-between gap-3 text-[13px] leading-[18px] text-ink-muted">
+                  <span>Needed along with the password. You can change it in Admin Settings.</span>
+                  <span className="flex gap-1 shrink-0" aria-hidden="true">
+                    {[0, 1, 2, 3, 4, 5].map((i) => <span key={i} className={`w-2 h-2 rounded-full transition-colors ${i < pin.length ? 'bg-brand' : 'bg-line'}`} />)}
+                  </span>
                 </p>
               </div>
 
@@ -224,7 +252,7 @@ export const AdminLogin: React.FC = () => {
             </form>
           </div>
 
-          <p className="mt-4 text-center text-[13px] leading-[18px] text-ink-muted flex items-center justify-center gap-1.5">
+          <p className="mt-4 lg:mt-0 lg:col-span-2 text-center text-[13px] leading-[18px] text-ink-muted flex items-center justify-center gap-1.5">
             <Lock className="w-3.5 h-3.5" aria-hidden="true" /> This page is for store staff only
           </p>
         </div>

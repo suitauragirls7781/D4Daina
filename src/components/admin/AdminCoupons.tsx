@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { adminDb } from '../../lib/firebase';
 import { useAdmin } from '../../context/AdminContext';
 import { useShop } from '../../context/ShopContext';
-import { Plus, Edit3, Trash2, X, Save, CheckCircle2 } from 'lucide-react';
+import { Plus, Edit3, Trash2, X, Save, CheckCircle2, Search, Sparkles, Eye } from 'lucide-react';
 import { Coupon } from '../../types';
 import { couponRestrictionNotes } from '../../utils/coupons';
 import { TagIcon } from '../StoreIcons';
@@ -23,10 +25,36 @@ const offerText = (c: Pick<Coupon, 'discountType' | 'discountValue' | 'maxDiscou
   return parts.join(', ');
 };
 
-type CouponState = 'running' | 'upcoming' | 'ended' | 'off';
+type CouponState = 'running' | 'upcoming' | 'usedup' | 'ended' | 'off';
+type FilterTab = 'all' | CouponState;
 
-const FILTER_LABEL = { all: 'All', active: 'Switched on', expired: 'Ended', disabled: 'Switched off' } as const;
-const EMPTY_TEXT = { all: '', active: 'No coupon is switched on right now.', expired: 'No coupon has ended yet.', disabled: 'No coupon is switched off.' } as const;
+const FILTER_LABEL: Record<FilterTab, string> = { all: 'All', running: 'Live', upcoming: 'Scheduled', usedup: 'Used up', ended: 'Ended', off: 'Switched off' };
+const EMPTY_TEXT: Record<FilterTab, string> = {
+  all: '', running: 'No coupon is live right now.', upcoming: 'No coupon is waiting for its start day.', usedup: 'No coupon has run out of uses.',
+  ended: 'No coupon has ended yet.', off: 'No coupon is switched off.',
+};
+
+/** "2026-10-20" in days from today (negative = past). */
+const daysFrom = (iso: string, today: string) => Math.round((new Date(`${iso}T00:00:00Z`).getTime() - new Date(`${today}T00:00:00Z`).getTime()) / 86400000);
+const isoIn = (days: number) => new Date(Date.now() + days * 86400000).toISOString().slice(0, 10);
+
+/**
+ * Ready-made starting points for a new coupon. They only fill the form (every value can be changed) and promise
+ * nothing the store does not do: the "once per customer" one counts paid orders per email or mobile, it does not
+ * check that it is the customer's first order.
+ */
+const TEMPLATES: Array<{ id: string; name: string; line: string; fill: () => Partial<Omit<Coupon, 'id' | 'usageCount'>> }> = [
+  { id: 'festive', name: 'Festive % off', line: '20% off up to ₹600 on orders above ₹1,499, for two weeks', fill: () => ({ code: 'FESTIVE20', discountType: 'percentage', discountValue: 20, maxDiscount: 600, minOrderValue: 1499, startDate: isoIn(0), expiryDate: isoIn(14), usageLimit: 500, perUserLimit: 0 }) },
+  { id: 'welcome', name: 'Once per customer', line: '10% off up to ₹300 on orders above ₹999; each email or mobile can use it once', fill: () => ({ code: 'WELCOME10', discountType: 'percentage', discountValue: 10, maxDiscount: 300, minOrderValue: 999, startDate: isoIn(0), expiryDate: isoIn(90), usageLimit: 1000, perUserLimit: 1 }) },
+  { id: 'flat', name: 'Flat ₹ off a bigger bag', line: '₹200 off on orders above ₹2,499, for a month', fill: () => ({ code: 'SAVE200', discountType: 'fixed', discountValue: 200, maxDiscount: undefined, minOrderValue: 2499, startDate: isoIn(0), expiryDate: isoIn(30), usageLimit: 300, perUserLimit: 0 }) },
+];
+
+/** The sentence a shopper reads about this coupon, from its own fields. */
+const shopperLine = (c: Pick<Coupon, 'code' | 'discountType' | 'discountValue' | 'maxDiscount' | 'minOrderValue' | 'expiryDate' | 'allowedCategories' | 'allowedProductIds' | 'perUserLimit'>) => {
+  const code = String(c.code || '').trim().toUpperCase().replace(/\s+/g, '') || 'CODE';
+  const notes = couponRestrictionNotes(c as Coupon);
+  return `Use ${code} in the bag: ${offerText(c)}${notes.length ? ` (${notes.join('; ').toLowerCase()})` : ''}${c.expiryDate ? `. Valid till ${dayText(c.expiryDate)}` : ''}.`;
+};
 
 /** A titled group of fields inside the coupon form. */
 const FormGroup: React.FC<{ title: string; hint?: string; children: React.ReactNode }> = ({ title, hint, children }) => (
@@ -49,7 +77,18 @@ export const AdminCoupons: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
-  const [filterTab, setFilterTab] = useState<'all' | 'active' | 'expired' | 'disabled'>('all');
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
+  const [codeSearch, setCodeSearch] = useState('');
+  // Coupons the festive panel (Admin → Special DOD) runs on, so a coupon card can say so
+  const [dodCodes, setDodCodes] = useState<string[]>([]);
+  useEffect(() => onSnapshot(doc(adminDb, 'storefront_settings', 'specialDod'), (snap) => {
+    try {
+      const value = snap.exists() ? JSON.parse(snap.data().value_json || '{}') : null;
+      setDodCodes(value && value.enabled !== false && Array.isArray(value.offers)
+        ? value.offers.filter((o: any) => o && o.enabled !== false && o.couponCode).map((o: any) => String(o.couponCode).trim().toUpperCase())
+        : []);
+    } catch { setDodCodes([]); }
+  }, () => setDodCodes([])), []);
 
   const [formData, setFormData] = useState<Omit<Coupon, 'id' | 'usageCount'>>({
     code: '',
@@ -77,8 +116,34 @@ export const AdminCoupons: React.FC = () => {
   const stateOf = (coupon: Coupon): CouponState => {
     if (checkIfExpired(coupon)) return 'ended';
     if (!coupon.isActive) return 'off';
+    if (Number(coupon.usageLimit) > 0 && Number(coupon.usageCount) >= Number(coupon.usageLimit)) return 'usedup';
     if (coupon.startDate && coupon.startDate > todayStr) return 'upcoming';
     return 'running';
+  };
+
+  // Paid orders that carried each code, from the orders loaded in the admin: how many and the discount given
+  const paidUse = useMemo(() => {
+    const map = new Map<string, { orders: number; given: number }>();
+    orders.forEach((order) => {
+      if (!order.couponCode || order.paymentStatus !== 'Paid') return;
+      const code = String(order.couponCode).trim().toUpperCase();
+      const row = map.get(code) || { orders: 0, given: 0 };
+      row.orders += 1;
+      row.given += Number(order.couponDiscount) || 0;
+      map.set(code, row);
+    });
+    return map;
+  }, [orders]);
+
+  const applyTemplate = (id: string) => {
+    const template = TEMPLATES.find((t) => t.id === id);
+    if (!template) return;
+    const fill = template.fill();
+    // A code that already exists gets a number added, so a template never clashes with a real coupon
+    let code = String(fill.code || '');
+    const taken = new Set(coupons.filter((c) => c.id !== editingCouponId).map((c) => String(c.code).toUpperCase()));
+    for (let n = 2; taken.has(code); n += 1) code = `${String(fill.code)}${n}`;
+    setFormData((prev) => ({ ...prev, ...fill, code, isActive: true }));
   };
 
   const handleOpenAdd = () => {
@@ -160,14 +225,12 @@ export const AdminCoupons: React.FC = () => {
       .catch((err: any) => showToast(err?.message || 'Could not save. Please try again.', 'error'));
   };
 
-  const matchesTab = (coupon: Coupon, tab: typeof filterTab) => {
-    const isExpired = checkIfExpired(coupon);
-    if (tab === 'active') return coupon.isActive && !isExpired;
-    if (tab === 'expired') return isExpired;
-    if (tab === 'disabled') return !coupon.isActive && !isExpired;
-    return true; // 'all'
-  };
-  const filteredCoupons = coupons.filter((coupon) => matchesTab(coupon, filterTab));
+  const matchesTab = (coupon: Coupon, tab: FilterTab) => tab === 'all' || stateOf(coupon) === tab;
+  const STATE_RANK: Record<CouponState, number> = { running: 0, upcoming: 1, usedup: 2, off: 3, ended: 4 };
+  const filteredCoupons = coupons
+    .filter((coupon) => matchesTab(coupon, filterTab))
+    .filter((coupon) => !codeSearch.trim() || String(coupon.code).toLowerCase().includes(codeSearch.trim().toLowerCase()))
+    .sort((a, b) => STATE_RANK[stateOf(a)] - STATE_RANK[stateOf(b)]);
 
   // Key numbers, all from the real coupon list and the orders already loaded in the admin
   const runningCount = coupons.filter((c) => stateOf(c) === 'running').length;
@@ -208,9 +271,15 @@ export const AdminCoupons: React.FC = () => {
       </Tiles>
 
       {/* Filter */}
-      <div role="group" aria-label="Filter coupons" className="flex flex-nowrap gap-2 max-w-full overflow-x-auto sag-scroll-x">
-        {(['all', 'active', 'expired', 'disabled'] as const).map((tab) => {
+      <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="relative lg:w-64 shrink-0">
+        <Search className="w-4 h-4 text-ink-muted absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+        <input type="search" value={codeSearch} onChange={(e) => setCodeSearch(e.target.value)} placeholder="Find a code" aria-label="Find a coupon by its code" className="sag-input h-11 pl-10" />
+      </div>
+      <div role="group" aria-label="Filter coupons" className="flex flex-nowrap gap-2 max-w-full overflow-x-auto sag-scroll-x min-w-0">
+        {(['all', 'running', 'upcoming', 'usedup', 'ended', 'off'] as const).map((tab) => {
           const count = coupons.filter((c) => matchesTab(c, tab)).length;
+          if (tab !== 'all' && tab !== 'running' && count === 0) return null;
           return (
             <button
               key={tab}
@@ -225,6 +294,7 @@ export const AdminCoupons: React.FC = () => {
           );
         })}
       </div>
+      </div>
 
       {/* Coupons */}
       {filteredCoupons.length === 0 ? (
@@ -235,7 +305,7 @@ export const AdminCoupons: React.FC = () => {
             <button type="button" onClick={handleOpenAdd} className={kit.primary}><Plus className="w-4 h-4 text-current" /> Create coupon</button>
           ) : undefined}
         >
-          {filterTab === 'all' ? 'Use Create coupon to add the first one.' : EMPTY_TEXT[filterTab]}
+          {codeSearch.trim() ? 'No code matches this search.' : filterTab === 'all' ? 'Use Create coupon to add the first one.' : EMPTY_TEXT[filterTab]}
         </Empty>
       ) : (
         <ul className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
@@ -253,11 +323,22 @@ export const AdminCoupons: React.FC = () => {
                   <span className={`font-mono text-lg leading-7 font-semibold tracking-[0.08em] px-3 py-1 border border-dashed rounded-full break-all ${isExpired ? 'text-ink-faint border-line line-through' : 'text-brand border-brand-line bg-brand-wash'}`}>
                     {coupon.code}
                   </span>
-                  {state === 'running' && <Pill tone="live">Running</Pill>}
-                  {state === 'upcoming' && <Pill tone="soon">Starts on {dayText(coupon.startDate)}</Pill>}
+                  {state === 'running' && <Pill tone="live">Live</Pill>}
+                  {state === 'upcoming' && <Pill tone="soon">Scheduled · starts {dayText(coupon.startDate)}</Pill>}
+                  {state === 'usedup' && <Pill tone="problem">Used up</Pill>}
                   {state === 'ended' && <Pill tone="off">Ended</Pill>}
                   {state === 'off' && <Pill tone="off">Switched off</Pill>}
                 </div>
+                {(() => {
+                  const code = String(coupon.code).toUpperCase();
+                  const left = coupon.expiryDate && state === 'running' ? daysFrom(coupon.expiryDate, todayStr) : null;
+                  return (dodCodes.includes(code) || (left !== null && left <= 3)) ? (
+                    <div className="-mt-1 flex flex-wrap gap-1.5">
+                      {dodCodes.includes(code) && <span className="inline-flex items-center gap-1 min-h-7 px-3 rounded-full bg-highlight text-xs font-semibold text-ink"><Sparkles className="w-3.5 h-3.5" aria-hidden="true" /> Runs the festive panel (Special DOD)</span>}
+                      {left !== null && left <= 3 && <span className="inline-flex items-center min-h-7 px-3 rounded-full border border-brand-line text-xs font-semibold text-brand">{left <= 0 ? 'Last day today' : `${left} day${left === 1 ? '' : 's'} left`}</span>}
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* What it gives */}
                 <div>
@@ -265,6 +346,10 @@ export const AdminCoupons: React.FC = () => {
                   {couponRestrictionNotes(coupon).map((note) => (
                     <p key={note} className={`mt-1 ${kit.hint}`}>{note}</p>
                   ))}
+                  <p className="mt-2 flex items-start gap-1.5 rounded-[14px] bg-page px-3 py-2 text-[13px] leading-[18px] text-ink-muted">
+                    <Eye className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
+                    <span><span className="font-semibold text-ink">A shopper reads:</span> {shopperLine(coupon)}</span>
+                  </p>
                 </div>
 
                 {/* Dates and uses */}
@@ -284,7 +369,15 @@ export const AdminCoupons: React.FC = () => {
                     </dt>
                     <dd className="mt-1.5">
                       <Meter percent={usedPercent} label={`Coupon ${coupon.code} uses`} valueText={`${used} of ${limit} used`} />
-                      {usedUp && <p className="mt-1.5 text-[13px] leading-[18px] font-medium text-danger">All uses are taken. Shoppers can no longer apply this code.</p>}
+                      {usedUp && <p className="mt-1.5 text-[13px] leading-[18px] font-medium text-danger">All uses are taken. Shoppers can no longer apply this code. Raise "Total uses allowed" to run it again.</p>}
+                      {(() => {
+                        const use = paidUse.get(String(coupon.code).toUpperCase());
+                        return use ? (
+                          <p className="mt-1.5 text-[13px] leading-[18px] text-ink-muted">
+                            On <span className="font-semibold text-ink">{use.orders}</span> paid order{use.orders === 1 ? '' : 's'} loaded here{use.given > 0 ? <>, <span className="font-semibold text-ink">{rupees(use.given)}</span> given off</> : ''}.
+                          </p>
+                        ) : null;
+                      })()}
                     </dd>
                   </div>
                 </dl>
@@ -353,6 +446,25 @@ export const AdminCoupons: React.FC = () => {
 
             <form onSubmit={handleSubmit} className="text-sm">
               <div className="px-5 sm:px-7 py-5 space-y-4">
+
+                {!editingCouponId && (
+                  <div role="group" aria-label="Start from a template">
+                    <p className="sag-label">Start from a template (optional)</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {TEMPLATES.map((t) => (
+                        <button key={t.id} type="button" onClick={() => applyTemplate(t.id)} className="min-h-11 rounded-[16px] border border-line bg-surface px-3 py-2.5 text-left cursor-pointer transition-colors hover:border-ink">
+                          <span className="block text-sm font-semibold text-ink">{t.name}</span>
+                          <span className="mt-0.5 block text-xs leading-4 text-ink-muted">{t.line}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <p className="flex items-start gap-2 rounded-[16px] bg-highlight px-3.5 py-3 text-[13px] leading-[18px] text-ink" aria-live="polite">
+                  <Eye className="w-4 h-4 mt-0.5 shrink-0" aria-hidden="true" />
+                  <span><span className="font-semibold">A shopper reads:</span> {shopperLine(formData)}</span>
+                </p>
 
                 <FormGroup title="1. The code">
                   <div>
