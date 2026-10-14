@@ -64,15 +64,18 @@ export const AdminLeads: React.FC = () => {
   };
 
   const exportLeadsCsv = () => {
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + "Email,Name,Phone,Source,Date,Offer Sent\n"
-      + leads.map(l => `${l.email},${l.name || ''},${l.phone || ''},${l.source},${l.createdAt},${l.offerSent ? 'Yes' : 'No'}`).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `sag_leads_${new Date().toISOString().split('T')[0]}.csv`);
+    // Every value quoted, so a name or message with a comma or quote stays in its own column; only the leads shown are exported
+    const cell = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+    const lines = [['Email', 'Name', 'Phone', 'Source', 'Date', 'Offer Sent'].map(cell).join(',')]
+      .concat(shownLeads.map((l) => [l.email, l.name || '', l.phone || '', SOURCE_LABEL[l.source] || l.source, l.createdAt, l.offerSent ? 'Yes' : 'No'].map(cell).join(',')));
+    const url = URL.createObjectURL(new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sag_leads_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
   const sourceBadge = (source: string) => (
