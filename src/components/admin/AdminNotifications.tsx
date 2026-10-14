@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { type LucideIcon, Bell, CheckCheck, ChevronRight, PackageOpen, RotateCcw, ShoppingBag, Wallet, X, XCircle } from 'lucide-react';
+import { type LucideIcon, Bell, CheckCheck, ChevronRight, PackageOpen, RotateCcw, ShoppingBag, Truck, Wallet, X, XCircle } from 'lucide-react';
 import type { Order, Product } from '../../types';
 import { rupees } from './adminStats';
 import { refundsToDo } from './orderMoney';
@@ -13,7 +13,9 @@ import { isLowStock } from '../../utils/inventory';
  * "Read" is remembered in this browser; an item leaves the list by itself once it is handled.
  */
 
-export type NoteKind = 'order' | 'cancel' | 'return' | 'refund' | 'stock';
+export type NoteKind = 'order' | 'ship' | 'cancel' | 'return' | 'refund' | 'stock';
+/** Standing lists (they never count as unread on the bell). */
+const STANDING: NoteKind[] = ['ship', 'stock'];
 
 export interface AdminNote {
   key: string;
@@ -29,12 +31,13 @@ export interface AdminNote {
 
 const KIND: Record<NoteKind, { label: string; icon: LucideIcon; tone: string }> = {
   order: { label: 'Orders to pack', icon: ShoppingBag, tone: 'bg-ok-tint text-ok' },
+  ship: { label: 'Packed, waiting for the courier', icon: Truck, tone: 'bg-sunken text-ink' },
   cancel: { label: 'Cancellation requests', icon: XCircle, tone: 'bg-highlight text-sale' },
   return: { label: 'Return and exchange requests', icon: RotateCcw, tone: 'bg-highlight text-sale' },
   refund: { label: 'Refunds to send', icon: Wallet, tone: 'bg-danger-tint text-danger' },
   stock: { label: 'Low on stock', icon: PackageOpen, tone: 'bg-sunken text-ink' },
 };
-const ORDER_OF: NoteKind[] = ['cancel', 'return', 'refund', 'order', 'stock'];
+const ORDER_OF: NoteKind[] = ['cancel', 'return', 'refund', 'order', 'ship', 'stock'];
 
 const SEEN_KEY = 'sag_admin_seen_notes';
 const readSeen = (): Set<string> => {
@@ -87,6 +90,12 @@ export const buildNotes = (orders: Order[], products: Product[], lowStockThresho
     line: [o.customerName || 'Customer', o.deliveryAddress?.city, o.payMode === 'cod' ? `COD · collect ${rupees(Number(o.codDue) || 0)}` : 'Paid online'].filter(Boolean).join(' · '),
     side: rupees(Number(o.finalTotal) || 0), target: { order: o.orderNumber },
   }));
+  orders.filter((o) => !o.testPayment && o.paymentStatus === 'Paid' && o.status === 'Packed').forEach((o) => notes.push({
+    key: `ship|${o.orderNumber}`, kind: 'ship', at: String(o.date || ''),
+    title: `${o.orderNumber} · ${o.customerName || 'Customer'}`,
+    line: String(o.trackingNumber || '').trim() ? `Tracking ${o.trackingNumber}. Mark it shipped once the courier has it.` : 'Add the courier and tracking number, then mark it shipped.',
+    side: rupees(Number(o.finalTotal) || 0), target: { order: o.orderNumber },
+  }));
   products
     .filter((p) => !p.hidden && p.productType !== 'accessory' && isLowStock(p, lowStockThreshold))
     .sort((a, b) => Number(a.stockQuantity ?? 0) - Number(b.stockQuantity ?? 0))
@@ -106,7 +115,7 @@ export const buildNotes = (orders: Order[], products: Product[], lowStockThresho
 export const useAdminNotes = (orders: Order[], products: Product[], lowStockThreshold: number) => {
   const notes = useMemo(() => buildNotes(orders, products, lowStockThreshold), [orders, products, lowStockThreshold]);
   const [seen, setSeen] = useState<Set<string>>(readSeen);
-  const unread = notes.filter((n) => n.kind !== 'stock' && !seen.has(n.key));
+  const unread = notes.filter((n) => !STANDING.includes(n.kind) && !seen.has(n.key));
   const markRead = useCallback((keys: string[]) => {
     setSeen((old) => {
       const next = new Set(old);
@@ -125,7 +134,7 @@ type Filter = 'all' | 'orders' | 'requests' | 'stock';
 const FILTERS: { id: Filter; label: string; kinds: NoteKind[] }[] = [
   { id: 'all', label: 'All', kinds: ORDER_OF },
   { id: 'requests', label: 'Requests', kinds: ['cancel', 'return', 'refund'] },
-  { id: 'orders', label: 'Orders', kinds: ['order'] },
+  { id: 'orders', label: 'Orders', kinds: ['order', 'ship'] },
   { id: 'stock', label: 'Stock', kinds: ['stock'] },
 ];
 const PER_KIND = 6;
@@ -157,7 +166,7 @@ export const NotificationCentre: React.FC<CentreProps> = ({ open, onClose, notes
   if (!open) return null;
   const kinds = FILTERS.find((f) => f.id === filter)!.kinds;
   const shown = notes.filter((n) => kinds.includes(n.kind));
-  const unreadKeys = notes.filter((n) => n.kind !== 'stock' && !seen.has(n.key)).map((n) => n.key);
+  const unreadKeys = notes.filter((n) => !STANDING.includes(n.kind) && !seen.has(n.key)).map((n) => n.key);
   const countOf = (f: typeof FILTERS[number]) => notes.filter((n) => f.kinds.includes(n.kind)).length;
 
   return (
@@ -211,7 +220,7 @@ export const NotificationCentre: React.FC<CentreProps> = ({ open, onClose, notes
                 </p>
                 <ul>
                   {rows.slice(0, PER_KIND).map((n) => {
-                    const unread = n.kind !== 'stock' && !seen.has(n.key);
+                    const unread = !STANDING.includes(n.kind) && !seen.has(n.key);
                     return (
                       <li key={n.key}>
                         <button type="button" onClick={() => { markRead([n.key]); onGo(n.target); onClose(); }} className="adm-row w-full min-h-[60px] px-3 mx-0 py-2 flex items-center gap-3 text-left cursor-pointer hover:bg-[color:var(--adm-hover)]">
@@ -231,7 +240,7 @@ export const NotificationCentre: React.FC<CentreProps> = ({ open, onClose, notes
                   })}
                 </ul>
                 {rows.length > PER_KIND && (
-                  <button type="button" onClick={() => { onGo(kind === 'stock' ? { tab: 'products' } : kind === 'order' ? { tab: 'orders' } : { tab: kind === 'return' ? 'returns' : 'cancellations' }); onClose(); }} className="ml-5 mb-1 min-h-10 text-[13px] font-bold text-brand underline underline-offset-[3px] cursor-pointer">
+                  <button type="button" onClick={() => { onGo(kind === 'stock' ? { tab: 'products' } : kind === 'order' || kind === 'ship' ? { tab: 'orders' } : { tab: kind === 'return' ? 'returns' : 'cancellations' }); onClose(); }} className="ml-5 mb-1 min-h-10 text-[13px] font-bold text-brand underline underline-offset-[3px] cursor-pointer">
                     See all {rows.length}
                   </button>
                 )}

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   type LucideIcon, ArrowLeft, ChevronRight, Clock, Copy, CornerDownLeft, ExternalLink, Eye, EyeOff, FileText,
   MessageCircle, Package, PackageCheck, Pause, Phone, Play, Search, ShoppingBag, Tag, User, X, Zap,
@@ -56,7 +57,9 @@ interface AdminSearchProps {
 }
 
 type Group = 'Recent' | 'Actions' | 'Orders' | 'Customers' | 'Products' | 'Coupons' | 'Pages';
-const GROUPS: Group[] = ['Recent', 'Actions', 'Orders', 'Customers', 'Products', 'Coupons', 'Pages'];
+// Before typing: recent pages, then the quick actions, then every page. While typing: the records first.
+const GROUPS_EMPTY: Group[] = ['Recent', 'Actions', 'Orders', 'Customers', 'Products', 'Coupons', 'Pages'];
+const GROUPS_TYPED: Group[] = ['Orders', 'Customers', 'Products', 'Coupons', 'Pages', 'Actions', 'Recent'];
 
 interface SubAction {
   id: string;
@@ -357,7 +360,7 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage, ope
 
   const groups = focusHit
     ? [{ group: 'Actions' as Group, rows: list.map((hit, index) => ({ hit, index })) }]
-    : GROUPS
+    : (query.trim() && !query.trim().startsWith('>') ? GROUPS_TYPED : GROUPS_EMPTY)
       .map((group) => ({ group, rows: list.map((hit, index) => ({ hit, index })).filter((r) => r.hit.group === group) }))
       .filter((g) => g.rows.length > 0);
   const typed = query.trim();
@@ -399,7 +402,7 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage, ope
         </>
       )}
 
-      {open && (
+      {open && createPortal(
         <div
           className="fixed inset-0 z-[60] bg-[color:var(--sag-scrim)] flex items-start justify-center px-2.5 pt-2.5 sm:px-3 sm:pt-[10vh] adm-fade-in"
           onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
@@ -505,7 +508,9 @@ export const AdminSearch: React.FC<AdminSearchProps> = ({ pages, onOpenPage, ope
               <span className="flex items-center gap-1.5 ml-auto"><kbd className="adm-kbd">Esc</kbd> {focusHit ? 'back' : 'close'}</span>
             </div>
           </div>
-        </div>
+        </div>,
+        // Into the admin's root, not inside the sticky top bar (whose layer would put the phone's bottom bar above it)
+        document.getElementById('admin-root-container') || document.body,
       )}
     </>
   );
