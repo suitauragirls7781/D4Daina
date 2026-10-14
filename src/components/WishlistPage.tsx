@@ -160,7 +160,7 @@ export const WishlistPage: React.FC = () => {
 
   if (wishlist.length === 0) {
     return (
-      <div id="wishlist-empty-state" data-aura className="px-3 pt-4 pb-16 sm:px-6 lg:pt-8">
+      <div id="wishlist-empty-state" data-aura className="clay-pg px-3 pt-4 pb-16 sm:px-6 lg:pt-8">
         <div className="mx-auto max-w-[1120px] lg:grid lg:grid-cols-2 lg:items-start lg:gap-[50px]">
           <div className="aa-band aa-band-blush">
             <span className="aa-ic kx-drawn kx-beat mb-5 h-14 w-14" aria-hidden="true">
@@ -206,7 +206,7 @@ export const WishlistPage: React.FC = () => {
   }
 
   return (
-    <div id="wishlist-page-container" data-aura className="px-3 pt-4 pb-16 sm:px-6 lg:pt-8 lg:pb-20">
+    <div id="wishlist-page-container" data-aura className="clay-pg px-3 pt-4 pb-16 sm:px-6 lg:pt-8 lg:pb-20">
       <div className="mx-auto max-w-[1120px]">
 
         {/* Breadcrumbs (tablet and desktop) */}
