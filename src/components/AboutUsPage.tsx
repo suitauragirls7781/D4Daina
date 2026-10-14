@@ -31,7 +31,7 @@ export const AboutUsPage: React.FC = () => {
   const body = 'text-[15px] leading-[23px] lg:text-[16px] lg:leading-[25px] text-ink';
 
   return (
-    <div id="about-us-page" data-aura className="pb-14 lg:pb-20">
+    <div id="about-us-page" data-aura className="clay-pg pb-14 lg:pb-20">
       <InfoPageHeader
         crumb="About us"
         eyebrow="Our story"

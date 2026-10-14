@@ -71,7 +71,7 @@ export const ContactUsPage: React.FC = () => {
   const label = 'aa-flbl';
 
   return (
-    <div id="contact-us-page" data-aura className="pb-14 lg:pb-20">
+    <div id="contact-us-page" data-aura className="clay-pg pb-14 lg:pb-20">
       <InfoPageHeader
         crumb="Contact us"
         eyebrow="Customer care"

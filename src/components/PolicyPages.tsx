@@ -167,7 +167,7 @@ const PolicyWrapper: React.FC<PolicyWrapperProps> = ({ page, title, subtitle, fa
   const column = many ? 'lg:col-span-8 lg:col-start-5' : 'lg:col-span-12';
 
   return (
-    <div id={`${page}-page`} data-aura className="pb-14 lg:pb-20">
+    <div id={`${page}-page`} data-aura className="clay-pg pb-14 lg:pb-20">
       <InfoPageHeader crumb={title} eyebrow={eyebrow} title={title} subtitle={subtitle} />
 
       <div className="max-w-[1120px] mx-auto px-4 sm:px-7 pt-4 lg:pt-10 lg:grid lg:grid-cols-12 lg:gap-x-12">
