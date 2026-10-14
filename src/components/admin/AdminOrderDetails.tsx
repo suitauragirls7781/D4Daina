@@ -432,9 +432,9 @@ export const AdminOrderDetails: React.FC<AdminOrderDetailsProps> = ({ orderId })
   const customerStory = (
     <Panel id="admin-order-customer-history" title="This customer" icon={<History />} hint="Other orders from the same mobile number or email.">
       <div className="flex flex-wrap gap-1.5">{facts.map((f) => <Pill key={f.key} tone={f.tone}>{f.label}</Pill>)}</div>
-      {realOthers.length > 0 && (
+      {spentBefore > 0 && (
         <p className="mt-3 text-sm leading-5 text-ink sag-num">
-          {realOthers.length} other {realOthers.length === 1 ? 'order' : 'orders'}{spentBefore > 0 ? <>, <span className="font-semibold">{inr(spentBefore)}</span> paid and kept</> : ''}.
+          <span className="font-semibold">{inr(spentBefore)}</span> paid and kept on {realOthers.length === 1 ? 'the other order' : 'the other orders'}.
         </p>
       )}
       {otherOrders.length === 0 ? (

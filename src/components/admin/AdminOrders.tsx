@@ -388,17 +388,17 @@ export const AdminOrders: React.FC = () => {
         <div className="flex items-start gap-2.5">
           {selectBox(order, 'mt-0.5')}
           <div className="min-w-0 flex-1">
+            <p className="text-[13px] leading-5 font-semibold text-ink sag-num truncate" title={order.orderNumber}>{order.orderNumber}</p>
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-sm leading-5 font-semibold text-ink sag-num truncate">{order.orderNumber}</p>
+              <p className="min-w-0 text-[13px] leading-[18px] text-ink truncate">{order.customerName}{a?.city ? <span className="text-ink-muted"> · {a.city}</span> : null}</p>
               <p className="text-[15px] leading-5 font-bold text-ink sag-num shrink-0">{inr(order.finalTotal)}</p>
             </div>
-            <p className="text-[13px] leading-[18px] text-ink truncate">{order.customerName}{a?.city ? <span className="text-ink-muted"> · {a.city}</span> : null}</p>
             <p className="text-xs leading-4 text-ink-muted sag-num">{ageOf(order.date)}{order.payMode === 'cod' ? ` · COD, collect ${inr(order.codDue)}` : ' · prepaid'}</p>
           </div>
         </div>
         <div className="mt-2 flex flex-wrap gap-1.5 empty:hidden">{renderFlags(order)}{renderFacts(order)}</div>
         {step && (
-          <button type="button" onClick={(e) => { e.stopPropagation(); runNextStep(order, step); }} className={`${adminUi.primarySmall} mt-2.5 w-full !h-10`}>
+          <button type="button" onClick={(e) => { e.stopPropagation(); runNextStep(order, step); }} className={`${adminUi.primarySmall} mt-2.5 w-full !h-auto min-h-10 py-2 !px-3 !whitespace-normal text-center leading-tight`}>
             {step.label}
           </button>
         )}

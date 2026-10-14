@@ -72,7 +72,7 @@ const Sheet: React.FC<{ title: string; titleId: string; onClose?: () => void; ch
 );
 
 const STATE_ICON: Record<RowState, React.ReactNode> = {
-  ready: <span className="w-4 h-4 rounded-full border-2 border-control" aria-hidden="true" />,
+  ready: <span className="w-2 h-2 rounded-full bg-ink-muted" aria-hidden="true" />,
   running: <Loader2 className="w-4 h-4 animate-spin text-ink" aria-hidden="true" />,
   done: <CheckCircle2 className="w-4 h-4 text-ok" aria-hidden="true" />,
   failed: <XCircle className="w-4 h-4 text-danger" aria-hidden="true" />,
