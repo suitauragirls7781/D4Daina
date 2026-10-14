@@ -11,145 +11,10 @@ import { OrderStatusBadge } from './PaymentBadge';
 import { returnRows } from './AdminReturns';
 import { waitingCancelRows } from './AdminCancellations';
 import { AdminPageHeader } from './adminShared';
-import { AnalyticsDay, OrderDay, dayLabel, dayRange, istDay, istToday, num, ordersByDay, rupees, shiftDay, totalsFor, useDailyAnalytics } from './adminStats';
-import { ActivityFeedPanel, FeedEvent, LiveDot, LiveVisitorsPanel, SourcesAndDevices, UpdatedAgo, VisitorsByHourPanel, useLiveVisitors } from './AdminLive';
+import { dayLabel, dayRange, istDay, istToday, num, ordersByDay, rupees, shiftDay, useDailyAnalytics } from './adminStats';
+import { ActivityFeedPanel, FeedEvent, LiveDot, LivePulse, LiveVisitorsPanel, SourcesAndDevices, UpdatedAgo, VisitorsByHourPanel, useLiveVisitors } from './AdminLive';
+import { CategoryPanel, DeviceFunnelPanel, FunnelPanel, KpiBoard, KpiId, MoneyMixPanel, PERIODS, PeriodId, SalesHeatmapPanel, TrendPanel } from './DashboardPanels';
 import { EmptyNote, Panel, Segmented, adminText } from './adminUi';
-
-type PeriodId = 'today' | '7' | '30';
-const PERIODS: Array<{ id: PeriodId; label: string; words: string }> = [
-  { id: 'today', label: 'Today', words: 'today' },
-  { id: '7', label: '7 days', words: 'the last 7 days' },
-  { id: '30', label: '30 days', words: 'the last 30 days' },
-];
-
-type Metric = 'sales' | 'orders' | 'visits';
-const METRICS: Array<{ id: Metric; label: string }> = [
-  { id: 'sales', label: 'Sales' },
-  { id: 'orders', label: 'Orders' },
-  { id: 'visits', label: 'Visitors' },
-];
-
-// ---------------------------------------------------------------- the path to an order
-
-const FunnelPanel: React.FC<{
-  days: string[]; words: string; analytics: Map<string, AnalyticsDay>; orders: Map<string, OrderDay>; ready: boolean; action: React.ReactNode;
-}> = ({ days, words, analytics, orders, ready, action }) => {
-  const totals = useMemo(() => totalsFor(days, analytics, orders), [days, analytics, orders]);
-  const steps: Array<{ label: string; value: number | null; leave: string }> = [
-    { label: 'Visits', value: totals.visits, leave: '' },
-    { label: 'Product views', value: totals.productViews, leave: 'arriving and opening a product' },
-    { label: 'Added to bag', value: totals.cartAdds, leave: 'opening a product and adding it to the bag' },
-    { label: 'Checkout started', value: totals.checkouts, leave: 'the bag and checkout' },
-    { label: 'Paid orders', value: totals.paid, leave: 'checkout and payment' },
-  ];
-  const peak = steps.reduce((max, s) => Math.max(max, s.value ?? 0), 0);
-
-  // The step where the largest share of people stopped (only between two counted steps)
-  let worst: { leave: string; lost: number } | null = null;
-  steps.forEach((step, i) => {
-    const before = i > 0 ? steps[i - 1].value : null;
-    if (step.value === null || before === null || before <= 0 || step.value > before) return;
-    const lost = 1 - step.value / before;
-    if (lost > 0 && (!worst || lost > worst.lost)) worst = { leave: step.leave, lost };
-  });
-  const sentence = !ready ? 'Loading…'
-    : totals.visits === null ? `No visits were counted for ${words}, so the path cannot be drawn yet.`
-    : worst ? `Most people leave between ${(worst as { leave: string }).leave}.`
-    : 'There is not enough movement yet to say where people leave.';
-
-  return (
-    <Panel id="admin-funnel" title="The path to an order" note={`From a visit to a paid order, in ${words}`} action={action}>
-      <ol className="space-y-3">
-        {steps.map((step, i) => {
-          const before = i > 0 ? steps[i - 1].value : null;
-          const moved = step.value !== null && before !== null && before > 0 && step.value <= before ? Math.round((step.value / before) * 100) : null;
-          const width = step.value !== null && peak > 0 ? Math.max((step.value / peak) * 100, step.value > 0 ? 1.5 : 0) : 0;
-          return (
-            <li key={step.label}>
-              <div className="flex items-baseline justify-between gap-3">
-                <span className="text-sm leading-5 text-ink">{step.label}</span>
-                <span className="shrink-0 text-right">
-                  <span className={`sag-num ${step.value === null ? 'text-sm text-ink-muted' : 'text-base font-semibold text-ink'}`}>{!ready ? '…' : step.value === null ? 'No data' : num(step.value)}</span>
-                  {ready && moved !== null && <span className="ml-2 sag-num text-xs leading-4 text-ink-muted">{moved}% moved on</span>}
-                </span>
-              </div>
-              <div className="mt-1.5 h-3 rounded-full bg-line overflow-hidden" aria-hidden="true">
-                <div className={`h-full rounded-full ${i === steps.length - 1 ? 'bg-accent' : 'bg-brand'}`} style={{ width: `${ready ? width : 0}%` }} />
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-      <p className="mt-4 pt-3 border-t border-line rounded-none text-sm leading-5 text-ink">{sentence}</p>
-      <p className="mt-1 text-xs leading-4 text-ink-muted">Product views and searches count once per visitor per product per day.</p>
-    </Panel>
-  );
-};
-
-// ---------------------------------------------------------------- last 30 days
-
-const DailyChart: React.FC<{
-  today: string; analytics: Map<string, AnalyticsDay>; orders: Map<string, OrderDay>; ordersLoaded: boolean; visitsLoaded: boolean; onReports: () => void;
-}> = ({ today, analytics, orders, ordersLoaded, visitsLoaded, onReports }) => {
-  const [metric, setMetric] = useState<Metric>('sales');
-  const [picked, setPicked] = useState('');
-  const rows = useMemo(() => dayRange(shiftDay(today, -29), today).map((day) => {
-    const o = orders.get(day);
-    return { day, sales: o?.sales || 0, orders: o?.paid || 0, visits: analytics.get(day)?.visits ?? null };
-  }), [today, analytics, orders]);
-
-  const ready = metric === 'visits' ? visitsLoaded : ordersLoaded;
-  const valueOf = (r: (typeof rows)[number]): number | null => r[metric];
-  const show = (value: number | null) => (value === null ? 'No data' : metric === 'sales' ? rupees(value) : num(value));
-  const peak = rows.reduce((max, r) => Math.max(max, valueOf(r) ?? 0), 0);
-  const best = peak > 0 ? rows.find((r) => valueOf(r) === peak) : undefined;
-  const focused = rows.find((r) => r.day === picked) || rows[rows.length - 1];
-  const label = METRICS.find((m) => m.id === metric)!.label;
-
-  return (
-    <Panel
-      id="admin-last-30"
-      title="Last 30 days"
-      note={`${label} for each day. Tap a bar for that day's exact figure.`}
-      action={<Segmented label="Show in the chart" value={metric} options={METRICS} onChange={setMetric} />}
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <p className="text-sm leading-5 text-ink-muted" aria-live="polite">
-          {dayLabel(focused.day)}{focused.day === today ? ' (today so far)' : ''}:{' '}
-          <span className="sag-num text-xl leading-7 font-semibold text-ink">{ready ? show(valueOf(focused)) : '…'}</span>
-        </p>
-        {ready && (
-          <p className="text-[13px] leading-[18px] text-star">
-            {best ? <>Best day: {dayLabel(best.day)} with <span className="sag-num font-medium">{show(valueOf(best))}</span></> : <span className="text-ink-muted">Nothing to show in these 30 days yet.</span>}
-          </p>
-        )}
-      </div>
-      <div className="mt-3 h-40 flex items-end gap-[2px] border-b border-line rounded-none" role="group" aria-label={`${label} per day, oldest first`}>
-        {rows.map((r) => {
-          const value = ready ? valueOf(r) : null;
-          const height = value !== null && peak > 0 ? Math.max((value / peak) * 100, value > 0 ? 2 : 0) : 0;
-          const on = r.day === focused.day;
-          const words = `${dayLabel(r.day)}: ${ready ? show(valueOf(r)) : 'loading'}`;
-          return (
-            <button key={r.day} type="button" title={words} aria-label={words} aria-pressed={on}
-              onClick={() => setPicked(r.day)} onMouseEnter={() => setPicked(r.day)} onFocus={() => setPicked(r.day)}
-              className={`flex-1 min-w-0 h-full flex items-end cursor-pointer rounded-t-[4px] ${on ? 'bg-sunken' : 'hover:bg-sunken'}`}>
-              <span className={`block w-full rounded-t-[4px] ${on ? 'bg-accent' : r.day === best?.day ? 'bg-star' : 'bg-brand'}`} style={{ height: `${height}%` }} />
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-1.5 flex justify-between text-[11px] leading-4 text-ink-muted" aria-hidden="true">
-        <span>{dayLabel(rows[0].day)}</span>
-        <span>Today</span>
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <p className="text-xs leading-4 text-ink-muted">{metric === 'visits' ? 'A day without a bar may have no count ("No data").' : 'Sales count paid orders that were not cancelled.'}</p>
-        <button type="button" onClick={onReports} className={adminText.link}>Every day in Reports <ChevronRight className="w-3.5 h-3.5" /></button>
-      </div>
-    </Panel>
-  );
-};
 
 // ---------------------------------------------------------------- the page
 
@@ -157,6 +22,8 @@ export const AdminDashboardOverview: React.FC = () => {
   const { products = [], orders = [], ordersLoaded, lowStockThreshold, reviews = [] } = useAdmin();
   const { openAdminTab, openAdminProductNew, openAdminOrderDetails } = useRouter();
   const [period, setPeriod] = useState<PeriodId>('7');
+  // The key number drawn in the trend chart (tapping a big number picks it)
+  const [kpi, setKpi] = useState<KpiId>('sales');
 
   const live = useLiveVisitors();
   // This month, the same days of last month, and the last 30 days
@@ -321,8 +188,13 @@ export const AdminDashboardOverview: React.FC = () => {
           </dl>
         </div>
 
+        <LivePulse live={live} />
+
         {view?.paused && (
           <p className="mt-4 px-4 py-3 rounded-[16px] bg-surface text-sm leading-5 text-ink">Visitor counting is paused for today to keep orders safe (free plan limit).</p>
+        )}
+        {view?.livePaused && (
+          <p className="mt-4 px-4 py-3 rounded-[16px] bg-surface text-sm leading-5 text-ink">The live list has used its free amount for today, so it stops moving until tomorrow. Orders and the daily visit counts are not affected.</p>
         )}
         {analytics.error && <p className={`mt-3 ${small}`}>{analytics.error}</p>}
       </section>
@@ -368,7 +240,41 @@ export const AdminDashboardOverview: React.FC = () => {
         <PaymentProblemsPanel />
       </div>
 
-      {/* 2 and 3. Who is here and what they are doing */}
+      {/* How the business is doing: one period switch for everything below it */}
+      <section id="admin-period-bar" aria-label="Period for the numbers below" className="sag-glass p-4 sm:px-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h3 className={adminText.title}>How the shop is doing</h3>
+          <p className={`mt-0.5 ${adminText.note}`}>
+            {period === 'today' ? `${dayLabel(today)} so far` : `${dayLabel(periodDays[0])} to ${dayLabel(today)}`}, against {chosen.before}. Tap a number to draw it in the trend.
+          </p>
+        </div>
+        {periodSwitch}
+      </section>
+      <KpiBoard period={period} days={periodDays} today={today} analytics={analytics.days} byDay={byDay} orders={orders}
+        ordersLoaded={ordersLoaded} visitsLoaded={analytics.loaded} selected={kpi} onSelect={setKpi} />
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <TrendPanel period={period} days={periodDays} today={today} metric={kpi} onMetric={setKpi} analytics={analytics.days} byDay={byDay}
+          ready={ordersLoaded && analytics.loaded} onReports={() => openAdminTab('reports')} />
+        <FunnelPanel days={periodDays} words={chosen.words} analytics={analytics.days} byDay={byDay} ready={ordersLoaded && analytics.loaded} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <MoneyMixPanel orders={orders} days={periodDays} words={chosen.words} ordersLoaded={ordersLoaded} onCancellations={() => openAdminTab('cancellations')} />
+        <SalesHeatmapPanel orders={orders} today={today} ordersLoaded={ordersLoaded} />
+      </div>
+
+      {/* Top products, searches */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <AdminInsights days={periodDays} periodWords={chosen.words} />
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <CategoryPanel products={products} orders={orders} days={periodDays} today={today} words={chosen.words} ordersLoaded={ordersLoaded} />
+        <DeviceFunnelPanel days={periodDays} words={chosen.words} />
+      </div>
+
+      {/* Who is here and what they are doing */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
         <LiveVisitorsPanel live={live} />
         <ActivityFeedPanel live={live} orderEvents={orderEvents} />
@@ -377,15 +283,9 @@ export const AdminDashboardOverview: React.FC = () => {
       {/* Visitors hour by hour (drawn only when the live view sends the hourly counts) */}
       <VisitorsByHourPanel live={live} />
 
-      {/* 4. Today, this week, this month */}
+      {/* Today, this week, this month (calendar periods) */}
       <MetricsDashboard today={today} analytics={analytics.days} orders={byDay} ordersLoaded={ordersLoaded} visitsLoaded={analytics.loaded} />
       <p className={`${small} max-w-3xl`}>Orders and sales are counted on the day they were paid, India time. A week runs Monday to Sunday. The daily visit counter closes its day at 5:30 am India time, so before 5:30 am today has no visits figure yet.</p>
-
-      {/* 5 and 6. The path to an order, and the last 30 days */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        <FunnelPanel days={periodDays} words={chosen.words} analytics={analytics.days} orders={byDay} ready={ordersLoaded && analytics.loaded} action={periodSwitch} />
-        <DailyChart today={today} analytics={analytics.days} orders={byDay} ordersLoaded={ordersLoaded} visitsLoaded={analytics.loaded} onReports={() => openAdminTab('reports')} />
-      </div>
 
       {/* 7. Needs your attention, with the newest orders */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -434,10 +334,7 @@ export const AdminDashboardOverview: React.FC = () => {
         </Panel>
       </div>
 
-      {/* 8. Top products, searches, sources and devices */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <AdminInsights days={periodDays} periodWords={chosen.words} action={periodSwitch} />
-      </div>
+      {/* Where today's visitors come from */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <SourcesAndDevices live={live} />
       </div>

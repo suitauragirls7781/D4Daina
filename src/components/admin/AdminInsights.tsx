@@ -1,18 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { adminDb as db } from '../../lib/firebase';
+import React, { useMemo } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { useRouter } from '../../context/RouterContext';
-import { istDay, num } from './adminStats';
+import { istToday, num } from './adminStats';
+import { salesByProduct, useProductDaily } from './adminProductStats';
 import { Panel, Thumb } from './adminUi';
-
-interface DayCounts {
-  views: Record<string, number>;
-  wishlists: Record<string, number>;
-  terms: Record<string, number>;
-}
-const emptyDay = (): DayCounts => ({ views: {}, wishlists: {}, terms: {} });
-const chunks = <T,>(list: T[], size: number) => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, i * size + size));
 
 interface AdminInsightsProps {
   /** The days of the chosen period (YYYY-MM-DD). */
@@ -31,72 +22,25 @@ interface AdminInsightsProps {
 export const AdminInsights: React.FC<AdminInsightsProps> = ({ days, periodWords, action }) => {
   const { products = [], orders = [], ordersLoaded } = useAdmin();
   const { openAdminProductEdit } = useRouter();
-  const cache = useRef(new Map<string, DayCounts>());
-  const [version, setVersion] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [failed, setFailed] = useState(false);
-
+  const counts = useProductDaily(days, istToday());
+  const { loading, failed } = counts;
   const key = days.join(',');
-  useEffect(() => {
-    const missing = days.filter((day) => !cache.current.has(day));
-    if (!missing.length) { setLoading(false); return; }
-    let stopped = false;
-    setLoading(true);
-    setFailed(false);
-    Promise.all(chunks(missing, 10).map((part) => Promise.all([
-      getDocs(query(collection(db, 'search_terms'), where('day', 'in', part))),
-      getDocs(query(collection(db, 'product_daily'), where('day', 'in', part))),
-    ]))).then((results) => {
-      if (stopped) return;
-      missing.forEach((day) => cache.current.set(day, emptyDay()));
-      results.forEach(([terms, productRows]) => {
-        terms.docs.forEach((d) => {
-          const x = d.data();
-          const row = cache.current.get(String(x.day));
-          if (row && x.term) row.terms[String(x.term)] = (row.terms[String(x.term)] || 0) + (Number(x.count) || 0);
-        });
-        productRows.docs.forEach((d) => {
-          const x = d.data();
-          const row = cache.current.get(String(x.day));
-          const id = String(x.productId || '');
-          if (!row || !id) return;
-          row.views[id] = (row.views[id] || 0) + (Number(x.views) || 0);
-          row.wishlists[id] = (row.wishlists[id] || 0) + (Number(x.wishlists) || 0);
-        });
-      });
-      setVersion((n) => n + 1);
-    }).catch(() => { if (!stopped) setFailed(true); }).finally(() => { if (!stopped) setLoading(false); });
-    return () => { stopped = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
 
   const { viewed, saved, terms } = useMemo(() => {
-    const sum = (pick: (d: DayCounts) => Record<string, number>) => {
-      const total = new Map<string, number>();
-      days.forEach((day) => Object.entries(pick(cache.current.get(day) || emptyDay())).forEach(([id, n]) => total.set(id, (total.get(id) || 0) + n)));
-      return [...total.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]);
-    };
-    return { viewed: sum((d) => d.views).slice(0, 5), saved: sum((d) => d.wishlists).slice(0, 5), terms: sum((d) => d.terms).slice(0, 8) };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, version]);
+    const top = (m: Map<string, number>, n: number) => [...m.entries()].filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).slice(0, n);
+    return { viewed: top(counts.views, 5), saved: top(counts.wishlists, 5), terms: top(counts.terms, 8) };
+  }, [counts]);
 
   // Units sold in the period: paid orders, not cancelled or refunded, by the India-time day they were paid
-  const sold = useMemo(() => {
-    const inPeriod = new Set(days);
-    const units = new Map<string, number>();
-    orders.forEach((o) => {
-      if (o.testPayment || o.paymentStatus !== 'Paid' || o.status === 'Cancelled' || o.status === 'Refunded') return;
-      if (!inPeriod.has(istDay(o.paidAt || o.date))) return;
-      o.items.forEach((item) => {
-        const id = String(item.product?.id || '');
-        if (id) units.set(id, (units.get(id) || 0) + (Number(item.quantity) || 0));
-      });
-    });
-    return [...units.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders, key]);
+  const soldMap = useMemo(() => salesByProduct(orders, days), [orders, key]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sold = useMemo(() => [...soldMap.entries()].map(([id, s]) => [id, s.units] as [string, number]).filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 5), [soldMap]);
 
   const byId = useMemo(() => new Map(products.map((p) => [String(p.id), p])), [products]);
+  // Products many people opened but nobody bought in the period: worth a look at the photos, price or sizes
+  const notSelling = useMemo(() => [...counts.views.entries()]
+    .filter(([id, v]) => v >= 5 && !soldMap.has(id) && byId.has(id))
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5), [counts.views, soldMap, byId]);
   const counted = loading ? 'Loading…' : failed ? 'These counts could not be read right now.' : `No data for ${periodWords}.`;
   const head = 'text-[11px] leading-4 font-bold uppercase tracking-[0.12em] text-ink-muted';
 
@@ -148,6 +92,13 @@ export const AdminInsights: React.FC<AdminInsightsProps> = ({ days, periodWords,
             {productList(sold, (n) => `${num(n)} sold`, ordersLoaded ? `Nothing sold in ${periodWords}.` : 'Loading orders…')}
           </div>
         </div>
+        {!loading && ordersLoaded && notSelling.length > 0 && (
+          <div id="admin-not-selling" className="mt-5 pt-4 border-t border-line rounded-none">
+            <p className={head}>Looked at a lot, not bought yet</p>
+            <p className="mt-0.5 text-xs leading-4 text-ink-muted">Opened by 5 or more people in {periodWords} without a sale. Worth checking the photos, the price and the sizes in stock.</p>
+            {productList(notSelling, (n) => `${num(n)} views, 0 sold`, '')}
+          </div>
+        )}
       </Panel>
       <Panel id="admin-searches" title="Searches and wishlist" note={`In ${periodWords}`}>
         <p className={head}>What people searched for</p>

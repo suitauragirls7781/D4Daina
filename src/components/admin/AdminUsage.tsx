@@ -56,6 +56,14 @@ const tone = (percent: number) => (percent >= NEAR
     ? { danger: false, text: 'text-sale', word: 'Getting close' }
     : { danger: false, text: 'text-ink', word: '' });
 
+/**
+ * Where a meter ends up by the reset if the rest of the period goes like the part already gone (a straight
+ * line from the use so far). Only once a fifth of the period has passed and something was used; else null.
+ */
+const paceOf = (percent: number, elapsed: number | null | undefined) => (elapsed && elapsed >= 0.2 && elapsed < 1 && percent > 0 ? percent / elapsed : null);
+/** The share (0-1) of a counting period from `start` to `end` that has passed at `at`; null when the dates are unknown. */
+const elapsedOf = (start: number, end: number, at: number) => (Number.isFinite(start) && Number.isFinite(end) && end > start ? Math.min(1, Math.max(0, (at - start) / (end - start))) : null);
+
 const UsageBar: React.FC<{
   title: string; used: number; limit: number; usedText: string; limitText: string;
   /** The same fact as one sentence, read out by screen readers. */
@@ -63,9 +71,12 @@ const UsageBar: React.FC<{
   /** What happens, in plain words, if this meter reaches 100%. */
   atLimit?: string;
   note?: string;
-}> = ({ title, used, limit, usedText, limitText, detail, atLimit, note }) => {
+  /** Share of the counting period already gone (0-1): gives the "at this pace" estimate. */
+  elapsed?: number | null;
+}> = ({ title, used, limit, usedText, limitText, detail, atLimit, note, elapsed }) => {
   const percent = limit > 0 ? (used / limit) * 100 : 0;
   const colours = tone(percent);
+  const pace = paceOf(percent, elapsed);
   return (
     <div className={`${kit.inset} flex flex-col gap-2.5`}>
       <div className="flex items-start justify-between gap-3">
@@ -78,6 +89,11 @@ const UsageBar: React.FC<{
         <span className={`ml-auto text-sm leading-5 font-semibold ${colours.text}`}>{percentText(percent)}% used</span>
       </p>
       <Meter label={title} percent={percent} danger={colours.danger} valueText={detail} />
+      {pace !== null && (
+        <p className={`${kit.hint} sag-num`}>
+          <span className={`font-semibold ${pace >= 100 ? 'text-danger' : 'text-ink'}`}>At this pace: about {percentText(Math.min(pace, 999))}% by the reset.</span> An estimate from the use so far, not a promise.
+        </p>
+      )}
       {note && <p className={kit.hint}>{note}</p>}
       {atLimit && <p className={kit.hint}><span className="font-semibold text-ink">If it fills up:</span> {atLimit}</p>}
     </div>
@@ -206,19 +222,27 @@ export const AdminUsage: React.FC = () => {
   };
 
   // Every meter that has a real number right now, to work out the plain answer at the top
-  const meters: Array<{ name: string; percent: number }> = [];
+  // How much of each counting period has passed, for the "at this pace" estimates
+  const fetchedMs = view ? Date.parse(view.fetchedAt) : NaN;
+  const resetMs = view ? Date.parse(view.resetAt) : NaN;
+  const periodElapsed = view ? (monthly ? elapsedOf(Date.parse(view.periodStart || ''), resetMs, fetchedMs) : elapsedOf(resetMs - DAY_MS, resetMs, fetchedMs)) : null;
+  const mediaElapsed = view?.media ? elapsedOf(Date.parse(view.media.monthStart), Date.parse(view.media.resetAt), fetchedMs) : null;
+  const meters: Array<{ name: string; percent: number; pace: number | null; when: string }> = [];
   if (view?.configured) {
-    const add = (name: string, used: number, limit: number) => { if (limit > 0) meters.push({ name, percent: (used / limit) * 100 }); };
-    if (view.workers) add('Worker requests', view.workers.requests, view.workers.limit);
+    const add = (name: string, used: number, limit: number, elapsed: number | null = null, when = '') => {
+      if (limit > 0) { const percent = (used / limit) * 100; meters.push({ name, percent, pace: paceOf(percent, elapsed), when }); }
+    };
+    const periodWord = monthly ? 'this month' : 'today';
+    if (view.workers) add('Worker requests', view.workers.requests, view.workers.limit, periodElapsed, periodWord);
     if (view.d1) {
-      add('database reads', view.d1.rowsRead, view.d1.rowsReadLimit);
-      add('database writes', view.d1.rowsWritten, view.d1.rowsWrittenLimit);
+      add('database reads', view.d1.rowsRead, view.d1.rowsReadLimit, periodElapsed, periodWord);
+      add('database writes', view.d1.rowsWritten, view.d1.rowsWrittenLimit, periodElapsed, periodWord);
     }
-    if (view.email?.dailyCap) add('emails', Math.max(0, view.email.dailyCap - view.email.left), view.email.dailyCap);
+    if (view.email?.dailyCap) add('emails', Math.max(0, view.email.dailyCap - view.email.left), view.email.dailyCap, null, 'today');
     if (view.media) {
-      if (view.media.storageBytes !== null) add('photo storage', view.media.storageBytes, view.media.storageLimit);
-      add('photos shown to shoppers', view.media.reads, view.media.readsLimit);
-      add('photo uploads', view.media.writes, view.media.writesLimit);
+      if (view.media.storageBytes !== null) add('photo storage', view.media.storageBytes, view.media.storageLimit, null, 'stored now');
+      add('photos shown to shoppers', view.media.reads, view.media.readsLimit, mediaElapsed, 'this month');
+      add('photo uploads', view.media.writes, view.media.writesLimit, mediaElapsed, 'this month');
     }
   }
   const namesOf = (rows: typeof meters) => rows.map((row) => row.name).join(', ');
@@ -313,6 +337,32 @@ export const AdminUsage: React.FC = () => {
             {refreshButton}
           </section>
 
+          {/* Every meter in one list, fullest first */}
+          {meters.length > 0 && (
+            <Panel id="admin-usage-board" title="All meters at a glance" hint="Fullest first. Each bar is the share of the free (or included) amount already used.">
+              <ul className="divide-y divide-line">
+                {[...meters].sort((a, b) => b.percent - a.percent).map((m) => {
+                  const colours = tone(m.percent);
+                  const width = Math.min(100, Math.max(m.percent, m.percent > 0 ? 1 : 0));
+                  return (
+                    <li key={m.name} className="py-2.5">
+                      <div className="flex items-baseline justify-between gap-3 text-sm leading-5">
+                        <span className="min-w-0 text-ink first-letter:uppercase">{m.name} <span className="text-ink-muted">· {m.when}</span></span>
+                        <span className={`shrink-0 sag-num font-semibold ${colours.text}`}>{percentText(m.percent)}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 rounded-full bg-line overflow-hidden" aria-hidden="true">
+                        <div className={`h-full rounded-full ${colours.danger ? 'bg-danger' : m.percent >= CLOSE ? 'bg-sale' : 'bg-brand'}`} style={{ width: `${width}%` }} />
+                      </div>
+                      {m.pace !== null && (
+                        <p className="mt-1 text-xs leading-4 text-ink-muted sag-num">At this pace about {percentText(Math.min(m.pace, 999))}% by the reset (an estimate){m.pace >= 100 ? ': it would run out before the reset' : ''}.</p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </Panel>
+          )}
+
           <Panel
             title={monthly ? 'This month\'s meters' : 'Today\'s meters'}
             hint={monthly ? `What has been used ${since}, against what the paid plan includes.` : `What has been used ${since}, against the free daily limits.`}
@@ -327,6 +377,7 @@ export const AdminUsage: React.FC = () => {
                   limitText={num(view.workers.limit)}
                   detail={`${num(view.workers.requests)} of ${num(view.workers.limit)} used ${since}`}
                   atLimit={atLimit.requests}
+                  elapsed={periodElapsed}
                   note={`Every time the store answers a shopper or the admin, it counts as one.${view.workers.scriptRequests !== undefined && view.workers.scriptRequests !== view.workers.requests
                     ? ` ${num(view.workers.scriptRequests)} of these are this store (${view.workers.scriptName}); the limit counts every Worker in the account.`
                     : ''}`}
@@ -342,6 +393,7 @@ export const AdminUsage: React.FC = () => {
                     limitText={num(view.d1.rowsReadLimit)}
                     detail={`${num(view.d1.rowsRead)} of ${num(view.d1.rowsReadLimit)} used ${since}`}
                     atLimit={atLimit.reads}
+                    elapsed={periodElapsed}
                     note={`Looking up products, orders and settings. ${num(view.d1.readQueries)} read queries`}
                   />
                   <UsageBar
@@ -352,6 +404,7 @@ export const AdminUsage: React.FC = () => {
                     limitText={num(view.d1.rowsWrittenLimit)}
                     detail={`${num(view.d1.rowsWritten)} of ${num(view.d1.rowsWrittenLimit)} used ${since}`}
                     atLimit={atLimit.writes}
+                    elapsed={periodElapsed}
                     note={`Saving orders, changes and visitor counts. ${num(view.d1.writeQueries)} write queries`}
                   />
                 </>
@@ -413,6 +466,7 @@ export const AdminUsage: React.FC = () => {
                   limitText={num(view.media.readsLimit)}
                   detail={`${num(view.media.reads)} of ${num(view.media.readsLimit)} used this month`}
                   atLimit={atLimit.photos}
+                  elapsed={mediaElapsed}
                   note="A photo Cloudflare already has in its cache near the shopper does not count, so this stays far below the number of photos seen. Sending photos costs nothing: there is no data limit."
                 />
                 <UsageBar
@@ -423,6 +477,7 @@ export const AdminUsage: React.FC = () => {
                   limitText={num(view.media.writesLimit)}
                   detail={`${num(view.media.writes)} of ${num(view.media.writesLimit)} used this month`}
                   atLimit={atLimit.photos}
+                  elapsed={mediaElapsed}
                   note="One uploaded photo is nine small files."
                 />
               </div>
