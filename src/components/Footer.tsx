@@ -111,8 +111,16 @@ export const Footer: React.FC = () => {
           <svg className="aura-ft-k" viewBox="0 0 40 74" aria-hidden="true" focusable="false">
             <path pathLength={1} d="M20 0v26l14 14-14 14L6 40l14-14M20 54c-9 4-9 14 0 14s9-10 0-14v20" />
           </svg>
-          <button type="button" onClick={() => go('home')} className="aura-ft-w" aria-label="Suit Aura Girls home">
-            Suit <em>Aura</em> Girls
+
+          <button
+            type="button"
+            onClick={() => go('home')}
+            className="aura-ft-w"
+            aria-label="Suit Aura Girls home"
+          >
+            <span className="aura-ft-w-gradient">
+              Suit <em>Aura</em> Girls
+            </span>
           </button>
           <p className="aura-ft-s">Ethnic wear · {facts.delivery}</p>
 

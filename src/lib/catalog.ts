@@ -26,6 +26,7 @@ export const readsLive = (): boolean => {
   if (typeof window === 'undefined') return true;
   if (isAdminAreaPath(window.location.pathname)) return true;
   if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return true;
+  if (window.location.hostname.includes('.run.app') || window.location.hostname.includes('webcontainer')) return true;
   try {
     return localStorage.getItem(LIVE_FLAG) === '1';
   } catch {

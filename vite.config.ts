@@ -27,13 +27,28 @@ const startPagePreload = () => ({
   },
 });
 
+const apiDevFallback = () => ({
+  name: 'sag-api-dev-fallback',
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
+      if (req.url && req.url.startsWith('/api/')) {
+        res.statusCode = 404;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'API endpoint not available in preview dev mode', path: req.url }));
+        return;
+      }
+      next();
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => {
   // `vite build --mode cloudflare`: the Firebase SDK imports resolve to our own small stand-ins
   // (src/shims), which talk to the Worker's /api/db. Every other mode keeps the real Firebase SDK.
   const cloudflare = mode === 'cloudflare';
   const shim = (name: string) => path.resolve(__dirname, 'src/shims', name);
   return {
-    plugins: [react(), tailwindcss(), startPagePreload()],
+    plugins: [react(), tailwindcss(), startPagePreload(), apiDevFallback()],
     // Cloudflare's Git build has no build variables set, so Google sign-in is on there unless switched off
     define: cloudflare ? { 'import.meta.env.VITE_GOOGLE_LOGIN': JSON.stringify(process.env.VITE_GOOGLE_LOGIN ?? '1') } : {},
     resolve: {
@@ -62,6 +77,7 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 3000,
       strictPort: true,
+      allowedHosts: true,
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },

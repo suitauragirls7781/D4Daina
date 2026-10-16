@@ -3067,8 +3067,18 @@ html { background-color: var(--clay-bg); }
 /* Footer: the deep clay slab with rounded shoulders; the giant wordmark is pressed into it like a stamp */
 .aura-ft { background: var(--clay-deep); color: var(--aura-ink); border-radius: 36px 36px 0 0; box-shadow: inset 0 4px 10px rgba(255,255,255,.55);
   --fg: #111013; --inv: #F5F2EC; --mu: #554F49; --hl: rgba(17,16,19,.14); --ac: #8E4C58; }
-.aura-ft-w { color: var(--clay-deep); text-shadow: -2px -2px 2px rgba(255,255,255,.75), 3px 3px 5px rgba(110,84,66,.42); }
-.aura-ft-w em { color: var(--clay-deep); }
+.aura-ft-w { text-shadow: none; }
+.aura-ft-w-gradient {
+  background: linear-gradient(135deg, #FFB703 0%, #E07A8A 50%, #F3C9BF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  filter: drop-shadow(0 4px 20px rgba(224, 122, 138, 0.35));
+}
+.aura-ft-w-gradient em {
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
 .aura-ft-ln > button { background: var(--clay-surface); box-shadow: var(--clay-2t); }
 .aura-ft-ln > button:first-child { background: var(--aura-ink); color: var(--aura-paper); box-shadow: var(--clay-ink-btn); }
 .aura-ft-so { background: var(--clay-surface); box-shadow: var(--clay-2t); }
