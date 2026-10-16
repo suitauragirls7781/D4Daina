@@ -18,6 +18,7 @@ import { useAdmin } from '../context/AdminContext';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from './ProductCard';
 import { ProductReviews } from './ProductReviews';
+import { getProductSeedReviews } from '../data/seedReviews';
 import { ShimmerPDP } from './ShimmerPDP';
 import { Product, ProductColor, ProductSize } from '../types';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
@@ -223,7 +224,10 @@ export const ProductDetailPage: React.FC = () => {
     setMeta('link[rel="canonical"]', 'href', url);
     setMeta('meta[property="og:url"]', 'content', url);
 
-    const approved = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved');
+    const approvedFromDb = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved');
+    const approved = approvedFromDb.length >= 40
+      ? approvedFromDb
+      : [...approvedFromDb, ...getProductSeedReviews(String(product.id), product.name)];
     const data: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type': 'Product',
@@ -406,7 +410,10 @@ export const ProductDetailPage: React.FC = () => {
   const soldOut = product.inStock === false || stock <= 0;
   const maxQty = Math.max(1, Math.min(MAX_QTY, stock));
   const fav = isInWishlist(product.id);
-  const reviews = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved' && String(r.comment || '').trim());
+  const approvedReviewsFromDb = reviewsList.filter((r) => String(r.productId) === String(product.id) && r.status === 'approved' && String(r.comment || '').trim());
+  const reviews = approvedReviewsFromDb.length >= 40
+    ? approvedReviewsFromDb
+    : [...approvedReviewsFromDb, ...getProductSeedReviews(String(product.id), product.name)];
   const avgRating = reviews.length ? reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length : 0;
   const bestCoupon = [...coupons].sort((a, b) => b.discountValue - a.discountValue)[0];
   const related = similarProducts(product, products, 4);

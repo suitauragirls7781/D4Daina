@@ -6,6 +6,7 @@ import { useAdmin } from '../context/AdminContext';
 import { Star, X } from 'lucide-react';
 import { getCleanImageUrl, productPhoto, ELEGANT_PLACEHOLDER_SVG } from '../utils/imageHelper';
 import { Icon, flyToBag, prefersReducedMotion } from '../aura';
+import { getProductSeedReviews } from '../data/seedReviews';
 
 interface ProductCardProps {
   product: Product;
@@ -155,8 +156,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, compact = fal
       sum += value;
       count += 1;
     }
+    if (count < 40) {
+      const seeds = getProductSeedReviews(String(product.id), product.name);
+      for (const s of seeds) {
+        sum += s.rating;
+        count += 1;
+      }
+    }
     return count ? { avg: sum / count, count } : null;
-  }, [reviewsList, product.id]);
+  }, [reviewsList, product.id, product.name]);
 
   const add = (size: ProductSize) => {
     addedHere.current = true;

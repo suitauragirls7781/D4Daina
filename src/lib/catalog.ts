@@ -25,8 +25,7 @@ const BUCKET_MS = 5 * 60 * 1000;
 export const readsLive = (): boolean => {
   if (typeof window === 'undefined') return true;
   if (isAdminAreaPath(window.location.pathname)) return true;
-  if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return true;
-  if (window.location.hostname.includes('.run.app') || window.location.hostname.includes('webcontainer')) return true;
+  if (['localhost', '127.0.0.1'].includes(window.location.hostname)) return false;
   try {
     return localStorage.getItem(LIVE_FLAG) === '1';
   } catch {
@@ -48,15 +47,14 @@ let pending: Promise<PublicCatalog | null> | null = null;
 // on the loading screen (prices are always re-checked by the server at checkout).
 const SAVED_KEY = 'sag_catalog_saved_v1';
 const SAVED_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+import defaultCatalog from '../data/defaultCatalog.json';
 const valid = (catalog: any): catalog is PublicCatalog => Boolean(catalog && Array.isArray(catalog.products) && catalog.settings);
 const readSaved = (): PublicCatalog | null => {
   try {
     const saved = JSON.parse(localStorage.getItem(SAVED_KEY) || 'null');
-    if (!valid(saved) || Date.now() - new Date(saved.generatedAt).getTime() > SAVED_MAX_AGE_MS) return null;
-    return saved;
-  } catch {
-    return null;
-  }
+    if (valid(saved) && Date.now() - new Date(saved.generatedAt).getTime() <= SAVED_MAX_AGE_MS) return saved;
+  } catch {}
+  return (defaultCatalog as unknown as PublicCatalog) || null;
 };
 const save = (catalog: PublicCatalog) => {
   try { localStorage.setItem(SAVED_KEY, JSON.stringify(catalog)); } catch {}

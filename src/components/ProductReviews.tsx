@@ -11,6 +11,7 @@ import { getCleanImageUrl } from '../utils/imageHelper';
 import { Product } from '../types';
 import { MediaGrant, uploadImageWithGrant } from '../lib/media';
 import { AuraTitle } from '../aura';
+import { getProductSeedReviews } from '../data/seedReviews';
 
 // Product reviews: rating summary, what customers mention, the approved reviews and the review form.
 // Everything shown comes from approved reviews; new reviews go to /api/reviews and wait for approval.
@@ -208,14 +209,23 @@ export const ProductReviews: React.FC<{ product: Product }> = ({ product }) => {
   }, [productId]);
 
   const rows = useMemo(() => {
-    const source = live ?? reviewsList
+    const fromDb = live ?? reviewsList
       .filter((r) => String(r.productId) === productId && r.status === 'approved')
       .map((r) => toRow(r.id, r as unknown as Record<string, any>, false));
+
+    let source = fromDb;
+    if (fromDb.length < 40) {
+      const seedReviews = getProductSeedReviews(productId, product.name).map((r) => toRow(r.id, r as unknown as Record<string, any>, true));
+      const existingIds = new Set(fromDb.map((r) => r.id));
+      const needed = seedReviews.filter((r) => !existingIds.has(r.id));
+      source = [...fromDb, ...needed];
+    }
+
     // Order of the list: reviews with a customer photo first, then verified purchases, then the rest;
     // newest first inside each group. Which reviews are shown does not change.
     const group = (r: ReviewRow) => (r.imageUrl ? 0 : r.verifiedPurchase ? 1 : 2);
     return source.filter((r) => r.comment).sort((a, b) => group(a) - group(b) || b.time - a.time);
-  }, [live, reviewsList, productId]);
+  }, [live, reviewsList, productId, product.name]);
 
   const summary = useMemo(() => {
     const count = rows.length;

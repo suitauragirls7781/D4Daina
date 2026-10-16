@@ -30,7 +30,31 @@ const startPagePreload = () => ({
 const apiDevFallback = () => ({
   name: 'sag-api-dev-fallback',
   configureServer(server: any) {
-    server.middlewares.use((req: any, res: any, next: any) => {
+    server.middlewares.use(async (req: any, res: any, next: any) => {
+      if (req.url && req.url.startsWith('/api/admin-config') && req.url.includes('action=catalog')) {
+        try {
+          const liveRes = await fetch('https://www.suitauragirls.in' + req.url);
+          if (liveRes.ok) {
+            const data = await liveRes.text();
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(data);
+            return;
+          }
+        } catch {}
+        try {
+          const fs = await import('fs');
+          const path = await import('path');
+          const fallbackPath = path.resolve(__dirname, 'src/data/defaultCatalog.json');
+          if (fs.existsSync(fallbackPath)) {
+            const data = fs.readFileSync(fallbackPath, 'utf8');
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(data);
+            return;
+          }
+        } catch {}
+      }
       if (req.url && req.url.startsWith('/api/')) {
         res.statusCode = 404;
         res.setHeader('Content-Type', 'application/json');
