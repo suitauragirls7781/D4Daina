@@ -620,7 +620,7 @@ const actions = {
     return { status: 200, body: signed };
   },
 
-  // Return or exchange request from the signed-in owner of a delivered order (within 7 days of delivery).
+  // Return or exchange request from the signed-in owner of a delivered order (within 45 days of delivery).
   // Everything is checked here; the store is emailed, and the admin approves or rejects it in the admin panel.
   async 'return-request'(db, body, req, identity) {
     if (!identity.email) throw new UserError('Please sign in to request a return or exchange.', 401);
@@ -708,7 +708,7 @@ const actions = {
       status: 200,
       body: {
         order: ownerOrderView(order),
-        message: 'Cancellation request sent. Our team will review it and email you. If the order is cancelled before dispatch, the full amount is refunded to your original payment method.',
+        message: 'Cancellation request sent. Our team will review it and email you. If the order is cancelled, the amount paid, less any charges in our Cancellation policy, is refunded to your original payment method.',
       },
     };
   },

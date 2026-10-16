@@ -255,7 +255,7 @@ export interface ReturnEligibility {
   canRequest: boolean;
   /** Why not, in words the customer can act on ('' when they can). */
   reason: string;
-  /** End of the 7-day window (ISO; 11:59 pm India time on the last day), or '' when the delivery date is unknown. */
+  /** End of the 45-day window (ISO; 11:59 pm India time on the last day), or '' when the delivery date is unknown. */
   windowEndsAt: string;
   /** Pieces of each order line (by index) that can still go into a request (bought minus already returned or exchanged). */
   remaining?: number[];

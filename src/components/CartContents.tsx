@@ -354,7 +354,7 @@ export const EmptyBag: React.FC<{ onDone?: () => void; heading?: 'h1' | 'h2' }> 
 };
 
 /**
- * The facts the bag has always closed with ("Secure online payment · 7-day returns & exchange"), as small
+ * The facts the bag has always closed with ("Secure online payment · 45-day returns & exchange"), as small
  * sand and blush tiles. The words are the store's own line from Assurance.tsx; nothing is added.
  */
 export const BagFacts: React.FC<{ className?: string }> = ({ className = '' }) => (

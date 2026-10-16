@@ -629,7 +629,7 @@ export const requestCancellation = async (db, { orderNumber, email, reason }) =>
 // normalizeReturnRequest and converted the first time the admin acts on them.
 // ---------------------------------------------------------------------------------------------
 
-export const RETURN_WINDOW_DAYS = 7;
+export const RETURN_WINDOW_DAYS = 45;
 export const RETURN_REASONS = ["Size doesn't fit", 'Damaged / defective', 'Wrong item received', 'Colour or quality not as expected', 'Other'];
 /** Reasons for which at least one photo is required. */
 export const RETURN_PHOTO_REASONS = ['Damaged / defective', 'Wrong item received'];

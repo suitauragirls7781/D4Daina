@@ -782,7 +782,7 @@ export const AdminSettings: React.FC = () => {
               <textarea rows={2} maxLength={500} value={storeForm.invoiceAddress || ''} onChange={(e) => setStoreForm({ ...storeForm, invoiceAddress: e.target.value })} className={area} />
             </Field>
             <Field label="Note printed on invoices" className="sm:col-span-2">
-              <textarea rows={2} maxLength={500} value={storeForm.invoiceNote || ''} onChange={(e) => setStoreForm({ ...storeForm, invoiceNote: e.target.value })} placeholder="e.g. Goods once sold can be exchanged within 7 days as per our return policy." className={area} />
+              <textarea rows={2} maxLength={500} value={storeForm.invoiceNote || ''} onChange={(e) => setStoreForm({ ...storeForm, invoiceNote: e.target.value })} placeholder="e.g. Goods once sold can be exchanged within 45 days as per our return policy." className={area} />
             </Field>
           </div>
         </Panel>

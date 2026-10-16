@@ -45,7 +45,7 @@ export const canRequestCancel = (order: OrderWithRequests, windowHours = 0) =>
 export const cancelClosedNote = (order: OrderWithRequests, windowHours = 0) => {
   if (order.paymentStatus !== 'Paid' || order.cancelRequest) return '';
   if (['Shipped', 'In Transit', 'Out for Delivery'].includes(order.status)) {
-    return "This order has been shipped, so it can't be cancelled. You can ask for a return or exchange within 7 days of delivery.";
+    return "This order has been shipped, so it can't be cancelled. You can ask for a return or exchange within 45 days of delivery.";
   }
   if (CANCELLABLE_STATUSES.includes(order.status) && cancelWindowPassed(order, windowHours)) {
     return 'The cancellation time for this order has passed.';

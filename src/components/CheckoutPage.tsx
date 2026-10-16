@@ -1149,7 +1149,7 @@ export const CheckoutPage: React.FC = () => {
   const appTile = (on: boolean) => `aco-upi${on ? ' on' : ''}`;
   // The radio dot inside a UPI app tile: it fills when the tile is chosen (drawn by CSS from the tile's class)
   const appDot = (_on: boolean) => <i aria-hidden="true" />;
-  // "Secure payment by <gateway> · 7-day returns & exchange": the store's own wording (Assurance), with the
+  // "Secure payment by <gateway> · 45-day returns & exchange": the store's own wording (Assurance), with the
   // gateway's name only once it is known (the cash-on-delivery advance always goes through Razorpay)
   const securedByText = assuranceLine(gatewayKnown ? (codChosen ? 'razorpay' : gateway) : undefined);
   // Display only: the online-payment option's detail line, the same words whether or not cash on delivery is offered

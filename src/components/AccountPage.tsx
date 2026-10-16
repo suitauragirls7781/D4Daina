@@ -780,7 +780,7 @@ export const AccountPage: React.FC = () => {
     coupons: coupons.length ? `${coupons.length} available` : 'Offers and codes',
     profile: 'Name and contact details',
     style: 'Colours, sizes and budget you like',
-    returns: withRequests.length ? `${withRequests.length} ${withRequests.length === 1 ? 'request' : 'requests'}` : 'Within 7 days of delivery',
+    returns: withRequests.length ? `${withRequests.length} ${withRequests.length === 1 ? 'request' : 'requests'}` : 'Within 45 days of delivery',
     help: 'Contact us and store policies',
   };
   const newestOrder = shownOrders.length
@@ -1101,7 +1101,7 @@ export const AccountPage: React.FC = () => {
                 <div className="rounded-[26px] bg-blush p-4 sm:p-5 flex gap-3">
                   <span className="aa-ic"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                   <p className="min-w-0 text-[14px] leading-[21px] text-ink">
-                    You can ask for a return or a size exchange within 7 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
+                    You can ask for a return or a size exchange within 45 days of delivery. Pieces must be unused and unwashed, with their original tags; clearance pieces (50% or more off) can be exchanged for another size only. Add photos if something arrived damaged or wrong. Our team reviews every request and emails you.{' '}
                     <button type="button" onClick={() => setActivePage('return-policy')} className={textLink}>Return policy</button>
                   </p>
                 </div>
@@ -1148,7 +1148,7 @@ export const AccountPage: React.FC = () => {
                 ))}
 
                 {returnable.length === 0 && withRequests.length === 0 && (
-                  <EmptyState icon={<ReturnIcon className="w-7 h-7" mono />} title="Nothing to return right now" text="Delivered orders appear here for 7 days after delivery." />
+                  <EmptyState icon={<ReturnIcon className="w-7 h-7" mono />} title="Nothing to return right now" text="Delivered orders appear here for 45 days after delivery." />
                 )}
               </section>
             )}

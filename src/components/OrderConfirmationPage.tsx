@@ -331,7 +331,7 @@ export const OrderConfirmationPage: React.FC = () => {
                 <button type="button" onClick={() => { setActivePage('return-policy'); window.scrollTo(0, 0); }} className={stepRow} data-rv>
                   <span className="aa-ic"><ReturnIcon className="w-5 h-5" mono live={false} /></span>
                   <span className="aa-row-t">
-                    <b>7-day returns & exchange</b>
+                    <b>45-day returns & exchange</b>
                     <small>If something is not right after delivery, ask for a return or a size exchange.</small>
                   </span>
                   <ChevronRight className="mt-3" strokeWidth={1.6} aria-hidden="true" />

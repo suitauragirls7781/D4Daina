@@ -4,7 +4,7 @@ import { HOME_WRAP } from './HomeSections';
 
 /**
  * Homepage "promises" strip. It shows the four facts the store stands behind (worded once, in Assurance.tsx):
- * secure online payment, 7-day returns & exchange, delivery across India and WhatsApp help.
+ * secure online payment, 45-day returns & exchange, delivery across India and WhatsApp help.
  * No fabric, weaving or dispatch-time claims are made here, because the owner has not confirmed any.
  * A forest section: the page takes that colour while it is under the reader's eye, and the facts follow it.
  */

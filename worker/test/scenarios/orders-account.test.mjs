@@ -386,13 +386,13 @@ test('return-request: only the signed-in owner of a delivered order, within the 
   }
   assert.equal((await h.doc('orders', orderNumber)).returnRequest, undefined);
 
-  // Delivered nine days ago: the seven-day window has closed
+  // Delivered 47 days ago: the 45-day window has closed
   const stored = await h.doc('orders', orderNumber);
-  const nineDaysAgo = new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString();
-  await h.update('orders', orderNumber, { timeline: stored.timeline.map((entry) => (entry.status === 'Delivered' ? { ...entry, at: nineDaysAgo } : entry)) });
+  const longAgo = new Date(Date.now() - 47 * 24 * 60 * 60 * 1000).toISOString();
+  await h.update('orders', orderNumber, { timeline: stored.timeline.map((entry) => (entry.status === 'Delivered' ? { ...entry, at: longAgo } : entry)) });
   const late = await returnRequest(orderNumber, ashaToken, form);
   assert.equal(late.status, 409);
-  assert.match(late.body.error, /7-day return \/ exchange window/);
+  assert.match(late.body.error, /45-day return \/ exchange window/);
   assert.equal(mailsTo(STORE_EMAIL, 'requested: order').filter((mail) => mail.subject.includes(orderNumber)).length, 0);
 
   // That was the customer's tenth request this hour: the eleventh is refused whatever it asks

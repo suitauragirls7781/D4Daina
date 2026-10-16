@@ -429,18 +429,18 @@ const deliveredMs = new Date('2026-09-10T10:00:00.000Z').getTime();
 const catalogue = new Map([['p1', { sizes: ['S', 'M', 'L'] }], ['p4', { sizes: ['M', 'L', 'XL'] }]]);
 const photoCheck = (url) => Boolean(returnPhotoKey(url));
 
-test('return window: until 11:59 pm India time on the 7th day after delivery; unknown delivery date is left to the admin', () => {
-  // Delivered 10 Sept, 3:30 pm IST: requests are taken until 17 Sept, 11:59:59 pm IST (6:29:59 pm UTC).
+test('return window: until 11:59 pm India time on the 45th day after delivery; unknown delivery date is left to the admin', () => {
+  // Delivered 10 Sept, 3:30 pm IST: requests are taken until 25 Oct, 11:59:59 pm IST (6:29:59 pm UTC).
   const order = deliveredOrder();
-  const lastMoment = Date.parse('2026-09-17T18:29:59.999Z');
-  assert.equal(returnWindowEndsAt(order), '2026-09-17T18:29:59.999Z');
+  const lastMoment = Date.parse('2026-10-25T18:29:59.999Z');
+  assert.equal(returnWindowEndsAt(order), '2026-10-25T18:29:59.999Z');
   assert.equal(returnBlockReason(order, deliveredMs + 2 * DAY), '');
-  assert.equal(returnBlockReason(order, deliveredMs + 7 * DAY + 60 * 60 * 1000), '', 'later in the day shown as the last day still counts');
+  assert.equal(returnBlockReason(order, deliveredMs + 45 * DAY + 60 * 60 * 1000), '', 'later in the day shown as the last day still counts');
   assert.equal(returnBlockReason(order, lastMoment), '', 'the last moment of the window still counts');
-  assert.match(returnBlockReason(order, lastMoment + 1), /7-day return \/ exchange window .* ended on 17 Sept?\.? 2026/);
-  // Delivered just after midnight IST on 11 Sept (still 10 Sept in UTC): the window runs to 18 Sept, 11:59 pm IST.
+  assert.match(returnBlockReason(order, lastMoment + 1), /45-day return \/ exchange window .* ended on 25 Oct\.? 2026/);
+  // Delivered just after midnight IST on 11 Sept (still 10 Sept in UTC): the window runs to 26 Oct, 11:59 pm IST.
   const lateNight = deliveredOrder({ timeline: [{ status: 'Delivered', at: '2026-09-10T18:40:00.000Z' }] });
-  assert.equal(returnWindowEndsAt(lateNight), '2026-09-18T18:29:59.999Z');
+  assert.equal(returnWindowEndsAt(lateNight), '2026-10-26T18:29:59.999Z');
   const noDate = deliveredOrder({ timeline: [] });
   assert.equal(returnWindowEndsAt(noDate), '');
   assert.equal(returnBlockReason(noDate, deliveredMs + 60 * DAY), '');
@@ -467,7 +467,7 @@ test('return eligibility: delivered + paid only, one open request at a time, nev
   assert.deepEqual(returnableQty(allBack), [0, 0]);
   assert.match(returnBlockReason(allBack, now), /Every piece of this order has already been returned or exchanged/);
   assert.deepEqual(returnableQty(deliveredOrder({ returnRequest: { status: 'rejected', type: 'return', items: [{ line: 0, qty: 2 }] } })), [2, 1], 'rejected requests do not count');
-  assert.equal(returnBlockReason(deliveredOrder({ returnRequest: { status: 'exchanged', type: 'exchange', items: [{ line: 1, qty: 1 }] } }), deliveredMs + 30 * DAY).includes('window'), true, 'the window still applies');
+  assert.equal(returnBlockReason(deliveredOrder({ returnRequest: { status: 'exchanged', type: 'exchange', items: [{ line: 1, qty: 1 }] } }), deliveredMs + 60 * DAY).includes('window'), true, 'the window still applies');
   assert.equal(returnBlockReason(deliveredOrder({ returnRequest: { status: 'rejected', type: 'return' } }), now), '', 'a rejected request can be followed by a new one');
   assert.match(returnBlockReason(deliveredOrder({ returnRequest: { status: 'rejected' }, pastReturnRequests: [{}, {}] }), now), /several return requests/);
   // Older requests: { reason, at } with the order status Refund Requested, or one the store handled before item-level returns.

@@ -343,15 +343,15 @@ export const ReturnPolicyPage: React.FC = () => {
     <PolicyWrapper
       page="return-policy"
       title="Returns & exchanges policy"
-      subtitle="Request a return or an exchange within 7 days of delivery"
+      subtitle="Request a return or an exchange within 45 days of delivery"
       short={[
-        "Request a return or exchange within 7 days of delivery",
+        "Request a return or exchange within 45 days of delivery",
         "The garment must be unused, unwashed and unstained, with tags intact",
         "Request it from My account → Orders",
         "Refund to your original payment method after our quality check",
       ]}
       facts={[
-        { icon: ReturnIcon, label: 'Return window', value: '7 days from delivery' },
+        { icon: ReturnIcon, label: 'Return window', value: '45 days from delivery' },
         { icon: TagIcon, label: 'Condition', value: 'Unused, tags intact' },
         { icon: OrdersIcon, label: 'How to request', value: 'My account → Orders' },
         { icon: LockIcon, label: 'Refunds', value: 'To original payment method' },
@@ -359,8 +359,8 @@ export const ReturnPolicyPage: React.FC = () => {
       sections={[
         {
           id: 'window',
-          title: '7-day return and exchange window',
-          body: <p className={P}>We want you to love what you order from Suit Aura Girls. If the size does not fit or if you wish to exchange it for another design, you may request an exchange or return within <S>7 days of delivery</S>.</p>,
+          title: '45-day return and exchange window',
+          body: <p className={P}>We want you to love what you order from Suit Aura Girls. If the size does not fit or if you wish to exchange it for another design, you may request an exchange or return within <S>45 days of delivery</S>.</p>,
         },
         {
           id: 'eligibility',
@@ -388,7 +388,7 @@ export const ReturnPolicyPage: React.FC = () => {
         {
           id: 'refunds',
           title: 'Refunds and exchanges',
-          body: <p className={P}>Once the returned item reaches us and passes our quality check, the refund is made to your original payment method, or your exchange piece is sent to you. For a cash on delivery order, the refund is sent to the UPI ID you give in the return request. You can follow every step of your request in My account.</p>,
+          body: <p className={P}>Once the returned item reaches us and passes our quality check, the refund is made to your original payment method, after any charges that apply (see our Cancellation policy), or your exchange piece is sent to you. For a cash on delivery order, the refund is sent to the UPI ID you give in the return request. You can follow every step of your request in My account.</p>,
         },
       ]}
     />
@@ -477,23 +477,23 @@ export const CancellationPolicyPage: React.FC = () => {
   <PolicyWrapper
     page="cancellation-policy"
     title="Cancellation policy"
-    subtitle="How to cancel an order that has not been dispatched yet"
+    subtitle="How to cancel an order, the charges that can apply and how the refund is made"
       short={[
-        "Cancel free of cost before the order is handed to the courier",
-        "Cancel from My account → Orders, or email or WhatsApp us with your Order ID",
-        "The full amount is refunded to your original payment method",
-        "Banks usually take 5–7 working days to show the refund",
+        "Cancel before the order is handed to the courier, from My account → Orders or by message",
+        "Depending on why and when an order is cancelled, a cancellation charge can be taken from the refund",
+        "If we cancel the order ourselves (out of stock or a problem on our side), you get the full amount back",
+        "The rest is refunded to your original payment method; banks usually take 5–7 working days to show it",
       ]}
     facts={[
-      { icon: PackageIcon, label: 'Cancel for free', value: 'Any time before dispatch' },
+      { icon: PackageIcon, label: 'Cancel', value: 'Before dispatch' },
       { icon: SupportIcon, label: 'How', value: 'My account → Orders, or message us' },
-      { icon: ReturnIcon, label: 'Refund', value: 'Full amount to source account' },
+      { icon: ReturnIcon, label: 'Refund', value: 'Amount paid, less any charges' },
     ]}
     sections={[
       {
         id: 'window',
         title: 'Cancellation window',
-        body: <p className={P}>You can cancel your order free of cost while it is <S>still with us</S> — that is, before it is handed to the courier.</p>,
+        body: <p className={P}>You can ask to cancel your order while it is <S>still with us</S>, that is, before it is handed to the courier. Once it is shipped it can no longer be cancelled; you can ask for a return or exchange after delivery instead (see our Returns & exchanges policy).</p>,
       },
       {
         id: 'how-to',
@@ -509,9 +509,24 @@ export const CancellationPolicyPage: React.FC = () => {
         ),
       },
       {
+        id: 'charges',
+        title: 'Cancellation charges',
+        body: (
+          <>
+            <p className={P}>Different charges apply depending on why and when an order is cancelled. They are taken from the amount you paid, and the rest is refunded:</p>
+            <List items={[
+              'Cancelled by us (the piece is out of stock, a technical problem or any other reason on our side): no charge, the full amount you paid is refunded.',
+              'Cancelled at your request before dispatch: a cancellation charge can be taken, for example the payment gateway fees and any work already done on the order, such as packing.',
+              'Parcel refused at delivery or sent back to us: the shipping charges both ways can be taken. For a cash on delivery order, the charge paid online to confirm it is not refunded.',
+            ]} />
+            <p className={P}>We always tell you by email or WhatsApp how much is being taken, and why, before the refund is made.</p>
+          </>
+        ),
+      },
+      {
         id: 'refund',
-        title: 'Full refund for cancelled orders',
-        body: <p className={P}>For orders cancelled before dispatch, the full amount you paid is refunded to your original payment method. We start the refund as soon as the cancellation is processed; banks usually take 5–7 working days to show it. For a cash on delivery order this is the charge you paid online. That charge is not refunded if the parcel is refused at delivery.</p>,
+        title: 'How the refund is made',
+        body: <p className={P}>Once the cancellation is processed and the charges (if any) are worked out, the rest of the amount is refunded to your original payment method. Banks usually take 5–7 working days to show it. For a cash on delivery order, the refund is the part you paid online.</p>,
       },
     ]}
   />

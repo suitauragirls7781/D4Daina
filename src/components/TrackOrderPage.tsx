@@ -378,7 +378,7 @@ export const TrackOrderPage: React.FC = () => {
                 <div className="min-w-0 flex-1">
                   <p className="text-[20px] leading-6 font-extrabold tracking-[-0.02em] text-ink">Not the right fit?</p>
                   <p className="mt-0.5 text-[14px] leading-5 text-ink-muted">
-                    Ask for a return or a size exchange{formatWindowEnd(order.returnEligibility?.windowEndsAt) ? ` by ${formatWindowEnd(order.returnEligibility?.windowEndsAt)}` : ' within 7 days of delivery'}.
+                    Ask for a return or a size exchange{formatWindowEnd(order.returnEligibility?.windowEndsAt) ? ` by ${formatWindowEnd(order.returnEligibility?.windowEndsAt)}` : ' within 45 days of delivery'}.
                   </p>
                 </div>
                 <button type="button" onClick={() => setReturnOpen(true)} className="aura-btn aura-btn-line aura-btn-sm">

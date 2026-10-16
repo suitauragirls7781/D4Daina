@@ -14,7 +14,7 @@ type PromiseItem = { icon: React.FC<StoreIconProps>; title: string; text: string
 // Every promise here is taken from the store's own policy pages and contact details.
 const PROMISES: PromiseItem[] = [
   { icon: TruckIcon, title: 'Delivery across India', text: 'Most orders are dispatched within 24–48 business hours, with tracking on every parcel.', page: 'shipping-policy', link: 'Shipping policy' },
-  { icon: ReturnIcon, title: '7-day returns & exchange', text: 'Size not right? Request a return or exchange within 7 days of delivery.', page: 'return-policy', link: 'Returns policy' },
+  { icon: ReturnIcon, title: '45-day returns & exchange', text: 'Size not right? Request a return or exchange within 45 days of delivery.', page: 'return-policy', link: 'Returns policy' },
   { icon: LockIcon, title: 'Secure prepaid checkout', text: 'Pay safely by UPI (Google Pay, PhonePe, Paytm or any UPI app) through a trusted payment gateway.', page: 'privacy-policy', link: 'Privacy policy' },
   { icon: SupportIcon, title: 'Real people to help', text: 'Talk to our team on WhatsApp, phone or email, Monday to Saturday.', page: 'contact', link: 'Contact us' },
 ];
